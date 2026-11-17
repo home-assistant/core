@@ -18,7 +18,7 @@ from homeassistant.components.switch import (
     SwitchService,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -158,7 +158,7 @@ async def test_switch_invalid_auth_starts_reauth(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.practical_morse_container"},
+            {TargetKey.ENTITY_ID: "switch.practical_morse_container"},
             blocking=True,
         )
     await hass.async_block_till_done()

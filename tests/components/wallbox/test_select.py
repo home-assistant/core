@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.wallbox.const import EcoSmartMode
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant, HomeAssistantError
 
 from .conftest import http_404_error, http_429_error, setup_integration
@@ -42,7 +42,7 @@ async def test_wallbox_select_solar_charging_class(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                 SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
@@ -90,7 +90,7 @@ async def test_wallbox_select_class_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                 SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
@@ -119,7 +119,7 @@ async def test_wallbox_select_too_many_requests_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                 SelectServiceArgument.OPTION: mode,
             },
             blocking=True,
@@ -148,7 +148,7 @@ async def test_wallbox_select_connection_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                 SelectServiceArgument.OPTION: mode,
             },
             blocking=True,

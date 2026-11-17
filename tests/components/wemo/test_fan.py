@@ -20,7 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -116,7 +116,7 @@ async def test_fan_reset_filter_service(
     await hass.services.async_call(
         DOMAIN,
         WemoService.RESET_FILTER_LIFE,
-        {CommonServiceArgument.ENTITY_ID: wemo_entity.entity_id},
+        {TargetKey.ENTITY_ID: wemo_entity.entity_id},
         blocking=True,
     )
     pywemo_device.reset_filter_life.assert_called_with()
@@ -141,7 +141,7 @@ async def test_fan_set_humidity_service(
         DOMAIN,
         WemoService.SET_HUMIDITY,
         {
-            CommonServiceArgument.ENTITY_ID: wemo_entity.entity_id,
+            TargetKey.ENTITY_ID: wemo_entity.entity_id,
             WemoServiceArgument.TARGET_HUMIDITY: test_input,
         },
         blocking=True,

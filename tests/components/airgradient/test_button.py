@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -48,7 +48,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+            TargetKey.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
         },
         blocking=True,
     )
@@ -58,7 +58,7 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: "button.airgradient_test_led_bar",
+            TargetKey.ENTITY_ID: "button.airgradient_test_led_bar",
         },
         blocking=True,
     )
@@ -154,7 +154,7 @@ async def test_exception_handling(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
+                TargetKey.ENTITY_ID: "button.airgradient_calibrate_co2_sensor",
             },
             blocking=True,
         )
