@@ -223,6 +223,18 @@ class DALIScanButtonEntity(
             )
         }-{suffix}"
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._coordinator_info.async_add_listener(self._handle_info_update)
+        )
+
+    @callback
+    def _handle_info_update(self) -> None:
+        self.async_write_ha_state()
+
     @property
     @override
     def available(self) -> bool:
