@@ -6,6 +6,7 @@ import probatio
 import pytest
 
 from homeassistant.components.energy.data import (
+    BATTERY_SOURCE_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
@@ -150,6 +151,46 @@ async def test_energy_preferences_migration_from_version_1_3(
     assert manager.data["device_consumption_gas"] == []
 
 
+async def test_energy_preferences_migration_from_version_1_4(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test that cost_adjustment_day is removed when migrating from v1.4 to v1.5."""
+    grid_source = {
+        "type": "grid",
+        "stat_energy_from": "sensor.grid_import",
+        "stat_energy_to": None,
+        "stat_cost": None,
+        "stat_compensation": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.15,
+        "entity_energy_price_export": None,
+        "number_energy_price_export": None,
+    }
+    gas_source = {"type": "gas", "stat_energy_from": "sensor.gas"}
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 4,
+        "key": "energy",
+        "data": {
+            "energy_sources": [{**grid_source, "cost_adjustment_day": 0.5}, gas_source],
+            "device_consumption": [],
+            "device_consumption_water": [],
+            "device_consumption_gas": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"] == [grid_source, gas_source]
+    assert hass_storage["energy"]["minor_version"] == 5
+    assert hass_storage["energy"]["data"]["energy_sources"] == [
+        grid_source,
+        gas_source,
+    ]
+
+
 async def test_battery_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:
@@ -241,8 +282,16 @@ async def test_battery_stat_soc_round_trip(
     assert source["stat_soc"] == "sensor.battery_state_of_charge"
 
 
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 13.5}, id="manual"),
+        pytest.param({"entity_capacity": "sensor.battery_capacity"}, id="sensor"),
+    ],
+)
 async def test_battery_capacity_round_trip(
     hass: HomeAssistant,
+    capacity_config: dict[str, float | str],
 ) -> None:
     """Test that battery capacity is preserved through async_update."""
     manager = EnergyManager(hass)
@@ -253,18 +302,41 @@ async def test_battery_capacity_round_trip(
         "type": "battery",
         "stat_energy_from": "sensor.battery_energy_from",
         "stat_energy_to": "sensor.battery_energy_to",
-        "capacity": 13.5,
+        **capacity_config,
     }
     sources = ENERGY_SOURCE_SCHEMA([battery_source])
 
     await manager.async_update({"energy_sources": sources})
 
     assert manager.data is not None
-    assert manager.data["energy_sources"][0]["capacity"] == 13.5
+    assert manager.data["energy_sources"][0] == battery_source
+
+
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 0}, id="zero"),
+        pytest.param({"capacity": -1}, id="negative"),
+        pytest.param(
+            {"capacity": 13.5, "entity_capacity": "sensor.battery_capacity"},
+            id="both",
+        ),
+        pytest.param({"entity_capacity": "invalid"}, id="invalid-entity"),
+        pytest.param({"entity_capacity": ""}, id="empty-entity"),
+        pytest.param({"entity_capacity": "number.capacity"}, id="wrong-domain"),
+    ],
+)
+def test_battery_capacity_invalid(capacity_config: dict[str, float | str]) -> None:
+    """Reject invalid or ambiguous battery capacity sources."""
     with pytest.raises(probatio.Invalid):
-        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": 0}])
-    with pytest.raises(probatio.Invalid):
-        ENERGY_SOURCE_SCHEMA([{**battery_source, "capacity": -1}])
+        BATTERY_SOURCE_SCHEMA(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                **capacity_config,
+            }
+        )
 
 
 async def test_grid_power_config_inverted_sets_stat_rate(
@@ -291,7 +363,6 @@ async def test_grid_power_config_inverted_sets_stat_rate(
                     "power_config": {
                         "stat_rate_inverted": "sensor.grid_power",
                     },
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -452,13 +523,11 @@ async def test_energy_sources_validation_multiple_grids() -> None:
                 "type": "grid",
                 "stat_energy_from": "sensor.grid1_import",
                 "stat_energy_to": "sensor.grid1_export",
-                "cost_adjustment_day": 0,
             },
             {
                 "type": "grid",
                 "stat_energy_from": "sensor.grid2_import",
                 "stat_energy_to": None,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -509,7 +578,6 @@ async def test_grid_power_config_standard_stat_rate(hass: HomeAssistant) -> None
                     "power_config": {
                         "stat_rate": "sensor.grid_power",
                     },
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -536,7 +604,6 @@ async def test_grid_new_format_validates_correctly() -> None:
                 "number_energy_price": 0.15,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.08,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -551,7 +618,6 @@ async def test_grid_new_format_validates_correctly() -> None:
                 "type": "grid",
                 "stat_energy_from": "sensor.energy_import",
                 "stat_energy_to": None,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -609,7 +675,6 @@ async def test_grid_power_without_power_config(hass: HomeAssistant) -> None:
                     "number_energy_price_export": None,
                     # No power_config, just stat_rate directly
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -672,7 +737,7 @@ async def test_grid_migration_single_import_export(hass: HomeAssistant) -> None:
     assert grid["stat_compensation"] is None
     assert grid["entity_energy_price"] is None
     assert grid["entity_energy_price_export"] == "sensor.sell_price"
-    assert grid["cost_adjustment_day"] == 0.5
+    assert "cost_adjustment_day" not in grid
 
     # Should not have legacy fields
     assert "flow_from" not in grid
@@ -900,7 +965,7 @@ async def test_grid_migration_power_only(hass: HomeAssistant) -> None:
     assert grid["stat_energy_to"] is None
     # Power is preserved
     assert grid["stat_rate"] == "sensor.grid_power"
-    assert grid["cost_adjustment_day"] == 0.5
+    assert "cost_adjustment_day" not in grid
 
 
 async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
@@ -917,7 +982,6 @@ async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
                 "number_energy_price": 0.15,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.08,
-                "cost_adjustment_day": 0,
             }
         ],
         "device_consumption": [],
@@ -951,7 +1015,6 @@ async def test_grid_validation_single_import_price() -> None:
                     "stat_energy_from": "sensor.grid_import",
                     "entity_energy_price": "sensor.price",
                     "number_energy_price": 0.15,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -971,7 +1034,6 @@ async def test_grid_validation_single_export_price() -> None:
                     "stat_energy_to": "sensor.grid_export",
                     "entity_energy_price_export": "sensor.sell_price",
                     "number_energy_price_export": 0.08,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -1056,7 +1118,6 @@ async def test_grid_rejects_entity_price_for_external_import_stat() -> None:
                     "type": "grid",
                     "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                     "entity_energy_price": "input_number.electricity_rate",
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -1071,7 +1132,6 @@ async def test_grid_rejects_number_price_for_external_export_stat() -> None:
                     "type": "grid",
                     "stat_energy_to": "external:grid_export",
                     "number_energy_price_export": 0.08,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -1085,7 +1145,6 @@ async def test_grid_allows_stat_cost_for_external_stat() -> None:
                 "type": "grid",
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                 "stat_cost": "opower:utility_elec_12345_energy_cost",
-                "cost_adjustment_day": 0,
             }
         ]
     )
@@ -1179,7 +1238,6 @@ async def test_grid_allows_price_with_stat_cost_for_external_stat() -> None:
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                 "stat_cost": "opower:utility_elec_12345_energy_cost",
                 "entity_energy_price": "input_number.electricity_rate",
-                "cost_adjustment_day": 0,
             }
         ]
     )
@@ -1242,7 +1300,6 @@ GRID = {
     "stat_compensation": None,
     "entity_energy_price_export": None,
     "number_energy_price_export": None,
-    "cost_adjustment_day": 0.0,
 }
 
 

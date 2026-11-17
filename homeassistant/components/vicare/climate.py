@@ -4,8 +4,6 @@ from contextlib import suppress
 import logging
 from typing import Any, override
 
-from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
@@ -79,9 +77,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            device.serial,
-            device.config,
-            device.api,
+            device,
             circuit,
         )
         for device in device_list
@@ -125,16 +121,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def __init__(
         self,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(
-            self._attr_translation_key, device_serial, device_config, device, circuit
-        )
-        self._device = device
+        super().__init__(self._attr_translation_key, device, circuit)
+        self._device = device.api
         self._attributes: dict[str, Any] = {}
         self._attributes["vicare_programs"] = self._api.getPrograms()
         self._attr_preset_modes = [
