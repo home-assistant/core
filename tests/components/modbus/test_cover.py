@@ -3,7 +3,11 @@
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverState,
+)
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
@@ -26,9 +30,8 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -272,27 +275,36 @@ async def test_service_cover_move(hass: HomeAssistant, mock_modbus_ha) -> None:
 
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == CoverState.OPEN
 
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == CoverState.CLOSED
 
     await mock_modbus_ha.reset()
     mock_modbus_ha.read_holding_registers.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert mock_modbus_ha.read_holding_registers.called
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     mock_modbus_ha.read_coils.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID2}, blocking=True
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID2},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
 
