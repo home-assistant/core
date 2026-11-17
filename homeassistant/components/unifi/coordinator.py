@@ -173,6 +173,9 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             LOGGER.debug("Could not refetch UniFi %s data: %s", name, err)
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error refetching UniFi %s data", name)
+        else:
+            if not self.last_update_success:
+                self.async_set_updated_data(None)
 
         self._schedule_refresh()
 

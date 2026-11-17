@@ -303,6 +303,52 @@ async def test_empty_websocket_handler_resumes_fallback_after_recovery(
         assert update.call_count == 2
 
 
+async def test_empty_websocket_resync_recovers_failed_coordinator(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """An empty successful resync restores a failed coordinator and its entities."""
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
+    with patch.object(
+        hub.api.clients, "update", side_effect=[aiounifi.RequestError(), None]
+    ) as update:
+        await _advance(hass, WEBSOCKET_FALLBACK_INTERVAL.total_seconds() + 1)
+        assert not coordinator.last_update_success
+        assert not _available(hass)
+
+        await mock_websocket_state.disconnect()
+        await mock_websocket_state.reconnect()
+
+    assert update.call_count == 2
+    assert coordinator.last_update_success
+    assert _available(hass)
+
+
+async def test_failed_websocket_resync_keeps_coordinator_unavailable(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A rejected resync does not recover an already failed coordinator."""
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
+    with patch.object(
+        hub.api.clients,
+        "update",
+        side_effect=[aiounifi.RequestError(), aiounifi.Forbidden()],
+    ) as update:
+        await _advance(hass, WEBSOCKET_FALLBACK_INTERVAL.total_seconds() + 1)
+        assert not coordinator.last_update_success
+
+        await mock_websocket_state.disconnect()
+        await mock_websocket_state.reconnect()
+
+    assert update.call_count == 2
+    assert hub.available
+    assert not coordinator.last_update_success
+    assert not _available(hass)
+
+
 async def test_unexpected_login_error_logs_one_traceback_per_outage(
     hass: HomeAssistant,
     hub: UnifiHub,
