@@ -335,7 +335,6 @@ class BackupAgentClient:
                 translation_key="cannot_connect",
                 translation_placeholders={
                     "host": self.cfg.runtime_data.host,
-                    "error": str(e),
                 },
             ) from e
 
@@ -358,7 +357,6 @@ class BackupAgentClient:
                 translation_key="sftp_session_failed",
                 translation_placeholders={
                     "host": self.cfg.runtime_data.host,
-                    "error": str(e),
                 },
             ) from e
 

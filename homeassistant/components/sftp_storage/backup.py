@@ -133,7 +133,7 @@ class SFTPBackupAgent(BackupAgent):
             raise BackupAgentError(
                 translation_domain=DOMAIN,
                 translation_key="delete_failed",
-                translation_placeholders={"backup_id": backup_id, "error": str(err)},
+                translation_placeholders={"backup_id": backup_id},
             ) from err
 
         LOGGER.debug("Successfully removed backup id: %s", backup_id)
@@ -150,7 +150,6 @@ class SFTPBackupAgent(BackupAgent):
                 raise BackupAgentError(
                     translation_domain=DOMAIN,
                     translation_key="list_failed",
-                    translation_placeholders={"error": str(err)},
                 ) from err
 
     @override
