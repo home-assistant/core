@@ -898,7 +898,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overload',
     'unique_id': 'test-device-id-1_overload',
     'unit_of_measurement': None,
   })
@@ -949,7 +949,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'over_temperature',
     'unique_id': 'test-device-id-1_overTemperature',
     'unit_of_measurement': None,
   })
@@ -2836,7 +2836,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overload',
     'unique_id': 'test-device-id-1_overload',
     'unit_of_measurement': None,
   })
@@ -2887,7 +2887,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'over_temperature',
     'unique_id': 'test-device-id-1_overTemperature',
     'unit_of_measurement': None,
   })

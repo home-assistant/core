@@ -78,6 +78,7 @@ OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 OVERLOAD_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="overload",
     name="Overload",
+    translation_key="overload",
     device_class=BinarySensorDeviceClass.PROBLEM,
     on_value="Warming",
 )
@@ -85,6 +86,7 @@ OVERLOAD_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 OVERTEMPERATURE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="overTemperature",
     name="Overtemperature",
+    translation_key="over_temperature",
     device_class=BinarySensorDeviceClass.PROBLEM,
     on_value="Warming",
 )
