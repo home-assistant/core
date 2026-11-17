@@ -521,21 +521,24 @@ class TestOnectaDataUpdateCoordinator:
 
         assert coordinator._polling_backoff_remaining() == timedelta(seconds=1)
 
-    async def test_manual_update_respects_get_retry_after(
+    async def test_manual_update_bypasses_get_retry_after(
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
     ) -> None:
-        """Manual entity refreshes use cached state during Retry-After."""
+        """Manual entity refreshes query Daikin during a polling backoff."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
         coordinator = config_entry.runtime_data
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         coordinator.client.get_gateway_devices = AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+            side_effect=[
+                OnectaRateLimitError(
+                    RateLimit(retry_after=60),
+                    method="GET",
+                    path="/v1/gateway-devices",
+                ),
+                _load_gateway_devices("minimal_data"),
+            ]
         )
 
         await async_update_entity(hass, entity_id)
@@ -544,14 +547,15 @@ class TestOnectaDataUpdateCoordinator:
 
         await async_update_entity(hass, entity_id)
 
-        coordinator.client.get_gateway_devices.assert_awaited_once()
+        assert coordinator.client.get_gateway_devices.await_count == 2
+        assert coordinator._polling_backoff_until is not None
 
-    async def test_manual_update_respects_write_polling_backoff(
+    async def test_manual_update_bypasses_write_polling_backoff(
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
     ) -> None:
-        """Manual entity refreshes use cached state during write backoff."""
+        """Manual entity refreshes query Daikin during write backoff."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
         coordinator = config_entry.runtime_data
         coordinator._polling_backoff_until = (
@@ -564,8 +568,21 @@ class TestOnectaDataUpdateCoordinator:
 
         await async_update_entity(hass, entity_id)
 
-        coordinator.client.get_gateway_devices.assert_not_awaited()
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
         assert coordinator._polling_backoff_until is not None
+
+    async def test_scheduled_update_respects_write_polling_backoff(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Scheduled polls keep using cached state during write backoff."""
+        coordinator._polling_backoff_until = (
+            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        )
+        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+
+        assert await coordinator._async_update_data_from_cloud() == {}
+
+        coordinator.client.get_gateway_devices.assert_not_awaited()
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_rate_limited_write_defers_polling(
