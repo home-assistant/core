@@ -13,7 +13,7 @@
           "key_id": "Key ID",
           "key_pem": "Private key (.p8)",
           "location": "[%key:common::config_flow::data::location%]",
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "service_id": "Service ID",
           "team_id": "Apple team ID"
         },

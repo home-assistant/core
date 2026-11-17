@@ -12,7 +12,7 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_token": "Access token"
+          "api_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
@@ -21,7 +21,7 @@
       },
       "user": {
         "data": {
-          "api_token": "Access token"
+          "api_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
