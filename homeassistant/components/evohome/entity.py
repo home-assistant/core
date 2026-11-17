@@ -1,6 +1,6 @@
 """Support for entities of the Evohome integration."""
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from datetime import datetime
 from enum import StrEnum
 import logging
@@ -16,9 +16,10 @@ from evohomeasync2.const import (
 )
 
 from homeassistant.core import callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import NEXT_SP_FROM, THIS_SP_FROM
+from .const import DOMAIN, NEXT_SP_FROM, THIS_SP_FROM
 from .coordinator import EvoLocationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -179,3 +180,17 @@ class EvoChild(EvoEntity):
         }
 
         super()._handle_coordinator_update()
+
+    async def _async_set_override(self, client_api: Awaitable[evo.CommTask]) -> None:
+        """Set an override, translating the error if the client rejects it."""
+        try:
+            await self.coordinator.call_client_api(client_api)
+        except evo.InvalidSetModeError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "override_not_in_future"
+                    if err.reason == evo.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE
+                    else "override_request_invalid"
+                ),
+            ) from err

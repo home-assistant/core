@@ -112,11 +112,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             until = dt_util.utcnow() + duration
 
         if state:
-            await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
+            await self._async_set_override(self._evo_device.set_on(until=until))
         else:
-            await self.coordinator.call_client_api(
-                self._evo_device.set_off(until=until)
-            )
+            await self._async_set_override(self._evo_device.set_off(until=until))
 
     @property
     @override
@@ -147,13 +145,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             until = self.setpoints.get(NEXT_SP_FROM)
 
             if operation_mode == STATE_ON:
-                await self.coordinator.call_client_api(
-                    self._evo_device.set_on(until=until)
-                )
+                await self._async_set_override(self._evo_device.set_on(until=until))
             else:  # STATE_OFF
-                await self.coordinator.call_client_api(
-                    self._evo_device.set_off(until=until)
-                )
+                await self._async_set_override(self._evo_device.set_off(until=until))
 
     @override
     async def async_turn_away_mode_on(self) -> None:
