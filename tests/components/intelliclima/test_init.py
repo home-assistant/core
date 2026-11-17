@@ -7,6 +7,7 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaFilterStatus,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_succeeds_when_filter_status_unavailable(

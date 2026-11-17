@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiosomecomfort
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -15,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 # The away temperatures are options, not fields on the user form.
 FAKE_CONFIG = {
@@ -29,7 +28,7 @@ FAKE_CONFIG = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.honeywell.async_setup_entry", return_value=True
+        "homeassistant.components.honeywell.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -104,7 +103,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the config entry is created."""
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -135,7 +134,7 @@ async def test_show_option_form(
 
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -155,7 +154,7 @@ async def test_create_option_entry(
 
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         options_form = await hass.config_entries.options.async_init(
             config_entry.entry_id
@@ -190,7 +189,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -226,7 +225,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     client.login.side_effect = aiosomecomfort.device.AuthError
     with patch(
         "homeassistant.components.honeywell.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

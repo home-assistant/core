@@ -42,7 +42,7 @@ async def valid_flow(
 
     with (
         mocked_upb(sync_complete, config_ok),
-        patch("homeassistant.components.upb.async_setup_entry", return_value=True),
+        patch("homeassistant.components.upb.async_setup_entry", return_value=None),
     ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,7 +59,7 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
     with (
         mocked_upb(),
         patch(
-            "homeassistant.components.upb.async_setup_entry", return_value=True
+            "homeassistant.components.upb.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         flow = await hass.config_entries.flow.async_init(
@@ -113,7 +113,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         mocked_upb(),
-        patch("homeassistant.components.upb.async_setup_entry", return_value=True),
+        patch("homeassistant.components.upb.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -131,7 +131,7 @@ async def test_form_missing_upb_file(hass: HomeAssistant) -> None:
 
     with (
         mocked_upb(),
-        patch("homeassistant.components.upb.async_setup_entry", return_value=True),
+        patch("homeassistant.components.upb.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

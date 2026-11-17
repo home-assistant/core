@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'ignore_cec_count': 1,
+      'known_hosts_count': 2,
+      'uuid_filter_count': 0,
+    }),
+    'devices': list([
+      dict({
+        'added': True,
+        'cast_type': 'cast',
+        'manufacturer': 'Google Inc.',
+        'model_name': 'Chromecast Ultra',
+        'port': 8009,
+      }),
+      dict({
+        'added': False,
+        'cast_type': 'group',
+        'manufacturer': 'Google Inc.',
+        'model_name': 'Google Cast Group',
+        'port': 42241,
+      }),
+      dict({
+        'added': True,
+        'cast_type': None,
+        'manufacturer': None,
+        'model_name': 'Model 101',
+        'port': 8009,
+      }),
+      dict({
+        'added': False,
+        'cast_type': 'group',
+        'manufacturer': 'Google Inc.',
+        'model_name': 'Google Cast Group',
+        'port': 42242,
+      }),
+    ]),
+    'unknown_models': dict({
+      'Model 101': dict({
+        'cast_type': 'audio',
+        'manufacturer': 'Cyberdyne Systems',
+      }),
+    }),
+  })
+# ---

@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from sense_energy import SenseAPIException
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +21,6 @@ from homeassistant.util.dt import utcnow
 
 from . import setup_platform
 from .const import DEVICE_1_ID, DEVICE_1_NAME, DEVICE_2_NAME, MONITOR_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_binary_sensors(

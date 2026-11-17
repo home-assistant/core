@@ -1,14 +1,20 @@
 """Tests for Broadlink remotes."""
 
-from base64 import b64decode
+import asyncio
+from base64 import b64decode, b64encode
 from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import call, patch
 
-from broadlink_async.exceptions import BroadlinkException, NetworkTimeoutError
+from broadlink_async.exceptions import (
+    BroadlinkException,
+    CommandNotSupportedError,
+    NetworkTimeoutError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.remote import CODE_SAVE_DELAY, FLAG_SAVE_DELAY
@@ -34,8 +40,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import BroadlinkDevice, MockSetup, get_device
 
-from tests.common import async_fire_time_changed
-
 REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 
 SUBDEVICE = "Living Room"
@@ -45,6 +49,7 @@ IR_PACKET = (
     "OhEUERQRORE5EBURFBA6EBUQOhE5EBUQFRA6EDoRFBEADQUAAA=="
 )
 IR_PACKET_ALT = "JgAEAAECAwQ="
+RF_PACKET = bytes.fromhex("b2000600111122223333")
 
 
 @pytest.fixture
@@ -433,7 +438,7 @@ async def test_remote_delete_command_reports_unknown_commands(
     await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command=["other"])
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))]
 
-    with pytest.raises(ValueError, match="Command not found: 'known'"):
+    with pytest.raises(ServiceValidationError, match="Command not found: 'known'"):
         await _async_call_remote(
             hass, SERVICE_SEND_COMMAND, entity_id, command=["known"]
         )
@@ -488,3 +493,178 @@ async def test_remote_delete_command_reports_invalid_input(
     )
 
     assert mock_setup.api.send_data.call_args_list == [call(b64decode(IR_PACKET))] * 2
+
+
+@pytest.fixture
+def mock_sleep() -> Generator[None]:
+    """Skip the one-second delays while learning RF codes."""
+    with patch("homeassistant.components.broadlink.remote.asyncio.sleep"):
+        yield
+
+
+@pytest.mark.usefixtures("mock_sleep")
+async def test_remote_learn_rf_command(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test learning an RF command uses the swept frequency and stores the code."""
+    device = get_device("Garage")
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_frequency.return_value = (True, 433.92)
+    mock_setup.api.check_data.return_value = RF_PACKET
+
+    await _async_call_remote(
+        hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+    )
+
+    assert mock_setup.api.sweep_frequency.call_count == 1
+    assert mock_setup.api.find_rf_packet.call_args == call(433.92)
+    codes = hass_storage[f"broadlink_remote_{device.mac}_codes"]["data"]
+    assert codes == {SUBDEVICE: {"light": b64encode(RF_PACKET).decode()}}
+
+    await _async_call_remote(hass, SERVICE_SEND_COMMAND, entity_id, command="light")
+
+    assert mock_setup.api.send_data.call_args == call(RF_PACKET)
+
+
+@pytest.mark.parametrize(
+    (
+        "api_method",
+        "side_effect",
+        "frequency_result",
+        "learning_timeout",
+        "sweep_cancels",
+    ),
+    [
+        pytest.param(
+            "sweep_frequency",
+            CommandNotSupportedError(-4, "Command not supported"),
+            (True, 433.92),
+            timedelta(seconds=30),
+            0,
+            id="sweep_not_supported",
+        ),
+        pytest.param(
+            "check_frequency",
+            CommandNotSupportedError(-4, "Command not supported"),
+            (True, 433.92),
+            timedelta(seconds=30),
+            1,
+            id="check_frequency_error",
+        ),
+        pytest.param(
+            "check_frequency",
+            None,
+            (False, 0.0),
+            # Short enough for the test, long enough to poll at least once.
+            timedelta(milliseconds=10),
+            1,
+            id="frequency_never_locks",
+        ),
+        pytest.param(
+            "find_rf_packet",
+            CommandNotSupportedError(-4, "Command not supported"),
+            (True, 433.92),
+            timedelta(seconds=30),
+            0,
+            id="find_packet_not_supported",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_sleep")
+async def test_remote_learn_rf_command_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    api_method: str,
+    side_effect: Exception | None,
+    frequency_result: tuple[bool, float],
+    learning_timeout: timedelta,
+    sweep_cancels: int,
+) -> None:
+    """Test a failure while learning an RF command is reported to the caller."""
+    device = get_device("Garage")
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_frequency.return_value = frequency_result
+    getattr(mock_setup.api, api_method).side_effect = side_effect
+
+    with (
+        patch(
+            "homeassistant.components.broadlink.remote.LEARNING_TIMEOUT",
+            learning_timeout,
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to learn command 'light'"),
+    ):
+        await _async_call_remote(
+            hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+        )
+
+    assert getattr(mock_setup.api, api_method).called
+    assert mock_setup.api.cancel_sweep_frequency.call_count == sweep_cancels
+    assert f"broadlink_remote_{device.mac}_codes" not in hass_storage
+
+
+@pytest.mark.usefixtures("mock_sleep")
+async def test_remote_learn_rf_command_cancelled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cancelling RF learning while polling the frequency ends the sweep."""
+    device = get_device("Garage")
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    mock_setup.api.check_frequency.side_effect = asyncio.CancelledError
+
+    with pytest.raises(asyncio.CancelledError):
+        await _async_call_remote(
+            hass, SERVICE_LEARN_COMMAND, entity_id, command="light", command_type="rf"
+        )
+
+    assert mock_setup.api.cancel_sweep_frequency.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(RF_PACKET).decode()},
+            id="send",
+        ),
+        pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(b"\xb1" + RF_PACKET[1:]).decode()},
+            id="send_rm4_packet",
+        ),
+        pytest.param(
+            SERVICE_SEND_COMMAND,
+            {"command": "b64:" + b64encode(b"\xb4" + RF_PACKET[1:]).decode()},
+            id="send_315mhz_packet",
+        ),
+        pytest.param(
+            SERVICE_LEARN_COMMAND,
+            {"device": "fan", "command": "light", "command_type": "rf"},
+            id="learn",
+        ),
+    ],
+)
+async def test_remote_rf_not_supported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test RF actions on a model without RF raise a validation error."""
+    device = get_device("Entrance")
+    mock_setup, entity_id = await _async_setup_remote(hass, entity_registry, device)
+    del mock_setup.api.sweep_frequency
+
+    with pytest.raises(ServiceValidationError, match="doesn't support RF commands"):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            service,
+            {"entity_id": entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert mock_setup.api.send_data.call_count == 0

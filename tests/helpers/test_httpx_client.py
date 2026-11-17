@@ -7,6 +7,11 @@ import httpcore2
 from httpcore2._backends.mock import AsyncMockBackend
 import httpx2
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    extract_stack_to_frame,
+    mock_integration,
+)
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
@@ -17,8 +22,6 @@ from homeassistant.util.ssl import (
     SSLCipherList,
     client_context,
 )
-
-from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
 
 async def test_get_async_client_with_ssl(hass: HomeAssistant) -> None:

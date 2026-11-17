@@ -4,11 +4,10 @@ from unittest.mock import AsyncMock
 
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("discovergy")

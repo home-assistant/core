@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.coolmaster.climate import CoolmasterClimate
 from homeassistant.components.coolmaster.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_INFO: dict[str, str] = {
     "version": "1",

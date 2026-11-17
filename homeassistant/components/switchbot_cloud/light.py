@@ -17,8 +17,9 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import AFTER_COMMAND_REFRESH
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 

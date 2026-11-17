@@ -12,6 +12,8 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pysmartyplants import Sensor, SensorUpdate, SmartyPlantsConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.smartyplants.const import (
     CONF_WEBHOOK_SECRET,
@@ -23,9 +25,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID, WEBHOOK_SECRET
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 MOISTURE = "sensor.monstera_soil_moisture"
 TEMPERATURE = "sensor.monstera_temperature"

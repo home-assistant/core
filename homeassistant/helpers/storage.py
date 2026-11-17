@@ -447,10 +447,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                         corrupt_path,
                         err,
                     )
-                    from .issue_registry import (  # noqa: PLC0415
-                        IssueSeverity,
-                        async_create_issue,
-                    )
+                    from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
                     issue_domain = HOMEASSISTANT_DOMAIN
                     if (

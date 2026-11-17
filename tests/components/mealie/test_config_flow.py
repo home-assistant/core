@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mealie.const import CONF_PARSER, DOMAIN
 from homeassistant.config_entries import (
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -5,6 +5,7 @@ from enum import Enum
 from typing import NamedTuple
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
 import pyvera as pv
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.components.vera.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 type SetupCallback = Callable[[pv.VeraController, dict], None]
 

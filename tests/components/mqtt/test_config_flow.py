@@ -13,39 +13,12 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 import probatio
 import pytest
-
-from homeassistant import config_entries
-from homeassistant.components import mqtt
-from homeassistant.components.hassio import AddonError
-from homeassistant.components.mqtt.config_flow import (
-    CONF_CLIENT_KEY_PASSWORD,
-    OTHER_SETTINGS,
-    PWD_NOT_CHANGED,
-    SET_CA_CERT,
-    SET_CLIENT_CERT,
-    TRANSLATION_DESCRIPTION_PLACEHOLDERS,
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockMqttReasonCode,
+    get_schema_suggested_value,
 )
-from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS, DOMAIN
-from homeassistant.components.mqtt.util import learn_more_url
-from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_PROTOCOL,
-    CONF_USERNAME,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-    selector,
-)
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA,
     MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA,
     MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA,
@@ -84,9 +57,38 @@ from .common import (
     MOCK_VALVE_SUBENTRY_DATA_STATE,
     MOCK_WATER_HEATER_SUBENTRY_DATA,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import MockConfigEntry, MockMqttReasonCode, get_schema_suggested_value
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant import config_entries
+from homeassistant.components import mqtt
+from homeassistant.components.hassio import AddonError
+from homeassistant.components.mqtt.config_flow import (
+    CONF_CLIENT_KEY_PASSWORD,
+    OTHER_SETTINGS,
+    PWD_NOT_CHANGED,
+    SET_CA_CERT,
+    SET_CLIENT_CERT,
+    TRANSLATION_DESCRIPTION_PLACEHOLDERS,
+)
+from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS, DOMAIN
+from homeassistant.components.mqtt.util import learn_more_url
+from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    selector,
+)
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 ADD_ON_DISCOVERY_INFO = {
     "addon": "Mosquitto Mqtt Broker",

@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from upb_lib.devices import UpbAddr, UpbDevice
 
 from homeassistant.components.upb.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 LIGHT_ENTITY_ID = "light.test_light"
 

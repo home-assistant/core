@@ -8,6 +8,12 @@ from unittest.mock import patch
 
 import aiodhcpwatcher
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+)
 from scapy import interfaces
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
@@ -38,13 +44,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-)
 
 # connect b8:b7:f1:6d:b5:33 192.168.210.56
 RAW_DHCP_REQUEST = (

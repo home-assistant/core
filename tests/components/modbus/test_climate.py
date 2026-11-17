@@ -1,6 +1,7 @@
 """The tests for the Modbus climate component."""
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -111,8 +112,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
-
-from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 

@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
@@ -23,8 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import create_online_device
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_STREAM_URL = "https://example.com/live.m3u8"
 TEST_IMAGE_BYTES = b"fake-image-bytes"

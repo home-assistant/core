@@ -12,6 +12,7 @@ from aioruckus.const import (
     ERROR_LOGIN_INCORRECT,
 )
 from aioruckus.exceptions import AuthenticationError
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import (
@@ -38,8 +39,6 @@ from . import (
     mock_config_entry,
 )
 
-from tests.common import async_fire_time_changed
-
 
 @contextmanager
 def _patch_success() -> Generator[None]:
@@ -48,7 +47,7 @@ def _patch_success() -> Generator[None]:
         RuckusAjaxApiPatchContext(),
         patch(
             "homeassistant.components.ruckus_unleashed.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -66,7 +65,7 @@ async def test_form(hass: HomeAssistant) -> None:
         RuckusAjaxApiPatchContext(),
         patch(
             "homeassistant.components.ruckus_unleashed.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

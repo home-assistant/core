@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseError
@@ -24,8 +25,6 @@ from .common import (
     mock_setup,
     retrieve_media,
 )
-
-from tests.typing import ClientSessionGenerator
 
 
 class MSEntity(MockTTSEntity):

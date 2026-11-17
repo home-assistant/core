@@ -12,7 +12,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfRatio,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -33,6 +40,42 @@ class HotSpringSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_chlorine",
+        translation_key="freshwater_iq_chlorine",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
+        suggested_display_precision=2,
+        value_fn=lambda spa: spa.freshwater_iq.chlorine,
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_orp",
+        translation_key="freshwater_iq_orp",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+        suggested_display_precision=0,
+        value_fn=lambda spa: spa.freshwater_iq.orp,
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_ph",
+        device_class=SensorDeviceClass.PH,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda spa: spa.freshwater_iq.ph,
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
+    HotSpringSensorEntityDescription(
+        key="freshwater_iq_sensor_life",
+        translation_key="freshwater_iq_sensor_life",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=1,
+        value_fn=lambda spa: spa.freshwater_iq.sensor_life_percentage,
+        exists_fn=lambda spa: spa.freshwater_iq.installed,
+    ),
     HotSpringSensorEntityDescription(
         key="current_temperature",
         translation_key="current_temperature",

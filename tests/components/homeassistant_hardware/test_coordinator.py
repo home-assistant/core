@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from freezegun.api import FrozenDateTimeFactory
 from ha_silabs_firmware_client import FirmwareManifest, ManifestMissing
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
@@ -14,8 +15,6 @@ from homeassistant.components.homeassistant_hardware.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_firmware_update_coordinator_fetching(

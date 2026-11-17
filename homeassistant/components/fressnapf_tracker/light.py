@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FressnapfTrackerConfigEntry
 from .const import DOMAIN
+from .coordinator import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
 from .services import handle_fressnapf_tracker_exception
 
@@ -98,6 +98,17 @@ class FressnapfTrackerLight(FressnapfTrackerEntity, LightEntity):
                 translation_domain=DOMAIN,
                 translation_key=error_type,
             )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the flashlight can currently be used.
+
+        The Fressnapf app disables the flashlight while the tracker is asleep,
+        charging or has an empty battery.
+        """
+        activatable = self.coordinator.data.led_activatable
+        return super().available and activatable is not None and activatable.overall
 
     @property
     @override

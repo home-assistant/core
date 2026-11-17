@@ -35,12 +35,8 @@ from .const import (
     PRECISION_MAPPING_FAMILY_28,
 )
 from .entity import OneWireEntity
-from .onewirehub import (
-    SIGNAL_NEW_DEVICE_CONNECTED,
-    OneWireConfigEntry,
-    OneWireHub,
-    OWDeviceDescription,
-)
+from .model import OWDeviceDescription
+from .onewirehub import SIGNAL_NEW_DEVICE_CONNECTED, OneWireConfigEntry, OneWireHub
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server

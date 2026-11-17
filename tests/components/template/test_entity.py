@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.template import DOMAIN, entity as abstract_entity
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.components.template.const import TemplateService
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -78,7 +78,7 @@ async def test_reload_stops_entity_action_scripts(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     assert not turn_on_script.is_running

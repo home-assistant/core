@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import RPC_COVER_UPDATE_TIME_SEC
+from .const import RPC_COVER_UPDATE_TIME_SEC, ShellyServiceArgument
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -256,14 +256,17 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """If cover is closed."""
-        if not self._positioning and self.status["state"] == "stopped":
-            # A stopped cover without position control only knows the
-            # direction it last travelled in
-            if not (last_direction := self.status.get("last_direction")):
-                return None
-            return cast(str, last_direction) == "close"
+        if not self._positioning:
+            if self.status["state"] == "stopped":
+                # A stopped cover without position control only knows the
+                # direction it last travelled in
+                if not (last_direction := self.status.get("last_direction")):
+                    return None
+                return cast(str, last_direction) == "close"
+            return cast(bool, self.status["state"] == "closed")
 
-        return cast(bool, self.status["state"] == "closed")
+        # Some OEM firmwares report "stopped" instead of "closed" at position 0
+        return cast(bool, self.status["current_pos"] == 0)
 
     @property
     @override
@@ -316,6 +319,7 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         finally:
             self._update_task = None
 
+    @callback
     @override
     def _update_callback(self) -> None:
         """Handle device update. Use a task when opening/closing is in progress."""
@@ -375,7 +379,9 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
         """Move the cover and its tilt to a specific position in a single call."""
         await self.coordinator.device.cover_set_position(
-            self._id, pos=kwargs[ATTR_POSITION], slat_pos=kwargs[ATTR_TILT_POSITION]
+            self._id,
+            pos=kwargs[ShellyServiceArgument.POSITION],
+            slat_pos=kwargs[ShellyServiceArgument.TILT_POSITION],
         )
 
     @rpc_call

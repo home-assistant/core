@@ -24,8 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.event_type import EventType
 
 from . import rest_api, websocket_api
-from .const import (  # noqa: F401
-    ATTR_MESSAGE,
+from .const import (
     DOMAIN,
     LOGBOOK_ENTRY_CONTEXT_ID,
     LOGBOOK_ENTRY_DOMAIN,
@@ -37,13 +36,29 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_RUN_ID,
     LOGBOOK_ENTRY_SOURCE,
 )
-from .helpers import async_log_entry, log_entry  # noqa: F401
+from .helpers import async_log_entry, log_entry
 from .models import LazyEventPartialState, LogbookConfig
 from .services import async_setup_services
 
 CONFIG_SCHEMA = probatio.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
+
+__all__ = [
+    "DOMAIN",
+    "LOGBOOK_ENTRY_CONTEXT_ID",
+    "LOGBOOK_ENTRY_DOMAIN",
+    "LOGBOOK_ENTRY_ENTITY_ID",
+    "LOGBOOK_ENTRY_ICON",
+    "LOGBOOK_ENTRY_ITEM_ID",
+    "LOGBOOK_ENTRY_MESSAGE",
+    "LOGBOOK_ENTRY_NAME",
+    "LOGBOOK_ENTRY_RUN_ID",
+    "LOGBOOK_ENTRY_SOURCE",
+    "LazyEventPartialState",
+    "async_log_entry",
+    "log_entry",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

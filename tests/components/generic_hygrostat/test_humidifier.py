@@ -6,10 +6,20 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
-from homeassistant.components.generic_hygrostat import DOMAIN
+from homeassistant.components.generic_hygrostat.const import (
+    DOMAIN,
+    GenericHygrostatEntityStateAttribute,
+)
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
@@ -40,19 +50,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.switch.common import MockSwitch
 
 ENTITY = "humidifier.test"
 ENT_SENSOR = "sensor.test"
 ENT_SWITCH = "switch.test"
-ATTR_SAVED_HUMIDITY = "saved_humidity"
 MIN_HUMIDITY = 20
 MAX_HUMIDITY = 65
 TARGET_HUMIDITY = 42
@@ -1552,7 +1554,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
                     ATTR_ENTITY_ID: ENTITY,
                     ATTR_HUMIDITY: "40",
                     ATTR_MODE: MODE_AWAY,
-                    ATTR_SAVED_HUMIDITY: "50",
+                    GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY: "50",
                 },
             ),
         ),
@@ -1577,7 +1579,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
 
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 40
-    assert state.attributes[ATTR_SAVED_HUMIDITY] == 50
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 50
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.state == STATE_OFF
 
@@ -1738,7 +1740,7 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.attributes[ATTR_HUMIDITY] == 32
-    assert state.attributes[ATTR_SAVED_HUMIDITY] == 40
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 40
     assert state.state == STATE_OFF
 
     # Change target humidity
@@ -1753,7 +1755,7 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     # Current target humidity not changed
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 32
-    assert state.attributes[ATTR_SAVED_HUMIDITY] == 42
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 42
     assert state.attributes[ATTR_MODE] == MODE_AWAY
     assert state.state == STATE_OFF
 
@@ -1769,7 +1771,7 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
     # Target humidity changed to away_humidity
     state = hass.states.get("humidifier.test_hygrostat")
     assert state.attributes[ATTR_HUMIDITY] == 42
-    assert state.attributes[ATTR_SAVED_HUMIDITY] == 32
+    assert state.attributes[GenericHygrostatEntityStateAttribute.SAVED_HUMIDITY] == 32
     assert state.attributes[ATTR_MODE] == MODE_NORMAL
     assert state.state == STATE_OFF
 

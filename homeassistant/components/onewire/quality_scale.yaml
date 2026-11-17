@@ -73,32 +73,21 @@ rules:
     status: done
     comment: The bus is scanned for new devices at regular interval
   discovery-update-info:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: >
+      owserver has no unique identifier to reliably match a discovered server
+      to an existing entry. Discovered entries store a hostname (mDNS or app),
+      not an IP address.
   repair-issues:
     status: exempt
     comment: No repairs available
-  docs-use-cases:
-    status: todo
-    comment: Under review
-  docs-supported-devices:
-    status: todo
-    comment: Under review
-  docs-supported-functions:
-    status: todo
-    comment: Under review
-  docs-data-update:
-    status: todo
-    comment: Under review
-  docs-known-limitations:
-    status: todo
-    comment: Under review
-  docs-troubleshooting:
-    status: todo
-    comment: Under review
-  docs-examples:
-    status: todo
-    comment: Under review
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   ## Platinum
   async-dependency: done

@@ -5,6 +5,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import pi_hole
@@ -15,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import CONFIG_DATA_DEFAULTS, ZERO_DATA_V6, _create_mocked_hole, _patch_init_hole
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("api_version", [5, 6])

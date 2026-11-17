@@ -13,6 +13,7 @@ from cookidoo_api.exceptions import (
     CookidooRequestException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -28,8 +29,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
 from .test_init import setup_integration
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_USER_STEP = {
     CONF_EMAIL: EMAIL,

@@ -29,11 +29,7 @@ async def async_send_single_command(host: str, port: int, command: str) -> list[
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={
-                "host": host,
-                "port": str(port),
-                "error": str(err),
-            },
+            translation_placeholders={"host": host, "port": str(port)},
         ) from err
     received = b""
     try:
@@ -55,7 +51,6 @@ async def async_send_single_command(host: str, port: int, command: str) -> list[
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="send_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
     finally:
         writer.close()

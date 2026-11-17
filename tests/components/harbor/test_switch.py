@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from harbor import HarborCommandError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import SETTINGS_PAYLOAD, SETTINGS_TOPIC, emit_message
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_ON_ENTITY = "switch.harbor_camera_1234567890_camera"
 VIDEO_FLIP_ENTITY = "switch.harbor_camera_1234567890_flip_image"

@@ -6,6 +6,13 @@ from unittest.mock import patch
 import attr
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner,
+    MockBleakClient,
+    _get_manager,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import HaBluetoothConnector
@@ -25,11 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from . import FakeRemoteScanner, MockBleakClient, _get_manager
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures(
@@ -73,7 +75,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -102,7 +104,7 @@ async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -141,7 +143,7 @@ async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -191,7 +193,7 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -219,7 +221,7 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -260,7 +262,7 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -305,7 +307,7 @@ async def test_async_step_integration_discovery_during_onboarding(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.onboarding.async_is_onboarded",
@@ -562,7 +564,7 @@ async def test_async_step_user_linux_adapter_replace_ignored(
     with (
         patch("homeassistant.components.bluetooth.async_setup", return_value=True),
         patch(
-            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

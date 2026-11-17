@@ -21,8 +21,6 @@ class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        await self.async_set_unique_id(DOMAIN)
-
         if user_input is None:
             return self.async_show_form(step_id="user")
 

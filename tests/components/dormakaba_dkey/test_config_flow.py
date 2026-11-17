@@ -6,6 +6,7 @@ from bleak.exc import BleakError
 from py_dormakaba_dkey import errors as dkey_errors
 from py_dormakaba_dkey.models import AssociationData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dormakaba_dkey.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from . import DKEY_DISCOVERY_INFO, NOT_DKEY_DISCOVERY_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:
@@ -210,7 +209,7 @@ async def _test_common_success(hass: HomeAssistant, result: FlowResult) -> None:
         ) as mock_associate,
         patch(
             "homeassistant.components.dormakaba_dkey.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -391,7 +390,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ) as mock_associate,
         patch(
             "homeassistant.components.dormakaba_dkey.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

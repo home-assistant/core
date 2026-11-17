@@ -26,6 +26,13 @@ class GetDateTimeTool(Tool):
     integration = DOMAIN
 
     @override
+    def __eq__(self, other: object) -> bool:
+        """All instances of this stateless tool are interchangeable."""
+        if type(self) is type(other) is GetDateTimeTool:
+            return True
+        return NotImplemented
+
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,

@@ -6,17 +6,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from PyTado.http import DeviceActivationStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 import requests_mock
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    load_json_object_fixture,
-)
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def mock_tado_api() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock the setup entry."""
     with patch(
-        "homeassistant.components.tado.async_setup_entry", return_value=True
+        "homeassistant.components.tado.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -63,7 +63,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def init_integration(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+def zone_states_overrides() -> dict[str, str]:
+    """Return zone state fixtures to use instead of the ones in zone_states.json."""
+    return {}
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zone_states_overrides: dict[str, str],
+):
     """Set up the tado integration in Home Assistant."""
 
     token_fixture = "token.json"
@@ -108,6 +118,14 @@ async def init_integration(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
 
     # Zone Default Overlay
     zone_def_overlay = "zone_default_overlay.json"
+
+    zone_states = await async_load_json_object_fixture(
+        hass, zone_states_fixture, DOMAIN
+    )
+    for zone_id, fixture in zone_states_overrides.items():
+        zone_states["zoneStates"][zone_id] = await async_load_json_object_fixture(
+            hass, fixture, DOMAIN
+        )
 
     with (
         requests_mock.mock() as m,
@@ -174,7 +192,7 @@ async def init_integration(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zoneStates",
-            text=await async_load_fixture(hass, zone_states_fixture, DOMAIN),
+            json=zone_states,
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/6/capabilities",

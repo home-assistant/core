@@ -51,7 +51,11 @@ from .const import (
     DOMAIN,
     LEGACY_ZEROCONF_PORT,
 )
-from .helpers import get_config_entry_unique_id, get_zha_gateway
+from .helpers import (
+    async_update_device_path,
+    get_config_entry_unique_id,
+    get_zha_gateway,
+)
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -329,7 +333,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         return self.async_show_form(
             step_id="verify_radio",
             description_placeholders={
-                CONF_NAME: self._radio_mgr.radio_type.description,
+                "name": self._radio_mgr.radio_type.description,
                 "docs_recommended_adapters_url": (
                     "https://www.home-assistant.io/integrations/zha/#recommended-zigbee-radio-adapters-and-modules"
                 ),
@@ -797,9 +801,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
-
-        self._set_confirm_only()
-
         zha_config_entries = self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False
         )
@@ -829,9 +830,32 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
             for entry in zha_config_entries:
                 path = entry.data.get(CONF_DEVICE, {}).get(CONF_DEVICE_PATH)
+                if path is None:
+                    continue
 
                 # Abort discovery if the device path is already configured
-                if path is not None and path in current_device_paths:
+                if path in current_device_paths:
+                    return self.async_abort(
+                        reason="single_instance_allowed",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
+
+                # A configured radio turning up at another path has moved, between the
+                # host and a serial proxy or between proxies. Its entry follows it.
+                if (
+                    usb.async_find_moved_serial_port(self.hass, path)
+                    == self._radio_mgr.device_path
+                ):
+                    async_update_device_path(
+                        self.hass, entry, self._radio_mgr.device_path
+                    )
+                    if entry.state in (
+                        ConfigEntryState.LOADED,
+                        ConfigEntryState.SETUP_RETRY,
+                        ConfigEntryState.SETUP_ERROR,
+                    ):
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
                     return self.async_abort(
                         reason="single_instance_allowed",
                         translation_domain=HOMEASSISTANT_DOMAIN,
@@ -870,7 +894,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                CONF_NAME: self.context.get("title_placeholders", {}).get(
+                "name": self.context.get("title_placeholders", {}).get(
                     CONF_NAME, self._radio_mgr.device_path or ""
                 )
             },
@@ -901,7 +925,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         self._radio_mgr.device_path = dev_path
         self.context["title_placeholders"] = {
-            CONF_NAME: description
+            "name": description
             or usb.human_readable_device_name(
                 dev_path,
                 serial_number,
@@ -969,7 +993,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             device_path=device_path,
         )
 
-        self.context["title_placeholders"] = {CONF_NAME: title}
+        self.context["title_placeholders"] = {"name": title}
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_settings = DEVICE_SCHEMA(
@@ -1005,7 +1029,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self._radio_mgr.radio_type = radio_type
         self._radio_mgr.device_path = device_path
         self._radio_mgr.device_settings = device_settings
-        self.context["title_placeholders"] = {CONF_NAME: name}
+        self.context["title_placeholders"] = {"name": name}
 
         return await self.async_step_confirm()
 
@@ -1137,6 +1161,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return self.async_abort(reason="reconfigure_successful")
 
+    @callback
     @override
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""

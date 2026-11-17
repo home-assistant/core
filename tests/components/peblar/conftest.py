@@ -16,12 +16,15 @@ from peblar import (
     PeblarVersions,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -41,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.peblar.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.peblar.async_setup_entry", return_value=None):
         yield
 
 

@@ -1,14 +1,15 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
 import asyncio
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import override
 
+import aiohttp
 from aioindiallsky import (
     ExposureData,
+    IndiAllSkyAuthError,
     IndiAllSkyClient,
     IndiAllSkyError,
     MediaData,
@@ -16,12 +17,21 @@ from aioindiallsky import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
 from .util import get_ssl_context
@@ -54,6 +64,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
 
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
         """Initialize the coordinator."""
+        self.session = async_create_clientsession(
+            hass,
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            cookie_jar=aiohttp.CookieJar(unsafe=True),
+        )
         self.client = IndiAllSkyClient(
             host=entry.data[CONF_HOST],
             port=int(entry.data[CONF_PORT]),
@@ -61,7 +76,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 entry.data[CONF_SSL],
                 entry.data[CONF_VERIFY_SSL],
             ),
-            session=async_get_clientsession(hass),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            session=self.session,
         )
         self.latest_exposure: ExposureData | None = None
         self.latest_keogram: MediaData | None = None
@@ -147,8 +164,12 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         while True:
             self._sensor_fetch_queued = False
             try:
-                with suppress(IndiAllSkyError):
+                try:
                     await self.client.fetch_sensors()
+                except IndiAllSkyAuthError:
+                    self.config_entry.async_start_reauth(self.hass)
+                except IndiAllSkyError:
+                    pass
             finally:
                 if not self._sensor_fetch_queued:
                     self._sensor_fetch_task = None
@@ -197,6 +218,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("latestkeogram")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
             image_bytes = None
@@ -244,6 +268,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("lateststartrail")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
             image_bytes = None
@@ -253,7 +280,29 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         """Handle new sensor_update event from WebSocket stream."""
         if self.latest_sensor is not None:
             merged_sensors = dict(self.latest_sensor.sensors)
-            merged_sensors.update(sensor.sensors)
+            for key, val in sensor.sensors.items():
+                existing = merged_sensors.get(key)
+                if isinstance(existing, dict):
+                    if isinstance(val, dict):
+                        merged_entry = {
+                            **existing,
+                            **{
+                                k: v
+                                for k, v in val.items()
+                                if k == "value" or v is not None
+                            },
+                        }
+                        if (
+                            val.get("unit") is not None
+                            and val.get("unit") != existing.get("unit")
+                            and "value" not in val
+                        ):
+                            merged_entry["value"] = None
+                        merged_sensors[key] = merged_entry
+                    else:
+                        merged_sensors[key] = {**existing, "value": val}
+                else:
+                    merged_sensors[key] = val
 
             merged_temp = (
                 list(sensor.raw_temp)
@@ -270,27 +319,89 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             if sensor.raw_data:
                 merged_data.update(sensor.raw_data)
 
+            has_declared_temp_unit = (
+                bool(sensor.raw_data and sensor.raw_data.get("temp_unit"))
+                or any(
+                    isinstance(entry := sensor.sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
+                    )
+                )
+                or sensor.temp_unit != "°C"
+            )
+            old_temp_unit = self.latest_sensor.temp_unit
+            new_temp_unit = (
+                sensor.temp_unit if has_declared_temp_unit else old_temp_unit
+            )
+
+            has_retained_declared_temp_unit = (
+                has_declared_temp_unit
+                or bool(merged_data and merged_data.get("temp_unit"))
+                or new_temp_unit != "°C"
+                or any(
+                    isinstance(entry := merged_sensors.get(key), dict)
+                    and bool(entry.get("unit"))
+                    for key in (
+                        "dew_point",
+                        "frost_point",
+                        "heat_index",
+                        "camera_temp",
+                        "sensor_temp_10",
+                        "cpu_temperature",
+                    )
+                )
+            )
+
+            if has_retained_declared_temp_unit:
+                for key, val in sensor.sensors.items():
+                    entry = merged_sensors.get(key)
+                    if (
+                        isinstance(entry, dict)
+                        and entry.get("unit") in ("°C", "°F", "K")
+                        and entry.get("unit") != new_temp_unit
+                        and (not isinstance(val, dict) or val.get("unit") is None)
+                        and (not isinstance(val, dict) or "value" in val)
+                    ):
+                        merged_sensors[key] = {**entry, "unit": new_temp_unit}
+
+            def _retain_temp(
+                new_val: float | None, old_val: float | None
+            ) -> float | None:
+                if new_val is not None:
+                    return new_val
+                if old_val is None or old_temp_unit == new_temp_unit:
+                    return old_val
+                return round(
+                    TemperatureConverter.convert(old_val, old_temp_unit, new_temp_unit),
+                    2,
+                )
+
             self.latest_sensor = SensorData(
                 last_update=sensor.last_update or self.latest_sensor.last_update,
                 sensors=merged_sensors,
                 raw_temp=merged_temp,
                 raw_user=merged_user,
                 raw_data=merged_data,
+                temp_unit=new_temp_unit,
                 dew_heater=sensor.dew_heater
                 if sensor.dew_heater is not None
                 else self.latest_sensor.dew_heater,
-                dew_point=sensor.dew_point
-                if sensor.dew_point is not None
-                else self.latest_sensor.dew_point,
-                frost_point=sensor.frost_point
-                if sensor.frost_point is not None
-                else self.latest_sensor.frost_point,
+                dew_point=_retain_temp(sensor.dew_point, self.latest_sensor.dew_point),
+                frost_point=_retain_temp(
+                    sensor.frost_point, self.latest_sensor.frost_point
+                ),
                 fan_duty_cycle=sensor.fan_duty_cycle
                 if sensor.fan_duty_cycle is not None
                 else self.latest_sensor.fan_duty_cycle,
-                heat_index=sensor.heat_index
-                if sensor.heat_index is not None
-                else self.latest_sensor.heat_index,
+                heat_index=_retain_temp(
+                    sensor.heat_index, self.latest_sensor.heat_index
+                ),
                 wind_direction=sensor.wind_direction
                 if sensor.wind_direction is not None
                 else self.latest_sensor.wind_direction,
@@ -303,9 +414,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 camera_sqm_adu=sensor.camera_sqm_adu
                 if sensor.camera_sqm_adu is not None
                 else self.latest_sensor.camera_sqm_adu,
-                cpu_temperature=sensor.cpu_temperature
-                if sensor.cpu_temperature is not None
-                else self.latest_sensor.cpu_temperature,
+                cpu_temperature=_retain_temp(
+                    sensor.cpu_temperature, self.latest_sensor.cpu_temperature
+                ),
             )
         else:
             self.latest_sensor = sensor
@@ -332,6 +443,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             if not self.client.is_connected:
                 await self.client.connect()
             await self.client.fetch_sensors()
+        except IndiAllSkyAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

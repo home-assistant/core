@@ -8,13 +8,15 @@ from unittest.mock import patch
 import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
@@ -25,12 +27,12 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,9 +46,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_1 = {
     "hostname": "client_1",
@@ -1531,8 +1530,8 @@ async def test_outlet_switches(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
@@ -1547,8 +1546,8 @@ async def test_outlet_switches(
     # Turn on outlet
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
@@ -2030,8 +2029,8 @@ async def test_switch_turn_on_request_failed(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN
@@ -2057,8 +2056,8 @@ async def test_switch_turn_off_request_failed(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.block_client_1_blocked"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.block_client_1_blocked"},
             blocking=True,
         )
     assert exc_info.value.translation_domain == DOMAIN

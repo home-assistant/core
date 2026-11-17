@@ -362,7 +362,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._tts_queued = True
 
         if (
-            self._queue["count"] >= 1
+            self._queue["items"]
             and self._queue["items"][0]["data_kind"] == "pipe"
             and self._queue["items"][0]["title"] in KNOWN_PIPES
         ):  # if playing a pipe, set source to forward controls

@@ -1,7 +1,10 @@
 """Tests for the NRGkick integration initialization."""
 
+from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from nrgkick_api import (
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
@@ -12,16 +15,16 @@ from nrgkick_api import (
     NRGkickUnreachableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nrgkick.const import DOMAIN
+from homeassistant.components.nrgkick.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -124,3 +127,102 @@ async def test_device(
     )
     assert device is not None
     assert device == snapshot
+
+
+async def test_json_api_disabled_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a repair issue is created and a reload recovers once the API is enabled."""
+    mock_nrgkick_api.get_info.side_effect = NRGkickAPIDisabledError("API disabled")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    issue_id = f"json_api_disabled_{mock_config_entry.entry_id}"
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == mock_config_entry.entry_id
+    assert issue.translation_key == "json_api_disabled"
+    assert issue.translation_placeholders == {"device_name": mock_config_entry.title}
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert not issue.is_fixable
+
+    # The user enables the JSON API again and reloads the integration.
+    mock_nrgkick_api.get_info.side_effect = None
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_json_api_disabled_at_runtime(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a repair issue while running, which is removed once the API is enabled."""
+    await setup_integration(hass, mock_config_entry)
+    issue_id = f"json_api_disabled_{mock_config_entry.entry_id}"
+    entity_id = "sensor.nrgkick_test_status"
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_nrgkick_api.get_info.side_effect = NRGkickAPIDisabledError("API disabled")
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    mock_nrgkick_api.get_info.side_effect = None
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state != STATE_UNAVAILABLE
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(
+            NRGkickUnreachableError("Connection refused"),
+            logging.INFO,
+            id="unreachable",
+        ),
+        pytest.param(NRGkickTimeoutError("Timeout"), logging.ERROR, id="timeout"),
+    ],
+)
+async def test_refresh_log_level(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    level: int,
+) -> None:
+    """Test an unreachable device is logged at info level."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_nrgkick_api.get_info.side_effect = exception
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.nrgkick.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]

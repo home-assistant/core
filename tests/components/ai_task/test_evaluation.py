@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task
@@ -23,9 +25,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 QUESTIONS: dict[str, ai_task.EvaluationQuestion] = {
     "delivered": {"type": "noul", "instructions": "Has the package arrived?"},

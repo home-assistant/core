@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from pyschlage.exceptions import Error as PyschlageError, NotAuthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.schlage.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockSchlageConfigEntry
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

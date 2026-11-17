@@ -1,6 +1,6 @@
 """Anglian Water data coordinator."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, override
 
@@ -8,6 +8,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    HourlyReadingsUnavailableError,
     InvalidGrantError,
     UnknownEndpointError,
 )
@@ -26,7 +27,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
@@ -71,9 +72,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
         except ConsentRequiredError as err:
-            async_create_consent_required_issue(
-                self.hass, self.config_entry.data[CONF_ACCOUNT_NUMBER]
-            )
+            async_create_consent_required_issue(self.hass, self.config_entry)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="consent_required",
@@ -89,6 +88,11 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="service_unavailable",
                 retry_after=60.0,
+            ) from err
+        except HourlyReadingsUnavailableError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="hourly_readings_unavailable",
             ) from err
         else:
             async_delete_consent_required_issue(
@@ -141,27 +145,9 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                     continue
                 start = dt_util.as_local(parsed_read_at) - timedelta(hours=1)
                 _LOGGER.debug("Getting statistics at %s", start)
-                stats: dict[str, list[Any]] = {}
-                for end in (start + timedelta(seconds=1), None):
-                    stats = await get_instance(self.hass).async_add_executor_job(
-                        statistics_during_period,
-                        self.hass,
-                        start,
-                        end,
-                        {
-                            usage_statistic_id,
-                        },
-                        "hour",
-                        None,
-                        {"sum"},
-                    )
-                    if stats:
-                        break
-                    if end:
-                        _LOGGER.debug(
-                            "Not found, trying to find oldest statistic after %s",
-                            start,
-                        )
+                stats = await get_instance(self.hass).async_add_executor_job(
+                    self._get_statistics, start, usage_statistic_id
+                )
 
                 if not stats or not stats.get(usage_statistic_id):
                     _LOGGER.debug(
@@ -218,3 +204,29 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 "Adding %s statistics for %s", len(usage_statistics), usage_statistic_id
             )
             async_add_external_statistics(self.hass, usage_metadata, usage_statistics)
+
+    def _get_statistics(
+        self, start: datetime, statistic_id: str
+    ) -> dict[str, list[Any]]:
+        """Get the statistic at start, or the oldest statistic after start."""
+        stats: dict[str, list[Any]] = {}
+        for end in (start + timedelta(seconds=1), None):
+            stats = statistics_during_period(
+                self.hass,
+                start,
+                end,
+                {
+                    statistic_id,
+                },
+                "hour",
+                None,
+                {"sum"},
+            )
+            if stats:
+                break
+            if end:
+                _LOGGER.debug(
+                    "Not found, trying to find oldest statistic after %s",
+                    start,
+                )
+        return stats

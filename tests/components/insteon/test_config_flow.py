@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.insteon.config_flow import (
@@ -32,8 +33,6 @@ from .const import (
     PATCH_CONNECTION,
     PATCH_USB_LIST,
 )
-
-from tests.common import MockConfigEntry
 
 USB_PORTS = {"/dev/ttyUSB0": "/dev/ttyUSB0", MOCK_DEVICE: MOCK_DEVICE}
 
@@ -90,7 +89,7 @@ async def _device_form(
         ),
         patch(
             PATCH_ASYNC_SETUP_ENTRY,
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)

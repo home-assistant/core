@@ -7,12 +7,13 @@ from functools import lru_cache
 import re
 from typing import TYPE_CHECKING, Final, TypedDict
 
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from lru import LRU
 
 from homeassistant.core import callback
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 
-from .models import BluetoothCallback, BluetoothServiceInfoBleak
+from .models import BluetoothCallback
 
 if TYPE_CHECKING:
     from bleak.backends.scanner import AdvertisementData

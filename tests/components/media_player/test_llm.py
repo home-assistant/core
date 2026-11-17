@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -28,8 +29,6 @@ from homeassistant.helpers import (
     llm,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_mock_service
 
 ENTITY_ID = "media_player.test"
 SEARCH_PLAY_FEATURES = (

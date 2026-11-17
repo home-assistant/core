@@ -9,6 +9,7 @@ from pysmartyplants import (
     SmartyPlantsForbiddenError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -18,8 +19,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ACCOUNT_ID, API_KEY, WEBHOOK_ID, WEBHOOK_SECRET
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_API_KEY: API_KEY}
 NEW_API_KEY = "sp_rotated_key_87654321"

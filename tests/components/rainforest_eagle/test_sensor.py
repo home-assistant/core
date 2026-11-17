@@ -6,14 +6,13 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.rainforest_eagle.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_200_RESPONSE_WITH_PRICE, MOCK_200_RESPONSE_WITHOUT_PRICE
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensors_200(hass: HomeAssistant, setup_rainforest_200) -> None:

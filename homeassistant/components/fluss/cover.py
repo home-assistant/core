@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from fluss_api import FlussApiClientError
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
@@ -12,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FlussApiClientError, FlussConfigEntry
+from .coordinator import FlussConfigEntry
 from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1

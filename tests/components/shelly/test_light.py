@@ -507,7 +507,7 @@ async def test_rpc_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC light."""
-    entity_id = f"{LIGHT_DOMAIN}.test_light_0"
+    entity_id = f"{LIGHT_DOMAIN}.test_name_test_light_0"
     monkeypatch.delitem(mock_rpc_device.status, "switch:0")
     await init_integration(hass, 2)
 
@@ -736,7 +736,7 @@ async def test_rpc_rgbw_device_light_mode_remove_others(
 
     # verify we have 4 lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
-        entity_id = f"light.test_light_{i}"
+        entity_id = f"light.test_name_test_light_{i}"
 
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_ON
@@ -947,7 +947,7 @@ async def test_rpc_cct_light_without_ct_range(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC CCT light without ct_range in the light config."""
-    entity_id = f"{LIGHT_DOMAIN}.living_room_lamp"
+    entity_id = f"{LIGHT_DOMAIN}.test_name_living_room_lamp"
 
     config = deepcopy(mock_rpc_device.config)
     config["cct:0"] = {"id": 0, "name": "Living room lamp"}
@@ -1107,7 +1107,7 @@ async def test_rpc_ledstrip_light(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name_ledstrip_0"
+    entity_id = f"{LIGHT_DOMAIN}.test_name"
 
     await init_integration(hass, 4)
 
@@ -1230,7 +1230,7 @@ async def test_rpc_ledstrip_light_device_not_initialized(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC LED strip light state update when the device is not initialized."""
-    entity_id = f"{LIGHT_DOMAIN}.test_name_ledstrip_0"
+    entity_id = f"{LIGHT_DOMAIN}.test_name"
 
     await init_integration(hass, 4)
 

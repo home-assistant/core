@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from libpyvivotek.vivotek import VivotekCameraError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vivotek.camera import DEFAULT_FRAMERATE, DEFAULT_NAME
 from homeassistant.components.vivotek.const import (
@@ -25,8 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_DATA = {
     CONF_IP_ADDRESS: "1.2.3.4",

@@ -1,6 +1,13 @@
 """Tests for the Novy Hood light platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.light import (
@@ -18,10 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.novy_cooker_hood_light"
 

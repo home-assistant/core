@@ -11,6 +11,7 @@ from modbus_connection import (
     ModbusTimeoutError,
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.flexit import create_modbus_params
 from homeassistant.components.flexit.const import (
@@ -22,8 +23,6 @@ from homeassistant.components.flexit.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def test_create_tcp_params() -> None:
