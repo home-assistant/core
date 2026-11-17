@@ -2146,7 +2146,7 @@ pyairvisual==2023.08.1
 pyanglianwater==3.3.3
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.9.1
+pyaprilaire==0.10.0
 
 # homeassistant.components.aqvify
 pyaqvify==0.0.12
