@@ -16,8 +16,13 @@ from homeassistant.components.gree.discovery import (
     normalize_identifier,
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import discovery_flow, entity_registry as er
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -417,6 +422,75 @@ async def test_validation_cancelled(
 
 
 @pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
+async def test_shutdown_cancels_selected_device_binding(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
+) -> None:
+    """Shutdown cancels validation and closes the device without enrolling it."""
+    data = device_info_to_data(device().device_info)
+    result = await start_selected_step(hass, step, data)
+    submission = {
+        "pick_device": {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+        "discovery_confirm": {},
+    }[step]
+    started = asyncio.Event()
+
+    async def delayed_bind() -> None:
+        started.set()
+        await asyncio.Event().wait()
+
+    device().bind.side_effect = delayed_bind
+    validation = asyncio.create_task(
+        hass.config_entries.flow.async_configure(result["flow_id"], submission)
+    )
+    await started.wait()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    with pytest.raises(asyncio.CancelledError):
+        async with asyncio.timeout(5):
+            await validation
+
+    device().close.assert_called_once_with()
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+
+
+@pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
+@pytest.mark.parametrize(
+    "shutdown_state",
+    [
+        pytest.param(CoreState.stopping, id="stopping"),
+        pytest.param(CoreState.final_write, id="final-write"),
+        pytest.param(CoreState.stopped, id="stopped"),
+    ],
+)
+async def test_shutdown_rejects_late_selected_device_binding(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery_entry: MockConfigEntry,
+    step: str,
+    shutdown_state: CoreState,
+) -> None:
+    """A bind completing after shutdown begins cannot enroll a device."""
+    data = device_info_to_data(device().device_info)
+    result = await start_selected_step(hass, step, data)
+    submission = {
+        "pick_device": {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+        "discovery_confirm": {},
+    }[step]
+
+    async def late_bind() -> None:
+        hass.set_state(shutdown_state)
+
+    device().bind.side_effect = late_bind
+    with pytest.raises(asyncio.CancelledError):
+        await hass.config_entries.flow.async_configure(result["flow_id"], submission)
+
+    device().close.assert_called_once_with()
+    assert hass.config_entries.async_entries(DOMAIN) == [discovery_entry]
+
+
+@pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
 async def test_shutdown_during_selected_binding(
     hass: HomeAssistant,
     device: MagicMock,
@@ -424,7 +498,7 @@ async def test_shutdown_during_selected_binding(
     discovery_entry: MockConfigEntry,
     step: str,
 ) -> None:
-    """Shutdown cancels active and queued selected bindings before bind."""
+    """Shutdown cancels active and queued scans without waiting for replies."""
     await hass.async_start()
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -453,11 +527,10 @@ async def test_shutdown_during_selected_binding(
     device.side_effect = [first_bound_device, second_bound_device]
 
     started = asyncio.Event()
-    release = asyncio.Event()
 
     async def delayed_scan(**kwargs: Any) -> list[Any]:
         started.set()
-        await release.wait()
+        await asyncio.Event().wait()
         return [first_candidate.device_info, second_candidate.device_info]
 
     active = Mock(scan=AsyncMock(side_effect=delayed_scan), close=Mock())
@@ -486,10 +559,10 @@ async def test_shutdown_during_selected_binding(
         await scan_requests.get()
 
         await hass.async_stop()
-        release.set()
-        results = await asyncio.gather(
-            active_selection, queued_selection, return_exceptions=True
-        )
+        async with asyncio.timeout(5):
+            results = await asyncio.gather(
+                active_selection, queued_selection, return_exceptions=True
+            )
 
     assert all(isinstance(result, asyncio.CancelledError) for result in results)
     active.scan.assert_awaited_once()

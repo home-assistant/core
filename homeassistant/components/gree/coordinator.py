@@ -40,11 +40,24 @@ type GreeConfigEntry = ConfigEntry[DeviceDataUpdateCoordinator]
 
 
 async def async_bind_device(hass: HomeAssistant, device: AirConditionerDevice) -> None:
-    """Open the scan-gated firmware window and bind unless HA is shutting down."""
-    await async_get_discovery(hass).async_scan(wait_for=0)
-    if hass.is_stopping or hass.state is CoreState.stopped:
-        raise asyncio.CancelledError
-    await device.bind()
+    """Open the firmware discovery window and cancel binding on shutdown."""
+    task = asyncio.current_task()
+
+    @callback
+    def _async_stop(_event: Event) -> None:
+        if task is not None:
+            task.cancel()
+
+    unsub_stop = hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    try:
+        await async_get_discovery(hass).async_scan(wait_for=0)
+        if hass.state in (CoreState.stopping, CoreState.final_write, CoreState.stopped):
+            raise asyncio.CancelledError
+        await device.bind()
+        if hass.state in (CoreState.stopping, CoreState.final_write, CoreState.stopped):
+            raise asyncio.CancelledError
+    finally:
+        unsub_stop()
 
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
