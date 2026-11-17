@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -225,7 +226,7 @@ async def test_real_device_controls_after_dependency_upgrade(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_OFF,
-                {ATTR_ENTITY_ID: panel_light},
+                {TargetKey.ENTITY_ID: panel_light},
                 blocking=True,
             )
             assert commands[-1]["Lig"] == 0
@@ -234,7 +235,7 @@ async def test_real_device_controls_after_dependency_upgrade(
             await hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_OFF,
-                {ATTR_ENTITY_ID: xfan},
+                {TargetKey.ENTITY_ID: xfan},
                 blocking=True,
             )
             assert commands[-1]["Blo"] == 0

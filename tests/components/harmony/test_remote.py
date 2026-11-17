@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
@@ -353,7 +353,7 @@ async def test_change_channel(
         DOMAIN,
         HarmonyService.CHANGE_CHANNEL,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_REMOTE,
+            TargetKey.ENTITY_ID: ENTITY_REMOTE,
             HarmonyServiceArgument.CHANNEL: 100,
         },
         blocking=True,
@@ -382,7 +382,7 @@ async def test_sync(
     await hass.services.async_call(
         DOMAIN,
         HarmonyService.SYNC,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_REMOTE},
+        {TargetKey.ENTITY_ID: ENTITY_REMOTE},
         blocking=True,
     )
     await hass.async_block_till_done()

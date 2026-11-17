@@ -31,6 +31,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import (
     Context,
@@ -171,7 +172,7 @@ async def test_turn_on_off_toggle(
 
     if toggle:
         await hass.services.async_call(
-            DOMAIN, ScriptService.TOGGLE, {ATTR_ENTITY_ID: ENTITY_ID}
+            DOMAIN, ScriptService.TOGGLE, {TargetKey.ENTITY_ID: ENTITY_ID}
         )
     else:
         await hass.services.async_call(DOMAIN, split_entity_id(ENTITY_ID)[1])
@@ -690,7 +691,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, context=context
+        DOMAIN, ScriptService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_ID}, context=context
     )
     await asyncio.wait_for(started_flag.wait(), 1)
 
@@ -717,7 +718,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         ScriptService.TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         context=stop_context,
     )
@@ -1888,7 +1889,7 @@ async def test_script_service_changed_entity_id(
     )
 
     await hass.services.async_call(
-        DOMAIN, ScriptService.TURN_ON, {ATTR_ENTITY_ID: "script.custom_entity_id"}
+        DOMAIN, ScriptService.TURN_ON, {TargetKey.ENTITY_ID: "script.custom_entity_id"}
     )
     # Can't block till done while the script is waiting
     await asyncio.wait_for(called.wait(), 1)
