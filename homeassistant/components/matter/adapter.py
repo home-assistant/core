@@ -54,6 +54,30 @@ def _get_child_device_endpoint_ids(node: MatterNode, endpoint_id: int) -> set[in
     }
 
 
+# Recorded as the owner of moved entities that still have their child device
+# names. It never equals a current owner, so the next owner check reloads.
+_RENAME_PENDING = -1
+
+
+def _get_endpoint_and_part_ids(node: MatterNode, endpoint_id: int) -> set[int]:
+    """Return the endpoint's ID with the IDs of its parts, at any depth.
+
+    Unlike `get_compose_child_ids`, this also works for a part that is itself
+    below another part.
+    """
+    endpoint_ids = {endpoint_id}
+    for other_id in node.endpoints:
+        seen = {other_id}
+        parent = node.get_closest_compose_parent(other_id)
+        while parent is not None and parent.endpoint_id not in seen:
+            if parent.endpoint_id == endpoint_id:
+                endpoint_ids.add(other_id)
+                break
+            seen.add(parent.endpoint_id)
+            parent = node.get_closest_compose_parent(parent.endpoint_id)
+    return endpoint_ids
+
+
 def _get_unique_id_prefixes(
     server_info: ServerInfoMessage, node: MatterNode, endpoint_ids: Iterable[int]
 ) -> tuple[str, ...]:
@@ -63,6 +87,15 @@ def _get_unique_id_prefixes(
         for endpoint_id in endpoint_ids
         if endpoint_id in node.endpoints
     )
+
+
+def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
+    """Return the unique_id prefix of the entities of a child device's endpoint."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    for domain, value in child_device.identifiers:
+        if domain == DOMAIN and value.startswith(prefix):
+            return f"{value.removeprefix(prefix)}-"
+    return None
 
 
 def _child_device_endpoint_id(child_device: dr.ChildDeviceEntry) -> int | None:
@@ -150,7 +183,12 @@ class MatterAdapter:
                 return  # race condition
             if get_device_endpoint(endpoint) != endpoint:
                 # A composed device is represented by a single HA device, which is
-                # only removed once its compose parent endpoint is removed.
+                # only removed once its compose parent endpoint is removed. The
+                # server announces the removal of the parts before their parent's,
+                # and the client drops a part together with its compose relation,
+                # so the parent's removal no longer finds it: remove the part's
+                # own entities now.
+                self._remove_endpoint_entities(node, endpoint)
                 return
             # An endpoint split into its own child device is removed on its own,
             # without touching the node (parent) device.
@@ -305,6 +343,15 @@ class MatterAdapter:
                 self._forget_endpoint_entities(
                     node.node_id, _get_child_device_endpoint_ids(node, endpoint_id)
                 )
+                # Entities of the gone endpoint placed on the node device, like
+                # those of a vendor cluster covering the node, aren't removed
+                # with the child device.
+                if unique_id_prefix := _child_device_unique_id_prefix(child_device):
+                    for entity_entry in er.async_entries_for_device(
+                        entity_registry, node_device.id, include_disabled_entities=True
+                    ):
+                        if entity_entry.unique_id.startswith(unique_id_prefix):
+                            entity_registry.async_remove(entity_entry.entity_id)
             device_registry.async_remove_device(child_device.id)
         if moved_entities and node_was_set_up:
             self._schedule_reload()
@@ -317,6 +364,12 @@ class MatterAdapter:
             if (key := (node_id, endpoint_id)) in self._child_device_owners:
                 self._child_device_owners[key] = None
 
+    def _set_rename_pending(self, node_id: int, endpoint_ids: Iterable[int]) -> None:
+        """Record that live entities of the endpoints keep their child names."""
+        for endpoint_id in endpoint_ids:
+            if (key := (node_id, endpoint_id)) in self._child_device_owners:
+                self._child_device_owners[key] = _RENAME_PENDING
+
     def _remove_child_device(
         self,
         node: MatterNode,
@@ -326,7 +379,11 @@ class MatterAdapter:
         """Remove an endpoint's child device with the endpoint's entities.
 
         Entities of other endpoints on it, e.g. of a Power Topology measurement
-        endpoint, stay and are moved to the node device.
+        endpoint, stay and are moved to the node device. As they were created
+        without a name suffix, they are recorded as pending a rename, so the
+        owner check after the node update that follows the removal reloads the
+        config entry to recreate them with the names of the node device, unless
+        their endpoint is removed by then too.
         """
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         device_registry = dr.async_get(self.hass)
@@ -336,10 +393,14 @@ class MatterAdapter:
             *node.get_compose_child_ids(endpoint.endpoint_id),
         }
         unique_id_prefixes = _get_unique_id_prefixes(server_info, node, endpoint_ids)
+        other_endpoint_ids = (
+            _get_child_device_endpoint_ids(node, endpoint.endpoint_id) - endpoint_ids
+        )
         if node_device := device_registry.async_get_device_by_identifier(
             get_node_device_identifier(server_info, node.node_id),
             self.config_entry.entry_id,
         ):
+            live_endpoint_ids: set[int] = set()
             for entity_entry in er.async_entries_for_device(
                 entity_registry, child_device.id, include_disabled_entities=True
             ):
@@ -347,13 +408,23 @@ class MatterAdapter:
                     entity_registry.async_update_entity(
                         entity_entry.entity_id, device_id=node_device.id
                     )
+                    # Disabled entities have no live entity object to rename.
+                    if entity_entry.disabled_by is None:
+                        live_endpoint_ids.update(
+                            other_id
+                            for other_id in other_endpoint_ids
+                            if entity_entry.unique_id.startswith(
+                                _get_unique_id_prefixes(server_info, node, (other_id,))
+                            )
+                        )
             self._set_moved_to_node_device(
-                node.node_id,
-                _get_child_device_endpoint_ids(node, endpoint.endpoint_id)
-                - endpoint_ids,
+                node.node_id, other_endpoint_ids - live_endpoint_ids
             )
+            self._set_rename_pending(node.node_id, live_endpoint_ids)
+        # Remove the endpoint's entities by their unique ID, so also any that are
+        # not on the child device.
+        self._remove_endpoint_entities(node, endpoint)
         device_registry.async_remove_device(child_device.id)
-        self._forget_endpoint_entities(node.node_id, endpoint_ids)
 
     def _forget_endpoint_entities(
         self, node_id: int, endpoint_ids: Iterable[int]
@@ -366,30 +437,21 @@ class MatterAdapter:
     def _remove_endpoint_entities(
         self, node: MatterNode, endpoint: MatterEndpoint
     ) -> None:
-        """Remove the entities of an endpoint and of its composed parts."""
+        """Remove the entities of an endpoint and of its composed parts.
+
+        The entities can be on the node device, a child device or a bridged
+        device, so they are found by their unique ID, which starts with the id
+        of the endpoint's device and the endpoint id.
+        """
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
-        endpoint_ids = {
-            endpoint.endpoint_id,
-            *node.get_compose_child_ids(endpoint.endpoint_id),
-        }
+        endpoint_ids = _get_endpoint_and_part_ids(node, endpoint.endpoint_id)
         unique_id_prefixes = _get_unique_id_prefixes(server_info, node, endpoint_ids)
-        device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
-        # Entities sit on the node device or, e.g. for a Power Topology
-        # measurement endpoint, on one of its child devices.
-        if node_device := device_registry.async_get_device_by_identifier(
-            get_node_device_identifier(server_info, node.node_id),
-            self.config_entry.entry_id,
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
         ):
-            for device in (
-                node_device,
-                *dr.async_entries_for_parent_device(device_registry, node_device.id),
-            ):
-                for entity_entry in er.async_entries_for_device(
-                    entity_registry, device.id, include_disabled_entities=True
-                ):
-                    if entity_entry.unique_id.startswith(unique_id_prefixes):
-                        entity_registry.async_remove(entity_entry.entity_id)
+            if entity_entry.unique_id.startswith(unique_id_prefixes):
+                entity_registry.async_remove(entity_entry.entity_id)
         self._forget_endpoint_entities(node.node_id, endpoint_ids)
 
     def _reload_if_child_device_owners_changed(self, node: MatterNode) -> None:
