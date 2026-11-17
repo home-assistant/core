@@ -1448,7 +1448,7 @@ async def test_protocol_version(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "ProtocolVersion"
+    assert state.state == "1"
 
     attribute = clusters.MeterIdentification.Attributes.ProtocolVersion
 
