@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime as dt
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 import httpx2
 
@@ -16,13 +16,13 @@ from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from mcp.types import InitializeResult, ToolAnnotations
+from mcp.types import InitializeResult, RequestParamsMeta, ToolAnnotations
 import probatio
 
 # Imported by name because the tests patch it on this module.
 from probatio import from_openapi
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -42,9 +42,19 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = dt.timedelta(minutes=30)
 TIMEOUT = 30
+META_USER_ID = "io.home-assistant/user_id"
 
 type TokenManager = Callable[[], Awaitable[str]]
 type ModelContextProtocolConfigEntry = ConfigEntry[ModelContextProtocolCoordinator]
+
+
+def static_token_manager(token: str) -> TokenManager:
+    """Return a token manager for a token that does not expire."""
+
+    async def token_manager() -> str:
+        return token
+
+    return token_manager
 
 
 async def _raise_on_post_error(response: httpx2.Response) -> None:
@@ -201,6 +211,15 @@ class ModelContextProtocolTool(llm.Tool):
         llm_context: llm.LLMContext,
     ) -> llm.ToolResult:
         """Call the tool."""
+        meta: RequestParamsMeta | None = None
+        # Remote servers added by the user must not get a stable user identifier
+        if (
+            self.config_entry.source == SOURCE_HASSIO
+            and llm_context.context
+            and (user_id := llm_context.context.user_id)
+        ):
+            # mypy does not support the extra_items of this TypedDict (PEP 728)
+            meta = cast(RequestParamsMeta, {META_USER_ID: user_id})
         try:
             async with asyncio.timeout(TIMEOUT):
                 async with mcp_client(hass, self.server_url, self.token_manager) as (
@@ -208,7 +227,7 @@ class ModelContextProtocolTool(llm.Tool):
                     _,
                 ):
                     result = await session.call_tool(
-                        tool_input.tool_name, tool_input.tool_args
+                        tool_input.tool_name, tool_input.tool_args, meta=meta
                     )
         except (TimeoutError, httpx2.TimeoutException) as error:
             _LOGGER.debug("Timeout when calling tool: %s", error)

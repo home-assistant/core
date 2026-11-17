@@ -99,9 +99,8 @@ async def test_tai8570_sensors(
     with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
         setup_owproxy_mock_devices(owproxy, [device_id])
 
-    with caplog.at_level(logging.DEBUG):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entity_registry.entities.get("sensor.12_111111111111_temperature") is None
     assert "unreachable sensor /12.111111111111/TAI8570/temperature" in caplog.text
