@@ -15,8 +15,8 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -821,16 +821,23 @@ async def test_no_requested_refresh_after_ha_close(
 
 
 async def test_no_refresh_rescheduled_after_ha_close(hass: HomeAssistant) -> None:
-    """Test a refresh cancelled at close does not schedule the next refresh."""
+    """Test a refresh cancelled at close doesn't poll during or after close."""
     calls = 0
     update_started = asyncio.Event()
 
     async def refresh() -> int:
         nonlocal calls
         calls += 1
-        update_started.set()
-        await asyncio.Event().wait()
+        if calls == 1:
+            update_started.set()
+            await asyncio.Event().wait()
         return calls
+
+    async def slow_close(_: Event) -> None:
+        await asyncio.sleep(0.05)
+        async_fire_time_changed(hass, utcnow() + DEFAULT_UPDATE_INTERVAL * 2)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, slow_close)
 
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,

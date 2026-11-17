@@ -30,8 +30,6 @@ class Debouncer[_R_co]:
         function: optional and can be instantiated later.
         cancel_on_shutdown: drop a pending call when Home Assistant stops,
                    instead of running it during the stop or close stages.
-                   DataUpdateCoordinator always enables this on its request
-                   refresh debouncer, also on one passed in by an integration.
         """
         self.hass = hass
         self.logger = logger
