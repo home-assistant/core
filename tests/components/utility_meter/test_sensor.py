@@ -42,7 +42,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
     UnitOfEnergy,
     UnitOfVolume,
 )
@@ -160,7 +160,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: "select.energy_bill", "option": "offpeak"},
+        {TargetKey.ENTITY_ID: "select.energy_bill", "option": "offpeak"},
         blocking=True,
     )
 
@@ -1663,7 +1663,7 @@ async def test_non_periodically_resetting_meter_with_tariffs(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: "select.energy_bill", "option": "high"},
+        {TargetKey.ENTITY_ID: "select.energy_bill", "option": "high"},
         blocking=True,
     )
     await hass.async_block_till_done()

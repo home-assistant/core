@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -82,7 +82,7 @@ async def test_micromodule_impulse_relay_impulse_length_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: IMPULSE_LENGTH_ENTITY_ID,
+            TargetKey.ENTITY_ID: IMPULSE_LENGTH_ENTITY_ID,
             NumberServiceArgument.VALUE: 2.5,
         },
         blocking=True,
@@ -167,7 +167,7 @@ async def test_shutter_contact2_bypass_timeout_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID,
+            TargetKey.ENTITY_ID: BYPASS_TIMEOUT_ENTITY_ID,
             NumberServiceArgument.VALUE: 10.6,
         },
         blocking=True,
@@ -232,7 +232,7 @@ async def test_smart_plug_power_threshold_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: POWER_THRESHOLD_ENTITY_ID,
+            TargetKey.ENTITY_ID: POWER_THRESHOLD_ENTITY_ID,
             NumberServiceArgument.VALUE: 20,
         },
         blocking=True,
@@ -327,7 +327,7 @@ async def test_smart_plug_enter_duration_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTER_DURATION_ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTER_DURATION_ENTITY_ID,
             NumberServiceArgument.VALUE: 300,
         },
         blocking=True,
@@ -422,7 +422,7 @@ async def test_thermostat_offset_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: OFFSET_ENTITY_ID,
+            TargetKey.ENTITY_ID: OFFSET_ENTITY_ID,
             NumberServiceArgument.VALUE: -2.5,
         },
         blocking=True,
@@ -527,7 +527,7 @@ async def test_smart_plug_led_brightness_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: LED_BRIGHTNESS_ENTITY_ID,
+            TargetKey.ENTITY_ID: LED_BRIGHTNESS_ENTITY_ID,
             NumberServiceArgument.VALUE: 35,
         },
         blocking=True,
@@ -614,7 +614,7 @@ async def test_room_thermostat2_display_numbers_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.room_thermostat_2_display_brightness",
+            TargetKey.ENTITY_ID: "number.room_thermostat_2_display_brightness",
             NumberServiceArgument.VALUE: 80,
         },
         blocking=True,
@@ -623,7 +623,7 @@ async def test_room_thermostat2_display_numbers_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.room_thermostat_2_display_on_time",
+            TargetKey.ENTITY_ID: "number.room_thermostat_2_display_on_time",
             NumberServiceArgument.VALUE: 120,
         },
         blocking=True,
@@ -735,7 +735,7 @@ async def test_dimmer_dimming_speed_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: DIMMER_SPEED_ENTITY_ID,
+            TargetKey.ENTITY_ID: DIMMER_SPEED_ENTITY_ID,
             NumberServiceArgument.VALUE: 3.6,
         },
         blocking=True,
@@ -824,7 +824,7 @@ async def test_dimmer_brightness_range_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 42.4,
         },
         blocking=True,

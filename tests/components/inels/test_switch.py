@@ -5,12 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import (
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    CommonServiceArgument,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import MAC_ADDRESS, UNIQUE_ID, get_entity_id
@@ -124,7 +119,7 @@ async def test_switch_turn_on(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: get_entity_id(entity_config, index)},
+            {TargetKey.ENTITY_ID: get_entity_id(entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -158,7 +153,7 @@ async def test_switch_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: get_entity_id(entity_config, index)},
+            {TargetKey.ENTITY_ID: get_entity_id(entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()
