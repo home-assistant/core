@@ -1,5 +1,6 @@
 """Test Matter sensors."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from chip.clusters import Objects as clusters
@@ -1373,15 +1374,13 @@ async def test_commodity_price_sensor(
     # Update CurrentPrice
     set_node_attribute(
         matter_node,
-        1,
+        3,
         149,
         2,
         {
-            0: 1731661200,
-            1: 1731664800,
+            0: 784976400,
+            1: 784980000,
             2: 32,
-            4: "Heures pleines",
-            5: [],
         },
     )
 
@@ -1395,15 +1394,13 @@ async def test_commodity_price_sensor(
     # Open-ended period: periodEnd is None
     set_node_attribute(
         matter_node,
-        1,
+        3,
         149,
         2,
         {
-            0: 1731661200,
+            0: 784976400,
             1: None,
             2: 25,
-            4: "Tarif courant",
-            5: [],
         },
     )
 
@@ -1415,7 +1412,7 @@ async def test_commodity_price_sensor(
     assert state.attributes["unit_of_measurement"] == "EUR/kWh"
 
     # Null CurrentPrice: keep the last known value
-    set_node_attribute(matter_node, 1, 149, 2, None)
+    set_node_attribute(matter_node, 3, 149, 2, None)
 
     await trigger_subscription_callback(hass, matter_client)
 
@@ -1427,7 +1424,7 @@ async def test_commodity_price_sensor(
     # CurrentPrice without Price
     set_node_attribute(
         matter_node,
-        1,
+        3,
         149,
         2,
         {
@@ -1442,3 +1439,35 @@ async def test_commodity_price_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "0.25"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_commodity_price"])
+@pytest.mark.parametrize(
+    ("attribute_id", "value", "expected_state", "expected_unit"),
+    [
+        pytest.param(0, 1, "0.25", "EUR/kVAh", id="kvah"),
+        pytest.param(1, {0: 752, 1: 2}, "0.25", "SEK/kWh", id="known_currency"),
+        pytest.param(1, {0: 999, 1: 2}, "0.25", None, id="unknown_currency"),
+        pytest.param(1, None, "unknown", None, id="null_currency"),
+    ],
+)
+async def test_commodity_price_sensor_currency_and_tariff(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    attribute_id: int,
+    value: Any,
+    expected_state: str,
+    expected_unit: str | None,
+) -> None:
+    """Test Commodity Price unit when currency or tariff unit changes."""
+    entity_id = "sensor.mock_commodity_price_current_price"
+
+    set_node_attribute(matter_node, 3, 149, attribute_id, value)
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == expected_state
+    assert state.attributes.get("unit_of_measurement") == expected_unit

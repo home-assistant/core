@@ -81,6 +81,27 @@ COMMODITY_PRICE_CURRENCY_MAP = {
     985: "PLN",
     203: "CZK",
     554: "NZD",
+    348: "HUF",
+    946: "RON",
+    975: "BGN",
+    352: "ISK",
+    156: "CNY",
+    410: "KRW",
+    356: "INR",
+    986: "BRL",
+    484: "MXN",
+    710: "ZAR",  # codespell:ignore zar
+    949: "TRY",
+    643: "RUB",
+    702: "SGD",
+    344: "HKD",
+    376: "ILS",
+    784: "AED",
+    682: "SAR",
+    764: "THB",
+    360: "IDR",
+    458: "MYR",
+    608: "PHP",
 }
 
 COMMODITY_PRICE_TARIFF_UNIT_MAP = {
