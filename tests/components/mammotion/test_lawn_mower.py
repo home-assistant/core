@@ -179,6 +179,14 @@ async def test_activity(
             id="resume",
         ),
         pytest.param(
+            SERVICE_START_MOWING,
+            WorkMode.MODE_CHARGING_PAUSE,
+            1,
+            ["resume_execute_task"],
+            1,
+            id="resume-charging-paused",
+        ),
+        pytest.param(
             SERVICE_DOCK,
             WorkMode.MODE_WORKING,
             0,
@@ -296,6 +304,13 @@ async def test_command_not_delivered(
             [TimeoutError],
             "resume_failed",
             id="resume",
+        ),
+        pytest.param(
+            SERVICE_START_MOWING,
+            WorkMode.MODE_CHARGING_PAUSE,
+            [TimeoutError],
+            "resume_failed",
+            id="resume-charging-paused",
         ),
         pytest.param(
             SERVICE_DOCK,

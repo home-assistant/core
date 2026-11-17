@@ -104,7 +104,11 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         try:
-            if self.rpt_dev_status.sys_status == WorkMode.MODE_PAUSE:
+            # A mower recharging mid-job resumes it, as a paused one does.
+            if self.rpt_dev_status.sys_status in (
+                WorkMode.MODE_PAUSE,
+                WorkMode.MODE_CHARGING_PAUSE,
+            ):
                 await self._async_send("resume_execute_task", "resume_failed")
             else:
                 await self._async_send("start_job", "start_failed")
