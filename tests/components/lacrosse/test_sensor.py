@@ -124,7 +124,7 @@ def test_sensor_name_includes_sensor_type(hass: HomeAssistant) -> None:
 
     assert added_sensors[0].name == "Humidity"
     assert added_sensors[0].has_entity_name
-    assert added_sensors[0].device_info["name"] == "Test"
+    assert added_sensors[0].device_info.name == "Test"
 
 
 @pytest.mark.parametrize(
@@ -182,7 +182,7 @@ def test_device_uses_name(
         config,
     )
 
-    assert sensor.device_info["name"] == device_name
+    assert sensor.device_info.name == device_name
     assert sensor.entity_id == f"sensor.{object_id}_{sensor_type}"
 
 
