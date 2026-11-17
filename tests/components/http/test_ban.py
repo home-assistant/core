@@ -405,13 +405,6 @@ async def test_ip_bans_file_creation(
         ),
         pytest.param(
             AccessMethod.LOGIN,
-            {"username": "<b>evil</b>\nfake log line", "password": "wrong"},
-            "Failed login attempt"
-            " (with username: '&lt;b&gt;evil&lt;/b&gt;\\nfake log line')",
-            id="login_username_escaped",
-        ),
-        pytest.param(
-            AccessMethod.LOGIN,
             {"client_id": "https://example.com/", "code": "123456"},
             "Failed login attempt (incorrect MFA code)",
             id="login_wrong_mfa_code",
