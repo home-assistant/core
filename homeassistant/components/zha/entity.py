@@ -1,7 +1,7 @@
 """Entity for Zigbee Home Automation."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 import dataclasses
 from enum import IntFlag
 from functools import partial
@@ -13,13 +13,13 @@ from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import State, callback
+from homeassistant.core import Context, State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import Undefined
+from homeassistant.helpers.typing import StateType, Undefined
 
 from .const import DOMAIN
 from .helpers import (
@@ -37,6 +37,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _context_expected_state: StateType = None
+    _pending_group_context: bool = False
     remove_future: asyncio.Future[Any]
 
     def __init__(self, entity_data: EntityData, *args, **kwargs) -> None:
@@ -150,12 +152,66 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""
 
+    def _iter_group_member_entities(self) -> Iterator[ZHAEntity]:
+        """Yield registered HA entities for all members of this group entity."""
+        group_proxy = self.entity_data.group_proxy
+        assert group_proxy is not None
+        gateway_proxy = group_proxy.gateway_proxy
+        member_unique_ids = set(group_proxy.group.all_member_entity_unique_ids)
+        for ieee in {member.device.ieee for member in group_proxy.group.members}:
+            for entity_ref in gateway_proxy.ha_entity_refs.get(ieee, ()):
+                if entity_ref.entity_data.entity.unique_id in member_unique_ids:
+                    yield entity_ref.ha_entity
+
+    @callback
+    def async_set_group_context(
+        self, context: Context, expected_state: StateType = None
+    ) -> None:
+        """Set context propagated from a ZHA group entity."""
+        if expected_state is None:
+            super().async_set_context(context)
+            self._context_expected_state = None
+        elif self._context is context:
+            self._context_expected_state = expected_state
+
+    @callback
+    @override
+    def async_set_context(self, context: Context) -> None:
+        """Set the context the entity currently operates under."""
+        super().async_set_context(context)
+        self._context_expected_state = None
+        if not self.entity_data.is_group_entity:
+            return
+
+        self._pending_group_context = True
+        for member_entity in self._iter_group_member_entities():
+            member_entity.async_set_group_context(context)
+
+    @callback
+    @override
+    def _async_write_ha_state(self) -> None:
+        """Write the state to the state machine."""
+        if self._pending_group_context:
+            self._pending_group_context = False
+            if self._context is not None:
+                expected_state = self.state
+                for member_entity in self._iter_group_member_entities():
+                    member_entity.async_set_group_context(self._context, expected_state)
+        super()._async_write_ha_state()
+
     @callback
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
+        if (
+            self._context_expected_state is not None
+            and self.state != self._context_expected_state
+        ):
+            self._context = None
+            self._context_set = None
+            self._context_expected_state = None
         self.async_write_ha_state()
 
     @override
@@ -185,11 +241,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 self.async_remove,
             )
         )
-        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
-            self.entity_id,
-            self.entity_data,
-            self.remove_future,
-        )
+        self.entity_data.device_proxy.gateway_proxy.register_entity_reference(self)
 
         if (state := await self.async_get_last_state()) is not None:
             self.restore_external_state_attributes(state)
