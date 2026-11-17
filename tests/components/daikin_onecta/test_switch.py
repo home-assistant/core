@@ -1,7 +1,7 @@
 """Tests for Daikin Onecta switch entities."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from daikin_onecta.models import Characteristic
 import pytest
@@ -107,37 +107,6 @@ async def test_switch_rejects_unknown_state(method: str) -> None:
 
     assert err.value.translation_key == "switch_state_unavailable"
     entity._async_execute_command.assert_not_awaited()
-
-
-async def test_switch_setup_skips_builtin_power_controls() -> None:
-    """Keep climate and water-heater power controls on their native platforms."""
-    management_point = SimpleNamespace(
-        embedded_id="point",
-        management_point_type="climateControl",
-        scalar_characteristics=lambda: {
-            "onOffMode": Characteristic(
-                value="on", settable=True, values=["on", "off"]
-            ),
-            "powerfulMode": Characteristic(
-                value="off", settable=True, values=["on", "off"]
-            ),
-        },
-    )
-    device = SimpleNamespace(
-        device=SimpleNamespace(management_points=[management_point])
-    )
-    config_entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(data={"gateway": device})
-    )
-    async_add_entities = MagicMock()
-
-    with patch(
-        "homeassistant.components.daikin_onecta.switch.SWITCH_DESCRIPTIONS",
-        {"onOffMode": MagicMock(), "powerfulMode": MagicMock()},
-    ):
-        await async_setup_switches(MagicMock(), config_entry, async_add_entities)
-
-    async_add_entities.assert_called_once_with([])
 
 
 async def test_unknown_characteristic_is_skipped() -> None:

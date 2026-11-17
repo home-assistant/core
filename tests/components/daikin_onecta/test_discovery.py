@@ -89,7 +89,6 @@ async def test_missing_values_do_not_change_entity_topology(
                     and name in SWITCH_DESCRIPTIONS
                     and characteristic.settable
                     and {"on", "off"}.issubset(values)
-                    and name not in {"onOffMode", "powerfulMode"}
                 ):
                     characteristic.value = None
                     expected_entities["switch"] = (

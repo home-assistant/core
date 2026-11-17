@@ -38,10 +38,7 @@ def management_point_entity_keys(point: ManagementPoint) -> set[str]:
     for name, characteristic in point.scalar_characteristics().items():
         values = characteristic.values or []
         if characteristic.settable and "on" in values and "off" in values:
-            if name in SWITCH_DESCRIPTIONS and not (
-                name in {"onOffMode", "powerfulMode"}
-                and point.management_point_type in _CONTROL_MANAGEMENT_POINT_TYPES
-            ):
+            if name in SWITCH_DESCRIPTIONS:
                 keys.add(f"switch:{name}")
         elif name in BINARY_SENSOR_DESCRIPTIONS and characteristic.values is None:
             keys.add(f"binary_sensor:{name}")

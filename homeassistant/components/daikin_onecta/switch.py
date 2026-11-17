@@ -25,16 +25,9 @@ async def async_setup_entry(
     """Set up Daikin switches based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     sensors: list[DaikinSwitch] = []
-    supported_management_point_types = {
-        "domesticHotWaterTank",
-        "domesticHotWaterFlowThrough",
-        "climateControl",
-        "climateControlMainZone",
-    }
 
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
-            management_point_type = management_point.management_point_type
             for (
                 value,
                 characteristic,
@@ -46,16 +39,6 @@ async def async_setup_entry(
                     and "off" in values
                     and (description := SWITCH_DESCRIPTIONS.get(value)) is not None
                 ):
-                    if (
-                        value == "onOffMode"
-                        and management_point_type in supported_management_point_types
-                    ):
-                        continue
-                    if (
-                        value == "powerfulMode"
-                        and management_point_type in supported_management_point_types
-                    ):
-                        continue
                     sensors.append(
                         DaikinSwitch(
                             device,
