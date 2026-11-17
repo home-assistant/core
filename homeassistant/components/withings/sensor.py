@@ -570,7 +570,9 @@ SLEEP_SENSORS = [
     ),
     WithingsSleepSensorEntityDescription(
         key="sleep_hrv_start_ms",
-        value_fn=lambda sleep_summary: sleep_summary.average_heart_rate_variability_start,
+        value_fn=lambda sleep_summary: (
+            sleep_summary.average_heart_rate_variability_start
+        ),
         translation_key="heart_rate_variability_start",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,

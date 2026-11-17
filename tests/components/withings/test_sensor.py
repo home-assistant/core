@@ -507,6 +507,7 @@ async def test_apnea_hypopnea_index_no_reading(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+
 async def test_workout_sensors_created_when_existed(
     hass: HomeAssistant,
     withings: AsyncMock,
