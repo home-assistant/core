@@ -1,8 +1,10 @@
 """Test the Fressnapf Tracker light platform."""
 
 from collections.abc import AsyncGenerator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fressnapftracker import (
     FressnapfTrackerError,
     FressnapfTrackerInvalidTokenError,
@@ -11,7 +13,11 @@ from fressnapftracker import (
     TrackerSettings,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -20,7 +26,13 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -216,3 +228,55 @@ async def test_turn_on_off_error(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("brightness", "activatable", "expected_state"),
+    [
+        pytest.param(0, False, STATE_UNAVAILABLE, id="off_not_activatable"),
+        pytest.param(0, True, STATE_OFF, id="off_activatable"),
+        pytest.param(50, False, STATE_UNAVAILABLE, id="on_not_activatable"),
+        pytest.param(50, True, STATE_ON, id="on_activatable"),
+    ],
+)
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_availability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client_init: MagicMock,
+    brightness: int,
+    activatable: bool,
+    expected_state: str,
+) -> None:
+    """Test the flashlight is unavailable if it cannot be activated."""
+    tracker = mock_api_client_init.get_tracker.return_value
+    tracker.led_brightness.value = brightness
+    tracker.led_activatable.overall = activatable
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unavailable_when_update_fails(
+    hass: HomeAssistant,
+    mock_api_client_coordinator: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the flashlight is unavailable when the tracker data cannot be updated."""
+    mock_api_client_coordinator.get_tracker.side_effect = FressnapfTrackerError(
+        "API Error"
+    )
+
+    freezer.tick(timedelta(minutes=16))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fluffy_flashlight")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

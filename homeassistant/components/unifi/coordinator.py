@@ -8,8 +8,10 @@ from typing import TYPE_CHECKING, override
 import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
+from aiounifi.interfaces.devices import Devices
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -175,3 +177,36 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     id(update_callback),
                     self.name,
                 )
+
+
+class UnifiDeviceDataUpdateCoordinator(UnifiDataUpdateCoordinator[Devices]):
+    """Synchronize device firmware metadata independently of entities."""
+
+    def __init__(self, hub: UnifiHub) -> None:
+        """Initialize device version tracking."""
+        self._device_versions: dict[str, str] = {}
+        super().__init__(hub, hub.api.devices)
+
+    @callback
+    @override
+    def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
+        """Update registry metadata only when a reported version changes."""
+        if event is ItemEvent.DELETED:
+            self._device_versions.pop(obj_id, None)
+        else:
+            device = self.handler[obj_id]
+            if "version" in device.raw:
+                version = device.version
+                if self._device_versions.get(obj_id) != version:
+                    device_registry = dr.async_get(self.hass)
+                    device_entry = device_registry.async_get_device_by_connection(
+                        (dr.CONNECTION_NETWORK_MAC, device.mac),
+                        self._connection.config_entry.entry_id,
+                    )
+                    if device_entry is not None and device_entry.sw_version != version:
+                        device_registry.async_update_device(
+                            device_entry.id, sw_version=version
+                        )
+                    self._device_versions[obj_id] = version
+
+        super()._async_handle_update(event, obj_id)

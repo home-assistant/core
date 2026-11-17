@@ -1,25 +1,39 @@
 """Support for SwitchBot Cloud services."""
 
+from enum import StrEnum
 from logging import getLogger
 
 import probatio
 from switchbot_api import ArtFrameCommands
 
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = getLogger(__name__)
 
 
+class SwitchBotCloudService(StrEnum):
+    """Store keys for SwitchBot Cloud services."""
+
+    UPLOAD_ART_FRAME_IMAGE = "upload_art_frame_image"
+
+
+class SwitchBotCloudServiceArgument(StrEnum):
+    """Store keys for SwitchBot Cloud service arguments."""
+
+    IMAGE_URL = "image_url"
+
+
 UPLOAD_IMAGE_SCHEMA = probatio.Schema(
     {
-        probatio.Required("device_id"): probatio.All(
+        probatio.Required(CommonServiceArgument.DEVICE_ID): probatio.All(
             probatio.EnsureList(), [cv.string], probatio.NonEmpty()
         ),
-        probatio.Required("image_url"): cv.url,
+        probatio.Required(SwitchBotCloudServiceArgument.IMAGE_URL): cv.url,
     }
 )
 
@@ -27,8 +41,8 @@ UPLOAD_IMAGE_SCHEMA = probatio.Schema(
 async def handle_upload_image(call: ServiceCall) -> None:
     """Handle Ai Art Frame Upload Image."""
     hass = call.hass
-    image_url = call.data["image_url"]
-    device_ids = call.data.get("device_id", [])
+    image_url = call.data[SwitchBotCloudServiceArgument.IMAGE_URL]
+    device_ids = call.data.get(CommonServiceArgument.DEVICE_ID, [])
 
     for ha_device_id in device_ids:
         device, config_entry = service.async_get_device_and_config_entry(
@@ -57,7 +71,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the SwitchBot Cloud services."""
     hass.services.async_register(
         DOMAIN,
-        AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+        SwitchBotCloudService.UPLOAD_ART_FRAME_IMAGE,
         handle_upload_image,
         schema=UPLOAD_IMAGE_SCHEMA,
     )

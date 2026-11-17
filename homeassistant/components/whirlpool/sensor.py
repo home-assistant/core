@@ -119,9 +119,10 @@ OVEN_COOK_MODE = {
 def washer_state(washer: Washer) -> str | None:
     """Determine correct states for a washer."""
 
-    machine_state = washer.get_machine_state()
+    if (machine_state := washer.get_machine_state()) is None:
+        return None
 
-    if machine_state == WasherMachineState.RunningMainCycle:
+    if machine_state is WasherMachineState.RunningMainCycle:
         if washer.get_cycle_status_filling():
             return STATE_CYCLE_FILLING
         if washer.get_cycle_status_rinsing():
@@ -141,9 +142,10 @@ def washer_state(washer: Washer) -> str | None:
 def dryer_state(dryer: Dryer) -> str | None:
     """Determine correct states for a dryer."""
 
-    machine_state = dryer.get_machine_state()
+    if (machine_state := dryer.get_machine_state()) is None:
+        return None
 
-    if machine_state == DryerMachineState.RunningMainCycle:
+    if machine_state is DryerMachineState.RunningMainCycle:
         if dryer.get_cycle_status_sensing():
             return STATE_CYCLE_SENSING
 
@@ -151,10 +153,12 @@ def dryer_state(dryer: Dryer) -> str | None:
 
 
 @dataclass(frozen=True, kw_only=True)
-class WhirlpoolSensorEntityDescription(SensorEntityDescription):
+class WhirlpoolSensorEntityDescription[_ApplianceT: Washer | Dryer](
+    SensorEntityDescription
+):
     """Describes a Whirlpool sensor entity."""
 
-    value_fn: Callable[[Appliance], str | None]
+    value_fn: Callable[[_ApplianceT], str | None]
 
 
 WASHER_STATE_OPTIONS = [
@@ -172,7 +176,7 @@ DRYER_STATE_OPTIONS = [
     STATE_CYCLE_SENSING,
 ]
 
-WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
+WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription[Washer], ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
         translation_key="washer_state",
@@ -186,11 +190,15 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=[value for value in WASHER_TANK_FILL.values() if value],
-        value_fn=lambda washer: WASHER_TANK_FILL.get(washer.get_dispense_1_level()),
+        value_fn=lambda washer: (
+            WASHER_TANK_FILL.get(level)
+            if (level := washer.get_dispense_1_level()) is not None
+            else None
+        ),
     ),
 )
 
-DRYER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
+DRYER_SENSORS: tuple[WhirlpoolSensorEntityDescription[Dryer], ...] = (
     WhirlpoolSensorEntityDescription(
         key="state",
         translation_key="dryer_state",
@@ -339,15 +347,21 @@ async def async_setup_entry(
     )
 
 
-class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
+class WhirlpoolSensor[_ApplianceT: Washer | Dryer](WhirlpoolEntity, SensorEntity):
     """A class for the Whirlpool sensors."""
 
+    _appliance: _ApplianceT
+
     def __init__(
-        self, appliance: Appliance, description: WhirlpoolSensorEntityDescription
+        self,
+        appliance: _ApplianceT,
+        description: WhirlpoolSensorEntityDescription[_ApplianceT],
     ) -> None:
         """Initialize the washer sensor."""
         super().__init__(appliance, unique_id_suffix=f"-{description.key}")
-        self.entity_description: WhirlpoolSensorEntityDescription = description
+        self.entity_description: WhirlpoolSensorEntityDescription[_ApplianceT] = (
+            description
+        )
 
     @property
     @override
@@ -377,7 +391,7 @@ class WhirlpoolTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
         """Return true if the timer/cycle is in a running state."""
 
     @abstractmethod
-    def _get_seconds_remaining(self) -> int:
+    def _get_seconds_remaining(self) -> int | None:
         """Return the number of seconds remaining."""
 
     @override
@@ -404,7 +418,9 @@ class WhirlpoolTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
 
         if self._is_running():
             self._running = True
-            new_timestamp = now + timedelta(seconds=self._get_seconds_remaining())
+            if (seconds_remaining := self._get_seconds_remaining()) is None:
+                return self._value
+            new_timestamp = now + timedelta(seconds=seconds_remaining)
             if self._value is None or (
                 isinstance(self._value, datetime)
                 and abs(new_timestamp - self._value) > timedelta(seconds=60)
@@ -437,7 +453,7 @@ class WasherTimeSensor(WhirlpoolTimeSensorBase):
         )
 
     @override
-    def _get_seconds_remaining(self) -> int:
+    def _get_seconds_remaining(self) -> int | None:
         return self._appliance.get_time_remaining()
 
 
@@ -463,7 +479,7 @@ class DryerTimeSensor(WhirlpoolTimeSensorBase):
         return self._appliance.get_machine_state() is DryerMachineState.RunningMainCycle
 
     @override
-    def _get_seconds_remaining(self) -> int:
+    def _get_seconds_remaining(self) -> int | None:
         return self._appliance.get_time_remaining()
 
 

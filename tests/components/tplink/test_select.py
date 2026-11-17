@@ -6,14 +6,14 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.components.tplink.select import SELECT_DESCRIPTIONS
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -147,8 +147,11 @@ async def test_select_select(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Second choice"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "Second choice",
+        },
         blocking=True,
     )
     mocked_feature.set_value.assert_called_with("Second choice")
