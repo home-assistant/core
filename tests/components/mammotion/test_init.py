@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
@@ -516,6 +516,35 @@ async def test_state_persisted_on_final_write(
 
     await push_state(mock_state_bus, pushed)
     await hass.async_block_till_done()
+
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+
+    assert hass_storage[storage_key]["data"] == {DEFAULT_NAME: pushed.to_dict()}
+
+
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_failed_state_write_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_storage: dict[str, Any],
+    mock_state_bus: EventBus[DeviceSnapshot],
+) -> None:
+    """Test state a failed write did not save is written on the next flush."""
+    await setup_integration(hass, mock_config_entry)
+    storage_key = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    store = mock_config_entry.runtime_data.mowers[0].coordinator.store
+    pushed = reporting(WorkMode.MODE_RETURNING)
+    await push_state(mock_state_bus, pushed)
+    await hass.async_block_till_done()
+
+    with (
+        patch.object(store, "async_save", side_effect=OSError("disk full")),
+        pytest.raises(OSError, match="disk full"),
+    ):
+        await store.async_flush_mower_data()
 
     assert storage_key not in hass_storage
 

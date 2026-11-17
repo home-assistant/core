@@ -26,6 +26,7 @@ class MammotionConfigStore(Store[dict[str, Any]]):
         )
         self.mower_data: dict[str, Any] = {}
         self._pending: dict[str, MowingDevice] = {}
+        self._unsaved_changes = False
 
     async def async_load_mower_data(self) -> None:
         """Load the persisted mower data into memory."""
@@ -39,12 +40,13 @@ class MammotionConfigStore(Store[dict[str, Any]]):
 
     async def async_flush_mower_data(self, _event: Event | None = None) -> None:
         """Write the latest mower data to disk if it changed."""
-        changed = False
         for device_name, device in self._pending.items():
             data = device.to_dict()
             if self.mower_data.get(device_name) != data:
                 self.mower_data[device_name] = data
-                changed = True
+                # Cleared only once saved, so a failed write is retried next flush.
+                self._unsaved_changes = True
         self._pending.clear()
-        if changed:
+        if self._unsaved_changes:
             await self.async_save(dict(self.mower_data))
+            self._unsaved_changes = False
