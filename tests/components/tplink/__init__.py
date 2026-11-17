@@ -20,6 +20,7 @@ from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
 from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
+from kasa.smartcam.modules.pantilt import PanTilt
 from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 from syrupy.assertion import SnapshotAssertion
 
@@ -433,6 +434,14 @@ def _mocked_camera_module(device):
     return camera
 
 
+def _mocked_pan_tilt_module(device):
+    pan_tilt = MagicMock(auto_spec=PanTilt, name="Mocked pan tilt")
+    pan_tilt.presets = {"Door": "1", "Garden": "2"}
+    pan_tilt.goto_preset = AsyncMock()
+
+    return pan_tilt
+
+
 def _mocked_thermostat_module(device):
     therm = MagicMock(auto_spec=Thermostat, name="Mocked thermostat")
     therm.state = True
@@ -550,6 +559,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
+    Module.PanTilt: _mocked_pan_tilt_module,
     Module.Thermostat: _mocked_thermostat_module,
     Module.Clean: _mocked_clean_module,
     Module.Speaker: _mocked_speaker_module,

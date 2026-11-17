@@ -145,6 +145,9 @@
       "pan_right": {
         "name": "Pan right"
       },
+      "ptz_preset": {
+        "name": "Go to preset {preset_name}"
+      },
       "sensor_reset": {
         "name": "Reset sensor consumable"
       },
