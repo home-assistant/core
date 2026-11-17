@@ -1,9 +1,12 @@
 """Tests for the aerosmart sensor platform."""
 
+from unittest.mock import patch
+
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -17,7 +20,8 @@ async def test_all_entities(
 ) -> None:
     """Test all sensor entities."""
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("homeassistant.components.aerosmart.PLATFORMS", [Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
