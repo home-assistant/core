@@ -662,8 +662,7 @@ async def test_on_websocket_stale_log_format(caplog: pytest.LogCaptureFixture) -
     _set_diagnostic_defaults(hap.home)
     hap.home.websocket_message_count = Mock(return_value=42)
 
-    with caplog.at_level("DEBUG"):
-        await hap._on_websocket_stale("warning", 423.7)
+    await hap._on_websocket_stale("warning", 423.7)
 
     assert "424" in caplog.text  # %.0f rounds
     assert "message_count=42" in caplog.text
