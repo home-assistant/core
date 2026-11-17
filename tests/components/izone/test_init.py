@@ -493,6 +493,30 @@ async def test_legacy_entry_with_several_controllers_removed_with_repair(
     assert entity.name == "My AC"
 
 
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_repair_kept_when_unlisted_controller_set_up(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setting up a controller the repair doesn't list leaves the repair in place."""
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    _register_controller(device_registry, legacy, "000000002")
+    _register_controller(device_registry, legacy, "000000003")
+
+    await _async_setup_yaml(hass, {})
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_ISSUE_ID) is not None
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, LEGACY_ISSUE_ID) is not None
+
+
 @pytest.mark.usefixtures("mock_create_discovery")
 @pytest.mark.parametrize(
     ("config", "issue_expected"),

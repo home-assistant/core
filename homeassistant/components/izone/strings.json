@@ -138,7 +138,7 @@
       "title": "The `{action}` action is being removed"
     },
     "legacy_entry_removed": {
-      "description": "Your iZone entry from before Home Assistant 2026.8 was set up for more than one controller ({uids}), so it couldn't be updated and was removed. To set up your controller again, go to **Settings** > **Devices & services** and add it from the discovered devices. If you add it within 30 days, its entities keep their previous names and areas.\n\nThis issue clears once one of these controllers is set up.",
+      "description": "Your iZone entry from before Home Assistant 2026.8 was set up for more than one controller ({uids}), so it couldn't be updated and was removed. This can happen when a controller was replaced and the old one is still registered. To set up your controller again, go to **Settings** > **Devices & services** and add it from the discovered devices, or add the iZone integration if it isn't listed. If you add it within 30 days, its entities keep their previous names and areas.\n\nThis issue clears once one of these controllers is set up.",
       "title": "Your old iZone entry was removed"
     },
     "yaml_exclude_unused": {
