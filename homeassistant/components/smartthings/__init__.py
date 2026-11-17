@@ -209,6 +209,10 @@ async def _async_replace_subscription(
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
+        except SmartThingsForbiddenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="entitlement_required"
+            ) from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
@@ -409,7 +413,10 @@ async def async_unload_entry(
     client = entry.runtime_data.client
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
         with contextlib.suppress(
-            SmartThingsConnectionError, SmartThingsQuotaExceededError
+            SmartThingsConnectionError,
+            SmartThingsQuotaExceededError,
+            SmartThingsForbiddenError,
+            SmartThingsAuthenticationFailedError,
         ):
             await client.delete_subscription(subscription_id)
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

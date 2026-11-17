@@ -368,6 +368,12 @@ async def test_stale_subscription_id(
             id="delete_authentication_failed",
         ),
         pytest.param(
+            "delete_subscription",
+            SmartThingsForbiddenError("Forbidden"),
+            "entitlement_required",
+            id="delete_forbidden",
+        ),
+        pytest.param(
             "create_subscription",
             SmartThingsAuthenticationFailedError("Authentication failed"),
             "authentication_failed",
@@ -528,6 +534,14 @@ async def test_unloading(
         pytest.param(
             SmartThingsQuotaExceededError("Quota exceeded"),
             id="quota_exceeded",
+        ),
+        pytest.param(
+            SmartThingsForbiddenError("Forbidden"),
+            id="forbidden",
+        ),
+        pytest.param(
+            SmartThingsAuthenticationFailedError("Authentication failed"),
+            id="authentication_failed",
         ),
     ],
 )
