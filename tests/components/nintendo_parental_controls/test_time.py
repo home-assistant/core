@@ -12,7 +12,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -67,7 +67,7 @@ async def test_set_time(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         service_data={TimeServiceArgument.TIME: new_value},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1
@@ -114,7 +114,7 @@ async def test_set_time_service_exceptions(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             service_data={TimeServiceArgument.TIME: new_value},
-            target={ATTR_ENTITY_ID: entity_id},
+            target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1

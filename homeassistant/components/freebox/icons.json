@@ -25,6 +25,24 @@
       "partition_free_space": {
         "default": "mdi:harddisk"
       },
+      "port_link_speed": {
+        "default": "mdi:gauge"
+      },
+      "port_link_speed_unnamed": {
+        "default": "mdi:gauge"
+      },
+      "port_rx_rate": {
+        "default": "mdi:download-network"
+      },
+      "port_rx_rate_unnamed": {
+        "default": "mdi:download-network"
+      },
+      "port_tx_rate": {
+        "default": "mdi:upload-network"
+      },
+      "port_tx_rate_unnamed": {
+        "default": "mdi:upload-network"
+      },
       "rate_down": {
         "default": "mdi:download-network"
       },
