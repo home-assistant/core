@@ -288,7 +288,7 @@ async def test_legacy_entry_bound_from_climate_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Without a controller device, the controller climate entity gives the UID."""
+    """Without any devices, the controller climate entity gives the UID."""
     legacy = _legacy_entry()
     legacy.add_to_hass(hass)
     entity_registry.async_get_or_create(
@@ -302,6 +302,25 @@ async def test_legacy_entry_bound_from_climate_entity(
 
     assert legacy.state is ConfigEntryState.LOADED
     assert legacy.unique_id == "000000001"
+
+
+@pytest.mark.usefixtures("mock_create_discovery", "mock_controller")
+async def test_legacy_entry_bound_from_zone_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_discovery_service: Mock,
+) -> None:
+    """Zone devices give the UID when the controller device was removed."""
+    legacy = _legacy_entry()
+    legacy.add_to_hass(hass)
+    controller = _register_controller(device_registry, legacy, "000000001")
+    device_registry.async_remove_device(controller.id)
+
+    await _async_setup_yaml(hass, {})
+
+    assert legacy.state is ConfigEntryState.LOADED
+    assert legacy.unique_id == "000000001"
+    mock_discovery_service.discover_all.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_create_discovery", "mock_controller")

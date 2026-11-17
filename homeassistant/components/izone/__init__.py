@@ -211,7 +211,7 @@ async def _async_resolve_legacy_entry(
             dr.async_get(hass), entry.entry_id
         )
         for identifier in device.identifiers
-        if len(identifier) == 2 and identifier[0] == DOMAIN
+        if identifier[0] == DOMAIN
     } or {
         entity.unique_id
         for entity in er.async_entries_for_config_entry(
