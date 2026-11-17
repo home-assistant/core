@@ -84,9 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> None
         _async_start_discovery()
         return
 
-    _async_transfer_legacy_records(hass, entry)
+    legacy = _async_prepare_legacy_records(hass, entry)
     entry.runtime_data = coordinator = DeviceDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
+    if legacy is not None:
+        _async_transfer_legacy_records(hass, entry, *legacy)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -98,11 +100,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: GreeConfigEntry) -> Non
 
 
 @callback
-def _async_transfer_legacy_records(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Transfer a confirmed device's records and inherit its legacy preferences."""
+def _async_prepare_legacy_records(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> tuple[ConfigEntry, dr.DeviceEntry] | None:
+    """Inherit legacy identity and preferences without changing registry ownership."""
     source = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     if source is None:
-        return
+        return None
     device_registry = dr.async_get(hass)
     matches = [
         (device, identifier)
@@ -113,10 +117,29 @@ def _async_transfer_legacy_records(hass: HomeAssistant, entry: ConfigEntry) -> N
         if domain == DOMAIN and normalize_identifier(identifier) == entry.unique_id
     ]
     if not matches:
-        return
+        return None
     if len(matches) != 1:
         raise ConfigEntryError("Multiple legacy Gree devices match this device")
     device, identifier = matches[0]
+    # Keep the identifier spelling used by the existing entity unique IDs.
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, CONF_IDENTIFIER: identifier},
+        pref_disable_polling=source.pref_disable_polling,
+        pref_disable_new_entities=source.pref_disable_new_entities,
+    )
+    return source, device
+
+
+@callback
+def _async_transfer_legacy_records(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    source: ConfigEntry,
+    device: dr.DeviceEntry,
+) -> None:
+    """Transfer legacy registry ownership after device initialization succeeds."""
+    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     entities = [
         entity
@@ -125,13 +148,6 @@ def _async_transfer_legacy_records(hass: HomeAssistant, entry: ConfigEntry) -> N
         )
         if entity.config_entry_id == source.entry_id
     ]
-    # Keep the identifier spelling used by the existing entity unique IDs.
-    hass.config_entries.async_update_entry(
-        entry,
-        data={**entry.data, CONF_IDENTIFIER: identifier},
-        pref_disable_polling=source.pref_disable_polling,
-        pref_disable_new_entities=source.pref_disable_new_entities,
-    )
     # Move entities first so the device update cannot remove old-owner entities.
     for entity in entities:
         entity_registry.async_update_entity(

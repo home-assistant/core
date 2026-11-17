@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from greeclimate.exceptions import DeviceTimeoutError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -379,6 +380,61 @@ async def test_manual_enrollment_preserves_disabled_device(
     assert migrated_entity.disabled_by is er.RegistryEntryDisabler.DEVICE
     assert hass.states.get(old_entity.entity_id) is None
     assert source.disabled_by is source_disabled_by
+
+
+@pytest.mark.parametrize("failure_method", ["bind", "update_state"])
+async def test_failed_enrollment_removal_preserves_legacy_records(
+    hass: HomeAssistant,
+    device: MagicMock,
+    discovery: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    failure_method: str,
+) -> None:
+    """Removing an entry that failed initialization leaves legacy records intact."""
+    discovery.mock_devices.clear()
+    source = _add_legacy_entry(hass)
+    candidate = device()
+    candidate.has_valid_state = False
+    getattr(candidate, failure_method).side_effect = DeviceTimeoutError
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=source.entry_id,
+        identifiers={(DOMAIN, candidate.device_info.mac)},
+    )
+    old_device = device_registry.async_update_device(
+        old_device.id, name_by_user="Bedroom AC"
+    )
+    old_entity = entity_registry.async_get_or_create(
+        Platform.CLIMATE,
+        DOMAIN,
+        candidate.device_info.mac,
+        config_entry=source,
+        device_id=old_device.id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+    target = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id=normalize_identifier(candidate.device_info.mac),
+        data=device_info_to_data(candidate.device_info),
+    )
+    target.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert target.state is ConfigEntryState.SETUP_RETRY
+    assert device_registry.async_get(old_device.id) == old_device
+    assert entity_registry.async_get(old_entity.entity_id) == old_entity
+
+    await hass.config_entries.async_remove(target.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.config_entries.async_get_entry(target.entry_id) is None
+    assert device_registry.async_get(old_device.id) == old_device
+    assert entity_registry.async_get(old_entity.entity_id) == old_entity
 
 
 @pytest.mark.parametrize(
