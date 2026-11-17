@@ -625,8 +625,7 @@ async def _async_convert_audio(
                     process.stdin.write(chunk)
                     await process.stdin.drain()
             finally:
-                if process.stdin:
-                    process.stdin.close()
+                process.stdin.close()
 
         writer_task = hass.async_create_background_task(
             write_input(), "tts_ffmpeg_conversion"
