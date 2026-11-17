@@ -9,6 +9,12 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
 from homeassistant.components.matter.helpers import get_child_device_id, get_device_id
+from homeassistant.components.matter.semantic_tags import (
+    POSITION_BOTTOM,
+    POSITION_LEFT,
+    POSITION_RIGHT,
+    POSITION_TOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -376,6 +382,57 @@ async def test_endpoint_child_devices_pruned_on_reload(
     orphan_entry = entity_registry.async_get(orphan.entity_id)
     assert orphan_entry is not None
     assert orphan_entry.device_id == parent.id
+
+
+@pytest.mark.parametrize("node_fixture", ["lifx_switch_115"])
+async def test_endpoint_child_devices_renamed_on_node_update(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test child devices are renamed when the names of a split group change.
+
+    A child device is otherwise only renamed when one of its entities is added,
+    which could leave siblings with names from different sources.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert {child.name for child in children} == {
+        "Channel 1",
+        "Channel 2",
+        "Channel 3",
+        "Channel 4",
+    }
+
+    # E.g. a firmware update replaces the Common Number tags by positions.
+    for endpoint_id, tags in (
+        (41, (POSITION_TOP, POSITION_LEFT)),
+        (42, (POSITION_TOP, POSITION_RIGHT)),
+        (43, (POSITION_BOTTOM, POSITION_LEFT)),
+        (44, (POSITION_BOTTOM, POSITION_RIGHT)),
+    ):
+        set_node_attribute(
+            matter_node,
+            endpoint_id,
+            29,
+            4,
+            [{"0": None, "1": 8, "2": tag} for tag in tags],
+        )
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert {child.name for child in children} == {
+        "Top left",
+        "Top right",
+        "Bottom left",
+        "Bottom right",
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])

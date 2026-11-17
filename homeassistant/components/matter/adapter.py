@@ -19,6 +19,7 @@ from .helpers import (
     MatterConfigEntry,
     endpoint_requires_child_device,
     get_child_device_identifier,
+    get_child_device_names,
     get_child_device_owner,
     get_device_endpoint,
     get_device_id,
@@ -35,6 +36,21 @@ if TYPE_CHECKING:
     from matter_server.client.models.node import MatterEndpoint, MatterNode
 
     from .models import MatterEntityInfo
+    from .semantic_tags import ChildDeviceName
+
+# The endpoint whose child device holds an endpoint's entities, with the child's
+# name, or None for both when they are on the node (or bridged) device.
+type ChildDevicePlacement = tuple[int | None, ChildDeviceName | None]
+
+
+def _get_child_device_placement(endpoint: MatterEndpoint) -> ChildDevicePlacement:
+    """Return where the entities of the endpoint belong."""
+    if (owner := get_child_device_owner(endpoint)) is None:
+        return (None, None)
+    return (
+        owner.endpoint_id,
+        get_child_device_names(endpoint.node).get(owner.endpoint_id),
+    )
 
 
 def _get_child_device_endpoint_ids(node: MatterNode, endpoint_id: int) -> set[int]:
@@ -55,8 +71,8 @@ def _get_child_device_endpoint_ids(node: MatterNode, endpoint_id: int) -> set[in
 
 
 # Recorded as the owner of moved entities that still have their child device
-# names. It never equals a current owner, so the next owner check reloads.
-_RENAME_PENDING = -1
+# names. It never equals a current placement, so the next owner check reloads.
+_RENAME_PENDING: ChildDevicePlacement = (-1, None)
 
 
 def _get_endpoint_and_part_ids(node: MatterNode, endpoint_id: int) -> set[int]:
@@ -127,9 +143,10 @@ class MatterAdapter:
         # (node_id, endpoint_id) so they can be dropped when an endpoint is
         # removed, letting its entities be rediscovered if it reappears.
         self.discovered_entities: dict[tuple[int, int], set[str]] = {}
-        # The endpoint whose child device holds the entities of an endpoint, as
-        # decided when they were created, grouped like discovered_entities.
-        self._child_device_owners: dict[tuple[int, int], int | None] = {}
+        # The endpoint whose child device holds the entities of an endpoint, and
+        # the child's name, as decided when they were created, grouped like
+        # discovered_entities.
+        self._child_device_owners: dict[tuple[int, int], ChildDevicePlacement] = {}
         self._reload_scheduled = False
 
     def register_platform_handler(
@@ -362,7 +379,7 @@ class MatterAdapter:
         """Record that the entities of the endpoints were moved to the node device."""
         for endpoint_id in endpoint_ids:
             if (key := (node_id, endpoint_id)) in self._child_device_owners:
-                self._child_device_owners[key] = None
+                self._child_device_owners[key] = (None, None)
 
     def _set_rename_pending(self, node_id: int, endpoint_ids: Iterable[int]) -> None:
         """Record that live entities of the endpoints keep their child names."""
@@ -459,6 +476,8 @@ class MatterAdapter:
 
         E.g. a new endpoint can make an existing sibling split into a child device,
         which its already created entities only pick up when they are recreated.
+        The same goes for a child device whose name changed, which is otherwise
+        only renamed when one of its entities is added.
         """
         if node.is_bridge_device:
             return
@@ -466,8 +485,7 @@ class MatterAdapter:
             key = (node.node_id, endpoint.endpoint_id)
             if key not in self._child_device_owners:
                 continue
-            owner = get_child_device_owner(endpoint)
-            if self._child_device_owners[key] != (owner.endpoint_id if owner else None):
+            if self._child_device_owners[key] != _get_child_device_placement(endpoint):
                 self._schedule_reload()
                 return
 
@@ -602,7 +620,7 @@ class MatterAdapter:
         discovered = self.discovered_entities.setdefault(
             (endpoint.node.node_id, endpoint.endpoint_id), set()
         )
-        child_device_owner = get_child_device_owner(endpoint)
+        child_device_placement = _get_child_device_placement(endpoint)
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(
             endpoint, server_info.schema_version
@@ -621,8 +639,7 @@ class MatterAdapter:
             )
             discovered.add(discovery_key)
             self._child_device_owners.setdefault(
-                (endpoint.node.node_id, endpoint.endpoint_id),
-                child_device_owner.endpoint_id if child_device_owner else None,
+                (endpoint.node.node_id, endpoint.endpoint_id), child_device_placement
             )
             new_entity = entity_info.entity_class(
                 self.matter_client, endpoint, entity_info
