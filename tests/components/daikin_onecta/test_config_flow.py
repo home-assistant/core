@@ -258,6 +258,42 @@ async def test_reauth_oauth_create_entry(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_invalid_token_aborts_without_changing_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials,
+) -> None:
+    """Abort reauthentication when the OAuth response has an invalid token."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET)
+    )
+    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    config_entry.add_to_hass(hass)
+    original_data = config_entry.data.copy()
+    result = await async_reauth_external_step(hass, config_entry, hass_client_no_auth)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "invalid",
+            "refresh_token": "new-refresh-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_token"
+    assert config_entry.unique_id == "1234567890"
+    assert config_entry.data == original_data
+    assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_rejects_different_account(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
