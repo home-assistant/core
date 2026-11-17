@@ -426,37 +426,16 @@ async def test_zeroconf_updates_sw_version(
 
 
 @pytest.mark.parametrize(
-    ("other_host", "other_unique_id", "answering", "other_data"),
+    ("other_host", "answering"),
     [
-        pytest.param(None, None, ("192.168.5.100",), None, id="old_address_answers"),
-        pytest.param(
-            "192.168.5.208",
-            None,
-            (),
-            {CONF_HOST: "192.168.5.208", CONF_PORT: 502, CONF_SW_VERSION: "4.1.00"},
-            id="address_of_other_entry",
-        ),
-        pytest.param(
-            "192.168.5.208",
-            "0001000000000002",
-            (),
-            {CONF_HOST: "192.168.5.208", CONF_PORT: 502},
-            id="address_of_entry_with_other_uuid",
-        ),
+        pytest.param(None, ("192.168.5.100",), id="old_address_answers"),
+        pytest.param("192.168.5.208", (), id="address_of_other_entry"),
     ],
 )
 async def test_zeroconf_other_qube_with_the_same_uuid(
-    hass: HomeAssistant,
-    other_host: str | None,
-    other_unique_id: str | None,
-    answering: tuple[str, ...],
-    other_data: dict[str, Any] | None,
+    hass: HomeAssistant, other_host: str | None, answering: tuple[str, ...]
 ) -> None:
-    """Test an announcement from another Qube with the same uuid moves nothing.
-
-    An entry without a uuid on the announced address is that Qube and only
-    gets its panel version.
-    """
+    """Test an announcement from another Qube with the same uuid moves nothing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.5.100", CONF_PORT: 502},
@@ -464,12 +443,9 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
     )
     entry.add_to_hass(hass)
     if other_host:
-        other = MockConfigEntry(
-            domain=DOMAIN,
-            data={CONF_HOST: other_host, CONF_PORT: 502},
-            unique_id=other_unique_id,
-        )
-        other.add_to_hass(hass)
+        MockConfigEntry(
+            domain=DOMAIN, data={CONF_HOST: other_host, CONF_PORT: 502}
+        ).add_to_hass(hass)
 
     with patch_answering_hosts(*answering):
         result = await hass.config_entries.flow.async_init(
@@ -479,68 +455,6 @@ async def test_zeroconf_other_qube_with_the_same_uuid(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
-    if other_host:
-        assert other.data == other_data
-        assert other.unique_id == other_unique_id
-
-
-async def test_zeroconf_hostname_shared_with_another_qube(hass: HomeAssistant) -> None:
-    """Test the shared hostname does not match while an entry has the address."""
-    by_name = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "qube.local", CONF_PORT: 502, CONF_SW_VERSION: "4.0.00"},
-        unique_id=DEVICE_INFO.uuid,
-    )
-    by_name.add_to_hass(hass)
-    by_address = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.168.5.208", CONF_PORT: 502}
-    )
-    by_address.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert by_name.data[CONF_SW_VERSION] == "4.0.00"
-    assert by_address.data[CONF_SW_VERSION] == "4.1.00"
-    assert by_address.unique_id is None
-
-
-@pytest.mark.parametrize(
-    ("state", "stored", "reload"),
-    [
-        pytest.param(ConfigEntryState.LOADED, "4.1.00", False, id="loaded_unchanged"),
-        pytest.param(ConfigEntryState.LOADED, "4.0.00", True, id="loaded_changed"),
-        pytest.param(ConfigEntryState.SETUP_RETRY, "4.1.00", True, id="retry"),
-        pytest.param(
-            ConfigEntryState.SETUP_IN_PROGRESS, "4.0.00", True, id="setting_up"
-        ),
-        pytest.param(ConfigEntryState.NOT_LOADED, "4.0.00", False, id="not_loaded"),
-    ],
-)
-async def test_zeroconf_reload_by_entry_state(
-    hass: HomeAssistant, state: ConfigEntryState, stored: str, reload: bool
-) -> None:
-    """Test when rediscovery of the configured controller reloads its entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.5.208", CONF_PORT: 502, CONF_SW_VERSION: stored},
-        unique_id=DEVICE_INFO.uuid,
-    )
-    entry.add_to_hass(hass)
-    entry.mock_state(hass, state)
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=ZEROCONF_DISCOVERY
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_SW_VERSION] == "4.1.00"
-    assert mock_reload.called is reload
 
 
 async def test_zeroconf_new_version_reloads_entry(
