@@ -9,8 +9,8 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
-    status: todo
-    comment: The OpenAQ SDK needs a public CI pipeline to build and publish its PyPI releases.
+    status: exempt
+    comment: The openaq-python SDK lacks an automated PyPI publish workflow; releases are published manually.
   docs-actions:
     status: exempt
     comment: Integration registers no actions.
