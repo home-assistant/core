@@ -64,6 +64,11 @@
         "name": "EPEX tomorrow prices available"
       }
     },
+    "datetime": {
+      "departure_time": {
+        "name": "Departure time"
+      }
+    },
     "sensor": {
       "capacity_tariff_daily_power_peak": {
         "name": "Capacity tariff daily power peak"
@@ -410,8 +415,14 @@
     "cannot_connect": {
       "message": "There was a connection error connecting to the API. Try again later."
     },
+    "departure_too_far": {
+      "message": "The departure time can be at most {days} days ahead."
+    },
     "invalid_auth": {
       "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
+    },
+    "no_active_session": {
+      "message": "The vehicle has no active Smart Charge session."
     }
   },
   "selector": {
