@@ -361,11 +361,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             event.capability is Capability.BUTTON
             and event.attribute is Attribute.BUTTON
         ):
-            if event.device_id not in device_status:
-                hass.config_entries.async_schedule_reload(entry.entry_id)
-                return
-            if event.device_id not in entry.runtime_data.devices:
-                return
             hass.bus.async_fire(
                 EVENT_BUTTON,
                 {

@@ -170,53 +170,6 @@ async def test_button_event(
     assert events[0] == snapshot
 
 
-@pytest.mark.parametrize("device_fixture", ["button"])
-async def test_button_event_unknown_device_schedules_reload(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a button event from an unknown device reloads the entry."""
-    await setup_integration(hass, mock_config_entry)
-    events = []
-    hass.bus.async_listen(EVENT_BUTTON, events.append)
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        await trigger_update(
-            hass,
-            devices,
-            "00000000-0000-0000-0000-000000000000",
-            Capability.BUTTON,
-            Attribute.BUTTON,
-            "pushed",
-        )
-
-    mock_reload.assert_called_once_with(mock_config_entry.entry_id)
-    assert not events
-
-
-@pytest.mark.parametrize("device_fixture", ["button"])
-async def test_button_event_device_without_main_status_is_ignored(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a button event from a device without main status fires nothing."""
-    await setup_integration(hass, mock_config_entry)
-    device_id = "c4bdd19f-85d1-4d58-8f9c-e75ac3cf113b"
-    del mock_config_entry.runtime_data.devices[device_id]
-    events = []
-    hass.bus.async_listen(EVENT_BUTTON, events.append)
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        await trigger_update(
-            hass, devices, device_id, Capability.BUTTON, Attribute.BUTTON, "pushed"
-        )
-
-    mock_reload.assert_not_called()
-    assert not events
-
-
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_create_subscription(
     hass: HomeAssistant,
