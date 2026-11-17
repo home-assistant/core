@@ -2509,5 +2509,5 @@ def test_zeroconf_top_level_property_moved(caplog: pytest.LogCaptureFixture) -> 
     assert matcher == {"properties": {"manufacturer": "acme"}}
     assert (
         'Matching the zeroconf property "manufacturer" at top-level is deprecated and '
-        "will stop working in Home Assistant 2027.6.0"
+        "will stop working in Home Assistant 2027.12.0"
     ) in caplog.text
