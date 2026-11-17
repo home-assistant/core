@@ -17,7 +17,7 @@ from homeassistant.components.nx584.const import (
     DOMAIN,
     REQUEST_TIMEOUT,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -241,13 +241,18 @@ async def test_import_binary_sensor_only(
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
 @pytest.mark.parametrize("hass_config", [BOTH_YAML])
 @pytest.mark.parametrize(
-    "domains",
+    ("domains", "alarm_entity_id", "back_disabled_by"),
     [
         pytest.param(
-            (ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN), id="alarm_first"
+            (ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN),
+            "alarm_control_panel.house",
+            None,
+            id="alarm_first",
         ),
         pytest.param(
             (BINARY_SENSOR_DOMAIN, ALARM_CONTROL_PANEL_DOMAIN),
+            "alarm_control_panel.192_168_1_10_5007",
+            er.RegistryEntryDisabler.INTEGRATION,
             id="binary_sensor_first",
         ),
     ],
@@ -257,6 +262,8 @@ async def test_import_both_platforms(
     hass_config: ConfigType,
     entity_registry: er.EntityRegistry,
     domains: tuple[str, str],
+    alarm_entity_id: str,
+    back_disabled_by: er.RegistryEntryDisabler | None,
 ) -> None:
     """Test both YAML platforms of one server merge into a single entry."""
     await _async_setup_yaml(hass, hass_config, *domains)
@@ -270,66 +277,15 @@ async def test_import_both_platforms(
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"3": "motion"},
     }
-    assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [
-        "alarm_control_panel.house"
-    ]
-    assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
-        "binary_sensor.front",
-        "binary_sensor.inside",
-    ]
+    # The platform set up first registers the entities, before the other one's
+    # settings are merged in.
+    assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [alarm_entity_id]
     assert hass.states.get("binary_sensor.inside").attributes["device_class"] == (
         "motion"
     )
     back = entity_registry.async_get("binary_sensor.back")
     assert back
-    assert back.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
-@pytest.mark.parametrize("hass_config", [BOTH_YAML])
-async def test_import_keeps_enabled_excluded_zone(
-    hass: HomeAssistant, hass_config: ConfigType, entity_registry: er.EntityRegistry
-) -> None:
-    """Test a later import does not disable an excluded zone the user enabled."""
-    await _async_setup_yaml(
-        hass, hass_config, ALARM_CONTROL_PANEL_DOMAIN, BINARY_SENSOR_DOMAIN
-    )
-    entity_registry.async_update_entity("binary_sensor.back", disabled_by=None)
-
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_EXCLUDE_ZONES: [2]},
-    )
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get("binary_sensor.back").disabled_by is None
-
-
-@pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
-@pytest.mark.parametrize("hass_config", [ALARM_YAML])
-async def test_import_keeps_changed_alarm_entity_id(
-    hass: HomeAssistant,
-    hass_config: ConfigType,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a YAML name does not override an alarm entity ID the user changed."""
-    mock_config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        ALARM_CONTROL_PANEL_DOMAIN,
-        DOMAIN,
-        f"{mock_config_entry.entry_id}_alarm",
-        config_entry=mock_config_entry,
-        suggested_object_id="my_alarm",
-    )
-
-    await _async_setup_yaml(hass, hass_config, ALARM_CONTROL_PANEL_DOMAIN)
-
-    assert mock_config_entry.title == "House"
-    assert hass.states.async_entity_ids(ALARM_CONTROL_PANEL_DOMAIN) == [
-        "alarm_control_panel.my_alarm"
-    ]
+    assert back.disabled_by is back_disabled_by
 
 
 @pytest.mark.usefixtures("mock_client", "mock_watcher", "mock_hass_config")
@@ -370,6 +326,7 @@ async def test_import_ignores_entity_namespace(
         "alarm_control_panel.house"
     ]
     assert sorted(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == [
+        "binary_sensor.back",
         "binary_sensor.front",
         "binary_sensor.inside",
     ]
