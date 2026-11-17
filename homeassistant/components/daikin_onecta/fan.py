@@ -1,7 +1,6 @@
 """Support for Daikin air purifiers."""
 
 from collections.abc import Awaitable, Callable
-import re
 from typing import Any, override
 
 from daikin_onecta.air_purification import AirPurificationClient
@@ -19,13 +18,14 @@ from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
+from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
 
 
 def _preset_mode_state(mode: str) -> str:
     """Return a translated Home Assistant state key for a Daikin mode."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
+    return enum_value_to_state(mode)
 
 
 async def async_setup_entry(

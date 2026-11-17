@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-import re
 from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import EnergyAggregate, ManagementPoint
@@ -30,6 +29,7 @@ from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS, SENSOR_DESCRIPTIONS
+from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
 
@@ -51,11 +51,6 @@ def _native_unit(unit: str | None, description: SensorEntityDescription) -> str 
     except ValueError:
         return unit
     return unit
-
-
-def _enum_state(value: str) -> str:
-    """Normalize Daikin's camelCase enum values for HA enum state translations."""
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
 
 
 @dataclass(frozen=True)
@@ -370,6 +365,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
+        self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
             self._device.id,
@@ -415,7 +411,17 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             isinstance(result, str)
             and self.entity_description.device_class is SensorDeviceClass.ENUM
         ):
-            return _enum_state(result)
+            state = enum_value_to_state(result)
+            if state not in (self.entity_description.options or []):
+                if result not in self._unknown_enum_values:
+                    self._unknown_enum_values.add(result)
+                    _LOGGER.debug(
+                        "Ignoring unsupported Daikin enum value %r for %s",
+                        result,
+                        self._value,
+                    )
+                return None
+            return state
         return result if isinstance(result, str | int | float) else None
 
     @property

@@ -1,5 +1,6 @@
 """Tests for Daikin Onecta sensor entities."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -89,33 +90,45 @@ def test_string_mode_sensors_use_enum_options(key: str, options: list[str]) -> N
     assert description.options == options
 
 
-@pytest.mark.parametrize(
-    ("key", "native_value", "expected_value"),
-    [
-        (
-            "setpointMode",
-            "weatherDependentHeatingFixedCooling",
-            "weather_dependent_heating_fixed_cooling",
-        ),
-        ("airPurificationMode", "antiPollen", "anti_pollen"),
-        ("operationMode", "fanOnly", "fan_only"),
-    ],
-)
-def test_string_mode_sensor_normalizes_enum_state(
-    key: str, native_value: str, expected_value: str
+async def test_unknown_enum_value_keeps_sensor_updating(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Normalize native camelCase values to the translated enum state keys."""
-    point = SimpleNamespace(
-        scalar_characteristic=lambda _: SimpleNamespace(value=native_value)
+    """Show unknown enum values as unknown without breaking future updates."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.scalar_characteristic("setpointMode") is not None
     )
-    entity = object.__new__(DaikinValueSensor)
-    entity._device = SimpleNamespace(management_point=lambda _: point)
-    entity._embedded_id = "point"
-    entity._sub_type = None
-    entity._value = key
-    entity.entity_description = SENSOR_DESCRIPTIONS[key]
+    characteristic = point.scalar_characteristic("setpointMode")
+    assert characteristic is not None
+    entity_id = "sensor.altherma_climatecontrol_setpoint_mode"
+    caplog.set_level(
+        logging.DEBUG, logger="homeassistant.components.daikin_onecta.sensor"
+    )
 
-    assert entity.sensor_value() == expected_value
+    characteristic.value = "weatherDependentHeatingFixedCooling"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "weather_dependent_heating_fixed_cooling"
+
+    characteristic.value = "newDaikinOperationMode"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    assert caplog.text.count("Ignoring unsupported Daikin enum value") == 1
 
 
 @pytest.mark.parametrize(
