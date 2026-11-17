@@ -2,7 +2,9 @@
 
 from collections.abc import Generator
 from dataclasses import dataclass
+import errno
 import glob
+import os
 from pathlib import Path
 import re
 from typing import Any, cast
@@ -432,6 +434,48 @@ async def test_upload_size_limit(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize("method", ["stat", "read_bytes"])
+@pytest.mark.parametrize(
+    ("error_no", "translation_key"),
+    [
+        pytest.param(errno.ENOENT, "os_read_not_found", id="not_found"),
+        pytest.param(errno.EACCES, "os_read_permission_denied", id="permission"),
+        pytest.param(errno.EISDIR, "os_read_is_directory", id="is_directory"),
+        pytest.param(errno.EIO, "os_read_error", id="fallback"),
+    ],
+)
+async def test_upload_file_read_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+    error_no: int,
+    translation_key: str,
+) -> None:
+    """Test that a file read error raises a translated error."""
+    await setup_integration(hass, mock_config_entry)
+    with (
+        patch.object(
+            Path, method, side_effect=OSError(error_no, os.strerror(error_no))
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            OneDriveService.UPLOAD,
+            {
+                CommonServiceArgument.CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                OneDriveServiceArgument.FILENAME: TEST_FILENAME,
+                OneDriveServiceArgument.DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"path": TEST_FILENAME}
 
 
 async def test_create_album_failed(

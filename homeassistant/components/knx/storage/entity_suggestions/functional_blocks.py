@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal, Required, TypedDict, over
 
 from awesomeversion import AwesomeVersion
 import probatio
+from xknx.dpt import DPTBase
 from xknx.typing import DPTMainSubDict
 from xknxproject.models import (
     Channel as ProjectChannel,
@@ -26,6 +27,7 @@ from xknxproject.models import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from ...dpt import HaDptClass, get_supported_dpts
 from ..const import CONF_DPT, CONF_GA_PASSIVE
 from ..dpa import functional_block
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
@@ -195,6 +197,25 @@ def _selector_dpt_enum(selector: GASelector) -> type[Enum] | None:
     return None
 
 
+def _selector_dpt_classes(selector: GASelector) -> list[HaDptClass] | None:
+    """Return the selectors dpt classes, if it uses them."""
+    if isinstance(selector.dpt, list):
+        return selector.dpt
+    return None
+
+
+def _supported_dpt(ga_dpt: DPTType | None, dpt_classes: list[HaDptClass]) -> str | None:
+    """Return the supported DPT of a group address, if it is of one of the classes."""
+    if ga_dpt is None:
+        return None
+    if (transcoder := DPTBase.parse_transcoder(ga_dpt)) is None:
+        return None
+    dpt = transcoder.dpt_number_str()
+    if (dpt_info := get_supported_dpts().get(dpt)) is None:
+        return None
+    return dpt if dpt_info["dpt_class"] in dpt_classes else None
+
+
 def _dpt_matches(ga_dpt: DPTType | None, valid_dpt: DPTMainSubDict) -> bool:
     """Check whether a group address DPT matches a valid DPT (sub None matches any)."""
     return (
@@ -214,12 +235,18 @@ def _ga_dpt_valid_for_selector(ga_dpt: DPTType | None, selector: GASelector) -> 
         return any(
             _dpt_matches(ga_dpt, dpt_string_to_dict(item.value)) for item in dpt_enum
         )
-    # dpt-class lists or no restriction: don't reject based on project DPT
+    if (dpt_classes := _selector_dpt_classes(selector)) is not None:
+        # the `dpt` config key is set from the project DPT - optional ones may be unset
+        return (
+            not selector.dpt_required or _supported_dpt(ga_dpt, dpt_classes) is not None
+        )
     return True
 
 
 def _dpt_select_value(ga_dpt: DPTType | None, selector: GASelector) -> str | None:
-    """Value for the `dpt` config key of dpt-enum selectors matching a group addresses DPT."""
+    """Value for the `dpt` config key of selectors matching a group addresses DPT."""
+    if (dpt_classes := _selector_dpt_classes(selector)) is not None:
+        return _supported_dpt(ga_dpt, dpt_classes)
     if (dpt_enum := _selector_dpt_enum(selector)) is None:
         return None
     return next(

@@ -30,7 +30,7 @@ from .const import (
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Edifier IR."""
 
-    VERSION = 3
+    VERSION = 4
     MINOR_VERSION = 1
 
     @override

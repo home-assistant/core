@@ -227,6 +227,9 @@
       }
     },
     "update": {
+      "package_update": {
+        "name": "{package_name} update"
+      },
       "update": {
         "name": "DSM update"
       }

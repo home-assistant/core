@@ -1,7 +1,6 @@
 """Support for media browsing."""
 
 import asyncio
-from functools import partial
 from typing import Any
 
 from jellyfin_apiclient_python import JellyfinClient
@@ -171,11 +170,40 @@ def fetch_items(
     ]
 
 
+def fetch_search_items(
+    client: JellyfinClient,
+    query: SearchMediaQuery,
+    media_types: list[str] | list[None],
+) -> list[dict[str, Any]]:
+    """Search items in Jellyfin server for each media type."""
+    items: list[dict[str, Any]] = []
+    for media_type in media_types:
+        if query.media_content_type == MediaType.ARTIST:
+            # The items of a by-name artist are not its descendants, so a
+            # parentId search finds nothing. Filter on the artist instead.
+            items_dict = client.jellyfin.user_items(
+                params={
+                    "searchTerm": query.search_query,
+                    "Recursive": True,
+                    "IncludeItemTypes": media_type,
+                    "Limit": 20,
+                    "ArtistIds": query.media_content_id,
+                },
+            )
+        else:
+            items_dict = client.jellyfin.search_media_items(
+                term=query.search_query,
+                media=media_type,
+                parent_id=query.media_content_id,
+            )
+        items.extend(items_dict.get("Items", []))
+    return items
+
+
 async def search_items(
     hass: HomeAssistant, client: JellyfinClient, user_id: str, query: SearchMediaQuery
 ) -> list[BrowseMedia]:
     """Search items in Jellyfin server."""
-    items: list[dict[str, Any]] = []
     # Search for items based on media filter classes (or all if none specified)
     media_types: list[str] | list[None] = []
     if query.media_filter_classes:
@@ -192,29 +220,9 @@ async def search_items(
     else:
         media_types = [None]
 
-    for media_type in media_types:
-        if query.media_content_type == MediaType.ARTIST:
-            # The items of a by-name artist are not its descendants, so a
-            # parentId search finds nothing. Filter on the artist instead.
-            search = partial(
-                client.jellyfin.user_items,
-                params={
-                    "searchTerm": query.search_query,
-                    "Recursive": True,
-                    "IncludeItemTypes": media_type,
-                    "Limit": 20,
-                    "ArtistIds": query.media_content_id,
-                },
-            )
-        else:
-            search = partial(
-                client.jellyfin.search_media_items,
-                term=query.search_query,
-                media=media_type,
-                parent_id=query.media_content_id,
-            )
-        items_dict: dict[str, Any] = await hass.async_add_executor_job(search)
-        items.extend(items_dict.get("Items", []))
+    items = await hass.async_add_executor_job(
+        fetch_search_items, client, query, media_types
+    )
 
     return [await item_payload(hass, client, user_id, item) for item in items]
 

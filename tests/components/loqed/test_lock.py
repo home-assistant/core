@@ -5,13 +5,14 @@ from loqedAPI import loqed
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.lock import LockState
+from homeassistant.components.lock import LockService, LockState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -66,7 +67,10 @@ async def test_lock_transition_to_unlocked(
     entity_id = "lock.home"
 
     await hass.services.async_call(
-        "lock", SERVICE_UNLOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "lock",
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     lock.unlock.assert_called()
@@ -80,7 +84,10 @@ async def test_lock_transition_to_locked(
     entity_id = "lock.home"
 
     await hass.services.async_call(
-        "lock", SERVICE_LOCK, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "lock",
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     lock.lock.assert_called()
@@ -94,7 +101,10 @@ async def test_lock_transition_to_open(
     entity_id = "lock.home"
 
     await hass.services.async_call(
-        "lock", SERVICE_OPEN, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "lock",
+        LockService.OPEN,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
     lock.open.assert_called()

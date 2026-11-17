@@ -9,11 +9,11 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -89,10 +89,10 @@ async def test_selected_option(
 async def _select_option_and_wait(hass: HomeAssistant | None, entity, option):
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity,
-            ATTR_OPTION: option,
+            CommonServiceArgument.ENTITY_ID: entity,
+            SelectServiceArgument.OPTION: option,
         },
         blocking=True,
     )

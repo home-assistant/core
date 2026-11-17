@@ -1,11 +1,12 @@
 """Support for System Bridge notification service."""
 
+from datetime import timedelta
 import logging
 from typing import Any, override
 
 from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import ConnectionClosedException
-from systembridgeconnector.models.notification import Notification
+from systembridgeconnector.models.notification import Notification, NotificationButton
 from systembridgeconnector.models.response import Response
 
 from homeassistant.components.notify import (
@@ -19,7 +20,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -28,6 +29,7 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
+from .issue import async_deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +100,44 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
                 message=message, title=ATTR_TITLE_DEFAULT if title is None else title
             ),
         )
+
+    async def system_bridge_send_message(
+        self,
+        message: str,
+        title: str = ATTR_TITLE_DEFAULT,
+        icon: str | None = None,
+        urgency: str | None = None,
+        duration: timedelta | None = None,
+        buttons: list[dict[str, str]] | None = None,
+        sound: str | None = None,
+        url: str | None = None,
+        path: str | None = None,
+    ) -> ServiceResponse:
+        """Send a message via the system_bridge.send_message action."""
+        response = await _async_send_notification(
+            self.coordinator,
+            Notification(
+                title=title,
+                message=message,
+                icon=icon,
+                urgency=urgency,
+                duration=(
+                    None if duration is None else int(duration.total_seconds() * 1000)
+                ),
+                buttons=(
+                    None
+                    if buttons is None
+                    else [NotificationButton(**button) for button in buttons]
+                ),
+                sound=sound,
+                action_url=url,
+                action_path=path,
+            ),
+        )
+        self._async_record_notification()
+        # Versions before 5.20.0 don't reply with the id
+        data = response.data if isinstance(response.data, dict) else {}
+        return {"id": data.get("id")}
 
 
 async def async_get_service(
@@ -178,6 +218,8 @@ class SystemBridgeNotificationService(BaseNotificationService):
         **kwargs: Any,
     ) -> None:
         """Send a message."""
+        async_deprecated_notify_action_call(self.hass, self._service_name)
+
         data = kwargs.get(ATTR_DATA, {}) or {}
 
         notification = Notification(
