@@ -63,6 +63,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self._app_id: str | None = None
+        self._replace_app = False
         self._implementations: dict[str, AbstractOAuth2Implementation] = {}
 
     @property
@@ -174,7 +175,8 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 None,
             )
 
-            if existing_app is not None:
+            # A replacement must not rotate the secret of the credential in use.
+            if existing_app is not None and not self._replace_app:
                 self._app_id = existing_app.app_id
                 # Another flow may have just provisioned this app; regenerating its
                 # credentials would invalidate the secret that flow still uses.
@@ -273,9 +275,12 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         data_updates = dict(data)
         if self._app_id is not None:
             data_updates[CONF_APP_ID] = self._app_id
-        return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), data_updates=data_updates
-        )
+        previous_auth_domain = entry.data.get("auth_implementation")
+        result = self.async_update_reload_and_abort(entry, data_updates=data_updates)
+        if previous_auth_domain not in (None, data["auth_implementation"]):
+            ledger = await async_get_app_ledger(self.hass)
+            await ledger.async_remove_unused_credential(previous_auth_domain)
+        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -311,5 +316,20 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self.flow_impl.domain, async_get_redirect_uri(self.hass)
             ):
                 return await self.async_step_user()
-            return await self.async_step_auth()
+            return await self.async_step_reauth_method()
         return await self.async_step_user()
+
+    async def async_step_reauth_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconnect with the stored credential or replace the app."""
+        return self.async_show_menu(
+            step_id="reauth_method", menu_options=["auth", "new_app"]
+        )
+
+    async def async_step_new_app(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Replace the app of the entry being reauthenticated."""
+        self._replace_app = True
+        return await self.async_step_pat()

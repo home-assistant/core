@@ -79,18 +79,35 @@ class SmartThingsAppLedger:
             self._data["apps"][app_id] = redirect_uri
             await self.async_save()
 
+    def _credential_ids(self, auth_domain: str) -> list[str]:
+        """Return the ids of stored credentials for an auth_domain."""
+        credentials = self.hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+        return [
+            item[CONF_ID]
+            for item in credentials.async_items()
+            if item[CONF_DOMAIN] == DOMAIN
+            and item.get(CONF_AUTH_DOMAIN, item[CONF_ID]) == auth_domain
+        ]
+
+    async def async_remove_unused_credential(self, auth_domain: str) -> None:
+        """Remove a provisioned app's credential once no entry uses it."""
+        if not self.is_provisioned_auth_domain(auth_domain) or any(
+            entry.data.get("auth_implementation") == auth_domain
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+        ):
+            return
+        credentials = self.hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+        for item_id in self._credential_ids(auth_domain):
+            await credentials.async_delete_item(item_id)
+
     async def async_replace_credential(
         self, auth_domain: str, credential: ClientCredential
     ) -> None:
         """Replace any existing stored credential for an auth_domain with a new one."""
         credentials = self.hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
-        for item in credentials.async_items():
-            if item[CONF_DOMAIN] != DOMAIN:
-                continue
-            if item.get(CONF_AUTH_DOMAIN, item[CONF_ID]) != auth_domain:
-                continue
+        for item_id in self._credential_ids(auth_domain):
             try:
-                await credentials.async_delete_item(item[CONF_ID])
+                await credentials.async_delete_item(item_id)
             except HomeAssistantError:
                 _LOGGER.debug(
                     "Could not delete existing credential %s before replacing it",

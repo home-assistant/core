@@ -36,6 +36,14 @@
       "reauth_confirm": {
         "description": "The SmartThings integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reauth_method": {
+        "description": "Reconnect with the SmartThings app Home Assistant created for you, or enter a new Personal Access Token to create a replacement app, for example after the app was deleted.",
+        "menu_options": {
+          "auth": "Reconnect with the existing app",
+          "new_app": "Create a new app"
+        },
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },

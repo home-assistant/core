@@ -28,12 +28,14 @@ from homeassistant.components.smartthings.app_ledger import (
     SmartThingsAppLedger,
 )
 from homeassistant.components.smartthings.const import (
+    CONF_APP_ID,
     CONF_LOCATION_ID,
     CONF_PAT_TOKEN,
     CONF_SUBSCRIPTION_ID,
     DOMAIN,
     MANAGE_PLANS_URL,
     PAT_TOKEN_URL,
+    REQUESTED_SCOPES,
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_TOKEN
@@ -487,7 +489,7 @@ async def test_stale_provisioned_credential_not_reused(
     ("ledger_redirect_uri", "result_type", "step_id"),
     [
         pytest.param(
-            REDIRECT_URI, FlowResultType.EXTERNAL_STEP, "auth", id="same_redirect_uri"
+            REDIRECT_URI, FlowResultType.MENU, "reauth_method", id="same_redirect_uri"
         ),
         pytest.param(
             OTHER_REDIRECT_URI, FlowResultType.FORM, "pat", id="redirect_uri_changed"
@@ -508,6 +510,72 @@ async def test_reauthentication_stale_provisioned_credential(
 
     assert result["type"] is result_type
     assert result["step_id"] == step_id
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "with_provisioned_credential", "mock_setup_entry"
+)
+@pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
+async def test_reauthentication_new_app(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_config_entry_with_app_id: MockConfigEntry,
+) -> None:
+    """Check reauth can replace the entry's app with a new one."""
+    mock_config_entry_with_app_id.add_to_hass(hass)
+    mock_smartthings.list_apps.return_value = [
+        SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
+    ]
+
+    result = await mock_config_entry_with_app_id.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "new_app"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pat"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=mock-client-id" in result["url"]
+    # Rotating the secret of the app in use would break the entry until reauth ends.
+    mock_smartthings.regenerate_oauth.assert_not_called()
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": " ".join(REQUESTED_SCOPES),
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry_with_app_id.data["auth_implementation"] == (
+        f"{DOMAIN}_mock-app-id"
+    )
+    assert mock_config_entry_with_app_id.data[CONF_APP_ID] == "mock-app-id"
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert set(implementations) == {f"{DOMAIN}_mock-app-id"}
 
 
 @pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
@@ -788,6 +856,9 @@ async def test_reauthentication(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "auth"}
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -915,6 +986,9 @@ async def test_reauthentication_wrong_scopes(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "auth"}
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -966,6 +1040,9 @@ async def test_reauth_account_mismatch(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "auth"}
+    )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -1015,6 +1092,13 @@ async def test_reauthentication_no_cloud_uses_stored_credential(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reauth_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "auth"}
+    )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
