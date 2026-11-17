@@ -75,10 +75,16 @@ COMMODITY_PRICE_CURRENCY_MAP = {
     36: "AUD",
     392: "JPY",
     756: "CHF",
+    752: "SEK",
+    578: "NOK",
+    208: "DKK",
+    985: "PLN",
+    203: "CZK",
+    554: "NZD",
 }
 
 COMMODITY_PRICE_TARIFF_UNIT_MAP = {
-    clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kKVA",
+    clusters.Globals.Enums.TariffUnitEnum.kKVAh: "kVAh",
     clusters.Globals.Enums.TariffUnitEnum.kKWh: "kWh",
     clusters.Globals.Enums.TariffUnitEnum.kUnknownEnumValue: None,
 }
@@ -384,29 +390,34 @@ class MatterCommodityPriceSensor(MatterSensor):
             clusters.CommodityPrice.Attributes.TariffUnit
         )
 
-        self._attr_native_value = None
-        self._attr_native_unit_of_measurement = None
-        self._attr_suggested_display_precision = None
-
-        if current_price in (None, NullValue):
+        # A missing price must not overwrite the last valid value.
+        if current_price in (None, NullValue) or current_price.price is None:
             return
 
+        # Currency contains the decimal scaling information.
+        # Without it, the price cannot be converted reliably.
         if currency in (None, NullValue):
+            self._attr_native_value = None
+            self._attr_native_unit_of_measurement = None
             return
 
-        raw_price = current_price.price
         decimal_points = currency.decimalPoints
         currency_code = currency.currency
+
+        raw_price = current_price.price
+
+        # Always expose the price, even if its currency is unknown.
+        self._attr_native_value = raw_price / (10**decimal_points)
 
         currency_name = COMMODITY_PRICE_CURRENCY_MAP.get(currency_code)
         tariff_name = COMMODITY_PRICE_TARIFF_UNIT_MAP.get(tariff_unit)
 
-        if currency_name is None or tariff_name is None:
-            return
-
-        self._attr_native_value = raw_price / (10**decimal_points)
-        self._attr_native_unit_of_measurement = f"{currency_name}/{tariff_name}"
-        self._attr_suggested_display_precision = decimal_points
+        # Only expose a unit when both mappings are known.
+        self._attr_native_unit_of_measurement = (
+            f"{currency_name}/{tariff_name}"
+            if currency_name is not None and tariff_name is not None
+            else None
+        )
 
 
 class MatterConcentrationSensor(MatterSensor):
