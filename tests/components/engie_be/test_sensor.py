@@ -892,6 +892,35 @@ async def test_service_point_success_without_ean_is_cached_once(
     assert mock_engie_client.return_value.async_get_service_point.call_count == 1
 
 
+async def test_service_point_fetched_once_per_meter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test two suffixed EANs of one meter share a single service point fetch."""
+    second_suffix_ean = f"{bare_ean(OFFTAKE_ONLY_EAN)}_ID2"
+    mock_engie_client.return_value.async_get_prices.return_value = PricesResponse(
+        items=(
+            _single_period_prices(OFFTAKE_ONLY_EAN),
+            _single_period_prices(second_suffix_ean),
+        )
+    )
+    await setup_entry(hass, mock_config_entry)
+
+    mock_engie_client.return_value.async_get_service_point.assert_called_once_with(
+        OFFTAKE_ONLY_EAN
+    )
+    for ean in (OFFTAKE_ONLY_EAN, second_suffix_ean):
+        state = hass.states.get(
+            get_entity_id(
+                entity_registry, "sensor", f"{BAN}_{ean}_offtake_TOTAL_HOURS_per_m3"
+            )
+        )
+        assert state is not None
+        assert state.state == str(round(0.2 * GAS_CONVERSION_COEFFICIENT, 6))
+
+
 GAS_PER_M3_UNIQUE_ID = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS_per_m3"
 
 

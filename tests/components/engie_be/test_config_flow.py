@@ -258,9 +258,14 @@ async def test_reauth_flow(
     mock_engie_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the reauthentication flow."""
+    """Test reauthentication only replaces the tokens and keeps the title."""
     mock_engie_client.return_value.subject = SUBJECT
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        title="My ENGIE account",
+        data={**mock_config_entry.data, CONF_MFA_METHOD: MfaMethod.EMAIL.value},
+    )
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -275,16 +280,17 @@ async def test_reauth_flow(
     mock_engie_client.return_value.async_start_authentication.assert_called_once()
     assert mock_engie_client.return_value.async_start_authentication.call_args.args[
         :3
-    ] == (EMAIL, "new-password", MfaMethod.SMS)
+    ] == (EMAIL, "new-password", MfaMethod.EMAIL)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"code": "123456"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.title == "My ENGIE account"
     assert mock_config_entry.data == {
         CONF_EMAIL: EMAIL,
-        CONF_MFA_METHOD: "sms",
+        CONF_MFA_METHOD: MfaMethod.EMAIL.value,
         CONF_ACCESS_TOKEN: "new-access-token",
         CONF_REFRESH_TOKEN: "new-refresh-token",
     }
