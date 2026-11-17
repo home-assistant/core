@@ -12,9 +12,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', '1234')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
@@ -29,7 +29,7 @@
     'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
@@ -44,7 +44,6 @@
 # name: test_number[envoy_eu_batt][number.envoy_1234_reserve_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Reserve battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
@@ -73,9 +72,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', '654321')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
@@ -90,7 +89,7 @@
     'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
@@ -105,7 +104,6 @@
 # name: test_number[envoy_metered_batt_relay][number.enpower_654321_reserve_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Reserve battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
@@ -134,9 +132,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -151,7 +149,7 @@
     'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
@@ -160,18 +158,18 @@
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC1_soc_low',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_cutoff_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Cutoff battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc1_fixture_cutoff_battery_level',
@@ -194,9 +192,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC1')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -211,7 +209,7 @@
     'object_id_base': 'Restore battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
@@ -220,18 +218,18 @@
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC1_soc_high',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc1_fixture_restore_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Restore battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc1_fixture_restore_battery_level',
@@ -254,9 +252,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -271,7 +269,7 @@
     'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
@@ -280,18 +278,18 @@
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC2_soc_low',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_cutoff_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Cutoff battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc2_fixture_cutoff_battery_level',
@@ -314,9 +312,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC2')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -331,7 +329,7 @@
     'object_id_base': 'Restore battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
@@ -340,18 +338,18 @@
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC2_soc_high',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc2_fixture_restore_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Restore battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc2_fixture_restore_battery_level',
@@ -374,9 +372,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -391,7 +389,7 @@
     'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
@@ -400,18 +398,18 @@
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC3_soc_low',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_cutoff_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Cutoff battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc3_fixture_cutoff_battery_level',
@@ -434,9 +432,9 @@
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('enphase_envoy', 'NC3')]>,
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -451,7 +449,7 @@
     'object_id_base': 'Restore battery level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
@@ -460,18 +458,18 @@
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC3_soc_high',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '%',
   })
 # ---
 # name: test_number[envoy_metered_batt_relay][number.nc3_fixture_restore_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Restore battery level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nc3_fixture_restore_battery_level',

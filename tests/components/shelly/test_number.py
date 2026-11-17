@@ -15,18 +15,18 @@ from homeassistant.components.number import (
     ATTR_MIN,
     ATTR_MODE,
     ATTR_STEP,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
@@ -41,9 +41,14 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import MOCK_LEDSTRIP_STATUS
+from .conftest import (
+    MOCK_LEDSTRIP_STATUS_BLINK,
+    MOCK_LEDSTRIP_STATUS_RAINBOW,
+    MOCK_LEDSTRIP_STATUS_SOLID,
+)
 
 DEVICE_BLOCK_ID = 4
+LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_effect_speed"
 
 
 @pytest.fixture(autouse=True)
@@ -196,8 +201,11 @@ async def test_block_number_set_value(
     mock_block_device.reset_mock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(0, pos=30.0)
@@ -230,8 +238,11 @@ async def test_block_set_value_connection_error(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+                NumberServiceArgument.VALUE: 30,
+            },
             blocking=True,
         )
 
@@ -260,8 +271,11 @@ async def test_block_set_value_auth_error(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
 
@@ -348,8 +362,8 @@ async def test_rpc_device_virtual_number(
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 56.7)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 56.7},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -460,10 +474,10 @@ async def test_blu_trv_ext_temp_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 22.2,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 22.2,
         },
         blocking=True,
     )
@@ -493,10 +507,10 @@ async def test_blu_trv_valve_pos_set_value(
     monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "pos", 20)
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: 20.0,
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
     )
@@ -536,10 +550,10 @@ async def test_blu_trv_number_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
-                ATTR_VALUE: 20.0,
+                CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+                NumberServiceArgument.VALUE: 20.0,
             },
             blocking=True,
         )
@@ -557,10 +571,10 @@ async def test_blu_trv_number_reauth_error(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
-            ATTR_VALUE: 20.0,
+            CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+            NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
     )
@@ -618,38 +632,23 @@ async def test_cury_number_entity(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_name_left_slot_intensity", ATTR_VALUE: 80.0},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: "number.test_name_left_slot_intensity",
+            NumberServiceArgument.VALUE: 80.0,
+        },
         blocking=True,
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
 
 
-LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"
-LEDSTRIP_STATUS_RAINBOW = MOCK_LEDSTRIP_STATUS["ledstrip:0"]
-LEDSTRIP_STATUS_BLINK = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "effect": "blink",
-    "rgb": [127, 172, 255],
-    "bg_rgb": [171, 171, 171],
-    "speed": 50,
-    "intensity": 65,
-}
-LEDSTRIP_STATUS_SOLID = {
-    "id": 0,
-    "on": False,
-    "brightness": 36,
-    "effect": "solid",
-    "rgb": [255, 81, 68],
-}
-
-
 @pytest.mark.parametrize(
     ("control", "ledstrip_status"),
-    [("speed", LEDSTRIP_STATUS_RAINBOW), ("intensity", LEDSTRIP_STATUS_BLINK)],
+    [
+        ("speed", MOCK_LEDSTRIP_STATUS_RAINBOW),
+        ("intensity", MOCK_LEDSTRIP_STATUS_BLINK),
+    ],
 )
 async def test_rpc_ledstrip_number(
     hass: HomeAssistant,
@@ -661,7 +660,7 @@ async def test_rpc_ledstrip_number(
     ledstrip_status: dict[str, Any],
 ) -> None:
     """Test RPC LED strip effect control number."""
-    entity_id = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_{control}"
+    entity_id = f"{NUMBER_DOMAIN}.test_name_effect_{control}"
     monkeypatch.setitem(
         mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(ledstrip_status)
     )
@@ -676,8 +675,8 @@ async def test_rpc_ledstrip_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 80.0},
+        NumberService.SET_VALUE,
+        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})
@@ -694,9 +693,12 @@ async def test_rpc_ledstrip_number(
 @pytest.mark.parametrize(
     ("ledstrip_status", "expected_state"),
     [
-        (LEDSTRIP_STATUS_RAINBOW, "33"),
-        (LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
-        (LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True}, STATE_UNAVAILABLE),
+        (MOCK_LEDSTRIP_STATUS_RAINBOW, "33"),
+        (MOCK_LEDSTRIP_STATUS_SOLID, STATE_UNAVAILABLE),
+        (
+            MOCK_LEDSTRIP_STATUS_SOLID | {"speed": 33, "reverse": True},
+            STATE_UNAVAILABLE,
+        ),
         (
             {
                 "id": 0,
@@ -729,7 +731,9 @@ async def test_rpc_ledstrip_speed_number_availability(
 ) -> None:
     """Test RPC LED strip effect speed number availability depends on the effect."""
     monkeypatch.setitem(
-        mock_ledstrip_rpc_device.status, "ledstrip:0", deepcopy(LEDSTRIP_STATUS_SOLID)
+        mock_ledstrip_rpc_device.status,
+        "ledstrip:0",
+        deepcopy(MOCK_LEDSTRIP_STATUS_SOLID),
     )
 
     await init_integration(hass, 4)

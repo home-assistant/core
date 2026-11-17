@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload, override
+from typing import Any, Literal, NamedTuple, TypedDict, cast, overload, override
 
 import async_interrupt
 import probatio
@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_EXCLUDE,
     CONF_FOR_EACH,
     CONF_IF,
     CONF_MODE,
@@ -111,7 +112,7 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+from .typing import ConfigType, TemplateVarsType, Undefined
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"
@@ -333,13 +334,101 @@ REPEAT_WARN_ITERATIONS = 5000
 REPEAT_TERMINATE_ITERATIONS = 10000
 
 
+type _BlockKind = Literal["triggers", "conditions", "actions"]
+
+
+class _Block(NamedTuple):
+    """A block of triggers, conditions or actions nested in an action."""
+
+    kind: _BlockKind
+    optional: bool = False
+
+
+# The layout of a config: a block, a dict, or a list of dicts with the layout
+type _Layout = Mapping[str, _Block | _Layout | list[_Layout]]
+
+# Blocks are validated in order. A block that is not optional is required by
+# the action's schema.
+_NESTED_BLOCKS: dict[str, _Layout] = {
+    cv.SCRIPT_ACTION_CHOOSE: {
+        CONF_DEFAULT: _Block("actions", optional=True),
+        CONF_CHOOSE: [
+            {CONF_CONDITIONS: _Block("conditions"), CONF_SEQUENCE: _Block("actions")}
+        ],
+    },
+    cv.SCRIPT_ACTION_IF: {
+        CONF_IF: _Block("conditions"),
+        CONF_THEN: _Block("actions"),
+        CONF_ELSE: _Block("actions", optional=True),
+    },
+    cv.SCRIPT_ACTION_PARALLEL: {CONF_PARALLEL: [{CONF_SEQUENCE: _Block("actions")}]},
+    cv.SCRIPT_ACTION_REPEAT: {
+        CONF_REPEAT: {
+            CONF_UNTIL: _Block("conditions", optional=True),
+            CONF_WHILE: _Block("conditions", optional=True),
+            CONF_SEQUENCE: _Block("actions"),
+        }
+    },
+    cv.SCRIPT_ACTION_SEQUENCE: {CONF_SEQUENCE: _Block("actions")},
+    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {CONF_WAIT_FOR_TRIGGER: _Block("triggers")},
+}
+
+
+async def _async_validate_block(
+    hass: HomeAssistant, kind: _BlockKind, block: list[Any]
+) -> list[Any]:
+    """Validate a block of triggers, conditions or actions."""
+    if kind == "triggers":
+        return await trigger_helper.async_validate_trigger_config(hass, block)
+    if kind == "conditions":
+        return await condition.async_validate_conditions_config(hass, block)
+    return await async_validate_actions_config(hass, block)
+
+
+async def _async_validate_nested_blocks(
+    hass: HomeAssistant,
+    config: ConfigType,
+    layout: _Layout,
+    path: tuple[str | int, ...] = (),
+) -> None:
+    """Validate the blocks in config in place, following layout.
+
+    The path of config in the action is prepended to validation errors.
+    """
+    for key, nested in layout.items():
+        if isinstance(nested, _Block):
+            if nested.optional and key not in config:
+                continue
+            try:
+                config[key] = await _async_validate_block(
+                    hass, nested.kind, config[key]
+                )
+            except probatio.Invalid as err:
+                err.prepend([*path, key])
+                raise
+        elif isinstance(nested, list):
+            for index, item in enumerate(config[key]):
+                await _async_validate_nested_blocks(
+                    hass, item, nested[0], (*path, key, index)
+                )
+        else:
+            await _async_validate_nested_blocks(hass, config[key], nested, (*path, key))
+
+
 async def async_validate_actions_config(
     hass: HomeAssistant, actions: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate a list of actions."""
     # No gather here because async_validate_action_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_action_config(hass, action) for action in actions]
+    validated = []
+    for index, action in enumerate(actions):
+        try:
+            validated.append(await async_validate_action_config(hass, action))
+        except probatio.Invalid as err:
+            err.prepend([index])
+            raise
+    return validated
 
 
 async def async_validate_action_config(
@@ -349,75 +438,18 @@ async def async_validate_action_config(
     action_type = cv.determine_script_action(config)
 
     if action_type in STATIC_VALIDATION_ACTION_TYPES:
-        pass
+        return config
 
-    elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
-        config = await device_action.async_validate_action_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
+        return await device_action.async_validate_action_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)
+    if action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
+        return await condition.async_validate_condition_config(hass, config)
 
-    elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
-        config[
-            CONF_WAIT_FOR_TRIGGER
-        ] = await trigger_helper.async_validate_trigger_config(
-            hass, config[CONF_WAIT_FOR_TRIGGER]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        if CONF_UNTIL in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_UNTIL]
-            )
-            config[CONF_REPEAT][CONF_UNTIL] = conditions
-        if CONF_WHILE in config[CONF_REPEAT]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, config[CONF_REPEAT][CONF_WHILE]
-            )
-            config[CONF_REPEAT][CONF_WHILE] = conditions
-        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_REPEAT][CONF_SEQUENCE]
-        )
-
-    elif action_type == cv.SCRIPT_ACTION_CHOOSE:
-        if CONF_DEFAULT in config:
-            config[CONF_DEFAULT] = await async_validate_actions_config(
-                hass, config[CONF_DEFAULT]
-            )
-
-        for choose_conf in config[CONF_CHOOSE]:
-            conditions = await condition.async_validate_conditions_config(
-                hass, choose_conf[CONF_CONDITIONS]
-            )
-            choose_conf[CONF_CONDITIONS] = conditions
-            choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, choose_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_IF:
-        config[CONF_IF] = await condition.async_validate_conditions_config(
-            hass, config[CONF_IF]
-        )
-        config[CONF_THEN] = await async_validate_actions_config(hass, config[CONF_THEN])
-        if CONF_ELSE in config:
-            config[CONF_ELSE] = await async_validate_actions_config(
-                hass, config[CONF_ELSE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_PARALLEL:
-        for parallel_conf in config[CONF_PARALLEL]:
-            parallel_conf[CONF_SEQUENCE] = await async_validate_actions_config(
-                hass, parallel_conf[CONF_SEQUENCE]
-            )
-
-    elif action_type == cv.SCRIPT_ACTION_SEQUENCE:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
-            hass, config[CONF_SEQUENCE]
-        )
-
-    else:
+    if (layout := _NESTED_BLOCKS.get(action_type)) is None:
         raise ValueError(f"No validation for {action_type}")
 
+    await _async_validate_nested_blocks(hass, config, layout)
     return config
 
 
@@ -440,7 +472,7 @@ class _StopScript(_HaltScript):
         self,
         message: str,
         response: Any,
-        conversation_response: str | UndefinedType | None = UNDEFINED,
+        conversation_response: str | Undefined | None = Undefined,
     ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
@@ -470,7 +502,7 @@ class _ScriptRun:
         self._started = False
         self._stop = hass.loop.create_future()
         self._stopped = asyncio.Event()
-        self._conversation_response: str | UndefinedType | None = UNDEFINED
+        self._conversation_response: str | Undefined | None = Undefined
 
     def _changed(self) -> None:
         if not self._stop.done():
@@ -533,7 +565,7 @@ class _ScriptRun:
             response = err.response
 
             # Bubble up child conversation response
-            if err.conversation_response is not UNDEFINED:
+            if err.conversation_response is not Undefined:
                 self._conversation_response = err.conversation_response
 
         except Exception:
@@ -703,7 +735,7 @@ class _ScriptRun:
                 eager_start=True,
             )
         )
-        if result and result.conversation_response is not UNDEFINED:
+        if result and result.conversation_response is not Undefined:
             self._conversation_response = result.conversation_response
 
     ## Flow control actions ##
@@ -1476,10 +1508,12 @@ type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
-    """Extract referenced IDs."""
+    """Extract referenced IDs, including those in an exclude block."""
     # Data may not exist, or be a template
     if not isinstance(data, dict):
         return
+
+    _referenced_extract_ids(data.get(CONF_EXCLUDE), key, found)
 
     item_ids = data.get(key)
 
@@ -1508,7 +1542,7 @@ class _IfData(TypedDict):
 class ScriptRunResult:
     """Container with the result of a script run."""
 
-    conversation_response: str | UndefinedType | None
+    conversation_response: str | Undefined | None
     service_response: ServiceResponse
     variables: Mapping[str, Any]
 

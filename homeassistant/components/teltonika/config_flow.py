@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
-from .util import get_url_variants
+from .util import entry_data_to_url, get_url_variants, url_to_entry_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Teltonika."""
 
-    VERSION = 1
+    VERSION = 2
     MINOR_VERSION = 1
     _discovered_host: str | None = None
 
@@ -118,13 +118,9 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info["device_id"])
                 self._abort_if_unique_id_configured()
 
-                data_to_store = dict(user_input)
-                if "host" in info:
-                    data_to_store[CONF_HOST] = info["host"]
-
                 return self.async_create_entry(
                     title=info["title"],
-                    data=data_to_store,
+                    data={**user_input, **url_to_entry_data(info["host"])},
                 )
 
         return self.async_show_form(
@@ -143,10 +139,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
+        base_url = entry_data_to_url(reauth_entry.data)
 
         if user_input is not None:
             data = {
-                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_HOST: base_url,
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_VERIFY_SSL: reauth_entry.data.get(CONF_VERIFY_SSL, False),
@@ -186,7 +183,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
-                "host": reauth_entry.data[CONF_HOST],
+                "host": base_url,
             },
         )
 
@@ -292,12 +289,12 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured(updates={CONF_HOST: info["host"]})
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                 return self.async_create_entry(
                     title=info["title"],
                     data={
-                        CONF_HOST: info["host"],
+                        **url_to_entry_data(info["host"]),
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_VERIFY_SSL: False,

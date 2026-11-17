@@ -1,25 +1,34 @@
 """Support for Nightscout sensors."""
 
-from datetime import timedelta
-import logging
-from typing import Any
+from typing import Any, override
 
-from aiohttp import ClientError
-from py_nightscout import Api as NightscoutAPI
-
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_DATE, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NightscoutConfigEntry
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION
+from .coordinator import NightscoutConfigEntry, NightscoutGlucoseCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=1)
-
-_LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "Blood Glucose"
+
+TREND_ICONS = {
+    "Flat": "mdi:arrow-right",
+    "SingleDown": "mdi:arrow-down",
+    "FortyFiveDown": "mdi:arrow-bottom-right",
+    "DoubleDown": "mdi:chevron-triple-down",
+    "SingleUp": "mdi:arrow-up",
+    "FortyFiveUp": "mdi:arrow-top-right",
+    "DoubleUp": "mdi:chevron-triple-up",
+}
 
 
 async def async_setup_entry(
@@ -28,61 +37,64 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Glucose Sensor."""
-    api = entry.runtime_data
-    async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+    coordinator = entry.runtime_data
+    async_add_entities([NightscoutSensor(coordinator, "Blood Sugar", entry.unique_id)])
 
 
-class NightscoutSensor(SensorEntity):
+class NightscoutSensor(CoordinatorEntity[NightscoutGlucoseCoordinator], SensorEntity):
     """Implementation of a Nightscout sensor."""
 
     _attr_device_class = SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
     )
-    _attr_icon = "mdi:cloud-question"
 
-    def __init__(self, api: NightscoutAPI, name: str, unique_id: str | None) -> None:
+    def __init__(
+        self,
+        coordinator: NightscoutGlucoseCoordinator,
+        name: str,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the Nightscout sensor."""
-        self.api = api
+        super().__init__(coordinator)
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self._attr_extra_state_attributes: dict[str, Any] = {}
 
-    async def async_update(self) -> None:
-        """Fetch the latest data from Nightscout REST API and update the state."""
-        try:
-            values = await self.api.get_sgvs()
-        except (ClientError, TimeoutError, OSError) as error:
-            _LOGGER.error("Error fetching data. Failed with %s", error)
-            self._attr_available = False
-            return
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if a glucose reading is available."""
+        return super().available and self.coordinator.data is not None
 
-        self._attr_available = True
-        self._attr_extra_state_attributes = {}
-        self._attr_native_value = None
-        if values:
-            value = values[0]
-            self._attr_extra_state_attributes = {
-                ATTR_DEVICE: value.device,
-                ATTR_DATE: value.date,
-                ATTR_DELTA: value.delta,
-                ATTR_DIRECTION: value.direction,
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the latest glucose value."""
+        reading = self.coordinator.data
+        return int(reading.sgv) if reading else None
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the attributes of the latest glucose reading."""
+        reading = self.coordinator.data
+        return (
+            {
+                ATTR_DEVICE: reading.device,
+                ATTR_DATE: reading.date,
+                ATTR_DELTA: reading.delta,
+                ATTR_DIRECTION: reading.direction,
             }
-            self._attr_native_value = value.sgv
-            self._attr_icon = self._parse_icon(value.direction)
-        else:
-            self._attr_available = False
-            _LOGGER.warning("Empty reply found when expecting JSON data")
+            if reading
+            else None
+        )
 
-    def _parse_icon(self, direction: str) -> str:
-        """Update the icon based on the direction attribute."""
-        switcher = {
-            "Flat": "mdi:arrow-right",
-            "SingleDown": "mdi:arrow-down",
-            "FortyFiveDown": "mdi:arrow-bottom-right",
-            "DoubleDown": "mdi:chevron-triple-down",
-            "SingleUp": "mdi:arrow-up",
-            "FortyFiveUp": "mdi:arrow-top-right",
-            "DoubleUp": "mdi:chevron-triple-up",
-        }
-        return switcher.get(direction, "mdi:cloud-question")
+    @property
+    @override
+    def icon(self) -> str:
+        """Return an icon matching the trend direction."""
+        reading = self.coordinator.data
+        if reading is None:
+            return "mdi:cloud-question"
+        return TREND_ICONS.get(reading.direction, "mdi:cloud-question")

@@ -2,27 +2,16 @@
 
 from typing import Any, override
 
-from homematicip.base.enums import DeviceType, FunctionalChannelType
+from homematicip.base.enums import DeviceType
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LIGHT_OWNED_DEVICE_TYPES, SWITCH_CHANNEL_TYPES
 from .entity import ATTR_GROUP_MEMBER_UNREACHABLE, HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
-
-SWITCH_CHANNEL_TYPES = (
-    FunctionalChannelType.SWITCH_CHANNEL,
-    FunctionalChannelType.SWITCH_MEASURING_CHANNEL,
-    FunctionalChannelType.MULTI_MODE_INPUT_SWITCH_CHANNEL,
-)
-
-# these carry a switch channel, but their entity is a light
-LIGHT_OWNED_DEVICE_TYPES = (
-    DeviceType.BRAND_SWITCH_NOTIFICATION_LIGHT,
-    DeviceType.BRAND_SWITCH_MEASURING,
-)
 
 # a single channel, but named after it, so renaming would break their entity ids
 CHANNEL_NAMED_DEVICE_TYPES = (DeviceType.DIN_RAIL_SWITCH,)

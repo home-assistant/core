@@ -23,6 +23,7 @@ from homeassistant.auth.models import (
 )
 from homeassistant.components import auth
 from homeassistant.components.auth import DOMAIN
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -270,6 +271,25 @@ def test_auth_code_store_expiration(
     entry = retrieve(client_id, code)
     assert entry is not None
     assert entry.credentials == mock_credential
+
+
+def test_auth_code_store_prunes_expired(
+    mock_credential, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that storing a code removes expired codes."""
+    store, retrieve = auth._create_auth_code_store()
+    client_id = "bla"
+    now = utcnow()
+
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
+
+    freezer.move_to(now + timedelta(minutes=10))
+    store(client_id, mock_credential)
+
+    # Moving back in time shows the expired code is gone, not just rejected.
+    freezer.move_to(now)
+    assert retrieve(client_id, code) is None
 
 
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
@@ -1198,3 +1218,32 @@ async def test_auth_code_unexpected_verifier_rejected(
     result = await resp.json()
     assert result["error"] == "invalid_request"
     assert "no code challenge was present" in result["error_description"]
+
+
+@pytest.mark.parametrize(
+    ("url", "content_type"),
+    [
+        pytest.param("/auth/login_flow", "application/json", id="login_flow"),
+        pytest.param(
+            "/auth/login_flow/mock-flow-id", "application/json", id="login_flow_step"
+        ),
+        pytest.param("/auth/token", "application/x-www-form-urlencoded", id="token"),
+        pytest.param("/auth/revoke", "application/x-www-form-urlencoded", id="revoke"),
+    ],
+)
+async def test_unauthenticated_body_too_large(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    url: str,
+    content_type: str,
+) -> None:
+    """Test unauthenticated auth endpoints reject large bodies before parsing."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.post(
+        url,
+        data=b"a" * (MAX_UNAUTHENTICATED_BODY_SIZE + 1),
+        headers={"Content-Type": content_type},
+    )
+
+    assert resp.status == HTTPStatus.REQUEST_ENTITY_TOO_LARGE

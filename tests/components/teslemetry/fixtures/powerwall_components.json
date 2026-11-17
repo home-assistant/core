@@ -1,0 +1,106 @@
+{
+  "components": {
+    "pch": [
+      {
+        "signals": [
+          {
+            "name": "PCH_State",
+            "value": null,
+            "textValue": "PCH_STATE_GRID_FOLLOW",
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageA",
+            "value": 385.2,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageB",
+            "value": 379.6,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageC",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageD",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageE",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvVoltageF",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentA",
+            "value": 6.42,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentB",
+            "value": 6.31,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentC",
+            "value": 1.2e-16,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentD",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentE",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          },
+          {
+            "name": "PCH_PvCurrentF",
+            "value": 0.0,
+            "textValue": null,
+            "boolValue": null,
+            "timestamp": "2026-10-13T00:00:00+10:00"
+          }
+        ],
+        "activeAlerts": []
+      }
+    ],
+    "pws": [],
+    "bms": [],
+    "hvp": [],
+    "baggr": []
+  }
+}

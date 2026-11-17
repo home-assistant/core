@@ -103,6 +103,7 @@ class FluxLight(
     """Representation of a Flux light."""
 
     _attr_name = None
+    _attr_translation_key = "light"
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 

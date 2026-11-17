@@ -79,15 +79,13 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             pool_data.measures_coordinator = OndiloIcoMeasuresCoordinator(
                 self.hass, self.config_entry, self.api, pool_id
             )
-            self._device_registry.async_get_or_create_device(
+            self._device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    identifiers={(DOMAIN, pool_data.ico["serial_number"])},
-                    manufacturer="Ondilo",
-                    model="ICO",
-                    name=pool_data.pool["name"],
-                    sw_version=pool_data.ico["sw_version"],
-                ),
+                identifiers={(DOMAIN, pool_data.ico["serial_number"])},
+                manufacturer="Ondilo",
+                model="ICO",
+                name=pool_data.pool["name"],
+                sw_version=pool_data.ico["sw_version"],
             )
 
         removed_pools = known_pools - current_pools
@@ -105,7 +103,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             pool_data = data[pool_id]
             measures_coordinator = pool_data.measures_coordinator
             measures_coordinator.set_next_refresh(pool_data)
-            if not measures_coordinator.data:
+            if measures_coordinator.data_or_none is None:
                 await measures_coordinator.async_refresh()
 
         return data

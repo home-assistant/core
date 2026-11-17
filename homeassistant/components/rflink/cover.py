@@ -5,12 +5,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.cover import (
-    DOMAIN as PLATFORM_DOMAIN,
-    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
-    CoverEntity,
-    CoverState,
-)
+from homeassistant.components.cover import CoverEntity, CoverState
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +24,6 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import RflinkCommand
-from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +59,6 @@ RFLINK_PLATFORM = {
         }
     ),
 }
-
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    RFLINK_PLATFORM,
-    extra=probatio.ALLOW_EXTRA,
-)
 
 
 def entity_type_for_device_id(device_id):
@@ -130,10 +119,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink cover platform."""
     if discovery_info is None:
-        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
-        async_add_entities(devices_from_config(config))
-    else:
-        async_add_entities(devices_from_config(discovery_info))
+        return
+    async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):

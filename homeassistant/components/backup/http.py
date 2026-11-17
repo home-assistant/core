@@ -13,9 +13,12 @@ from multidict import istr
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame
 from homeassistant.util import slugify
-from homeassistant.util.async_iterator import AsyncIteratorReader, AsyncIteratorWriter
+from homeassistant.util.async_iterator import (
+    AsyncIteratorReader,
+    AsyncIteratorWriter,
+    async_close_iterator,
+)
 
 from . import util
 from .agent import BackupAgent
@@ -64,16 +67,6 @@ class DownloadBackupView(HomeAssistantView):
         except BackupNotFound:
             return Response(status=HTTPStatus.NOT_FOUND)
 
-        # Check for None to be backwards compatible with the old BackupAgent API,
-        # this can be removed in HA Core 2025.10
-        if not backup:
-            frame.report_usage(
-                "returns None from BackupAgent.async_get_backup",
-                breaks_in_ha_version="2025.10",
-                integration_domain=agent_id.partition(".")[0],
-            )
-            return Response(status=HTTPStatus.NOT_FOUND)
-
         headers = {
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar",
             CONTENT_TYPE: "application/x-tar",
@@ -115,11 +108,14 @@ class DownloadBackupView(HomeAssistantView):
             return FileResponse(path=path.as_posix(), headers=headers)
 
         stream = await agent.async_download_backup(backup_id)
-        response = StreamResponse(status=HTTPStatus.OK, headers=headers)
-        await response.prepare(request)
-        async for chunk in stream:
-            await response.write(chunk)
-        return response
+        try:
+            response = StreamResponse(status=HTTPStatus.OK, headers=headers)
+            await response.prepare(request)
+            async for chunk in stream:
+                await response.write(chunk)
+            return response
+        finally:
+            await async_close_iterator(stream)
 
     async def _send_backup_with_password(
         self,
@@ -151,21 +147,31 @@ class DownloadBackupView(HomeAssistantView):
             """Call by the worker thread when it's done."""
             hass.loop.call_soon_threadsafe(worker_done_event.set)
 
-        stream = AsyncIteratorWriter(hass.loop)
+        writer = AsyncIteratorWriter(hass.loop)
         worker = threading.Thread(
             target=util.decrypt_backup,
-            args=[backup, reader, stream, password, on_done, 0, []],
+            args=[backup, reader, writer, password, on_done, 0, []],
         )
         try:
             worker.start()
             response = StreamResponse(status=HTTPStatus.OK, headers=headers)
             await response.prepare(request)
-            async for chunk in stream:
+            async for chunk in writer:
                 await response.write(chunk)
             return response
         finally:
-            reader.close()
-            await worker_done_event.wait()
+            # Unblock the worker if the response was not fully sent
+            writer.abort()
+            if isinstance(reader, AsyncIteratorReader):
+                reader.abort()
+            try:
+                if worker.is_alive():
+                    await worker_done_event.wait()
+            finally:
+                if isinstance(reader, AsyncIteratorReader):
+                    await reader.aclose()
+                else:
+                    reader.close()
 
 
 class UploadBackupView(HomeAssistantView):

@@ -221,8 +221,8 @@ async def test_migrate_entry(
             "homeassistant.components.monzo.async_generate_id",
             return_value="generated-webhook-id",
         ),
-        patch("homeassistant.components.monzo.async_setup_entry", return_value=True),
-        patch("homeassistant.components.monzo.async_unload_entry", return_value=True),
+        patch("homeassistant.components.monzo.async_setup_entry", return_value=None),
+        patch("homeassistant.components.monzo.async_unload_entry", return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.version == 1

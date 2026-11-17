@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_STATE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -30,7 +30,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import validators as tcv
-from .const import DOMAIN
+from .const import DEFAULT_NAMES, DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -78,7 +78,7 @@ TILT_FEATURES = (
     | CoverEntityFeature.SET_TILT_POSITION
 )
 
-DEFAULT_NAME = "Template Cover"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.COVER]
 
 COVER_COMMON_SCHEMA = probatio.Schema(
     {

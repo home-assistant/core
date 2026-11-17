@@ -5,6 +5,16 @@
       "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_emitter_entity_id": "[%key:component::alpha_bidet_infrared::config::step::user::data::infrared_emitter_entity_id%]"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "[%key:component::alpha_bidet_infrared::config::step::user::data_description::infrared_emitter_entity_id%]"
+        },
+        "description": "Change the infrared transmitter used to control your Alpha Bidet.",
+        "title": "Reconfigure Alpha Bidet IR"
+      },
       "user": {
         "data": {
           "infrared_emitter_entity_id": "Infrared transmitter",

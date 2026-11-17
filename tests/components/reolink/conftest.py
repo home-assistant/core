@@ -40,6 +40,7 @@ TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
 TEST_MAC_CAM = "11:22:33:44:55:66"
 DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_UID = "ABC1234567D89EFG"
+TEST_UID2 = "HGF9876543D21CBA"
 TEST_UID_CAM = "DEF7654321D89GHT"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
@@ -59,7 +60,7 @@ TEST_BC_CON = ConnectionEnum.tcp.value
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.reolink.async_setup_entry", return_value=True
+        "homeassistant.components.reolink.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, Callable, Coroutine
 from dataclasses import replace
 from http import HTTPStatus
 import os
+from time import monotonic
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -24,6 +25,7 @@ from pytest_homeassistant.typing import ClientSessionGenerator
 from homeassistant import bootstrap
 from homeassistant.components import hassio, onboarding, person
 from homeassistant.components.http import KEY_HASS
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.components.onboarding import DOMAIN, const, views
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant, callback
@@ -98,14 +100,14 @@ def mock_default_integrations():
     with (
         patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
         patch("homeassistant.components.rpi_power.new_under_voltage"),
-        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch("homeassistant.components.met.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.radio_browser.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.shopping_list.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -227,6 +229,32 @@ async def test_onboarding_user(
         "Kitchen",
         "Living Room",
     ]
+
+
+@pytest.mark.parametrize(
+    "url", ["/api/onboarding/users", "/api/onboarding/integration/wait"]
+)
+async def test_onboarding_body_too_large(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+    url: str,
+) -> None:
+    """Test unauthenticated onboarding views reject large bodies."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    resp = await client.post(
+        url,
+        data=b"a" * (MAX_UNAUTHENTICATED_BODY_SIZE + 1),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert resp.status == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
 
 
 async def test_onboarding_user_invalid_name(
@@ -852,7 +880,7 @@ async def test_onboarding_installation_type_during_bootstrap(
         ),
     ):
         bootstrap_task = asyncio.create_task(
-            bootstrap._async_set_up_integrations(hass, {"frontend": {}})
+            bootstrap._async_set_up_integrations(hass, {"frontend": {}}, monotonic())
         )
         await onboarding_loaded.wait()
         assert "hassio" not in hass.config.components

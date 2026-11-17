@@ -4,6 +4,7 @@
   "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dhcp": [
     {
       "hostname": "zentrios-*"

@@ -70,7 +70,7 @@ async def test_migrate_entry_version_1(hass: HomeAssistant) -> None:
 
 async def test_migrate_entry_minor_version_2_2(hass: HomeAssistant) -> None:
     """Test migrating a 2.1 config entry to 2.2."""
-    with patch("homeassistant.components.toon.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.toon.async_setup_entry", return_value=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={

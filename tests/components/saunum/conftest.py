@@ -111,5 +111,5 @@ def mock_setup_entry() -> Generator[MagicMock]:
     with patch(
         "homeassistant.components.saunum.async_setup_entry", autospec=True
     ) as mock_setup_entry:
-        mock_setup_entry.return_value = True
+        mock_setup_entry.return_value = None
         yield mock_setup_entry

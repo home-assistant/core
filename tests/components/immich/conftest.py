@@ -54,7 +54,7 @@ from .const import (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.immich.async_setup_entry", return_value=True
+        "homeassistant.components.immich.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -73,6 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="e7ef5713-9dab-4bd4-b899-715b0ca4379e",
         title="Someone",
+        entry_id="01JIMMICH00000000000000000",
     )
 
 

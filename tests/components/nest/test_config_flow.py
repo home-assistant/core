@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientError
 from google_nest_sdm.exceptions import AuthException
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -22,6 +23,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .common import (
     CLIENT_ID,
     CLOUD_PROJECT_ID,
+    LEGACY_TOPIC_NAME,
     PROJECT_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
@@ -33,7 +35,11 @@ from .conftest import FakeAuth, PlatformSetup
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 RAND_SUFFIX = "ABCDEF"
+EXPIRED_TOKEN_TIMESTAMP = 1649376000  # 2022-04-08
 NEW_TOPIC_NAME = f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
+NEW_SUBSCRIPTION_NAME = (
+    f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
+)
 
 FAKE_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
@@ -215,7 +221,7 @@ class OAuthFixture:
     ) -> FlowResult:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
-            "homeassistant.components.nest.async_setup_entry", return_value=True
+            "homeassistant.components.nest.async_setup_entry", return_value=None
         ) as mock_setup:
             new_result = await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1
@@ -1742,3 +1748,414 @@ async def test_list_subscriptions_failure(
             "type": "Bearer",
         },
     }
+
+
+TEST_CONFIG_LEGACY_TOPIC = NestTestConfig(
+    config_entry_data={
+        "sdm": {},
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "subscription_name": SUBSCRIBER_ID,
+        "topic_name": LEGACY_TOPIC_NAME,
+        "auth_implementation": "imported-cred",
+    },
+    credential=TEST_CONFIG_APP_CREDS.credential,
+)
+TEST_CONFIG_LEGACY_TOPIC_IMPORTED = NestTestConfig(
+    config_entry_data={
+        **TEST_CONFIG_LEGACY_TOPIC.config_entry_data,
+        "subscriber_id_imported": True,
+    },
+    credential=TEST_CONFIG_APP_CREDS.credential,
+)
+TEST_CONFIG_NO_CLOUD_PROJECT = NestTestConfig(
+    config_entry_data={
+        "sdm": {},
+        "project_id": PROJECT_ID,
+        "subscriber_id": SUBSCRIBER_ID,
+        "auth_implementation": "imported-cred",
+    },
+    credential=TEST_CONFIG_APP_CREDS.credential,
+)
+OLD_SUBSCRIPTION_URL = f"https://pubsub.googleapis.com/v1/{SUBSCRIBER_ID}"
+
+
+def _delete_calls(aioclient_mock: AiohttpClientMocker) -> list[str]:
+    """Return the urls of DELETE requests made."""
+    return [
+        str(url)
+        for method, url, _data, _headers in aioclient_mock.mock_calls
+        if method == "delete"
+    ]
+
+
+async def _async_reconfigure(
+    hass: HomeAssistant,
+    result: FlowResult,
+    topic_name: str,
+    subscription_name: str,
+) -> FlowResult:
+    """Continue a reconfigure flow selecting a topic and subscription."""
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pubsub_topic"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"topic_name": topic_name}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pubsub_topic_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pubsub_subscription"
+
+    with patch(
+        "homeassistant.components.nest.async_setup_entry", return_value=None
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"subscription_name": subscription_name}
+        )
+        await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    return result
+
+
+@pytest.mark.parametrize(
+    ("nest_test_config", "sdm_managed_topic", "expected_deletes"),
+    [
+        pytest.param(
+            TEST_CONFIG_APP_CREDS, True, [OLD_SUBSCRIPTION_URL], id="subscriber-id"
+        ),
+        pytest.param(
+            TEST_CONFIG_LEGACY_TOPIC, True, [OLD_SUBSCRIPTION_URL], id="legacy-topic"
+        ),
+        pytest.param(TEST_CONFIG_LEGACY_TOPIC_IMPORTED, True, [], id="imported"),
+        pytest.param(
+            TEST_CONFIG_NO_CLOUD_PROJECT,
+            True,
+            [OLD_SUBSCRIPTION_URL],
+            id="no-cloud-project",
+        ),
+    ],
+)
+async def test_reconfigure_create_topic(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    expected_deletes: list[str],
+) -> None:
+    """Test reconfigure creates a self-hosted topic and subscription."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.delete(OLD_SUBSCRIPTION_URL, json={})
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    # The Google-hosted topic is never offered
+    assert result["data_schema"]({}) == {"topic_name": "create_new_topic"}
+
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    data = dict(config_entry.data)
+    assert data.pop("token")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "imported-cred",
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "topic_name": NEW_TOPIC_NAME,
+        "subscription_name": NEW_SUBSCRIPTION_NAME,
+    }
+    assert _delete_calls(aioclient_mock) == expected_deletes
+
+
+@pytest.mark.parametrize(
+    ("nest_test_config", "user_managed_topics", "subscriptions"),
+    [
+        (
+            TEST_CONFIG_LEGACY_TOPIC,
+            [f"projects/{CLOUD_PROJECT_ID}/topics/my-topic"],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+            ],
+        )
+    ],
+)
+async def test_reconfigure_existing_subscription(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfigure with a user-created topic and subscription."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.delete(OLD_SUBSCRIPTION_URL, json={})
+
+    result = await _async_reconfigure(
+        hass,
+        await config_entry.start_reconfigure_flow(hass),
+        f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+        f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription",
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.data["topic_name"] == (
+        f"projects/{CLOUD_PROJECT_ID}/topics/my-topic"
+    )
+    assert config_entry.data["subscription_name"] == (
+        f"projects/{CLOUD_PROJECT_ID}/subscriptions/my-subscription"
+    )
+    assert config_entry.data["subscriber_id_imported"] is True
+    assert _delete_calls(aioclient_mock) == [OLD_SUBSCRIPTION_URL]
+
+
+@pytest.mark.parametrize(
+    ("user_managed_topics", "subscriptions"),
+    [
+        (
+            [
+                f"projects/{CLOUD_PROJECT_ID}/topics/other-topic",
+                f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+            ],
+            [
+                (
+                    f"projects/{CLOUD_PROJECT_ID}/subscriptions/other-subscription",
+                    f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                ),
+                (SUBSCRIBER_ID, f"projects/{CLOUD_PROJECT_ID}/topics/my-topic"),
+            ],
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("nest_test_config", "expected_imported"),
+    [
+        pytest.param(
+            NestTestConfig(
+                config_entry_data={
+                    **TEST_CONFIG_LEGACY_TOPIC.config_entry_data,
+                    "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                },
+                credential=TEST_CONFIG_APP_CREDS.credential,
+            ),
+            False,
+            id="created-by-home-assistant",
+        ),
+        pytest.param(
+            NestTestConfig(
+                config_entry_data={
+                    **TEST_CONFIG_LEGACY_TOPIC.config_entry_data,
+                    "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+                    "subscriber_id_imported": True,
+                },
+                credential=TEST_CONFIG_APP_CREDS.credential,
+            ),
+            True,
+            id="created-by-user",
+        ),
+    ],
+)
+async def test_reconfigure_same_subscription(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    expected_imported: bool,
+) -> None:
+    """Test reconfigure keeps the current subscription and its ownership."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["data_schema"]({}) == {
+        "topic_name": f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+    }
+
+    result = await _async_reconfigure(
+        hass,
+        result,
+        f"projects/{CLOUD_PROJECT_ID}/topics/my-topic",
+        SUBSCRIBER_ID,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.data["subscription_name"] == SUBSCRIBER_ID
+    assert ("subscriber_id_imported" in config_entry.data) is expected_imported
+    assert not _delete_calls(aioclient_mock)
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+async def test_reconfigure_delete_subscription_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfigure succeeds when the old subscription can't be deleted."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.delete(OLD_SUBSCRIPTION_URL, status=HTTPStatus.NOT_FOUND)
+
+    result = await _async_reconfigure(
+        hass,
+        await config_entry.start_reconfigure_flow(hass),
+        "create_new_topic",
+        "create_new_subscription",
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+@pytest.mark.parametrize(
+    "token_response_args",
+    [
+        pytest.param({"status": HTTPStatus.INTERNAL_SERVER_ERROR}, id="server-error"),
+        pytest.param({"exc": ClientError("No internet")}, id="client-error"),
+    ],
+)
+async def test_reconfigure_token_refresh_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    token_response_args: dict[str, Any],
+) -> None:
+    """Test reconfigure aborts when the token refresh fails temporarily."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, **token_response_args)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    "nest_test_config",
+    [
+        pytest.param(TEST_CONFIG_LEGACY_TOPIC, id="legacy-topic"),
+        pytest.param(TEST_CONFIG_NO_CLOUD_PROJECT, id="no-cloud-project"),
+    ],
+)
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+async def test_reconfigure_token_revoked(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+) -> None:
+    """Test reconfigure re-authenticates when the token was revoked."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.BAD_REQUEST)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await oauth.async_oauth_web_flow(result)
+
+    # Replace the failing token response so the auth code exchange succeeds
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.register_mock_requests()
+    oauth.async_mock_refresh()
+    aioclient_mock.delete(OLD_SUBSCRIPTION_URL, json={})
+
+    result = await oauth.async_configure(result, None)
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+    assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+async def test_reconfigure_implementation_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when the OAuth implementation is unavailable."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+    ):
+        result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_implementation_unavailable"
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_NO_CLOUD_PROJECT])
+@pytest.mark.parametrize("subscriber_id", ["invalid-subscriber-format"])
+async def test_reconfigure_missing_cloud_project(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure prompts for the cloud project when it can't be determined."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_project"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"cloud_project_id": CLOUD_PROJECT_ID}
+    )
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+    assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_NO_CLOUD_PROJECT])
+@pytest.mark.parametrize("subscriber_id", ["invalid-subscriber-format"])
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+async def test_reconfigure_missing_cloud_project_token_revoked(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+) -> None:
+    """Test reconfigure prompts for cloud project after reauthentication."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.BAD_REQUEST)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await oauth.async_oauth_web_flow(result)
+
+    # Replace the failing token response so the auth code exchange succeeds
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.register_mock_requests()
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_project"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"cloud_project_id": CLOUD_PROJECT_ID}
+    )
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+    assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
