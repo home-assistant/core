@@ -13,7 +13,7 @@ import jwt
 from place.config import OAUTH2_TOKEN_URL
 from place.errors import PlaceFulfillmentError, PlaceMqttConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.config_entries import ConfigEntryState
@@ -511,3 +511,38 @@ async def test_setup_mqtt_connection_rejected(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_get_iot_credentials",
+    "mock_provider",
+)
+async def test_setup_mqtt_connection_failure_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Retry setup after the initial MQTT connection fails."""
+    mock_mqtt_client.connect.side_effect = [
+        PlaceMqttConnectionError("Failed to establish MQTT connection"),
+        None,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_mqtt_client.loop_start.assert_not_called()
+    mock_mqtt_client.wait_for_connection.assert_not_called()
+    mock_mqtt_client.disconnect.assert_called_once()
+    mock_mqtt_client.loop_stop.assert_called_once()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_mqtt_client.connect.call_count == 2
+    mock_mqtt_client.loop_start.assert_called_once()
+    mock_mqtt_client.wait_for_connection.assert_called_once()

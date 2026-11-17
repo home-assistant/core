@@ -76,10 +76,13 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
 
         Runs in executor.
         """
-        self.mqtt_client.connect(
-            on_message=self._on_mqtt_message,
-            on_connect=self._on_mqtt_connect,
-        )
+        try:
+            self.mqtt_client.connect(
+                on_message=self._on_mqtt_message,
+                on_connect=self._on_mqtt_connect,
+            )
+        except PlaceMqttConnectionError as err:
+            raise ConfigEntryNotReady(err) from err
         self.mqtt_client.loop_start()
         try:
             self.mqtt_client.wait_for_connection()
