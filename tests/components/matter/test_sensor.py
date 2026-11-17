@@ -1356,7 +1356,7 @@ async def test_general_diagnostics_sensors_disabled_by_default(
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_commodity_price"])
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
 async def test_commodity_price_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -1441,7 +1441,7 @@ async def test_commodity_price_sensor(
     assert state.state == "0.25"
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_commodity_price"])
+@pytest.mark.parametrize("node_fixture", ["mock_electrical_utility_meter"])
 @pytest.mark.parametrize(
     ("attribute_id", "value", "expected_state", "expected_unit"),
     [

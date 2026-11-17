@@ -27535,7 +27535,7 @@
     'state': '2025-01-01T13:57:07+00:00',
   })
 # ---
-# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price_current_price-entry]
+# name: test_sensors[mock_electrical_utility_meter][sensor.mock_commodity_price_current_price-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27574,7 +27574,7 @@
     'unit_of_measurement': 'EUR/kWh',
   })
 # ---
-# name: test_sensors[mock_commodity_price][sensor.mock_commodity_price_current_price-state]
+# name: test_sensors[mock_electrical_utility_meter][sensor.mock_commodity_price_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Commodity Price Current price',
