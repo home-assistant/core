@@ -37,7 +37,6 @@ from homeassistant.components.utility_meter.services import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
@@ -195,7 +194,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         DOMAIN,
         UtilityMeterService.CALIBRATE,
         {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            TargetKey.ENTITY_ID: "sensor.energy_bill_midpeak",
             UtilityMeterServiceArgument.VALUE: "100",
         },
         blocking=True,
@@ -209,7 +208,7 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
         DOMAIN,
         UtilityMeterService.CALIBRATE,
         {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
+            TargetKey.ENTITY_ID: "sensor.energy_bill_midpeak",
             UtilityMeterServiceArgument.VALUE: "0.123",
         },
         blocking=True,

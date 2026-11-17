@@ -22,12 +22,7 @@ from homeassistant.components.input_text.const import (
     InputTextServiceArgument,
 )
 from homeassistant.components.text import TextEntityCapabilityAttribute
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_MODE,
-    CONF_NAME,
-    EntityStateAttribute,
-)
+from homeassistant.const import CONF_MODE, CONF_NAME, EntityStateAttribute, TargetKey
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
@@ -77,7 +72,7 @@ async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> No
     await hass.services.async_call(
         DOMAIN,
         InputTextService.SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, InputTextServiceArgument.VALUE: value},
+        {TargetKey.ENTITY_ID: entity_id, InputTextServiceArgument.VALUE: value},
         blocking=True,
     )
 

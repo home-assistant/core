@@ -27,7 +27,6 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
@@ -1532,7 +1531,7 @@ async def test_outlet_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
@@ -1548,7 +1547,7 @@ async def test_outlet_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {ATTR_ENTITY_ID: f"switch.{entity_id}"},
+        {TargetKey.ENTITY_ID: f"switch.{entity_id}"},
         blocking=True,
     )
 
