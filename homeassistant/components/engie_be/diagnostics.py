@@ -35,7 +35,7 @@ TO_REDACT = {
 
 
 def _hashed_identifier(identifier: str) -> str:
-    """Return a stable fingerprint that keeps households and meters apart."""
+    """Return a short hash that hides an identifier but keeps households and meters apart."""
     return f"**REDACTED_{hashlib.sha256(identifier.encode()).hexdigest()[:16]}"
 
 

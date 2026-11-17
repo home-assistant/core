@@ -734,7 +734,7 @@ async def test_contracts_retry_finishing_while_unloading_adds_no_entities(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a retry that returns while the entry unloads leaves the households alone."""
+    """Test a retry that returns while the entry unloads changes no household and adds no entities."""
     client = mock_engie_client.return_value
     client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
     await setup_entry(hass, mock_config_entry)
@@ -1014,7 +1014,7 @@ async def test_epex_midnight_rollover_fetches_only_the_new_tomorrow(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test yesterday's tomorrow slots serve the new day after midnight."""
+    """Test that after midnight only the new tomorrow is fetched for both granularities."""
     freezer.move_to(datetime(2026, 10, 3, 21, 0, tzinfo=BRUSSELS_TIME_ZONE))
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 

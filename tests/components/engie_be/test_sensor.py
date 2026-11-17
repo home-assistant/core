@@ -122,7 +122,7 @@ async def test_excl_vat_disabled_by_default(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test excl-VAT price sensors are disabled by default, incl-VAT ones are not."""
+    """Test excl. VAT price sensors start disabled and incl. VAT ones start enabled."""
     await setup_entry(hass, mock_config_entry)
 
     entity_entries = without_capacity_tariff(
@@ -328,7 +328,7 @@ async def test_period_window_skips_sensors(
     valid_from: date | None,
     valid_to: date | None,
 ) -> None:
-    """Test no sensors are created when no period covers today (locks in exclusive valid_to)."""
+    """Test no sensors are created when no period covers today, including the day valid_to names."""
     freezer.move_to("2026-08-13T12:00:00+02:00")
     mock_engie_client.return_value.async_get_prices.return_value = build_prices(
         valid_from=valid_from, valid_to=valid_to
@@ -403,7 +403,7 @@ async def test_available_degrades_for_missing_slot(
     freezer: FrozenDateTimeFactory,
     degraded_prices: PricesResponse,
 ) -> None:
-    """Test a missing slot key makes the entity unavailable for every degraded-data branch."""
+    """Test a price sensor becomes unavailable when a refresh no longer contains its slot."""
     await setup_entry(hass, mock_config_entry)
     entity_id = get_entity_id(
         entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
@@ -513,7 +513,7 @@ async def test_new_slot_code_appears(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a new time-of-use slot code adds exactly its incl/excl VAT sensor pair."""
+    """Test a new time-of-use slot code adds exactly its incl. and excl. VAT sensors."""
     await setup_entry(hass, mock_config_entry)
 
     count_before = len(

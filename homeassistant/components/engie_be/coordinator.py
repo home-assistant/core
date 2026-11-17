@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the ENGIE Belgium integration."""
+"""Data update coordinators for the ENGIE Belgium integration."""
 
 import asyncio
 from collections.abc import Callable, Iterable, Iterator, Mapping
@@ -47,7 +47,7 @@ _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
 
 
 def mask_identifier(identifier: str) -> str:
-    """Mask an account/meter identifier down to its last four characters."""
+    """Mask an account or meter identifier down to its last four characters."""
     return f"…{identifier[-4:]}"
 
 
@@ -88,7 +88,7 @@ def peak_as_dict(peak: Peak) -> dict[str, float | str]:
 
 
 def normalize_slot_code(raw_code: str) -> str:
-    """Strip a redundant direction prefix from a raw time-of-use slot code."""
+    """Return the part of a raw time-of-use slot code after its direction prefix."""
     for prefix in _DIRECTION_PREFIXES:
         idx = raw_code.rfind(prefix)
         if idx != -1:
@@ -97,7 +97,7 @@ def normalize_slot_code(raw_code: str) -> str:
 
 
 def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
-    """Return the kWh per m³ conversion factor of a gas service point, if any."""
+    """Return the positive kWh per m³ conversion factor of a gas service point, if any."""
     if (
         service_point.market_details is None
         or service_point.market_details.installation is None
@@ -301,7 +301,7 @@ def epex_window(day: date) -> tuple[datetime, datetime]:
 def epex_slots_cover_day(
     slots: Iterable[EpexSlot], day: date, granularity: EpexGranularity
 ) -> bool:
-    """Return True when the slots tile the Brussels calendar day without gaps."""
+    """Return True when slots of the expected length cover the whole Brussels day without gaps."""
     start, end = epex_window(day)
     duration = timedelta(minutes=granularity.value)
     day_slots = sorted(epex_slots_for_day(slots, day), key=lambda slot: slot.start)
@@ -341,7 +341,7 @@ class EngieBePeaksData:
 
     @property
     def peak(self) -> Peak | None:
-        """Return the peak to display, falling back to the previous month early in the month."""
+        """Return this month's peak, or last month's peak when this month has none yet."""
         return None if (source := self._source) is None else source.peak_of_the_month
 
     @property

@@ -55,7 +55,7 @@ _FALLBACK_TYPE_KEY = "energy"
 
 
 def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> str:
-    """Resolve the translation-key type dimension for an EAN."""
+    """Return the energy type part of the translation key for an EAN."""
     energy_type = (ean_energy_types.get(bare_ean(ean)) or "").upper()
     return _ENERGY_TYPE_KEYS.get(energy_type, _FALLBACK_TYPE_KEY)
 
@@ -63,7 +63,7 @@ def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> st
 def _duplicate_type_eans(
     eans: Iterable[str], ean_energy_types: Mapping[str, str | None]
 ) -> set[str]:
-    """Return the EANs whose energy type recurs more than once in a household."""
+    """Return the EANs that share their energy type with another EAN of the household."""
     type_keys = {ean: _energy_type_key(ean, ean_energy_types) for ean in eans}
     counts = Counter(type_keys.values())
     return {ean for ean, type_key in type_keys.items() if counts[type_key] > 1}
@@ -80,7 +80,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
-        """Add price sensors for any household/EAN/slot combination not yet known."""
+        """Add price sensors for each household, EAN and slot combination not added yet."""
         new_entities: list[EngieBePriceSensor] = []
         for household in runtime_data.households.values():
             prices_data: EngieBePricesData | None = household.prices.data
@@ -330,7 +330,7 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
         return epex_slot_covering(self._slots(), dt_util.utcnow() + step)
 
     def extreme_slot(self, choose: Callable[..., EpexSlot]) -> EpexSlot | None:
-        """Return today's cheapest or most expensive slot in Brussels."""
+        """Return today's cheapest or most expensive slot, or None when today is not fully covered."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots = self._slots()
         if not epex_slots_cover_day(slots, today, self.entity_description.granularity):
@@ -371,7 +371,7 @@ class EngieBePeaksSensorEntityDescription(SensorEntityDescription):
 
 
 def _monthly_peak_attributes(data: EngieBePeaksData) -> dict[str, Any]:
-    """Return which month the displayed peak belongs to and last month's peak."""
+    """Return the month of the displayed peak, whether it is a fallback, and the peak it replaced."""
     attributes: dict[str, Any] = {
         "peak_month": data.peak_month,
         "peak_is_fallback": data.is_fallback,
