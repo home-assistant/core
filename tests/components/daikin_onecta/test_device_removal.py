@@ -160,7 +160,7 @@ async def test_remove_management_point_device_is_rejected(
     management_point = next(
         point
         for point in coordinator.data[gateway_id].device.management_points
-        if point.management_point_type == "climateControl"
+        if point.management_point_type not in {"gateway", "climateControl"}
     )
     device_entry = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{gateway_id}_{management_point.embedded_id}"),

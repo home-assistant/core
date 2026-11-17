@@ -1601,6 +1601,9 @@ async def test_climate_platform_services_and_management_points(
         control = SimpleNamespace(
             embedded_id=embedded_id,
             management_point_type="climateControl",
+            model=None,
+            serial=None,
+            version=None,
             name=SimpleNamespace(
                 value=embedded_id.replace("_", " ").title(),
             ),
@@ -1617,6 +1620,9 @@ async def test_climate_platform_services_and_management_points(
         control.mode_characteristic = presets.get
         control.current_temperature = lambda _target: None
         control.sensory_data = lambda _target: None
+        error_state = SimpleNamespace(value=False, settable=False, values=None)
+        control.scalar_characteristics = lambda: {"isInErrorState": error_state}
+        control.scalar_characteristic = lambda _name: error_state
         return control
 
     climate_controls = {
@@ -1631,6 +1637,7 @@ async def test_climate_platform_services_and_management_points(
         gateway_embedded_id=None,
         gateway_management_point=None,
         mac_address=None,
+        management_points=tuple(climate_controls.values()),
         management_points_by_type=lambda _: tuple(climate_controls.values()),
     )
     device.gateway_metadata = (None, None, None)
@@ -1652,6 +1659,10 @@ async def test_climate_platform_services_and_management_points(
         patch(
             "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator",
             return_value=coordinator,
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.PLATFORMS",
+            [Platform.CLIMATE, Platform.BINARY_SENSOR],
         ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1675,6 +1686,19 @@ async def test_climate_platform_services_and_management_points(
     assert bedroom_device is not None
     assert living_room_device.name == "Living Room"
     assert bedroom_device.name == "Climate zone"
+    for embedded_id, zone_device in (
+        ("living_room", living_room_device),
+        ("bedroom", bedroom_device),
+    ):
+        binary_sensor_id = entity_registry.async_get_entity_id(
+            Platform.BINARY_SENSOR,
+            DOMAIN,
+            f"gateway_{embedded_id}_isInErrorState",
+        )
+        assert binary_sensor_id is not None
+        binary_sensor_entry = entity_registry.async_get(binary_sensor_id)
+        assert binary_sensor_entry is not None
+        assert binary_sensor_entry.device_id == zone_device.id
 
     async def call_service(service: str, **service_data: str | int | HVACMode) -> None:
         """Call a climate service for the living room entity."""

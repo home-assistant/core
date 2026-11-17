@@ -2,7 +2,7 @@
 
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
-from .const import MANAGEMENT_POINT_DEVICE_NAMES
+from .const import MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
 
 
 class DaikinOnectaDevice:
@@ -67,7 +67,8 @@ class DaikinOnectaDevice:
                         point.version,
                     )
                     for point in getattr(self.device, "management_points", [])
-                    if point.management_point_type in MANAGEMENT_POINT_DEVICE_NAMES
+                    if point.management_point_type
+                    in MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
                 )
             ),
         )

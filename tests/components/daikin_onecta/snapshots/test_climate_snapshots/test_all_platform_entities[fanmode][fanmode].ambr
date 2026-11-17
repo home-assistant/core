@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_all_platform_entities[fanmode][fanmode]
   dict({
-    'binary_sensor.sala_climatecontrol_is_holiday_mode_active': dict({
+    'binary_sensor.sala_is_firmware_update_supported': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -11,11 +11,59 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.sala_is_firmware_update_supported',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Is firmware update supported',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Is firmware update supported',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'isfirmwareupdatesupported',
+        'unique_id': '00000000-0000-4000-8000-000000000101_gateway_isFirmwareUpdateSupported',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Is firmware update supported',
+        }),
+        'context': <ANY>,
+        'entity_id': 'binary_sensor.sala_is_firmware_update_supported',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'on',
+      }),
+    }),
+    'binary_sensor.sala_is_holiday_mode_active': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
+        'disabled_by': None,
+        'domain': 'binary_sensor',
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+        'entity_id': 'binary_sensor.sala_is_holiday_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -39,17 +87,17 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Is holiday mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Is holiday mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_holiday_mode_active',
+        'entity_id': 'binary_sensor.sala_is_holiday_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.sala_climatecontrol_is_in_error_state': dict({
+    'binary_sensor.sala_is_in_error_state': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -59,11 +107,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_in_error_state',
+        'entity_id': 'binary_sensor.sala_is_in_error_state',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -88,17 +136,17 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Is in error state',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Is in error state',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_in_error_state',
+        'entity_id': 'binary_sensor.sala_is_in_error_state',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'binary_sensor.sala_climatecontrol_is_powerful_mode_active': dict({
+    'binary_sensor.sala_is_powerful_mode_active': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -108,11 +156,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.sala_is_powerful_mode_active',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -136,62 +184,14 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Is powerful mode active',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Is powerful mode active',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.sala_climatecontrol_is_powerful_mode_active',
+        'entity_id': 'binary_sensor.sala_is_powerful_mode_active',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
-      }),
-    }),
-    'binary_sensor.sala_gateway_is_firmware_update_supported': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_gateway')]>,
-        'disabled_by': None,
-        'domain': 'binary_sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'binary_sensor.sala_gateway_is_firmware_update_supported',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Is firmware update supported',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Is firmware update supported',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '00000000-0000-4000-8000-000000000101_gateway_isFirmwareUpdateSupported',
-        'unit_of_measurement': None,
-      }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Is firmware update supported',
-        }),
-        'context': <ANY>,
-        'entity_id': 'binary_sensor.sala_gateway_is_firmware_update_supported',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'on',
       }),
     }),
     'button.daikin_onecta_account_refresh': dict({
@@ -366,7 +366,7 @@
         'state': 'off',
       }),
     }),
-    'select.sala_climatecontrol_schedule': dict({
+    'select.sala_schedule': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -383,11 +383,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'select',
         'entity_category': None,
-        'entity_id': 'select.sala_climatecontrol_schedule',
+        'entity_id': 'select.sala_schedule',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -411,7 +411,7 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Schedule',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -420,7 +420,7 @@
           ]),
         }),
         'context': <ANY>,
-        'entity_id': 'select.sala_climatecontrol_schedule',
+        'entity_id': 'select.sala_schedule',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -467,7 +467,7 @@
       }),
       'state': None,
     }),
-    'sensor.sala_climatecontrol_cooling_daily_electrical_consumption': dict({
+    'sensor.sala_cooling_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -479,11 +479,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -511,19 +511,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Cooling daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Cooling daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_daily_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.sala_climatecontrol_cooling_monthly_electrical_consumption': dict({
+    'sensor.sala_cooling_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -535,11 +535,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -567,19 +567,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Cooling monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Cooling monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_monthly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0.1',
       }),
     }),
-    'sensor.sala_climatecontrol_cooling_weekly_electrical_consumption': dict({
+    'sensor.sala_cooling_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -591,11 +591,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -623,19 +623,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Cooling weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Cooling weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_weekly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.sala_climatecontrol_cooling_yearly_electrical_consumption': dict({
+    'sensor.sala_cooling_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -647,11 +647,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -679,19 +679,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Cooling yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Cooling yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_cooling_yearly_electrical_consumption',
+        'entity_id': 'sensor.sala_cooling_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '26.9',
       }),
     }),
-    'sensor.sala_climatecontrol_error_code': dict({
+    'sensor.sala_error_code': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -701,11 +701,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.sala_climatecontrol_error_code',
+        'entity_id': 'sensor.sala_error_code',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -729,17 +729,17 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Error code',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Error code',
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_error_code',
+        'entity_id': 'sensor.sala_error_code',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '00',
       }),
     }),
-    'sensor.sala_climatecontrol_heating_daily_electrical_consumption': dict({
+    'sensor.sala_heating_daily_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -751,11 +751,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_daily_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -783,19 +783,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Heating daily electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Heating daily electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_heating_daily_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_daily_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.sala_climatecontrol_heating_monthly_electrical_consumption': dict({
+    'sensor.sala_heating_monthly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -807,11 +807,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_monthly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -839,19 +839,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Heating monthly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Heating monthly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_heating_monthly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_monthly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.sala_climatecontrol_heating_weekly_electrical_consumption': dict({
+    'sensor.sala_heating_weekly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -863,11 +863,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_weekly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -895,19 +895,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Heating weekly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Heating weekly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_heating_weekly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_weekly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '0',
       }),
     }),
-    'sensor.sala_climatecontrol_heating_yearly_electrical_consumption': dict({
+    'sensor.sala_heating_yearly_electrical_consumption': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -919,11 +919,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_yearly_electrical_consumption',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -951,19 +951,57 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Heating yearly electrical consumption',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Heating yearly electrical consumption',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_heating_yearly_electrical_consumption',
+        'entity_id': 'sensor.sala_heating_yearly_electrical_consumption',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '1.9',
       }),
     }),
-    'sensor.sala_climatecontrol_outdoor_temperature': dict({
+    'sensor.sala_ip_address': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'config_entry_id': <ANY>,
+        'config_subentry_id': None,
+        'device_class': None,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
+        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+        'domain': 'sensor',
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+        'entity_id': 'sensor.sala_ip_address',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'IP address',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'IP address',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'ipaddress',
+        'unique_id': '00000000-0000-4000-8000-000000000101_gateway_ipAddress',
+        'unit_of_measurement': None,
+      }),
+      'state': None,
+    }),
+    'sensor.sala_outdoor_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -975,11 +1013,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_outdoor_temperature',
+        'entity_id': 'sensor.sala_outdoor_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1007,19 +1045,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Outdoor temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Outdoor temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_outdoor_temperature',
+        'entity_id': 'sensor.sala_outdoor_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '18',
       }),
     }),
-    'sensor.sala_climatecontrol_room_temperature': dict({
+    'sensor.sala_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1031,11 +1069,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': None,
-        'entity_id': 'sensor.sala_climatecontrol_room_temperature',
+        'entity_id': 'sensor.sala_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1063,19 +1101,19 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Room temperature',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.sala_climatecontrol_room_temperature',
+        'entity_id': 'sensor.sala_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '21',
       }),
     }),
-    'sensor.sala_gateway_ip_address': dict({
+    'update.sala_firmware_update': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1085,49 +1123,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_gateway')]>,
-        'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-        'domain': 'sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.sala_gateway_ip_address',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'IP address',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'IP address',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'ipaddress',
-        'unique_id': '00000000-0000-4000-8000-000000000101_gateway_ipAddress',
-        'unit_of_measurement': None,
-      }),
-      'state': None,
-    }),
-    'update.sala_gateway_firmware_update': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': None,
-        'config_entry_id': <ANY>,
-        'config_subentry_id': None,
-        'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101_gateway')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000101')]>,
         'disabled_by': None,
         'domain': 'update',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'update.sala_gateway_firmware_update',
+        'entity_id': 'update.sala_firmware_update',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1155,7 +1155,7 @@
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Firmware update',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sala Firmware update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '4_0_3',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '4_0_3',
@@ -1167,7 +1167,7 @@
           <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
         }),
         'context': <ANY>,
-        'entity_id': 'update.sala_gateway_firmware_update',
+        'entity_id': 'update.sala_firmware_update',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

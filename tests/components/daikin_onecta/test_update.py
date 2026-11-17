@@ -45,12 +45,12 @@ async def test_firmware_install_executes_command(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.living_room_gateway_firmware_update"},
+        {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
         blocking=True,
     )
 
     config_entry.runtime_data.async_execute_command.assert_awaited_once()
-    state = hass.states.get("update.living_room_gateway_firmware_update")
+    state = hass.states.get("update.living_room_firmware_update")
     assert state is not None
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
 
@@ -140,7 +140,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     """Publish pending install state before the cloud write and stale polls."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
-    entity_id = "update.living_room_gateway_firmware_update"
+    entity_id = "update.living_room_firmware_update"
     entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
     assert isinstance(entity, DaikinFirmwareUpdateEntity)
     requested_sequence = coordinator.cloud_update_sequence
@@ -217,7 +217,7 @@ async def test_failed_firmware_install_clears_pending_state(
     """A failed HA install service leaves no optimistic progress state."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     config_entry.runtime_data.async_execute_command = AsyncMock(return_value=False)
-    entity_id = "update.living_room_gateway_firmware_update"
+    entity_id = "update.living_room_firmware_update"
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -258,7 +258,7 @@ async def test_firmware_install_rejects_unavailable_firmware(
             await hass.services.async_call(
                 UPDATE_DOMAIN,
                 SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.living_room_gateway_firmware_update"},
+                {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
                 blocking=True,
             )
         assert err.value.translation_key == "firmware_install_unavailable"
@@ -267,7 +267,7 @@ async def test_firmware_install_rejects_unavailable_firmware(
             await hass.services.async_call(
                 UPDATE_DOMAIN,
                 SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.living_room_gateway_firmware_update"},
+                {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
                 blocking=True,
             )
         assert err.value.translation_key == "service_not_supported"
@@ -282,7 +282,7 @@ async def test_firmware_state_clears_when_firmware_disappears(
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
-    entity_id = "update.living_room_gateway_firmware_update"
+    entity_id = "update.living_room_firmware_update"
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,

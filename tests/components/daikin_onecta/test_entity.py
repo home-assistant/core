@@ -7,7 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.entity import _add_management_point_metadata
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .test_climate_snapshots import _async_setup_fixture
@@ -17,9 +17,10 @@ async def test_gateway_device_registry_uses_cloud_metadata(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Register gateway metadata from the config-entry cloud response."""
-    await _async_setup_fixture(hass, config_entry, "altherma")
+    await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
     gateway_id, device = next(iter(coordinator.data.items()))
     gateway_entry = device_registry.async_get_device_by_identifier(
@@ -33,6 +34,32 @@ async def test_gateway_device_registry_uses_cloud_metadata(
     assert gateway_entry.model == model
     assert gateway_entry.serial_number == serial_number
     assert gateway_entry.sw_version == sw_version
+
+    climate_control_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if any(
+            f"{gateway_id}_{point.embedded_id}_" in entry.unique_id
+            for point in device.device.management_points_by_type("climateControl")
+        )
+    ]
+    assert climate_control_entities
+    assert all(
+        entry.device_id == gateway_entry.id for entry in climate_control_entities
+    )
+
+    indoor_unit = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_indoorUnit"), config_entry.entry_id
+    )
+    outdoor_unit = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_outdoorUnit"), config_entry.entry_id
+    )
+    assert indoor_unit is not None
+    assert indoor_unit.name == "Indoor unit"
+    assert outdoor_unit is not None
+    assert outdoor_unit.name == "Outdoor unit"
 
 
 def test_add_management_point_metadata_handles_missing_point() -> None:

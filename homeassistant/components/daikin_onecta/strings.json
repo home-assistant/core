@@ -44,6 +44,27 @@
   "device": {
     "climate_zone": {
       "name": "Climate zone"
+    },
+    "domestic_hot_water_flow_through": {
+      "name": "Domestic hot water flow-through unit"
+    },
+    "domestic_hot_water_tank": {
+      "name": "Domestic hot water tank"
+    },
+    "indoor_hydro_unit": {
+      "name": "Indoor hydro unit"
+    },
+    "indoor_unit": {
+      "name": "Indoor unit"
+    },
+    "management_point": {
+      "name": "Daikin unit"
+    },
+    "outdoor_unit": {
+      "name": "Outdoor unit"
+    },
+    "user_interface": {
+      "name": "User interface"
     }
   },
   "entity": {

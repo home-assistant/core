@@ -35,13 +35,13 @@ async def test_schedule_select_updates_cached_selection(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.master_climatecontrol_schedule",
+            ATTR_ENTITY_ID: "select.master_schedule",
             SelectServiceArgument.OPTION: "1",
         },
         blocking=True,
     )
 
-    state = hass.states.get("select.master_climatecontrol_schedule")
+    state = hass.states.get("select.master_schedule")
     assert state is not None
     assert state.state == "1"
     async_update_listeners.assert_called_once_with()
@@ -54,7 +54,7 @@ async def test_schedule_select_ignores_current_option(
     await _async_setup_fixture(hass, config_entry, "schedule")
     execute_command = _execute_typed_command(config_entry)
     config_entry.runtime_data.async_execute_command = execute_command
-    state = hass.states.get("select.master_climatecontrol_schedule")
+    state = hass.states.get("select.master_schedule")
     assert state is not None
 
     await hass.services.async_call(
@@ -77,7 +77,7 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     await _async_setup_fixture(hass, config_entry, "gas")
     coordinator = config_entry.runtime_data
     coordinator.async_execute_command = _execute_typed_command(config_entry)
-    state = hass.states.get("select.my_living_room_climatecontrol_schedule")
+    state = hass.states.get("select.my_living_room_schedule")
     assert state is not None
     assert state.state == "althermaClimateControl0"
 
@@ -118,7 +118,7 @@ async def test_schedule_select_rejects_missing_selection(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.master_climatecontrol_schedule",
+                ATTR_ENTITY_ID: "select.master_schedule",
                 SelectServiceArgument.OPTION: "Schedule",
             },
             blocking=True,
@@ -138,7 +138,7 @@ async def test_schedule_select_rejects_unadvertised_option(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.master_climatecontrol_schedule",
+                ATTR_ENTITY_ID: "select.master_schedule",
                 SelectServiceArgument.OPTION: "not-advertised",
             },
             blocking=True,
@@ -162,7 +162,7 @@ async def test_schedule_named_off_does_not_disable_schedule(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.master_climatecontrol_schedule")
+    state = hass.states.get("select.master_schedule")
     assert state is not None
     assert "off" in state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
     assert (

@@ -179,7 +179,7 @@ async def test_water_heater_rejects_unavailable_temperature_control(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
                 WaterHeaterServiceArgument.TEMPERATURE: 50,
             },
             blocking=True,
@@ -250,7 +250,7 @@ async def test_water_heater_rejects_unadvertised_operation_mode(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
                 "operation_mode": "unsupported_mode",
             },
             blocking=True,
@@ -273,11 +273,11 @@ async def test_water_heater_turn_off_updates_cached_state(
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank"},
+        {ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank"},
         blocking=True,
     )
 
-    state = hass.states.get("water_heater.altherma_domestichotwatertank")
+    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
     assert state is not None
     assert state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == "off"
 
@@ -311,7 +311,7 @@ async def test_water_heater_temperature_updates_typed_cache(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
             WaterHeaterServiceArgument.TEMPERATURE: 50,
         },
         blocking=True,
@@ -354,13 +354,13 @@ async def test_water_heater_publishes_successful_partial_operation_write(
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
                 "operation_mode": STATE_PERFORMANCE,
             },
             blocking=True,
         )
 
-    state = hass.states.get("water_heater.altherma_domestichotwatertank")
+    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
     assert state is not None
     assert state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_HEAT_PUMP
     assert coordinator.async_execute_command.await_count == 2
@@ -414,7 +414,7 @@ async def test_water_heater_rejects_unknown_power_state(
             WATER_HEATER_DOMAIN,
             service,
             {
-                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
                 **service_data,
             },
             blocking=True,
@@ -437,13 +437,13 @@ async def test_water_heater_set_performance_updates_state(
         WATER_HEATER_DOMAIN,
         WATER_HEATER_SERVICE_SET_OPERATION_MODE,
         {
-            ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
             "operation_mode": STATE_PERFORMANCE,
         },
         blocking=True,
     )
 
-    state = hass.states.get("water_heater.altherma_domestichotwatertank")
+    state = hass.states.get("water_heater.altherma_domestic_hot_water_tank")
     assert state is not None
     assert (
         state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_PERFORMANCE

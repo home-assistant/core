@@ -28,11 +28,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, FANMODE_FIXED
+from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
@@ -151,26 +150,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
         self.entity_description = description
         self._update_state()
-
-    @property
-    @override
-    def device_info(self) -> ChildDeviceInfo | DeviceInfo:
-        """Return the gateway or, for multiple zones, its climate zone child."""
-        if len(self._device.device.management_points_by_type("climateControl")) <= 1:
-            return DeviceInfo(identifiers={(DOMAIN, self._device.id)})
-
-        assert self._device.ha_device_id is not None
-        management_point = self._device.management_point(self._embedded_id)
-        assert management_point is not None
-        name = (
-            management_point.name.value if management_point.name is not None else None
-        )
-        return ChildDeviceInfo(
-            identifiers={(DOMAIN, f"{self._device.id}_{self._embedded_id}")},
-            name=name or None,
-            parent_device_id=self._device.ha_device_id,
-            translation_key="climate_zone" if not name else None,
-        )
 
     def _update_state(self) -> None:
         """Refresh all state attributes from the device."""

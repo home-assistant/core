@@ -36,11 +36,11 @@ async def test_switch_service_updates_cached_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SWITCH_SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test_living_room_climatecontrol_econo_mode"},
+        {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
         blocking=True,
     )
 
-    state = hass.states.get("switch.test_living_room_climatecontrol_econo_mode")
+    state = hass.states.get("switch.test_living_room_econo_mode")
     assert state is not None
     assert state.state == "off"
 
@@ -74,7 +74,7 @@ async def test_switch_updates_sibling_climate_preset(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.test_living_room_climatecontrol_econo_mode"},
+            {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
             blocking=True,
         )
         assert (
@@ -118,7 +118,7 @@ async def test_switch_rejects_unknown_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.test_living_room_climatecontrol_econo_mode"},
+            {ATTR_ENTITY_ID: "switch.test_living_room_econo_mode"},
             blocking=True,
         )
 

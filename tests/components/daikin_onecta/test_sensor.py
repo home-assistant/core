@@ -106,7 +106,7 @@ async def test_unknown_enum_value_keeps_sensor_updating(
     )
     characteristic = point.scalar_characteristic("setpointMode")
     assert characteristic is not None
-    entity_id = "sensor.altherma_climatecontrol_setpoint_mode"
+    entity_id = "sensor.altherma_setpoint_mode"
     caplog.set_level(
         logging.DEBUG, logger="homeassistant.components.daikin_onecta.sensor"
     )
@@ -350,10 +350,8 @@ async def test_sensors_become_unavailable_when_management_point_disappears(
     coordinator = config_entry.runtime_data
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("climateControl")[0]
-    scalar_entity_id = "sensor.altherma_climatecontrol_room_temperature"
-    energy_entity_id = (
-        "sensor.altherma_climatecontrol_heating_daily_electrical_consumption"
-    )
+    scalar_entity_id = "sensor.altherma_room_temperature"
+    energy_entity_id = "sensor.altherma_heating_daily_electrical_consumption"
     assert hass.states.get(scalar_entity_id) is not None
     assert hass.states.get(energy_entity_id) is not None
 

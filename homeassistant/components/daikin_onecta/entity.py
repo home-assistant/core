@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_NAMES
+from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
 from .coordinator import OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 
@@ -26,11 +26,66 @@ def _add_management_point_metadata(
     if (management_point := device.management_point(embedded_id)) is None:
         return
     if management_point.model is not None:
-        info["model"] = management_point.model
+        info.model = management_point.model
     if management_point.serial is not None:
-        info["serial_number"] = management_point.serial
+        info.serial_number = management_point.serial
     if management_point.version is not None:
-        info["sw_version"] = management_point.version
+        info.sw_version = management_point.version
+
+
+def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
+    """Return the Home Assistant device info for a gateway."""
+    gateway = device.device
+    connections = set()
+    if gateway.mac_address:
+        connections.add((CONNECTION_NETWORK_MAC, gateway.mac_address))
+
+    info = DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        connections=connections,
+        manufacturer="Daikin",
+        model_id=gateway.device_model,
+        name=device.name,
+    )
+    if (embedded_id := gateway.gateway_embedded_id) is not None:
+        _add_management_point_metadata(info, device, embedded_id)
+    return info
+
+
+def management_point_device_info(
+    device: DaikinOnectaDevice, embedded_id: str
+) -> DeviceInfo | ChildDeviceInfo:
+    """Return consistent device info for a Daikin management point."""
+    gateway = device.device
+    management_point = device.management_point(embedded_id)
+    if management_point is None:
+        return _gateway_device_info(device)
+
+    management_point_type = management_point.management_point_type
+    if management_point_type == "gateway":
+        return _gateway_device_info(device)
+
+    if management_point_type == "climateControl":
+        if len(gateway.management_points_by_type("climateControl")) <= 1:
+            return _gateway_device_info(device)
+        name = (
+            management_point.name.value if management_point.name is not None else None
+        )
+        translation_key = None if name else "climate_zone"
+        name = name or None
+    else:
+        translation_key = MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS.get(
+            management_point_type, "management_point"
+        )
+        name = None
+
+    assert device.ha_device_id is not None
+    return ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{device.id}_{embedded_id}")},
+        parent_device_id=device.ha_device_id,
+        translation_key=translation_key,
+        name=name,
+    )
 
 
 class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
@@ -65,23 +120,7 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return the gateway device registry information."""
-        gateway = self._device.device
-        connections = set()
-        if gateway.mac_address:
-            connections.add((CONNECTION_NETWORK_MAC, gateway.mac_address))
-
-        info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.id)},
-            connections=connections,
-            manufacturer="Daikin",
-            model_id=gateway.device_model,
-            name=self._device.name,
-        )
-        if (embedded_id := gateway.gateway_embedded_id) is not None and (
-            gateway.management_point(embedded_id) is not None
-        ):
-            _add_management_point_metadata(info, self._device, embedded_id)
-        return info
+        return _gateway_device_info(self._device)
 
 
 class DaikinOnectaAccountEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
@@ -151,25 +190,9 @@ class DaikinManagementPointEntity(DaikinEntity):
     ) -> None:
         """Initialize a management-point entity."""
         super().__init__(device, coordinator, embedded_id)
-        point = device.management_point(embedded_id)
-        self._management_point_type = (
-            point.management_point_type if point is not None else None
-        )
 
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
-        """Return a physical management point as a gateway child device."""
-        if self._management_point_type is None:
-            return super().device_info
-        assert self._device.ha_device_id is not None
-
-        management_point_type = self._management_point_type
-        return ChildDeviceInfo(
-            identifiers={(DOMAIN, f"{self._device.id}_{self._embedded_id}")},
-            name=MANAGEMENT_POINT_DEVICE_NAMES.get(
-                management_point_type,
-                management_point_type[0].upper() + management_point_type[1:],
-            ),
-            parent_device_id=self._device.ha_device_id,
-        )
+        """Return consistent device info for the source management point."""
+        return management_point_device_info(self._device, self._embedded_id)

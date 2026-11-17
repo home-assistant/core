@@ -14,11 +14,14 @@ SCHEDULE_DISABLED = "home_assistant_schedule_is_disabled"
 
 FANMODE_FIXED = "fixed"
 
-MANAGEMENT_POINT_DEVICE_NAMES = {
-    "indoorUnit": "Indoor unit",
-    "indoorUnitHydro": "Indoor hydro unit",
-    "outdoorUnit": "Outdoor unit",
-    "userInterface": "User interface",
+MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
+    "climateControl": "climate_zone",
+    "domesticHotWaterFlowThrough": "domestic_hot_water_flow_through",
+    "domesticHotWaterTank": "domestic_hot_water_tank",
+    "indoorUnit": "indoor_unit",
+    "indoorUnitHydro": "indoor_hydro_unit",
+    "outdoorUnit": "outdoor_unit",
+    "userInterface": "user_interface",
 }
 
 SENSORY_DATA_SENSOR_TYPES = (
