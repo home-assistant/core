@@ -578,6 +578,43 @@ async def test_reauthentication_new_app(
     assert set(implementations) == {f"{DOMAIN}_mock-app-id"}
 
 
+@pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
+@pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
+async def test_reauthentication_new_app_reuses_unused_app(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_smartthings: AsyncMock,
+    mock_config_entry_with_app_id: MockConfigEntry,
+) -> None:
+    """Check a replacement reuses an app left over from an abandoned attempt."""
+    mock_config_entry_with_app_id.add_to_hass(hass)
+    hass_storage[STORAGE_KEY]["data"]["apps"]["spare-app-id"] = REDIRECT_URI
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("SPARE_CLIENT_ID", "SPARE_CLIENT_SECRET"),
+        f"{DOMAIN}_spare-app-id",
+    )
+    mock_smartthings.list_apps.return_value = [
+        SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing"),
+        SimpleNamespace(app_id="spare-app-id", app_name="homeassistant.spare"),
+    ]
+
+    result = await mock_config_entry_with_app_id.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "new_app"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=SPARE_CLIENT_ID" in result["url"]
+    mock_smartthings.create_app.assert_not_called()
+    mock_smartthings.regenerate_oauth.assert_not_called()
+
+
 @pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
 @pytest.mark.parametrize(
     "error",

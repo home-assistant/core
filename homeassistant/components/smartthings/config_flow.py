@@ -171,12 +171,13 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     for app in apps
                     if app.app_name.startswith(APP_NAME_PREFIX)
                     and ledger.is_reusable(app.app_id, redirect_uri)
+                    # A replacement must not rotate the secret of an app in use.
+                    and not (self._replace_app and self._is_app_in_use(app.app_id))
                 ),
                 None,
             )
 
-            # A replacement must not rotate the secret of the credential in use.
-            if existing_app is not None and not self._replace_app:
+            if existing_app is not None:
                 self._app_id = existing_app.app_id
                 # Another flow may have just provisioned this app; regenerating its
                 # credentials would invalidate the secret that flow still uses.
@@ -220,6 +221,14 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
             implementations = await async_get_implementations(self.hass, DOMAIN)
             self.flow_impl = implementations[auth_domain]
+
+    def _is_app_in_use(self, app_id: str) -> bool:
+        """Return if a config entry authenticates with the app."""
+        auth_domain = app_auth_domain(app_id)
+        return any(
+            entry.data.get("auth_implementation") == auth_domain
+            for entry in self._async_current_entries(include_ignore=False)
+        )
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
