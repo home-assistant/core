@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
 import weakref
@@ -24,6 +25,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import frame, update_coordinator
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -772,6 +774,87 @@ async def test_no_refresh_after_ha_close(
     async_fire_time_changed(hass, utcnow() + crd.update_interval * 2)
     await hass.async_block_till_done()
     assert crd.data == 1
+
+
+@pytest.mark.parametrize(
+    ("debouncer_kwargs", "requests", "calls_at_stop"),
+    [
+        pytest.param({"cooldown": 0.35, "immediate": False}, 1, 0, id="delayed"),
+        pytest.param(None, 2, 1, id="default"),
+    ],
+)
+async def test_no_requested_refresh_after_ha_close(
+    hass: HomeAssistant,
+    debouncer_kwargs: dict[str, Any] | None,
+    requests: int,
+    calls_at_stop: int,
+) -> None:
+    """Test a debounced refresh request does not fire once Home Assistant closed."""
+    calls = 0
+
+    async def refresh() -> int:
+        nonlocal calls
+        calls += 1
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        config_entry=None,
+        name="test",
+        update_method=refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+        request_refresh_debouncer=(
+            Debouncer(hass, _LOGGER, **debouncer_kwargs) if debouncer_kwargs else None
+        ),
+    )
+    crd.async_add_listener(Mock())
+
+    for _ in range(requests):
+        await crd.async_request_refresh()
+    await hass.async_stop()
+    assert calls == calls_at_stop
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+    assert calls == calls_at_stop
+
+
+async def test_no_refresh_rescheduled_after_ha_close(hass: HomeAssistant) -> None:
+    """Test a refresh cancelled at close does not schedule the next refresh."""
+    calls = 0
+    update_started = asyncio.Event()
+
+    async def refresh() -> int:
+        nonlocal calls
+        calls += 1
+        update_started.set()
+        await asyncio.Event().wait()
+        return calls
+
+    crd = update_coordinator.DataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        config_entry=None,
+        name="test",
+        update_method=refresh,
+        update_interval=DEFAULT_UPDATE_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            hass, _LOGGER, cooldown=0.35, immediate=False
+        ),
+    )
+    crd.async_add_listener(Mock())
+
+    await crd.async_request_refresh()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await update_started.wait()
+    assert calls == 1
+
+    await hass.async_stop()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    assert calls == 1
 
 
 @pytest.mark.parametrize(

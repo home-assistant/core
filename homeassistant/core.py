@@ -1273,6 +1273,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
+        self._cancel_cancellable_timers()
         self.set_state(CoreState.not_running)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -1322,6 +1323,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks("close")
 
+        self._cancel_cancellable_timers()
         self.set_state(CoreState.stopped)
         self.import_executor.shutdown()
 

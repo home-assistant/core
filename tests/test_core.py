@@ -3154,6 +3154,43 @@ async def test_cancellable_hassjob(hass: HomeAssistant, eager_start: bool) -> No
     timer2.cancel()
 
 
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        EVENT_HOMEASSISTANT_STOP,
+        EVENT_HOMEASSISTANT_FINAL_WRITE,
+        EVENT_HOMEASSISTANT_CLOSE,
+    ],
+)
+async def test_cancellable_hassjob_created_while_stopping(
+    hass: HomeAssistant, event_type: str
+) -> None:
+    """Test cancellable jobs created in the stop stages are cancelled as well."""
+    job = ha.callback(MagicMock())
+    timers: list[asyncio.TimerHandle] = []
+
+    @ha.callback
+    def create_timers(_: ha.Event) -> None:
+        """Create timers while Home Assistant is stopping."""
+        timers.extend(
+            hass.loop.call_later(
+                60,
+                hass.async_run_hass_job,
+                HassJob(job, cancel_on_shutdown=cancel_on_shutdown),
+            )
+            for cancel_on_shutdown in (True, False)
+        )
+
+    hass.bus.async_listen_once(event_type, create_timers)
+
+    await hass.async_stop()
+
+    cancellable, other = timers
+    assert cancellable.cancelled()
+    assert not other.cancelled()
+    other.cancel()
+
+
 async def test_validate_state(hass: HomeAssistant) -> None:
     """Test validate_state."""
     assert ha.validate_state("test") == "test"
