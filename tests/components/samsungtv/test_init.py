@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.samsungtv.const import (
@@ -107,6 +108,29 @@ async def test_setup_updates_from_ssdp(hass: HomeAssistant) -> None:
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
     )
+
+
+@pytest.mark.parametrize(
+    ("status", "text", "expected"),
+    [
+        (200, UPNP_SVC_RENDERING_CONTROL, "http://10.10.12.34:9197/dmr"),
+        (404, "", None),
+    ],
+)
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_setup_rendering_control_fallback(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    text: str,
+    expected: str | None,
+) -> None:
+    """Test the renderer location is probed when ssdp has no data."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://10.10.12.34:9197/dmr", status=status, text=text)
+    entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+
+    assert entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION) == expected
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
