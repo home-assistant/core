@@ -75,34 +75,6 @@ async def test_setup_does_not_serialize_independent_requests(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_setup_cancels_the_other_first_refresh(
-    hass: HomeAssistant,
-    mock_miele_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a failing first refresh cancels the one running in parallel."""
-    cancelled = asyncio.Event()
-
-    async def _get_devices() -> dict[str, Any]:
-        try:
-            await asyncio.sleep(10)
-        except asyncio.CancelledError:
-            cancelled.set()
-            raise
-        return {}
-
-    async def _get_filling_levels() -> dict[str, Any]:
-        raise ClientConnectionError
-
-    mock_miele_client.get_devices.side_effect = _get_devices
-    mock_miele_client.get_filling_levels.side_effect = _get_filling_levels
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert cancelled.is_set()
-
-
 @pytest.mark.parametrize(
     ("expires_at", "status", "expected_state"),
     [

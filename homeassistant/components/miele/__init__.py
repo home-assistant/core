@@ -59,25 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> Non
     _api = MieleAPI(auth)
     _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
     _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
-
-    async def _first_refresh(
-        coordinator: MieleDataUpdateCoordinator | MieleAuxDataUpdateCoordinator,
-    ) -> None:
-        """Refresh a coordinator for the first time."""
-        await coordinator.async_config_entry_first_refresh()
-
-    refresh_tasks = [
-        hass.async_create_task(_first_refresh(_coordinator)),
-        hass.async_create_task(_first_refresh(_aux_coordinator)),
-    ]
-    try:
-        await asyncio.gather(*refresh_tasks)
-    except BaseException:
-        # A failed refresh must not leave its sibling running.
-        for task in refresh_tasks:
-            task.cancel()
-        await asyncio.gather(*refresh_tasks, return_exceptions=True)
-        raise
+    await asyncio.gather(
+        _coordinator.async_config_entry_first_refresh(),
+        _aux_coordinator.async_config_entry_first_refresh(),
+    )
 
     entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
