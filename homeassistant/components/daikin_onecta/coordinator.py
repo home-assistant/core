@@ -19,7 +19,7 @@ from daikin_onecta.exceptions import (
 from daikin_onecta.models import GatewayDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
@@ -171,7 +171,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self._polling_backoff_until = None
             self._last_patch_call = dt_util.utcnow()
             if had_polling_backoff or self._unsub_post_write_refresh is not None:
-                self.update_interval = _POST_WRITE_COOLDOWN
                 self._schedule_post_write_refresh()
             return True
 
@@ -200,6 +199,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._unsub_post_write_refresh = None
         await self.async_request_refresh()
 
+    @callback
     def _cancel_post_write_refresh(self) -> None:
         """Cancel a pending post-write refresh."""
         if self._unsub_post_write_refresh is not None:

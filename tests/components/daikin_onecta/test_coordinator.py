@@ -684,7 +684,6 @@ class TestOnectaDataUpdateCoordinator:
 
         command = AsyncMock()
         assert await coordinator.async_execute_command(lambda _client: command())
-        assert coordinator.update_interval == timedelta(seconds=30)
 
         freezer.tick(timedelta(seconds=29))
         async_fire_time_changed(hass)

@@ -1931,6 +1931,26 @@ def test_swing_modes_translate_standard_values(
     ]
 
 
+def test_fixed_swing_mode_is_not_treated_as_swing_off() -> None:
+    """Keep Daikin's fixed direction mode distinct from swing off."""
+    entity = object.__new__(DaikinClimate)
+    axis = SimpleNamespace(
+        current_mode=SimpleNamespace(
+            settable=True,
+            value="fixed",
+            values=["swing", "fixed"],
+        )
+    )
+    entity._fan_operation = MagicMock(
+        return_value=SimpleNamespace(
+            fan_direction=SimpleNamespace(vertical=axis, horizontal=None)
+        )
+    )
+
+    assert entity._get_swing_mode() == "fixed"
+    assert entity._get_swing_modes() == [SWING_ON, "fixed"]
+
+
 @pytest.mark.parametrize(
     ("control", "service", "service_data", "feature"),
     [
