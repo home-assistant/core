@@ -3862,7 +3862,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "energyzero": {
       "name": "EnergyZero",
@@ -3984,8 +3984,8 @@
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
-      "iot_class": "local_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "epic_games_store": {
       "name": "Epic Games Store",
@@ -7052,6 +7052,18 @@
       ],
       "config_flow": false
     },
+    "intesis_modbus": {
+      "name": "Intesis Modbus",
+      "integration_type": "device",
+      "categories": [
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "intesishome": {
       "name": "IntesisHome",
       "integration_type": "hub",
@@ -8956,14 +8968,14 @@
     },
     "meteoalarm": {
       "name": "MeteoAlarm",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "weather_alerts.public_warnings"
       ],
       "connectivity": [
         "cloud"
       ],
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "meteoclimatic": {
@@ -13442,7 +13454,8 @@
         "productivity_information.shopping_groceries"
       ],
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "sia": {
       "name": "SIA Alarm Systems",
@@ -15669,6 +15682,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "trimlight": {
+      "name": "Trimlight",
+      "integration_type": "device",
+      "categories": [
+        "lighting.led_strips_controllers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "trmnl": {
       "name": "TRMNL",
       "integration_type": "hub",
@@ -16385,6 +16407,18 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "voice_support": {
+      "name": "Voice support",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.voice_assistants"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "voicerss": {
       "name": "VoiceRSS",

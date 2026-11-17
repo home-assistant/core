@@ -42,6 +42,7 @@
     "select_schedule": "Winter",
     "sensors": {
       "illuminance": 45.0,
+      "maximum_modulation_level": 100,
       "setpoint_high": 23.5,
       "setpoint_low": 4.0,
       "temperature": 24.1
@@ -120,6 +121,8 @@
       "dhw_temperature": 52.9,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 100,
+      "fault_flags": 0,
+      "oem_fault_code": 0,
       "outdoor_air_temperature": 17.2,
       "return_temperature": 26.3,
       "water_temperature": 25.3

@@ -8,20 +8,24 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 from solarlog_cli.solarlog_exceptions import (
+    SolarLogAuthenticationError,
     SolarLogConnectionError,
     SolarLogUpdateError,
 )
-from solarlog_cli.solarlog_models import InverterData
+from solarlog_cli.solarlog_models import BatteryData, InverterData, SolarlogData
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from . import setup_platform
 
@@ -82,6 +86,86 @@ async def test_add_remove_entities(
     assert hass.states.get("sensor.inverter_3_consumption_year").state == "0.454"
 
 
+async def test_battery_data_survives_basic_refresh(
+    hass: HomeAssistant,
+    mock_solarlog_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test battery data is preserved across a basic refresh and updated by a device refresh."""
+
+    async def return_basic_data() -> SolarlogData:
+        return SolarlogData.from_dict(
+            await async_load_json_object_fixture(hass, "solarlog_data.json", DOMAIN)
+        )
+
+    mock_solarlog_connector.update_basic_data.side_effect = return_basic_data
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await async_setup_component(hass, "homeassistant", {})
+
+    assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_solarlog_connector.update_basic_data.await_count == 2
+    assert mock_solarlog_connector.update_battery_data.await_count == 2
+    assert hass.states.get("sensor.solarlog_charging_power").state == "50.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "0.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "45.0"
+
+    mock_solarlog_connector.update_device_list.return_value = {}
+    mock_solarlog_connector.update_inverter_data.return_value = {}
+    mock_solarlog_connector.update_battery_data.side_effect = [
+        SolarLogUpdateError(),
+        BatteryData(
+            charge_power=100.0,
+            discharge_power=25.0,
+            level=80.0,
+            voltage=50.0,
+        ),
+    ]
+    freezer.tick(delta=timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.solarlog_charging_power").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.solarlog_discharging_power").state == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("sensor.solarlog_charge_level").state == STATE_UNAVAILABLE
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.solarlog_charging_power").state == "100.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "25.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "80.0"
+
+    mock_solarlog_connector.update_battery_data.side_effect = None
+    mock_solarlog_connector.update_battery_data.return_value = BatteryData(
+        charge_power=150.0,
+        discharge_power=35.0,
+        level=90.0,
+        voltage=50.0,
+    )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": "sensor.solarlog_charging_power"},
+        blocking=True,
+    )
+
+    assert hass.states.get("sensor.solarlog_charging_power").state == "150.0"
+    assert hass.states.get("sensor.solarlog_discharging_power").state == "35.0"
+    assert hass.states.get("sensor.solarlog_charge_level").state == "90.0"
+
+
 @pytest.mark.usefixtures("mock_solarlog_connector")
 async def test_inverter_via_device_id(
     hass: HomeAssistant,
@@ -104,6 +188,78 @@ async def test_inverter_via_device_id(
     assert inverter_device is not None
 
     assert inverter_device.via_device_id == controller_device.id
+
+
+@pytest.mark.parametrize(
+    ("update_method", "coordinator_name"),
+    [
+        ("update_energy_data", "longtime_data_coordinator"),
+        ("update_inverter_data", "device_data_coordinator"),
+    ],
+)
+async def test_auth_error_during_coordinator_update(
+    hass: HomeAssistant,
+    update_method: str,
+    coordinator_name: str,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinators recover after an authentication error."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    update_mock = getattr(mock_solarlog_connector, update_method)
+    update_mock.side_effect = [
+        SolarLogAuthenticationError(),
+        update_mock.return_value,
+    ]
+    mock_solarlog_connector.login.return_value = True
+    update_count = update_mock.await_count
+    coordinator = getattr(mock_config_entry.runtime_data, coordinator_name)
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not coordinator.last_update_success
+    assert update_mock.await_count == update_count + 1
+    assert mock_solarlog_connector.login.await_count == 2
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert coordinator.last_update_success
+    assert update_mock.await_count == update_count + 2
+    assert mock_solarlog_connector.login.await_count == 2
+
+
+async def test_auth_error_during_longtime_update_failed_authentication(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a longtime update starts reauth when authentication cannot be renewed."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    mock_solarlog_connector.update_energy_data.side_effect = SolarLogAuthenticationError
+    mock_solarlog_connector.login.return_value = False
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        not mock_config_entry.runtime_data.longtime_data_coordinator.last_update_success
+    )
+    assert mock_solarlog_connector.login.await_count == 2
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize(

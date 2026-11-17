@@ -13,7 +13,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -97,6 +97,6 @@ async def test_switch_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: AIR_INTAKE_ENTITY_ID},
+            {TargetKey.ENTITY_ID: AIR_INTAKE_ENTITY_ID},
             blocking=True,
         )

@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeHarmonyClient
@@ -32,6 +33,9 @@ from .const import (
     PLAY_MUSIC_ACTIVITY_ID,
     WATCH_TV_ACTIVITY_ID,
 )
+
+OLD_CONFIG_FILE = "harmony_123.conf"
+NEW_CONFIG_FILE = f"{STORAGE_DIR}/{DOMAIN}/harmony_123.conf"
 
 
 async def test_unique_id_migration(
@@ -195,7 +199,8 @@ async def test_remove_entry_removes_config_file(
 ) -> None:
     """Test removing the entry removes the hub configuration file."""
     hass.config.config_dir = str(tmp_path)
-    config_file = tmp_path / "harmony_123.conf"
+    config_file = tmp_path / NEW_CONFIG_FILE
+    config_file.parent.mkdir(parents=True)
     config_file.write_text("{}")
     mock_config_entry.add_to_hass(hass)
 
@@ -203,3 +208,41 @@ async def test_remove_entry_removes_config_file(
     await hass.async_block_till_done()
 
     assert not config_file.exists()
+
+
+@pytest.mark.usefixtures("mock_hc", "mock_write_config")
+async def test_migrate_config_file_to_storage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test the hub configuration file is moved from the config root into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / OLD_CONFIG_FILE).write_text("{}")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=mock_config_entry.unique_id,
+        data=mock_config_entry.data,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 2
+    assert not (tmp_path / OLD_CONFIG_FILE).exists()
+    assert (tmp_path / NEW_CONFIG_FILE).read_text() == "{}"
+
+
+@pytest.mark.usefixtures("mock_hc")
+async def test_config_file_written_to_storage(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, tmp_path: Path
+) -> None:
+    """Test the hub configuration file is written into .storage."""
+    hass.config.config_dir = str(tmp_path)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (tmp_path / NEW_CONFIG_FILE).exists()
+    assert not (tmp_path / OLD_CONFIG_FILE).exists()

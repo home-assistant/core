@@ -12,10 +12,10 @@ from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
+
 if TYPE_CHECKING:
     from . import ThinqConfigEntry
-
-from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
 

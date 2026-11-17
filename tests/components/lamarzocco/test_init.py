@@ -16,7 +16,11 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
+from homeassistant.components.lamarzocco.const import (
+    CONF_INSTALLATION_KEY,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -283,6 +287,46 @@ async def test_gateway_version_issue(
         DOMAIN, f"unsupported_gateway_firmware_{mock_config_entry.entry_id}"
     )
     assert (issue is not None) == issue_exists
+
+
+@pytest.mark.parametrize(
+    ("entry_token", "cloud_token", "use_bluetooth", "issue_exists"),
+    [
+        pytest.param(None, None, True, True, id="missing_token"),
+        pytest.param("token", None, True, False, id="stored_token"),
+        pytest.param(None, "token", True, False, id="token_from_cloud"),
+        pytest.param(None, None, False, False, id="bluetooth_disabled"),
+    ],
+)
+async def test_missing_bluetooth_token_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_client: MagicMock,
+    entry_token: str | None,
+    cloud_token: str | None,
+    use_bluetooth: bool,
+    issue_exists: bool,
+) -> None:
+    """Test the issue for a missing Bluetooth token."""
+    mock_cloud_client.get_thing_settings.return_value.ble_auth_token = cloud_token
+    entry = MockConfigEntry(
+        title=mock_config_entry.title,
+        domain=DOMAIN,
+        version=4,
+        data=mock_config_entry.data | {CONF_TOKEN: entry_token},
+        options={CONF_USE_BLUETOOTH: use_bluetooth},
+        unique_id=mock_config_entry.unique_id,
+    )
+
+    await async_init_integration(hass, entry)
+
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"missing_bluetooth_token_{entry.entry_id}"
+        )
+        is not None
+    ) == issue_exists
 
 
 async def test_gateway_version_issue_per_entry(

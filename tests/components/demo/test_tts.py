@@ -18,7 +18,7 @@ from homeassistant.components.tts import (
     TextToSpeechServiceArgument,
     async_get_media_source_audio,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -55,7 +55,7 @@ async def test_speak(hass: HomeAssistant) -> None:
         TTS_DOMAIN,
         TextToSpeechService.SPEAK,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID: "media_player.something",
             TextToSpeechServiceArgument.MESSAGE: "There is someone at the door.",
         },
