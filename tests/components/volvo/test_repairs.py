@@ -36,26 +36,19 @@ async def setup_repairs(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
 
 
-@pytest.mark.parametrize(
-    "reauth_in_progress",
-    [pytest.param(False, id="new_reauth"), pytest.param(True, id="existing_reauth")],
-)
-async def test_volvoid_migration_repair(
+async def test_volvoid_migration_repair_new_reauth(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     setup_integration: Callable[[], Awaitable[bool]],
-    reauth_in_progress: bool,
 ) -> None:
-    """Test that the repair continues in the reauth flow of the entry."""
+    """Test that the repair continues in a new reauth flow of the entry."""
     issue_id = f"volvoid_migration_{mock_config_entry.entry_id}"
     assert await setup_integration()
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "volvo_new"
     )
-    if reauth_in_progress:
-        await mock_config_entry.start_reauth_flow(hass)
 
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
@@ -71,6 +64,33 @@ async def test_volvoid_migration_repair(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
     assert result["next_flow"] == [FlowType.CONFIG_FLOW, flows[0]["flow_id"]]
+    # Removed by the reload after a successful reauth instead
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+
+async def test_volvoid_migration_repair_existing_reauth(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    setup_integration: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test that the repair continues in the existing reauth flow of the entry."""
+    issue_id = f"volvoid_migration_{mock_config_entry.entry_id}"
+    assert await setup_integration()
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "volvo_new"
+    )
+    reauth_result = await mock_config_entry.start_reauth_flow(hass)
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    result = await process_repair_fix_flow(client, result["flow_id"], json={})
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_started"
+    assert result["next_flow"] == [FlowType.CONFIG_FLOW, reauth_result["flow_id"]]
+
+    assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
     # Removed by the reload after a successful reauth instead
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 

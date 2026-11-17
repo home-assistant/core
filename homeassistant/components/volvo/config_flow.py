@@ -61,8 +61,8 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         url = URL(await super().async_generate_authorize_url())
         scopes: Sequence[str] = ALL_SCOPES
 
-        # Home Assistant Link manages the client ID in Home Assistant Cloud, so read it
-        # from the URL to follow its Volvo ID migration as well.
+        # Read client ID from the URL so we can support both
+        # local credentials and Home Assistant's account linking.
         if client_id := url.query.get("client_id"):
             scopes = get_volvoid_server(client_id).all_scopes
 
