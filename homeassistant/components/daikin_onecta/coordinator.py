@@ -106,6 +106,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         # Keep the bypass until the debouncer runs a refresh. A scheduled
         # refresh may consume it first, which still gives the request a cloud
         # update without making multiple calls for multiple climate entities.
+        # If a debounced request is dropped while another refresh is running,
+        # the flag may instead reach the next scheduled poll, causing one
+        # extra GET. Accept that rare request to preserve the manual bypass.
         self._bypass_polling_backoff = True
         await super().async_request_refresh()
 
