@@ -11,13 +11,18 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
 from aiounifi.models.api import ApiItem
-from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyScheduleMode
+from aiounifi.models.firewall_policy import (
+    FirewallPolicy,
+    FirewallPolicyScheduleMode,
+    build_schedule,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
 from .const import DOMAIN
@@ -27,7 +32,6 @@ from .entity import (
     async_firewall_policy_supported_fn,
     async_unifi_network_device_info_fn,
 )
-from .firewall_policy_schedule import async_save_schedule
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -63,7 +67,13 @@ async def async_firewall_policy_schedule_mode_control_fn(
             translation_domain=DOMAIN,
             translation_key="schedule_mode_not_supported",
         )
-    await async_save_schedule(hub, obj_id, mode=mode)
+    # "Today" is the controller's date: its clock is the one the schedule runs on.
+    await hub.async_save_firewall_policy(
+        obj_id,
+        schedule_fn=lambda current: build_schedule(
+            current, dt_util.now(hub.time_zone).date(), mode=mode
+        ),
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -116,17 +126,16 @@ class UnifiSelectEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        async with self.control_lock:
-            try:
-                await self.entity_description.select_option_fn(
-                    self.hub, self._obj_id, option
-                )
-            except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
-            await self.async_refresh_after_control()
+        try:
+            await self.entity_description.select_option_fn(
+                self.hub, self._obj_id, option
+            )
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
+        await self.async_refresh_after_control()
 
     @callback
     @override

@@ -1,9 +1,15 @@
 """UniFi Network entity helper."""
 
+import asyncio
+from collections import defaultdict
+from collections.abc import Callable, Mapping
+from copy import deepcopy
 from datetime import datetime, timedelta
+from typing import Any, cast
 
 import aiounifi
 from aiounifi.models.device import DeviceSetPoePortModeRequest
+from aiounifi.models.firewall_policy import FirewallPolicySchedule
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -20,6 +26,7 @@ class UnifiEntityHelper:
         self.api = api
 
         self._device_command = UnifiDeviceCommand(hass, api)
+        self._firewall_policy_command = UnifiFirewallPolicyCommand(api)
         self._heartbeat = UnifiEntityHeartbeat(hass)
 
     @callback
@@ -54,6 +61,19 @@ class UnifiEntityHelper:
     ) -> None:
         """Queue commands to execute them together per device."""
         self._device_command.queue_poe_command(device_id, port_idx, poe_mode)
+
+    async def save_firewall_policy(
+        self,
+        obj_id: str,
+        *,
+        enabled: bool | None = None,
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        | None = None,
+    ) -> None:
+        """Save a change to a firewall policy, one write per policy at a time."""
+        await self._firewall_policy_command.save(
+            obj_id, enabled=enabled, schedule_fn=schedule_fn
+        )
 
 
 class UnifiEntityHeartbeat:
@@ -152,3 +172,53 @@ class UnifiDeviceCommand:
                 )
 
         self._cancel_command = async_call_later(self.hass, self.COMMAND_DELAY, _command)
+
+
+class UnifiFirewallPolicyCommand:
+    """UniFi firewall policy command helper class.
+
+    Saving a firewall policy sends the whole policy, built from the cached
+    copy. Entities on different platforms can change the same policy, so
+    writes to a policy run one at a time, each starting from the policy as
+    the one before it left it.
+
+    Unlike PoE commands these aren't delayed and batched: the caller needs
+    to know whether its own change was accepted.
+    """
+
+    def __init__(self, api: aiounifi.Controller) -> None:
+        """Initialize firewall policy command helper."""
+        self.api = api
+
+        self._locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
+
+    async def save(
+        self,
+        obj_id: str,
+        *,
+        enabled: bool | None = None,
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        | None = None,
+    ) -> None:
+        """Save a change to a firewall policy.
+
+        schedule_fn builds the new schedule from the current one.
+        """
+        async with self._locks[obj_id]:
+            policies = self.api.firewall_policies
+            policy = policies[obj_id]
+            schedule = None
+            if schedule_fn is not None:
+                # aiounifi types the schedule as always present; read it as optional.
+                raw: Mapping[str, Any] = policy.raw
+                schedule = schedule_fn(raw.get("schedule", {}))
+            response = await policies.save(policy, enabled=enabled, schedule=schedule)
+            if not response.get("data"):
+                # The controller accepted the change without sending the policy
+                # back. Cache what was sent, so the next write builds on it.
+                saved = cast(dict[str, Any], deepcopy(policy.raw))
+                if enabled is not None:
+                    saved["enabled"] = enabled
+                if schedule is not None:
+                    saved["schedule"] = schedule
+                policies.process_raw([saved])
