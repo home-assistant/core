@@ -515,6 +515,10 @@ async def test_set_system_mode_entity_not_found(
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
         {EvoServiceArgument.MODE: "NotARealMode"},
+        "mode_unknown",
+    ),
+    (
+        {EvoServiceArgument.MODE: "Cool"},  # a valid mode, but not for this system
         "mode_not_supported",
     ),
     (
@@ -572,16 +576,29 @@ async def test_set_system_mode_validator(
 
 
 @pytest.mark.parametrize("install", ["default"])
-async def test_set_system_mode_rejected_for_other_reason(
+@pytest.mark.parametrize(
+    ("reason", "expected_translation_key"),
+    [
+        pytest.param(
+            evo_exc.RequestErrorReason.TIMESPAN_REQUIRED,
+            "mode_timespan_required",
+            id="timespan_required",
+        ),
+        pytest.param(None, "mode_request_invalid", id="other_reason"),
+    ],
+)
+async def test_set_system_mode_rejected_by_client(
     hass: HomeAssistant,
     ctl_id: str,
+    reason: evo_exc.RequestErrorReason | None,
+    expected_translation_key: str,
 ) -> None:
-    """Test a system mode rejected by the client for any other reason."""
+    """Test a system mode rejected by the client, for reasons the fixtures can't raise."""
 
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidSetModeError("Invalid mode"),
+            side_effect=evo_exc.InvalidSetModeError("Invalid mode", reason=reason),
         ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -593,7 +610,7 @@ async def test_set_system_mode_rejected_for_other_reason(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "mode_request_invalid"
+    assert exc_info.value.translation_key == expected_translation_key
     assert exc_info.value.translation_placeholders == {"mode": "Auto"}
 
 

@@ -57,8 +57,9 @@ EVO_PRESET_TO_HA = {
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 _SET_MODE_ERROR_KEYS: Final = {
-    evo.RequestErrorReason.MODE_UNKNOWN: "mode_not_supported",
+    evo.RequestErrorReason.MODE_UNKNOWN: "mode_unknown",
     evo.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
+    evo.RequestErrorReason.TIMESPAN_REQUIRED: "mode_timespan_required",
     evo.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
     evo.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE: "mode_timespan_not_in_future",
 }

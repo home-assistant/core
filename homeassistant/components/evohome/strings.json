@@ -27,6 +27,12 @@
     "mode_timespan_not_in_future": {
       "message": "The 'Duration' or 'Period' of the mode `{mode}` must end in the future"
     },
+    "mode_timespan_required": {
+      "message": "The mode `{mode}` requires a 'Duration' or 'Period'"
+    },
+    "mode_unknown": {
+      "message": "The mode `{mode}` is not a valid system mode"
+    },
     "zone_only_service": {
       "message": "Only zones support the `{service}` action"
     }
