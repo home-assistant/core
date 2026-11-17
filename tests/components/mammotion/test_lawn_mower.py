@@ -355,6 +355,13 @@ async def test_command_not_delivered(
         ),
         pytest.param(
             SERVICE_STOP,
+            WorkMode.MODE_CHARGING_PAUSE,
+            [TimeoutError],
+            "stop_failed",
+            id="stop-charging-paused",
+        ),
+        pytest.param(
+            SERVICE_STOP,
             WorkMode.MODE_RETURNING,
             [TimeoutError],
             "dock_cancel_failed",
@@ -416,6 +423,13 @@ def _reports(*states: Device) -> Callable[..., Awaitable[Device]]:
         ),
         pytest.param(
             WorkMode.MODE_PAUSE, WorkMode.MODE_PAUSE, ["cancel_job"], 0, id="paused"
+        ),
+        pytest.param(
+            WorkMode.MODE_CHARGING_PAUSE,
+            WorkMode.MODE_CHARGING_PAUSE,
+            ["cancel_job"],
+            0,
+            id="charging-paused",
         ),
         pytest.param(
             WorkMode.MODE_RETURNING,

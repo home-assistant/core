@@ -150,6 +150,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         if mode not in (
             WorkMode.MODE_WORKING,
             WorkMode.MODE_PAUSE,
+            WorkMode.MODE_CHARGING_PAUSE,
             WorkMode.MODE_RETURNING,
         ):
             return
@@ -165,7 +166,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                 mode = await self._async_wait_for_mode(
                     "dock_cancel_failed", WorkMode.MODE_PAUSE, WorkMode.MODE_READY
                 )
-            if mode == WorkMode.MODE_PAUSE:
+            if mode in (WorkMode.MODE_PAUSE, WorkMode.MODE_CHARGING_PAUSE):
                 await self._async_send("cancel_job", "stop_failed")
         finally:
             await self.coordinator.async_request_report()
