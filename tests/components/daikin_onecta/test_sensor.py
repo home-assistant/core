@@ -1,5 +1,6 @@
 """Tests for Daikin Onecta sensor entities."""
 
+from dataclasses import replace
 import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock
@@ -14,7 +15,6 @@ from homeassistant.components.daikin_onecta.entity_descriptions import (
 )
 from homeassistant.components.daikin_onecta.sensor import (
     DaikinEnergySensor,
-    DaikinLimitSensor,
     DaikinValueSensor,
     EnergySensorDetails,
     ValueSensorDetails,
@@ -342,53 +342,50 @@ def test_sensor_preserves_unknown_native_unit(
     assert _native_unit(unit, description) == expected
 
 
-def test_energy_sensor_value_when_management_point_is_missing() -> None:
-    """Return no energy value after its source point disappears."""
-    entity = object.__new__(DaikinEnergySensor)
-    entity._device = SimpleNamespace(management_point=lambda _: None)
-    entity._embedded_id = "point"
-    entity._period = SENSOR_PERIOD_DAILY
-    entity._datatype = "consumption"
-    entity._sensor_type = "electrical"
-    entity._operation_mode = "heating"
-
-    assert entity.sensor_value() is None
-
-
-def test_value_sensor_value_when_management_point_is_missing() -> None:
-    """Return no scalar value after its source point disappears."""
-    entity = object.__new__(DaikinValueSensor)
-    entity._device = SimpleNamespace(management_point=lambda _: None)
-    entity._embedded_id = "point"
-    entity._sub_type = None
-    entity._value = "roomTemperature"
-
-    assert entity.sensor_value() is None
-
-
-def test_value_sensor_unavailable_when_point_disappears_between_checks() -> None:
-    """Handle a point disappearing while availability is being evaluated."""
-    entity = object.__new__(DaikinValueSensor)
-    entity.coordinator = SimpleNamespace(last_update_success=True)
-    entity._embedded_id = "point"
-    entity._sub_type = None
-    entity._value = "roomTemperature"
-    entity._device = SimpleNamespace(
-        available=True,
-        management_point=MagicMock(side_effect=[SimpleNamespace(), None]),
+async def test_sensors_become_unavailable_when_management_point_disappears(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Publish scalar and energy sensors unavailable through HA after removal."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("climateControl")[0]
+    scalar_entity_id = "sensor.altherma_climatecontrol_room_temperature"
+    energy_entity_id = (
+        "sensor.altherma_climatecontrol_heating_daily_electrical_consumption"
     )
+    assert hass.states.get(scalar_entity_id) is not None
+    assert hass.states.get(energy_entity_id) is not None
 
-    assert not entity.available
+    gateway.device.management_points.remove(point)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(scalar_entity_id).state == "unavailable"
+    assert hass.states.get(energy_entity_id).state == "unavailable"
 
 
-def test_limit_sensor_updates_on_coordinator_refresh() -> None:
-    """Refresh and publish the account-level rate-limit sensor value."""
-    entity = object.__new__(DaikinLimitSensor)
-    entity.coordinator = SimpleNamespace(rate_limits={"remaining_day": 123})
-    entity._limit_key = "remaining_day"
-    entity.async_write_ha_state = MagicMock()
+async def test_limit_sensor_updates_through_coordinator_listener(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Publish account rate-limit changes through the HA entity state API."""
+    registered = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{config_entry.unique_id}_rate_limit_remaining_day",
+        config_entry=config_entry,
+        disabled_by=None,
+    )
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    coordinator.client.rate_limit = replace(
+        coordinator.client.rate_limit, day_remaining=123
+    )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
-    entity._handle_coordinator_update()
-
-    assert entity.native_value == 123
-    entity.async_write_ha_state.assert_called_once_with()
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == "123"

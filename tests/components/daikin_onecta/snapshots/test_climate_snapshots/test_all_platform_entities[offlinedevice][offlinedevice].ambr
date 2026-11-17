@@ -244,7 +244,7 @@
         'state': 'unavailable',
       }),
     }),
-    'binary_sensor.studio_climatecontrol_power': dict({
+    'binary_sensor.studio_climatecontrol_on_off_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -258,7 +258,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': None,
-        'entity_id': 'binary_sensor.studio_climatecontrol_power',
+        'entity_id': 'binary_sensor.studio_climatecontrol_on_off_mode',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -266,12 +266,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': 'Power',
+        'object_id_base': 'On/Off mode',
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
         'original_icon': None,
-        'original_name': 'Power',
+        'original_name': 'On/Off mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -283,10 +283,10 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Power',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl On/Off mode',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.studio_climatecontrol_power',
+        'entity_id': 'binary_sensor.studio_climatecontrol_on_off_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

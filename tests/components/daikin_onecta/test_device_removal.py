@@ -13,6 +13,7 @@ from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
 
 
@@ -22,6 +23,7 @@ async def missing_gateway(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> dr.DeviceEntry:
     """Retain a registered gateway absent from a successful cloud response."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -31,7 +33,7 @@ async def missing_gateway(
         (DOMAIN, gateway_id), config_entry.entry_id
     )
     assert device_entry is not None
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
+    mock_onecta_client.get_gateway_devices.return_value = []
     freezer.tick(coordinator.update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

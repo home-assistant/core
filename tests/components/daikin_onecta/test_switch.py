@@ -1,7 +1,7 @@
 """Tests for Daikin Onecta switch entities."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from daikin_onecta.models import Characteristic
 import pytest
@@ -9,7 +9,6 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import ClimateEntityStateAttribute
 from homeassistant.components.daikin_onecta.switch import (
-    DaikinSwitch,
     async_setup_entry as async_setup_switches,
 )
 from homeassistant.components.switch import (
@@ -86,27 +85,45 @@ async def test_switch_updates_sibling_climate_preset(
         )
 
 
-def test_switch_preserves_unknown_state() -> None:
-    """Do not interpret an omitted switch value as off."""
-    entity = object.__new__(DaikinSwitch)
-    entity._switch_state = None
-
-    assert entity.is_on is None
-
-
-@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
-async def test_switch_rejects_unknown_state(method: str) -> None:
-    """Reject switch commands when Daikin omits the current value."""
-    entity = object.__new__(DaikinSwitch)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity._switch_state = None
-    entity._async_execute_command = AsyncMock()
+@pytest.mark.parametrize("service", [SWITCH_SERVICE_TURN_ON, SWITCH_SERVICE_TURN_OFF])
+async def test_switch_rejects_unknown_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Reject switch commands through the HA service when Daikin omits its value."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute_command
+    device = next(
+        device
+        for device in config_entry.runtime_data.data.values()
+        if any(
+            point.scalar_characteristic("econoMode") is not None
+            for point in device.device.management_points
+        )
+    )
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.scalar_characteristic("econoMode") is not None
+    )
+    characteristic = point.scalar_characteristic("econoMode")
+    assert characteristic is not None
+    characteristic.value = None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)()
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.test_living_room_climatecontrol_econo_mode"},
+            blocking=True,
+        )
 
     assert err.value.translation_key == "switch_state_unavailable"
-    entity._async_execute_command.assert_not_awaited()
+    execute_command.assert_not_awaited()
 
 
 async def test_unknown_characteristic_is_skipped() -> None:

@@ -7,7 +7,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import SCHEDULE_DISABLED
-from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -103,29 +102,49 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     assert updated_state.state == "althermaClimateControl1"
 
 
-async def test_schedule_select_rejects_missing_selection() -> None:
-    """Reject a selection when Daikin no longer provides schedule data."""
-    entity = object.__new__(DaikinScheduleSelect)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity.selection = MagicMock(return_value=None)
+async def test_schedule_select_rejects_missing_selection(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reject a selection through HA when Daikin no longer provides schedules."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = device.device.management_points[0]
+    point.schedule = None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
-        await entity.async_select_option("Schedule")
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.master_climatecontrol_schedule",
+                SelectServiceArgument.OPTION: "Schedule",
+            },
+            blocking=True,
+        )
 
-    assert err.value.translation_key == "schedule_selection_unavailable"
+    # The select platform rejects the now-absent option before calling the entity.
+    assert err.value.translation_key == "not_valid_option"
 
 
-async def test_schedule_select_rejects_unadvertised_option() -> None:
-    """Reject a schedule option that is not advertised by the device."""
-    entity = object.__new__(DaikinScheduleSelect)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity.selection = MagicMock(return_value=MagicMock())
-    entity.get_options = MagicMock(return_value=[])
-
+async def test_schedule_select_rejects_unadvertised_option(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reject an option through HA that the device does not advertise."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
     with pytest.raises(ServiceValidationError) as err:
-        await entity.async_select_option("Schedule")
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.master_climatecontrol_schedule",
+                SelectServiceArgument.OPTION: "not-advertised",
+            },
+            blocking=True,
+        )
 
-    assert err.value.translation_key == "schedule_option_unavailable"
+    assert err.value.translation_key == "not_valid_option"
 
 
 async def test_schedule_named_off_does_not_disable_schedule(

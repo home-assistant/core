@@ -2,16 +2,13 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from daikin_onecta.client import OnectaClient
-from daikin_onecta.models import Characteristic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
-from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
@@ -23,12 +20,20 @@ from homeassistant.components.fan import (
     FanEntityStateAttribute,
     FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .platform_helpers import _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture
+
+
+def _air_purification(config_entry: MockConfigEntry):
+    """Return the purifier state from the loaded fixture gateway."""
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert point.air_purification is not None
+    return point.air_purification
 
 
 async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
@@ -88,26 +93,53 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
 
 
 @pytest.mark.parametrize(
-    ("method", "args", "translation_key"),
+    ("method", "args"),
     [
-        ("async_turn_on", (), "air_purifier_power_unavailable"),
-        ("async_turn_off", (), "air_purifier_power_unavailable"),
-        ("async_set_preset_mode", ("auto_fan",), "air_purifier_mode_unavailable"),
-        ("async_set_percentage", (100,), "air_purifier_speed_unavailable"),
+        ("async_turn_on", ()),
+        ("async_turn_off", ()),
+        ("async_set_preset_mode", ("auto_fan",)),
+        ("async_set_percentage", (100,)),
     ],
 )
 async def test_air_purifier_rejects_unavailable_controls(
-    method: str, args: tuple[object, ...], translation_key: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    method: str,
+    args: tuple[object, ...],
 ) -> None:
-    """Reject purifier controls that are not provided by the device."""
-    entity = object.__new__(DaikinAirPurifier)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity._air_purification = MagicMock(return_value=None)
+    """Reject purifier services when the cloud no longer provides its controls."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    point = next(iter(coordinator.data.values())).device.management_points_by_type(
+        "climateControl"
+    )[0]
+    point.characteristics.pop("airPurificationMode")
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)(*args)
+    if method in ("async_turn_on", "async_turn_off"):
+        service = (
+            FAN_SERVICE_TURN_ON if method == "async_turn_on" else FAN_SERVICE_TURN_OFF
+        )
+        service_data = {}
+    elif method == "async_set_preset_mode":
+        service = SERVICE_SET_PRESET_MODE
+        service_data = {FanServiceArgument.PRESET_MODE: args[0]}
+    else:
+        service = SERVICE_SET_PERCENTAGE
+        service_data = {FanServiceArgument.PERCENTAGE: args[0]}
 
-    assert err.value.translation_key == translation_key
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol", **service_data},
+        blocking=True,
+    )
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None and state.state == "unavailable"
+    execute.assert_not_awaited()
 
 
 async def test_air_purifier_preset_updates_cached_state(
@@ -203,84 +235,97 @@ async def test_air_purifier_uses_discrete_speed_percentages(
     )
 
 
-def test_air_purifier_preserves_unknown_power_state() -> None:
-    """Do not interpret an omitted purifier power value as off."""
-    entity = object.__new__(DaikinAirPurifier)
-    purification = SimpleNamespace(
-        power=Characteristic(value=None, settable=True),
-        mode=None,
-        modes=[],
-        fan_operation=MagicMock(return_value=None),
-    )
-    entity._air_purification = MagicMock(return_value=purification)
+async def test_air_purifier_preserves_unknown_power_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not interpret an omitted cloud power value as off in HA state."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    purification = _air_purification(config_entry)
+    assert purification.power is not None
+    purification.power.value = None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
-    entity._update_state()
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None
+    assert state.state == "unknown"
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
-    assert entity.is_on is None
-    assert entity.percentage is None
 
+async def test_air_purifier_preserves_unknown_fixed_speed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not publish a percentage when the cloud omits fixed speed value."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    purification = _air_purification(config_entry)
+    assert purification.mode is not None
+    purification.mode.value = "manualFan"
+    operation = purification.fan_operation("manualFan")
+    assert operation is not None and operation.fan_speed is not None
+    assert operation.fan_speed.modes is not None
+    operation.fan_speed.modes[FANMODE_FIXED].value = None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
-def test_air_purifier_preserves_unknown_fixed_speed() -> None:
-    """Do not convert an omitted native fixed speed to an integer."""
-    entity = object.__new__(DaikinAirPurifier)
-    operation = SimpleNamespace(
-        fan_speed=SimpleNamespace(
-            modes={FANMODE_FIXED: Characteristic(value=None, settable=True)}
-        )
-    )
-    purification = SimpleNamespace(
-        power=Characteristic(value="on", settable=True),
-        mode=Characteristic(value="manualFan", settable=True),
-        modes=["manualFan"],
-        fan_operation=MagicMock(return_value=operation),
-    )
-    entity._air_purification = MagicMock(return_value=purification)
-    entity._fixed_speeds = MagicMock(return_value=[1, 2, 3, 4])
-    entity._fixed_speed_count = MagicMock(return_value=4)
-
-    entity._update_state()
-
-    assert entity.percentage is None
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
 
 @pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
-async def test_air_purifier_rejects_unknown_power_state(method: str) -> None:
-    """Reject purifier commands when Daikin omits the current power value."""
-    entity = object.__new__(DaikinAirPurifier)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity._air_purification = MagicMock(
-        return_value=SimpleNamespace(power=Characteristic(value=None, settable=True))
-    )
-    entity._power_control_is_available = MagicMock(return_value=True)
-    entity._async_execute_air_purification_command = AsyncMock()
+async def test_air_purifier_rejects_unknown_power_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry, method: str
+) -> None:
+    """Reject HA power services when Daikin omits its current value."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.power is not None
+    purification.power.value = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)()
-
-    assert err.value.translation_key == "air_purifier_power_unavailable"
-    entity._async_execute_air_purification_command.assert_not_awaited()
-
-
-async def test_air_purifier_percentage_rejects_unknown_power_before_mode_write() -> (
-    None
-):
-    """Do not partially change purifier mode when its power state is unknown."""
-    entity = object.__new__(DaikinAirPurifier)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_is_on", None)
-    entity._air_purification = MagicMock(
-        return_value=SimpleNamespace(
-            power=Characteristic(value=None, settable=True),
-            mode=Characteristic(value="autoFan"),
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FAN_SERVICE_TURN_ON if method == "async_turn_on" else FAN_SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol"},
+            blocking=True,
         )
-    )
-    entity._async_set_mode = AsyncMock()
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_percentage(100)
 
     assert err.value.translation_key == "air_purifier_power_unavailable"
-    entity._async_set_mode.assert_not_awaited()
+    execute.assert_not_awaited()
+
+
+async def test_air_purifier_percentage_rejects_unknown_power_before_mode_write(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not change purifier mode through HA when its power state is unknown."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.power is not None
+    purification.power.value = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol",
+                FanServiceArgument.PERCENTAGE: 100,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "air_purifier_power_unavailable"
+    execute.assert_not_awaited()
 
 
 async def test_air_purifier_turn_off_then_on_updates_cached_state(
@@ -394,155 +439,167 @@ async def test_air_purifier_rejects_manual_speed_as_preset(
     command.assert_not_awaited()
 
 
-async def test_air_purifier_does_not_expose_read_only_preset_modes() -> None:
-    """Do not expose a preset service for a read-only Daikin mode."""
-    entity = object.__new__(DaikinAirPurifier)
-    purification = SimpleNamespace(
-        power=SimpleNamespace(value="on"),
-        mode=SimpleNamespace(value="autoFan", settable=False),
-        modes=["autoFan", "manualFan"],
-        fan_operation=MagicMock(return_value=None),
-    )
-    entity._air_purification = MagicMock(return_value=purification)
-    entity._device = SimpleNamespace(name="Purifier")
-
-    entity._update_state()
-
-    assert entity.supported_features == (
-        FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
-    )
-    assert entity.preset_modes == []
-    with pytest.raises(HomeAssistantError):
-        await entity.async_set_preset_mode("manualFan")
-
-
-@pytest.mark.parametrize(
-    ("mode", "fixed", "expected"),
-    [
-        ("missing", None, []),
-        ("read_only", SimpleNamespace(settable=False), []),
-        (
-            "missing_bounds",
-            SimpleNamespace(settable=True, min_value=1, max_value=None, step_value=1),
-            [],
-        ),
-        (
-            "missing_step",
-            SimpleNamespace(settable=True, min_value=1, max_value=3, step_value=None),
-            [],
-        ),
-        (
-            "invalid_step",
-            SimpleNamespace(settable=True, min_value=1, max_value=3, step_value=0),
-            [],
-        ),
-        (
-            "fractional_bounds",
-            SimpleNamespace(settable=True, min_value=1.5, max_value=3, step_value=1),
-            [],
-        ),
-        (
-            "fractional_step",
-            SimpleNamespace(settable=True, min_value=1, max_value=3, step_value=0.5),
-            [],
-        ),
-        (
-            "valid",
-            SimpleNamespace(settable=True, min_value=1, max_value=5, step_value=2),
-            [1, 3, 5],
-        ),
-    ],
-)
-def test_air_purifier_fixed_speeds(
-    mode: str, fixed: object, expected: list[int]
+async def test_air_purifier_does_not_expose_read_only_preset_modes(
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Only expose integral, writable fixed speeds."""
-    entity = object.__new__(DaikinAirPurifier)
-    operation = SimpleNamespace(
-        fan_speed=SimpleNamespace(modes={FANMODE_FIXED: fixed} if fixed else None)
+    """A read-only native mode is omitted from the HA fan preset service."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.mode is not None
+    purification.mode.settable = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None
+    assert not state.attributes.get(FanEntityCapabilityAttribute.PRESET_MODES)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                FanServiceArgument.PRESET_MODE: "auto_fan",
+            },
+            blocking=True,
+        )
+    execute.assert_not_awaited()
+
+
+async def test_air_purifier_hides_invalid_fixed_speed_control(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not advertise percentage control for malformed native speed data."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    operation = purification.fan_operation("manualFan")
+    assert operation is not None and operation.fan_speed is not None
+    assert operation.fan_speed.modes is not None
+    operation.fan_speed.modes[FANMODE_FIXED].step_value = 0
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.SET_SPEED
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                FanServiceArgument.PERCENTAGE: 50,
+            },
+            blocking=True,
+        )
+    execute.assert_not_awaited()
+
+
+async def test_air_purifier_turn_on_applies_optional_controls(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Apply optional preset and speed arguments through the HA fan service."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
+        config_entry
     )
-    purification = SimpleNamespace(
-        fan_operation=MagicMock(return_value=operation if mode != "missing" else None)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol",
+            FanServiceArgument.PRESET_MODE: "auto_fan",
+            FanServiceArgument.PERCENTAGE: 65,
+        },
+        blocking=True,
     )
-    entity._air_purification = MagicMock(return_value=purification)
 
-    assert entity._fixed_speeds() == expected
-    assert entity._fixed_speed_count() == (len(expected) or None)
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == 75
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
 
 
-async def test_air_purifier_turn_on_applies_optional_controls() -> None:
-    """Apply requested preset and speed after an already-on power state."""
-    entity = object.__new__(DaikinAirPurifier)
-    entity._air_purification = MagicMock(
-        return_value=SimpleNamespace(power=SimpleNamespace(value="on", settable=True))
+async def test_air_purifier_turn_off_is_noop_when_already_off(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Avoid a cloud write through HA when the purifier is already off."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol"},
+        blocking=True,
     )
-    entity.async_set_preset_mode = AsyncMock()
-    entity.async_set_percentage = AsyncMock()
+    execute.reset_mock()
 
-    await entity.async_turn_on(percentage=65, preset_mode="auto_fan")
-
-    entity.async_set_preset_mode.assert_awaited_once_with("auto_fan")
-    entity.async_set_percentage.assert_awaited_once_with(65)
-
-
-async def test_air_purifier_turn_off_is_noop_when_already_off() -> None:
-    """Avoid a cloud write when the purifier is already off."""
-    entity = object.__new__(DaikinAirPurifier)
-    entity._air_purification = MagicMock(
-        return_value=SimpleNamespace(power=SimpleNamespace(value="off", settable=True))
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol"},
+        blocking=True,
     )
-    entity._async_execute_air_purification_command = AsyncMock()
 
-    await entity.async_turn_off()
-
-    entity._async_execute_air_purification_command.assert_not_awaited()
+    execute.assert_not_awaited()
 
 
-async def test_air_purifier_zero_percentage_turns_off() -> None:
-    """Map zero fan percentage to the fan turn-off operation."""
-    entity = object.__new__(DaikinAirPurifier)
-    entity.async_turn_off = AsyncMock()
-
-    await entity.async_set_percentage(0)
-
-    entity.async_turn_off.assert_awaited_once_with()
-
-
-async def test_air_purifier_percentage_rejects_missing_speed_after_mode_change() -> (
-    None
-):
-    """Reject a speed command if selecting manual mode removes the mode data."""
-    entity = object.__new__(DaikinAirPurifier)
-    mode = SimpleNamespace(value="autoFan", settable=True)
-    purification = SimpleNamespace(
-        mode=mode,
-        modes=["autoFan", "manualFan"],
-        power=SimpleNamespace(value="on", settable=True),
+async def test_air_purifier_zero_percentage_turns_off(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Map zero fan percentage to power off through the HA fan service."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
+        config_entry
     )
-    entity._air_purification = MagicMock(side_effect=[purification, purification, None])
-    entity._fixed_speeds = MagicMock(return_value=[1, 2, 3])
-    entity._async_set_mode = AsyncMock()
-    entity._attr_is_on = True
-    entity._device = SimpleNamespace(name="Purifier")
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol",
+            FanServiceArgument.PERCENTAGE: 0,
+        },
+        blocking=True,
+    )
 
+    state = hass.states.get("fan.air_purifier_climatecontrol")
+    assert state is not None and state.state == "off"
+
+
+async def test_air_purifier_percentage_rejects_missing_speed_after_mode_change(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reject percentage service if the mode change removes speed data."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("climateControl")[0]
+
+    def remove_air_purification(*_args, **_kwargs) -> None:
+        point.characteristics.pop("airPurificationMode")
+
+    coordinator.client.patch_characteristic.side_effect = remove_air_purification
     with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_percentage(50)
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol",
+                FanServiceArgument.PERCENTAGE: 50,
+            },
+            blocking=True,
+        )
 
     assert err.value.translation_key == "air_purifier_speed_unavailable"
-
-
-async def test_air_purifier_percentage_rejects_unsupported_fixed_speeds() -> None:
-    """Reject a manual-mode request when Daikin exposes no writable speeds."""
-    entity = object.__new__(DaikinAirPurifier)
-    purification = SimpleNamespace(
-        mode=SimpleNamespace(value="manualFan", settable=True),
-        power=SimpleNamespace(value="on", settable=True),
-    )
-    entity._air_purification = MagicMock(return_value=purification)
-    entity._fixed_speeds = MagicMock(return_value=[])
-    entity._device = SimpleNamespace(name="Purifier")
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_percentage(50)
-
-    assert err.value.translation_key == "air_purifier_speed_unavailable"
+    assert execute.await_count == 1

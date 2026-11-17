@@ -31,7 +31,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import FAKE_ACCESS_TOKEN
+from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
@@ -260,6 +260,7 @@ async def test_poll_discovers_new_entities_through_reload(
     freezer: FrozenDateTimeFactory,
     add_capability: Callable[[list[GatewayDevice]], tuple[str, str]],
     disabled_by_default: bool,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Poll, reload, and actually create a newly exposed platform entity."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -268,6 +269,7 @@ async def test_poll_discovers_new_entities_through_reload(
     domain, unique_id = add_capability(devices)
     assert entity_registry.async_get_entity_id(domain, DOMAIN, unique_id) is None
 
+    mock_onecta_client.get_gateway_devices.return_value = devices
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -277,10 +279,6 @@ async def test_poll_discovers_new_entities_through_reload(
             "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value=FAKE_ACCESS_TOKEN,
         ),
-        patch(
-            "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
-            return_value=devices,
-        ) as get_gateways,
     ):
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -292,26 +290,27 @@ async def test_poll_discovers_new_entities_through_reload(
     assert (
         entity_registry.async_get(entity_id).disabled_by is not None
     ) == disabled_by_default
-    assert get_gateways.await_count == 2
+    assert mock_onecta_client.get_gateway_devices.await_count == 2
 
 
 async def test_pending_discovery_reload_is_not_scheduled_twice(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Only schedule one reload when another capability appears while it is pending."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("minimal_data")
     _add_boolean(devices)
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
+    mock_onecta_client.get_gateway_devices.return_value = devices
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
         updated_devices = deepcopy(devices)
         _add_setpoint(updated_devices)
-        coordinator._async_get_cloud_devices.return_value = updated_devices
+        mock_onecta_client.get_gateway_devices.return_value = updated_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     schedule_reload.assert_called_once_with(config_entry.entry_id)
@@ -321,6 +320,7 @@ async def test_state_changes_do_not_reload_platforms(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Ordinary temperature changes are not new entity capabilities."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -330,7 +330,7 @@ async def test_state_changes_do_not_reload_platforms(
     next(iter(point.temperature_control.value.operation_modes.values())).setpoints[
         "roomTemperature"
     ].value += 1
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
+    mock_onecta_client.get_gateway_devices.return_value = devices
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -415,6 +415,7 @@ async def test_removed_controls_become_unavailable_and_recover(
     suffix: str,
     remove_capability: Callable[[ManagementPoint], None],
     removal_reload_count: int,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Retain an entity's identity when its control disappears and returns."""
     await _async_setup_fixture(hass, config_entry, fixture)
@@ -437,7 +438,7 @@ async def test_removed_controls_become_unavailable_and_recover(
     registry_entry = entity_registry.async_get(entity_id)
     restored_devices = deepcopy(devices)
     remove_capability(point)
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=devices)
+    mock_onecta_client.get_gateway_devices.return_value = devices
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -453,7 +454,7 @@ async def test_removed_controls_become_unavailable_and_recover(
         )
         assert schedule_reload.call_count == removal_reload_count
 
-        coordinator._async_get_cloud_devices.return_value = restored_devices
+        mock_onecta_client.get_gateway_devices.return_value = restored_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert hass.states.get(entity_id).state == initial_state.state

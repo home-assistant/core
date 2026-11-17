@@ -64,14 +64,13 @@ async def test_refresh_button_recovers_after_failed_poll(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client,
 ) -> None:
     """Keep the button usable to retry a failed poll without reloading."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
-    coordinator._async_get_cloud_devices = AsyncMock(
-        side_effect=OnectaConnectionError(
-            "network unavailable", method="GET", path="/v1/gateway-devices"
-        )
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+        "network unavailable", method="GET", path="/v1/gateway-devices"
     )
     await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert not coordinator.last_update_success
@@ -79,9 +78,8 @@ async def test_refresh_button_recovers_after_failed_poll(
     assert state is not None
     assert state.state != "unavailable"
 
-    coordinator._async_get_cloud_devices = AsyncMock(
-        return_value=_load_gateway_devices("dry")
-    )
+    mock_onecta_client.get_gateway_devices.side_effect = None
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("dry")
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
@@ -90,4 +88,4 @@ async def test_refresh_button_recovers_after_failed_poll(
     )
 
     assert coordinator.last_update_success
-    coordinator._async_get_cloud_devices.assert_awaited_once()
+    mock_onecta_client.get_gateway_devices.assert_awaited()

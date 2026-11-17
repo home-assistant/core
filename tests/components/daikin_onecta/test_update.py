@@ -2,8 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from daikin_onecta.models import Characteristic, GatewayDevice
 from freezegun.api import FrozenDateTimeFactory
@@ -15,7 +14,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
     ClimateServiceArgument,
 )
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEntity
 from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
@@ -27,6 +25,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_fire_coordinator_update, _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -35,6 +34,7 @@ async def test_firmware_install_executes_command(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
@@ -81,7 +81,7 @@ async def test_firmware_install_executes_command(
 
     # A few fresh polls without status or version evidence may still be stale.
     gateways = _load_gateway_devices("dx4_firmwareavailable")
-    coordinator._async_get_cloud_devices = AsyncMock(return_value=gateways)
+    mock_onecta_client.get_gateway_devices.return_value = gateways
     await _async_fire_coordinator_update(hass, coordinator, freezer)
     assert (
         hass.states.get(state.entity_id).attributes[
@@ -137,7 +137,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A queued poll cannot replace firmware state before install bookkeeping."""
+    """Publish pending install state before the cloud write and stale polls."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
     entity_id = "update.living_room_gateway_firmware_update"
@@ -153,13 +153,13 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     point.firmware_update_status = None
     install_started = asyncio.Event()
     finish_install = asyncio.Event()
-    poll_started = asyncio.Event()
+    pending_during_install: list[tuple[int, str | None, int] | None] = []
     pending_at_poll: list[tuple[int, str | None, int] | None] = []
-    original_update_data = coordinator._async_update_data
 
     async def install(
         _gateway_id: str, _management_point_id: str, _resource: str
     ) -> None:
+        pending_during_install.append(entity._pending_install)
         install_started.set()
         await finish_install.wait()
 
@@ -167,16 +167,11 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         pending_at_poll.append(entity._pending_install)
         return gateways
 
-    async def track_update_data() -> dict[str, DaikinOnectaDevice]:
-        poll_started.set()
-        return await original_update_data()
-
     with (
         patch.object(coordinator.client, "put_management_point", side_effect=install),
         patch.object(
             coordinator.client, "get_gateway_devices", side_effect=read_gateways
         ),
-        patch.object(coordinator, "_async_update_data", side_effect=track_update_data),
         # Exercise the waiting poll without relying on the post-write cooldown.
         patch(
             "homeassistant.components.daikin_onecta.coordinator._POST_WRITE_COOLDOWN",
@@ -192,11 +187,15 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
             )
         )
         await install_started.wait()
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await poll_started.wait()
+        assert pending_during_install == [
+            (requested_sequence, installed_version, requested_sequence + 3)
+        ]
         finish_install.set()
         await install_task
+
+        # Query the stale cloud model after the install service returns.
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert pending_at_poll == [
@@ -212,69 +211,99 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
 
 
-async def test_failed_firmware_install_clears_pending_state() -> None:
-    """A rejected install does not leave optimistic progress behind."""
-    entity = object.__new__(DaikinFirmwareUpdateEntity)
-    entity._device = SimpleNamespace(id="gateway")
-    entity._embedded_id = "gateway"
-    entity._is_update_supported = True
-    entity._firmware_id = "firmware-id"
-    entity._attr_installed_version = "1.0"
-    entity._attr_supported_features = UpdateEntityFeature.INSTALL
-    entity._pending_install = None
-    entity.coordinator = SimpleNamespace(cloud_update_sequence=2)
-    entity._async_execute_command = AsyncMock(side_effect=HomeAssistantError)
-    entity.async_write_ha_state = MagicMock()
-
+async def test_failed_firmware_install_clears_pending_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A failed HA install service leaves no optimistic progress state."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    config_entry.runtime_data.async_execute_command = AsyncMock(return_value=False)
+    entity_id = "update.living_room_gateway_firmware_update"
     with pytest.raises(HomeAssistantError):
-        await entity.async_install(None, False)
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    assert entity._pending_install is None
-    assert entity.supported_features is UpdateEntityFeature.INSTALL
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+    assert state.attributes["supported_features"] == UpdateEntityFeature.INSTALL
 
 
 @pytest.mark.parametrize("update_supported", [False, True])
 async def test_firmware_install_rejects_unavailable_firmware(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     update_supported: bool,
 ) -> None:
-    """Do not issue a cloud command without a usable firmware offer."""
-    entity = object.__new__(DaikinFirmwareUpdateEntity)
-    entity._device = MagicMock(name="Device")
-    entity._is_update_supported = update_supported
-    entity._firmware_id = None
-    entity._async_execute_command = AsyncMock()
+    """Reject an install service if Daikin offers no supported firmware ID."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    execute = AsyncMock(return_value=True)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_point(gateway.device.gateway_embedded_id)
+    assert point is not None
+    assert point.is_firmware_update_supported is not None
+    assert point.firmware_update is not None
+    point.is_firmware_update_supported.value = update_supported
+    point.firmware_update.value.pop("id")
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_install(None, False)
+    if update_supported:
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: "update.living_room_gateway_firmware_update"},
+                blocking=True,
+            )
+        assert err.value.translation_key == "firmware_install_unavailable"
+    else:
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: "update.living_room_gateway_firmware_update"},
+                blocking=True,
+            )
+        assert err.value.translation_key == "service_not_supported"
+    execute.assert_not_awaited()
 
-    assert err.value.translation_key == "firmware_install_unavailable"
-    entity._async_execute_command.assert_not_awaited()
 
-
-def test_firmware_state_clears_when_firmware_disappears() -> None:
-    """Clear stale update state when a gateway stops reporting firmware data."""
-    entity = object.__new__(DaikinFirmwareUpdateEntity)
-    entity._pending_install = (1, "1.0", 4)
-    entity._attr_installed_version = "1.0"
-    entity._attr_latest_version = "2.0"
-    entity._attr_release_url = "https://example.invalid/release"
-    entity._attr_release_summary = "Update"
-    entity._firmware_id = "firmware-id"
-    entity._attr_in_progress = True
-    entity._is_update_supported = True
-    entity._attr_supported_features = (
-        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+async def test_firmware_state_clears_when_firmware_disappears(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Clear update state through HA when a gateway stops reporting firmware."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
+        config_entry
     )
-    entity._attr_extra_state_attributes = {"firmware_update_type": "major"}
+    entity_id = "update.living_room_gateway_firmware_update"
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
 
-    entity._update_from_management_point(SimpleNamespace(firmware=None))
+    gateway = next(iter(config_entry.runtime_data.data.values()))
+    point = gateway.device.management_point(gateway.device.gateway_embedded_id)
+    assert point is not None
+    point.firmware_version = None
+    point.software_version = None
+    point.is_firmware_update_supported = None
+    point.firmware_update = None
+    point.firmware_update_status = None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
-    assert entity._pending_install is None
-    assert entity.installed_version is None
-    assert entity.latest_version is None
-    assert entity.release_url is None
-    assert entity.release_summary is None
-    assert entity.in_progress is False
-    assert not entity._is_update_supported
-    assert entity.supported_features == UpdateEntityFeature(0)
-    assert entity.extra_state_attributes == {}
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"

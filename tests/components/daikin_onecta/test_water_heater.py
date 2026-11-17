@@ -1,6 +1,5 @@
 """Tests for Daikin Onecta water heater entities."""
 
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -10,6 +9,7 @@ from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_OPERATION_MODE as WATER_HEATER_SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE as WATER_HEATER_SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF as WATER_HEATER_SERVICE_TURN_OFF,
     SERVICE_TURN_ON as WATER_HEATER_SERVICE_TURN_ON,
@@ -143,92 +143,120 @@ def test_water_heater_uses_standard_target_temperature_step() -> None:
 
 
 @pytest.mark.parametrize(
-    ("operation", "temperature_settable", "translation_key"),
-    [
-        (STATE_OFF, True, "water_heater_off"),
-        (STATE_HEAT_PUMP, False, "water_heater_temperature_not_settable"),
-        (STATE_HEAT_PUMP, None, "water_heater_temperature_not_settable"),
-    ],
+    ("operation", "temperature_settable"),
+    [(STATE_OFF, True), (STATE_HEAT_PUMP, False), (STATE_HEAT_PUMP, None)],
 )
 async def test_water_heater_rejects_unavailable_temperature_control(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     operation: str,
     temperature_settable: bool | None,
-    translation_key: str,
 ) -> None:
-    """Reject temperature writes when the tank cannot accept them."""
-    if temperature_settable is None:
-        entity = object.__new__(DaikinWaterTank)
-        entity._device = MagicMock(
-            name="Tank",
-            management_point=MagicMock(
-                return_value=SimpleNamespace(
-                    domestic_hot_water=SimpleNamespace(temperature=None)
-                )
-            ),
-        )
-        entity._embedded_id = "tank"
-    else:
-        device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
-        point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    """Reject a HA temperature request when its device control is unavailable."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    point.on_off_mode.value = "off" if operation == STATE_OFF else "on"
+    if temperature_settable is False:
         assert point.domestic_hot_water is not None
         assert point.domestic_hot_water.temperature is not None
-        point.domestic_hot_water.temperature.settable = temperature_settable
-        entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
-    entity._attr_current_operation = operation
-    entity._async_execute_hot_water_command = AsyncMock()
+        point.domestic_hot_water.temperature.settable = False
+    elif temperature_settable is None:
+        point.temperature_control.value.operation_modes["heating"].setpoints.pop(
+            "domesticHotWaterTemperature"
+        )
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_tank_temperature(50)
+    expected_translation_key = (
+        "water_heater_off" if operation == STATE_OFF else "service_not_supported"
+    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+            },
+            blocking=True,
+        )
 
-    assert err.value.translation_key == translation_key
-    entity._async_execute_hot_water_command.assert_not_awaited()
+    assert err.value.translation_key == expected_translation_key
+    execute.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
-    ("current_operation", "supported_features", "method", "translation_key"),
+    ("current_operation", "method"),
     [
-        (
-            STATE_OFF,
-            WaterHeaterEntityFeature(0),
-            "async_turn_on",
-            "water_heater_on_off_unavailable",
-        ),
-        (
-            STATE_HEAT_PUMP,
-            WaterHeaterEntityFeature(0),
-            "async_turn_off",
-            "water_heater_on_off_unavailable",
-        ),
+        (STATE_OFF, "async_turn_on"),
+        (STATE_HEAT_PUMP, "async_turn_off"),
     ],
 )
 async def test_water_heater_rejects_unavailable_power_control(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     current_operation: str,
-    supported_features: WaterHeaterEntityFeature,
     method: str,
-    translation_key: str,
 ) -> None:
-    """Reject turning a water heater on or off without a writable power control."""
-    entity = object.__new__(DaikinWaterTank)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_current_operation", current_operation)
-    object.__setattr__(entity, "_attr_supported_features", supported_features)
+    """Reject unsupported power actions through Home Assistant services."""
+    await _async_setup_fixture(hass, config_entry, "holidaymode")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    point = next(
+        point
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterFlowThrough"
+    )
+    point.on_off_mode.value = "off" if current_operation == STATE_OFF else "on"
+    point.on_off_mode.settable = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    state = hass.states.async_all(WATER_HEATER_DOMAIN)[0]
+    assert state is not None
+    service = (
+        WATER_HEATER_SERVICE_TURN_ON
+        if method == "async_turn_on"
+        else WATER_HEATER_SERVICE_TURN_OFF
+    )
 
-    with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)()
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: state.entity_id},
+            blocking=True,
+        )
 
-    assert err.value.translation_key == translation_key
+    assert err.value.translation_key == "service_not_supported"
+    execute.assert_not_awaited()
 
 
-async def test_water_heater_rejects_unadvertised_operation_mode() -> None:
-    """Reject an operation mode that the heater does not advertise."""
-    entity = object.__new__(DaikinWaterTank)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    entity.get_operation_list = MagicMock(return_value=[STATE_OFF])
+async def test_water_heater_rejects_unadvertised_operation_mode(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reject an operation mode through HA that Daikin does not advertise."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
 
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_operation_mode(STATE_HEAT_PUMP)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                "operation_mode": "unsupported_mode",
+            },
+            blocking=True,
+        )
 
-    assert err.value.translation_key == "water_heater_operation_mode_unavailable"
+    execute.assert_not_awaited()
 
 
 async def test_water_heater_turn_off_updates_cached_state(
@@ -302,42 +330,40 @@ async def test_water_heater_temperature_updates_typed_cache(
     remove_listener()
 
 
-async def test_water_heater_publishes_successful_partial_operation_write() -> None:
-    """Keep the successful power write visible if powerful mode later fails."""
-    entity = object.__new__(DaikinWaterTank)
-    power = SimpleNamespace(value="off", settable=True)
-    powerful_mode = SimpleNamespace(value="off", settable=True)
-    hot_water = SimpleNamespace(
-        power=power,
-        powerful_mode=powerful_mode,
-        temperature=None,
-        current_temperature=None,
+async def test_water_heater_publishes_successful_partial_operation_write(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Keep a successful power stage visible when the boost stage fails."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    point = next(
+        point
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
     )
-    entity._device = MagicMock(
-        name="Tank",
-        management_point=MagicMock(
-            return_value=SimpleNamespace(
-                domestic_hot_water=hot_water,
-                on_off_mode=power,
-                sensory_characteristic=MagicMock(return_value=None),
-            )
-        ),
-    )
-    entity._embedded_id = "tank"
-    entity._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
-    entity._attr_current_operation = "off"
-    entity._attr_operation_list = ["off", STATE_HEAT_PUMP, STATE_PERFORMANCE]
-    entity._async_execute_hot_water_command = AsyncMock(
-        side_effect=[None, HomeAssistantError]
-    )
-    entity.coordinator = MagicMock()
-
+    point.on_off_mode.value = "off"
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.powerful_mode is not None
+    point.domestic_hot_water.powerful_mode.value = "off"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    coordinator.async_execute_command = AsyncMock(side_effect=[True, False])
     with pytest.raises(HomeAssistantError):
-        await entity.async_set_operation_mode(STATE_PERFORMANCE)
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+            {
+                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                "operation_mode": STATE_PERFORMANCE,
+            },
+            blocking=True,
+        )
 
-    assert power.value == "on"
-    assert entity.current_operation == STATE_HEAT_PUMP
-    entity.coordinator.async_update_listeners.assert_called_once()
+    state = hass.states.get("water_heater.altherma_domestichotwatertank")
+    assert state is not None
+    assert state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_HEAT_PUMP
+    assert coordinator.async_execute_command.await_count == 2
 
 
 @pytest.mark.parametrize(
@@ -350,60 +376,75 @@ async def test_water_heater_publishes_successful_partial_operation_write() -> No
     ],
 )
 async def test_water_heater_rejects_unknown_power_state(
-    method: str, args: tuple[object, ...]
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    method: str,
+    args: tuple[object, ...],
 ) -> None:
-    """Reject water-heater commands when Daikin omits the current power value."""
-    entity = object.__new__(DaikinWaterTank)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_current_operation", None)
-    entity.get_operation_list = MagicMock(
-        return_value=[STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
+    """Reject HA write services when Daikin omits the current power value."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    point = next(
+        point
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
     )
-    entity._async_execute_hot_water_command = AsyncMock()
+    point.on_off_mode.value = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    if method == "async_turn_on":
+        service = WATER_HEATER_SERVICE_TURN_ON
+        service_data = {}
+    elif method == "async_turn_off":
+        service = WATER_HEATER_SERVICE_TURN_OFF
+        service_data = {}
+    elif method == "async_set_operation_mode":
+        service = WATER_HEATER_SERVICE_SET_OPERATION_MODE
+        service_data = {"operation_mode": args[0]}
+    else:
+        service = WATER_HEATER_SERVICE_SET_TEMPERATURE
+        service_data = {WaterHeaterServiceArgument.TEMPERATURE: args[0]}
 
     with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)(*args)
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+                **service_data,
+            },
+            blocking=True,
+        )
 
     assert err.value.translation_key == "water_heater_on_off_unavailable"
-    entity._async_execute_hot_water_command.assert_not_awaited()
+    execute.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    ("current", "requested", "expected"),
-    [
-        (STATE_HEAT_PUMP, STATE_OFF, ("off", "")),
-        (STATE_OFF, STATE_PERFORMANCE, ("on", "on")),
-        (STATE_PERFORMANCE, STATE_HEAT_PUMP, ("", "off")),
-        (STATE_HEAT_PUMP, STATE_HEAT_PUMP, ("", "")),
-    ],
-)
-def test_water_heater_requested_modes(
-    current: str, requested: str, expected: tuple[str, str]
+async def test_water_heater_set_performance_updates_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Calculate only the native power and boost changes required."""
-    entity = object.__new__(DaikinWaterTank)
-    entity._attr_current_operation = current
-
-    assert entity._requested_modes(requested) == expected
-
-
-async def test_water_heater_publishes_successful_powerful_mode_write() -> None:
-    """Publish a successful boost change to sibling entities."""
-    entity = object.__new__(DaikinWaterTank)
-    powerful_mode = SimpleNamespace(value="off", settable=True)
-    hot_water = SimpleNamespace(
-        power=SimpleNamespace(value="on", settable=True),
-        powerful_mode=powerful_mode,
+    """A successful boost command updates the entity through HA's service API."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    config_entry.runtime_data.async_execute_command = _execute_typed_command(
+        config_entry
     )
-    point = SimpleNamespace(domestic_hot_water=hot_water)
-    entity._device = SimpleNamespace(management_point=lambda _: point)
-    entity._embedded_id = "tank"
-    entity._attr_current_operation = STATE_HEAT_PUMP
-    entity._attr_operation_list = [STATE_HEAT_PUMP, STATE_PERFORMANCE]
-    entity._async_execute_hot_water_command = AsyncMock()
-    entity._publish_write_update = MagicMock()
 
-    await entity.async_set_operation_mode(STATE_PERFORMANCE)
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestichotwatertank",
+            "operation_mode": STATE_PERFORMANCE,
+        },
+        blocking=True,
+    )
 
-    assert powerful_mode.value == "on"
-    entity._publish_write_update.assert_called_once_with()
+    state = hass.states.get("water_heater.altherma_domestichotwatertank")
+    assert state is not None
+    assert (
+        state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_PERFORMANCE
+    )

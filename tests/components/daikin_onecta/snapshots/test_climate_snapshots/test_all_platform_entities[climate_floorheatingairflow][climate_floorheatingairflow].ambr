@@ -534,7 +534,7 @@
         'state': 'off',
       }),
     }),
-    'binary_sensor.test_room_a_indoor_unit': dict({
+    'binary_sensor.test_room_a_indoor_unit_dry_keep_setting': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -548,7 +548,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': None,
-        'entity_id': 'binary_sensor.test_room_a_indoor_unit',
+        'entity_id': 'binary_sensor.test_room_a_indoor_unit_dry_keep_setting',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -556,12 +556,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': None,
+        'object_id_base': 'Dry keep setting',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': None,
+        'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -572,10 +572,10 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Indoor unit',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Indoor unit Dry keep setting',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.test_room_a_indoor_unit',
+        'entity_id': 'binary_sensor.test_room_a_indoor_unit_dry_keep_setting',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1213,7 +1213,7 @@
         'state': 'on',
       }),
     }),
-    'binary_sensor.test_room_b_indoor_unit': dict({
+    'binary_sensor.test_room_b_indoor_unit_dry_keep_setting': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -1227,7 +1227,7 @@
         'disabled_by': None,
         'domain': 'binary_sensor',
         'entity_category': None,
-        'entity_id': 'binary_sensor.test_room_b_indoor_unit',
+        'entity_id': 'binary_sensor.test_room_b_indoor_unit_dry_keep_setting',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -1235,12 +1235,12 @@
         'labels': set({
         }),
         'name': None,
-        'object_id_base': None,
+        'object_id_base': 'Dry keep setting',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
-        'original_name': None,
+        'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
@@ -1251,10 +1251,10 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Indoor unit',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Indoor unit Dry keep setting',
         }),
         'context': <ANY>,
-        'entity_id': 'binary_sensor.test_room_b_indoor_unit',
+        'entity_id': 'binary_sensor.test_room_b_indoor_unit_dry_keep_setting',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
