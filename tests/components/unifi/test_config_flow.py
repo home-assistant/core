@@ -420,6 +420,46 @@ async def test_reauth_flow_reloads_not_loaded_entry(
     mock_reload.assert_called_once_with(config_entry.entry_id)
 
 
+async def test_reconfigure_flow_uses_update_listener_to_reload_entry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify reconfigure uses the update listener to reload an entry."""
+    config_entry = config_entry_setup
+    config_entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_RETRY, "test"
+    )
+
+    try:
+        result = await config_entry.start_reconfigure_flow(hass)
+
+        with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    CONF_HOST: "1.2.3.4",
+                    CONF_USERNAME: "new_name",
+                    CONF_PASSWORD: "new_pass",
+                    CONF_PORT: 1234,
+                    CONF_VERIFY_SSL: True,
+                },
+            )
+            await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        mock_reload.assert_called_once_with(config_entry.entry_id)
+        assert (
+            "has an update listener and should use it for scheduling a reload"
+            not in caplog.text
+        )
+    finally:
+        config_entry._async_set_state(
+            hass, config_entries.ConfigEntryState.LOADED, None
+        )
+
+
 async def test_reauth_flow_reloads_loaded_entry_with_unchanged_data(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:

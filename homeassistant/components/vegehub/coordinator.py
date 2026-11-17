@@ -41,8 +41,7 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.vegehub.num_actuators or 0,
             self.vegehub.is_ac or False,
         )
-        if self.data:
-            existing_data: dict = self.data
+        if (existing_data := self.data_or_none) is not None:
             existing_data.update(sensor_data)
             if sensor_data:
                 self.async_set_updated_data(existing_data)
