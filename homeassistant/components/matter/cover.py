@@ -89,12 +89,7 @@ CLOSURE_TAG_TO_DEVICE_CLASS = {
 class ClosurePanelRole(IntEnum):
     """Functional role of a ClosurePanel child endpoint.
 
-    Lift, Sliding and Rotate are all a panel's primary, continuous
-    opening amount - a roof window rotating open (ClosureWindow.Roof)
-    is exactly as much a 0-100% position as a blind's Lift, just
-    achieved by a different physical motion - so they all drive
-    current_cover_position. Tilt is the only secondary axis, paired
-    with a primary one on venetian-blind-style panels.
+    Lift, Sliding and Rotate all drive the primary position; Tilt is the secondary axis.
     """
 
     POSITION = 0
@@ -121,16 +116,10 @@ def _extract_struct_field(value: Any, attr_name: str) -> Any:
 
 
 def _get_closure_device_class(tag_list: Any) -> CoverDeviceClass | None:
-    """Return the HA device class for a Closure endpoint from its TagList.
-
-    None (no device class) when the TagList is empty/absent or its tags
-    (e.g. Barrier, Cabinet) have no matching HA device class, rather than
-    guessing - a generic cover icon is more honest than a wrong one.
-    """
+    """Return the HA device class for a Closure endpoint from its TagList, or None if unmapped."""
     fallback_device_class: CoverDeviceClass | None = None
     for tag in tag_list or ():
-        # A non-null mfgCode scopes namespaceID/tag to that manufacturer: our
-        # tables only cover the standard (mfgCode-less) namespaces.
+        # Tags with a manufacturer code are outside the standard namespaces.
         if _extract_struct_field(tag, "mfgCode") is not None:
             continue
         namespace_id = _extract_struct_field(tag, "namespaceID")
@@ -156,8 +145,7 @@ CLOSURE_PANEL_TAG_TO_ROLE = {
 def _get_closure_panel_role(tag_list: Any) -> ClosurePanelRole | None:
     """Return the functional role of a ClosurePanel endpoint from its TagList."""
     for tag in tag_list or ():
-        # A non-null mfgCode scopes namespaceID/tag to that manufacturer: our
-        # table only covers the standard (mfgCode-less) ClosurePanel namespace.
+        # Tags with a manufacturer code are outside the standard namespace.
         if _extract_struct_field(tag, "mfgCode") is not None:
             continue
         if _extract_struct_field(tag, "namespaceID") != NAMESPACE_CLOSURE_PANEL:
@@ -184,17 +172,7 @@ def _ha_position_to_percent100ths(position: int) -> int:
 
 
 def _is_slats_orientation_tilt(panel: MatterEndpoint, role: ClosurePanelRole) -> bool:
-    """Return True if `panel` is a slat-rotating Tilt panel.
-
-    Per spec 5.5.8.1.5.1, the fold only applies to a Unit=Degree,
-    UnitRange=-90..90 panel (the spec's own "only accepted exception" to the
-    general monotonic 0%=open/100%=closed convention the other panels (and
-    `_ha_position_to_percent100ths`/`_percent100ths_to_ha_position`) assume).
-    A Unit/UnitRange where 0 falls strictly inside the range, or that isn't
-    advertised via the Unit feature, is out of scope. The fold is also only
-    valid for the Tilt role: `role` scopes it there so a Modulation panel
-    driving position isn't folded.
-    """
+    """Return True if `panel` is a slat-rotating Tilt panel (Unit=Degree, UnitRange -90..90)."""
     if role is not ClosurePanelRole.TILT:
         return False
     if not _feature_supported(
@@ -236,9 +214,7 @@ def _is_slats_orientation_tilt(panel: MatterEndpoint, role: ClosurePanelRole) ->
 def _slats_percent100ths_to_ha_position(value: int | None) -> int | None:
     """Convert a slat-rotating Tilt panel's percent100ths to a HA 0-100 position.
 
-    0% and 100% both fold onto HA position 0 (closed); 50% is HA position
-    100 (open, slats horizontal). Readings symmetric around 50% (e.g. 25%
-    and 75%) are indistinguishable in HA's single-ended 0-100 scale.
+    0% and 100% both map to 0 (closed), 50% maps to 100 (open).
     """
     if value is None:
         return None
@@ -248,12 +224,7 @@ def _slats_percent100ths_to_ha_position(value: int | None) -> int | None:
 def _ha_position_to_slats_percent100ths(position: int, *, mirrored: bool) -> int:
     """Convert a HA 0-100 position to a slat-rotating Tilt panel's percent100ths.
 
-    The reverse mapping is ambiguous (two closed states fold into one), so
-    this targets whichever half of the physical range the panel's raw
-    position is already on, keeping the slats on their current side instead
-    of sweeping 180 degrees through fully open to reach the other one. `mirrored`
-    selects the 50%-100% half; otherwise this is the exact inverse of
-    `_slats_percent100ths_to_ha_position`, targeting the 0%-50% half.
+    `mirrored` selects the 50%-100% half, keeping the slats on their current side.
     """
     return 10000 - position * 50 if mirrored else position * 50
 
@@ -277,14 +248,7 @@ def _remote_unlatch_supported(
     motion_latching_feature: int,
     remote_unlatching_bit: int,
 ) -> bool:
-    """Return True if `endpoint` can be remotely unlatched.
-
-    The MotionLatching feature alone isn't enough: LatchControlModes
-    (mandatory whenever MotionLatching is supported) further indicates
-    whether RemoteUnlatching is actually permitted - a device may only
-    support physical/manual unlatching, in which case sending `latch=False`
-    is rejected with InvalidInState.
-    """
+    """Return True if `endpoint` supports MotionLatching and RemoteUnlatching."""
     if not _feature_supported(endpoint, feature_map_attribute, motion_latching_feature):
         return False
     latch_control_modes = endpoint.get_attribute_value(
@@ -586,16 +550,9 @@ class MatterCover(MatterEntity, CoverEntity):
 
 
 class MatterClosure(MatterEntity, CoverEntity):
-    """Representation of a Matter Closure (garage door, blind, roof window, etc.) cover.
+    """Representation of a Matter Closure cover.
 
-    The ClosureControl cluster on this entity's own endpoint provides coarse
-    Open/Close/Stop (no arbitrary position). Devices with a continuous
-    opening amount and/or a distinct Tilt axis (e.g. venetian blinds, roof
-    windows) additionally expose one or more child ClosurePanel endpoints,
-    listed in this endpoint's Descriptor PartsList and each carrying its own
-    ClosureDimension cluster for fine positioning. Those children are
-    resolved lazily via `_closure_panels` and drive
-    `current_cover_position`/`current_cover_tilt_position`.
+    ClosurePanel child endpoints, when present, drive the position and tilt.
     """
 
     _write_state_debounce_cooldown = STATE_WRITE_DEBOUNCE_COOLDOWN
@@ -615,11 +572,7 @@ class MatterClosure(MatterEntity, CoverEntity):
 
     @property
     def _closure_dimension_children(self) -> list[MatterEndpoint]:
-        """Return all ClosureDimension child endpoints, regardless of Positioning support.
-
-        Used for subscribing to FeatureMap changes: a panel without Positioning
-        may gain it later, so we need to detect those updates even on excluded panels.
-        """
+        """Return all ClosureDimension child endpoints, including those without Positioning."""
         node = self._endpoint.node
         children: list[MatterEndpoint] = []
         for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
@@ -639,9 +592,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 continue
             if not child.has_cluster(clusters.ClosureDimension):
                 continue
-            # ClosureDimension permits MotionLatching without Positioning
-            # (a latch-only panel): nothing to drive current_cover_position/
-            # current_cover_tilt_position from in that case.
+            # Latch-only panels have no position to report.
             if not _feature_supported(
                 child,
                 clusters.ClosureDimension.Attributes.FeatureMap,
@@ -672,15 +623,7 @@ class MatterClosure(MatterEntity, CoverEntity):
 
     @callback
     def _refresh_closure_panel_subscriptions(self) -> None:
-        """Refresh subscriptions for panel endpoints.
-
-        Subscribes to FeatureMap changes on ALL ClosureDimension children (including
-        those without Positioning) to detect capability restoration, routed through
-        `_on_closure_panel_capability_changed` since panel membership may change.
-        Subscribes to CurrentState and TargetState only for active panels (those
-        with Positioning and a valid role); those can't change panel membership,
-        so they're routed through the plain `_on_matter_event`.
-        """
+        """Refresh subscriptions for panel endpoints."""
         path_callbacks: dict[str, Callable[[EventType, Any], None]] = {}
 
         for child in self._closure_dimension_children:
@@ -782,23 +725,12 @@ class MatterClosure(MatterEntity, CoverEntity):
         target: clusters.ClosureControl.Enums.TargetPositionEnum,
         fully_at: clusters.ClosureControl.Enums.CurrentPositionEnum,
     ) -> None:
-        """Send MoveTo, unlatching only if the move actually leaves the current position.
+        """Send MoveTo, unlatching only if the move leaves the current position.
 
-        Spec 1.6.0 Sec. 5.4.8.2.4 only needs `latch=False` to unlatch a
-        latched closure when the move requires it. Sending it whenever
-        remote unlatching is merely supported would unlatch (and desecure,
-        per Sec. 5.4.6.5.4) a closure that's already at the requested
-        position, e.g. closing an already-closed, latched gate.
-
-        A move can already be pending (MainState Moving/WaitingForMotion)
-        while OverallCurrentState still reports the requested position, e.g.
-        cancelling a pending Open by pressing Close again. `latch=False`
-        there would still unlatch: Sec. 5.4.8.2.2 falls back to the pending
-        OverallTargetState.Latch, which the pending move already cleared.
-        Re-affirming `latch=True` instead asks for the position the closure
-        is already at, so Sec. 5.4.8.2.4 just stops it. Without
-        RemoteUnlatching support there's no way to keep it latched here, so
-        the closure ends up unlatched.
+        Unlatching a closure that is already at the target would desecure it
+        for no reason. A pending move at the current position is cancelled
+        with Stop instead, since MoveTo to that position is rejected while
+        latched.
         """
         overall_current_state = self.get_matter_attribute_value(
             clusters.ClosureControl.Attributes.OverallCurrentState
@@ -814,6 +746,18 @@ class MatterClosure(MatterEntity, CoverEntity):
             _extract_struct_field(overall_current_state, "position") == fully_at
         )
         if not move_pending and already_at_target:
+            return
+        if (
+            move_pending
+            and already_at_target
+            and _extract_struct_field(overall_current_state, "latch")
+            and not _feature_supported(
+                self._endpoint,
+                clusters.ClosureControl.Attributes.FeatureMap,
+                clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
+            )
+        ):
+            await self.send_device_command(clusters.ClosureControl.Commands.Stop())
             return
         command_kwargs: dict[str, Any] = {"position": target}
         if self._motion_latching_supported() and _extract_struct_field(
@@ -859,19 +803,12 @@ class MatterClosure(MatterEntity, CoverEntity):
     async def _set_panel_target(
         self, panel: MatterEndpoint, position: int, role: ClosurePanelRole
     ) -> None:
-        """Send SetTarget to a ClosurePanel child endpoint.
-
-        A latched panel rejects SetTarget with InvalidInState until it's
-        explicitly unlatched, so unlatch as part of the move when the panel
-        is currently latched and the move actually changes its position
-        (mirrors the parent's MoveTo `latch=False` in `_move_closure`).
-        """
+        """Send SetTarget to a ClosurePanel child endpoint, unlatching if the move changes position."""
         current_state = panel.get_attribute_value(
             None, clusters.ClosureDimension.Attributes.CurrentState
         )
         if _is_slats_orientation_tilt(panel, role):
-            # Mirror onto whichever half the panel is already on, so the
-            # move doesn't sweep 180 degrees through fully open.
+            # Stay on the half the slats are already on.
             current_raw_position = _extract_struct_field(current_state, "position")
             target_position = _ha_position_to_slats_percent100ths(
                 position,
@@ -921,8 +858,7 @@ class MatterClosure(MatterEntity, CoverEntity):
         position = _extract_struct_field(overall_current_state, "position")
         target_position = _extract_struct_field(overall_target_state, "position")
 
-        # chip's MatterIntEnum maps an unrecognized value to kUnknownEnumValue
-        # via _missing_ instead of raising, so these constructions never fail.
+        # Unknown values map to kUnknownEnumValue instead of raising.
         if isinstance(position, int):
             position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
         if isinstance(target_position, int):
@@ -948,10 +884,7 @@ class MatterClosure(MatterEntity, CoverEntity):
         self._attr_is_closing = False
         if main_state in (
             clusters.ClosureControl.Enums.MainStateEnum.kMoving,
-            # A pending move the closure hasn't started yet still has a
-            # direction: OverallCurrentState keeps reporting the position it
-            # hasn't left (spec 5.4.8.2.4), so showing plain open/closed here
-            # would hide it.
+            # A pending move still has a direction.
             clusters.ClosureControl.Enums.MainStateEnum.kWaitingForMotion,
         ):
             if (
@@ -975,10 +908,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 )
             ) is not None:
                 direction_panel = closure_panels[direction_role]
-                # Prefer the primary (position) panel: Tilt is a secondary
-                # axis, so a closed venetian blind whose slats are moving
-                # isn't opening or closing. Fall back to Tilt only when it's
-                # the sole panel, i.e. Tilt is the closure's only motion axis.
+                # Tilt is secondary: only use it when no position panel exists.
                 panel_state = direction_panel.get_attribute_value(
                     None, clusters.ClosureDimension.Attributes.CurrentState
                 )
@@ -988,10 +918,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 current_pos = _extract_struct_field(panel_state, "position")
                 target_pos = _extract_struct_field(panel_target, "position")
                 if isinstance(current_pos, int) and isinstance(target_pos, int):
-                    # A SlatsOrientation panel is closed at both 0% and 100%
-                    # and open at 50%, so raw percent100ths can't be compared
-                    # directly; go through its HA position (always
-                    # higher=more open) like the general convention below.
+                    # Compare HA positions: slats panels are not monotonic in raw percent100ths.
                     to_ha_position = (
                         _slats_percent100ths_to_ha_position
                         if _is_slats_orientation_tilt(direction_panel, direction_role)
@@ -1011,8 +938,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToVentilationPosition,
                 clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToSignaturePosition,
             ):
-                # No panels and no percent100ths position to compare against:
-                # only the unambiguous extremes give a direction.
+                # Without panels, only the extremes give a direction.
                 if (
                     position
                     == clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyClosed
@@ -1025,8 +951,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                     self._attr_is_closing = True
 
         supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
-        # Stop is non-conformant (and rejected) on Instantaneous closures:
-        # there's no in-progress motion for it to interrupt.
+        # Stop is rejected on Instantaneous closures.
         if not _feature_supported(
             self._endpoint,
             clusters.ClosureControl.Attributes.FeatureMap,

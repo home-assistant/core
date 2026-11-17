@@ -2288,14 +2288,11 @@ async def test_closure_cover_gate_cancel_pending_open_stays_latched(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Pressing Close while a pending Open hasn't moved the gate re-latches it.
+    """Pressing Close while a pending Open hasn't moved the gate sends Stop.
 
     The fixture starts fully closed and latched. A pending Open (MainState
-    WaitingForMotion, OverallTargetState.position FullyOpen) hasn't moved
-    OverallCurrentState yet, so Close re-requests the position the gate is
-    already at. `latch=False` there would still unlatch it: Sec. 5.4.8.2.2
-    falls back to OverallTargetState.Latch, already cleared by the pending
-    Open's own unlatch. `latch=True` keeps the gate secure instead.
+    WaitingForMotion) hasn't moved OverallCurrentState yet, so Close targets
+    the position the gate is already at, which a latched gate rejects.
     """
     entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
 
@@ -2326,11 +2323,7 @@ async def test_closure_cover_gate_cancel_pending_open_stays_latched(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.ClosureControl.Commands.MoveTo(
-            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
-            latch=True,
-        ),
-        timed_request_timeout_ms=1000,
+        command=clusters.ClosureControl.Commands.Stop(),
     )
 
 
