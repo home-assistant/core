@@ -60,7 +60,7 @@ PARALLEL_UPDATES = 1
 # Offered permanently so a timer can always be returned to its non-repeating state.
 _NO_REPEAT = "no_repeat"
 
-type _WriteFn = Callable[["NeoPoolSelect", NeoPoolModbusClient, str], Awaitable[None]]
+type _WriteFn = Callable[[NeoPoolSelect, NeoPoolModbusClient, str], Awaitable[None]]
 type _OptionsFn = Callable[[dict[str, Any]], list[str]]
 type _CurrentOptionFn = Callable[[dict[str, Any]], str | None]
 

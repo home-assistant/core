@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from switchbot import SwitchbotAccountConnectionError, SwitchbotAuthenticationError
 
 from homeassistant.components.bluetooth import (
@@ -32,8 +33,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
+    HUB4_SERVICE_INFO,
     LOCK_ULTRA_MAX_SERVICE_INFO,
     NOT_SWITCHBOT_INFO,
+    PLUG_MINI_IT_SERVICE_INFO,
     USER_INPUT,
     WOCURTAIN3_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
@@ -48,8 +51,6 @@ from . import (
     init_integration,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "switchbot"
 
@@ -66,12 +67,24 @@ def mock_scanners_all_passive() -> Generator[None]:
         yield
 
 
-async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("service_info", "title", "sensor_type"),
+    [
+        pytest.param(WOHAND_SERVICE_INFO, "Bot EEFF", "bot", id="bot"),
+        pytest.param(HUB4_SERVICE_INFO, "Hub4 EEFF", "hub4", id="hub4"),
+    ],
+)
+async def test_bluetooth_discovery(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    title: str,
+    sensor_type: str,
+) -> None:
     """Test discovery via bluetooth with a valid device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=WOHAND_SERVICE_INFO,
+        data=service_info,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -84,10 +97,10 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Bot EEFF"
+    assert result["title"] == title
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
-        CONF_SENSOR_TYPE: "bot",
+        CONF_SENSOR_TYPE: sensor_type,
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -335,6 +348,52 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
         CONF_KEY_ID: "ff",
         CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
         CONF_SENSOR_TYPE: "relay_switch_1pm",
+    }
+    assert result["result"].unique_id == "aabbccddeeff"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_bluetooth_discovery_plug_mini_it_key(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a encrypted device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=PLUG_MINI_IT_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "encrypted_choose_method"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "encrypted_key"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encrypted_key"
+    assert result["errors"] == {}
+
+    with (
+        patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotRelaySwitch.verify_encryption_key", return_value=True
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KEY_ID: "ff",
+                CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Plug Mini (IT) EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_KEY_ID: "ff",
+        CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
+        CONF_SENSOR_TYPE: "plug_mini_it",
     }
     assert result["result"].unique_id == "aabbccddeeff"
 
@@ -700,6 +759,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
         "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
         return_value=[
             NOT_SWITCHBOT_INFO,
+            HUB4_SERVICE_INFO,
             WOCURTAIN_SERVICE_INFO,
             WOHAND_SERVICE_ALT_ADDRESS_INFO,
             WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
@@ -1686,7 +1746,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     # Test Force night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1751,7 +1811,7 @@ async def test_options_flow_curtain_speed(
 
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -2077,7 +2137,7 @@ async def test_options_flow_lock_with_night_latch(
     # Test night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from fishaudio.resources import AsyncAccountClient, AsyncTTSClient, AsyncVoicesClient
 import pytest
+from pytest_homeassistant.common import AsyncGenerator, MockConfigEntry
 
 from homeassistant.components.fish_audio.const import (
     CONF_BACKEND,
@@ -18,14 +19,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CREDITS, MOCK_VOICES
 
-from tests.common import AsyncGenerator, MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.fish_audio.async_setup_entry", return_value=True
+        "homeassistant.components.fish_audio.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

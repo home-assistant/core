@@ -1,5 +1,7 @@
 """Collection of helpers."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
@@ -15,8 +17,6 @@ from .const import (
     MOCK_ACCOUNTS_RESPONSE,
     MOCK_ACCOUNTS_RESPONSE_V3,
 )
-
-from tests.common import MockConfigEntry
 
 
 class MockPagination:

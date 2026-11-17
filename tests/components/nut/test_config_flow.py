@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nut.config_flow import PASSWORD_NOT_CHANGED
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .util import _get_mock_nutclient, async_init_integration
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_HOST: "localhost",
@@ -63,7 +62,7 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -103,7 +102,7 @@ async def test_form_user_one_alias(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -172,7 +171,7 @@ async def test_form_user_multiple_aliases(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -218,7 +217,7 @@ async def test_form_user_one_alias_with_ignored_entry(hass: HomeAssistant) -> No
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -333,7 +332,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -397,7 +396,7 @@ async def test_auth_failures(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -470,7 +469,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -609,7 +608,7 @@ async def test_abort_multiple_aliases_duplicate_unique_ids(hass: HomeAssistant) 
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1025,7 +1024,7 @@ async def test_reconfigure_multiple_aliases_successful(hass: HomeAssistant) -> N
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1093,7 +1092,7 @@ async def test_reconfigure_multiple_aliases_nochange(hass: HomeAssistant) -> Non
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1163,7 +1162,7 @@ async def test_reconfigure_multiple_aliases_password_nochange(
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1250,7 +1249,7 @@ async def test_reconfigure_multiple_aliases_already_configured(
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1331,7 +1330,7 @@ async def test_reconfigure_multiple_aliases_unique_id_change(
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1418,7 +1417,7 @@ async def test_reconfigure_multiple_aliases_duplicate_unique_ids(
         ),
         patch(
             "homeassistant.components.nut.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

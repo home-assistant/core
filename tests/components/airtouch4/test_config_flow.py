@@ -32,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.airtouch4.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,7 +71,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
 
         with patch(
             "homeassistant.components.airtouch4.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ):
             result3 = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"host": "0.0.0.1"}
@@ -104,7 +104,7 @@ async def test_form_library_error_message(hass: HomeAssistant) -> None:
 
         with patch(
             "homeassistant.components.airtouch4.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ):
             result3 = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"host": "0.0.0.1"}
@@ -137,7 +137,7 @@ async def test_form_connection_refused(hass: HomeAssistant) -> None:
 
         with patch(
             "homeassistant.components.airtouch4.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ):
             result3 = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"host": "0.0.0.1"}
@@ -174,7 +174,7 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
 
         with patch(
             "homeassistant.components.airtouch4.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ):
             result3 = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"host": "0.0.0.1"}

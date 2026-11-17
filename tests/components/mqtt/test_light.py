@@ -191,27 +191,8 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
-
-from homeassistant.components import light
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.light.schema_basic import (
-    CONF_BRIGHTNESS_COMMAND_TOPIC,
-    CONF_COLOR_TEMP_COMMAND_TOPIC,
-    CONF_EFFECT_COMMAND_TOPIC,
-    CONF_EFFECT_LIST,
-    CONF_HS_COMMAND_TOPIC,
-    CONF_RGB_COMMAND_TOPIC,
-    CONF_RGBW_COMMAND_TOPIC,
-    CONF_RGBWW_COMMAND_TOPIC,
-    CONF_XY_COMMAND_TOPIC,
-    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
-    VALUE_TEMPLATE_KEYS,
-)
-from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message, mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -241,10 +222,28 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message, mock_restore_cache
+from homeassistant.components import light
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.light.schema_basic import (
+    CONF_BRIGHTNESS_COMMAND_TOPIC,
+    CONF_COLOR_TEMP_COMMAND_TOPIC,
+    CONF_EFFECT_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_HS_COMMAND_TOPIC,
+    CONF_RGB_COMMAND_TOPIC,
+    CONF_RGBW_COMMAND_TOPIC,
+    CONF_RGBWW_COMMAND_TOPIC,
+    CONF_XY_COMMAND_TOPIC,
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+    VALUE_TEMPLATE_KEYS,
+)
+from homeassistant.components.mqtt.models import PublishPayloadType
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
+
 from tests.components.light import common
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
     DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}

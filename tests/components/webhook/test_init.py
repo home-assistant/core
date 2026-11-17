@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import webhook
 from homeassistant.components.webhook import DOMAIN
@@ -17,7 +18,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest
 
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture

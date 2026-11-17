@@ -4,19 +4,18 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture, snapshot_platform
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -124,7 +123,7 @@ async def test_button_start_charge(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, ButtonService.PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (None,)
@@ -148,8 +147,8 @@ async def test_button_authentication_expired(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            service_data={ATTR_ENTITY_ID: "button.reg_zoe_40_start_charge"},
+            ButtonService.PRESS,
+            service_data={TargetKey.ENTITY_ID: "button.reg_zoe_40_start_charge"},
             blocking=True,
         )
 
@@ -183,7 +182,7 @@ async def test_button_stop_charge(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, ButtonService.PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -211,7 +210,7 @@ async def test_button_start_air_conditioner(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, ButtonService.PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (21, None)
@@ -234,7 +233,7 @@ async def test_button_sound_horn(
         "renault_api.renault_vehicle.RenaultVehicle.start_horn",
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, ButtonService.PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -257,7 +256,7 @@ async def test_button_flash_lights(
         "renault_api.renault_vehicle.RenaultVehicle.start_lights",
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            BUTTON_DOMAIN, ButtonService.PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()

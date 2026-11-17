@@ -5,6 +5,7 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, async_rounded_state
 from homeassistant.components.tomorrowio.const import ATTRIBUTION
@@ -18,8 +19,6 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import make_v2_config_entry
 from .const import API_V4_ENTRY_DATA
-
-from tests.common import async_fire_time_changed
 
 CC_SENSOR_ENTITY_ID = "sensor.tomorrow_io_{}"
 

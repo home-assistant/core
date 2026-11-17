@@ -6,6 +6,11 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -20,12 +25,6 @@ from .patchers import (
     STATUS_DATA_FIXTURE,
     STATUS_DATA_SUCCESS_PATCHER,
     STATUS_DATA_TARGET,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
 )
 
 

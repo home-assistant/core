@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import ATTR_DURATION, DOMAIN as SIREN_DOMAIN
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import assert_command_call, async_deliver_events, device_unavailable_event
-
-from tests.common import snapshot_platform
 
 SIREN = FixtureDevice(
     "setup/local_somfy_tahoma_v2_europe.json",

@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 from homeassistant.const import Platform
+from script.hassfest.translation_data import generate_upload_data
 
-from . import upload
 from .util import flatten_translations, get_base_arg_parser, load_json_from_path
 
 
@@ -29,7 +29,7 @@ ENTITY_COMPONENT_PREFIX = tuple(f"component::{domain}::" for domain in Platform)
 def run():
     """Clean translations."""
     args = get_arguments()
-    translations = upload.generate_upload_data()
+    translations = generate_upload_data(Path.cwd())
     flattened_translations = flatten_translations(translations)
     flattened_translations = {
         key: value

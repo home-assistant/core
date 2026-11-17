@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
@@ -339,7 +339,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             entry_data[CONF_TYPE],
             (entry_data[CONF_HOST], DEFAULT_PORT),
             bytes.fromhex(entry_data[CONF_MAC]),
-            name=entry_data[CONF_NAME],
+            name=self._get_reauth_entry().title,
         )
         device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)

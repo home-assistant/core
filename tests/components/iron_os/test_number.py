@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pynecil import CharSetting, CommunicationError, TempUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.iron_os.const import (
@@ -15,17 +20,15 @@ from homeassistant.components.iron_os.const import (
     MIN_TEMP_F,
 )
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -212,9 +215,9 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: value},
-        target={ATTR_ENTITY_ID: entity_id},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: value},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(mock_pynecil.write.mock_calls) == 1
@@ -243,9 +246,9 @@ async def test_set_value_exception(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_VALUE: 300},
-            target={ATTR_ENTITY_ID: "number.pinecil_setpoint_temperature"},
+            NumberService.SET_VALUE,
+            service_data={NumberServiceArgument.VALUE: 300},
+            target={TargetKey.ENTITY_ID: "number.pinecil_setpoint_temperature"},
             blocking=True,
         )
 

@@ -3,15 +3,15 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
-from homeassistant.components.person import ATTR_DEVICE_TRACKERS, DOMAIN
+from homeassistant.components.person import DOMAIN
+from homeassistant.components.person.const import PersonEntityStateAttribute
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.mark.usefixtures("recorder_mock", "enable_custom_integrations")
@@ -43,4 +43,4 @@ async def test_exclude_attributes(
     assert len(states) >= 1
     for entity_states in states.values():
         for state in entity_states:
-            assert ATTR_DEVICE_TRACKERS not in state.attributes
+            assert PersonEntityStateAttribute.DEVICE_TRACKERS not in state.attributes

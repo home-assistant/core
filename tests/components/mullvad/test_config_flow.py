@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 from mullvad_api import MullvadAPIError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, setup
 from homeassistant.components.mullvad.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_user(hass: HomeAssistant) -> None:
@@ -24,7 +23,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.mullvad.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.mullvad.config_flow.MullvadAPI"
@@ -77,7 +76,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.mullvad.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("homeassistant.components.mullvad.config_flow.MullvadAPI"),
     ):
@@ -113,7 +112,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.mullvad.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("homeassistant.components.mullvad.config_flow.MullvadAPI"),
     ):

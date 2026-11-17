@@ -4,24 +4,26 @@ from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+from energyid_webhooks.exceptions import EnergyIDAuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_successful_setup(
@@ -512,19 +514,67 @@ async def test_initial_state_queued_for_new_mapping(
     sensor_mock.update.assert_called_with(42.5, ANY)
 
 
-async def test_synchronize_sensors_error_handling(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(OSError("Connection failed"), id="os_error"),
+        pytest.param(RuntimeError("Sync error"), id="runtime_error"),
+        pytest.param(ClientError("Server disconnected"), id="client_error"),
+        pytest.param(
+            ClientResponseError(request_info=MagicMock(), history=(), status=500),
+            id="http_error",
+        ),
+    ],
+)
+async def test_periodic_sync_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Test an upload error is logged once at info and keeps the entry loaded."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_webhook_client.synchronize_sensors.side_effect = error
+
+    for interval in (1, 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=61 * interval)
+        )
+        await hass.async_block_till_done()
+
+    assert mock_webhook_client.synchronize_sensors.await_count == 2
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.unavailable_logged
+    assert [
+        record.levelname
+        for record in caplog.records
+        if record.message == f"EnergyID is unavailable: {error}"
+    ] == ["INFO"]
+
+
+async def test_periodic_sync_refused_credentials_start_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test that synchronize_sensors errors are handled gracefully."""
-    mock_webhook_client.synchronize_sensors.side_effect = OSError("Connection failed")
-
+    """Test credentials refused while uploading start one reauthentication."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    mock_webhook_client.synchronize_sensors.side_effect = EnergyIDAuthenticationError(
+        request_info=MagicMock(), history=(), status=401
+    )
 
-    # ASSERT: Integration should still load
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    for interval in (1, 2):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=61 * interval)
+        )
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert [flow["context"]["source"] for flow in flows] == ["reauth"]
+    assert not mock_config_entry.runtime_data.unavailable_logged
 
 
 async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
@@ -555,7 +605,9 @@ async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
         assert entry.error_reason_translation_key == "auth_timeout"
 
 
-async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
+async def test_periodic_sync_error_and_recovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test periodic sync error handling and recovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -597,44 +649,22 @@ async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert call_count[0] == 1  # First periodic call with error
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "EnergyID is unavailable: Connection lost"
+        ] == ["INFO"]
 
         # Trigger periodic sync again - second time, should succeed
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
         await hass.async_block_till_done()
 
         assert call_count[0] == 2  # Second periodic call succeeds
-
-
-async def test_periodic_sync_runtime_error(hass: HomeAssistant) -> None:
-    """Test periodic sync handles RuntimeError."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_PROVISIONING_KEY: "test_key",
-            CONF_PROVISIONING_SECRET: "test_secret",
-            CONF_DEVICE_ID: "test_device",
-            CONF_DEVICE_NAME: "Test Device",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.energyid.WebhookClient") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.authenticate = AsyncMock(return_value=True)
-        mock_client.recordNumber = "site_123"
-        mock_client.recordName = "Test Site"
-        mock_client.webhook_policy = {"uploadInterval": 60}
-        mock_client.synchronize_sensors = AsyncMock(
-            side_effect=RuntimeError("Sync error")
-        )
-        mock_client_class.return_value = mock_client
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Trigger sync with RuntimeError
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-        await hass.async_block_till_done()
+        assert [
+            record.levelname
+            for record in caplog.records
+            if record.message == "Connection to EnergyID re-established"
+        ] == ["INFO"]
 
 
 async def test_config_entry_update_listener(
@@ -663,6 +693,8 @@ async def test_config_entry_update_listener(
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client.get_or_create_sensor = MagicMock(return_value=MagicMock())
         mock_client_class.return_value = mock_client
 
@@ -683,6 +715,10 @@ async def test_config_entry_update_listener(
         # This should trigger config_entry_update_listener
         hass.config_entries.async_update_entry(entry, data=entry.data)
         await hass.async_block_till_done()
+
+    # The listeners are updated in place; unchanged credentials need no reload.
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_non_numeric(
@@ -1065,6 +1101,8 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
         mock_client.recordNumber = "site_123"
         mock_client.recordName = "Test Site"
         mock_client.webhook_policy = None
+        mock_client.provisioning_key = "test_key"
+        mock_client.provisioning_secret = "test_secret"
         mock_client_class.return_value = mock_client
 
         await hass.config_entries.async_setup(entry.entry_id)
@@ -1075,6 +1113,9 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
             entry, data={**entry.data, "test": "value"}
         )
         await hass.async_block_till_done()
+
+    mock_client.authenticate.assert_awaited_once()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_initial_state_conversion_error_valueerror(
@@ -1432,3 +1473,122 @@ async def test_subentry_unload_during_entry_unload(
         "async_unload should have been called for the subentry"
     )
     assert result is True
+
+
+async def test_changing_directive_option_reloads_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test enabling directives in the options reloads the entry."""
+    mock_webhook_client.api_access_token = "device-token"
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not mock_config_entry.runtime_data.directive_coordinator.directives_enabled
+    mock_webhook_client.get_directives.assert_not_awaited()
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.directive_coordinator.directives_enabled
+    mock_webhook_client.get_directives.assert_awaited_once()
+
+
+async def _reauthenticate(
+    hass: HomeAssistant, entry: MockConfigEntry, key: str, secret: str
+) -> ConfigFlowResult:
+    """Run the reauthentication flow with credentials that link the same record."""
+    flow_client = MagicMock()
+    flow_client.authenticate = AsyncMock(return_value=True)
+    flow_client.recordNumber = "EA-TEST"
+    flow_client.recordName = "Test EnergyID Site"
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=flow_client,
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PROVISIONING_KEY: key, CONF_PROVISIONING_SECRET: secret},
+        )
+        await hass.async_block_till_done()
+    return result
+
+
+@pytest.mark.parametrize(
+    ("key", "secret"),
+    [
+        pytest.param("new-key", "new-secret", id="new_credentials"),
+        pytest.param("test-key", "test-secret", id="claim_renewed"),
+    ],
+)
+async def test_reauth_of_loaded_entry_reloads_it_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    key: str,
+    secret: str,
+) -> None:
+    """Test reauthenticating a loaded entry stores the credentials and reloads it."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "record_number": "EA-TEST"}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PROVISIONING_KEY] == key
+    assert mock_config_entry.data[CONF_PROVISIONING_SECRET] == secret
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Set up once before reauthentication and once after, with the new credentials.
+    assert mock_webhook_client.authenticate.await_count == 2
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret
+
+
+@pytest.mark.parametrize(
+    ("key", "secret"),
+    [
+        pytest.param("new-key", "new-secret", id="new_credentials"),
+        pytest.param("test-key", "test-secret", id="same_credentials"),
+    ],
+)
+async def test_reauth_after_failed_setup_sets_the_entry_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+    key: str,
+    secret: str,
+) -> None:
+    """Test reauthenticating an entry whose device was not claimed at setup."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "record_number": "EA-TEST"}
+    )
+    mock_webhook_client.authenticate.return_value = False
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_webhook_client.authenticate.return_value = True
+    with patch(
+        "homeassistant.components.energyid.WebhookClient",
+        return_value=mock_webhook_client,
+    ) as client_class:
+        result = await _reauthenticate(hass, mock_config_entry, key, secret)
+
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # The entry is set up again with the new credentials, not the refused ones.
+    assert client_class.call_args.kwargs["provisioning_key"] == key
+    assert client_class.call_args.kwargs["provisioning_secret"] == secret

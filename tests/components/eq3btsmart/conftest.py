@@ -6,12 +6,11 @@ from unittest.mock import MagicMock, patch
 from bleak.backends.scanner import AdvertisementData
 from eq3btsmart.const import Eq3OperationMode
 import pytest
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 from .const import MAC
-
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture(autouse=True)

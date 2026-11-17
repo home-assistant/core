@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.elmax.const import (
@@ -43,8 +44,6 @@ from . import (
     MOCK_WRONG_PANEL_PIN,
 )
 from .conftest import MOCK_DIRECT_BASE_URI_V6
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=IPv4Address(address=MOCK_DIRECT_HOST),
@@ -107,7 +106,7 @@ CONF_POLLING = "polling"
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.elmax.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.elmax.async_setup_entry", return_value=None):
         yield
 
 
@@ -159,7 +158,7 @@ async def test_direct_setup(hass: HomeAssistant) -> None:
     )
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         set_mode_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
@@ -186,7 +185,7 @@ async def test_direct_show_form(hass: HomeAssistant) -> None:
     )
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         set_mode_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
@@ -207,7 +206,7 @@ async def test_cloud_setup(hass: HomeAssistant) -> None:
     )
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         show_form_result = await hass.config_entries.flow.async_configure(
             show_form_result["flow_id"],
@@ -720,7 +719,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],

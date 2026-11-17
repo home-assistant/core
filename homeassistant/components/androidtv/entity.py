@@ -7,13 +7,7 @@ from typing import Any, Concatenate
 
 from androidtv.exceptions import LockNotAcquiredException
 
-from homeassistant.const import (
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -127,16 +121,16 @@ class AndroidTVEntity(Entity):
             CONF_NAME, f"{device_type} {entry.data[CONF_HOST]}"
         )
         info = self.aftv.device_properties
-        model = info.get(ATTR_MODEL)
+        model = info.get("model")
         self._attr_device_info = DeviceInfo(
             model=f"{model} ({device_type})" if model else device_type,
             name=device_name,
         )
         if self.unique_id:
             self._attr_device_info.identifiers = {(DOMAIN, self.unique_id)}
-        if manufacturer := info.get(ATTR_MANUFACTURER):
+        if manufacturer := info.get("manufacturer"):
             self._attr_device_info.manufacturer = manufacturer
-        if sw_version := info.get(ATTR_SW_VERSION):
+        if sw_version := info.get("sw_version"):
             self._attr_device_info.sw_version = sw_version
         if mac := get_androidtv_mac(info):
             self._attr_device_info.connections = {(CONNECTION_NETWORK_MAC, mac)}

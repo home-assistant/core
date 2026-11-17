@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GoogleAirQualityConfigEntry
 from .const import DOMAIN
-from .coordinator import GoogleAirQualityUpdateCoordinator
+from .coordinator import GoogleAirQualityConfigEntry, GoogleAirQualityUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 # Coordinator is used to centralize the data updates

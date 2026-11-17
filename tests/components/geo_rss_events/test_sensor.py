@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import sensor
 from homeassistant.components.geo_rss_events import sensor as geo_rss_events
@@ -16,8 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 URL = "http://geo.rss.local/geo_rss_events.xml"
 VALID_CONFIG_WITH_CATEGORIES = {

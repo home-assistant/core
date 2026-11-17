@@ -1,0 +1,4 @@
+extend = "../../script/ruff.toml"
+
+[lint]
+extend-ignore = ["T20"]

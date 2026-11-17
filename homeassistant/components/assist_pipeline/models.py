@@ -15,6 +15,7 @@ class PipelineEventType(StrEnum):
     RUN_END = "run-end"
     WAKE_WORD_START = "wake_word-start"
     WAKE_WORD_END = "wake_word-end"
+    WAKE_WORD_REJECTED = "wake_word-rejected"
     STT_START = "stt-start"
     STT_VAD_START = "stt-vad-start"
     STT_VAD_END = "stt-vad-end"

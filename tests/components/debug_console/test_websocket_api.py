@@ -3,13 +3,12 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket
 
 from homeassistant.components.websocket_api import ERR_UNAUTHORIZED
 
 from . import COMMANDS
-
-from tests.common import MockUser
-from tests.typing import MockHAClientWebSocket
 
 
 @pytest.mark.parametrize("command", COMMANDS)

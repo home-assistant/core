@@ -8,6 +8,11 @@ from neopool_modbus import NeoPoolInvalidStateError
 from neopool_modbus.exceptions import NeoPoolConnectionError
 from neopool_modbus.registers import RelayKind, TimerRelayMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -25,8 +30,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

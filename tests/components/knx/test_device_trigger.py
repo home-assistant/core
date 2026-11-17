@@ -4,6 +4,7 @@ import logging
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
-
-from tests.common import async_get_device_automations
 
 
 async def test_if_fires_on_telegram(
@@ -408,7 +407,8 @@ async def test_invalid_device_trigger(
         )
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
-            "not a valid option at 'invalid'. Got None" in caplog.records[0].message
+            "not a valid option at 'triggers[0].invalid'. Got True"
+            in caplog.records[0].message
         )
 
 

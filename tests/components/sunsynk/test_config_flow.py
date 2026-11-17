@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sunsynk.exceptions import SunsynkAuthenticationError, SunsynkConnectionError
 
 from homeassistant.components.sunsynk.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import PASSWORD, USER_ID, USERNAME
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="e-linter", ip="192.168.1.20", macaddress="1091a8aabbcc"

@@ -4,6 +4,7 @@ from unittest.mock import ANY, MagicMock
 
 from pyhomeworks import exceptions as hw_exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

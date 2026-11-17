@@ -5,9 +5,14 @@ from unittest.mock import patch
 from aurorapy.client import AuroraError, AuroraTimeoutError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.aurora_abb_powerone.const import ATTR_FIRMWARE, DOMAIN
+from homeassistant.components.aurora_abb_powerone.const import (
+    CONF_FIRMWARE,
+    CONF_MODEL,
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+)
 from homeassistant.components.usb import SerialDevice
-from homeassistant.const import ATTR_MODEL, ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -60,7 +65,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.aurora_abb_powerone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -73,9 +78,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_PORT: "/dev/ttyUSB7",
         CONF_ADDRESS: 7,
-        ATTR_FIRMWARE: "1.234",
-        ATTR_MODEL: "9.8.7.6 (A.B.C)",
-        ATTR_SERIAL_NUMBER: "9876543",
+        CONF_FIRMWARE: "1.234",
+        CONF_MODEL: "9.8.7.6 (A.B.C)",
+        CONF_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
     assert result2["result"].unique_id == "9876543"
@@ -198,7 +203,7 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.aurora_abb_powerone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

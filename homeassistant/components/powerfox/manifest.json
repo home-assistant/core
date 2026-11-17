@@ -1,8 +1,10 @@
 {
   "domain": "powerfox",
   "name": "Powerfox Cloud",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/powerfox",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

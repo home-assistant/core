@@ -16,7 +16,8 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
+from .data import AugustData
 from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,

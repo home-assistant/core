@@ -6,7 +6,7 @@ import probatio
 import pytest
 
 from homeassistant.components.zoneminder.const import DOMAIN
-from homeassistant.const import ATTR_ID, ATTR_NAME
+from homeassistant.components.zoneminder.services import ZoneMinderServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,7 +37,10 @@ async def test_set_run_state_valid_call(
     await hass.services.async_call(
         DOMAIN,
         "set_run_state",
-        {ATTR_ID: MOCK_HOST, ATTR_NAME: "Away"},
+        {
+            ZoneMinderServiceArgument.ID: MOCK_HOST,
+            ZoneMinderServiceArgument.NAME: "Away",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -69,7 +72,10 @@ async def test_set_run_state_multi_server_targets_correct_server(
     await hass.services.async_call(
         DOMAIN,
         "set_run_state",
-        {ATTR_ID: MOCK_HOST_2, ATTR_NAME: "Home"},
+        {
+            ZoneMinderServiceArgument.ID: MOCK_HOST_2,
+            ZoneMinderServiceArgument.NAME: "Home",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -92,7 +98,9 @@ async def test_set_run_state_missing_fields_rejected(
         await hass.services.async_call(
             DOMAIN,
             "set_run_state",
-            {ATTR_ID: MOCK_HOST},  # Missing ATTR_NAME
+            {
+                ZoneMinderServiceArgument.ID: MOCK_HOST
+            },  # Missing ZoneMinderServiceArgument.NAME
             blocking=True,
         )
 
@@ -115,7 +123,10 @@ async def test_set_run_state_invalid_host(
         await hass.services.async_call(
             DOMAIN,
             "set_run_state",
-            {ATTR_ID: "invalid.host", ATTR_NAME: "Away"},
+            {
+                ZoneMinderServiceArgument.ID: "invalid.host",
+                ZoneMinderServiceArgument.NAME: "Away",
+            },
             blocking=True,
         )
 

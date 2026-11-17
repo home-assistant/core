@@ -10,11 +10,7 @@ from typing import Any, Self, cast, override
 import probatio
 
 from homeassistant import config_entries
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_PERSONS,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -45,7 +41,7 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
@@ -84,6 +80,31 @@ UPDATE_FIELDS: VolDictType = {
     probatio.Optional(CONF_PASSIVE): cv.boolean,
     probatio.Optional(CONF_ICON): cv.icon,
 }
+
+__all__ = [
+    "ATTR_PASSIVE",
+    "ATTR_RADIUS",
+    "CONF_ICON",
+    "CONF_LATITUDE",
+    "CONF_LONGITUDE",
+    "CONF_NAME",
+    "CONF_PASSIVE",
+    "CONF_RADIUS",
+    "CREATE_FIELDS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "ENTITY_ID_HOME",
+    "HOME_ZONE",
+    "ICON_IMPORT",
+    "SERVICE_RELOAD",
+    "UPDATE_FIELDS",
+    "Zone",
+    "ZoneEntityStateAttribute",
+    "ZoneStorageCollection",
+    "async_active_zone",
+    "async_get_enclosing_zones",
+    "async_in_zones",
+]
 
 
 def empty_value(value: Any) -> Any:
@@ -556,9 +577,7 @@ class Zone(collection.CollectionEntity):
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
 
-        from homeassistant.components.device_tracker import (  # noqa: PLC0415
-            ATTR_IN_ZONES,
-        )
+        from homeassistant.components.device_tracker import ATTR_IN_ZONES  # noqa: PLC0415
 
         return (
             state is not None

@@ -172,6 +172,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "name": self.name,
                 },
                 learn_more_url="https://www.home-assistant.io/integrations/enphase_envoy",
+                config_entry_id=self.config_entry.entry_id,
             )
             return
         if not self.manual_token:

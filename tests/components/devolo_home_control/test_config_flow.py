@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,8 +15,6 @@ from .const import (
     DISCOVERY_INFO_WRONG_DEVICE,
     DISCOVERY_INFO_WRONG_DEVOLO_DEVICE,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:

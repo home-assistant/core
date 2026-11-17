@@ -6,6 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.rainbird import DOMAIN
@@ -30,9 +35,6 @@ from .conftest import (
     mock_response,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
 
 @pytest.fixture(name="responses")
 def mock_responses() -> list[AiohttpClientMockResponse]:
@@ -56,7 +58,7 @@ async def mock_setup() -> AsyncGenerator[AsyncMock]:
 
     with patch(
         "homeassistant.components.rainbird.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

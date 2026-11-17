@@ -6,6 +6,7 @@ import socket
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Version
 from uiprotect.data.public_devices import PublicNVR
@@ -50,8 +51,6 @@ from .conftest import (
     DEFAULT_VERIFY_SSL,
     MAC_ADDR,
 )
-
-from tests.common import MockConfigEntry
 
 # Base user input without credentials (for tests that override them)
 BASE_USER_INPUT = {
@@ -140,7 +139,7 @@ async def test_user_flow(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) ->
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -524,7 +523,7 @@ async def test_form_reauth_auth(
         ) as mock_setup,
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
@@ -631,7 +630,7 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -836,7 +835,7 @@ async def test_discovered_by_unifi_discovery(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -905,7 +904,7 @@ async def test_discovered_by_unifi_discovery_partial(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -1129,7 +1128,7 @@ async def test_discovered_by_unifi_discovery_dc_different_interface_resolver_fai
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -1273,7 +1272,7 @@ async def test_discovery_with_both_ignored_and_normal_entry(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -1321,7 +1320,7 @@ async def test_discovery_confirm_fallback_to_ip(
     with (
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -1389,7 +1388,7 @@ async def test_discovery_confirm_with_api_key_error(
     with (
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -1910,7 +1909,7 @@ async def test_reauth_empty_credentials_keeps_existing(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # Submit with empty credentials - should keep existing
@@ -2002,7 +2001,7 @@ async def test_reauth_credential_update(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2104,7 +2103,7 @@ async def test_form_api_key_client_error(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2130,7 +2129,7 @@ async def test_port_int_conversion(
     with (
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup",
@@ -2196,7 +2195,7 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2290,7 +2289,7 @@ async def test_api_key_flow_errors(
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2661,7 +2660,7 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(

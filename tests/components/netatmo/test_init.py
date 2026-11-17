@@ -16,12 +16,23 @@ from freezegun.api import FrozenDateTimeFactory
 import pyatmo
 from pyatmo.const import ALL_SCOPES
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, netatmo, webhook
 from homeassistant.components.cloud import SIGNAL_CLOUD_CONNECTION_STATE
 from homeassistant.components.netatmo import DOMAIN, coordinator
-from homeassistant.components.netatmo.coordinator import ACCOUNT
+from homeassistant.components.netatmo.coordinator import (
+    ACCOUNT,
+    WEATHER,
+    NetatmoDataHandler,
+    NetatmoPublisher,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -57,9 +68,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 from tests.components.cloud import mock_cloud
-from tests.typing import WebSocketGenerator
 
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {
@@ -1481,8 +1490,8 @@ async def test_entity_stays_available_through_tolerated_errors(
 
 @pytest.mark.parametrize(
     "error",
-    [TimeoutError, pyatmo.ApiError],
-    ids=["timeout", "api_error"],
+    [TimeoutError, pyatmo.ApiError, aiohttp.ServerDisconnectedError],
+    ids=["timeout", "api_error", "server_disconnected"],
 )
 async def test_entity_unavailable_after_three_failed_updates(
     hass: HomeAssistant,
@@ -1594,6 +1603,74 @@ async def test_log_when_unavailable(
         await data_handler.async_fetch_data(ACCOUNT)
 
         assert caplog.text.count("recovered") == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [TimeoutError, pyatmo.ApiError],
+    ids=["timeout", "api_error"],
+)
+async def test_setup_retried_when_homes_cannot_be_fetched(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    error: type[Exception],
+) -> None:
+    """Test that setup is retried until the homes can be fetched."""
+    failing = True
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if failing and kwargs.get("endpoint", "").endswith("homesdata"):
+            raise error
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.coordinator.PLATFORMS", [Platform.SWITCH]
+        ),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert hass.states.get(SWITCH_ENTITY_ID) is None
+
+        failing = False
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON
+
+
+async def test_setup_without_homes(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that an account without homes still loads, as a retry cannot help."""
+
+    def remove_homes(payload: dict) -> None:
+        if isinstance(payload.get("body", {}).get("homes"), list):
+            payload["body"]["homes"] = []
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        return await fake_post_request(hass, *args, msg_callback=remove_homes, **kwargs)
+
+    await _setup_switch_platform(hass, config_entry, fake_post)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SWITCH_ENTITY_ID) is None
 
 
 @contextmanager
@@ -1850,6 +1927,7 @@ async def test_a_shutdown_drops_the_webhook_once(
         await hass.async_block_till_done()
 
     assert mock_auth.return_value.async_dropwebhook.call_count == 1
+    assert config_entry.runtime_data.webhook_registered is False
 
 
 async def test_a_failed_registration_is_still_dropped_at_shutdown(
@@ -2427,4 +2505,177 @@ async def test_a_cloudhook_the_cloud_refuses_is_retried(
     assert mock_cloudhook.call_count == 2
     mock_auth.return_value.async_addwebhook.assert_called_once_with(
         "https://hooks.nabu.casa/ABCD"
+    )
+
+
+async def test_a_webhook_never_registered_is_still_dropped(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that teardown clears a registration an earlier run left behind."""
+    hass.config.components.add("cloud")
+    with (
+        patch(
+            "homeassistant.helpers.network.get_url",
+            return_value="http://example.nabu.casa",
+        ),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+            return_value="http://example.com",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        # An http URL is refused before anything is registered
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook.assert_not_called()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    # Netatmo keeps a registration across restarts, so one is dropped regardless
+    mock_auth.return_value.async_dropwebhook.assert_called_once()
+
+
+async def _drive_scheduled_updates(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: int
+) -> None:
+    """Fire every scheduled update falling in the given span."""
+    for _ in range(seconds // 30):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_the_startup_burst_does_not_throttle_the_poll_schedule(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the calls made while subscribing cannot breach the rate limit."""
+    request_times: list[float] = []
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        if (
+            kwargs.get("endpoint", "").endswith("homestatus")
+            and kwargs.get("params", {}).get("home_id") == HOME_ID
+        ):
+            request_times.append(time())
+        return await fake_post_request(hass, *args, **kwargs)
+
+    # Comfortably above the handful of calls subscribing makes, but far below what
+    # those same calls extrapolate to when spread over only the first minute
+    with patch.object(coordinator, "CLOUD_LIMIT", 10):
+        await _setup_switch_platform(hass, config_entry, fake_post)
+        await _drive_scheduled_updates(hass, freezer, 600)
+
+    gaps = [round(later - earlier) for earlier, later in pairwise(request_times)]
+
+    # Throttling adds 60s to every publisher on every scheduled update, so any
+    # would stretch these gaps well past the base cadence
+    assert len(gaps) >= 2
+    assert set(gaps) == {180}
+
+
+async def test_calls_stop_counting_once_they_leave_the_window(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that the counter only reports the calls made in the trailing hour."""
+    await _setup_switch_platform(hass, config_entry, partial(fake_post_request, hass))
+    data_handler = config_entry.runtime_data
+
+    assert data_handler._calls_in_the_last_hour() > 0
+
+    # Advanced without firing the scheduled updates, so nothing is added back
+    freezer.tick(timedelta(seconds=coordinator.RATE_LIMIT_WINDOW + 1))
+
+    assert data_handler._calls_in_the_last_hour() == 0
+
+
+async def _remove_publisher(
+    data_handler: NetatmoDataHandler, publisher: NetatmoPublisher
+) -> None:
+    """Unsubscribe every subscriber of a publisher, which drops it."""
+    for update_callback in list(publisher.subscriptions):
+        await data_handler.unsubscribe(publisher.name, update_callback)
+
+
+async def _subscribe_new_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await data_handler.subscribe(WEATHER, WEATHER, None)
+
+
+async def _unsubscribe_fetching_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await _remove_publisher(data_handler, batch[0])
+
+
+async def _unsubscribe_pending_publisher(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    await _remove_publisher(data_handler, batch[-1])
+
+
+async def _force_update(
+    data_handler: NetatmoDataHandler, batch: list[NetatmoPublisher]
+) -> None:
+    data_handler.async_force_update(batch[-1].name)
+
+
+@pytest.mark.parametrize(
+    ("mutate_queue", "skipped"),
+    [
+        pytest.param(_subscribe_new_publisher, [], id="subscribe"),
+        pytest.param(_unsubscribe_fetching_publisher, [], id="unsubscribe_fetching"),
+        pytest.param(_unsubscribe_pending_publisher, [-1], id="unsubscribe_pending"),
+        pytest.param(_force_update, [], id="force_update"),
+    ],
+)
+async def test_queue_changes_while_a_fetch_is_awaited(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mutate_queue: Callable[
+        [NetatmoDataHandler, list[NetatmoPublisher]], Coroutine[Any, Any, None]
+    ],
+    skipped: list[int],
+) -> None:
+    """Test that an update polls its whole batch when the queue changes meanwhile."""
+    mutate = False
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        nonlocal mutate
+        if mutate:
+            mutate = False
+            await mutate_queue(data_handler, batch)
+        return await fake_post_request(hass, *args, **kwargs)
+
+    await _setup_switch_platform(hass, config_entry, fake_post)
+    data_handler = config_entry.runtime_data
+    batch = list(data_handler._queue)
+
+    assert len(batch) >= 2
+    for publisher in batch:
+        publisher.next_scan = 0
+
+    mutate = True
+    await data_handler.async_update(dt_util.utcnow())
+
+    assert not mutate
+    assert [publisher for publisher in batch if publisher.next_scan <= time()] == [
+        batch[index] for index in skipped
+    ]
+    assert sorted(publisher.name for publisher in data_handler._queue) == sorted(
+        data_handler.publisher
     )

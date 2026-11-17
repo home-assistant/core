@@ -1,6 +1,7 @@
 {
   "domain": "local_file",
   "name": "Local file",
+  "categories": ["diy_makers.web_data_connectors", "security_safety.cameras"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_file",

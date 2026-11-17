@@ -110,7 +110,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                "username": reauth_entry.data[CONF_USERNAME],
             },
         )
 

@@ -64,7 +64,9 @@ class ConversationEntity(RestoreEntity):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         with (
-            async_get_chat_session(self.hass, user_input.conversation_id) as session,
+            async_get_chat_session(
+                self.hass, user_input.conversation_id, context=user_input.context
+            ) as session,
             async_get_chat_log(self.hass, session, user_input) as chat_log,
         ):
             return await self._async_handle_message(user_input, chat_log)

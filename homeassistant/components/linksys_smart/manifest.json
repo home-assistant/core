@@ -1,7 +1,12 @@
 {
   "domain": "linksys_smart",
   "name": "Linksys Smart Wi-Fi",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/linksys_smart",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

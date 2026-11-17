@@ -5,13 +5,14 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture, snapshot_platform
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
 )
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -19,8 +20,6 @@ from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -156,7 +155,7 @@ async def test_number_action(
     ) as mock_action:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data=service_data,
             blocking=True,
         )
@@ -200,7 +199,7 @@ async def test_number_action_(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             service_data=service_data,
             blocking=True,
         )

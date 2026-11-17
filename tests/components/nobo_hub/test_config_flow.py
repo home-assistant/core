@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from pynobo import PynoboConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nobo_hub.const import (
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import SERIAL, STORED_IP
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="192.168.1.106",

@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 from aiomodernforms import ModernFormsConnectionError
+from pytest_homeassistant.common import async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -15,9 +17,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import init_integration, modern_forms_gen4_call_mock
-
-from tests.common import async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_full_user_flow_implementation(
@@ -40,7 +39,7 @@ async def test_full_user_flow_implementation(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
@@ -132,7 +131,7 @@ async def test_connection_error(
     update_mock.return_value.info.device_name = "ModernFormsFan"
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -273,7 +272,7 @@ async def test_full_user_flow_gen4(
 
     with patch(
         "homeassistant.components.modern_forms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}

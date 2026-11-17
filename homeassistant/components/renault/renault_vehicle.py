@@ -16,12 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .const import DOMAIN
+from .coordinator import RenaultDataUpdateCoordinator
+
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
-
-from .const import DOMAIN
-from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ def with_error_wrapping[**_P, _R](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     return wrapper

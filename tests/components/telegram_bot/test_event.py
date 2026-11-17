@@ -1,17 +1,15 @@
 """Test the telegram bot event platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.telegram_bot.const import (
-    ATTR_CHAT_ID,
-    ATTR_MESSAGE,
     DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    TelegramBotService,
+    TelegramBotServiceArgument,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_send_message(
@@ -28,8 +26,11 @@ async def test_send_message(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_MESSAGE,
-        {ATTR_CHAT_ID: 123456, ATTR_MESSAGE: "test message"},
+        TelegramBotService.SEND_MESSAGE,
+        {
+            TelegramBotServiceArgument.CHAT_ID: 123456,
+            TelegramBotServiceArgument.MESSAGE: "test message",
+        },
         blocking=True,
         return_response=True,
     )

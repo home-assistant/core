@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aioharmanluxury import HarmanLuxuryError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.harman_luxury.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEVICE_INFO, SSDP_DISCOVERY, TEST_HOST, TEST_NAME, TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_client")

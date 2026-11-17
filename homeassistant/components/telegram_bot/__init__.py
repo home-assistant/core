@@ -28,14 +28,7 @@ from .bot import (
     TelegramNotificationService,
     initialize_bot,
 )
-
-# The ATTR_* below are unused here, but re-exported for the telegram integration.
 from .const import (
-    ATTR_CHAT_ID,  # noqa: F401
-    ATTR_DISABLE_NOTIF,  # noqa: F401
-    ATTR_DISABLE_WEB_PREV,  # noqa: F401
-    ATTR_MESSAGE_TAG,  # noqa: F401
-    ATTR_MESSAGE_THREAD_ID,  # noqa: F401
     ATTR_PARSER,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
@@ -200,8 +193,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     # Create the bot device before the platforms are set up, so the per-chat devices can
     # resolve it as their via_device no matter which platform is set up first
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **bot_device_info(entry, bot.id)
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=bot_device_info(entry, bot.id)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

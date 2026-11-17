@@ -5,6 +5,7 @@ from unittest.mock import patch
 from xml.etree.ElementTree import ParseError
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import core
 from homeassistant.components.device_tracker import (
@@ -16,14 +17,12 @@ from homeassistant.components.fritz.const import (
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -190,8 +189,8 @@ async def test_execute_action_while_shutdown(
     hass.set_state(core.CoreState.stopping)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.mock_title_wi_fi_guest"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.mock_title_wi_fi_guest"},
         blocking=True,
     )
 

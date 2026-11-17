@@ -13,6 +13,7 @@ TO_REDACT = {
     "username",
     "password",
     "token",
+    "refresh_token",
     "unique_id",
     "hardware_id",
 }

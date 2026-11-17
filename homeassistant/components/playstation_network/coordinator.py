@@ -19,7 +19,6 @@ from psnawp_api.models.group.group_datatypes import GroupDetails
 from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -182,12 +181,13 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 self.hass,
                 DOMAIN,
                 f"group_chat_forbidden_{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="group_chat_forbidden",
                 translation_placeholders={
-                    CONF_NAME: self.config_entry.title,
+                    "name": self.config_entry.title,
                     "error_message": e.message or "",
                 },
             )

@@ -9,19 +9,26 @@ from neopool_modbus import NeoPoolError
 from neopool_modbus.exceptions import InvalidStateReason, NeoPoolInvalidStateError
 from neopool_modbus.registers import ConfigKind, FiltValveMode, RelayKind, RelayMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.neopool.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION, Platform
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _select_entity_id(
@@ -48,8 +55,8 @@ def _select_entity_id(
 async def _select_option(hass: HomeAssistant, entity_id: str, option: str) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {"entity_id": entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {"entity_id": entity_id, SelectServiceArgument.OPTION: option},
         blocking=True,
     )
 

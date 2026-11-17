@@ -66,6 +66,11 @@ BINARY_SENSOR_TYPES: tuple[OpenEVSEBinarySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.mqtt_connected,
     ),
+    OpenEVSEBinarySensorDescription(
+        key="station_status",
+        translation_key="station_status",
+        value_fn=lambda ev: ev.status == "active" if ev.status is not None else None,
+    ),
 )
 
 

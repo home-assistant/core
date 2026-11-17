@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -20,8 +21,6 @@ from .conftest import (
     MOCK_SERIAL_2,
     trigger_callback,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_success(

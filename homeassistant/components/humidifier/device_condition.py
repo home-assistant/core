@@ -28,8 +28,12 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import const
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
+)
 
 TOGGLE_CONDITION = toggle_entity.CONDITION_SCHEMA.extend(
     {probatio.Required(CONF_DOMAIN): DOMAIN}
@@ -54,7 +58,7 @@ CONDITION_SCHEMA = probatio.TaggedUnion(
 
 # Maps a state attribute to the condition config key used to compare against it.
 _STATE_ATTRIBUTE_TO_CONFIG_KEY = {
-    const.HumidifierEntityStateAttribute.MODE: ATTR_MODE,
+    HumidifierEntityStateAttribute.MODE: ATTR_MODE,
 }
 
 
@@ -72,7 +76,7 @@ async def async_get_conditions(
 
         supported_features = get_supported_features(hass, entry.entity_id)
 
-        if supported_features & const.HumidifierEntityFeature.MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -92,7 +96,7 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_mode":
-        attribute = const.HumidifierEntityStateAttribute.MODE
+        attribute = HumidifierEntityStateAttribute.MODE
     else:
         return toggle_entity.async_condition_from_config(hass, config)
 
@@ -128,7 +132,7 @@ async def async_get_condition_capabilities(
                 get_capability(
                     hass,
                     entry.entity_id,
-                    const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+                    HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
                 )
                 or []
             )

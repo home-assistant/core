@@ -12,6 +12,8 @@ from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.components import bluetooth
 from homeassistant.components.gardena_bluetooth import async_get_product
@@ -21,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_bluetooth
 
 from . import WATER_TIMER_SERVICE_INFO, get_config_entry
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -56,7 +56,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
     """Override async_unload_entry."""
     with patch(
         "homeassistant.components.gardena_bluetooth.async_unload_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_unload_entry:
         yield mock_unload_entry
 
@@ -66,7 +66,7 @@ def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.gardena_bluetooth.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -120,7 +120,7 @@ def mock_client(
 
     client_class = Mock()
 
-    SENTINEL = object()
+    SENTINEL = sentinel("SENTINEL")
 
     def _chars() -> list[Characteristic]:
         product_type = client_class.call_args.args[1]

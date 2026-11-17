@@ -1,6 +1,7 @@
 """Test DoorBird init."""
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from . import mock_not_found_exception, mock_unauthorized_exception, mock_webhook_call
 from .conftest import DoorbirdMockerType, patch_doorbird_api_entry_points
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_basic_setup(

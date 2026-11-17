@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.denon_rs232.config_flow import CONF_MODEL_NAME
 from homeassistant.components.denon_rs232.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE, MOCK_MODEL, MOCK_MODEL_SELECTION
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_async_setup_entry(mock_receiver: MagicMock) -> Generator[AsyncMock]:
@@ -23,7 +22,7 @@ def mock_async_setup_entry(mock_receiver: MagicMock) -> Generator[AsyncMock]:
 
     with patch(
         "homeassistant.components.denon_rs232.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -1,7 +1,7 @@
 """Support for alarm control panels that can be controlled through IFTTT."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 import probatio
 
@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_EVENT, DATA_IFTTT_ALARM, DOMAIN, SERVICE_TRIGGER
+from .const import DATA_IFTTT_ALARM, DOMAIN, IftttService, IftttServiceArgument
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,9 +161,9 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
 
     def set_alarm_state(self, event: str, state: AlarmControlPanelState) -> None:
         """Call the IFTTT trigger service to change the alarm state."""
-        data = {ATTR_EVENT: event}
+        data: dict[str, Any] = {IftttServiceArgument.EVENT: event}
 
-        self.hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
+        self.hass.services.call(DOMAIN, IftttService.TRIGGER, data)
         _LOGGER.debug("Called IFTTT integration to trigger event %s", event)
         if self._optimistic:
             self._attr_alarm_state = state

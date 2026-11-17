@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -39,8 +40,6 @@ from .common import (
     TAMPER_SENSOR,
     NodeDataType,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
@@ -1468,6 +1467,7 @@ async def test_legacy_door_open_state_repair_issue(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_legacy_door_open_state"
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_placeholders["entity_id"] == entity_id
     assert issue.translation_placeholders["entity_name"] == "Window/door is open"
     assert (
@@ -1475,6 +1475,15 @@ async def test_legacy_door_open_state_repair_issue(
         == "binary_sensor.ehandle_connectsense"
     )
     assert "test" in issue.translation_placeholders["items"]
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
+    )
 
 
 async def test_legacy_door_tilt_state_repair_issue(
