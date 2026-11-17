@@ -58,7 +58,6 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._email: str | None = None
-        self._password: str | None = None
         self._mfa_method: MfaMethod = MfaMethod.SMS
         self._auth_flow: AuthFlow | None = None
         self._client: EngieBeClient | None = None
@@ -68,7 +67,6 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, str]:
         """Start authentication with ENGIE Belgium and return any form errors."""
         self._email = user_input[CONF_EMAIL]
-        self._password = user_input[CONF_PASSWORD]
         self._mfa_method = MfaMethod(user_input[CONF_MFA_METHOD])
 
         session = async_create_clientsession(self.hass)
@@ -77,7 +75,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             self._auth_flow = await client.async_start_authentication(
                 self._email,
-                self._password,
+                user_input[CONF_PASSWORD],
                 self._mfa_method,
                 auth_session=session,
             )
@@ -89,22 +87,6 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected error during authentication")
             return {"base": "unknown"}
         return {}
-
-    async def _async_submit_mfa(self, code: str) -> tuple[str, str] | str:
-        """Submit the MFA code and return the tokens, or the form error key."""
-        if TYPE_CHECKING:
-            assert self._auth_flow is not None
-        try:
-            return await self._auth_flow.async_submit_mfa(code)
-        except EngieBeMfaError:
-            return "invalid_mfa_code"
-        except EngieBeAuthenticationError:
-            return "invalid_auth"
-        except EngieBeCommunicationError:
-            return "cannot_connect"
-        except EngieBeError:
-            LOGGER.exception("Unexpected error during MFA submission")
-            return "unknown"
 
     @override
     async def async_step_user(
@@ -190,10 +172,21 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            result = await self._async_submit_mfa(user_input["code"])
-            if not isinstance(result, str):
-                return await self._async_finish_login(*result)
-            errors["base"] = result
+            if TYPE_CHECKING:
+                assert self._auth_flow is not None
+            try:
+                tokens = await self._auth_flow.async_submit_mfa(user_input["code"])
+            except EngieBeMfaError:
+                errors["base"] = "invalid_mfa_code"
+            except EngieBeAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except EngieBeCommunicationError:
+                errors["base"] = "cannot_connect"
+            except EngieBeError:
+                LOGGER.exception("Unexpected error during MFA submission")
+                errors["base"] = "unknown"
+            else:
+                return await self._async_finish_login(*tokens)
 
         return self.async_show_form(
             step_id="mfa", data_schema=_CODE_SCHEMA, errors=errors

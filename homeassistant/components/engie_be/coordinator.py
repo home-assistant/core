@@ -17,7 +17,6 @@ from aioengiebelgium import (
     EpexSlot,
     MonthlyPeaks,
     Peak,
-    PricePeriod,
     PriceSlot,
     ServicePoint,
     bare_ean,
@@ -95,16 +94,6 @@ def normalize_slot_code(raw_code: str) -> str:
         if idx != -1:
             return raw_code[idx + len(prefix) :]
     return raw_code
-
-
-def _current_period(
-    periods: tuple[PricePeriod, ...], today: date
-) -> PricePeriod | None:
-    """Return the price period covering today, if any."""
-    for period in periods:
-        if period.contains(today):
-            return period
-    return None
 
 
 def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
@@ -259,7 +248,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
-            period = _current_period(ean_prices.periods, today)
+            period = next(
+                (period for period in ean_prices.periods if period.contains(today)),
+                None,
+            )
             if period is None:
                 continue
             for direction, direction_slots in (
@@ -473,18 +465,16 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                 if epex_slots_cover_day(slots[granularity], day, granularity):
                     continue
                 try:
-                    payload = await self.client.async_get_epex_prices(
-                        *epex_window(day), granularity=granularity
-                    )
-                except EngieBeAuthenticationError as err:
-                    raise auth_failed() from err
-                except EngieBeError as err:
+                    with _raise_update_errors():
+                        payload = await self.client.async_get_epex_prices(
+                            *epex_window(day), granularity=granularity
+                        )
+                except UpdateFailed as err:
                     if required:
-                        raise UpdateFailed(
-                            translation_domain=DOMAIN,
-                            translation_key="cannot_connect",
-                        ) from err
-                    LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
+                        raise
+                    LOGGER.debug(
+                        "Fetching EPEX prices for %s failed: %s", day, err.__cause__
+                    )
                     continue
                 slots[granularity] = [
                     slot for slot in slots[granularity] if brussels_day(slot) != day

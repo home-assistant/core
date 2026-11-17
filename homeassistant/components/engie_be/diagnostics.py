@@ -4,7 +4,7 @@ from datetime import timedelta
 import hashlib
 from typing import TYPE_CHECKING, Any
 
-from aioengiebelgium import EpexGranularity, MonthlyPeaks, bare_ean
+from aioengiebelgium import EpexGranularity, MonthlyPeaks, Peak, bare_ean
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
@@ -37,22 +37,21 @@ def _hashed_identifier(identifier: str) -> str:
     return f"**REDACTED_{hashlib.sha256(identifier.encode()).hexdigest()[:16]}"
 
 
+def _optional_peak(peak: Peak | None) -> dict[str, float | str] | None:
+    """Return the diagnostics of a capacity tariff peak, if there is one."""
+    return None if peak is None else peak_as_dict(peak)
+
+
 def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
     """Return the diagnostics of one month of capacity tariff peaks."""
     return {
         "year": monthly.year,
         "month": monthly.month,
-        "peak_of_the_month": (
-            peak_as_dict(monthly.peak_of_the_month)
-            if monthly.peak_of_the_month is not None
-            else None
-        ),
+        "peak_of_the_month": _optional_peak(monthly.peak_of_the_month),
         "daily_peaks": [peak_as_dict(peak) for peak in monthly.daily_peaks],
         "skipped_entries": monthly.skipped_entries,
-        "previous_peak_of_the_month": (
-            peak_as_dict(monthly.previous_peak_of_the_month)
-            if monthly.previous_peak_of_the_month is not None
-            else None
+        "previous_peak_of_the_month": _optional_peak(
+            monthly.previous_peak_of_the_month
         ),
     }
 
