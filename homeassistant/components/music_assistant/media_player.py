@@ -761,7 +761,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             await self.mass.player_queues.play_index(
                 self.active_queue.queue_id,
                 queue_item_id,
-                user=acting_user(self.mass, username, self._context),
+                user=(
+                    username
+                    if username is not None
+                    else user_from_context(self._context)
+                ),
             )
 
     @override
