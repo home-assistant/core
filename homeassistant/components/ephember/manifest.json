@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyephember2"],
   "quality_scale": "legacy",
-  "requirements": ["pyephember2==0.4.14"]
+  "requirements": ["pyephember2==0.4.15"]
 }

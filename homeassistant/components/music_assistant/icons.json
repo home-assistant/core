@@ -9,6 +9,14 @@
       "queue_playback_speed": {
         "default": "mdi:speedometer"
       }
+    },
+    "switch": {
+      "queue_autoplay": {
+        "default": "mdi:infinity"
+      },
+      "queue_crossfade": {
+        "default": "mdi:set-center"
+      }
     }
   },
   "services": {
