@@ -52,6 +52,7 @@ async def listening_integration(
         callback: Callable[[str, Any], Awaitable[None]] | None = None,
         notification_event_callback: Callable[[Any], Awaitable[None]] | None = None,
         power_state_callback: Callable[[Any], Awaitable[None]] | None = None,
+        settings_callback: Callable[[Any], Awaitable[None]] | None = None,
     ) -> None:
         await mock_data_listener(callback, power_state_callback=power_state_callback)
         await asyncio.Event().wait()

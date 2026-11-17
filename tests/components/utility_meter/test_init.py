@@ -15,7 +15,7 @@ from homeassistant.components import utility_meter
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter import (
@@ -226,7 +226,7 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", ATTR_OPTION: "offpeak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -247,14 +247,14 @@ async def test_services(hass: HomeAssistant, meter) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -352,7 +352,7 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "offpeak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)
@@ -373,14 +373,14 @@ async def test_services_config_entry(hass: HomeAssistant) -> None:
 
     # Change tariff
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "wrong_tariff"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     # Inexisting tariff, ignoring
     assert hass.states.get("select.energy_bill").state != "wrong_tariff"
 
     data = {ATTR_ENTITY_ID: "select.energy_bill", "option": "peak"}
-    await hass.services.async_call(SELECT_DOMAIN, SERVICE_SELECT_OPTION, data)
+    await hass.services.async_call(SELECT_DOMAIN, SelectService.SELECT_OPTION, data)
     await hass.async_block_till_done()
 
     now += timedelta(seconds=10)

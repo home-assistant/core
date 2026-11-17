@@ -10,8 +10,10 @@ from infrared_protocols.codes.edifier.r1700bt_2017 import EdifierR1700BT2017Code
 from infrared_protocols.codes.edifier.r1700bt_pre_2017 import EdifierR1700BTPre2017Code
 from infrared_protocols.codes.edifier.r1700bts import EdifierR1700BTsCode
 from infrared_protocols.codes.edifier.r2000db import EdifierR2000DBCode
+from infrared_protocols.codes.edifier.r2600 import EdifierR2600Code
 from infrared_protocols.codes.edifier.r2730db import EdifierR2730DBCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
+from infrared_protocols.codes.edifier.rc80b import EdifierRC80BCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
 from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
 
@@ -176,6 +178,18 @@ COMMAND_SET_BUTTONS: dict[
             command_code=EdifierR2000DBCode.EQ_DYNAMIC,
         ),
     ),
+    EdifierCommandSet.R2600: (
+        EdifierIrButtonEntityDescription(
+            key="pc",
+            translation_key="pc",
+            command_code=EdifierR2600Code.PC,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="aux",
+            translation_key="aux",
+            command_code=EdifierR2600Code.AUX,
+        ),
+    ),
     EdifierCommandSet.R2730DB: (
         EdifierIrButtonEntityDescription(
             key="bluetooth",
@@ -255,6 +269,33 @@ COMMAND_SET_BUTTONS: dict[
             key="coax",
             translation_key="coax",
             command_code=EdifierRC20GCode.COAX,
+        ),
+    ),
+    EdifierCommandSet.RC80B: (
+        EdifierIrButtonEntityDescription(
+            key="bluetooth",
+            translation_key="bluetooth",
+            command_code=EdifierRC80BCode.BLUETOOTH,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="line_1_2",
+            translation_key="line_1_2",
+            command_code=EdifierRC80BCode.LINE_1_2,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="opt_coax",
+            translation_key="opt_coax",
+            command_code=EdifierRC80BCode.OPT_COAX,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="fx_on",
+            translation_key="fx_on",
+            command_code=EdifierRC80BCode.FX_ON,
+        ),
+        EdifierIrButtonEntityDescription(
+            key="fx_off",
+            translation_key="fx_off",
+            command_code=EdifierRC80BCode.FX_OFF,
         ),
     ),
     EdifierCommandSet.S3000PRO: (

@@ -7,7 +7,7 @@ from telegram.constants import InputMediaType
 from telegram.error import TelegramError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     HomeAssistant,
@@ -27,41 +27,20 @@ from homeassistant.util.json import JsonValueType
 
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
-    ATTR_AUTHENTICATION,
-    ATTR_CAPTION,
-    ATTR_CHAT_ID,
-    ATTR_FILE,
-    ATTR_MEDIA_TYPE,
-    ATTR_MESSAGE_ID,
-    ATTR_PASSWORD,
-    ATTR_URL,
-    ATTR_USERNAME,
-    ATTR_VERIFY_SSL,
-    CHAT_ACTION_CHOOSE_STICKER,
-    CHAT_ACTION_FIND_LOCATION,
-    CHAT_ACTION_RECORD_VIDEO,
-    CHAT_ACTION_RECORD_VIDEO_NOTE,
-    CHAT_ACTION_RECORD_VOICE,
-    CHAT_ACTION_TYPING,
-    CHAT_ACTION_UPLOAD_DOCUMENT,
-    CHAT_ACTION_UPLOAD_PHOTO,
-    CHAT_ACTION_UPLOAD_VIDEO,
-    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-    CHAT_ACTION_UPLOAD_VOICE,
+    CONF_CHAT_ID,
     DOMAIN,
-    PARSER_HTML,
-    PARSER_MD,
-    PARSER_MD2,
-    PARSER_PLAIN_TEXT,
+    TelegramBotChatAction,
+    TelegramBotParseMode,
     TelegramBotService,
     TelegramBotServiceArgument,
+    TelegramBotServiceResponse,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PARSER_SCHEMA = probatio.All(
     cv.string,
-    probatio.In([PARSER_HTML, PARSER_MD, PARSER_MD2, PARSER_PLAIN_TEXT]),
+    probatio.In(list(TelegramBotParseMode)),
 )
 
 BASE_SERVICE_SCHEMA = probatio.Schema(
@@ -133,19 +112,7 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.Schema(
             probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Required(TelegramBotServiceArgument.CHAT_ACTION): probatio.In(
-            (
-                CHAT_ACTION_TYPING,
-                CHAT_ACTION_UPLOAD_PHOTO,
-                CHAT_ACTION_RECORD_VIDEO,
-                CHAT_ACTION_UPLOAD_VIDEO,
-                CHAT_ACTION_RECORD_VOICE,
-                CHAT_ACTION_UPLOAD_VOICE,
-                CHAT_ACTION_UPLOAD_DOCUMENT,
-                CHAT_ACTION_CHOOSE_STICKER,
-                CHAT_ACTION_FIND_LOCATION,
-                CHAT_ACTION_RECORD_VIDEO_NOTE,
-                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-            )
+            list(TelegramBotChatAction)
         ),
         probatio.Optional(
             TelegramBotServiceArgument.MESSAGE_THREAD_ID
@@ -182,7 +149,9 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
             [
                 probatio.Schema(
                     {
-                        probatio.Required(ATTR_MEDIA_TYPE): probatio.In(
+                        probatio.Required(
+                            TelegramBotServiceArgument.MEDIA_TYPE
+                        ): probatio.In(
                             (
                                 str(InputMediaType.AUDIO),
                                 str(InputMediaType.VIDEO),
@@ -190,13 +159,23 @@ SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
                                 str(InputMediaType.PHOTO),
                             )
                         ),
-                        probatio.Optional(ATTR_URL): cv.string,
-                        probatio.Optional(ATTR_FILE): cv.string,
-                        probatio.Optional(ATTR_CAPTION): cv.string,
-                        probatio.Optional(ATTR_USERNAME): cv.string,
-                        probatio.Optional(ATTR_PASSWORD): cv.string,
-                        probatio.Optional(ATTR_AUTHENTICATION): cv.string,
-                        probatio.Optional(ATTR_VERIFY_SSL, default=True): cv.boolean,
+                        probatio.Optional(TelegramBotServiceArgument.URL): cv.string,
+                        probatio.Optional(TelegramBotServiceArgument.FILE): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.CAPTION
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.USERNAME
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.PASSWORD
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.AUTHENTICATION
+                        ): cv.string,
+                        probatio.Optional(
+                            TelegramBotServiceArgument.VERIFY_SSL, default=True
+                        ): cv.boolean,
                     }
                 )
             ],
@@ -449,13 +428,15 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
             if service_response is not None:
                 formatted_responses: list[JsonValueType] = []
                 for chat_id, message_id in service_response.items():
-                    formatted_response = {
-                        ATTR_CHAT_ID: int(chat_id),
-                        ATTR_MESSAGE_ID: message_id,
+                    formatted_response: dict[str, JsonValueType] = {
+                        TelegramBotServiceResponse.CHAT_ID: int(chat_id),
+                        TelegramBotServiceResponse.MESSAGE_ID: message_id,
                     }
 
                     if target_notify_entity_id:
-                        formatted_response[ATTR_ENTITY_ID] = target_notify_entity_id
+                        formatted_response[TelegramBotServiceResponse.ENTITY_ID] = (
+                            target_notify_entity_id
+                        )
 
                     formatted_responses.append(formatted_response)
 
@@ -477,7 +458,11 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
     if len(errors) > 1:
         error_messages: list[str] = []
         for error, target in errors:
-            target_type = ATTR_CHAT_ID if target.isdigit() else ATTR_ENTITY_ID
+            target_type = (
+                TelegramBotServiceArgument.CHAT_ID
+                if target.isdigit()
+                else CommonServiceArgument.ENTITY_ID
+            )
             error_messages.append(f"`{target_type}` {target}: {error}")
 
         raise HomeAssistantError(
@@ -487,7 +472,7 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         )
 
     if service.return_response:
-        return {"chats": service_responses}
+        return {TelegramBotServiceResponse.CHATS: service_responses}
 
     return None
 
@@ -594,7 +579,7 @@ def _build_targets(
         notify_config_subentry = notify_config_entry.subentries[
             entity_entry.config_subentry_id
         ]
-        notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+        notify_chat_id: int = notify_config_subentry.data[CONF_CHAT_ID]
 
         targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
@@ -647,7 +632,7 @@ def _build_targets(
                     },
                 )
 
-            default_chat_id: int = subentries[0].data[ATTR_CHAT_ID]
+            default_chat_id: int = subentries[0].data[CONF_CHAT_ID]
             _LOGGER.debug(
                 "Defaulting to chat ID %s for bot %s",
                 default_chat_id,

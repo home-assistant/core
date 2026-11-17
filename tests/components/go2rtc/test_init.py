@@ -61,7 +61,7 @@ from homeassistant.components.go2rtc.util import (
 )
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, TargetKey
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -1104,7 +1104,7 @@ async def test_snapshot_service_go2rtc_error(
             CAMERA_DOMAIN,
             CameraService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: init_test_integration.entity_id,
+                TargetKey.ENTITY_ID: init_test_integration.entity_id,
                 CameraServiceArgument.FILENAME: str(snapshot_file),
             },
             blocking=True,

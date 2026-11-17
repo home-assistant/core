@@ -1325,7 +1325,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1341,7 +1341,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
@@ -1349,15 +1349,15 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "", "domain": ""},
-        "required value is empty at 'device_id'",
+        "required value is empty at '{platform_path}device_id'",
     ),
     (
         {"device_id": "", "domain": "light"},
-        "required value is empty at 'device_id'",
+        "required value is empty at '{platform_path}device_id'",
     ),
     (
         {"device_id": "very_unique", "domain": ""},
-        "required value is empty at 'domain'",
+        "required value is empty at '{platform_path}domain'",
     ),
 ]
 
@@ -1386,15 +1386,15 @@ BAD_TRIGGERS = [
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
     (
         {"device_id": "", "domain": ""},
-        "required value is empty at 'device_id'",
+        "required value is empty at '{platform_path}device_id'",
     ),
     (
         {"device_id": "", "domain": "light"},
-        "required value is empty at 'device_id'",
+        "required value is empty at '{platform_path}device_id'",
     ),
     (
         {"device_id": "very_unique", "domain": ""},
-        "required value is empty at 'domain'",
+        "required value is empty at '{platform_path}domain'",
     ),
 ]
 
@@ -1430,7 +1430,10 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="actions.") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1464,7 +1467,10 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="actions.") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1498,7 +1504,10 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="conditions.") in caplog.text
+    assert (
+        expected_error.format(path="conditions.", platform_path="conditions[0].")
+        in caplog.text
+    )
 
 
 async def test_automation_with_sub_condition(
@@ -1665,7 +1674,8 @@ async def test_automation_with_bad_sub_condition(
     )
 
     path = "conditions.conditions[0]."
-    assert expected_error.format(path=path) in caplog.text
+    platform_path = "conditions[0].conditions[0]."
+    assert expected_error.format(path=path, platform_path=platform_path) in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1698,7 +1708,10 @@ async def test_automation_with_bad_trigger(
         },
     )
 
-    assert expected_error.format(path="") in caplog.text
+    assert (
+        expected_error.format(path="triggers[0].", platform_path="triggers[0].")
+        in caplog.text
+    )
 
 
 async def test_websocket_device_not_found(
