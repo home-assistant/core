@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from ritualsgenie import (
     RitualsGenieAuthenticationError,
     RitualsGenieConnectionError,
@@ -16,6 +17,7 @@ from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, D
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -25,8 +27,6 @@ from .common import (
     mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_migration_v1_to_v2(
@@ -43,6 +43,7 @@ async def test_migration_v1_to_v2(
     assert old_mock_config_entry.version == 2
     assert ACCOUNT_HASH not in old_mock_config_entry.data
     assert old_mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert old_mock_config_entry.error_reason_translation_key == "missing_credentials"
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
@@ -81,17 +82,18 @@ async def test_config_entry_auth_failed(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        RitualsGenieConnectionError,
-        RitualsGenieError,
-        RitualsGenieRateLimitError("Slow down", retry_after=60),
+        (RitualsGenieConnectionError, "update_failed"),
+        (RitualsGenieError, "update_failed"),
+        (RitualsGenieRateLimitError("Slow down", retry_after=60), "rate_limited"),
     ],
 )
 async def test_update_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test entities become unavailable when updating fails."""
     config_entry = mock_config_entry(unique_id="id_123_update_failed")
@@ -105,6 +107,10 @@ async def test_update_failed(
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+    error = config_entry.runtime_data.hubs.last_exception
+    assert isinstance(error, HomeAssistantError)
+    assert error.translation_key == translation_key
 
 
 async def test_update_auth_failed(

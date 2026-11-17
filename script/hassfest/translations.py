@@ -8,14 +8,14 @@ import re
 import string
 from typing import Any
 
+from hassfest.model import Config, Integration, IntegrationType
 import probatio
 from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
-from script.translations import upload
 
-from .model import Config, Integration, IntegrationType
+from .translation_data import generate_upload_data
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -376,6 +376,87 @@ _EXCEPTIONS_SCHEMA = {
 }
 
 
+RELEASE_NOTES_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
+    translation_value_validator,
+    slug_validator=translation_key_validator,
+)
+
+
+def update_integration_only(value: Any) -> Any:
+    """Validate shared release notes messages are only defined by update."""
+    _, integration = _CURRENT_TRANSLATION.get()
+    if integration.domain != "update":
+        raise probatio.Invalid(
+            "release notes messages of other integrations belong in "
+            "entity::update::release_notes_messages"
+        )
+    return value
+
+
+ENTITY_COMPONENT_TRANSLATION_SCHEMA = {
+    probatio.Optional("name"): str,
+    probatio.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            probatio.Optional("name"): str,
+            probatio.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+}
+
+ENTITY_TRANSLATION_SCHEMA = {
+    probatio.Optional("name"): translation_value_validator,
+    probatio.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            probatio.Optional("name"): custom_translation_value_validator(
+                allow_placeholders=False
+            ),
+            probatio.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("unit_of_measurement"): custom_translation_value_validator(
+        allow_placeholders=False
+    ),
+}
+
+ENTITY_COMPONENT_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("release_notes_messages"): probatio.All(
+            update_integration_only, RELEASE_NOTES_MESSAGES_SCHEMA
+        ),
+        probatio.Any("_", cv.slug): ENTITY_COMPONENT_TRANSLATION_SCHEMA,
+    }
+)
+
+ENTITY_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("update"): {
+            probatio.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+            translation_key_validator: ENTITY_TRANSLATION_SCHEMA,
+        },
+        cv.slug: cv.schema_with_slug_keys(
+            ENTITY_TRANSLATION_SCHEMA,
+            slug_validator=translation_key_validator,
+        ),
+    }
+)
+
+
 def _with_integration(
     schema: probatio.Schema, config: Config, integration: Integration
 ) -> Callable[[Any], Any]:
@@ -522,68 +603,14 @@ def _gen_strings_schema(
                 probatio.Optional("description"): translation_value_validator,
             },
             probatio.Optional("issues"): gen_issues_schema(frontend_issues),
-            probatio.Optional("entity_component"): cv.schema_with_slug_keys(
-                {
-                    probatio.Optional("name"): str,
-                    probatio.Optional("state"): cv.schema_with_slug_keys(
-                        custom_translation_value_validator(allow_placeholders=False),
-                        slug_validator=translation_key_validator,
-                    ),
-                    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
-                        {
-                            probatio.Optional("name"): str,
-                            probatio.Optional("state"): cv.schema_with_slug_keys(
-                                custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                slug_validator=translation_key_validator,
-                            ),
-                        },
-                        slug_validator=translation_key_validator,
-                    ),
-                },
-                slug_validator=probatio.Any("_", cv.slug),
-            ),
+            probatio.Optional("entity_component"): ENTITY_COMPONENT_SCHEMA,
             probatio.Optional("device"): cv.schema_with_slug_keys(
                 {
                     probatio.Optional("name"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,
             ),
-            probatio.Optional("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    {
-                        probatio.Optional("name"): translation_value_validator,
-                        probatio.Optional("state"): cv.schema_with_slug_keys(
-                            custom_translation_value_validator(
-                                allow_placeholders=False
-                            ),
-                            slug_validator=translation_key_validator,
-                        ),
-                        probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
-                            {
-                                probatio.Optional(
-                                    "name"
-                                ): custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                probatio.Optional("state"): cv.schema_with_slug_keys(
-                                    custom_translation_value_validator(
-                                        allow_placeholders=False
-                                    ),
-                                    slug_validator=translation_key_validator,
-                                ),
-                            },
-                            slug_validator=translation_key_validator,
-                        ),
-                        probatio.Optional(
-                            "unit_of_measurement"
-                        ): custom_translation_value_validator(allow_placeholders=False),
-                    },
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=cv.slug,
-            ),
+            probatio.Optional("entity"): ENTITY_SCHEMA,
             **_EXCEPTIONS_SCHEMA,
             probatio.Optional("services"): cv.schema_with_slug_keys(
                 {
@@ -712,6 +739,15 @@ def gen_homeassistant_schema(
                 },
                 slug_validator=translation_key_validator,
             ),
+            # The protocols Home Assistant uses to reach the devices or
+            # service of an integration.
+            probatio.Optional("integration_connectivity"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Required("description"): translation_value_validator,
+                },
+                slug_validator=translation_key_validator,
+            ),
         }
     )
     return _with_integration(schema, config, integration)
@@ -822,7 +858,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         all_strings = None
     else:
-        all_strings = upload.generate_upload_data()  # type: ignore[no-untyped-call]
+        all_strings = generate_upload_data(config.root)
 
     for integration in integrations.values():
         validate_translation_file(config, integration, all_strings)

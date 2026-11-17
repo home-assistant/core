@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, PropertyMock
 from freezegun.api import FrozenDateTimeFactory
 import motionmount
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.motionmount.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -26,8 +27,6 @@ from . import (
     ZEROCONF_MAC,
     ZEROCONF_NAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MAC = bytes.fromhex("c4dd57f8a55f")
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")

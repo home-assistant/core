@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, call, patch
 
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
@@ -29,8 +30,6 @@ from . import (
     setup_config_entry,
 )
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = f"{COVER_DOMAIN}.{CONF_FAKE_NAME}"
 

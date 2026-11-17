@@ -1,7 +1,9 @@
 {
   "domain": "foursquare",
   "name": "Foursquare",
+  "categories": ["news_social_media", "presence_location"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/foursquare",
   "iot_class": "cloud_push",

@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from xiaomi_weather import Location, XiaomiWeatherError
 
 from homeassistant.components.xiaomi_weather.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import LocationSelector
-
-from tests.common import MockConfigEntry
 
 COORDINATES = {"latitude": 39.9, "longitude": 116.4}
 BEIJING = Location("weathercn:101010100", "北京市", "中国", 39.9, 116.4, {})

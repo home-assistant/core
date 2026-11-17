@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
 from homeassistant.components.homeassistant import (
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_ID, setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:

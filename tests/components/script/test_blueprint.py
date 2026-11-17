@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import script
 from homeassistant.components.blueprint import (
@@ -14,6 +15,7 @@ from homeassistant.components.blueprint import (
     Blueprint,
     DomainBlueprints,
 )
+from homeassistant.components.script.const import ScriptEntityStateAttribute
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     Context,
@@ -26,8 +28,6 @@ from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.common import MockConfigEntry, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(script.__file__).parent / "blueprints"
 
@@ -107,7 +107,12 @@ async def test_confirmable_notification(
     @callback
     def _async_script_changed(event: Event[EventStateChangedData]) -> None:
         # The script writes this action as soon as its wait triggers are attached
-        if event.data["new_state"].attributes.get("last_action") == "Awaiting response":
+        if (
+            event.data["new_state"].attributes.get(
+                ScriptEntityStateAttribute.LAST_ACTION
+            )
+            == "Awaiting response"
+        ):
             triggers_attached.set()
 
     async_track_state_change_event(hass, "script.confirm", _async_script_changed)

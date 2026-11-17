@@ -29,20 +29,21 @@
   },
   "device_automation": {
     "trigger_subtype": {
-      "double_press": "Double Press",
-      "hold_press": "Hold Press",
-      "long_double_press": "Long Double Press",
-      "long_press": "Long Press",
-      "long_triple_press": "Long Triple Press",
+      "double_press": "Double press",
+      "hold_press": "Hold press",
+      "hold_release": "Hold release",
+      "long_double_press": "Long double press",
+      "long_press": "Long press",
+      "long_triple_press": "Long triple press",
       "off": "Off",
       "on": "On",
       "press": "Press",
-      "rotate_left": "Rotate Left",
-      "rotate_right": "Rotate Right",
-      "step_down": "Step Down",
-      "step_up": "Step Up",
+      "rotate_left": "Rotate left",
+      "rotate_right": "Rotate right",
+      "step_down": "Step down",
+      "step_up": "Step up",
       "toggle": "Toggle",
-      "triple_press": "Triple Press"
+      "triple_press": "Triple press"
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",
@@ -63,6 +64,7 @@
             "state": {
               "double_press": "Double press",
               "hold_press": "Hold press",
+              "hold_release": "Hold release",
               "long_double_press": "Long double press",
               "long_press": "Long press",
               "long_triple_press": "Long triple press",
@@ -79,6 +81,7 @@
             "state": {
               "double_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::double_press%]",
               "hold_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::hold_press%]",
+              "hold_release": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::hold_release%]",
               "long_double_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_double_press%]",
               "long_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_press%]",
               "long_triple_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_triple_press%]",

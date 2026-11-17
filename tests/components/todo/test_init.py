@@ -9,6 +9,8 @@ import zoneinfo
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import (
@@ -27,7 +29,7 @@ from homeassistant.components.todo import (
     serialize_todo_item,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -37,9 +39,6 @@ from homeassistant.exceptions import (
 from homeassistant.setup import async_setup_component
 
 from . import create_mock_platform
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 TEST_OFFSET = "-06:00"
@@ -138,7 +137,7 @@ async def test_get_items_service(
         DOMAIN,
         TodoServices.GET_ITEMS,
         service_data,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
         return_response=True,
     )
@@ -189,7 +188,7 @@ async def test_add_item_service(
         DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: new_item_name},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -216,7 +215,7 @@ async def test_add_item_service_raises(
             DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "New item"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -263,7 +262,7 @@ async def test_add_item_service_invalid_input(
             DOMAIN,
             TodoServices.ADD_ITEM,
             item_data,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -340,7 +339,7 @@ async def test_add_item_service_extended_fields(
         DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "New item", **item_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -371,7 +370,7 @@ async def test_update_todo_item_service_by_id(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -396,7 +395,7 @@ async def test_update_todo_item_service_by_id_status_only(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -421,7 +420,7 @@ async def test_update_todo_item_service_by_id_rename(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", "rename": "Updated item"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -446,7 +445,7 @@ async def test_update_todo_item_service_raises(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", "rename": "Updated item", "status": "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -456,7 +455,7 @@ async def test_update_todo_item_service_raises(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "1", "rename": "Updated item", "status": "completed"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -473,7 +472,7 @@ async def test_update_todo_item_service_by_summary(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Item #1", "rename": "Something else", "status": "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -498,7 +497,7 @@ async def test_update_todo_item_service_by_summary_only_status(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Item #1", "rename": "Something else"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -524,7 +523,7 @@ async def test_update_todo_item_service_by_summary_not_found(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "Item #7", "status": "completed"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -556,7 +555,7 @@ async def test_update_item_service_invalid_input(
             DOMAIN,
             "update_item",
             item_data,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -583,7 +582,7 @@ async def test_update_todo_item_field_unsupported(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "1", **update_data},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -640,7 +639,7 @@ async def test_update_todo_item_extended_fields(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", **update_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -731,7 +730,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", **update_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -753,7 +752,7 @@ async def test_remove_todo_item_service_by_id(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["1", "2"]},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -776,7 +775,7 @@ async def test_remove_todo_item_service_raises(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["1", "2"]},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -794,7 +793,7 @@ async def test_remove_todo_item_service_invalid_input(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -811,7 +810,7 @@ async def test_remove_todo_item_service_by_summary(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["Item #1"]},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -833,7 +832,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["Item #7"]},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -983,7 +982,7 @@ async def test_unsupported_service(
             DOMAIN,
             service_name,
             payload,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -1023,7 +1022,7 @@ async def test_remove_completed_items_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -1037,7 +1036,7 @@ async def test_remove_completed_items_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
     test_entity.async_delete_todo_items.assert_not_called()
@@ -1056,7 +1055,7 @@ async def test_remove_completed_items_service_raises(
         await hass.services.async_call(
             DOMAIN,
             TodoServices.REMOVE_COMPLETED_ITEMS,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -1297,7 +1296,7 @@ async def test_list_todo_items_extended_fields(
         DOMAIN,
         "get_items",
         {},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
         return_response=True,
     )

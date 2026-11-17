@@ -7,14 +7,17 @@ from unittest.mock import ANY, patch
 import uuid
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.lovelace import dashboard, resources
-from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
+from homeassistant.components.lovelace.const import (
+    DOMAIN,
+    LOVELACE_DATA,
+    LovelaceService,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},
@@ -28,7 +31,9 @@ async def test_yaml_resources(
 ) -> None:
     """Test defining resources in configuration.yaml."""
     assert await async_setup_component(
-        hass, DOMAIN, {"lovelace": {"mode": "yaml", "resources": RESOURCE_EXAMPLES}}
+        hass,
+        DOMAIN,
+        {"lovelace": {"resource_mode": "yaml", "resources": RESOURCE_EXAMPLES}},
     )
 
     client = await hass_ws_client(hass)
@@ -49,7 +54,9 @@ async def test_yaml_resources_backwards(
         "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
-        assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "yaml"}})
+        assert await async_setup_component(
+            hass, DOMAIN, {"lovelace": {"resource_mode": "yaml"}}
+        )
 
     client = await hass_ws_client(hass)
 
@@ -426,7 +433,9 @@ async def test_reload_resources(hass: HomeAssistant) -> None:
             "lovelace": {"resource_mode": "yaml", "resources": new_resources}
         },
     ):
-        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, LovelaceService.RELOAD_RESOURCES, blocking=True
+        )
 
     assert hass.data[LOVELACE_DATA].resources.async_items() == new_resources
 
@@ -436,4 +445,6 @@ async def test_reload_resources_storage_mode(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, LovelaceService.RELOAD_RESOURCES, blocking=True
+        )

@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_wall_connector.wall_connector import Lifetime, Version, Vitals, WifiStatus
 
 from homeassistant.components.tesla_wall_connector.const import (
@@ -15,8 +16,6 @@ from homeassistant.components.tesla_wall_connector.const import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -35,7 +34,7 @@ async def mock_wall_connector_setup():
     """Mock component setup."""
     with patch(
         "homeassistant.components.tesla_wall_connector.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

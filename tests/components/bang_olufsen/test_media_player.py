@@ -1,7 +1,6 @@
 """Test the Bang & Olufsen media_player entity."""
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
-import logging
 from unittest.mock import AsyncMock, patch
 
 from mozart_api.exceptions import NotFoundException
@@ -17,6 +16,8 @@ from mozart_api.models import (
 )
 from probatio import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -119,9 +120,6 @@ from .const import (
     TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT,
 )
 
-from tests.common import MockConfigEntry, async_capture_events
-from tests.typing import WebSocketGenerator
-
 
 async def test_initialization(
     hass: HomeAssistant,
@@ -133,7 +131,6 @@ async def test_initialization(
 
     Checks _initialize, async_added_to_hass and __init__.
     """
-    caplog.set_level(logging.DEBUG)
 
     # Setup entity
     mock_config_entry.add_to_hass(hass)

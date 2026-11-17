@@ -6,16 +6,15 @@ from unittest.mock import Mock
 from besen.exceptions import CommandFailed
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.besen.services import BesenService, BesenServiceArgument
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "switch.garage_charge"
 START = "2026-10-01T22:00:00+00:00"
@@ -68,7 +67,7 @@ async def test_start_charging(
     await hass.services.async_call(
         DOMAIN,
         BesenService.START_CHARGING,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -99,7 +98,7 @@ async def test_start_charging_invalid_duration(
         await hass.services.async_call(
             DOMAIN,
             BesenService.START_CHARGING,
-            {ATTR_ENTITY_ID: ENTITY_ID, BesenServiceArgument.DURATION: duration},
+            {TargetKey.ENTITY_ID: ENTITY_ID, BesenServiceArgument.DURATION: duration},
             blocking=True,
         )
 
@@ -141,7 +140,7 @@ async def test_start_charging_errors(
         await hass.services.async_call(
             DOMAIN,
             BesenService.START_CHARGING,
-            {ATTR_ENTITY_ID: ENTITY_ID, BesenServiceArgument.START: START},
+            {TargetKey.ENTITY_ID: ENTITY_ID, BesenServiceArgument.START: START},
             blocking=True,
         )
 

@@ -49,16 +49,18 @@ async def async_setup_entry(
     """Set up A. O. Smith sensor platform."""
     data = entry.runtime_data
 
-    async_add_entities(
+    entities: list[AOSmithStatusSensorEntity | AOSmithEnergySensorEntity] = [
         AOSmithStatusSensorEntity(data.status_coordinator, description, junction_id)
         for description in STATUS_ENTITY_DESCRIPTIONS
         for junction_id in data.status_coordinator.data
-    )
+    ]
 
-    async_add_entities(
+    entities.extend(
         AOSmithEnergySensorEntity(data.energy_coordinator, junction_id)
         for junction_id in data.status_coordinator.data
     )
+
+    async_add_entities(entities)
 
 
 class AOSmithStatusSensorEntity(AOSmithStatusEntity, SensorEntity):

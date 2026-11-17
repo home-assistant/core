@@ -6,12 +6,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from omnilogic import OmniLogic, OmniLogicException
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.omnilogic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _get_telemetry_data(api: OmniLogic) -> list[dict[str, Any]]:

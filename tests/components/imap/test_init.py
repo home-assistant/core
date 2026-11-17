@@ -11,6 +11,11 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from aioimaplib import AUTH, NONAUTH, SELECTED, AioImapException, Response
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.const import CONF_CHARSET
@@ -46,8 +51,6 @@ from .const import (
     TEST_SEARCH_RESPONSE,
 )
 from .test_config_flow import MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

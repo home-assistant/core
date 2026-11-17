@@ -1,8 +1,10 @@
 {
   "domain": "openrgb",
   "name": "OpenRGB",
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@felipecrs"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/openrgb",
   "integration_type": "hub",
   "iot_class": "local_polling",

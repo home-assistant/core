@@ -16,6 +16,7 @@ from deebot_client.exceptions import (
 )
 from deebot_client.mqtt_client import create_mqtt_config
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ecovacs.const import (
     CONF_OVERRIDE_MQTT_URL,
@@ -40,8 +41,6 @@ from .const import (
     VALID_ENTRY_DATA_SELF_HOSTED,
     VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT,
 )
-
-from tests.common import MockConfigEntry
 
 _USER_STEP_SELF_HOSTED = {CONF_MODE: InstanceMode.SELF_HOSTED}
 

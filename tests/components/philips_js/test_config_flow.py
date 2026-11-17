@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock
 
 from haphilipsjs import PairingFailure
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
@@ -24,8 +25,6 @@ from . import (
     MOCK_USERINPUT,
     MOCK_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

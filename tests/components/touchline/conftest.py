@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.touchline.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 
@@ -24,10 +23,6 @@ def mock_pytouchline() -> Generator[MagicMock]:
         ) as mock_class,
         patch(
             "homeassistant.components.touchline.config_flow.PyTouchline",
-            new=mock_class,
-        ),
-        patch(
-            "homeassistant.components.touchline.climate.PyTouchline",
             new=mock_class,
         ),
     ):
@@ -47,7 +42,7 @@ def mock_pytouchline() -> Generator[MagicMock]:
 def mock_setup_entry() -> Generator[MagicMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.touchline.async_setup_entry", return_value=True
+        "homeassistant.components.touchline.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

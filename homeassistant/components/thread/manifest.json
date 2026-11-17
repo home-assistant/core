@@ -1,8 +1,10 @@
 {
   "domain": "thread",
   "name": "Thread",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/thread",
   "integration_type": "service",

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from modbus_connection import ModbusTlsParams
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.stiebel_eltron.const import DOMAIN, UNIT_ID
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
 RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}

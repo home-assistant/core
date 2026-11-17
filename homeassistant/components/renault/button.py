@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
@@ -31,13 +31,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultButtonEntity] = [
-        RenaultButtonEntity(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in BUTTON_TYPES
-        if description.is_supported(vehicle)
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultButtonEntity(vehicle, description)
+            for description in BUTTON_TYPES
+            if description.is_supported(vehicle)
+        )
+
+    config_entry.async_on_unload(
+        config_entry.runtime_data.async_add_vehicle_listener(_async_add_vehicle)
+    )
 
 
 class RenaultButtonEntity(RenaultEntity, ButtonEntity):

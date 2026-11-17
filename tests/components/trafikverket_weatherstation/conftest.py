@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import WeatherStationInfoModel
 
 from homeassistant.components.trafikverket_weatherstation.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -12,6 +12,8 @@ from iottycloud.errors import (
     UnauthorizedException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import UPDATE_INTERVAL
@@ -21,9 +23,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_coordinator_called(

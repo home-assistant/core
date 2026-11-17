@@ -3,6 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
@@ -15,12 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent, group_speakers, ungroup_speakers
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
 
 
 async def test_fallback_to_polling(

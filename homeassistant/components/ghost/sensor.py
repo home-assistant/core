@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import Platform
+from homeassistant.const import Platform, UnitOfRatio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -129,7 +129,7 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
     GhostSensorEntityDescription(
         key="latest_email_open_rate",
         translation_key="latest_email_open_rate",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda data: (
             data.latest_email.get("open_rate") if data.latest_email else None
         ),
@@ -145,7 +145,7 @@ SENSORS: tuple[GhostSensorEntityDescription, ...] = (
     GhostSensorEntityDescription(
         key="latest_email_click_rate",
         translation_key="latest_email_click_rate",
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda data: (
             data.latest_email.get("click_rate") if data.latest_email else None
         ),

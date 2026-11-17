@@ -9,18 +9,7 @@ from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import Discovery
 from aiohttp.test_utils import TestClient
 import pytest
-
-from homeassistant import config_entries
-from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.config_entries import ConfigEntries
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-from homeassistant.setup import async_setup_component
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockUser,
@@ -28,6 +17,17 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+
+from homeassistant import config_entries
+from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
+from homeassistant.config_entries import ConfigEntries
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="mock_mqtt")
@@ -43,7 +43,7 @@ def mock_mqtt_fixture(
 
         VERSION = 1
 
-        async_step_hassio = AsyncMock(return_value={"type": "abort"})
+        async_step_hassio = AsyncMock(return_value={"type": FlowResultType.ABORT})
 
     with mock_config_flow(MQTT_DOMAIN, MqttFlow):
         yield MqttFlow

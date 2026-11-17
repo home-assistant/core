@@ -11,6 +11,8 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController, FakePairing
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homekit_controller.const import (
@@ -32,9 +34,6 @@ from .common import (
     setup_test_accessories_with_controller,
     setup_test_component,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 FIXTURES = [path.relative_to(FIXTURES_DIR) for path in FIXTURES_DIR.glob("*.json")]

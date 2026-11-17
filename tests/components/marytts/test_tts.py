@@ -7,6 +7,8 @@ from unittest.mock import patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
@@ -17,9 +19,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 def get_empty_wav() -> bytes:

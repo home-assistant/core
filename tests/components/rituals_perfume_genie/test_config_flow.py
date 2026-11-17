@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from ritualsgenie import (
     RitualsGenieAuthenticationError,
     RitualsGenieConnectionError,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_EMAIL, TEST_PASSWORD, TEST_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(

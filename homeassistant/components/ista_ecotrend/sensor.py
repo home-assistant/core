@@ -6,6 +6,7 @@ from enum import StrEnum
 import logging
 from typing import override
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
@@ -13,7 +14,6 @@ from homeassistant.components.recorder.models.statistics import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
-    get_instance,
     get_last_statistics,
 )
 from homeassistant.components.sensor import (
@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
@@ -219,6 +219,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         await self.update_statistics()
         await super().async_added_to_hass()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""

@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
@@ -18,8 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit) -> None:

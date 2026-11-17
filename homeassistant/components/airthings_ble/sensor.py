@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import override
 
-from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
+from airthings_ble import AirthingsDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -28,22 +28,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONNECTIVITY_MODE_MAP, get_connectivity_mode
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONNECTIVITY_MODE_MAP = {
-    AirthingsConnectivityMode.BLE.value: "bluetooth",
-    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
-    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
-}
-
-
-def get_connectivity_mode(value: str | float | None) -> str | None:
-    """Get connectivity mode."""
-    if not isinstance(value, str):
-        return None
-    return CONNECTIVITY_MODE_MAP.get(value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,6 +66,52 @@ SENSORS_MAPPING_TEMPLATE: dict[str, AirthingsBLESensorEntityDescription] = {
     "radon_longterm_level": AirthingsBLESensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+    ),
+    "radon_week_avg": AirthingsBLESensorEntityDescription(
+        key="radon_week_avg",
+        translation_key="radon_week_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_week_level": AirthingsBLESensorEntityDescription(
+        key="radon_week_level",
+        translation_key="radon_week_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_month_avg": AirthingsBLESensorEntityDescription(
+        key="radon_month_avg",
+        translation_key="radon_month_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_month_level": AirthingsBLESensorEntityDescription(
+        key="radon_month_level",
+        translation_key="radon_month_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["good", "fair", "poor"],
+        value_fn=lambda value: value if value != "unknown" else None,
+        entity_registry_enabled_default=False,
+    ),
+    "radon_year_avg": AirthingsBLESensorEntityDescription(
+        key="radon_year_avg",
+        translation_key="radon_year_avg",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "radon_year_level": AirthingsBLESensorEntityDescription(
+        key="radon_year_level",
+        translation_key="radon_year_level",
         device_class=SensorDeviceClass.ENUM,
         options=["good", "fair", "poor"],
         value_fn=lambda value: value if value != "unknown" else None,

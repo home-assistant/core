@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flexit.const import (
     CONF_BAUDRATE,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 TCP_USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_UNIT: 1}
 TCP_ENTRY_DATA = {CONF_TYPE: TYPE_TCP, **TCP_USER_INPUT}

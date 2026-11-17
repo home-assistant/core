@@ -48,6 +48,9 @@
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"
       },
+      "last_successful_automatic_backup_size": {
+        "name": "Last successful automatic backup size"
+      },
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
       }

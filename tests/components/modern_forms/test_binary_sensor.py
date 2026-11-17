@@ -1,13 +1,13 @@
 """Tests for the Modern Forms sensor platform."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_binary_sensors(

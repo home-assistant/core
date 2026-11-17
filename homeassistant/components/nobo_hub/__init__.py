@@ -6,7 +6,6 @@ from pynobo import PynoboConnectionError, nobo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_NAME,
     CONF_IP_ADDRESS,
     CONF_MAC,
     EVENT_HOMEASSISTANT_STOP,
@@ -107,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> N
         identifiers={(DOMAIN, hub.hub_serial)},
         connections=connections,
         serial_number=hub.hub_serial,
-        name=hub.hub_info[ATTR_NAME],
+        name=hub.hub_info["name"],
         manufacturer=NOBO_MANUFACTURER,
         model="Nobø Ecohub",
         sw_version=hub.hub_info[ATTR_SOFTWARE_VERSION],

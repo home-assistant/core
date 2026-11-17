@@ -16,6 +16,7 @@ from livisi import (
     WrongCredentialException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -29,7 +30,7 @@ from homeassistant.components.livisi.const import (
     LIVISI_REACHABILITY_CHANGE,
     ON_STATE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -40,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,8 +49,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import CONTROLLER, VALID_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _device(
@@ -198,14 +198,14 @@ async def test_setup_entities_and_unload(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(

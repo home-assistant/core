@@ -1,19 +1,28 @@
 """Tests for the Rituals Perfume Genie switch platform."""
 
+import pytest
+from ritualsgenie import (
+    RitualsGenieAuthenticationError,
+    RitualsGenieConnectionError,
+    RitualsGenieError,
+    RitualsGenieRateLimitError,
+)
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -102,8 +111,8 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.genie"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.genie"},
         blocking=True,
     )
 
@@ -114,8 +123,8 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.genie"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.genie"},
         blocking=True,
     )
 
@@ -144,8 +153,8 @@ async def test_standby_led(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.genie_standby_led"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.genie_standby_led"},
         blocking=True,
     )
 
@@ -157,8 +166,8 @@ async def test_standby_led(
     client.set_standby_led.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.genie_standby_led"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.genie_standby_led"},
         blocking=True,
     )
 
@@ -177,3 +186,54 @@ async def test_standby_led_unsupported(hass: HomeAssistant) -> None:
 
     assert hass.states.get("switch.genie") is not None
     assert hass.states.get("switch.genie_standby_led") is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        (RitualsGenieConnectionError, "communication_error"),
+        (RitualsGenieRateLimitError("Slow down", retry_after=60), "rate_limited"),
+        (RitualsGenieError("Something odd"), "unknown_error"),
+    ],
+)
+async def test_switch_action_error(
+    hass: HomeAssistant, exception: Exception, translation_key: str
+) -> None:
+    """Test a failing action raises a translated error."""
+    config_entry = mock_config_entry(unique_id="id_123_switch_action_error")
+    client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    client.turn_off.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.genie"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == translation_key
+    state = hass.states.get("switch.genie")
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_switch_action_authentication_error(hass: HomeAssistant) -> None:
+    """Test rejected credentials during an action start a reauthentication."""
+    config_entry = mock_config_entry(unique_id="id_123_switch_action_auth")
+    client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    client.turn_off.side_effect = RitualsGenieAuthenticationError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.genie"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    assert exc_info.value.translation_key == "authentication_failed"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

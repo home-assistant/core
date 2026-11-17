@@ -3,60 +3,32 @@
 import os
 from typing import Any, override
 
-import probatio
-
-from homeassistant.components.tts import (
-    CONF_LANG,
-    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
-    Provider,
-    TtsAudioType,
-)
+from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 SUPPORT_LANGUAGES = ["en", "de"]
 
 DEFAULT_LANG = "en"
 
-PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-    {probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
-)
 
-
-def get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> Provider:
-    """Set up Demo speech component."""
-    return DemoProvider(config.get(CONF_LANG, DEFAULT_LANG))
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Demo speech platform via config entry."""
+    async_add_entities([DemoProviderEntity()])
 
 
-class DemoProvider(Provider):
-    """Demo speech API provider."""
+class DemoProviderEntity(TextToSpeechEntity):
+    """Demo speech API provider entity."""
 
-    def __init__(self, lang: str) -> None:
-        """Initialize demo provider."""
-        self._lang = lang
-        self.name = "Demo"
-
-    @property
-    @override
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._lang
-
-    @property
-    @override
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
-
-    @property
-    @override
-    def supported_options(self) -> list[str]:
-        """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
+    _attr_name = "Demo TTS"
+    _attr_default_language = DEFAULT_LANG
+    _attr_supported_languages = SUPPORT_LANGUAGES
+    _attr_supported_options = ["voice", "age"]
 
     @override
     def get_tts_audio(

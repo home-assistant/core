@@ -1,8 +1,9 @@
 """Services for the schedule integration."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.const import CONF_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -12,10 +13,17 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_SCHEDULE, DOMAIN, SERVICE_GET
+from .const import DATA_SCHEDULE, DOMAIN
 
 if TYPE_CHECKING:
     from .entity import Schedule
+
+
+class ScheduleService(StrEnum):
+    """Store keys for schedule services."""
+
+    GET = "get_schedule"
+    RELOAD = "reload"
 
 
 async def _async_get_schedule_service(
@@ -41,12 +49,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_RELOAD,
+        ScheduleService.RELOAD,
         _async_reload_service,
     )
 
     hass.data[DATA_SCHEDULE].component.async_register_entity_service(
-        SERVICE_GET,
+        ScheduleService.GET,
         {},
         _async_get_schedule_service,
         supports_response=SupportsResponse.ONLY,

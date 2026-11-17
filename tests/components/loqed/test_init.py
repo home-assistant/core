@@ -9,6 +9,14 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.lock import LockState
@@ -19,15 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.network import get_url
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_webhook_accepts_valid_message(

@@ -2,21 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_all_entities(
@@ -43,16 +37,16 @@ async def test_setting_value(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        target={ATTR_ENTITY_ID: "switch.mock_title_boost"},
+        SwitchService.TURN_ON,
+        target={TargetKey.ENTITY_ID: "switch.mock_title_boost"},
         blocking=True,
     )
     mock_smarty.enable_boost.assert_called_once_with()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: "switch.mock_title_boost"},
+        SwitchService.TURN_OFF,
+        target={TargetKey.ENTITY_ID: "switch.mock_title_boost"},
         blocking=True,
     )
     mock_smarty.disable_boost.assert_called_once_with()

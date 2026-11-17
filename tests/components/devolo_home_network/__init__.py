@@ -1,12 +1,12 @@
 """Tests for the devolo Home Network integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.devolo_home_network.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from .const import DISCOVERY_INFO, IP
-
-from tests.common import MockConfigEntry
 
 
 def configure_integration(hass: HomeAssistant) -> MockConfigEntry:

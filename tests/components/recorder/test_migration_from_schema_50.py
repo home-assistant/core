@@ -6,6 +6,13 @@ import threading
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from pytest_unordered import unordered
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import Session
@@ -18,18 +25,10 @@ from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    get_patched_live_version,
-)
 from .conftest import instrument_migration
 
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager
-
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE_50 = "tests.components.recorder.db_schema_50"
+SCHEMA_MODULE_50 = "pytest_homeassistant.components.recorder.db_schema_50"
 
 
 @pytest.fixture

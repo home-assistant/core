@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 from aiolichess.exceptions import AioLichessError, AuthError
 from aiolichess.models import LichessUser
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lichess.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_lichess_client")

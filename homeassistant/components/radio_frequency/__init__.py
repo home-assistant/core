@@ -6,8 +6,8 @@ import logging
 from rf_protocols import ModulationType, RadioFrequencyCommand
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -15,21 +15,37 @@ from homeassistant.helpers.typing import ConfigType
 from . import websocket_api
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
+    RadioFrequencyDeviceClass,
+    RadioFrequencyReceivedSignal,
+    RadioFrequencyReceiverEntity,
+    RadioFrequencyReceiverEntityDescription,
     RadioFrequencyTransmitterEntity,
     RadioFrequencyTransmitterEntityDescription,
 )
-from .helpers import RadioFrequencyTransmitterConsumerEntity, async_send_command
+from .helpers import (
+    RadioFrequencyReceiverConsumerEntity,
+    RadioFrequencyTransmitterConsumerEntity,
+    async_send_command,
+    async_subscribe_receiver,
+)
 
 __all__ = [
     "DATA_COMPONENT",
     "DOMAIN",
     "ModulationType",
     "RadioFrequencyCommand",
+    "RadioFrequencyDeviceClass",
+    "RadioFrequencyReceivedSignal",
+    "RadioFrequencyReceiverConsumerEntity",
+    "RadioFrequencyReceiverEntity",
+    "RadioFrequencyReceiverEntityDescription",
     "RadioFrequencyTransmitterConsumerEntity",
     "RadioFrequencyTransmitterEntity",
     "RadioFrequencyTransmitterEntityDescription",
+    "async_get_receivers",
     "async_get_transmitters",
     "async_send_command",
+    "async_subscribe_receiver",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +59,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the radio_frequency domain."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[
-        RadioFrequencyTransmitterEntity
+        RadioFrequencyTransmitterEntity | RadioFrequencyReceiverEntity
     ](_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
@@ -52,14 +68,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @callback
@@ -85,11 +106,57 @@ def async_get_transmitters(
             translation_key="component_not_loaded",
         )
 
-    entities = list(component.entities)
+    entities = [
+        entity
+        for entity in component.entities
+        if isinstance(entity, RadioFrequencyTransmitterEntity)
+    ]
     if not entities:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="no_transmitters",
+        )
+
+    return [
+        entity.entity_id
+        for entity in entities
+        if entity.supports_modulation(modulation)
+        and entity.supports_frequency(frequency)
+    ]
+
+
+@callback
+def async_get_receivers(
+    hass: HomeAssistant,
+    frequency: int,
+    modulation: ModulationType,
+) -> list[str]:
+    """Get entity IDs of all RF receivers supporting the given frequency.
+
+    Receivers are filtered by both their supported frequency ranges and
+    their supported modulation types. An empty list means no compatible
+    receivers.
+
+    Raises:
+        HomeAssistantError: If the component is not loaded or if no
+            receivers exist.
+    """
+    component = hass.data.get(DATA_COMPONENT)
+    if component is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="component_not_loaded",
+        )
+
+    entities = [
+        entity
+        for entity in component.entities
+        if isinstance(entity, RadioFrequencyReceiverEntity)
+    ]
+    if not entities:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_receivers",
         )
 
     return [

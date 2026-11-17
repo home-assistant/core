@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import jwt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 from requests_mock.mocker import Mocker
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 USER_ID = "test-user-id"
 REFRESH_TOKEN = "refresh-token"

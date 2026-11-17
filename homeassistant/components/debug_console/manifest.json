@@ -1,6 +1,7 @@
 {
   "domain": "debug_console",
   "name": "Debug console",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@frenck"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/debug_console",

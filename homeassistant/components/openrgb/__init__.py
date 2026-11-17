@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -45,7 +45,7 @@ def _stable_key(old_key: str) -> str | None:
     return new_key if new_key != old_key else None
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> None:
     """Migrate an old config entry.
 
     Version 1 embedded the location in every device key verbatim, including the
@@ -112,7 +112,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
         hass.config_entries.async_update_entry(entry, version=2)
 
     _LOGGER.debug("Migration to configuration version %s successful", entry.version)
-    return True
 
 
 def _setup_server_device_registry(
@@ -125,7 +124,7 @@ def _setup_server_device_registry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.data[CONF_NAME],
+        name=entry.title,
         model="OpenRGB SDK Server",
         manufacturer="OpenRGB",
         sw_version=coordinator.get_client_protocol_version(),

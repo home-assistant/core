@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pysabnzbd import SabnzbdApiException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sabnzbd.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",

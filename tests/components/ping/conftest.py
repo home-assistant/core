@@ -4,13 +4,12 @@ from unittest.mock import patch
 
 from icmplib import Host
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.ping import CONF_PING_COUNT, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -19,7 +18,7 @@ def patch_setup(*args, **kwargs):
     with (
         patch(
             "homeassistant.components.ping.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("homeassistant.components.ping.async_setup", return_value=True),
     ):
@@ -44,6 +43,7 @@ async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="10.10.10.10",
+        entry_id="01JPING0000000000000000000",
         options={
             CONF_HOST: "10.10.10.10",
             CONF_PING_COUNT: 10.0,

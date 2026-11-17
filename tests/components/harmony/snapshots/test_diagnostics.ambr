@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': True,
+    'config': dict({
+      'Activities': dict({
+        '-1': 'PowerOff',
+        '10000': None,
+        '123': 'Watch TV',
+        '456': 'Play Music',
+        '789': 'Nile-TV',
+      }),
+      'Devices': dict({
+        'My TV': dict({
+          'commands': list([
+            'PowerOn',
+            'PowerOff',
+            'VolumeUp',
+            'VolumeDown',
+          ]),
+          'id': 1234,
+        }),
+      }),
+    }),
+    'current_activity': dict({
+      'id': 123,
+      'name': 'Watch TV',
+    }),
+    'model': 'Harmony Hub',
+    'options': dict({
+      'activity': 'Watch TV',
+      'delay_secs': 0.4,
+    }),
+    'sw_version': '123.456',
+  })
+# ---

@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, call, patch
 from anthemav.device_error import DeviceError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.anthemav.const import DOMAIN, POLL_INTERVAL
@@ -13,8 +14,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
