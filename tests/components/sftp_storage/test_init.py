@@ -1,7 +1,7 @@
 """Tests for SFTP Storage."""
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from asyncssh.misc import ChannelOpenError, ConnectionLost, PermissionDenied
 from asyncssh.sftp import SFTPConnectionLost, SFTPPermissionDenied
@@ -55,6 +55,20 @@ async def test_setup_and_unload(
         f" {entries[0].data[CONF_USERNAME]}@{entries[0].data[CONF_HOST]}"
         in caplog.messages
     )
+
+
+async def test_setup_closes_connection(
+    mock_ssh_connection: SSHClientConnectionMock,
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test that the connection opened to check the server during setup is closed."""
+    with patch.object(mock_ssh_connection, "close", MagicMock()) as mock_close:
+        await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries[0].state is ConfigEntryState.LOADED
+    mock_close.assert_called_once()
 
 
 async def test_setup_error(
@@ -111,7 +125,11 @@ async def test_setup_sftp_session_error_is_retried(
 ) -> None:
     """Test that losing the session after connecting is also retried."""
     mock_ssh_connection._sftp._mock_chdir.side_effect = sftp_error
-    await setup_integration()
+    with patch.object(mock_ssh_connection, "close", MagicMock()) as mock_close:
+        await setup_integration()
+
+    # The SSH connection made before the SFTP session failed is closed
+    mock_close.assert_called_once()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
