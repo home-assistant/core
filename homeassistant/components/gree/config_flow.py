@@ -1,9 +1,10 @@
-"""Config flow for Gree."""
+"""Config flow for Gree using shared user and DHCP discovery."""
 
 import logging
 from typing import Any, Self, override
 
-from greeclimate.device import Device, DeviceInfo
+from greeclimate.air_conditioner import AirConditionerDevice
+from greeclimate.device import DeviceInfo
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import probatio
 
@@ -17,6 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_IDENTIFIER, DOMAIN
@@ -58,6 +60,15 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._devices:
             return self.async_abort(reason="no_devices_found")
         return await self.async_step_pick_device()
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Offer persistent discovery setup without enrolling a DHCP device."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+        return await self.async_step_setup_discovery()
 
     async def async_step_setup_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -238,7 +249,7 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_USER:
             await self.async_set_unique_id(identifier, raise_on_progress=False)
         self._abort_if_unique_id_configured()
-        device = Device(
+        device = AirConditionerDevice(
             DeviceInfo(
                 ip=data[CONF_HOST],
                 port=data[CONF_PORT],

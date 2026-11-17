@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from greeclimate.device import Device
+from greeclimate.air_conditioner import AirConditionerDevice
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -22,31 +22,31 @@ from .entity import GreeEntity
 class GreeSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Gree switch entity."""
 
-    get_value_fn: Callable[[Device], bool]
-    set_value_fn: Callable[[Device, bool], None]
+    get_value_fn: Callable[[AirConditionerDevice], bool]
+    set_value_fn: Callable[[AirConditionerDevice, bool], None]
 
 
-def _set_light(device: Device, value: bool) -> None:
+def _set_light(device: AirConditionerDevice, value: bool) -> None:
     """Typed helper to set device light property."""
     device.light = value
 
 
-def _set_quiet(device: Device, value: bool) -> None:
+def _set_quiet(device: AirConditionerDevice, value: bool) -> None:
     """Typed helper to set device quiet property."""
     device.quiet = value
 
 
-def _set_fresh_air(device: Device, value: bool) -> None:
+def _set_fresh_air(device: AirConditionerDevice, value: bool) -> None:
     """Typed helper to set device fresh_air property."""
     device.fresh_air = value
 
 
-def _set_xfan(device: Device, value: bool) -> None:
+def _set_xfan(device: AirConditionerDevice, value: bool) -> None:
     """Typed helper to set device xfan property."""
     device.xfan = value
 
 
-def _set_anion(device: Device, value: bool) -> None:
+def _set_anion(device: AirConditionerDevice, value: bool) -> None:
     """Typed helper to set device anion property."""
     device.anion = value
 

@@ -14,11 +14,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.flic_button.const import CONF_PUSH_TWIST_MODE
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, PERCENTAGE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -205,8 +210,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: PUSH_TWIST_POSITION_ENTITY_ID, ATTR_VALUE: 55},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: PUSH_TWIST_POSITION_ENTITY_ID,
+            NumberServiceArgument.VALUE: 55,
+        },
         blocking=True,
     )
 
@@ -232,8 +240,11 @@ async def test_set_value_error(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: TWIST_POSITION_ENTITY_ID, ATTR_VALUE: 55},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: TWIST_POSITION_ENTITY_ID,
+                NumberServiceArgument.VALUE: 55,
+            },
             blocking=True,
         )
 

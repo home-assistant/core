@@ -1,8 +1,9 @@
 """Test the Seafile sensor platform."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
-from aioseafile import SeafileConnectionError
+from aioseafile import SeafileConnectionError, SeafileError, SeafileTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -64,18 +65,35 @@ async def test_library_removed(
     assert hass.states.get(LIBRARY_SIZE).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("error", "log_level"),
+    [
+        pytest.param(SeafileConnectionError, logging.INFO, id="cannot_connect"),
+        pytest.param(SeafileTimeoutError, logging.INFO, id="timeout"),
+        pytest.param(SeafileError, logging.ERROR, id="unknown"),
+    ],
+)
 async def test_update_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_seafile_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    error: type[SeafileError],
+    log_level: int,
 ) -> None:
-    """Test the sensors become unavailable when the server can't be reached."""
+    """Test the sensors become unavailable when an update fails."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_seafile_client.get_libraries.side_effect = SeafileConnectionError
+    mock_seafile_client.get_libraries.side_effect = error
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(LIBRARY_SIZE).state == STATE_UNAVAILABLE
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.seafile")
+        and record.levelno > logging.DEBUG
+    ] == [log_level]

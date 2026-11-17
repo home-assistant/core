@@ -4,15 +4,8 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from greeclimate.device import (
-    TEMP_MAX,
-    TEMP_MAX_F,
-    TEMP_MIN,
-    TEMP_MIN_F,
-    HorizontalSwing,
-    TemperatureUnits,
-    VerticalSwing,
-)
+from greeclimate.air_conditioner import TEMP_MAX, TEMP_MAX_F, TEMP_MIN, TEMP_MIN_F
+from greeclimate.device import HorizontalSwing, TemperatureUnits, VerticalSwing
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
 import pytest
@@ -976,8 +969,8 @@ async def test_fahrenheit_temperature_unit_sync(
     assert state is not None
     assert state.attributes[ATTR_TEMPERATURE] == 68
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 69
-    assert state.attributes[ATTR_MIN_TEMP] == TEMP_MIN_F
-    assert state.attributes[ATTR_MAX_TEMP] == TEMP_MAX_F
+    assert state.attributes[ATTR_MIN_TEMP] == 46
+    assert state.attributes[ATTR_MAX_TEMP] == 86
     assert (
         state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         == UnitOfTemperature.FAHRENHEIT

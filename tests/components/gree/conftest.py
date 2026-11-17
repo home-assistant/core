@@ -57,9 +57,9 @@ def device_fixture() -> Generator[MagicMock]:
     """Patch setup and validation devices without sharing discovery ownership."""
     with (
         patch(
-            "homeassistant.components.gree.coordinator.Device",
+            "homeassistant.components.gree.coordinator.AirConditionerDevice",
             return_value=build_device_mock(),
         ) as mock,
-        patch("homeassistant.components.gree.config_flow.Device", mock),
+        patch("homeassistant.components.gree.config_flow.AirConditionerDevice", mock),
     ):
         yield mock

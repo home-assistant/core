@@ -17,6 +17,9 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "[%key:component::midea::config::step::auto::data_description::device%]"
         }
       },
       "setup_discovery": {

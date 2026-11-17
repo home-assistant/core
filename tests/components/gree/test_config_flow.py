@@ -20,6 +20,7 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import build_device_mock
@@ -902,7 +903,7 @@ async def test_manual_retry_rechecks_entry_after_scan(
     async def scan_and_add_winner() -> dict[str, Any]:
         winner_flow = await start_selected_step(hass, "discovery_confirm", data)
         with patch(
-            "homeassistant.components.gree.config_flow.Device",
+            "homeassistant.components.gree.config_flow.AirConditionerDevice",
             return_value=winner_device,
         ):
             winner_result = await hass.config_entries.flow.async_configure(
@@ -1216,3 +1217,42 @@ async def test_concurrent_user_and_discovery_validation(
     ]
     assert user_result["result"].data == data
     assert device().close.call_count == 2
+
+
+async def test_dhcp_discovery(
+    hass: HomeAssistant, discovery_entry: MockConfigEntry
+) -> None:
+    """DHCP offers discovery setup once without enrolling an appliance."""
+    await hass.config_entries.async_remove(discovery_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(ip="192.168.1.10", hostname="", macaddress="f4911e7aca59"),
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "setup_discovery"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+    duplicate = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(ip="192.168.1.11", hostname="", macaddress="502cc6123456"),
+    )
+    assert duplicate["type"] is FlowResultType.ABORT
+    assert duplicate["reason"] == "already_in_progress"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
+    assert result["result"].unique_id == DOMAIN
+
+
+async def test_dhcp_already_configured(hass: HomeAssistant) -> None:
+    """DHCP cannot duplicate the persistent discovery entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(ip="192.168.1.10", hostname="", macaddress="f4911e7aca59"),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

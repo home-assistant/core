@@ -1,5 +1,6 @@
 """Tests for the Lunatone integration."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, PropertyMock
 
 import aiohttp
@@ -28,6 +29,47 @@ from . import (
     build_info_data,
     setup_integration,
 )
+
+
+async def test_line_added_after_info_update(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an added line creates its device and entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    async def fake_update() -> None:
+        info_data = deepcopy(mock_lunatone_info.data)
+        info_data.lines["2"] = deepcopy(info_data.lines["1"])
+        mock_lunatone_info.data = info_data
+
+    mock_lunatone_info.async_update.side_effect = fake_update
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    line_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}-line2"), mock_config_entry.entry_id
+    )
+    assert line_device is not None
+
+    assert mock_config_entry.unique_id
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
+    )
+    assert main_device is not None
+    assert line_device.via_device_id == main_device.id
+
+    assert hass.states.get("light.dali_line_2")
+    assert hass.states.get("sensor.dali_line_2_status")
+    assert hass.states.get("binary_sensor.dali_line_2_scan_status")
 
 
 async def test_load_unload_config_entry(

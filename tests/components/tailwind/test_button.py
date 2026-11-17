@@ -6,9 +6,9 @@ from gotailwind import TailwindError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.tailwind.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,8 +40,8 @@ async def test_number_entities(
     assert len(mock_tailwind.identify.mock_calls) == 0
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: state.entity_id},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
@@ -60,8 +60,8 @@ async def test_number_entities(
     ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: state.entity_id},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 

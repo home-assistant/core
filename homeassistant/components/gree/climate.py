@@ -3,11 +3,8 @@
 import logging
 from typing import Any, override
 
+from greeclimate.air_conditioner import TEMP_MAX, TEMP_MAX_F, TEMP_MIN, TEMP_MIN_F
 from greeclimate.device import (
-    TEMP_MAX,
-    TEMP_MAX_F,
-    TEMP_MIN,
-    TEMP_MIN_F,
     FanSpeed,
     HorizontalSwing,
     Mode,
