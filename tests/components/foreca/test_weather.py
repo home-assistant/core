@@ -314,7 +314,7 @@ async def test_air_quality_forecast(
     response = await hass.services.async_call(
         DOMAIN,
         ForecaService.GET_AIR_QUALITY_FORECAST,
-        {ATTR_ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: forecast_type},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: forecast_type},
         blocking=True,
         return_response=True,
     )
@@ -344,7 +344,7 @@ async def test_air_quality_forecast_without_a_time_is_dropped(
     response = await hass.services.async_call(
         DOMAIN,
         ForecaService.GET_AIR_QUALITY_FORECAST,
-        {ATTR_ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: forecast_type},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: forecast_type},
         blocking=True,
         return_response=True,
     )
@@ -385,7 +385,7 @@ async def test_air_quality_forecast_error(
         await hass.services.async_call(
             DOMAIN,
             ForecaService.GET_AIR_QUALITY_FORECAST,
-            {ATTR_ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: "daily"},
+            {TargetKey.ENTITY_ID: ENTITY_ID, ForecaServiceArgument.TYPE: "daily"},
             blocking=True,
             return_response=True,
         )
