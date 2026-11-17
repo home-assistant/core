@@ -4,10 +4,19 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from daikin_onecta.models import Characteristic
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.binary_sensor import (
     async_setup_entry as async_setup_binary_sensors,
 )
+from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .test_climate_snapshots import _async_setup_fixture
 
 
 async def test_unknown_characteristic_is_skipped() -> None:
@@ -29,3 +38,45 @@ async def test_unknown_characteristic_is_skipped() -> None:
     await async_setup_binary_sensors(MagicMock(), config_entry, async_add_entities)
 
     async_add_entities.assert_called_once_with([])
+
+
+@pytest.mark.parametrize(
+    ("fixture", "value"),
+    [("altherma", "dryKeepSetting"), ("altherma_firmwareupdate", "onOffMode")],
+)
+async def test_read_only_on_off_characteristics_are_binary_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixture: str,
+    value: str,
+) -> None:
+    """Expose read-only string-valued binary characteristics as binary sensors."""
+    await _async_setup_fixture(hass, config_entry, fixture)
+    coordinator = config_entry.runtime_data
+    device, point, characteristic = next(
+        (device, point, characteristic)
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if (characteristic := point.scalar_characteristic(value)) is not None
+        and not characteristic.settable
+        and set(characteristic.values or []) == {"on", "off"}
+    )
+    unique_id = f"{device.id}_{point.embedded_id}_{value}"
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, unique_id
+    )
+
+    assert entity_id is not None
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == characteristic.value
+
+    characteristic.value = "off" if characteristic.value == "on" else "on"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == characteristic.value

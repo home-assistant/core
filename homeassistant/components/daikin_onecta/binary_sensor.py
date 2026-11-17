@@ -13,6 +13,7 @@ from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
+from .utils import is_read_only_on_off_value
 
 PARALLEL_UPDATES = 1
 
@@ -36,9 +37,12 @@ async def async_setup_entry(
             ) in management_point.scalar_characteristics().items():
                 if (
                     characteristic.values is None
-                    and (description := BINARY_SENSOR_DESCRIPTIONS.get(value))
-                    is not None
-                ):
+                    or is_read_only_on_off_value(
+                        characteristic.settable, characteristic.values
+                    )
+                ) and (
+                    description := BINARY_SENSOR_DESCRIPTIONS.get(value)
+                ) is not None:
                     sensors.append(
                         DaikinBinarySensor(
                             device,
@@ -87,7 +91,13 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
             point.scalar_characteristic(self._value) if point is not None else None
         )
         result = characteristic.value if characteristic is not None else None
-        return result if isinstance(result, bool) else None
+        if isinstance(result, bool):
+            return result
+        if result == "on":
+            return True
+        if result == "off":
+            return False
+        return None
 
     @property
     @override
@@ -99,4 +109,12 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         characteristic = (
             point.scalar_characteristic(self._value) if point is not None else None
         )
-        return bool(characteristic is not None and characteristic.values is None)
+        return bool(
+            characteristic is not None
+            and (
+                characteristic.values is None
+                or is_read_only_on_off_value(
+                    characteristic.settable, characteristic.values
+                )
+            )
+        )

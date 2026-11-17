@@ -81,7 +81,7 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
     ),
     DaikinEntityMetadata(
         key="onOffMode",
-        device_class=None,
+        device_class=BinarySensorDeviceClass.POWER,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
@@ -809,7 +809,8 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         **_entity_description_kwargs(metadata),
     )
     for metadata in ENTITY_METADATA
-    if not isinstance(metadata.device_class, BinarySensorDeviceClass)
+    if metadata.key != "dryKeepSetting"
+    and not isinstance(metadata.device_class, BinarySensorDeviceClass)
     and not isinstance(metadata.device_class, UpdateDeviceClass)
 }
 
@@ -828,6 +829,8 @@ BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
         "islockfunctionenabled",
         "ispowerfulmodeactive",
         "ledenabled",
+        "onoffmode",
+        "drykeepsetting",
     }
 )
 

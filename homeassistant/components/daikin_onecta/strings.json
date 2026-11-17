@@ -51,6 +51,9 @@
       "daylightsavingtimeenabled": {
         "name": "Daylight saving time enabled"
       },
+      "drykeepsetting": {
+        "name": "Dry keep setting"
+      },
       "iscoolheatmaster": {
         "name": "Is cool/heat master"
       },
@@ -86,6 +89,9 @@
       },
       "ledenabled": {
         "name": "LED enabled"
+      },
+      "onoffmode": {
+        "name": "On/Off mode"
       }
     },
     "button": {
@@ -258,9 +264,6 @@
       "deltad": {
         "name": "DeltaD"
       },
-      "drykeepsetting": {
-        "name": "Dry keep setting"
-      },
       "economode": {
         "name": "Econo mode"
       },
@@ -341,9 +344,6 @@
       },
       "ledenabled": {
         "name": "LED enabled"
-      },
-      "onoffmode": {
-        "name": "On/Off mode"
       },
       "operationmode": {
         "name": "Operation mode",
