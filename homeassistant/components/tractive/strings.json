@@ -59,12 +59,6 @@
       "activity_time": {
         "name": "Activity time"
       },
-      "bark_status": {
-        "name": "Bark status",
-        "state": {
-          "normal": "[%key:common::state::normal%]"
-        }
-      },
       "daily_goal": {
         "name": "Daily goal"
       },

@@ -165,13 +165,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         options=["elevated", "normal"],
     ),
     TractiveSensorEntityDescription(
-        key="bark_status",
-        translation_key="bark_status",
-        health_sensor=True,
-        device_class=SensorDeviceClass.ENUM,
-        options=["normal"],
-    ),
-    TractiveSensorEntityDescription(
         key="scratch_status",
         translation_key="scratch_status",
         health_sensor=True,
