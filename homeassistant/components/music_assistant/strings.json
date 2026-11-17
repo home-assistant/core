@@ -156,6 +156,12 @@
       }
     },
     "number": {
+      "audio_delay": {
+        "name": "Audio delay"
+      },
+      "balance": {
+        "name": "Balance"
+      },
       "bass": {
         "name": "Bass"
       },
@@ -177,8 +183,17 @@
       "equalizer_mid": {
         "name": "Equalizer mid"
       },
+      "music_surround_level": {
+        "name": "Surround level (music)"
+      },
+      "sub_crossover": {
+        "name": "Subwoofer crossover"
+      },
       "subwoofer_volume": {
         "name": "Subwoofer volume"
+      },
+      "surround_level": {
+        "name": "Surround level (TV)"
       },
       "treble": {
         "name": "Treble"

@@ -36,6 +36,12 @@
             'value': -6.0,
           }),
           dict({
+            'key': 'balance',
+            'read_only': False,
+            'type': 'integer',
+            'value': 0,
+          }),
+          dict({
             'key': 'treble_ro',
             'read_only': True,
             'type': 'integer',

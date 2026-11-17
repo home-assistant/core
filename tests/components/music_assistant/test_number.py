@@ -132,8 +132,24 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # we only have two non read-only player options, bass and treble
-    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 2
+    # we only have three non read-only player options, bass, treble and balance
+    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 3
+
+
+async def test_disabled_by_default(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a player option disabled by default is registered disabled."""
+    entity_id = "number.test_player_1_balance"
+
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
 
 
 async def test_name_translation_availability(
