@@ -7,6 +7,7 @@ from pypck.inputs import ModStatusOutput, ModStatusRelays
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import RelayStateModifier
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
@@ -29,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 LIGHT_OUTPUT1 = "light.testmodule_light_output1"
 LIGHT_OUTPUT2 = "light.testmodule_light_output2"

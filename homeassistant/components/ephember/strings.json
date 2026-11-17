@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "The password you use in the EPH Ember app.",
+          "username": "The email address you use to sign in to the EPH Ember app."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure the EPH Ember cloud is reachable and restart Home Assistant to try again, or remove the `{domain}` climate platform from your `configuration.yaml` and set up the integration through the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} using YAML is being removed but the username or password in your YAML configuration was rejected.\n\nCorrect them and restart Home Assistant to try again, or remove the `{domain}` climate platform from your `configuration.yaml` and set up the integration through the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nRemove the `{domain}` climate platform from your `configuration.yaml` and set up the integration through the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    }
+  }
+}

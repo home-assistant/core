@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The access token belongs to a different Yardian controller."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "Enter the new access token for your Yardian Smart Sprinkler Controller.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
@@ -29,7 +37,7 @@
         "name": "Standby"
       },
       "watering_running": {
-        "name": "Watering running"
+        "name": "Water running"
       },
       "zone_enabled": {
         "name": "Enabled"
@@ -56,16 +64,24 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
   "services": {
     "start_irrigation": {
-      "description": "Starts the irrigation.",
+      "description": "Start a zone with a duration.",
       "fields": {
         "duration": {
           "description": "Duration for the target to be turned on.",
           "name": "Duration"
         }
       },
-      "name": "Start irrigation"
+      "name": "Start zone"
     }
   }
 }

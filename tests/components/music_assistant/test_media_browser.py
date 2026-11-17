@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from music_assistant_models.enums import MediaType as MASSMediaType
 from music_assistant_models.media_items import SearchResults
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -32,8 +33,6 @@ from homeassistant.components.music_assistant.media_browser import (
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration_from_fixtures
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -674,6 +673,44 @@ async def test_search_media_results_are_browsable(
         await async_browse_media(
             hass, music_assistant_client, item.media_content_id, item.media_content_type
         )
+
+
+async def test_search_media_results_can_search(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that only artist, album and playlist results can be searched inside."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    mock = MockSearchResults(
+        ["artist", "album", "track", "playlist", "radio", "podcast", "audiobook"]
+    )
+    for items in (
+        mock.artists,
+        mock.albums,
+        mock.tracks,
+        mock.playlists,
+        mock.radio,
+        mock.podcasts,
+        mock.audiobooks,
+    ):
+        for item in items:
+            # The search inside check needs the real media type.
+            item.media_type = MASSMediaType(item.media_type.value)
+
+    with patch.object(music_assistant_client.music, "search", return_value=mock):
+        search_results = await async_search_media(
+            music_assistant_client, SearchMediaQuery(search_query="test")
+        )
+
+    assert len(search_results.result) == 35
+    assert {
+        item.media_content_id for item in search_results.result if item.can_search
+    } == {
+        f"library://{media_type}/{index}"
+        for media_type in ("artist", "album", "playlist")
+        for index in range(5)
+    }
 
 
 async def test_search_media_websocket_from_library_listing(

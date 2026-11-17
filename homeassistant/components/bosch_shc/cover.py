@@ -2,10 +2,11 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCShutterControl, ShutterControlService
+from boschshcpy import SHCMicromoduleBlinds, SHCShutterControl, ShutterControlService
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -31,22 +32,34 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[ShutterControlCover | BlindsControlCover] = [
         ShutterControlCover(
             hass=hass,
             device=cover,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
         )
-        for cover in session.device_helper.shutter_controls
+        for cover in (
+            *session.device_helper.shutter_controls,
+            *session.device_helper.micromodule_shutter_controls,
+        )
+    ]
+    entities.extend(
+        BlindsControlCover(
+            hass=hass,
+            device=blind,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for blind in session.device_helper.micromodule_blinds
     )
+    async_add_entities(entities)
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device."""
 
     _attr_name = None
-    _attr_device_class = CoverDeviceClass.SHUTTER
     _device: SHCShutterControl
     _attr_supported_features = (
         CoverEntityFeature.OPEN
@@ -54,6 +67,14 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+
+    @property
+    @override
+    def device_class(self) -> CoverDeviceClass:
+        """Return the device class."""
+        if self._device.device_model == "MICROMODULE_AWNING":
+            return CoverDeviceClass.AWNING
+        return CoverDeviceClass.SHUTTER
 
     @property
     @override
@@ -99,3 +120,51 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._device.level = position / 100.0
+
+
+class BlindsControlCover(ShutterControlCover):
+    """Representation of a SHC micromodule blinds cover device."""
+
+    _device: SHCMicromoduleBlinds
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    @property
+    @override
+    def device_class(self) -> CoverDeviceClass:
+        """Return the device class."""
+        return CoverDeviceClass.BLIND
+
+    @override
+    def stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        self._device.stop_blinds()
+
+    @property
+    @override
+    def current_cover_tilt_position(self) -> int:
+        """Return the current cover tilt position."""
+        return round((1.0 - self._device.current_angle) * 100.0)
+
+    @override
+    def open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the cover tilt."""
+        self._device.target_angle = 0.0
+
+    @override
+    def close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the cover tilt."""
+        self._device.target_angle = 1.0
+
+    @override
+    def set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        tilt_position = kwargs[ATTR_TILT_POSITION]
+        self._device.target_angle = 1.0 - (tilt_position / 100.0)

@@ -4,13 +4,12 @@ from unittest.mock import patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("ccm15_device")

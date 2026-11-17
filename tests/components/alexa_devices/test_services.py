@@ -3,24 +3,22 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.services import (
-    ATTR_INFO_SKILL,
-    ATTR_SOUND,
-    ATTR_TEXT_COMMAND,
+    AlexaDevicesService,
+    AlexaDevicesServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_ID, TEST_DEVICE_1_SN
-
-from tests.common import MockConfigEntry, mock_device_registry
 
 
 async def test_setup_services(
@@ -32,9 +30,9 @@ async def test_setup_services(
     await setup_integration(hass, mock_config_entry)
 
     assert (services := hass.services.async_services_for_domain(DOMAIN))
-    assert "send_text_command" in services
-    assert "send_sound" in services
-    assert "send_info_skill" in services
+    assert AlexaDevicesService.SEND_TEXT_COMMAND in services
+    assert AlexaDevicesService.SEND_SOUND in services
+    assert AlexaDevicesService.SEND_INFO_SKILL in services
 
 
 async def test_info_skill_service(
@@ -55,9 +53,9 @@ async def test_info_skill_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_info_skill",
+        AlexaDevicesService.SEND_INFO_SKILL,
         {
-            ATTR_INFO_SKILL: "tell_joke",
+            AlexaDevicesServiceArgument.INFO_SKILL: "tell_joke",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -85,9 +83,9 @@ async def test_send_sound_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_sound",
+        AlexaDevicesService.SEND_SOUND,
         {
-            ATTR_SOUND: "bell_02",
+            AlexaDevicesServiceArgument.SOUND: "bell_02",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -115,9 +113,9 @@ async def test_send_text_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "send_text_command",
+        AlexaDevicesService.SEND_TEXT_COMMAND,
         {
-            ATTR_TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
+            AlexaDevicesServiceArgument.TEXT_COMMAND: "Play B.B.C. radio on TuneIn",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -128,17 +126,25 @@ async def test_send_text_service(
 
 
 @pytest.mark.parametrize(
-    ("sound", "device_id", "translation_key", "translation_placeholders"),
+    (
+        "sound",
+        "device_id",
+        "translation_domain",
+        "translation_key",
+        "translation_placeholders",
+    ),
     [
         (
             "bell_02",
             "fake_device_id",
-            "invalid_device_id",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
             {"device_id": "fake_device_id"},
         ),
         (
             "wrong_sound_name",
             TEST_DEVICE_1_ID,
+            DOMAIN,
             "invalid_sound_value",
             {
                 "sound": "wrong_sound_name",
@@ -152,6 +158,7 @@ async def test_invalid_parameters(
     mock_config_entry: MockConfigEntry,
     sound: str,
     device_id: str,
+    translation_domain: str,
     translation_key: str,
     translation_placeholders: dict[str, str],
 ) -> None:
@@ -172,31 +179,39 @@ async def test_invalid_parameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: sound,
+                AlexaDevicesServiceArgument.SOUND: sound,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_domain == translation_domain
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == translation_placeholders
 
 
 @pytest.mark.parametrize(
-    ("info_skill", "device_id", "translation_key", "translation_placeholders"),
+    (
+        "info_skill",
+        "device_id",
+        "translation_domain",
+        "translation_key",
+        "translation_placeholders",
+    ),
     [
         (
             "tell_joke",
             "fake_device_id",
-            "invalid_device_id",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
             {"device_id": "fake_device_id"},
         ),
         (
             "wrong_info_skill_name",
             TEST_DEVICE_1_ID,
+            DOMAIN,
             "invalid_info_skill_value",
             {
                 "info_skill": "wrong_info_skill_name",
@@ -210,6 +225,7 @@ async def test_invalid_info_skillparameters(
     mock_config_entry: MockConfigEntry,
     info_skill: str,
     device_id: str,
+    translation_domain: str,
     translation_key: str,
     translation_placeholders: dict[str, str],
 ) -> None:
@@ -230,15 +246,15 @@ async def test_invalid_info_skillparameters(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_info_skill",
+            AlexaDevicesService.SEND_INFO_SKILL,
             {
-                ATTR_INFO_SKILL: info_skill,
+                AlexaDevicesServiceArgument.INFO_SKILL: info_skill,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_domain == translation_domain
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == translation_placeholders
 
@@ -267,17 +283,20 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "entry_not_loaded"
-    assert exc_info.value.translation_placeholders == {"entry": mock_config_entry.title}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
+    assert exc_info.value.translation_placeholders == {
+        "domain": DOMAIN,
+        "entry_title": mock_config_entry.title,
+    }
 
 
 async def test_invalid_config_entry(
@@ -301,17 +320,20 @@ async def test_invalid_config_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: TEST_DEVICE_1_ID,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": TEST_DEVICE_1_ID}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": TEST_DEVICE_1_ID,
+        "domain": DOMAIN,
+    }
 
 
 async def test_missing_config_entry(
@@ -340,14 +362,17 @@ async def test_missing_config_entry(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "send_sound",
+            AlexaDevicesService.SEND_SOUND,
             {
-                ATTR_SOUND: "bell_02",
+                AlexaDevicesServiceArgument.SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "config_entry_not_found"
-    assert exc_info.value.translation_placeholders == {"device_id": device_entry.id}
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    assert exc_info.value.translation_placeholders == {
+        "device_name": device_entry.name,
+        "domain": DOMAIN,
+    }

@@ -57,6 +57,7 @@ def deprecate_entity(
             severity=IssueSeverity.WARNING,
             translation_key=translation_key,
             translation_placeholders=placeholders,
+            config_entry_id=entity_entry.config_entry_id,
         )
         return True
     return False

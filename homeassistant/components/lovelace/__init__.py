@@ -6,32 +6,21 @@ import logging
 import os
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend, onboarding, websocket_api
-from homeassistant.config import (
-    async_hass_config_yaml,
-    async_process_component_and_handle_errors,
-)
-from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import CONF_FILENAME, CONF_ICON, CONF_MODE, CONF_RESOURCES
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    collection,
-    config_validation as cv,
-    issue_registry as ir,
-)
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
-from .const import (  # noqa: F401
+from .const import (
     CONF_ALLOW_SINGLE_WORD,
-    CONF_ICON,
     CONF_REQUIRE_ADMIN,
     CONF_RESOURCE_MODE,
     CONF_SHOW_IN_SIDEBAR,
@@ -40,67 +29,81 @@ from .const import (  # noqa: F401
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
-    EVENT_LOVELACE_UPDATED,
-    LOVELACE_CONFIG_FILE,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
-    RESOURCE_RELOAD_SERVICE_SCHEMA,
     RESOURCE_SCHEMA,
     RESOURCE_UPDATE_FIELDS,
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
+    LovelaceService,
 )
-from .system_health import system_health_info  # noqa: F401
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "CONF_ICON",
+    "CONF_REQUIRE_ADMIN",
+    "CONF_SHOW_IN_SIDEBAR",
+    "CONF_TITLE",
+    "CONF_URL_PATH",
+    "DOMAIN",
+    "LOVELACE_DATA",
+    "MODE_STORAGE",
+    "SERVICE_RELOAD_RESOURCES",
+    "LovelaceData",
+    "LovelaceService",
+]
 
 
 def _validate_url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
-        raise vol.Invalid("Slug should not be None")
+        raise probatio.Invalid("Slug should not be None")
     if value != "lovelace" and "-" not in value:
-        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+        raise probatio.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
     if str_value == slg:
         return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+    raise probatio.Invalid(f"invalid slug {value} (try {slg})")
 
 
 CONF_DASHBOARDS = "dashboards"
 
-YAML_DASHBOARD_SCHEMA = vol.Schema(
+YAML_DASHBOARD_SCHEMA = probatio.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
-        vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): cv.path,
+        probatio.Required(CONF_MODE): MODE_YAML,
+        probatio.Required(CONF_FILENAME): cv.path,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default={}): vol.Schema(
-            {
-                # Deprecated - Remove in 2026.8
-                vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
-                ),
-                vol.Optional(CONF_RESOURCE_MODE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
-                ),
-                vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
-                    YAML_DASHBOARD_SCHEMA,
-                    slug_validator=_validate_url_slug,
-                ),
-                vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
-            }
+        probatio.Optional(DOMAIN, default={}): probatio.All(
+            # Failing validation would also stop the frontend, which depends on lovelace
+            cv.removed(CONF_MODE, raise_if_present=False),
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_RESOURCE_MODE, default=MODE_STORAGE
+                    ): probatio.All(
+                        probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
+                    ),
+                    probatio.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
+                        YAML_DASHBOARD_SCHEMA,
+                        slug_validator=_validate_url_slug,
+                    ),
+                    probatio.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
+                }
+            ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -116,36 +119,8 @@ class LovelaceData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Lovelace commands."""
-    mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
-
-    # resource_mode controls how resources are loaded (yaml vs storage)
-    # Deprecated - Remove mode fallback in 2026.8
-    resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
-
-    async def reload_resources_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml resources."""
-        try:
-            conf = await async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_reload",
-            ) from err
-
-        integration = await async_get_integration(hass, DOMAIN)
-
-        config = await async_process_component_and_handle_errors(
-            hass, conf, integration
-        )
-
-        if config is None:
-            raise HomeAssistantError("Config validation failed")
-
-        resource_collection = await create_yaml_resource_col(
-            hass, config[DOMAIN].get(CONF_RESOURCES)
-        )
-        hass.data[LOVELACE_DATA].resources = resource_collection
+    resource_mode = config[DOMAIN][CONF_RESOURCE_MODE]
 
     resource_collection: (
         resources.ResourceYAMLCollection | resources.ResourceStorageCollection
@@ -154,15 +129,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Load resources based on resource_mode
     if resource_mode == MODE_YAML:
-        resource_collection = await create_yaml_resource_col(hass, yaml_resources)
-
-        async_register_admin_service(
-            hass,
-            DOMAIN,
-            SERVICE_RELOAD_RESOURCES,
-            reload_resources_service_handler,
-            schema=RESOURCE_RELOAD_SERVICE_SCHEMA,
+        resource_collection = await resources.create_yaml_resource_col(
+            hass, yaml_resources
         )
+
         # Register lovelace/resources for backwards compatibility, remove in
         # Home Assistant Core 2025.1
         for command in ("lovelace/resources", "lovelace/resources/list"):
@@ -201,29 +171,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
 
-    # Deprecated - Remove in 2026.8
-    # For YAML mode, add the default "lovelace" dashboard if not already defined
-    # This migrates the legacy yaml mode to a proper yaml dashboard entry
-    if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
-        translations = await async_get_translations(
-            hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
-        )
-        title = translations.get(
-            "component.onboarding.dashboard.overview.title", "Overview"
-        )
-        yaml_dashboards = {
-            DOMAIN: {
-                CONF_TITLE: title,
-                CONF_ICON: DEFAULT_ICON,
-                CONF_SHOW_IN_SIDEBAR: True,
-                CONF_REQUIRE_ADMIN: False,
-                CONF_MODE: MODE_YAML,
-                CONF_FILENAME: LOVELACE_CONFIG_FILE,
-            },
-            **yaml_dashboards,
-        }
-        _async_create_yaml_mode_repair(hass)
-
     hass.data[LOVELACE_DATA] = LovelaceData(
         resource_mode=resource_mode,
         # We store a dictionary mapping url_path: config. None is the default.
@@ -231,6 +178,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resources=resource_collection,
         yaml_dashboards=yaml_dashboards,
     )
+
+    async_setup_services(hass)
 
     if hass.config.recovery_mode:
         return True
@@ -291,8 +240,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    # Migrate default lovelace panel to dashboard entry (storage mode only)
-    if mode == MODE_STORAGE:
+    # A YAML dashboard at the default url_path replaces the default storage dashboard
+    if DOMAIN not in hass.data[LOVELACE_DATA].yaml_dashboards:
         await _async_migrate_default_config(hass, dashboards_collection)
 
     # Ensure lovelace panel is always registered for backwards compatibility
@@ -314,27 +263,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         onboarding.async_add_listener(hass, create_map_dashboard)
 
     return True
-
-
-async def create_yaml_resource_col(
-    hass: HomeAssistant, yaml_resources: list[ConfigType] | None
-) -> resources.ResourceYAMLCollection:
-    """Create yaml resources collection."""
-    if yaml_resources is None:
-        default_config = dashboard.LovelaceYAML(hass, None, None)
-        try:
-            ll_conf = await default_config.async_load(False)
-        except HomeAssistantError:
-            pass
-        else:
-            if CONF_RESOURCES in ll_conf:
-                _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please"
-                    " see the docs"
-                )
-                yaml_resources = ll_conf[CONF_RESOURCES]
-
-    return resources.ResourceYAMLCollection(yaml_resources or [])
 
 
 @callback
@@ -431,7 +359,7 @@ async def _async_migrate_default_config(
                 CONF_URL_PATH: DOMAIN,
             }
         )
-    except HomeAssistantError, vol.Invalid:
+    except HomeAssistantError, probatio.Invalid:
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
@@ -465,19 +393,3 @@ async def _async_migrate_default_config(
             "core", {**(core_data or {}), "default_panel": DOMAIN}
         )
         _LOGGER.info("Set default panel to 'lovelace' during migration")
-
-
-# Deprecated - Remove in 2026.8
-@callback
-def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
-    """Create repair issue for YAML mode deprecation."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "yaml_mode_deprecated",
-        breaks_in_ha_version="2026.8.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="yaml_mode_deprecated",
-        translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
-    )

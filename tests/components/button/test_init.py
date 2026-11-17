@@ -6,30 +6,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components.button import (
-    DOMAIN,
-    SERVICE_PRESS,
-    ButtonDeviceClass,
-    ButtonEntity,
-    ButtonEntityDescription,
-)
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PLATFORM,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
-
-from .const import TEST_DOMAIN
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
@@ -38,6 +15,28 @@ from tests.common import (
     mock_platform,
     mock_restore_cache,
 )
+
+from homeassistant.components.button import (
+    DOMAIN,
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+    ButtonService,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import (
+    CONF_PLATFORM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    CommonServiceArgument,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from .const import TEST_DOMAIN
 
 
 async def test_button(hass: HomeAssistant) -> None:
@@ -71,8 +70,8 @@ async def test_custom_integration(
     now = dt_util.utcnow()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.button_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.button_1"},
         blocking=True,
     )
 
@@ -86,8 +85,8 @@ async def test_custom_integration(
     freezer.move_to(new_time)
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.button_1"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.button_1"},
         blocking=True,
     )
 
@@ -135,12 +134,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.BUTTON]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(

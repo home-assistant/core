@@ -4,14 +4,13 @@ import json
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.blueprint import DOMAIN, importer
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import async_load_fixture, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(scope="module")

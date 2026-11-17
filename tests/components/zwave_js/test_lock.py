@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
     ATTR_CODE_SLOT,
@@ -13,25 +14,16 @@ from zwave_js_server.event import Event
 from zwave_js_server.exceptions import FailedZWaveCommand, NotFoundError
 from zwave_js_server.model.node import Node, NodeStatus
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    LockState,
-)
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.zwave_js.const import (
-    ATTR_LOCK_TIMEOUT,
-    ATTR_OPERATION_TYPE,
     DOMAIN,
-    SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_GET_LOCK_USERCODE,
-    SERVICE_SET_LOCK_CONFIGURATION,
-    SERVICE_SET_LOCK_USERCODE,
+    ZWaveJSService,
+    ZWaveJSServiceArgument,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY, replace_value_of_zwave_value
 
@@ -53,8 +45,8 @@ async def test_door_lock(
     # Test locking
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
-        {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        LockService.LOCK,
+        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 
@@ -100,8 +92,8 @@ async def test_door_lock(
     # Test unlocking
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+        LockService.UNLOCK,
+        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
     )
 
@@ -121,9 +113,9 @@ async def test_door_lock(
     # Test set usercode service
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_USERCODE,
+        ZWaveJSService.SET_LOCK_USERCODE,
         {
-            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
             ATTR_CODE_SLOT: 1,
             ATTR_USERCODE: "1234",
         },
@@ -147,8 +139,8 @@ async def test_door_lock(
     # Test clear usercode
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_LOCK_USERCODE,
-        {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+        ZWaveJSService.CLEAR_LOCK_USERCODE,
+        {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
         blocking=True,
     )
 
@@ -178,8 +170,11 @@ async def test_door_lock(
     ) as mock_get_usercode:
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            ZWaveJSService.GET_LOCK_USERCODE,
+            {
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+            },
             blocking=True,
             return_response=True,
         )
@@ -203,11 +198,11 @@ async def test_door_lock(
     caplog.clear()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_CONFIGURATION,
+        ZWaveJSService.SET_LOCK_CONFIGURATION,
         {
-            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
-            ATTR_OPERATION_TYPE: "timed",
-            ATTR_LOCK_TIMEOUT: 1,
+            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ZWaveJSServiceArgument.OPERATION_TYPE: "timed",
+            ZWaveJSServiceArgument.LOCK_TIMEOUT: 1,
         },
         blocking=True,
     )
@@ -248,11 +243,11 @@ async def test_door_lock(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_LOCK_CONFIGURATION,
+        ZWaveJSService.SET_LOCK_CONFIGURATION,
         {
-            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
-            ATTR_OPERATION_TYPE: "timed",
-            ATTR_LOCK_TIMEOUT: 1,
+            CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ZWaveJSServiceArgument.OPERATION_TYPE: "timed",
+            ZWaveJSServiceArgument.LOCK_TIMEOUT: 1,
         },
         blocking=True,
     )
@@ -293,9 +288,9 @@ async def test_door_lock(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_USERCODE,
+            ZWaveJSService.SET_LOCK_USERCODE,
             {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
                 ATTR_USERCODE: "1234",
             },
@@ -306,8 +301,11 @@ async def test_door_lock(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            ZWaveJSService.CLEAR_LOCK_USERCODE,
+            {
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+            },
             blocking=True,
         )
 
@@ -321,8 +319,11 @@ async def test_door_lock(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            ZWaveJSService.GET_LOCK_USERCODE,
+            {
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+            },
             blocking=True,
             return_response=True,
         )
@@ -393,9 +394,9 @@ async def test_get_lock_usercode(
     ) as mock_get_usercode:
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
+            ZWaveJSService.GET_LOCK_USERCODE,
             {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -426,9 +427,9 @@ async def test_set_lock_usercode_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LOCK_USERCODE,
+            ZWaveJSService.SET_LOCK_USERCODE,
             {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
                 ATTR_USERCODE: "1234",
             },
@@ -452,8 +453,11 @@ async def test_clear_lock_usercode_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            ZWaveJSService.CLEAR_LOCK_USERCODE,
+            {
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+            },
             blocking=True,
         )
 
@@ -479,9 +483,9 @@ async def test_get_lock_usercode_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
+            ZWaveJSService.GET_LOCK_USERCODE,
             {
-                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
                 ATTR_CODE_SLOT: 1,
             },
             blocking=True,
@@ -505,8 +509,8 @@ async def test_get_all_lock_usercodes(
     ) as mock_get_usercodes:
         response = await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_LOCK_USERCODE,
-            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
+            ZWaveJSService.GET_LOCK_USERCODE,
+            {CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
             blocking=True,
             return_response=True,
         )
@@ -517,3 +521,58 @@ async def test_get_all_lock_usercodes(
                 "2": {"usercode": None, "in_use": False},
             }
         }
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "returns_response"),
+    [
+        pytest.param(
+            ZWaveJSService.GET_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1},
+            True,
+            id="get_lock_usercode",
+        ),
+        pytest.param(
+            ZWaveJSService.SET_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1, ATTR_USERCODE: "1234"},
+            False,
+            id="set_lock_usercode",
+        ),
+        pytest.param(
+            ZWaveJSService.CLEAR_LOCK_USERCODE,
+            {ATTR_CODE_SLOT: 1},
+            False,
+            id="clear_lock_usercode",
+        ),
+        pytest.param(
+            ZWaveJSService.SET_LOCK_CONFIGURATION,
+            {ZWaveJSServiceArgument.OPERATION_TYPE: "CONSTANT"},
+            False,
+            id="set_lock_configuration",
+        ),
+    ],
+)
+async def test_lock_management_services_require_admin(
+    hass: HomeAssistant,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    hass_read_only_user: MockUser,
+    service: str,
+    service_data: dict[str, int | str],
+    returns_response: bool,
+) -> None:
+    """Sensitive lock services reject non-admin users."""
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CommonServiceArgument.ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                **service_data,
+            },
+            blocking=True,
+            return_response=returns_response,
+            context=Context(user_id=hass_read_only_user.id),
+        )

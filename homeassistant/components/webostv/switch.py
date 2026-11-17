@@ -2,10 +2,14 @@
 
 from typing import Any, override
 
+from aiowebostv import WebOsTvServiceNotFoundError
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import WebOsTvConfigEntry
 from .entity import WebOsTvEntity, cmd
 
@@ -25,17 +29,21 @@ class LgWebOSScreenSwitchEntity(WebOsTvEntity, SwitchEntity):
     """Representation of a LG webOS TV Screen Switch."""
 
     _attr_translation_key = "screen"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the screen switch entity."""
         super().__init__(entry)
         self._attr_unique_id = f"{entry.unique_id}_screen"
+        self._unsupported = False
 
     @property
     @override
     def available(self) -> bool:
         """Return true if the entity is available."""
-        return super().available and self._client.tv_state.is_on
+        return (
+            super().available and self._client.tv_state.is_on and not self._unsupported
+        )
 
     @property
     @override
@@ -47,10 +55,23 @@ class LgWebOSScreenSwitchEntity(WebOsTvEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the screen on."""
-        await self._client.set_screen_state(True)
+        await self._async_set_screen_state(True)
 
     @cmd
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the screen off."""
-        await self._client.set_screen_state(False)
+        await self._async_set_screen_state(False)
+
+    async def _async_set_screen_state(self, state: bool) -> None:
+        """Set the screen state, marking the switch unsupported on a 404."""
+        try:
+            await self._client.set_screen_state(state)
+        except WebOsTvServiceNotFoundError as error:
+            self._unsupported = True
+            self.async_write_ha_state()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="screen_control_not_supported",
+                translation_placeholders={"name": self.coordinator.name},
+            ) from error

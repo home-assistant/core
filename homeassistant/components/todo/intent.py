@@ -1,8 +1,9 @@
 """Intents for the todo integration."""
 
+import dataclasses
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
@@ -26,8 +27,8 @@ class ListBaseIntentHandler(intent.IntentHandler):
     """Base class for toto intent handlers."""
 
     slot_schema = {
-        vol.Required("item"): intent.non_empty_string,
-        vol.Required("name"): intent.non_empty_string,
+        probatio.Required("item"): intent.non_empty_string,
+        probatio.Required("name"): intent.non_empty_string,
     }
     platforms = {DOMAIN}
 
@@ -125,11 +126,7 @@ class ListCompleteItemIntentHandler(ListBaseIntentHandler):
 
         # Mark as completed
         await target_list.async_update_todo_item(
-            TodoItem(
-                uid=matching_item.uid,
-                summary=matching_item.summary,
-                status=TodoItemStatus.COMPLETED,
-            )
+            dataclasses.replace(matching_item, status=TodoItemStatus.COMPLETED)
         )
 
 

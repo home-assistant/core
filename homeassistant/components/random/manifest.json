@@ -1,6 +1,7 @@
 {
   "domain": "random",
   "name": "Random",
+  "categories": ["helpers"],
   "codeowners": ["@fabaff"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/random",

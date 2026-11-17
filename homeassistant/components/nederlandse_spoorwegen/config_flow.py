@@ -4,15 +4,14 @@ import logging
 from typing import Any, override
 
 from ns_api import NSAPI, Station
+import probatio
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
     HTTPError,
     Timeout,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -28,6 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN, INTEGRATION_TITLE
+from .coordinator import NSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +92,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -119,7 +121,9 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -127,7 +131,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: NSConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"route": RouteSubentryFlowHandler}
@@ -164,19 +168,19 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
         ]
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_NAME): str,
-                    vol.Required(CONF_FROM): SelectSelector(
+                    probatio.Required(CONF_NAME): str,
+                    probatio.Required(CONF_FROM): SelectSelector(
                         SelectSelectorConfig(options=options, sort=True),
                     ),
-                    vol.Required(CONF_TO): SelectSelector(
+                    probatio.Required(CONF_TO): SelectSelector(
                         SelectSelectorConfig(options=options, sort=True),
                     ),
-                    vol.Optional(CONF_VIA): SelectSelector(
+                    probatio.Optional(CONF_VIA): SelectSelector(
                         SelectSelectorConfig(options=options, sort=True),
                     ),
-                    vol.Optional(CONF_TIME): TimeSelector(),
+                    probatio.Optional(CONF_TIME): TimeSelector(),
                 }
             ),
         )

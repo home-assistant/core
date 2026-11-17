@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lg_thinq.const import DOMAIN
@@ -14,13 +20,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.parametrize("device_fixture", ["air_conditioner", "kimchi_refrigerator"])
@@ -34,7 +33,7 @@ async def test_sensor_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    hass.config.time_zone = "UTC"
+    await hass.config.async_set_time_zone("UTC")
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
@@ -61,7 +60,7 @@ async def test_update_energy_entity(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update energy entity."""
-    hass.config.time_zone = "UTC"
+    await hass.config.async_set_time_zone("UTC")
     with patch(
         "homeassistant.components.lg_thinq.sensor.random.randint", return_value=1
     ):
@@ -94,7 +93,7 @@ async def test_energy_today_updates_hourly(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that energy_today sensor updates every hour, not once per day."""
-    hass.config.time_zone = "UTC"
+    await hass.config.async_set_time_zone("UTC")
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "sensor.test_air_conditioner_energy_today"
@@ -126,7 +125,7 @@ async def test_energy_today_last_reset_set_on_first_fetch(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test last_reset is set to midnight of the fetched day after first successful fetch."""
-    hass.config.time_zone = "UTC"
+    await hass.config.async_set_time_zone("UTC")
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "sensor.test_air_conditioner_energy_today"
@@ -160,7 +159,7 @@ async def test_energy_today_last_reset_advances_on_new_day_fetch(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test last_reset advances to the new day's midnight only when its data is fetched."""
-    hass.config.time_zone = "UTC"
+    await hass.config.async_set_time_zone("UTC")
     await setup_integration(hass, mock_config_entry)
 
     entity_id = "sensor.test_air_conditioner_energy_today"

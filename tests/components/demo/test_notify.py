@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN, notify as demo
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.fixture

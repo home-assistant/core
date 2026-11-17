@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from transmission_rpc.session import Session, SessionStats
 from transmission_rpc.torrent import Torrent
 
@@ -12,15 +13,13 @@ from homeassistant.components.transmission.const import DOMAIN
 
 from . import MOCK_CONFIG_DATA
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -66,10 +65,11 @@ def mock_transmission_client() -> Generator[AsyncMock]:
         }
         client.session_stats.return_value = SessionStats(fields=session_stats_data)
 
-        session_data = {"alt-speed-enabled": False}
+        session_data = {"alt-speed-enabled": False, "download-dir": "/downloads"}
         client.get_session.return_value = Session(fields=session_data)
 
         client.get_torrents.return_value = []
+        client.free_space.return_value = 42949672960  # 40 GiB
 
         yield mock_client_class
 

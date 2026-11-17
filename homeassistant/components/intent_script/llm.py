@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
 from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
 
-from . import ScriptIntentHandler
+from .const import DOMAIN
+from .helpers import ScriptIntentHandler
 
 
 @callback
@@ -43,8 +44,10 @@ def async_get_tools(
     # valid tool names.
     tools: list[Tool] = [
         IntentTool(
-            unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
+            f"{DOMAIN}__"
+            + unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
             handler,
+            integration=DOMAIN,
         )
         for handler in handlers
     ]

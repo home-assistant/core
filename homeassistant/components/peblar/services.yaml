@@ -1,0 +1,85 @@
+list_rfid_tokens:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+
+add_rfid_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      required: true
+      selector:
+        text:
+    description:
+      required: true
+      selector:
+        text:
+
+delete_rfid_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      required: true
+      selector:
+        text:
+
+list_vehicle_tokens:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+
+add_vehicle_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    evcc_id:
+      required: true
+      selector:
+        text:
+    alias:
+      required: true
+      selector:
+        text:
+
+delete_vehicle_token:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    evcc_id:
+      required: true
+      selector:
+        text:
+
+authorize_charge_session:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    uid:
+      selector:
+        text:
+    description:
+      selector:
+        text:

@@ -4,16 +4,13 @@ import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -25,8 +22,6 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_mock_service
 
 
 class MockIntentHandler(intent.IntentHandler):
@@ -40,6 +35,23 @@ class MockIntentHandler(intent.IntentHandler):
     def slot_schema(self):
         """Return the slot schema."""
         return self._mock_slot_schema
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, True, id="none"),
+        pytest.param("", True, id="empty-string"),
+        pytest.param(" \t", True, id="whitespace-string"),
+        pytest.param(0, False, id="zero"),
+        pytest.param(False, False, id="false"),
+        pytest.param([], False, id="empty-list"),
+        pytest.param({}, False, id="empty-dict"),
+    ],
+)
+def test_is_blank_slot_value(value: object, expected: bool) -> None:
+    """Test identifying intent slot values that represent an unspecified slot."""
+    assert intent.is_blank_slot_value(value) is expected
 
 
 async def test_async_match_states(
@@ -66,10 +78,14 @@ async def test_async_match_states(
     )
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "switch.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom switch"}
+        "switch.bedroom",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "bedroom switch"},
     )
 
     # Put entities into different areas
@@ -80,9 +96,7 @@ async def test_async_match_states(
         suggested_object_id="kitchen",
         original_name="kitchen light",
     )
-    entity_registry.async_update_entity(
-        state1.entity_id, area_id=area_kitchen.id, aliases=[er.COMPUTED_NAME]
-    )
+    entity_registry.async_update_entity(state1.entity_id, area_id=area_kitchen.id)
 
     entity_registry.async_get_or_create(
         "switch",
@@ -228,7 +242,6 @@ async def test_async_match_targets(
     kitchen_outlet = entity_registry.async_update_entity(
         kitchen_outlet.entity_id,
         name="kitchen outlet",
-        aliases=[er.COMPUTED_NAME],
         device_class=switch.SwitchDeviceClass.OUTLET,
         area_id=area_kitchen.id,
     )
@@ -262,7 +275,6 @@ async def test_async_match_targets(
     bedroom_switch_2 = entity_registry.async_update_entity(
         bedroom_switch_2.entity_id,
         name="second floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_2.id,
     )
     state_bedroom_switch_2 = State(
@@ -298,13 +310,12 @@ async def test_async_match_targets(
     bedroom_switch_3 = entity_registry.async_update_entity(
         bedroom_switch_3.entity_id,
         name="third floor bedroom switch",
-        aliases=[er.COMPUTED_NAME],
         area_id=area_bedroom_3.id,
     )
     state_bedroom_switch_3 = State(
         bedroom_switch_3.entity_id,
         "off",
-        attributes={ATTR_DEVICE_CLASS: switch.SwitchDeviceClass.OUTLET},
+        attributes={EntityStateAttribute.DEVICE_CLASS: switch.SwitchDeviceClass.OUTLET},
     )
 
     bathroom_light_3 = entity_registry.async_get_or_create(
@@ -320,8 +331,8 @@ async def test_async_match_targets(
         bathroom_light_3.entity_id,
         "on",
         attributes={
-            ATTR_FRIENDLY_NAME: "bathroom light",
-            ATTR_SUPPORTED_FEATURES: light.LightEntityFeature.EFFECT,
+            EntityStateAttribute.FRIENDLY_NAME: "bathroom light",
+            EntityStateAttribute.SUPPORTED_FEATURES: light.LightEntityFeature.EFFECT,
         },
     )
 
@@ -578,13 +589,19 @@ async def test_match_device_area(
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "light.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+        "light.bedroom",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "bedroom light"},
     )
     state3 = State(
-        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+        "light.living_room",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "living room light"},
     )
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
@@ -635,10 +652,14 @@ async def test_match_child_device_area(
     )
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+        "light.living_room",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "living room light"},
     )
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
@@ -658,13 +679,13 @@ async def test_match_child_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler({probatio.Required("name"): cv.string})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": 1})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": "kitchen"})
     handler1.async_validate_slots({"name": {"value": "kitchen"}})
     handler1.async_validate_slots(
@@ -962,6 +983,72 @@ async def test_service_handler_device_classes(
         )
 
 
+async def test_service_handler_failure_reported_for_failed_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test a failed service call is reported for its own entity."""
+    hass.states.async_set(
+        "switch.bedroom", "off", attributes={"device_class": "outlet"}
+    )
+    hass.states.async_set(
+        "switch.living_room", "off", attributes={"device_class": "outlet"}
+    )
+    living_room_done = asyncio.Event()
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Fail for the bedroom, after the living room call has finished."""
+        if call.data["entity_id"] == "switch.bedroom":
+            await living_room_done.wait()
+            raise HomeAssistantError("Failed")
+        living_room_done.set()
+
+    hass.services.async_register("switch", "turn_on", mock_service)
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            "TestType",
+            "switch",
+            "turn_on",
+            device_classes={switch.SwitchDeviceClass},
+        ),
+    )
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        "TestType",
+        slots={"device_class": {"value": "outlet"}},
+    )
+
+    # The calls finish in the opposite order to the entities
+    assert [target.id for target in result.success_results] == ["switch.living_room"]
+    assert [target.id for target in result.failed_results] == ["switch.bedroom"]
+
+
+async def test_service_handler_cancelled_call_propagates(
+    hass: HomeAssistant,
+) -> None:
+    """Test a cancelled service call cancels the intent instead of succeeding."""
+    hass.states.async_set("light.kitchen", "off")
+
+    async def mock_service(call: ServiceCall) -> None:
+        """Cancel the service call."""
+        raise asyncio.CancelledError
+
+    hass.services.async_register("light", "turn_on", mock_service)
+    intent.async_register(
+        hass, intent.ServiceIntentHandler("TestType", "light", "turn_on")
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "TestType",
+            slots={"name": {"value": "kitchen"}},
+        )
+
+
 async def test_service_handler_matched_states_uses_updated_state(
     hass: HomeAssistant,
 ) -> None:
@@ -1106,3 +1193,51 @@ async def test_intent_response_dict() -> None:
 
     # The original dict should not be affected by the mutations
     assert response_dict1 == response_dict2
+
+
+@pytest.mark.parametrize("reason", list(intent.MatchFailedReason))
+def test_match_failed_error_describes_every_reason(
+    reason: intent.MatchFailedReason,
+) -> None:
+    """Test every reason has wording, since str() is spoken by the REST API."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, reason),
+        constraints=intent.MatchTargetsConstraints(name="Lamp"),
+    )
+
+    assert str(error) == f"{intent._MATCH_FAILURE_REASONS[reason]} (given name 'Lamp')"
+
+
+def test_match_failed_error_str_names_the_constraints() -> None:
+    """Test the message names what was asked for, and only what was set."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.AREA),
+        constraints=intent.MatchTargetsConstraints(
+            name="Lamp", area_name="Kitchen", assistant="conversation"
+        ),
+    )
+
+    assert (
+        str(error) == "No entities were in the area (given name 'Lamp', area 'Kitchen')"
+    )
+
+
+def test_match_failed_error_str_without_constraints() -> None:
+    """Test the message stands alone when nothing was constrained."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.DOMAIN),
+        constraints=intent.MatchTargetsConstraints(),
+    )
+
+    assert str(error) == "No entities matched the domain"
+
+
+def test_match_failed_error_repr_keeps_the_detail() -> None:
+    """Test the full state is still available for logs and debugging."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.NAME),
+        constraints=intent.MatchTargetsConstraints(name="Lamp"),
+    )
+
+    assert repr(error).startswith("<MatchFailedError result=MatchTargetsResult(")
+    assert "constraints=MatchTargetsConstraints(" in repr(error)

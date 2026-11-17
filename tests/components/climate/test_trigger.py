@@ -3,16 +3,33 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    arm_trigger,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    other_states,
+    parametrize_numerical_attribute_changed_trigger_states,
+    parametrize_numerical_attribute_crossed_threshold_trigger_states,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ClimateEntityCapabilityAttribute,
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.climate.trigger import CONF_HVAC_MODE
+from homeassistant.components.climate.trigger import CONF_HVAC_MODE, TRIGGERS
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ENTITY_ID,
@@ -23,20 +40,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    other_states,
-    parametrize_numerical_attribute_changed_trigger_states,
-    parametrize_numerical_attribute_crossed_threshold_trigger_states,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
-
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -44,6 +47,9 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_CROSSED_THRESHOLD = {
@@ -51,6 +57,20 @@ _TEMPERATURE_CROSSED_THRESHOLD = {
         "type": "above",
         "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
     }
+}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "hvac_mode_changed": TargetSupport.STANDARD,
+    "started_cooling": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "target_humidity_changed": TargetSupport.STANDARD,
+    "target_humidity_crossed_threshold": TargetSupport.STANDARD,
+    "target_temperature_changed": TargetSupport.STANDARD,
+    "target_temperature_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+    "started_heating": TargetSupport.STANDARD,
 }
 
 
@@ -96,6 +116,11 @@ async def test_climate_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -116,18 +141,18 @@ async def test_climate_trigger_options_validation(
             "climate.hvac_mode_changed",
             # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             {CONF_HVAC_MODE: ["invalid_mode"]},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -226,6 +251,7 @@ async def test_climate_state_trigger_behavior_each(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
@@ -239,6 +265,7 @@ async def test_climate_state_trigger_behavior_each(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
@@ -356,6 +383,7 @@ async def test_climate_state_trigger_behavior_first(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
@@ -473,6 +501,7 @@ async def test_climate_state_trigger_behavior_all(
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
             attribute_required=True,
         ),
         *parametrize_trigger_states(
@@ -513,3 +542,59 @@ async def test_climate_state_attribute_trigger_behavior_all(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+async def test_climate_target_temperature_trigger_temperature_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test the trigger uses the temperature_unit attribute, not the system unit."""
+    calls: list[str] = []
+    entity_id = "climate.test"
+
+    # The system unit is °C, the entity reports in °F
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 70,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "climate.target_temperature_crossed_threshold",
+        {
+            "threshold": {
+                "type": "above",
+                "value": {"number": 25, "unit_of_measurement": "°C"},
+            }
+        },
+        {CONF_ENTITY_ID: [entity_id]},
+        calls,
+    )
+
+    # 72°F = 22.2°C, below 25°C - should NOT trigger
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 72,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 80°F = 26.7°C, above 25°C - should trigger
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 80,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1

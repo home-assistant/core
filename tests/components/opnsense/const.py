@@ -1,9 +1,6 @@
 """Constants for opnsense tests."""
 
-from homeassistant.components.opnsense.const import (
-    CONF_API_SECRET,
-    CONF_TRACKER_INTERFACES,
-)
+from homeassistant.components.opnsense.const import CONF_API_SECRET
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 
 TITLE = "OPNsense"
@@ -13,14 +10,6 @@ CONFIG_DATA = {
     CONF_API_SECRET: "secret",
     CONF_VERIFY_SSL: False,
 }
-CONFIG_DATA_IMPORT = {
-    CONF_URL: "http://router.lan/api",
-    CONF_API_KEY: "key",
-    CONF_API_SECRET: "secret",
-    CONF_VERIFY_SSL: False,
-    CONF_TRACKER_INTERFACES: ["LAN"],
-}
-
 ARP = [
     {
         "hostname": "",

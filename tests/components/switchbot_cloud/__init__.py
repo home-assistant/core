@@ -1,12 +1,11 @@
 """Tests for the SwitchBot Cloud integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from switchbot_api import Device
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -64,7 +63,6 @@ BATTERY_CIRCULATOR_FAN_2_PRO_INFO = Device(
     deviceType="Battery Circulator Fan 2 Pro",
     hubDeviceId="test-hub-id",
 )
-
 
 METER_INFO = Device(
     version="V1.0",

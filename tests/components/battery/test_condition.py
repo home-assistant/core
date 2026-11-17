@@ -3,7 +3,22 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.components.common import (
+    ConditionStateDescription,
+    TargetSupport,
+    assert_condition_behavior_all,
+    assert_condition_behavior_any,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
+    parametrize_numerical_condition_above_below_all,
+    parametrize_numerical_condition_above_below_any,
+    parametrize_target_entities,
+    target_entities,
+)
 
+from homeassistant.components.battery.condition import CONDITIONS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -12,19 +27,6 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
-    ConditionStateDescription,
-    assert_condition_behavior_all,
-    assert_condition_behavior_any,
-    assert_condition_options_supported,
-    parametrize_condition_states_all,
-    parametrize_condition_states_any,
-    parametrize_numerical_condition_above_below_all,
-    parametrize_numerical_condition_above_below_any,
-    parametrize_target_entities,
-    target_entities,
-)
 
 _BATTERY_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 
@@ -46,6 +48,15 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _LEVEL_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_low": TargetSupport.STANDARD,
+    "is_not_low": TargetSupport.STANDARD,
+    "is_charging": TargetSupport.STANDARD,
+    "is_not_charging": TargetSupport.STANDARD,
+    "is_level": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -73,6 +84,11 @@ async def test_battery_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

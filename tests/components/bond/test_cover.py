@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -31,8 +32,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def shades(name: str):

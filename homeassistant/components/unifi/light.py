@@ -31,6 +31,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
 )
 
 if TYPE_CHECKING:
@@ -60,6 +61,8 @@ def get_device_brightness_or_default(device: Device) -> int:
 @callback
 def async_device_led_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device supports LED control."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     device: Device = hub.api.devices[obj_id]
     return device.led_override is not None or device.supports_led_ring
 
@@ -184,6 +187,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
+        await self.async_refresh_after_control()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -197,6 +201,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 translation_domain=DOMAIN,
                 translation_key="action_request_failed",
             ) from err
+        await self.async_refresh_after_control()
 
     @callback
     @override

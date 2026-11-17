@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -15,7 +14,7 @@ PLATFORMS = [Platform.CALENDAR, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RecollectWasteConfigEntry
-) -> bool:
+) -> None:
     """Set up ReCollect Waste as config entry."""
     coordinator = ReCollectWasteDataUpdateCoordinator(hass, entry)
 
@@ -25,8 +24,6 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    return True
 
 
 async def async_reload_entry(
@@ -38,12 +35,14 @@ async def async_reload_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RecollectWasteConfigEntry
-) -> bool:
+) -> None:
     """Unload an ReCollect Waste config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: RecollectWasteConfigEntry
+) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -69,5 +68,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.debug("Migration to version %s successful", version)
-
-    return True

@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
+from pathlib import Path
 import sqlite3
 import sys
 import threading
@@ -10,7 +11,33 @@ from typing import Any, cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    convert_pending_states_to_meta,
+    corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    run_information_with_session,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
+from sqlalchemy import make_url
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -24,9 +51,11 @@ from homeassistant.components.recorder import (
     CONF_DB_RETRY_WAIT,
     CONF_DB_URL,
     CONFIG_SCHEMA,
+    DEFAULT_DB_FILE,
     DOMAIN,
     Recorder,
     db_schema,
+    get_default_url,
     get_instance,
     migration,
     statistics,
@@ -49,18 +78,14 @@ from homeassistant.components.recorder.db_schema import (
     StatisticsRuns,
 )
 from homeassistant.components.recorder.models import process_timestamp
+from homeassistant.components.recorder.pool import MutexPool, RecorderPool
 from homeassistant.components.recorder.queries import select_event_type_ids
-from homeassistant.components.recorder.services import (
-    SERVICE_DISABLE,
-    SERVICE_ENABLE,
-    SERVICE_PURGE,
-    SERVICE_PURGE_ENTITIES,
-)
+from homeassistant.components.recorder.services import RecorderService
 from homeassistant.components.recorder.table_managers import (
     state_attributes as state_attributes_table_manager,
     states_meta as states_meta_table_manager,
 )
-from homeassistant.components.recorder.util import session_scope
+from homeassistant.components.recorder.util import dburl_to_path, session_scope
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -80,29 +105,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from .common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    convert_pending_states_to_meta,
-    corrupt_db_file,
-    db_event_data_to_native,
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    run_information_with_session,
-)
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-    mock_platform,
-)
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -260,6 +262,118 @@ async def test_state_gets_saved_when_set_before_start_event(
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
+
+
+async def test_commit_future_covers_startup_batch(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test a commit future is returned while the startup batch is processed.
+
+    Once Home Assistant has started, the recorder drains its whole queue into a
+    startup batch before processing it. The queue is then empty although the
+    batch is not committed yet.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+    hass.states.async_set("test.recorder", "on")
+
+    batch_drained = threading.Event()
+    release_batch = threading.Event()
+    real_pre_process = instance._pre_process_startup_events
+
+    def _pre_process_startup_events(
+        startup_task_or_events: list[recorder.tasks.RecorderTask | Event],
+    ) -> None:
+        batch_drained.set()
+        release_batch.wait()
+        real_pre_process(startup_task_or_events)
+
+    with (
+        patch.object(
+            instance, "_pre_process_startup_events", _pre_process_startup_events
+        ),
+        # Periodic tasks run on the wall clock and could queue a task
+        patch.object(instance, "_async_setup_periodic_tasks"),
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        try:
+            assert await hass.async_add_executor_job(batch_drained.wait, 10)
+            assert instance.backlog == 0
+            commit_future = instance.async_get_commit_future()
+        finally:
+            release_batch.set()
+
+    assert commit_future is not None
+    await commit_future
+    with session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(States))) == 1
+
+
+async def test_queued_states_until_ready(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test state changes queued before the recorder is ready are indexed."""
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(
+        async_setup_recorder_instance(hass, {"exclude": {"entities": "test.excluded"}})
+    )
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    hass.states.async_set("test.excluded", "on")
+    hass.states.async_remove("test.recorder")
+    hass.states.async_set("test.recorder", "off")
+    hass.states.async_set("test.other", "on")
+
+    queued = instance.async_get_queued_states(
+        ["test.recorder", "test.excluded", "test.unknown"]
+    )
+    assert queued is not None
+    assert list(queued) == ["test.recorder"]
+    assert [state and state.state for state in queued["test.recorder"]] == [
+        "on",
+        None,
+        "off",
+    ]
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await async_wait_recording_done(hass)
+    assert instance.async_recorder_ready.is_set()
+    assert instance.async_get_queued_states(["test.recorder"]) is None
+
+    # The index is not kept up to date once the recorder is ready
+    hass.states.async_set("test.recorder", "on")
+    await async_wait_recording_done(hass)
+    assert instance._queued_states is None
+
+
+async def test_queued_states_frozen_when_recording_stops(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test the queued states are kept when recording stops.
+
+    That happens when the queue grows too large; later changes are not queued,
+    so they are missing from the index too.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+
+    hass.states.async_set("test.recorder", "on")
+    with patch.object(instance, "_reached_max_backlog", return_value=True):
+        instance._async_check_queue()
+    hass.states.async_set("test.recorder", "off")
+
+    queued = instance.async_get_queued_states(["test.recorder"])
+    assert queued is not None
+    assert [state and state.state for state in queued["test.recorder"]] == ["on"]
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -1505,10 +1619,10 @@ async def test_saving_state_with_serializable_data(
 
 async def test_has_services(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test the services exist."""
-    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
-    assert hass.services.has_service(DOMAIN, SERVICE_PURGE_ENTITIES)
+    assert hass.services.has_service(DOMAIN, RecorderService.DISABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.ENABLE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE)
+    assert hass.services.has_service(DOMAIN, RecorderService.PURGE_ENTITIES)
 
 
 async def test_service_disable_events_not_recording(
@@ -1518,7 +1632,7 @@ async def test_service_disable_events_not_recording(
     """Test that events are not recorded when recorder is disabled using service."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1552,7 +1666,7 @@ async def test_service_disable_events_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1601,7 +1715,7 @@ async def test_service_disable_states_not_recording(
     """Test state changes are not recorded when recorder is disabled."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_DISABLE,
+        RecorderService.DISABLE,
         {},
         blocking=True,
     )
@@ -1614,7 +1728,7 @@ async def test_service_disable_states_not_recording(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_ENABLE,
+        RecorderService.ENABLE,
         {},
         blocking=True,
     )
@@ -1658,7 +1772,7 @@ async def test_service_disable_run_information_recorded(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISABLE,
+            RecorderService.DISABLE,
             {},
             blocking=True,
         )
@@ -2220,7 +2334,7 @@ async def test_async_block_till_done(
 @pytest.mark.parametrize(
     ("db_url", "echo"),
     [
-        ("sqlite://blabla", None),
+        ("sqlite:///blabla", None),
         ("mariadb://blabla", False),
         ("mysql://blabla", False),
         ("mariadb+pymysql://blabla", False),
@@ -2282,7 +2396,7 @@ async def test_disable_echo(
             {},
         ),
         (
-            "sqlite://blabla",
+            "sqlite:///blabla",
             {},
         ),
     ],
@@ -2310,6 +2424,201 @@ async def test_mysql_missing_utf8mb4(
         connect_args = create_engine_mock.mock_calls[0][2].get("connect_args", {})
         for key, value in expected_connect_args.items():
             assert connect_args[key] == value
+
+
+async def test_postgresql_url_uses_psycopg2(hass: HomeAssistant) -> None:
+    """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
+    ):
+        await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_DB_URL: "postgresql://user:pass@host/db"}}
+        )
+        create_engine_mock.assert_called_once()
+        assert create_engine_mock.mock_calls[0].args[0] == make_url(
+            "postgresql+psycopg2://user:pass@host/db"
+        )
+
+
+@pytest.mark.parametrize(
+    ("config_url", "poolclass", "charset", "echo", "checks_file"),
+    [
+        pytest.param("sqlite://", MutexPool, None, None, False, id="sqlite_memory"),
+        pytest.param(
+            "sqlite:///:memory:",
+            MutexPool,
+            None,
+            None,
+            False,
+            id="sqlite_memory_database",
+        ),
+        pytest.param(
+            "sqlite:///blabla", RecorderPool, None, None, True, id="sqlite_file"
+        ),
+        pytest.param(
+            "sqlite+pysqlite:///blabla",
+            RecorderPool,
+            None,
+            None,
+            True,
+            id="pysqlite_file",
+        ),
+        pytest.param(
+            "sqlite+pysqlcipher://:key@/blabla",
+            None,
+            None,
+            False,
+            False,
+            id="pysqlcipher_file",
+        ),
+        pytest.param(
+            "mysql://user:pass@host/db", None, "utf8mb4", False, False, id="mysqldb"
+        ),
+        pytest.param(
+            "mysql+mysqldb://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="explicit_mysqldb",
+        ),
+        pytest.param(
+            "mariadb+pymysql://user:pass@host/db",
+            None,
+            "utf8mb4",
+            False,
+            False,
+            id="pymysql",
+        ),
+        pytest.param(
+            "mariadb+mariadbconnector://user:pass@host/db",
+            None,
+            None,
+            False,
+            False,
+            id="mariadbconnector",
+        ),
+        pytest.param(
+            "postgresql://user:pass@host/db", None, None, False, False, id="postgresql"
+        ),
+    ],
+)
+async def test_engine_options_for_backend_and_driver(
+    hass: HomeAssistant,
+    config_url: str,
+    poolclass: type[MutexPool | RecorderPool] | None,
+    charset: str | None,
+    echo: bool | None,
+    checks_file: bool,
+) -> None:
+    """Test the engine options are chosen from the backend and driver of the URL.
+
+    Only pysqlite databases are checked with sqlite3 before connecting, as
+    other SQLite drivers such as pysqlcipher use files sqlite3 can't open.
+    """
+    recorder_helper.async_initialize_recorder(hass)
+
+    class MockEvent:
+        def listen(self, _, _2, callback):
+            callback(None, None)
+
+    mock_event = MockEvent()
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine"
+        ) as create_engine_mock,
+        patch("homeassistant.components.recorder.core.sqlalchemy_event", mock_event),
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+        patch(
+            "homeassistant.components.recorder.core.validate_or_move_away_sqlite_database"
+        ) as validate_mock,
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: config_url}})
+        create_engine_mock.assert_called_once()
+
+    kwargs = create_engine_mock.mock_calls[0].kwargs
+    assert kwargs.get("poolclass") is poolclass
+    assert kwargs.get("connect_args", {}).get("charset") == charset
+    assert kwargs.get("echo") is echo
+    assert validate_mock.called is checks_file
+
+
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        pytest.param("", id="empty"),
+        pytest.param("sqlite:////config/home-assistant_v2.db", id="sqlite"),
+        pytest.param("sqlite+pysqlite:////config/db.db", id="pysqlite"),
+        pytest.param("sqlite+pysqlcipher://:key@/config/db.db", id="pysqlcipher"),
+        pytest.param("mysql://user:pass@host/db?charset=utf8mb4", id="mysql"),
+        pytest.param("postgresql://user:pass@host/db", id="postgresql"),
+    ],
+)
+def test_validate_db_url(db_url: str) -> None:
+    """Test valid database URLs are accepted."""
+    assert recorder.validate_db_url(db_url) == db_url
+
+
+@pytest.mark.parametrize(
+    ("db_url", "message"),
+    [
+        pytest.param("sqlite://", "In-memory SQLite", id="sqlite_memory"),
+        pytest.param("sqlite:///:memory:", "In-memory SQLite", id="memory_database"),
+        pytest.param(
+            "sqlite+pysqlite:///:memory:", "In-memory SQLite", id="pysqlite_memory"
+        ),
+        pytest.param(
+            "sqlite://host//config/db.db", "Invalid database URL", id="sqlite_host"
+        ),
+        pytest.param(
+            "sqlite+pysqlite://user:pass@/config/db.db",
+            "Invalid database URL",
+            id="pysqlite_credentials",
+        ),
+        pytest.param(
+            "sqlite://:1234//config/db.db", "Invalid database URL", id="sqlite_port"
+        ),
+        pytest.param("garbage", "Invalid database URL", id="garbage"),
+        pytest.param(
+            "mysql://user:pass@host:port/db", "Invalid database URL", id="bad_port"
+        ),
+    ],
+)
+def test_validate_db_url_invalid(db_url: str, message: str) -> None:
+    """Test invalid database URLs are rejected."""
+    with pytest.raises(probatio.Invalid, match=message):
+        recorder.validate_db_url(db_url)
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        pytest.param("config", id="plain"),
+        pytest.param("ha%20copy", id="percent_escape"),
+        pytest.param("100%", id="percent"),
+        pytest.param("a#b", id="hash"),
+        pytest.param("a:b", id="colon"),
+        pytest.param("a@b", id="at"),
+        pytest.param("a b", id="space"),
+    ],
+)
+async def test_default_url(
+    hass: HomeAssistant, tmp_path: Path, config_dir: str
+) -> None:
+    """Test the default URL points at the database file in the config directory."""
+    hass.config.config_dir = str(tmp_path / config_dir)
+
+    assert dburl_to_path(get_default_url(hass)) == hass.config.path(DEFAULT_DB_FILE)
 
 
 @pytest.mark.parametrize(
@@ -2344,6 +2653,8 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
 
         def create_connect_args(self, url):
             return ([], {"charset": "invalid"})
+
+        driver = "mysqldb"
 
         @property
         def name(self) -> str:
@@ -2727,10 +3038,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()
@@ -2821,3 +3129,27 @@ async def test_setting_up_recorder_fails_entity_registry_listener(
         "The recorder entity registry listener must be installed before "
         "async_track_entity_registry_updated_event is called" in caplog.text
     )
+
+
+async def test_setup_connection_after_connection_closed(
+    hass: HomeAssistant, setup_recorder: None
+) -> None:
+    """Test the connect listener does not raise once the engine is gone.
+
+    _close_connection disposes the engine and drops our reference to it, but dispose()
+    only empties the pool: the engine stays usable, so anything still holding a
+    reference to it can check out a fresh DBAPI connection. That fires the connect
+    listener, which is still registered, with self.engine already set to None.
+    """
+    instance = recorder.get_instance(hass)
+    assert instance.engine is not None
+
+    def _setup_connection_without_an_engine() -> None:
+        with instance.engine.connect() as connection:
+            dbapi_connection = connection._dbapi_connection
+            with patch.object(instance, "engine", None):
+                # There is no engine of ours left to configure the connection for,
+                # which is not a reason to raise into whatever caused the checkout
+                instance._setup_recorder_connection(dbapi_connection, Mock())
+
+    await instance.async_add_executor_job(_setup_connection_without_an_engine)

@@ -38,6 +38,10 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
+        <ZoneEntityStateAttribute.DEVICE_TRACKERS: 'device_trackers'>: list([
+          'device_tracker.demo_scanner',
+          'device_tracker.demo_tracker',
+        ]),
         <ZoneEntityStateAttribute.EDITABLE: 'editable'>: True,
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test home',
         <EntityStateAttribute.ICON: 'icon'>: 'mdi:home',

@@ -2,7 +2,7 @@
 
 from typing import Any, Unpack, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -45,11 +45,11 @@ from . import in_zone
 from .const import DOMAIN
 from .helpers import get_in_zones_attribute
 
-_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required("zone"): cv.entity_ids,
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_ENTITY_ID): cv.entity_ids,
+    probatio.Required("zone"): cv.entity_ids,
 }
-_CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
+_CONDITION_SCHEMA = probatio.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
 
 def zone(
@@ -186,8 +186,8 @@ _DOMAIN_SPECS: dict[str, DomainSpec] = {
 
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
         },
     }
 )
@@ -232,11 +232,11 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
         return not self._in_target_zone(entity_state)
 
 
-_OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
+_OCCUPANCY_CONDITION_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )

@@ -113,12 +113,11 @@ from aioairzone_cloud.const import (
 )
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone_cloud.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 WS_ID = "11:22:33:44:55:66"
 WS_ID_AIDOO = "11:22:33:44:55:67"
@@ -529,7 +528,7 @@ def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
 
 async def async_init_integration(
     hass: HomeAssistant,
-) -> None:
+) -> MockConfigEntry:
     """Set up the Airzone integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
@@ -568,3 +567,5 @@ async def async_init_integration(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    return config_entry

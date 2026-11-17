@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
@@ -39,6 +39,8 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
     ATTR_DEVICE_NAME,
+    ATTR_RAW_GPS,
+    ATTR_RAW_GPS_ACCURACY,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
@@ -49,19 +51,22 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
-LOCATION_UPDATE_SCHEMA = vol.All(
+LOCATION_UPDATE_SCHEMA = probatio.All(
     cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Optional(ATTR_LOCATION_NAME): cv.string,
-            vol.Optional(ATTR_GPS): cv.gps,
-            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
-            vol.Optional(ATTR_BATTERY): cv.positive_int,
-            vol.Optional(ATTR_SPEED): cv.positive_int,
-            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-            vol.Optional(ATTR_COURSE): cv.positive_int,
-            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-            vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            probatio.Optional(ATTR_LOCATION_NAME): cv.string,
+            probatio.Optional(ATTR_GPS): cv.gps,
+            probatio.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
+            probatio.Optional(ATTR_BATTERY): cv.positive_int,
+            probatio.Optional(ATTR_SPEED): cv.positive_int,
+            probatio.Optional(ATTR_ALTITUDE): probatio.Coerce(float),
+            probatio.Optional(ATTR_COURSE): cv.positive_int,
+            probatio.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            probatio.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            # The fix before the app adjusted gps to agree with a zone event
+            probatio.Optional(ATTR_RAW_GPS): cv.gps,
+            probatio.Optional(ATTR_RAW_GPS_ACCURACY): cv.positive_float,
         },
     ),
 )
@@ -85,7 +90,7 @@ class MobileAppDeviceTrackerExtraStoredData(ExtraStoredData):
             return None
         try:
             validated = LOCATION_UPDATE_SCHEMA(data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.debug("Discarding invalid restored device tracker data: %s", err)
             return None
         return cls(validated)

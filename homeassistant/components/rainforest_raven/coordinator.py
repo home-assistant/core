@@ -62,7 +62,7 @@ async def _get_all_data(
     return data
 
 
-class RAVEnDataCoordinator(DataUpdateCoordinator):
+class RAVEnDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Communication coordinator for a Rainforest RAVEn device."""
 
     _raven_device: RAVEnSerialDevice | None = None
@@ -138,7 +138,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 await device.open()
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
-        except:
+        except BaseException:
             await device.abort()
             raise
 

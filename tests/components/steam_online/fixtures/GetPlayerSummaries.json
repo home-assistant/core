@@ -37,6 +37,20 @@
           "personastate": 2,
           "timecreated": 1303243041,
           "personastateflags": 0
+        },
+        {
+          "steamid": "1234567890",
+          "communityvisibilitystate": 3,
+          "personaname": "unconfigured_account",
+          "profileurl": "https://steamcommunity.com/profiles/1234567890/",
+          "avatar": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg",
+          "avatarmedium": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg",
+          "avatarfull": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+          "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
+          "personastate": 0,
+          "primaryclanid": "1234567890",
+          "timecreated": 1786993711,
+          "personastateflags": 0
         }
       ]
     }

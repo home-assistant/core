@@ -1,6 +1,7 @@
 """Tests for the Aquacell integration."""
 
 from aioaquacell import Brand
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aquacell.const import (
     CONF_BRAND,
@@ -9,8 +10,6 @@ from homeassistant.components.aquacell.const import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_CONFIG_ENTRY = {
     CONF_EMAIL: "test@test.com",

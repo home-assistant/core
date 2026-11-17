@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -30,14 +30,22 @@ async def test_buttons(
         ("button.test_homelink", "tessie_trigger_homelink"),
         ("button.test_keyless_driving", "remote_start"),
         ("button.test_play_fart", "remote_boombox"),
+        (
+            "button.test_enable_keep_accessory_power",
+            "enable_keep_accessory_power_mode",
+        ),
+        (
+            "button.test_disable_keep_accessory_power",
+            "disable_keep_accessory_power_mode",
+        ),
     ):
         with patch(
             f"tesla_fleet_api.tessie.Vehicle.{func}",
         ) as mock_press:
             await hass.services.async_call(
                 BUTTON_DOMAIN,
-                SERVICE_PRESS,
-                {ATTR_ENTITY_ID: [entity_id]},
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: [entity_id]},
                 blocking=True,
             )
             mock_press.assert_called_once()
@@ -57,8 +65,8 @@ async def test_button_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ["button.test_wake"]},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: ["button.test_wake"]},
             blocking=True,
         )
 

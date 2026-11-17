@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.androidtv.config_flow import (
     APPS_NEW_ID,
@@ -34,14 +35,15 @@ from homeassistant.components.androidtv.const import (
     PROP_ETHMAC,
     PROP_WIFIMAC,
 )
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import patchers
+from .common import CONFIG_ANDROID_DEFAULT, SHELL_RESPONSE_OFF, setup_mock_entry
 from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
-
-from tests.common import MockConfigEntry
 
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
@@ -101,14 +103,14 @@ class MockConfigDevice:
 
 
 @pytest.mark.parametrize(
-    ("flow_input", "expected_data", "eth_mac", "wifi_mac"),
+    ("flow_input", "expected_data", "eth_mac", "wifi_mac", "expected_unique_id"),
     [
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, None),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, None),
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, None, WIFI_MAC),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, None, WIFI_MAC),
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, None, ETH_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, None, ETH_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, None, WIFI_MAC, WIFI_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, None, WIFI_MAC, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC, ETH_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC, ETH_MAC),
     ],
 )
 async def test_user(
@@ -117,6 +119,7 @@ async def test_user(
     expected_data: dict[str, Any],
     eth_mac: str | None,
     wifi_mac: str | None,
+    expected_unique_id: str,
 ) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
@@ -141,6 +144,7 @@ async def test_user(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data
+        assert result["result"].unique_id == expected_unique_id
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -163,15 +167,22 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
         PATCH_SETUP_ENTRY as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=flow_input,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=flow_input,
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data
+        assert result["result"].unique_id == ETH_MAC
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -189,9 +200,15 @@ async def test_error_both_key_server(hass: HomeAssistant) -> None:
         },
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=flow_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -221,9 +238,15 @@ async def test_error_invalid_key(hass: HomeAssistant) -> None:
         CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=flow_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=flow_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -269,9 +292,15 @@ async def test_invalid_mac(
         return_value=(MockConfigDevice(eth_mac, wifi_mac), None),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=flow_input,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=flow_input,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -284,12 +313,17 @@ async def test_abort_if_host_exist(hass: HomeAssistant) -> None:
         domain=DOMAIN, data=CONFIG_ADB_SERVER, unique_id=ETH_MAC
     ).add_to_hass(hass)
 
-    config_data = CONFIG_PYTHON_ADB
     # Should fail, same HOST
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=config_data,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=FLOW_PYTHON_ADB,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -310,9 +344,15 @@ async def test_abort_if_unique_exist(hass: HomeAssistant) -> None:
         return_value=(MockConfigDevice(), None),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_ADB_SERVER,
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FLOW_ADB_SERVER,
         )
 
         assert result["type"] is FlowResultType.ABORT
@@ -548,3 +588,216 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_SCREENCAP_INTERVAL] == 1
         assert config_entry.options[CONF_TURN_OFF_COMMAND] == "off"
         assert config_entry.options[CONF_TURN_ON_COMMAND] == "on"
+
+
+RECONFIGURE_HOST = "127.0.0.2"
+RECONFIGURE_INPUT = {
+    CONF_HOST: RECONFIGURE_HOST,
+    CONF_PORT: DEFAULT_PORT,
+    CONF_MORE_OPTIONS: {},
+}
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "flow_input", "expected_data"),
+    [
+        pytest.param(
+            CONFIG_ADB_SERVER,
+            {CONF_HOST: RECONFIGURE_HOST, CONF_PORT: 5556, CONF_MORE_OPTIONS: {}},
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: 5556,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+            },
+            id="adb_server_to_python_adb",
+        ),
+        pytest.param(
+            CONFIG_PYTHON_ADB,
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {
+                    CONF_ADB_SERVER_IP: "127.0.0.3",
+                    CONF_ADB_SERVER_PORT: 5038,
+                },
+            },
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+                CONF_ADB_SERVER_IP: "127.0.0.3",
+                CONF_ADB_SERVER_PORT: 5038,
+            },
+            id="python_adb_to_adb_server",
+        ),
+        pytest.param(
+            {**CONFIG_ADB_SERVER, CONF_NAME: "Living room TV"},
+            {CONF_HOST: RECONFIGURE_HOST, CONF_PORT: 5556, CONF_MORE_OPTIONS: {}},
+            {
+                CONF_HOST: RECONFIGURE_HOST,
+                CONF_PORT: 5556,
+                CONF_DEVICE_CLASS: DEVICE_ANDROIDTV,
+                CONF_NAME: "Living room TV",
+            },
+            id="keeps_yaml_imported_name",
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    flow_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test reconfiguring the connection settings."""
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)),
+        PATCH_SETUP_ENTRY,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=flow_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == expected_data
+
+
+async def test_reconfigure_reloads_loaded_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reconfiguring a loaded entry reloads it without the deprecated helper."""
+    patch_key, _, entry = setup_mock_entry(CONFIG_ANDROID_DEFAULT, MP_DOMAIN)
+    entry.add_to_hass(hass)
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.update_listeners
+
+        result = await entry.start_reconfigure_flow(hass)
+        with patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=RECONFIGURE_INPUT
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_HOST] == RECONFIGURE_HOST
+    assert "has an update listener" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("flow_input", "connect_kwargs", "error"),
+    [
+        pytest.param(
+            RECONFIGURE_INPUT,
+            {"return_value": (None, "Error")},
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            RECONFIGURE_INPUT, {"side_effect": TypeError}, "unknown", id="unknown"
+        ),
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {
+                    CONF_ADB_SERVER_IP: "127.0.0.1",
+                    CONF_ADBKEY: ADBKEY,
+                },
+            },
+            {"return_value": (MockConfigDevice(), None)},
+            "key_and_server",
+            id="key_and_server",
+        ),
+        pytest.param(
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_MORE_OPTIONS: {CONF_ADBKEY: ADBKEY},
+            },
+            {"return_value": (MockConfigDevice(), None)},
+            "adbkey_not_file",
+            id="adbkey_not_file",
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    flow_input: dict[str, Any],
+    connect_kwargs: dict[str, Any],
+    error: str,
+) -> None:
+    """Test errors during reconfiguration and recovering from them."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_PYTHON_ADB, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(CONNECT_METHOD, **connect_kwargs):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=flow_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with (
+        patch(CONNECT_METHOD, return_value=(MockConfigDevice(), None)),
+        PATCH_SETUP_ENTRY,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=RECONFIGURE_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**CONFIG_PYTHON_ADB, CONF_HOST: RECONFIGURE_HOST}
+
+
+@pytest.mark.parametrize(
+    ("eth_mac", "wifi_mac"),
+    [
+        pytest.param(None, WIFI_MAC, id="different_device"),
+        pytest.param(INVALID_MAC, None, id="invalid_mac"),
+    ],
+)
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, eth_mac: str | None, wifi_mac: str | None
+) -> None:
+    """Test reconfiguring to a different device aborts."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_PYTHON_ADB, unique_id=ETH_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        CONNECT_METHOD, return_value=(MockConfigDevice(eth_mac, wifi_mac), None)
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=RECONFIGURE_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == CONFIG_PYTHON_ADB

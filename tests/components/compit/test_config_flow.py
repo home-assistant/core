@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.compit.config_flow import CannotConnect, InvalidAuth
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import CONFIG_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_success(
@@ -38,6 +37,7 @@ async def test_async_step_user_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG_INPUT[CONF_EMAIL]
     assert result["data"] == CONFIG_INPUT
+    assert result["result"].unique_id == CONFIG_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

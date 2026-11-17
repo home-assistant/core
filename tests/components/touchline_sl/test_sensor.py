@@ -3,13 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import make_mock_module, make_mock_zone
-
-from tests.common import MockConfigEntry
 
 BATTERY_ENTITY_ID = "sensor.zone_1_zone_1_battery"
 

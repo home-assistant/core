@@ -1,20 +1,21 @@
 """Test the onboarding views."""
 
+from http import HTTPStatus
 from io import StringIO
 from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import register_auth_provider
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import backup, onboarding
 from homeassistant.components.backup import DOMAIN
+from homeassistant.components.http.const import MAX_UNAUTHENTICATED_BODY_SIZE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.common import register_auth_provider
-from tests.typing import ClientSessionGenerator
 
 
 def mock_onboarding_storage(hass_storage, data):
@@ -243,6 +244,32 @@ async def test_onboarding_backup_restore(
     mock_restore.assert_called_once_with("abc123", **expected_kwargs)
 
 
+async def test_onboarding_backup_restore_body_too_large(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test restore backup rejects large bodies."""
+    mock_onboarding_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
+    ) as mock_restore:
+        resp = await client.post(
+            "/api/onboarding/backup/restore",
+            data=b"a" * (MAX_UNAUTHENTICATED_BODY_SIZE + 1),
+            headers={"Content-Type": "application/json"},
+        )
+    assert resp.status == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+    mock_restore.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("params", "restore_error", "expected_status", "expected_json", "restore_calls"),
     [
@@ -253,8 +280,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: required key"
-                    " not provided @ data['agent_id']"
+                    "Message format incorrect: required key not provided at 'agent_id'"
                 )
             },
             0,
@@ -266,8 +292,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: required key"
-                    " not provided @ data['backup_id']"
+                    "Message format incorrect: required key not provided at 'backup_id'"
                 )
             },
             0,
@@ -283,9 +308,7 @@ async def test_onboarding_backup_restore(
             400,
             {
                 "message": (
-                    "Message format incorrect: expected bool"
-                    " for dictionary value"
-                    " @ data['restore_database']"
+                    "Message format incorrect: expected bool at 'restore_database'"
                 )
             },
             0,
@@ -304,7 +327,7 @@ async def test_onboarding_backup_restore(
                     "Message format incorrect: expected"
                     " Folder or one of 'share',"
                     " 'addons/local', 'ssl', 'media'"
-                    " @ data['restore_folders'][0]"
+                    " at 'restore_folders[0]'"
                 )
             },
             0,

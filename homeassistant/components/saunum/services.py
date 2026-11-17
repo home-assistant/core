@@ -1,7 +1,9 @@
 """Define services for the Saunum integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 
+import probatio
 from pysaunum import (
     DEFAULT_DURATION,
     DEFAULT_FAN_DURATION,
@@ -11,7 +13,6 @@ from pysaunum import (
     MAX_TEMPERATURE,
     MIN_TEMPERATURE,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -19,11 +20,19 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN
 
-ATTR_DURATION = "duration"
-ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_FAN_DURATION = "fan_duration"
 
-SERVICE_START_SESSION = "start_session"
+class LeilSaunaService(StrEnum):
+    """Store keys for Saunum services."""
+
+    START_SESSION = "start_session"
+
+
+class LeilSaunaServiceArgument(StrEnum):
+    """Store keys for Saunum service arguments."""
+
+    DURATION = "duration"
+    TARGET_TEMPERATURE = "target_temperature"
+    FAN_DURATION = "fan_duration"
 
 
 @callback
@@ -32,26 +41,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_START_SESSION,
+        LeilSaunaService.START_SESSION,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Optional(
-                ATTR_DURATION, default=timedelta(minutes=DEFAULT_DURATION)
-            ): vol.All(
+            probatio.Optional(
+                LeilSaunaServiceArgument.DURATION,
+                default=timedelta(minutes=DEFAULT_DURATION),
+            ): probatio.All(
                 cv.time_period,
-                vol.Range(
+                probatio.Range(
                     min=timedelta(minutes=1),
                     max=timedelta(minutes=MAX_DURATION),
                 ),
             ),
-            vol.Optional(ATTR_TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE): vol.All(
-                cv.positive_int, vol.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE)
+            probatio.Optional(
+                LeilSaunaServiceArgument.TARGET_TEMPERATURE, default=DEFAULT_TEMPERATURE
+            ): probatio.All(
+                cv.positive_int,
+                probatio.Range(min=MIN_TEMPERATURE, max=MAX_TEMPERATURE),
             ),
-            vol.Optional(
-                ATTR_FAN_DURATION, default=timedelta(minutes=DEFAULT_FAN_DURATION)
-            ): vol.All(
+            probatio.Optional(
+                LeilSaunaServiceArgument.FAN_DURATION,
+                default=timedelta(minutes=DEFAULT_FAN_DURATION),
+            ): probatio.All(
                 cv.time_period,
-                vol.Range(
+                probatio.Range(
                     min=timedelta(minutes=1),
                     max=timedelta(minutes=MAX_FAN_DURATION),
                 ),

@@ -4,22 +4,27 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
-
-from homeassistant.components.event import DOMAIN, EventEntity
-from homeassistant.components.event.const import ATTR_EVENT_TYPE
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntity, setup_test_component_platform
-from tests.components.common import (
+from pytest_homeassistant.common import MockEntity, setup_test_component_platform
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.event import (
+    DOMAIN,
+    EventEntity,
+    EventEntityStateAttribute,
+)
+from homeassistant.components.event.trigger import TRIGGERS
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 class _MockEventEntity(MockEntity, EventEntity):
@@ -48,6 +53,11 @@ async def target_events(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "event")
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "received": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -71,6 +81,11 @@ async def test_event_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("event"),
@@ -87,14 +102,18 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -109,14 +128,18 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "other_event"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -130,28 +153,36 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_long_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_long_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "other_event"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "other_event"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:03.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -172,14 +203,18 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -200,14 +235,18 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -228,21 +267,27 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },
@@ -257,7 +302,9 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:00.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
@@ -271,14 +318,18 @@ async def test_event_trigger_options_validation(
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:01.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 0,
                 },
                 {
                     "included_state": {
                         "state": "2026-01-01T00:00:02.000+00:00",
-                        "attributes": {ATTR_EVENT_TYPE: "button_press"},
+                        "attributes": {
+                            EventEntityStateAttribute.EVENT_TYPE: "button_press"
+                        },
                     },
                     "count": 1,
                 },

@@ -29,8 +29,7 @@ async def _set_charging_enabled(
             translation_key="set_charging_enabled_on_auto_charge",
         )
     await coordinator.technove.set_charging_enabled(enabled=enabled)
-    coordinator.data.info.is_session_active = enabled
-    coordinator.async_set_updated_data(coordinator.data)
+    await coordinator.async_request_refresh()
 
 
 async def _enable_charging(coordinator: TechnoVEDataUpdateCoordinator) -> None:
@@ -45,6 +44,7 @@ async def _set_auto_charge(
     coordinator: TechnoVEDataUpdateCoordinator, enabled: bool
 ) -> None:
     await coordinator.technove.set_auto_charge(enabled=enabled)
+    await coordinator.async_request_refresh()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +68,6 @@ SWITCHES = [
     TechnoVESwitchDescription(
         key="session_active",
         translation_key="session_active",
-        entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda station: station.info.is_session_active,
         turn_on_fn=_enable_charging,
         turn_off_fn=_disable_charging,

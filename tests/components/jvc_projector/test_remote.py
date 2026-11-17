@@ -1,8 +1,9 @@
 """Tests for JVC Projector remote platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -13,8 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "remote.jvc_projector"
 
@@ -31,6 +30,7 @@ async def test_entity_state(
     assert entity_registry.async_get(entity.entity_id)
 
 
+@patch("homeassistant.components.jvc_projector.remote.POWER_SLEEP", 0)
 async def test_commands(
     hass: HomeAssistant,
     mock_device: MagicMock,

@@ -866,8 +866,11 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         if description is not None:
             self.entity_description = description
+            sensor_name = description.name
         else:
-            self._attr_name = pysma_sensor.name
+            sensor_name = pysma_sensor.name
+        device_name = coordinator.data.sma_device_info.name
+        self._attr_name = f"{device_name or 'SMA'} {sensor_name}"
 
         protocol = "https" if entry.data[CONF_SSL] else "http"
         url = f"{protocol}://{entry.data[CONF_HOST]}"
@@ -881,7 +884,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=coordinator.data.sma_device_info.manufacturer,
             model=coordinator.data.sma_device_info.type,
-            name=coordinator.data.sma_device_info.name,
+            name=device_name,
             sw_version=coordinator.data.sma_device_info.sw_version,
             serial_number=coordinator.data.sma_device_info.serial,
         )
@@ -892,17 +895,6 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.
         self._sensor.enabled = False
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the sensor prefixed with the device name."""
-        if self._attr_device_info is None or not (
-            name_prefix := self._attr_device_info.get("name")
-        ):
-            name_prefix = "SMA"
-
-        return f"{name_prefix} {super().name}"
 
     @property
     @override

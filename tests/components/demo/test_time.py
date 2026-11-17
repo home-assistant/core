@@ -5,11 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -45,8 +45,11 @@ async def test_set_value(hass: HomeAssistant) -> None:
     """Test set value service."""
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_TIME, ATTR_TIME: "01:02:03"},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_TIME,
+            TimeServiceArgument.TIME: "01:02:03",
+        },
         blocking=True,
     )
     state = hass.states.get(ENTITY_TIME)

@@ -5,11 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
     DOMAIN,
@@ -21,14 +23,21 @@ from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 # Test constants
 TEST_PROVISIONING_KEY = "test_prov_key"
 TEST_PROVISIONING_SECRET = "test_prov_secret"
 TEST_RECORD_NUMBER = "site_12345"
 TEST_RECORD_NAME = "My Test Site"
 MAX_POLLING_ATTEMPTS = 60
+
+
+def _mock_claimed_client() -> MagicMock:
+    """Return a mocked WebhookClient for a claimed device."""
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = TEST_RECORD_NUMBER
+    mock_client.recordName = TEST_RECORD_NAME
+    return mock_client
 
 
 @pytest.fixture(name="mock_polling_interval", autouse=True)
@@ -44,7 +53,7 @@ def mock_polling_interval_fixture() -> Generator[int]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.energyid.async_setup_entry", return_value=True
+        "homeassistant.components.energyid.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -73,21 +82,69 @@ async def test_config_flow_user_step_success_claimed(hass: HomeAssistant) -> Non
                 CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
             },
         )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "directives"
+        assert result2["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_ENABLE_DIRECTIVES: True}
+        )
         await hass.async_block_till_done()
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == TEST_RECORD_NAME
-        assert result2["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
-        assert result2["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
-        assert result2["description"] == "add_sensor_mapping_hint"
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == TEST_RECORD_NAME
+        assert result3["data"][CONF_PROVISIONING_KEY] == TEST_PROVISIONING_KEY
+        assert result3["data"][CONF_PROVISIONING_SECRET] == TEST_PROVISIONING_SECRET
+        assert result3["options"] == {CONF_ENABLE_DIRECTIVES: True}
+        assert result3["description"] == "add_sensor_mapping_hint"
 
         # Check unique_id is set correctly
-        entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        entry = hass.config_entries.async_get_entry(result3["result"].entry_id)
         # For initially claimed devices, unique_id should be
         # the device_id, not record_number
         assert entry.unique_id.startswith("homeassistant_eid_")
         assert CONF_DEVICE_ID in entry.data
         assert entry.data[CONF_DEVICE_ID] == entry.unique_id
+
+
+async def test_options_flow_enables_automatic_directive_discovery(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test users can opt into every authorized signal without reconnecting."""
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: False}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_ENABLE_DIRECTIVES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_ENABLE_DIRECTIVES: True}
+
+
+async def test_options_flow_defaults_reflect_current_choice(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options form preselects the previously stored choice."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_ENABLE_DIRECTIVES: True},
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["data_schema"]({}) == {CONF_ENABLE_DIRECTIVES: True}
 
 
 async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> None:
@@ -134,12 +191,20 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
         )
         assert result_done["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
-        final_result = await hass.config_entries.flow.async_configure(
+        directives_result = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
+        )
+        assert directives_result["type"] is FlowResultType.FORM
+        assert directives_result["step_id"] == "directives"
+
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
         )
         await hass.async_block_till_done()
 
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["options"] == {CONF_ENABLE_DIRECTIVES: False}
+        assert final_result["result"].unique_id == final_result["data"][CONF_DEVICE_ID]
         assert final_result["title"] == TEST_RECORD_NAME
         assert final_result["description"] == "add_sensor_mapping_hint"
 
@@ -294,14 +359,20 @@ async def test_multiple_different_devices_allowed(hass: HomeAssistant) -> None:
         )
 
         # Should succeed because device_id will be different
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == TEST_RECORD_NAME
-        assert result2["data"][CONF_PROVISIONING_KEY] == "key2"
-        assert result2["data"][CONF_PROVISIONING_SECRET] == "secret2"
-        assert result2["description"] == "add_sensor_mapping_hint"
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "directives"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == TEST_RECORD_NAME
+        assert result3["data"][CONF_PROVISIONING_KEY] == "key2"
+        assert result3["data"][CONF_PROVISIONING_SECRET] == "secret2"
+        assert result3["description"] == "add_sensor_mapping_hint"
 
         # Verify unique_id is set
-        new_entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+        new_entry = hass.config_entries.async_get_entry(result3["result"].entry_id)
         assert new_entry.unique_id is not None
         assert new_entry.unique_id != entry.unique_id  # Different from first entry
 
@@ -329,6 +400,25 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "cannot_connect"
 
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "directives"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
     """Test unexpected error during authentication."""
@@ -352,6 +442,25 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "unknown_auth_error"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=_mock_claimed_client(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "directives"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_external_step_claimed_during_display(
@@ -401,12 +510,20 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         assert result_claimed["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
-        final_result = await hass.config_entries.flow.async_configure(
+        directives_result = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
+        )
+        assert directives_result["type"] is FlowResultType.FORM
+        assert directives_result["step_id"] == "directives"
+
+        final_result = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
         )
         await hass.async_block_till_done()
 
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
+        assert final_result["options"] == {CONF_ENABLE_DIRECTIVES: False}
+        assert final_result["result"].unique_id == final_result["data"][CONF_DEVICE_ID]
 
 
 async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) -> None:
@@ -441,19 +558,28 @@ async def test_config_flow_auth_and_claim_step_not_claimed(hass: HomeAssistant) 
         assert result3["step_id"] == "auth_and_claim"
 
 
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param("homeassistant_eid_existing_device", id="claimed_before_setup"),
+        pytest.param(None, id="claimed_during_setup"),
+    ],
+)
 async def test_config_flow_reauth_success(
     hass: HomeAssistant,
+    unique_id: str | None,
 ) -> None:
     """Test the reauthentication flow for EnergyID integration (success path)."""
     # Existing config entry
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="site_12345",
+        unique_id=unique_id,
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
             CONF_DEVICE_NAME: "Existing Device",
+            "record_number": "site_12345",
         },
     )
     entry.add_to_hass(hass)
@@ -469,11 +595,7 @@ async def test_config_flow_reauth_success(
         return_value=mock_client,
     ):
         # Start reauth flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         assert result["type"] == "form"
         assert result["step_id"] == "reauth_confirm"
 
@@ -488,10 +610,49 @@ async def test_config_flow_reauth_success(
         await hass.async_block_till_done()
 
         assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
         # Entry should be updated
         updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
         assert updated_entry.data[CONF_PROVISIONING_SECRET] == "new_secret"
+
+
+async def test_config_flow_reauth_wrong_record(hass: HomeAssistant) -> None:
+    """Test reauthentication aborts when the credentials link another record."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="homeassistant_eid_existing_device",
+        data={
+            CONF_PROVISIONING_KEY: "old_key",
+            CONF_PROVISIONING_SECRET: "old_secret",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
+            CONF_DEVICE_NAME: "Existing Device",
+            "record_number": "site_12345",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client = MagicMock()
+    mock_client.authenticate = AsyncMock(return_value=True)
+    mock_client.recordNumber = "other_site"
+    mock_client.recordName = "Other Site"
+
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        return_value=mock_client,
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_account"
+    assert entry.data[CONF_PROVISIONING_KEY] == "old_key"
 
 
 @pytest.mark.parametrize(
@@ -538,17 +699,45 @@ async def test_config_flow_client_response_error(
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == expected_error
 
+        mock_client.authenticate = AsyncMock(return_value=True)
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: TEST_PROVISIONING_KEY,
+                CONF_PROVISIONING_SECRET: TEST_PROVISIONING_SECRET,
+            },
+        )
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["step_id"] == "directives"
 
-async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
-    """Test reauth flow when device needs to be claimed."""
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("claimed_record", "reason", "expected_key"),
+    [
+        pytest.param(TEST_RECORD_NUMBER, "reauth_successful", "new_key", id="same"),
+        pytest.param("other_site", "wrong_account", "old_key", id="other_record"),
+    ],
+)
+async def test_config_flow_reauth_needs_claim(
+    hass: HomeAssistant, claimed_record: str, reason: str, expected_key: str
+) -> None:
+    """Test a reauth that needs a claim checks the record once it is claimed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="site_12345",
+        unique_id="homeassistant_eid_existing_device",
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "existing_device",
+            CONF_DEVICE_ID: "homeassistant_eid_existing_device",
             CONF_DEVICE_NAME: "Existing Device",
+            "record_number": TEST_RECORD_NUMBER,
         },
     )
     entry.add_to_hass(hass)
@@ -557,18 +746,14 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
     mock_client = MagicMock()
     mock_client.authenticate = AsyncMock(return_value=False)
     mock_client.get_claim_info.return_value = {"claim_url": "http://claim.me"}
+    claimed = _mock_claimed_client()
+    claimed.recordNumber = claimed_record
 
-    with (
-        patch(
-            "homeassistant.components.energyid.config_flow.WebhookClient",
-            return_value=mock_client,
-        ),
+    with patch(
+        "homeassistant.components.energyid.config_flow.WebhookClient",
+        side_effect=[mock_client, claimed],
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "reauth", "entry_id": entry.entry_id},
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
         # Check initial reauth form
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
@@ -583,6 +768,17 @@ async def test_config_flow_reauth_needs_claim(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.EXTERNAL_STEP
         assert result2["step_id"] == "auth_and_claim"
+
+        result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        assert result3["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result4 = await hass.config_entries.flow.async_configure(result2["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == reason
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data[CONF_PROVISIONING_KEY] == expected_key
 
 
 async def test_async_get_supported_subentry_types(hass: HomeAssistant) -> None:
@@ -754,11 +950,13 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
     """Test that reauth flow shows error when authentication fails with 401."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="homeassistant_eid_test_device",
         data={
             CONF_PROVISIONING_KEY: "old_key",
             CONF_PROVISIONING_SECRET: "old_secret",
-            CONF_DEVICE_ID: "test_device_id",
+            CONF_DEVICE_ID: "homeassistant_eid_test_device",
             CONF_DEVICE_NAME: "test_device_name",
+            "record_number": TEST_RECORD_NUMBER,
         },
     )
     mock_entry.add_to_hass(hass)
@@ -776,14 +974,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.config_flow.WebhookClient",
         return_value=mock_client,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_entry.entry_id,
-            },
-            data=mock_entry.data,
-        )
+        result = await mock_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
@@ -796,6 +987,20 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"]["base"] == "invalid_auth"
+
+        mock_client.authenticate.side_effect = None
+        mock_client.recordNumber = TEST_RECORD_NUMBER
+        mock_client.recordName = TEST_RECORD_NAME
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_PROVISIONING_KEY: "new_key",
+                CONF_PROVISIONING_SECRET: "new_secret",
+            },
+        )
+        await hass.async_block_till_done()
+        assert result3["type"] is FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
 
 
 async def test_polling_cancellation_on_auth_failure(hass: HomeAssistant) -> None:
@@ -928,7 +1133,14 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
-        assert result_done["type"] is FlowResultType.CREATE_ENTRY
+        assert result_done["type"] is FlowResultType.FORM
+        assert result_done["step_id"] == "directives"
+
+        result_entry = await hass.config_entries.flow.async_configure(
+            result_external["flow_id"], {CONF_ENABLE_DIRECTIVES: False}
+        )
+        assert result_entry["type"] is FlowResultType.CREATE_ENTRY
+        assert result_entry["result"].unique_id == result_entry["data"][CONF_DEVICE_ID]
 
         # Verify polling was cancelled - the auth count should not increase
         assert auth_call_count == 2

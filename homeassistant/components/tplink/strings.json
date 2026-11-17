@@ -3,9 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
       "camera_creds": "You have to set both username and password",
@@ -93,7 +91,7 @@
           "password": "Your TP-Link cloud password which is case-sensitive.",
           "username": "Your TP-Link cloud username which is the full email and is case-sensitive."
         },
-        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
+        "description": "The device requires authentication, please input your TP-Link credentials below. Note that both email and password are case-sensitive.",
         "title": "Authenticate"
       }
     }

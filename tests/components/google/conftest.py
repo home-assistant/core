@@ -1,7 +1,7 @@
 """Test configuration and mocks for the google integration."""
 
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-import datetime
+import datetime as dt
 import http
 import time
 from typing import Any
@@ -11,6 +11,8 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import OAuth2Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import yaml
 
 from homeassistant.components.application_credentials import (
@@ -22,9 +24,6 @@ from homeassistant.components.google import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ApiResult = Callable[[dict[str, Any]], None]
 type ComponentSetup = Callable[[], Awaitable[bool]]
@@ -174,16 +173,14 @@ def token_scopes() -> list[str]:
 
 
 @pytest.fixture
-def token_expiry() -> datetime.datetime:
+def token_expiry() -> dt.datetime:
     """Expiration time for credentials used in the test."""
     # OAuth library returns an offset-naive timestamp
-    return dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(hours=1)
+    return dt_util.utcnow().replace(tzinfo=None) + dt.timedelta(hours=1)
 
 
 @pytest.fixture
-def creds(
-    token_scopes: list[str], token_expiry: datetime.datetime
-) -> OAuth2Credentials:
+def creds(token_scopes: list[str], token_expiry: dt.datetime) -> OAuth2Credentials:
     """Fixture that defines creds used in the test."""
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",

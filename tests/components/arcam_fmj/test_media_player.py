@@ -1,12 +1,23 @@
 """Tests for arcam fmj receivers."""
 
 from collections.abc import Generator
+import logging
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
-from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.codecs import DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.errors import (
+    CommandInvalidAtThisTime,
+    CommandNotRecognised,
+    ConnectionFailed,
+    NotConnectedException,
+    ResponseException,
+    UnsupportedCommand,
+    UnsupportedZone,
+)
 from arcam.fmj.state import State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
@@ -16,15 +27,13 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
-    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_BROWSE_MEDIA,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
@@ -34,6 +43,8 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
     MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
@@ -42,8 +53,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -63,6 +72,25 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("player_setup")
+async def test_browse_media_without_presets(
+    hass: HomeAssistant, state_1: State
+) -> None:
+    """Test browsing when the receiver has no preset details."""
+    state_1.get_preset_details.return_value = None
+    response = await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    media = response[MOCK_ENTITY_ID]
+
+    assert media.media_content_id == "root"
+    assert media.children == []
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -180,14 +208,22 @@ async def test_update(hass: HomeAssistant, state_1: State) -> None:
     state_1.update.assert_called_with()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ConnectionFailed(), id="connection_failed"),
+        pytest.param(NotConnectedException(), id="not_connected"),
+    ],
+)
 @pytest.mark.usefixtures("player_setup")
-async def test_update_lost(
+async def test_update_unreachable(
     hass: HomeAssistant,
     state_1: State,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Test update, with connection loss is ignored."""
-    state_1.update.side_effect = ConnectionFailed()
+    """Test a lost connection marks the entity unavailable and logs at info."""
+    state_1.update.side_effect = exception
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -195,7 +231,13 @@ async def test_update_lost(
         service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
-    state_1.update.assert_called_with()
+
+    assert hass.states.get(MOCK_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        "homeassistant.components.arcam_fmj.coordinator",
+        logging.INFO,
+        "Arcam FMJ zone 1 is unavailable: Connection failed to the device",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
@@ -375,7 +417,7 @@ async def test_sound_mode(
     """Test selection sound mode."""
     state_1.get_decode_mode.return_value = mode_enum
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_SOUND_MODE) == mode
+    assert data.attributes.get(MediaPlayerEntityStateAttribute.SOUND_MODE) == mode
 
 
 @pytest.mark.parametrize(
@@ -397,7 +439,10 @@ async def test_sound_mode_list(
     """Test sound mode list."""
     state_1.get_decode_modes.return_value = modes_enum
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_SOUND_MODE_LIST) == modes
+    assert (
+        data.attributes.get(MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST)
+        == modes
+    )
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -407,15 +452,21 @@ async def test_is_volume_muted(
     """Test muted."""
     state_1.get_mute.return_value = True
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
+    assert (
+        data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED) is True
+    )
 
     state_1.get_mute.return_value = False
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
+    assert (
+        data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED) is False
+    )
 
     state_1.get_mute.return_value = None
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is None
+    assert (
+        data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED) is None
+    )
 
 
 @pytest.mark.usefixtures("player_setup")
@@ -423,15 +474,21 @@ async def test_volume_level(hass: HomeAssistant, client: Mock, state_1: State) -
     """Test volume."""
     state_1.get_volume.return_value = 0
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 0.0)
+    assert isclose(
+        data.attributes[MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL], 0.0
+    )
 
     state_1.get_volume.return_value = 50
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 50.0 / 99)
+    assert isclose(
+        data.attributes[MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL], 50.0 / 99
+    )
 
     state_1.get_volume.return_value = 99
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 1.0)
+    assert isclose(
+        data.attributes[MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL], 1.0
+    )
 
     state_1.get_volume.return_value = None
     data = await update(hass, client, MOCK_ENTITY_ID)
@@ -454,17 +511,40 @@ async def test_set_volume_level(
     state_1.set_volume.assert_called_with(call)
 
 
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        pytest.param(ConnectionFailed(), "connection_failed", id="connection_failed"),
+        pytest.param(NotConnectedException(), "connection_failed", id="not_connected"),
+        pytest.param(TimeoutError(), "connection_failed", id="timeout"),
+        pytest.param(
+            UnsupportedCommand(), "command_not_supported", id="unsupported_command"
+        ),
+        pytest.param(UnsupportedZone(), "command_not_supported", id="unsupported_zone"),
+        pytest.param(
+            CommandNotRecognised(), "command_not_supported", id="not_recognised"
+        ),
+        pytest.param(
+            CommandInvalidAtThisTime(), "command_rejected", id="invalid_at_this_time"
+        ),
+        pytest.param(ResponseException(), "command_rejected", id="response_exception"),
+    ],
+)
 @pytest.mark.usefixtures("player_setup")
-async def test_set_volume_level_lost(hass: HomeAssistant, state_1: State) -> None:
-    """Test setting volume, with a lost connection."""
+async def test_set_volume_level_error(
+    hass: HomeAssistant,
+    state_1: State,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test library errors are converted to translated errors."""
 
-    state_1.set_volume.side_effect = ConnectionFailed()
+    state_1.set_volume.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
         check=lambda e: (
-            e.translation_domain == "arcam_fmj"
-            and e.translation_key == "connection_failed"
+            e.translation_domain == "arcam_fmj" and e.translation_key == translation_key
         ),
     ):
         await hass.services.async_call(
@@ -495,7 +575,10 @@ async def test_media_content_type(
     """Test content type deduction."""
     state_1.get_source.return_value = source
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == media_content_type
+    assert (
+        data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE)
+        == media_content_type
+    )
 
 
 @pytest.mark.parametrize(
@@ -523,7 +606,7 @@ async def test_media_channel(
     state_1.get_rds_information.return_value = rds
     state_1.get_source.return_value = source
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_CHANNEL) == channel
+    assert data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_CHANNEL) == channel
 
 
 @pytest.mark.parametrize(
@@ -547,7 +630,7 @@ async def test_media_artist(
     state_1.get_dls_pdt.return_value = dls
     state_1.get_source.return_value = source
     data = await update(hass, client, MOCK_ENTITY_ID)
-    assert data.attributes.get(ATTR_MEDIA_ARTIST) == artist
+    assert data.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_ARTIST) == artist
 
 
 @pytest.mark.parametrize(

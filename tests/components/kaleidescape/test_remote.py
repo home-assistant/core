@@ -24,112 +24,65 @@ async def test_entity(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY_ID)
 
 
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        pytest.param(SERVICE_TURN_ON, "leave_standby", id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, "enter_standby", id="turn_off"),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration")
-async def test_commands(hass: HomeAssistant, mock_device: MagicMock) -> None:
-    """Test service calls."""
+async def test_turn_on_off(
+    hass: HomeAssistant, mock_device: MagicMock, service: str, method: str
+) -> None:
+    """Test turning the device on and off."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    assert mock_device.leave_standby.call_count == 1
+    getattr(mock_device, method).assert_awaited_once_with()
 
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert mock_device.enter_standby.call_count == 1
 
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["select"]},
-        blocking=True,
-    )
-    assert mock_device.select.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["up"]},
-        blocking=True,
-    )
-    assert mock_device.up.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["down"]},
-        blocking=True,
-    )
-    assert mock_device.down.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["left"]},
-        blocking=True,
-    )
-    assert mock_device.left.call_count == 1
-
+@pytest.mark.parametrize(
+    "command",
+    [
+        "select",
+        "up",
+        "down",
+        "left",
+        "right",
+        "cancel",
+        "play",
+        "pause",
+        "stop",
+        "next",
+        "previous",
+        "replay",
+        "scan_forward",
+        "scan_reverse",
+        "intermission_toggle",
+        "status_and_settings",
+        "go_movies",
+        "go_movie_covers",
+        "go_movie_list",
+        "go_movie_collections",
+        "menu_toggle",
+    ],
+)
+@pytest.mark.usefixtures("mock_integration")
+async def test_send_command(
+    hass: HomeAssistant, mock_device: MagicMock, command: str
+) -> None:
+    """Test each command calls the device method of the same name."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["right"]},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: [command]},
         blocking=True,
     )
-    assert mock_device.right.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["cancel"]},
-        blocking=True,
-    )
-    assert mock_device.cancel.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["replay"]},
-        blocking=True,
-    )
-    assert mock_device.replay.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["scan_forward"]},
-        blocking=True,
-    )
-    assert mock_device.scan_forward.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["scan_reverse"]},
-        blocking=True,
-    )
-    assert mock_device.scan_reverse.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["go_movie_covers"]},
-        blocking=True,
-    )
-    assert mock_device.go_movie_covers.call_count == 1
-
-    await hass.services.async_call(
-        REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_COMMAND: ["menu_toggle"]},
-        blocking=True,
-    )
-    assert mock_device.menu_toggle.call_count == 1
+    getattr(mock_device, command).assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("mock_device", "mock_integration")

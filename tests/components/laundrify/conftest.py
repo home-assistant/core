@@ -1,10 +1,11 @@
 """Configure py.test."""
 
-import json
 from unittest.mock import AsyncMock, patch
 
 from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.laundrify.const import DOMAIN, MANUFACTURER
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -12,15 +13,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
 
-from tests.common import MockConfigEntry, load_fixture
-from tests.typing import ClientSessionGenerator
-
 
 @pytest.fixture(name="mock_device")
 def laundrify_sensor_fixture() -> LaundrifyDevice:
     """Return a default Laundrify power sensor mock."""
     # Load test data from machines.json
-    machine_data = json.loads(load_fixture("laundrify/machines.json"))[0]
+    machine_data = load_json_array_fixture("laundrify/machines.json")[0]
 
     mock_device = AsyncMock(spec=LaundrifyDevice)
     mock_device.id = machine_data["id"]
@@ -70,7 +68,7 @@ def laundrify_api_fixture(hass_client: ClientSessionGenerator):
             "laundrify_aio.LaundrifyAPI.get_machines",
             return_value=[
                 LaundrifyDevice(machine, LaundrifyAPI)
-                for machine in json.loads(load_fixture("laundrify/machines.json"))
+                for machine in load_json_array_fixture("laundrify/machines.json")
             ],
         ),
     ):

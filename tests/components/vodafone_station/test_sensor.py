@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 from aiovodafone.exceptions import AlreadyLogged, CannotAuthenticate, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vodafone_station.const import LINE_TYPES, SCAN_INTERVAL
@@ -14,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(

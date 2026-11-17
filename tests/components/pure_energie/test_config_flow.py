@@ -14,10 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_full_user_flow_implementation(
-    hass: HomeAssistant, mock_pure_energie_config_flow: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pure_energie_config_flow")
+async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -39,10 +37,8 @@ async def test_full_user_flow_implementation(
     assert result["result"].unique_id == "aabbccddeeff"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_full_zeroconf_flow_implementationn(
-    hass: HomeAssistant, mock_pure_energie_config_flow: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry", "mock_pure_energie_config_flow")
+async def test_full_zeroconf_flow_implementationn(hass: HomeAssistant) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -78,20 +74,41 @@ async def test_full_zeroconf_flow_implementationn(
     assert result2["result"].unique_id == "aabbccddeeff"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_connection_error(
     hass: HomeAssistant, mock_pure_energie_config_flow: MagicMock
 ) -> None:
     """Test we show user form on Pure Energie connection error."""
-    mock_pure_energie_config_flow.device.side_effect = GridNetConnectionError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "example.com"},
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {}
+
+    mock_pure_energie_config_flow.device.side_effect = GridNetConnectionError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.com"},
     )
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
+
+    mock_pure_energie_config_flow.device.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "example.com"},
+    )
+
+    assert result.get("title") == "Pure Energie Meter"
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_connection_error(

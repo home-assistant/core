@@ -6,11 +6,11 @@ from aioairzone.common import TemperatureUnit
 
 from homeassistant.const import UnitOfTemperature
 
+CONF_MQTT_TOPIC: Final = "mqtt_topic"
 DOMAIN: Final = "airzone"
 MANUFACTURER: Final = "Airzone"
 
 AIOAIRZONE_DEVICE_TIMEOUT_SEC: Final = 10
-API_TEMPERATURE_STEP: Final = 0.5
 
 TEMP_UNIT_LIB_TO_HASS: Final[dict[TemperatureUnit, str]] = {
     TemperatureUnit.CELSIUS: UnitOfTemperature.CELSIUS,

@@ -3,16 +3,14 @@
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from .common import async_wait_recording_done
-
-from tests.common import get_system_health_info
-from tests.typing import RecorderInstanceGenerator
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
@@ -128,3 +126,42 @@ async def test_recorder_system_health_crashed_recorder_runs_table(
         "database_engine": SupportedDialect.SQLITE.value,
         "database_version": ANY,
     }
+
+
+@pytest.mark.parametrize("db_engine", [SupportedDialect.POSTGRESQL])
+@pytest.mark.parametrize(
+    "db_url",
+    [
+        "postgresql://homeassistant:secret@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa#ss@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa?ss@192.168.0.2:5432/home_assistant",
+        "postgresql://homeassistant:pa/ss@192.168.0.2:5432/home_assistant",
+    ],
+    ids=["plain", "hash", "question_mark", "slash"],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_recorder_system_health_db_name_with_special_characters(
+    hass: HomeAssistant,
+    db_engine: SupportedDialect,
+    db_url: str,
+    recorder_dialect_name: None,
+) -> None:
+    """Test the database name is read correctly when the password needs escaping.
+
+    Characters that are structural in a generic URL, such as ``#`` and ``?``,
+    must not be allowed to swallow the database name that follows them.
+    """
+    assert await async_setup_component(hass, "system_health", {})
+    await async_wait_recording_done(hass)
+
+    instance = get_instance(hass)
+    with (
+        patch.object(instance, "db_url", db_url),
+        patch(
+            "sqlalchemy.orm.session.Session.execute",
+            return_value=Mock(scalar=Mock(return_value=("1048576"))),
+        ) as execute_mock,
+    ):
+        await get_system_health_info(hass, "recorder")
+
+    assert execute_mock.call_args.args[1] == {"database_name": "home_assistant"}

@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.upnp.const import (
@@ -36,8 +37,6 @@ from .conftest import (
     TEST_UDN,
     TEST_USN,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures(
@@ -71,6 +70,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -105,6 +105,7 @@ async def test_flow_ssdp_ignore(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant) -> None:
@@ -180,6 +181,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: None,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
@@ -428,6 +430,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -478,6 +481,7 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_options_flow(

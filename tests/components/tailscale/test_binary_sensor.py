@@ -1,16 +1,18 @@
 """Tests for the sensors provided by the Tailscale integration."""
 
-from homeassistant.components.binary_sensor import (
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.tailscale.const import DOMAIN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
-    BinarySensorDeviceClass,
+    EntityCategory,
 )
-from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_tailscale_binary_sensors(
@@ -29,6 +31,40 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Client"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
+
+    state = hass.states.get("binary_sensor.frencks_iphone_connected_to_control")
+    entry = entity_registry.async_get(
+        "binary_sensor.frencks_iphone_connected_to_control"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "123456_connected_to_control"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_ON
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "frencks-iphone Connected to control"
+    )
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )
+
+    state = hass.states.get("binary_sensor.host_no_connectivity_connected_to_control")
+    entry = entity_registry.async_get(
+        "binary_sensor.host_no_connectivity_connected_to_control"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "123458_connected_to_control"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "host-no-connectivity Connected to control"
+    )
+    assert (
+        state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.CONNECTIVITY
+    )
 
     state = hass.states.get("binary_sensor.frencks_iphone_key_expiry_disabled")
     entry = entity_registry.async_get(

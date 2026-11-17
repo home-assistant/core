@@ -1,15 +1,17 @@
 """Services for the Netatmo integration."""
 
+import probatio
+
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.service import async_register_platform_entity_service
 
-from .const import DOMAIN
+from .climate import THERM_MODES
+from .const import CAMERA_LIGHT_MODES, DOMAIN, NetatmoService, NetatmoServiceArgument
 from .coordinator import NetatmoConfigEntry, async_get_loaded_entry
-from .webhook import async_register_webhook, async_unregister_webhook
-
-SERVICE_REGISTER_WEBHOOK = "register_webhook"
-SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
 
 
 def _get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry:
@@ -37,24 +39,116 @@ def _deprecate(hass: HomeAssistant, service: str) -> None:
 
 async def _register_webhook(call: ServiceCall) -> None:
     """Handle the deprecated register_webhook action."""
-    _deprecate(call.hass, SERVICE_REGISTER_WEBHOOK)
-    entry = _get_loaded_entry(call.hass)
+    _deprecate(call.hass, NetatmoService.REGISTER_WEBHOOK)
+    manager = _get_loaded_entry(call.hass).runtime_data.webhook_manager
     # Drop any existing registration first so re-registering an already-active
     # webhook does not raise "Handler is already defined!".
-    await async_unregister_webhook(call.hass, entry)
-    await async_register_webhook(call.hass, entry)
+    await manager.async_unregister()
+    await manager.async_ensure_registered()
 
 
 async def _unregister_webhook(call: ServiceCall) -> None:
     """Handle the deprecated unregister_webhook action."""
-    _deprecate(call.hass, SERVICE_UNREGISTER_WEBHOOK)
-    await async_unregister_webhook(call.hass, _get_loaded_entry(call.hass))
+    _deprecate(call.hass, NetatmoService.UNREGISTER_WEBHOOK)
+    await _get_loaded_entry(call.hass).runtime_data.webhook_manager.async_unregister()
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Netatmo services."""
-    hass.services.async_register(DOMAIN, SERVICE_REGISTER_WEBHOOK, _register_webhook)
     hass.services.async_register(
-        DOMAIN, SERVICE_UNREGISTER_WEBHOOK, _unregister_webhook
+        DOMAIN, NetatmoService.REGISTER_WEBHOOK, _register_webhook
+    )
+    hass.services.async_register(
+        DOMAIN, NetatmoService.UNREGISTER_WEBHOOK, _unregister_webhook
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_PERSONS_HOME,
+        entity_domain=CAMERA_DOMAIN,
+        func="_service_set_persons_home",
+        schema={
+            probatio.Required(NetatmoServiceArgument.PERSONS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            )
+        },
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_PERSON_AWAY,
+        entity_domain=CAMERA_DOMAIN,
+        func="_service_set_person_away",
+        schema={probatio.Optional(NetatmoServiceArgument.PERSON): cv.string},
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_CAMERA_LIGHT,
+        entity_domain=CAMERA_DOMAIN,
+        func="_service_set_camera_light",
+        schema={
+            probatio.Required(NetatmoServiceArgument.CAMERA_LIGHT_MODE): probatio.In(
+                CAMERA_LIGHT_MODES
+            )
+        },
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_SCHEDULE,
+        entity_domain=CLIMATE_DOMAIN,
+        func="_async_service_set_schedule",
+        schema={probatio.Required(NetatmoServiceArgument.SCHEDULE_NAME): cv.string},
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
+        entity_domain=CLIMATE_DOMAIN,
+        func="_async_service_set_preset_mode_with_end_datetime",
+        schema={
+            probatio.Required(NetatmoServiceArgument.PRESET_MODE): probatio.In(
+                THERM_MODES
+            ),
+            probatio.Required(NetatmoServiceArgument.END_DATETIME): cv.datetime,
+        },
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_TEMPERATURE_WITH_END_DATETIME,
+        entity_domain=CLIMATE_DOMAIN,
+        func="_async_service_set_temperature_with_end_datetime",
+        schema={
+            probatio.Required(NetatmoServiceArgument.TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
+            ),
+            probatio.Required(NetatmoServiceArgument.END_DATETIME): cv.datetime,
+        },
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.SET_TEMPERATURE_WITH_TIME_PERIOD,
+        entity_domain=CLIMATE_DOMAIN,
+        func="_async_service_set_temperature_with_time_period",
+        schema={
+            probatio.Required(NetatmoServiceArgument.TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
+            ),
+            probatio.Required(NetatmoServiceArgument.TIME_PERIOD): probatio.All(
+                cv.time_period,
+                cv.positive_timedelta,
+            ),
+        },
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        NetatmoService.CLEAR_TEMPERATURE_SETTING,
+        entity_domain=CLIMATE_DOMAIN,
+        func="_async_service_clear_temperature_setting",
+        schema=None,
     )

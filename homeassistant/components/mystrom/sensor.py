@@ -1,10 +1,13 @@
 """Support for myStrom sensors of switches/plugs."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 from typing import Any, override
 
+from pymystrom.bulb import MyStromBulb
+from pymystrom.exceptions import MyStromConnectionError
 from pymystrom.pir import MyStromPir
 from pymystrom.switch import MyStromSwitch
 
@@ -29,12 +32,29 @@ from homeassistant.util.dt import utcnow
 from .const import DOMAIN, MANUFACTURER
 from .models import MyStromConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class MyStromSensorEntityDescription[_DeviceT](SensorEntityDescription):
     """Class describing mystrom sensor entities."""
 
     value_fn: Callable[[_DeviceT], float | None]
+    # Only needed where nothing else on the device polls; a switch is kept
+    # fresh by its own entity refreshing the shared device.
+    update_fn: Callable[[_DeviceT], Coroutine[Any, Any, None]] | None = None
+
+
+SENSOR_TYPES_BULB: tuple[MyStromSensorEntityDescription[MyStromBulb], ...] = (
+    MyStromSensorEntityDescription(
+        key="consumption",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda device: device.consumption,
+        update_fn=lambda device: device.get_state(),
+    ),
+)
 
 
 SENSOR_TYPES_PIR: tuple[MyStromSensorEntityDescription[MyStromPir], ...] = (
@@ -50,6 +70,7 @@ SENSOR_TYPES_PIR: tuple[MyStromSensorEntityDescription[MyStromPir], ...] = (
                 else None
             )
         ),
+        update_fn=lambda device: device.get_temperatures(),
     ),
     MyStromSensorEntityDescription(
         key="illuminance",
@@ -61,6 +82,7 @@ SENSOR_TYPES_PIR: tuple[MyStromSensorEntityDescription[MyStromPir], ...] = (
                 float(device.intensity) if device.intensity is not None else None
             )
         ),
+        update_fn=lambda device: device.get_light(),
     ),
 )
 
@@ -110,6 +132,11 @@ async def async_setup_entry(
 
     entities: list[MyStromSensorBase] = []
     match device:
+        case MyStromBulb():
+            entities = [
+                MyStromSensor(device, entry.title, description, info["mac"])
+                for description in SENSOR_TYPES_BULB
+            ]
         case MyStromPir():
             entities = [
                 MyStromSensor(device, entry.title, description, info["mac"])
@@ -139,7 +166,7 @@ class MyStromSensorBase(SensorEntity):
 
     def __init__(
         self,
-        device: MyStromSwitch,
+        device: MyStromSwitch | MyStromBulb | MyStromPir,
         name: str,
         key: str,
         mac: str,
@@ -179,6 +206,20 @@ class MyStromSensor[_DeviceT](MyStromSensorBase):
     def native_value(self) -> float | None:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+    async def async_update(self) -> None:
+        """Get the latest reading from the device."""
+        if (update_fn := self.entity_description.update_fn) is None:
+            return
+
+        try:
+            await update_fn(self.device)
+        except MyStromConnectionError:
+            if self.available:
+                self._attr_available = False
+                _LOGGER.error("No route to myStrom device")
+        else:
+            self._attr_available = True
 
 
 class MyStromSwitchUptimeSensor(MyStromSensorBase):

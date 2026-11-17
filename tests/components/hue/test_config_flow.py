@@ -5,8 +5,10 @@ from unittest.mock import Mock, patch
 
 from aiohue.discovery import URL_NUPNP
 from aiohue.errors import AiohueException, LinkButtonNotPressed
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker, ClientError
 
 from homeassistant import config_entries
 from homeassistant.components.hue import DOMAIN, config_flow, const
@@ -19,14 +21,11 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, ClientError
-
 
 @pytest.fixture(name="hue_setup", autouse=True)
 def hue_setup_fixture():
     """Mock hue entry setup."""
-    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.hue.async_setup_entry", return_value=None):
         yield
 
 
@@ -135,7 +134,7 @@ async def test_manual_flow_works(hass: HomeAssistant) -> None:
 
     with (
         patch.object(config_flow, "create_app_key", return_value="123456789"),
-        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -229,7 +228,7 @@ async def test_flow_bridges_discovered(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         assert result["data_schema"]({"id": "not-discovered"})
 
     result["data_schema"]({"id": "bla"})
@@ -254,7 +253,7 @@ async def test_flow_two_bridges_discovered_one_new(
     assert result["step_id"] == "init"
     assert result["data_schema"]({"id": "beer"})
     assert result["data_schema"]({"id": "manual"})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         assert not result["data_schema"]({"id": "bla"})
 
 
@@ -296,6 +295,13 @@ async def test_flow_link_unknown_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "linking"}
 
+    with patch.object(config_flow, "create_app_key", return_value="123456789"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
     """Test config flow ."""
@@ -320,6 +326,13 @@ async def test_flow_link_button_not_pressed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "register_failed"}
+
+    with patch.object(config_flow, "create_app_key", return_value="123456789"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_link_cannot_connect(hass: HomeAssistant) -> None:
@@ -400,7 +413,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(
             "homeassistant.components.hue.config_flow.create_app_key",
             return_value="123456789",
         ),
-        patch("homeassistant.components.hue.async_unload_entry", return_value=True),
+        patch("homeassistant.components.hue.async_unload_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

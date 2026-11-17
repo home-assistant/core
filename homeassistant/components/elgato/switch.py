@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import elgato_device_action
 
 PARALLEL_UPDATES = 1
 
@@ -91,16 +91,14 @@ class ElgatoSwitchEntity(ElgatoEntity, SwitchEntity):
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator.client, True)
-        await self.coordinator.async_request_refresh()
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator.client, False)
-        await self.coordinator.async_request_refresh()

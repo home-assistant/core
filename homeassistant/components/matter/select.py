@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast, override
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
+from matter_server.common import custom_clusters
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -48,6 +49,17 @@ PUMP_OPERATION_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.OperationModeEnum.kLocal: "local",
 }
 PUMP_OPERATION_MODE_MAP_REVERSE = {v: k for k, v in PUMP_OPERATION_MODE_MAP.items()}
+
+CAMERA_FEATURE_NIGHT_VISION = (
+    clusters.CameraAvStreamManagement.Bitmaps.Feature.kNightVision
+)
+
+NIGHT_VISION_MAP = {
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kOff: "off",
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kOn: "on",
+    clusters.CameraAvStreamManagement.Enums.TriStateAutoEnum.kAuto: "auto",
+}
+NIGHT_VISION_MAP_REVERSE = {v: k for k, v in NIGHT_VISION_MAP.items()}
 
 type SelectCluster = (
     clusters.ModeSelect
@@ -144,13 +156,13 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
         """Update from device."""
         # the options can dynamically change based on the state of the device
         available_values = cast(
-            list[int],
+            list[int] | None,
             self.get_matter_attribute_value(self.entity_description.list_attribute),
         )
         # map available (int) values to string representation
         self._attr_options = [
             mapped_value
-            for value in available_values
+            for value in available_values or []
             if (mapped_value := self.entity_description.device_to_ha(value))
         ]
         # use base implementation from
@@ -292,15 +304,15 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         list_values_raw = self.get_matter_attribute_value(
             self.entity_description.list_attribute
         )
-        if TYPE_CHECKING:
-            assert list_values_raw is not None
-
         # Accept both list[str] and list[int], convert to str
-        list_values = [str(v) for v in list_values_raw]
+        list_values = [str(v) for v in list_values_raw or []]
         self._attr_options = list_values
-        current_option_idx: int = self.get_matter_attribute_value(
+        current_option_idx: int | None = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+        if current_option_idx is None:
+            self._attr_current_option = None
+            return
         try:
             self._attr_current_option = list_values[current_option_idx]
         except IndexError:
@@ -601,6 +613,20 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
+            key="CameraAvStreamManagementNightVision",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="night_vision",
+            options=list(NIGHT_VISION_MAP.values()),
+            device_to_ha=NIGHT_VISION_MAP.get,
+            ha_to_device=NIGHT_VISION_MAP_REVERSE.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.CameraAvStreamManagement.Attributes.NightVision,),
+        featuremap_contains=CAMERA_FEATURE_NIGHT_VISION,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
             key="ChimeSelectedChime",
             entity_category=EntityCategory.CONFIG,
             translation_key="selected_chime",
@@ -718,5 +744,111 @@ DISCOVERY_SCHEMAS = [
             clusters.DoorLock.Attributes.OperatingMode,
             clusters.DoorLock.Attributes.SupportedOperatingModes,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoSwitchType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_type",
+            options=["switch", "button"],
+            device_to_ha={
+                0: "button",
+                1: "switch",
+            }.get,
+            ha_to_device={
+                "button": 0,
+                "switch": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.SwitchType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoDirectlyConnected",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="switch_connection_mode",
+            options=["directly_connected", "matter_only"],
+            device_to_ha={
+                True: "directly_connected",
+                False: "matter_only",
+            }.get,
+            ha_to_device={
+                "directly_connected": True,
+                "matter_only": False,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(custom_clusters.WagoCluster.Attributes.DirectlyConnected,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoManualMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="travel_time_mode",
+            options=["automatic", "manual"],
+            device_to_ha={
+                False: "automatic",
+                True: "manual",
+            }.get,
+            ha_to_device={
+                "automatic": False,
+                "manual": True,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoManualMode,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="WagoBlindType",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="blind_type",
+            options=["roller_shutter", "venetian_blind"],
+            device_to_ha={
+                0: "roller_shutter",
+                1: "venetian_blind",
+            }.get,
+            ha_to_device={
+                "roller_shutter": 0,
+                "venetian_blind": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.WindowCovering.Attributes.WagoBlindType,),
+        vendor_id=(5428,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="AqaraLedStripMusicSyncEffect",
+            translation_key="music_sync_effect",
+            entity_category=EntityCategory.CONFIG,
+            options=["stretch", "pulse", "dash", "flash"],
+            device_to_ha={
+                1: "stretch",
+                2: "pulse",
+                3: "dash",
+                4: "flash",
+            }.get,
+            ha_to_device={
+                "stretch": 1,
+                "pulse": 2,
+                "dash": 3,
+                "flash": 4,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            custom_clusters.AqaraLedStripCluster.Attributes.MusicSyncEffect,
+        ),
+        vendor_id=(4447,),
     ),
 ]

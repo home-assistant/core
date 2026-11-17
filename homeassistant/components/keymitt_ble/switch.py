@@ -2,26 +2,12 @@
 
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
-from homeassistant.helpers.typing import VolDictType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MicroBotConfigEntry
 from .entity import MicroBotEntity
-
-CALIBRATE = "calibrate"
-CALIBRATE_SCHEMA: VolDictType = {
-    vol.Required("depth"): cv.positive_int,
-    vol.Required("duration"): cv.positive_int,
-    vol.Required("mode"): vol.In(["normal", "invert", "toggle"]),
-}
 
 
 async def async_setup_entry(
@@ -31,12 +17,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up MicroBot based on a config entry."""
     async_add_entities([MicroBotBinarySwitch(entry.runtime_data)])
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        CALIBRATE,
-        CALIBRATE_SCHEMA,
-        "async_calibrate",
-    )
 
 
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):

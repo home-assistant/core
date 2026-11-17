@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG, MockLocation
-
-from tests.common import MockConfigEntry
 
 
 async def test_ipma_fire_risk_create_sensors(hass: HomeAssistant) -> None:

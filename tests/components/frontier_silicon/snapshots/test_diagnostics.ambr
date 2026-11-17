@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'dst': dict({
+      'error': 'FSNotImplementedError',
+    }),
+    'eq_preset': dict({
+      'key': 0,
+      'label': 'MockedEq',
+    }),
+    'equalisers': list([
+      dict({
+        'key': 0,
+        'label': 'MockedEq',
+      }),
+    ]),
+    'mode': dict({
+      'id': 'mocked_mode0',
+      'key': 0,
+      'label': 'MockedMode',
+      'modetype': None,
+      'selectable': True,
+      'streamable': None,
+    }),
+    'modes': list([
+      dict({
+        'id': 'mocked_mode0',
+        'key': 0,
+        'label': 'MockedMode',
+        'modetype': None,
+        'selectable': True,
+        'streamable': None,
+      }),
+    ]),
+    'mute': False,
+    'play_caps': list([
+      'PAUSE',
+      'SKIP_NEXT',
+    ]),
+    'play_status': 'IDLE',
+    'power': False,
+    'rssi': -50,
+    'version': 'ir-mmi-FS2026-0500-0052.V2.11.7.EX65933-4RC1',
+    'volume': 3,
+    'volume_steps': 2,
+  })
+# ---

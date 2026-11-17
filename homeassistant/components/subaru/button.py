@@ -17,7 +17,7 @@ from .const import (
     VEHICLE_HAS_REMOTE_START,
 )
 from .coordinator import SubaruConfigEntry, SubaruDataUpdateCoordinator
-from .entity import SubaruEntity
+from .entity import SubaruCoordinatorEntity
 from .remote_service import async_call_remote_service
 
 
@@ -58,7 +58,7 @@ async def async_setup_entry(
     )
 
 
-class SubaruButton(SubaruEntity, ButtonEntity):
+class SubaruButton(SubaruCoordinatorEntity, ButtonEntity):
     """Class for a Subaru button."""
 
     entity_description: SubaruButtonEntityDescription
@@ -71,9 +71,8 @@ class SubaruButton(SubaruEntity, ButtonEntity):
         description: SubaruButtonEntityDescription,
     ) -> None:
         """Initialize the button for the vehicle."""
-        super().__init__(vehicle_info, description.key)
+        super().__init__(vehicle_info, coordinator, description.key)
         self.controller = controller
-        self.coordinator = coordinator
         self.entity_description = description
 
     @override

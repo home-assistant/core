@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
@@ -19,21 +20,19 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.util import get_device_uid_and_ch
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_CAM_NAME, TEST_UID, TEST_UID_CAM
-
-from tests.common import MockConfigEntry
 
 DEV_ID_NVR = f"{TEST_UID}_{TEST_UID_CAM}"
 DEV_ID_STANDALONE_CAM = f"{TEST_UID_CAM}"
@@ -121,8 +120,11 @@ async def test_try_function(
     with pytest.raises(expected.__class__) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
@@ -157,6 +159,8 @@ async def test_get_device_uid_and_ch(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = get_device_uid_and_ch(dev_entry, config_entry.runtime_data.host)
+    result = get_device_uid_and_ch(
+        dev_entry.identifiers, config_entry.runtime_data.host
+    )
     # always get the uid and channel form the DEV_ID_NVR since is_nvr = True
     assert result == ([TEST_UID, TEST_UID_CAM], 0, False)

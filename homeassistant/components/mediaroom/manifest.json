@@ -1,7 +1,9 @@
 {
   "domain": "mediaroom",
   "name": "Mediaroom",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@dgomes"],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mediaroom",
   "iot_class": "local_polling",
   "loggers": ["pymediaroom"],

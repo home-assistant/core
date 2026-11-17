@@ -3,15 +3,15 @@
 from enum import StrEnum
 from typing import Any
 
+import probatio
 from tuya_device_handlers.device_wrapper.service_feeder_schedule import (
     FeederSchedule,
     get_feeder_schedule_wrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
-import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.const import CommonServiceArgument
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -19,21 +19,27 @@ from .const import DOMAIN
 
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
-FEEDING_ENTRY_SCHEMA = vol.Schema(
+FEEDING_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional("days"): [vol.In(DAYS)],
-        vol.Required("time"): str,
-        vol.Required("portion"): int,
-        vol.Required("enabled"): bool,
+        probatio.Optional("days"): [probatio.In(DAYS)],
+        probatio.Required("time"): str,
+        probatio.Required("portion"): int,
+        probatio.Required("enabled"): bool,
     }
 )
 
 
-class Service(StrEnum):
-    """Tuya services."""
+class TuyaService(StrEnum):
+    """Store keys for Tuya services."""
 
     GET_FEEDER_MEAL_PLAN = "get_feeder_meal_plan"
     SET_FEEDER_MEAL_PLAN = "set_feeder_meal_plan"
+
+
+class TuyaServiceArgument(StrEnum):
+    """Store keys for Tuya service arguments."""
+
+    MEAL_PLAN = "meal_plan"
 
 
 def _get_tuya_device(
@@ -86,7 +92,7 @@ async def async_get_feeder_meal_plan(
     call: ServiceCall,
 ) -> dict[str, Any]:
     """Handle get_feeder_meal_plan service call."""
-    device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
+    device, _ = _get_tuya_device(call.hass, call.data[CommonServiceArgument.DEVICE_ID])
 
     if not (wrapper := get_feeder_schedule_wrapper(device)):
         raise ServiceValidationError(
@@ -109,7 +115,9 @@ async def async_get_feeder_meal_plan(
 
 async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
     """Handle set_feeder_meal_plan service call."""
-    device, manager = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
+    device, manager = _get_tuya_device(
+        call.hass, call.data[CommonServiceArgument.DEVICE_ID]
+    )
 
     if not (wrapper := get_feeder_schedule_wrapper(device)):
         raise ServiceValidationError(
@@ -120,7 +128,7 @@ async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
             },
         )
 
-    meal_plan: list[FeederSchedule] = call.data["meal_plan"]
+    meal_plan: list[FeederSchedule] = call.data[TuyaServiceArgument.MEAL_PLAN]
 
     await call.hass.async_add_executor_job(
         manager.send_commands,
@@ -129,16 +137,17 @@ async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
     )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up Tuya services."""
 
     hass.services.async_register(
         DOMAIN,
-        Service.GET_FEEDER_MEAL_PLAN,
+        TuyaService.GET_FEEDER_MEAL_PLAN,
         async_get_feeder_meal_plan,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): str,
+                probatio.Required(CommonServiceArgument.DEVICE_ID): str,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -146,12 +155,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        Service.SET_FEEDER_MEAL_PLAN,
+        TuyaService.SET_FEEDER_MEAL_PLAN,
         async_set_feeder_meal_plan,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): str,
-                vol.Required("meal_plan"): vol.All(
+                probatio.Required(CommonServiceArgument.DEVICE_ID): str,
+                probatio.Required(TuyaServiceArgument.MEAL_PLAN): probatio.All(
                     list,
                     [FEEDING_ENTRY_SCHEMA],
                 ),

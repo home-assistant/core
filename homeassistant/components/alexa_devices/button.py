@@ -51,6 +51,7 @@ async def async_setup_entry(
 
     def _check_routines_devices() -> None:
         current_routines = set(coordinator.api.routines)
+        known_routines.intersection_update(current_routines)
         new_routines = current_routines - known_routines
         if new_routines:
             known_routines.update(new_routines)
@@ -59,6 +60,7 @@ async def async_setup_entry(
             )
 
         current_devices = set(coordinator.data)
+        known_devices.intersection_update(current_devices)
         new_devices = current_devices - known_devices
         if new_devices:
             known_devices.update(new_devices)

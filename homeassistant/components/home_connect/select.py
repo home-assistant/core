@@ -229,7 +229,7 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         translation_key_values=COFFEE_MILK_RATIO_OPTIONS,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FLOW_RATE_OPTIONS.items()
+            for translation_key, value in COFFEE_MILK_RATIO_OPTIONS.items()
         },
     ),
     HomeConnectSelectEntityDescription(
@@ -543,7 +543,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 setting_key=cast(SettingKey, self.bsh_key),
             )
 
-        if setting and setting.constraints and setting.constraints.allowed_values:
+        if setting.constraints and setting.constraints.allowed_values:
             self._original_option_keys = set(setting.constraints.allowed_values)
             self._attr_options = [
                 self.entity_description.values_translation_key[option]

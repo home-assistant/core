@@ -1,17 +1,16 @@
 """Config flow for Pico TTS integration."""
 
-import shutil
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
 )
 
 
@@ -23,9 +22,6 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if await self.hass.async_add_executor_job(shutil.which, "pico2wave") is None:
-            return self.async_abort(reason="binary_not_found")
-
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -41,8 +37,3 @@ class PicoTTSConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_create_entry(title=title, data=data)
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import Pico TTS config from yaml."""
-
-        return await self.async_step_user(import_info)

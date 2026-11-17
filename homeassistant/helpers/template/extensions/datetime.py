@@ -3,6 +3,8 @@
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.helpers.template.helpers import raise_no_default
 from homeassistant.helpers.template.render_info import render_info_cv
 from homeassistant.util import dt as dt_util
@@ -12,7 +14,7 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
@@ -78,6 +80,11 @@ class DateTimeExtension(BaseTemplateExtension):
                     self.is_datetime,
                     as_test=True,
                 ),
+                TemplateFunction(
+                    "timedelta",
+                    self.is_timedelta,
+                    as_test=True,
+                ),
                 # Functions that require hass
                 TemplateFunction(
                     "now",
@@ -112,6 +119,14 @@ class DateTimeExtension(BaseTemplateExtension):
                 TemplateFunction(
                     "time_until",
                     self.time_until,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                    limited_ok=False,
+                ),
+                TemplateFunction(
+                    "timedelta_string",
+                    self.timedelta_string,
                     as_global=True,
                     as_filter=True,
                     requires_hass=True,
@@ -224,23 +239,27 @@ class DateTimeExtension(BaseTemplateExtension):
         """Return whether a value is a datetime."""
         return isinstance(value, datetime)
 
+    def is_timedelta(self, value: Any) -> bool:
+        """Return whether a value is a timedelta."""
+        return isinstance(value, timedelta)
+
     def now(self) -> datetime:
         """Record fetching now."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.now()
 
     def utcnow(self) -> datetime:
         """Record fetching utcnow."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         return dt_util.utcnow()
 
     def today_at(self, time_str: str = "") -> datetime:
         """Record fetching now where the time has been replaced with value."""
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         today = dt_util.start_of_local_day()
@@ -263,7 +282,7 @@ class DateTimeExtension(BaseTemplateExtension):
         wrong direction are returned as-is, except naive datetimes are first
         converted to local time.
         """
-        if (render_info := render_info_cv.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None and render_info.collecting:
             render_info.has_time = True
 
         if not isinstance(value, datetime):
@@ -319,3 +338,19 @@ class DateTimeExtension(BaseTemplateExtension):
         If the value not a datetime object the input will be returned unmodified.
         """
         return self._datetime_as_string(value, precision=precision, future=True)
+
+    def timedelta_string(self, value: Any, precision: int = 1) -> Any:
+        """Take a timedelta and return a human-readable string representation.
+
+        The result can be in seconds, minutes, hours, days, months and years.
+
+        precision is the number of units to return, with the last unit rounded.
+        precision=0 returns all units (no early rounding, except for sub-second values).
+
+        Negative timedeltas are formatted using their absolute value.
+
+        If the value is not a timedelta object the input will be returned unmodified.
+        """
+        if not isinstance(value, timedelta):
+            return value
+        return dt_util.timedelta_string(value, precision)

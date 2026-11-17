@@ -11,6 +11,7 @@ from google_health_api.exceptions import (
     HealthAuthException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.google_health.coordinator import POLLING_INTERVAL
@@ -19,8 +20,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -54,7 +53,9 @@ async def test_setup_api_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error retry handling when API fails."""
-    mock_google_health_client.steps.today.side_effect = GoogleHealthApiError
+    mock_google_health_client.steps.today.side_effect = GoogleHealthApiError(
+        "API error"
+    )
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
@@ -67,7 +68,9 @@ async def test_setup_auth_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error when API returns auth or forbidden errors."""
-    mock_google_health_client.steps.today.side_effect = HealthApiForbiddenException
+    mock_google_health_client.steps.today.side_effect = HealthApiForbiddenException(
+        "Forbidden"
+    )
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR

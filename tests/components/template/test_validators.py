@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.template import validators as cv
 from homeassistant.components.template.template_entity import TemplateEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import Template
 
@@ -126,6 +127,35 @@ async def test_enum(
     entity = create_test_entity(hass, config)
     assert cv.strenum(entity, "state", Brewery)(value) == expected
     check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("mmmm", Brewery.MMMM),
+        ("beer", None),
+        ("BeeR", None),
+    ],
+)
+async def test_enum_deprecated(
+    hass: HomeAssistant,
+    value: Any,
+    expected: Brewery | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enum validator rejects deprecated enums."""
+    entity = create_test_entity(hass, {})
+    assert (
+        cv.strenum(entity, "state", Brewery, deprecated_enums=(Brewery.BEER,))(value)
+        == expected
+    )
+    check_for_error(
+        value,
+        expected,
+        caplog.text,
+        f"Received invalid state: {value} for entity Test,"
+        " expected one of mmmm, is, good",
+    )
 
 
 @pytest.mark.parametrize(
@@ -898,6 +928,69 @@ async def test_item_in_list(
     [
         (
             {"default_entity_id": "test.test"},
+            "Received invalid test state: {} for entity test.test, expected 1, 2, 3, 4",
+        ),
+        (
+            {},
+            "Received invalid state: {} for entity Test, expected 1, 2, 3, 4",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("1", "1"),
+        ("2", "2"),
+        ("3", "3"),
+        ("4", "4"),
+        (1, "1"),
+        (2, "2"),
+        (3, "3"),
+        (4, "4"),
+        *expect_none(
+            None,
+            "1.0",
+            "2.0",
+            "3.0",
+            "4.0",
+            "BEER",
+            "IS",
+            "good",
+            "al;dfj",
+            "unknown",
+            "unavailable",
+            "tru",  # codespell:ignore tru
+            83242.2342,
+            True,
+            False,
+            {},
+            {"junk": "stuff"},
+            {"junk"},
+        ),
+    ],
+)
+async def test_string_item_in_list(
+    hass: HomeAssistant,
+    config: dict,
+    error: str,
+    value: Any,
+    expected: bool | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test result is in a list."""
+    entity = create_test_entity(hass, config)
+    value = cv.item_in_list(
+        entity, "state", ["1", "2", "3", "4"], stringify_result=True
+    )(value)
+    assert value == expected
+    check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"default_entity_id": "test.test"},
             "Received invalid test state: {} for entity"
             " test.test, expected one of beer, is, GOOD",
         ),
@@ -1060,3 +1153,36 @@ async def test_string(
     entity = create_test_entity(hass, config)
     assert cv.string(entity, "state")(value) == expected
     check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("name", "entity_config", "expected"),
+    [
+        pytest.param("Kitchen", {}, "name: Kitchen", id="name"),
+        pytest.param(
+            "Kitchen",
+            {"default_entity_id": "sensor.kitchen", "unique_id": "kitchen"},
+            "name: Kitchen",
+            id="name_wins",
+        ),
+        pytest.param(
+            "Template Sensor",
+            {"default_entity_id": "sensor.kitchen", "unique_id": "kitchen"},
+            "default_entity_id: sensor.kitchen",
+            id="default_entity_id",
+        ),
+        pytest.param(
+            "Template Sensor",
+            {"unique_id": "kitchen"},
+            "unique_id: kitchen",
+            id="unique_id",
+        ),
+        pytest.param("Template Sensor", {}, "name: Template Sensor", id="default_name"),
+    ],
+)
+def test_entity_config_identifier(
+    hass: HomeAssistant, name: str, entity_config: dict[str, str], expected: str
+) -> None:
+    """Test the entity config identifier for every fallback."""
+    config = {"name": Template(name, hass), **entity_config}
+    assert cv.entity_config_identifier(Platform.SENSOR, config) == expected

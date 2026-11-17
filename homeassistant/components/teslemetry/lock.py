@@ -5,6 +5,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.lock import LockEntity
@@ -13,7 +14,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import TeslemetryConfigEntry
 from .const import DOMAIN
 from .entity import (
     TeslemetryRootEntity,
@@ -21,7 +21,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_vehicle_command
-from .models import TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryVehicleData
 
 ENGAGED = "Engaged"
 
@@ -64,7 +64,7 @@ async def async_setup_entry(
 class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
     """Base vehicle lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:
@@ -141,7 +141,7 @@ class TeslemetryStreamingVehicleLockEntity(
 class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
     """Base cable Lock entity for Teslemetry."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
 
     @override
     async def async_lock(self, **kwargs: Any) -> None:

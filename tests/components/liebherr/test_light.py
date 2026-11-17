@@ -7,8 +7,13 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import Device, DeviceState, DeviceType, PresentationLightControl
-from pyliebherrhomeapi.exceptions import LiebherrConnectionError
+from pyliebherrhomeapi.exceptions import LiebherrServerError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.liebherr.const import DOMAIN
@@ -27,9 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -86,7 +89,6 @@ async def test_light_service_calls(
 ) -> None:
     """Test light turn on/off service calls."""
     entity_id = "light.test_fridge_presentation_light"
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -100,8 +102,22 @@ async def test_light_service_calls(
         target=expected_target,
     )
 
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+@pytest.mark.usefixtures("init_integration")
+async def test_light_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test light state updates before an SSE event arrives."""
+    entity_id = "light.test_fridge_presentation_light"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -109,10 +125,10 @@ async def test_light_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
 ) -> None:
-    """Test light fails gracefully on connection error."""
+    """Test light fails gracefully on a library error."""
     entity_id = "light.test_fridge_presentation_light"
-    mock_liebherr_client.set_presentation_light.side_effect = LiebherrConnectionError(
-        "Connection failed"
+    mock_liebherr_client.set_presentation_light.side_effect = LiebherrServerError(
+        "Server error"
     )
 
     with pytest.raises(
@@ -131,7 +147,7 @@ async def test_light_failure(
 async def test_light_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test light entity behavior when control is removed."""
     entity_id = "light.test_fridge_presentation_light"
@@ -145,9 +161,7 @@ async def test_light_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -167,13 +181,13 @@ async def test_light_when_control_missing(
 async def test_light_state_updates(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
     value: int | None,
     max_value: int,
     expected_state: str,
     expected_brightness: int | None,
 ) -> None:
-    """Test light entity state after coordinator update."""
+    """Test light entity state after a stream update."""
     entity_id = "light.test_fridge_presentation_light"
 
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: DeviceState(
@@ -188,9 +202,7 @@ async def test_light_state_updates(
         ],
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_push()
 
     state = hass.states.get(entity_id)
     assert state is not None

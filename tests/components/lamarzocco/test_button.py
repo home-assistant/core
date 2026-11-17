@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -39,9 +39,9 @@ async def test_start_backflush(
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
+                CommonServiceArgument.ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
             blocking=True,
         )
@@ -50,9 +50,18 @@ async def test_start_backflush(
     mock_lamarzocco.start_backflush.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_button_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test the La Marzocco button error."""
     serial_number = mock_lamarzocco.serial_number
@@ -60,13 +69,13 @@ async def test_button_error(
     state = hass.states.get(f"button.{serial_number}_start_backflush")
     assert state
 
-    mock_lamarzocco.start_backflush.side_effect = RequestNotSuccessful("Boom.")
+    mock_lamarzocco.start_backflush.side_effect = side_effect
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {
-                ATTR_ENTITY_ID: f"button.{serial_number}_start_backflush",
+                CommonServiceArgument.ENTITY_ID: f"button.{serial_number}_start_backflush",
             },
             blocking=True,
         )

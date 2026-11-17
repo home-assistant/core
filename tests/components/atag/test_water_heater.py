@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_TEMPERATURE,
@@ -11,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import UID, init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 WATER_HEATER_ID = "water_heater.atag_thermostat_atag"
 

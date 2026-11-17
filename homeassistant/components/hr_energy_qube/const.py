@@ -12,4 +12,8 @@ PLATFORMS = (
 )
 
 DEFAULT_PORT = 502
+# The controller answers on Modbus unit (slave) id 1
+UNIT_ID = 1
 DEFAULT_SCAN_INTERVAL = 15
+# Cap on the mDNS lookup of the controller's advertisement (seconds)
+MDNS_LOOKUP_TIMEOUT = 3.0

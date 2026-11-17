@@ -1,8 +1,9 @@
 """Tests for the nut integration."""
 
-import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.nut.const import DOMAIN
 from homeassistant.const import (
@@ -14,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 def _get_mock_nutclient(
@@ -61,7 +60,7 @@ async def async_init_integration(
     if ups_fixture is not None:
         ups_fixture = f"{ups_fixture}.json"
         if list_vars is None:
-            list_vars = json.loads(await async_load_fixture(hass, ups_fixture, DOMAIN))
+            list_vars = await async_load_json_object_fixture(hass, ups_fixture, DOMAIN)
 
     mock_pynut = _get_mock_nutclient(
         list_ups=list_ups,

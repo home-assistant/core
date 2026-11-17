@@ -11,6 +11,7 @@ from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AuthenticatedMonzoAPI
@@ -61,6 +62,7 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
             raise ConfigEntryAuthFailed from err
         except InvalidMonzoAPIResponseError as err:
             message = "Invalid Monzo API response."
+            translation_key = "invalid_api_response"
             if err.missing_key:
                 _LOGGER.debug(
                     "%s\nMissing key: %s\nResponse:\n%s",
@@ -68,13 +70,30 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
                     err.missing_key,
                     pformat(err.response),
                 )
-                message += " Enabling debug logging for details."
-            raise UpdateFailed(message) from err
+                translation_key = "invalid_api_response_with_details"
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
 
-        return MonzoData(
+        data = MonzoData(
             accounts={account["id"]: account for account in accounts},
             pots={pot["id"]: pot for pot in pots},
         )
+        current_resource_ids = data.accounts.keys() | data.pots.keys()
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            resource_ids = {
+                identifier[1]
+                for identifier in device.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if resource_ids and resource_ids.isdisjoint(current_resource_ids):
+                device_registry.async_remove_device(device.id)
+
+        return data
 
 
 @dataclass

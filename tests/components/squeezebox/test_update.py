@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
@@ -13,16 +14,14 @@ from homeassistant.components.squeezebox.const import (
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import FAKE_QUERY_RESPONSE
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_lms(
@@ -88,9 +87,9 @@ async def test_update_plugins_install_fallback(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -149,9 +148,9 @@ async def test_update_plugins_install_restart_fail(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -192,9 +191,9 @@ async def test_update_plugins_install_ok(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+            UpdateService.INSTALL,
             {
-                ATTR_ENTITY_ID: entity_id,
+                CommonServiceArgument.ENTITY_ID: entity_id,
             },
             blocking=True,
         )

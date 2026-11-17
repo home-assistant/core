@@ -4,17 +4,20 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+)
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.const import TemplateService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 
 
 @pytest.mark.parametrize(("count", "domain"), [(2, "template")])
@@ -251,7 +254,7 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            TemplateService.RELOAD,
             {},
             blocking=True,
         )
@@ -438,13 +441,15 @@ async def test_change_device(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity_id = f"{config_entry_options['template_type']}.my_template"
+    template_entity_id = (
+        f"{config_entry_options['template_type']}.mock_title_my_template"
+    )
 
     # Confirm that the template config entry has not been added to either device
     # and that the entities are linked to device 1
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, device_id1)
 
     # Change config options to use device 2 and reload the integration
@@ -461,7 +466,7 @@ async def test_change_device(
     # and that the entities are linked to device 2
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, device_id2)
 
     # Change the config options to remove the device and reload the integration
@@ -478,7 +483,7 @@ async def test_change_device(
     # and that the entities are not linked to any device
     for device_id in (device_id1, device_id2):
         device = device_registry.async_get(device_id=device_id)
-        assert template_config_entry.entry_id not in device.config_entries
+        assert device.config_entry_id != template_config_entry.entry_id
     check_template_entities(template_entity_id, None)
 
     # Confirm that there is no device with the helper config entry
@@ -488,6 +493,56 @@ async def test_change_device(
         )
         == []
     )
+
+
+@pytest.mark.parametrize(
+    "linked_device",
+    [
+        pytest.param("main", id="main_device"),
+        pytest.param("child", id="child_device"),
+    ],
+)
+async def test_link_to_main_or_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    linked_device: str,
+) -> None:
+    """Test a template entity links to a selected main or child device."""
+    source_entry = MockConfigEntry()
+    source_entry.add_to_hass(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("test", "main")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=main_device.id,
+    )
+    selected_device_id = {"main": main_device, "child": child_device}[linked_device].id
+
+    template_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+            "device_id": selected_device_id,
+        },
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entities = list(
+        entity_registry.entities.get_entries_for_config_entry_id(
+            template_config_entry.entry_id
+        )
+    )
+    assert len(template_entities) == 1
+    assert template_entities[0].device_id == selected_device_id
 
 
 async def test_setup_removes_stale_helper_device(
@@ -675,8 +730,8 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper
     # entity is linked to the source device
     device_entry = device_registry.async_get(device_entry.id)
-    assert template_config_entry.entry_id not in device_entry.config_entries
-    template_entity_entry = entity_registry.async_get("sensor.my_template")
+    assert device_entry.config_entry_id != template_config_entry.entry_id
+    template_entity_entry = entity_registry.async_get("sensor.mock_title_my_template")
     assert template_entity_entry.device_id == device_entry.id
 
     assert template_config_entry.version == 2

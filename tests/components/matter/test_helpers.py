@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.helpers import (
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .common import setup_integration_with_node_fixture
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
 async def test_get_device_id(
@@ -27,7 +26,7 @@ async def test_get_device_id(
     """Test get_device_id."""
     device_id = get_device_id(matter_client.server_info, matter_node.endpoints[0])
 
-    assert device_id == "00000000000004D2-0000000000000005-MatterNodeDevice"
+    assert device_id == "00000000000004D2-00000000000003ED-MatterNodeDevice"
 
 
 async def test_get_node_from_device_entry(

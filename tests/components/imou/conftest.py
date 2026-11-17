@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyimouapi.ha_device import ImouHaDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imou.const import CONF_APP_ID, DOMAIN, PLATFORMS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONFIG_ENTRY_DATA, default_mock_devices
-
-from tests.common import MockConfigEntry
 
 PATCH_IMOU_OPENAPI_CLIENT = "homeassistant.components.imou.ImouOpenApiClient"
 PATCH_CONFIG_FLOW_IMOU_OPENAPI_CLIENT = (
@@ -66,6 +65,7 @@ def mock_imou_ha_device_manager(
     with patch(PATCH_IMOU_HA_DEVICE_MANAGER, autospec=True) as mock_manager:
         device_manager = mock_manager.return_value
         device_manager.async_get_devices.return_value = imou_mock_devices
+        device_manager.async_update_devices_status.return_value = set()
         yield device_manager
 
 
@@ -74,7 +74,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry so config flow tests do not load the full integration."""
     with patch(
         "homeassistant.components.imou.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 
@@ -99,10 +99,10 @@ async def init_integration(
     mock_imou_openapi_client: AsyncMock,
     mock_imou_ha_device_manager: MagicMock,
     platforms: list[Platform],
-) -> MagicMock:
-    """Set up Imou with mocked library clients; returns the HA device manager mock."""
+) -> MockConfigEntry:
+    """Set up Imou with mocked library clients; returns the config entry."""
     mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.components.imou.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-    return mock_imou_ha_device_manager
+    return mock_config_entry

@@ -5,10 +5,6 @@ import math
 from typing import Any
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODES,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_SWING_MODES,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -18,6 +14,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateEntityCapabilityAttribute,
 )
 from homeassistant.core import State
 from homeassistant.util.percentage import (
@@ -51,7 +48,9 @@ def get_fan_modes_and_speeds(
     exposes, in HomeKit rotation-speed order; it is empty when the entity only
     advertises custom fan mode names.
     """
-    fan_modes = _lower_to_original(attributes.get(ATTR_FAN_MODES) or [])
+    fan_modes = _lower_to_original(
+        attributes.get(ClimateEntityCapabilityAttribute.FAN_MODES) or []
+    )
     ordered_fan_speeds: list[str] = []
     if PRE_DEFINED_FAN_MODES.intersection(fan_modes):
         ordered_fan_speeds = [
@@ -67,7 +66,9 @@ def get_swing_on_mode(attributes: dict[str, Any]) -> str | None:
     returned so it can be sent back to the service. Returns ``None`` when the
     entity exposes no predefined swing modes.
     """
-    if not (swing_modes := attributes.get(ATTR_SWING_MODES)):
+    if not (
+        swing_modes := attributes.get(ClimateEntityCapabilityAttribute.SWING_MODES)
+    ):
         return None
     lower_to_original = _lower_to_original(swing_modes)
     return next(
@@ -82,13 +83,13 @@ def get_swing_on_mode(attributes: dict[str, Any]) -> str | None:
 
 def get_swing_off_mode(attributes: dict[str, Any]) -> str:
     """Return the entity's off swing mode, preserving its original casing."""
-    swing_modes = attributes.get(ATTR_SWING_MODES) or []
+    swing_modes = attributes.get(ClimateEntityCapabilityAttribute.SWING_MODES) or []
     return _lower_to_original(swing_modes).get(SWING_OFF, SWING_OFF)
 
 
 def has_swing_off_mode(attributes: dict[str, Any]) -> bool:
     """Return whether the entity advertises a swing off mode."""
-    swing_modes = attributes.get(ATTR_SWING_MODES) or []
+    swing_modes = attributes.get(ClimateEntityCapabilityAttribute.SWING_MODES) or []
     return SWING_OFF in _lower_to_original(swing_modes)
 
 
@@ -131,12 +132,16 @@ def get_temperature_range_from_state(
     defaults are already Celsius and used as-is. The minimum is clamped to zero
     because the Home app crashes on negative bounds.
     """
-    if (min_temp := state.attributes.get(ATTR_MIN_TEMP)) is not None:
+    if (
+        min_temp := state.attributes.get(ClimateEntityCapabilityAttribute.MIN_TEMP)
+    ) is not None:
         min_temp = temperature_to_homekit(min_temp, unit)
     else:
         min_temp = default_min
 
-    if (max_temp := state.attributes.get(ATTR_MAX_TEMP)) is not None:
+    if (
+        max_temp := state.attributes.get(ClimateEntityCapabilityAttribute.MAX_TEMP)
+    ) is not None:
         max_temp = temperature_to_homekit(max_temp, unit)
     else:
         max_temp = default_max

@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 from urllib.parse import urlparse
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -16,10 +16,10 @@ from .data import WyomingService
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): int,
     }
 )
 
@@ -60,6 +60,43 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="no_services")
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            service = await WyomingService.create(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if service is None:
+                errors["base"] = "cannot_connect"
+            elif not service.get_name():
+                errors["base"] = "no_services"
+            else:
+                # Checked after the await to close a race with concurrent flows
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
+                if entry.update_listeners:
+                    return self.async_update_and_abort(entry, data_updates=user_input)
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -82,7 +119,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name},
-                "configuration_url": f"homeassistant://hassio/addon/{discovery_info.slug}/info",
+                "configuration_url": f"homeassistant://config/app/{discovery_info.slug}/info",
             }
         )
         return await self.async_step_hassio_confirm()

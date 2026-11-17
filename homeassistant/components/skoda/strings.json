@@ -1,0 +1,164 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "access_forbidden": "Access to this vehicle is forbidden.",
+      "api_error": "Communication error with the Škoda API. Check the validity of the VIN and API key.",
+      "cannot_connect": "Cannot connect to Škoda servers.",
+      "invalid_auth": "Invalid or expired API key.",
+      "invalid_vin_length": "VIN must be exactly 17 characters long.",
+      "rate_limit_exceeded": "Rate limit exceeded or low 12V battery.",
+      "timeout_connect": "Connection to the vehicle timed out.",
+      "unknown": "Unexpected error occurred.",
+      "vehicle_not_found": "No vehicle found with this VIN."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::skoda::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for {name} is invalid or has expired. Enter a new API key, which you can create in the MyŠkoda app under Profile -> Smart Home. Open {portal_url} on your phone to go straight to that page in the app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "vin": "Vehicle VIN (17 characters)"
+        },
+        "data_description": {
+          "api_key": "Your API key from the MyŠkoda app under Profile -> Smart Home.",
+          "vin": "The 17-character Vehicle Identification Number (VIN) of your vehicle."
+        },
+        "description": "***Škoda Auto a.s.*** *in collaboration with* ***Mobility Lab VŠB TUO***.\n\nTo connect the vehicle, enter the **VIN** and **API key**.\n\nCreate an API key in the MyŠkoda app under Profile -> Smart Home. Open this link on your phone to go straight to that page in the app:\n[{portal_url}]({portal_url})"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "air_conditioning": {
+        "name": "Air conditioning"
+      },
+      "auxiliary_heating": {
+        "name": "Auxiliary heating"
+      },
+      "bonnet": {
+        "name": "Hood"
+      },
+      "charging_cable": {
+        "name": "Charging cable"
+      },
+      "doors": {
+        "name": "Doors"
+      },
+      "lights": {
+        "name": "Lights"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
+    "number": {
+      "charge_limit": {
+        "name": "Charge limit"
+      }
+    },
+    "sensor": {
+      "aux_heating_duration": {
+        "name": "Auxiliary heating remaining duration"
+      },
+      "auxiliary_heating_mode": {
+        "name": "Auxiliary heating mode",
+        "state": {
+          "heating": "Heating",
+          "ventilation": "Ventilation"
+        }
+      },
+      "battery_percentage": {
+        "name": "Battery state of charge"
+      },
+      "charge_type": {
+        "name": "Charge type",
+        "state": {
+          "ac": "AC",
+          "dc": "DC",
+          "not_charging": "Not charging",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_state": {
+        "name": "Charging state",
+        "state": {
+          "charging": "Charging",
+          "charging_interrupted": "Charging interrupted",
+          "connect_cable": "Cable not connected",
+          "conserving": "Conserving",
+          "discharging": "Discharging",
+          "ready_for_charging": "Ready for charging"
+        }
+      },
+      "electric_range": {
+        "name": "Electric range"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "licence_plate": {
+        "name": "Registration plate"
+      },
+      "mileage": {
+        "name": "Mileage"
+      },
+      "preset_temperature_value": {
+        "name": "Target cabin temperature"
+      },
+      "remaining_ac_time": {
+        "name": "Air conditioning remaining time"
+      },
+      "remaining_time_to_full_battery": {
+        "name": "Time to full charge"
+      },
+      "total_range": {
+        "name": "Total range"
+      }
+    },
+    "switch": {
+      "active_ventilation": {
+        "name": "Active ventilation"
+      },
+      "charging": {
+        "name": "Charging"
+      }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send the command to the vehicle."
+    },
+    "command_not_supported": {
+      "message": "The vehicle does not support this command."
+    },
+    "invalid_step": {
+      "message": "The value {value} does not match the supported increment of {step}."
+    },
+    "rate_limit_exceeded": {
+      "message": "The Škoda API rejected the command because the rate limit was reached or the vehicle's 12 V battery is low. Try again later."
+    },
+    "vehicle_not_responding": {
+      "message": "The vehicle did not respond in time. Try again later."
+    }
+  }
+}

@@ -5,8 +5,8 @@ import logging
 from typing import override
 
 import neurio
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -42,9 +42,9 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_API_SECRET): cv.string,
-        vol.Required(CONF_SENSOR_ID): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_SECRET)): cv.string,
+        probatio.Required(CONF_SENSOR_ID): cv.string,
     }
 )
 
@@ -75,21 +75,17 @@ def setup_platform(
     update_daily()
     update_active()
 
-    # Active power sensor
-    add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
-    # Daily power sensor
-    add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
-    # Active generation sensor
     add_entities(
         [
+            NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active),
+            NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily),
             NeurioEnergy(
                 data, ACTIVE_GENERATION_NAME, ACTIVE_GENERATION_TYPE, update_active
-            )
+            ),
+            NeurioEnergy(
+                data, DAILY_GENERATION_NAME, DAILY_GENERATION_TYPE, update_daily
+            ),
         ]
-    )
-    # Daily generation sensor
-    add_entities(
-        [NeurioEnergy(data, DAILY_GENERATION_NAME, DAILY_GENERATION_TYPE, update_daily)]
     )
 
 

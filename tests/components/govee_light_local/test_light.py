@@ -1,18 +1,24 @@
 """Test Govee light local."""
 
-from errno import EADDRINUSE, ENETDOWN
+import asyncio
+from errno import EACCES, EADDRINUSE, EADDRNOTAVAIL, EAFNOSUPPORT, ENETDOWN
+from ipaddress import IPv4Network
+import logging
+import os
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from govee_local_api import GoveeDevice
-from govee_local_api.light_capabilities import ON_OFF_CAPABILITIES
+from govee_local_api import GoveeDevice, GoveeLightCapabilities
+from govee_local_api.light_capabilities import COMMON_FEATURES, ON_OFF_CAPABILITIES
 from govee_local_api.message import DevStatusResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
     DEVICE_TIMEOUT,
     DOMAIN,
+    REBIND_INTERVAL,
     SCAN_INTERVAL,
 )
 from homeassistant.components.light import (
@@ -21,6 +27,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
@@ -36,9 +44,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES, setup_light
-
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .conftest import (
+    DEFAULT_CAPABILITIES,
+    DISABLED_NETWORK_ADAPTERS,
+    EXPECTED_LISTENING_ADDRESSES,
+    SCENE_CAPABILITIES,
+    setup_light,
+)
 
 
 async def test_light_known_device(
@@ -82,6 +94,35 @@ async def test_light_unknown_device(
     assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
+@pytest.mark.parametrize(
+    ("temperature_range", "expected_min", "expected_max"),
+    [
+        pytest.param(None, 2000, 9000, id="default_range"),
+        pytest.param((2700, 6500), 2700, 6500, id="device_range"),
+    ],
+)
+async def test_light_color_temperature_range(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    temperature_range: tuple[int, int] | None,
+    expected_min: int,
+    expected_max: int,
+) -> None:
+    """Test the color temperature range comes from the device capabilities."""
+    await setup_light(
+        hass,
+        mock_govee_api,
+        GoveeLightCapabilities(
+            features=COMMON_FEATURES, temperature_range=temperature_range
+        ),
+    )
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == expected_min
+    assert light.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == expected_max
+
+
 async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
     """Test remove device."""
     entry, _ = await setup_light(hass, mock_govee_api, fingerprint="asdawdqwdqwd1")
@@ -112,13 +153,33 @@ async def test_light_setup_retry(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_light_setup_retry_eaddrinuse(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+@pytest.mark.parametrize(
+    ("bind_errno", "expected_error"),
+    [
+        pytest.param(
+            EADDRINUSE, "Port 4002 is already in use", id="address_already_in_use"
+        ),
+        pytest.param(
+            EADDRNOTAVAIL,
+            "Could not listen for Govee devices: Cannot assign requested address",
+            id="address_unavailable",
+        ),
+        pytest.param(
+            ENETDOWN,
+            "Could not listen for Govee devices: Network is down",
+            id="network_down",
+        ),
+    ],
+)
+async def test_light_setup_retry_when_no_address_binds(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    bind_errno: int,
+    expected_error: str,
 ) -> None:
-    """Test retry on address already in use."""
+    """Test setup is retried whenever the controller binds no address at all."""
 
-    mock_govee_api.start.side_effect = OSError()
-    mock_govee_api.start.side_effect.errno = EADDRINUSE
+    mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
     mock_govee_api.devices = [
         GoveeDevice(
             controller=mock_govee_api,
@@ -134,30 +195,40 @@ async def test_light_setup_retry_eaddrinuse(
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == expected_error
 
 
-async def test_light_setup_error(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
+@pytest.mark.parametrize(
+    ("bind_errno", "expected_error"),
+    [
+        pytest.param(
+            EACCES,
+            "Could not listen for Govee devices: Permission denied",
+            id="permission_denied",
+        ),
+        pytest.param(
+            EAFNOSUPPORT,
+            "Could not listen for Govee devices: Address family not supported by protocol",
+            id="address_family_unsupported",
+        ),
+    ],
+)
+async def test_light_setup_error_when_bind_fails_permanently(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    bind_errno: int,
+    expected_error: str,
 ) -> None:
-    """Test setup error."""
+    """Test setup fails without retrying when the bind error cannot clear on its own."""
 
-    mock_govee_api.start.side_effect = OSError()
-    mock_govee_api.start.side_effect.errno = ENETDOWN
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == expected_error
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
@@ -702,3 +773,251 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state is not None
     assert silent_state.state == STATE_UNAVAILABLE
     assert chatty_state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_single_controller_for_all_adapters(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a single controller listens on every enabled adapter address."""
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
+
+    with patch(
+        "homeassistant.components.govee_light_local.coordinator.GoveeController",
+        return_value=mock_govee_api,
+    ) as mock_controller:
+        await setup_light(hass, mock_govee_api)
+
+    assert mock_controller.call_count == 1
+    assert (
+        mock_controller.call_args.kwargs["listening_addresses"]
+        == EXPECTED_LISTENING_ADDRESSES
+    )
+
+    assert "Adapter eth0 (enabled): ['192.168.1.2/24', '192.168.1.2/24']" in caplog.text
+    assert "Adapter eth2 (disabled): ['172.16.0.5/16']" in caplog.text
+    assert "Listening on port 4002: 10.0.0.7 (10.0.0.0/8)" in caplog.text
+    assert "192.168.1.2 (192.168.1.0/24)" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_setup_with_partial_bind(
+    hass: HomeAssistant, mock_govee_api: AsyncMock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test setup succeeds when only some of the adapter addresses bind."""
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
+
+    # The controller drops what it could not bind, keeping both lists aligned.
+    mock_govee_api.listening_addresses = ["192.168.1.2"]
+    mock_govee_api.networks = [IPv4Network("192.168.1.0/24")]
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+
+    entry, _ = await setup_light(hass, mock_govee_api)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("light.H615A") is not None
+
+    mock_govee_api.start.assert_awaited_once_with(require_all=False)
+    assert "Listening on port 4002: 192.168.1.2 (192.168.1.0/24)" in caplog.text
+    assert "Not listening on 10.0.0.7: Cannot assign requested address" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_partial_bind_is_retried(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test addresses that failed to bind are retried once per REBIND_INTERVAL.
+
+    Walks a single timeline: the first retry still fails and the interval
+    holds across the next poll, the second retry brings the adapter back,
+    and nothing is retried once every address is bound.
+    """
+
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.govee_light_local")
+
+    mock_govee_api.listening_addresses = ["192.168.1.2"]
+    mock_govee_api.networks = [IPv4Network("192.168.1.0/24")]
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+
+    async def rebind_failed() -> list[str]:
+        if mock_govee_api.rebind_failed.await_count == 1:
+            return []
+        mock_govee_api.listening_addresses = ["10.0.0.7", "192.168.1.2"]
+        mock_govee_api.networks = [
+            IPv4Network("10.0.0.0/8"),
+            IPv4Network("192.168.1.0/24"),
+        ]
+        mock_govee_api.bind_failures = []
+        return ["10.0.0.7"]
+
+    mock_govee_api.rebind_failed.side_effect = rebind_failed
+
+    await setup_light(hass, mock_govee_api)
+    caplog.clear()
+
+    # Nothing is retried before REBIND_INTERVAL has elapsed.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    mock_govee_api.rebind_failed.assert_not_awaited()
+
+    # First retry: the address still does not bind.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 1
+    assert "Listening on port 4002" not in caplog.text
+
+    # The next poll does not retry outside the interval.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 1
+
+    # Second retry: the adapter is back and the live set is logged.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 2
+    assert (
+        "Listening on port 4002: 10.0.0.7 (10.0.0.0/8), 192.168.1.2 (192.168.1.0/24)"
+        in caplog.text
+    )
+
+    # Everything is bound, so later polls leave the controller alone.
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_govee_api.rebind_failed.await_count == 2
+
+
+async def test_full_bind_is_never_retried(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a controller that bound every address never calls rebind_failed."""
+
+    await setup_light(hass, mock_govee_api)
+
+    freezer.tick(REBIND_INTERVAL + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    mock_govee_api.rebind_failed.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_network_adapters")
+async def test_unload_waits_for_in_flight_rebind(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test unloading lets a running rebind finish before the controller is cleaned up."""
+
+    mock_govee_api.bind_failures = [
+        ("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))
+    ]
+    events: list[str] = []
+    rebind_started = asyncio.Event()
+    rebind_unblocked = asyncio.Event()
+
+    async def rebind_failed() -> list[str]:
+        rebind_started.set()
+        await rebind_unblocked.wait()
+        events.append("rebind_done")
+        return []
+
+    mock_govee_api.rebind_failed.side_effect = rebind_failed
+    mock_govee_api.cleanup.side_effect = lambda: (
+        events.append("cleanup") or mock_govee_api.cleanup.return_value
+    )
+
+    _entry, _ = await setup_light(hass, mock_govee_api)
+
+    freezer.tick(REBIND_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await rebind_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(_entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    # Unload is waiting on the rebind, so the controller is still untouched.
+    assert events == []
+
+    rebind_unblocked.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert events == ["rebind_done", "cleanup"]
+
+
+@pytest.mark.parametrize(
+    "bind_failures",
+    [
+        pytest.param(
+            [("10.0.0.7", OSError(EADDRNOTAVAIL, "Cannot assign requested address"))],
+            id="after_partial_bind",
+        ),
+        pytest.param([], id="after_full_bind"),
+    ],
+)
+async def test_reload_when_all_endpoints_lost(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    bind_failures: list[tuple[str, OSError]],
+) -> None:
+    """Test the entry is reloaded once the controller has no live endpoint left."""
+
+    mock_govee_api.bind_failures = bind_failures
+    entry, _ = await setup_light(hass, mock_govee_api)
+    assert mock_govee_api.start.await_count == 1
+
+    async def start(**kwargs: Any) -> None:
+        # The reloaded controller binds again.
+        mock_govee_api.protocols = [MagicMock()]
+
+    mock_govee_api.start.side_effect = start
+    mock_govee_api.protocols = []
+
+    # Past REBIND_INTERVAL so a partial bind would otherwise retry.
+    freezer.tick(REBIND_INTERVAL + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    assert "Lost every network listener, reloading" in caplog.text
+    mock_govee_api.rebind_failed.assert_not_awaited()
+    assert mock_govee_api.start.await_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.last_update_success
+
+
+async def test_light_setup_retry_without_listening_addresses(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test setup is retried when no enabled adapter has an IPv4 address."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.network.async_get_adapters",
+        return_value=DISABLED_NETWORK_ADAPTERS,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == "No enabled network adapter has an IPv4 address to listen on"
+    mock_govee_api.start.assert_not_awaited()

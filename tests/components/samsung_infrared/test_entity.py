@@ -1,11 +1,12 @@
 """Tests for the Samsung Infrared base entity."""
 
 import pytest
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID,
+)
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.components.infrared import EMITTER_ENTITY_ID as MOCK_INFRARED_ENTITY_ID
 
 
 @pytest.mark.usefixtures("init_integration")

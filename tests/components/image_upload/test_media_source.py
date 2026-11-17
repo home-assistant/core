@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientSession
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import media_source
 from homeassistant.components.image_upload import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import TEST_IMAGE
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
