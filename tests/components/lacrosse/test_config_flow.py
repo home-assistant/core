@@ -311,6 +311,49 @@ async def test_import_flow(
 
 
 @pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(None, id="without-unique-id"),
+        pytest.param("/dev/ttyUSB0", id="with-unique-id"),
+    ],
+)
+async def test_import_existing_receiver_recreates_yaml_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_setup_entry: AsyncMock,
+    unique_id: str | None,
+) -> None:
+    """Test YAML still raises a repair when its receiver is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=RECEIVER_DATA,
+        source=config_entries.SOURCE_IMPORT,
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+    assert (
+        issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
+        is None
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=RECEIVER_DATA,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    mock_setup_entry.assert_not_called()
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+@pytest.mark.parametrize(
     ("exception", "reason"),
     [
         pytest.param(SerialException, "cannot_connect", id="cannot-connect"),

@@ -183,6 +183,20 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.warning(
             "Importing LaCrosse from YAML is deprecated and will be removed"
         )
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2027.4.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LaCrosse",
+            },
+        )
         resolved_device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, import_config.get(CONF_DEVICE, "/dev/ttyUSB0")
         )
@@ -219,21 +233,6 @@ class LaCrosseConfigFlow(ConfigFlow, domain=DOMAIN):
             sensor_input = dict(sensor_config)
             sensor_input[CONF_NAME] = sensor_input.pop(CONF_NAME, slug)
             sensors[slug] = sensor_input
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2027.4.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "LaCrosse",
-            },
-        )
 
         return self.async_create_entry(
             title=entry_input[CONF_DEVICE],
