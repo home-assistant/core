@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -52,6 +53,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an eGauge config flow."""
 
     @staticmethod
+    @callback
     @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
