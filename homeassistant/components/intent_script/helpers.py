@@ -56,6 +56,8 @@ async def async_load_intents(
             try:
                 actions = await async_validate_actions_config(hass, conf[CONF_ACTION])
             except (probatio.Invalid, HomeAssistantError) as exc:
+                if isinstance(exc, probatio.Invalid):
+                    exc.prepend([CONF_ACTION])
                 _LOGGER.error(
                     "Failed to validate actions for intent %s: %s", intent_type, exc
                 )

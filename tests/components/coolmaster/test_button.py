@@ -1,8 +1,8 @@
 """The test for the Coolmaster button platform."""
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 
 
@@ -17,9 +17,9 @@ async def test_button(
     assert button is not None
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: button.entity_id,
+            CommonServiceArgument.ENTITY_ID: button.entity_id,
         },
         blocking=True,
     )

@@ -15,12 +15,12 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.sofar.const import DOMAIN, PACKS_SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -139,8 +139,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
     assert (state := hass.states.get(entity_id)) is not None
@@ -161,7 +164,10 @@ async def test_select_option_modbus_error(
     with pytest.raises(ModbusError, match="busy"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: charger_id, ATTR_OPTION: "feed_in_priority_mode"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: charger_id,
+                SelectServiceArgument.OPTION: "feed_in_priority_mode",
+            },
             blocking=True,
         )
