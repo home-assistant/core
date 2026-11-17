@@ -27,9 +27,10 @@ async def test_schedule_select_updates_cached_selection(
 ) -> None:
     """Selecting a schedule updates the entity state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "schedule")
-    config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
-    )
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    async_update_listeners = MagicMock(wraps=coordinator.async_update_listeners)
+    coordinator.async_update_listeners = async_update_listeners
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -44,6 +45,7 @@ async def test_schedule_select_updates_cached_selection(
     state = hass.states.get("select.master_climatecontrol_schedule")
     assert state is not None
     assert state.state == "1"
+    async_update_listeners.assert_called_once_with()
 
 
 async def test_schedule_select_ignores_current_option(
