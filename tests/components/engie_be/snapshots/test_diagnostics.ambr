@@ -62,16 +62,16 @@
             'daily_peaks': list([
               dict({
                 'end': '2026-10-15T18:15:00+02:00',
-                'peak_kw': 4.2,
-                'peak_kwh': 1.05,
+                'energy_kwh': 1.05,
+                'power_kw': 4.2,
                 'start': '2026-10-15T18:00:00+02:00',
               }),
             ]),
             'month': 10,
             'peak_of_the_month': dict({
               'end': '2026-10-15T18:15:00+02:00',
-              'peak_kw': 4.2,
-              'peak_kwh': 1.05,
+              'energy_kwh': 1.05,
+              'power_kw': 4.2,
               'start': '2026-10-15T18:00:00+02:00',
             }),
             'previous_peak_of_the_month': None,
@@ -183,16 +183,16 @@
             'daily_peaks': list([
               dict({
                 'end': '2026-10-15T18:15:00+02:00',
-                'peak_kw': 4.2,
-                'peak_kwh': 1.05,
+                'energy_kwh': 1.05,
+                'power_kw': 4.2,
                 'start': '2026-10-15T18:00:00+02:00',
               }),
             ]),
             'month': 10,
             'peak_of_the_month': dict({
               'end': '2026-10-15T18:15:00+02:00',
-              'peak_kw': 4.2,
-              'peak_kwh': 1.05,
+              'energy_kwh': 1.05,
+              'power_kw': 4.2,
               'start': '2026-10-15T18:00:00+02:00',
             }),
             'previous_peak_of_the_month': None,
@@ -283,16 +283,16 @@
             'daily_peaks': list([
               dict({
                 'end': '2026-10-15T18:15:00+02:00',
-                'peak_kw': 4.2,
-                'peak_kwh': 1.05,
+                'energy_kwh': 1.05,
+                'power_kw': 4.2,
                 'start': '2026-10-15T18:00:00+02:00',
               }),
             ]),
             'month': 10,
             'peak_of_the_month': dict({
               'end': '2026-10-15T18:15:00+02:00',
-              'peak_kw': 4.2,
-              'peak_kwh': 1.05,
+              'energy_kwh': 1.05,
+              'power_kw': 4.2,
               'start': '2026-10-15T18:00:00+02:00',
             }),
             'previous_peak_of_the_month': None,
@@ -381,16 +381,16 @@
             'daily_peaks': list([
               dict({
                 'end': '2026-10-15T18:15:00+02:00',
-                'peak_kw': 4.2,
-                'peak_kwh': 1.05,
+                'energy_kwh': 1.05,
+                'power_kw': 4.2,
                 'start': '2026-10-15T18:00:00+02:00',
               }),
             ]),
             'month': 10,
             'peak_of_the_month': dict({
               'end': '2026-10-15T18:15:00+02:00',
-              'peak_kw': 4.2,
-              'peak_kwh': 1.05,
+              'energy_kwh': 1.05,
+              'power_kw': 4.2,
               'start': '2026-10-15T18:00:00+02:00',
             }),
             'previous_peak_of_the_month': None,

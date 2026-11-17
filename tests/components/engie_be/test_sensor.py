@@ -36,7 +36,10 @@ from homeassistant.components.engie_be.const import (
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
 )
-from homeassistant.components.engie_be.coordinator import EngieBePricesData
+from homeassistant.components.engie_be.coordinator import (
+    EngieBePricesData,
+    mask_identifier,
+)
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -295,14 +298,14 @@ def _empty_address_relations() -> CustomerAccountRelations:
         pytest.param(_empty_address_relations(), id="empty-address"),
     ],
 )
-async def test_device_name_falls_back_to_ban(
+async def test_device_name_falls_back_to_masked_ban(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     relations: CustomerAccountRelations,
 ) -> None:
-    """Test the device name falls back to the bare BAN without a usable consumption address."""
+    """Test the device name falls back to the masked BAN without a usable consumption address."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         relations
     )
@@ -314,7 +317,7 @@ async def test_device_name_falls_back_to_ban(
         (DOMAIN, BAN), mock_config_entry.entry_id
     )
     assert household_device is not None
-    assert household_device.name == BAN
+    assert household_device.name == f"Business agreement {mask_identifier(BAN)}"
 
 
 @pytest.mark.parametrize(

@@ -46,6 +46,18 @@ class EngieBeRuntimeData:
     households: dict[str, EngieBeHouseholdCoordinators]
     epex_ready_callbacks: list[Callable[[], None]] = field(default_factory=list)
 
+    def claim_new_dynamic_bans(self, known_bans: set[str]) -> list[str]:
+        """Return the dynamic households missing from known_bans and add them to it."""
+        if self.epex is None:
+            return []
+        new_bans = [
+            ban
+            for ban, household in self.households.items()
+            if household.is_dynamic and ban not in known_bans
+        ]
+        known_bans.update(new_bans)
+        return new_bans
+
 
 type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 

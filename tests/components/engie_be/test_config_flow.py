@@ -76,19 +76,21 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("exception", "error", "logged"),
     [
-        (EngieBeCommunicationError("boom"), "cannot_connect"),
-        (EngieBeAuthenticationError("boom"), "invalid_auth"),
-        (EngieBeError("boom"), "unknown"),
+        (EngieBeCommunicationError("boom"), "cannot_connect", False),
+        (EngieBeAuthenticationError("boom"), "invalid_auth", False),
+        (EngieBeError("boom"), "unknown", True),
     ],
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
     mock_engie_client: MagicMock,
     mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
     error: str,
+    logged: bool,
 ) -> None:
     """Test recoverable errors on the user step."""
     mock_engie_client.return_value.subject = SUBJECT
@@ -103,6 +105,7 @@ async def test_user_step_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
+    assert ("Unexpected error during authentication" in caplog.text) is logged
 
     mock_engie_client.return_value.async_start_authentication.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -119,12 +122,12 @@ async def test_user_step_errors(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error"),
+    ("exception", "error", "logged"),
     [
-        (EngieBeMfaError("bad code"), "invalid_mfa_code"),
-        (EngieBeAuthenticationError("boom"), "invalid_auth"),
-        (EngieBeCommunicationError("boom"), "cannot_connect"),
-        (EngieBeError("boom"), "unknown"),
+        (EngieBeMfaError("bad code"), "invalid_mfa_code", False),
+        (EngieBeAuthenticationError("boom"), "invalid_auth", False),
+        (EngieBeCommunicationError("boom"), "cannot_connect", False),
+        (EngieBeError("boom"), "unknown", True),
     ],
 )
 async def test_mfa_submit_errors_recovery(
@@ -132,8 +135,10 @@ async def test_mfa_submit_errors_recovery(
     mock_engie_client: MagicMock,
     mock_auth_flow: MagicMock,
     mock_setup_entry: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
     exception: Exception,
     error: str,
+    logged: bool,
 ) -> None:
     """Test recoverable errors on the MFA submit step."""
     mock_engie_client.return_value.subject = SUBJECT
@@ -152,6 +157,7 @@ async def test_mfa_submit_errors_recovery(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
     assert result["errors"] == {"base": error}
+    assert ("Unexpected error during MFA submission" in caplog.text) is logged
 
     mock_auth_flow.async_submit_mfa.side_effect = None
     mock_auth_flow.async_submit_mfa.return_value = ("access", "refresh")

@@ -1,7 +1,7 @@
 """Config flow for the ENGIE Belgium integration."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aioengiebelgium import (
     AuthFlow,
@@ -24,7 +24,13 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_MFA_METHOD, CONF_REFRESH_TOKEN, DOMAIN, USER_MANAGEMENT_URL
+from .const import (
+    CONF_MFA_METHOD,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+    LOGGER,
+    USER_MANAGEMENT_URL,
+)
 
 _MFA_METHOD_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(
@@ -32,11 +38,11 @@ _MFA_METHOD_SELECTOR = selector.SelectSelector(
         translation_key="mfa_method",
     )
 )
-_CODE_SCHEMA = probatio.Schema({probatio.Required("code"): str})
+_CODE_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret("code")): str})
 _CREDENTIALS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_MFA_METHOD, default=MfaMethod.SMS.value): (
             _MFA_METHOD_SELECTOR
         ),
@@ -80,6 +86,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         except EngieBeCommunicationError:
             return {"base": "cannot_connect"}
         except EngieBeError:
+            LOGGER.exception("Unexpected error during authentication")
             return {"base": "unknown"}
         return {}
 
@@ -87,7 +94,8 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, code: str
     ) -> tuple[dict[str, str], tuple[str, str] | None]:
         """Submit the MFA code and return (errors, tokens)."""
-        assert self._auth_flow is not None
+        if TYPE_CHECKING:
+            assert self._auth_flow is not None
         try:
             tokens = await self._auth_flow.async_submit_mfa(code)
         except EngieBeMfaError:
@@ -97,6 +105,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         except EngieBeCommunicationError:
             return {"base": "cannot_connect"}, None
         except EngieBeError:
+            LOGGER.exception("Unexpected error during MFA submission")
             return {"base": "unknown"}, None
         return {}, tokens
 
@@ -145,7 +154,9 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+            ),
             description_placeholders={"email": reauth_entry.data[CONF_EMAIL]},
             errors=errors,
         )
@@ -185,7 +196,8 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors, tokens = await self._async_submit_mfa(user_input["code"])
             if not errors and tokens is not None:
                 access_token, refresh_token = tokens
-                assert self._client is not None
+                if TYPE_CHECKING:
+                    assert self._client is not None
                 subject = self._client.subject
                 if subject is None:
                     return self.async_show_form(

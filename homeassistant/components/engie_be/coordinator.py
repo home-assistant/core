@@ -1,12 +1,12 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
-from zoneinfo import ZoneInfo
 
 from aioengiebelgium import (
     BusinessAgreement,
@@ -31,6 +31,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BRUSSELS_TIME_ZONE,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     LOGGER,
@@ -46,12 +47,41 @@ _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
 
-BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
-
 
 def mask_identifier(identifier: str) -> str:
     """Mask an account/meter identifier down to its last four characters."""
     return f"…{identifier[-4:]}"
+
+
+@contextmanager
+def _raise_update_errors() -> Iterator[None]:
+    """Turn client errors into the matching coordinator update errors."""
+    try:
+        yield
+    except EngieBeAuthenticationError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
+    except EngieBeError as err:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+
+
+def brussels_day(slot: EpexSlot) -> date:
+    """Return the Brussels calendar day an EPEX slot starts on."""
+    return slot.start.astimezone(BRUSSELS_TIME_ZONE).date()
+
+
+def peak_as_dict(peak: Peak) -> dict[str, float | str]:
+    """Return one capacity tariff peak as a plain dictionary."""
+    return {
+        "power_kw": peak.peak_kw,
+        "energy_kwh": peak.peak_kwh,
+        "start": peak.start.isoformat(),
+        "end": peak.end.isoformat(),
+    }
 
 
 def normalize_slot_code(raw_code: str) -> str:
@@ -118,17 +148,8 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
     @override
     async def _async_update_data(self) -> dict[str, BusinessAgreement]:
         """Fetch the account's active business agreements."""
-        try:
+        with _raise_update_errors():
             relations = await self.client.async_get_customer_account_relations()
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
         agreements = {
             agreement.business_agreement_number: agreement
@@ -168,17 +189,18 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
-        device_name = (
-            agreement.consumption_address.format()
-            if agreement.consumption_address is not None
-            else ""
-        ) or ban
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, ban)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ENGIE Belgium",
-            name=device_name,
         )
+        if agreement.consumption_address is not None and (
+            address := agreement.consumption_address.format()
+        ):
+            self.device_info["name"] = address
+        else:
+            self.device_info["translation_key"] = "business_agreement"
+            self.device_info["translation_placeholders"] = {"ban": mask_identifier(ban)}
 
     def _service_point_due(self, ean: str, now: datetime) -> bool:
         """Return True when the service point of a bare EAN needs a fresh fetch."""
@@ -191,17 +213,8 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
     @override
     async def _async_update_data(self) -> EngieBePricesData:
         """Fetch this household's prices and pre-process them into a slot lookup."""
-        try:
+        with _raise_update_errors():
             prices = await self.client.async_get_prices(self.ban)
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
         now = dt_util.utcnow()
         fetch_eans = list(
@@ -243,9 +256,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                     self.gas_conversion_coefficients[bare] = coefficient
                 self._service_points_refreshed_at[bare] = now
 
-        brussels = dt_util.get_time_zone("Europe/Brussels")
-        assert brussels is not None
-        today = dt_util.now(brussels).date()
+        today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         slots: dict[tuple[str, str, str], PriceSlot] = {}
         for ean_prices in prices.items:
             period = _current_period(ean_prices.periods, today)
@@ -285,11 +296,7 @@ class EngieBeEpexData:
 
 def epex_slots_for_day(slots: Iterable[EpexSlot], day: date) -> tuple[EpexSlot, ...]:
     """Return the EPEX slots that start on the given Brussels calendar day."""
-    return tuple(
-        slot
-        for slot in slots
-        if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() == day
-    )
+    return tuple(slot for slot in slots if brussels_day(slot) == day)
 
 
 def epex_slot_covering(slots: Iterable[EpexSlot], moment: datetime) -> EpexSlot | None:
@@ -333,13 +340,21 @@ class EngieBePeaksData:
     previous_month: MonthlyPeaks | None
 
     @property
+    def _source(self) -> MonthlyPeaks | None:
+        """Return the month whose peak is displayed."""
+        if self.monthly.peak_of_the_month is not None:
+            return self.monthly
+        if (
+            self.previous_month is not None
+            and self.previous_month.peak_of_the_month is not None
+        ):
+            return self.previous_month
+        return None
+
+    @property
     def peak(self) -> Peak | None:
         """Return the peak to display, falling back to the previous month early in the month."""
-        if self.monthly.peak_of_the_month is not None:
-            return self.monthly.peak_of_the_month
-        if self.previous_month is not None:
-            return self.previous_month.peak_of_the_month
-        return None
+        return None if self._source is None else self._source.peak_of_the_month
 
     @property
     def is_fallback(self) -> bool:
@@ -349,14 +364,7 @@ class EngieBePeaksData:
     @property
     def peak_month(self) -> str | None:
         """Return the YYYY-MM month the displayed peak belongs to."""
-        if self.monthly.peak_of_the_month is not None:
-            source = self.monthly
-        elif (
-            self.previous_month is not None
-            and self.previous_month.peak_of_the_month is not None
-        ):
-            source = self.previous_month
-        else:
+        if (source := self._source) is None:
             return None
         return f"{source.year}-{source.month:02d}"
 
@@ -388,7 +396,7 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
     async def _async_update_data(self) -> EngieBePeaksData:
         """Fetch this month's peaks, plus last month's when this month has no peak yet."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
-        try:
+        with _raise_update_errors():
             monthly = await self.client.async_get_monthly_peaks(
                 self.ban, today.year, today.month
             )
@@ -402,15 +410,6 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
                 previous_month = await self.client.async_get_monthly_peaks(
                     self.ban, prev_year, prev_month
                 )
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 
@@ -472,9 +471,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
         tomorrow = today + timedelta(days=1)
         slots = {
             granularity: [
-                slot
-                for slot in data.slots(granularity)
-                if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() >= today
+                slot for slot in data.slots(granularity) if brussels_day(slot) >= today
             ]
             for granularity in EpexGranularity
         }
@@ -499,9 +496,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
                     continue
                 slots[granularity] = [
-                    slot
-                    for slot in slots[granularity]
-                    if slot.start.astimezone(BRUSSELS_TIME_ZONE).date() != day
+                    slot for slot in slots[granularity] if brussels_day(slot) != day
                 ] + list(payload.slots)
         return EngieBeEpexData(
             hourly=tuple(

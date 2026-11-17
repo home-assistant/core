@@ -22,17 +22,18 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, BRUSSELS_TIME_ZONE
 from .coordinator import (
-    BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
+    EngieBePeaksData,
     EngieBePricesCoordinator,
     EngieBePricesData,
     epex_slot_covering,
     epex_slots_cover_day,
     epex_slots_for_day,
     normalize_slot_code,
+    peak_as_dict,
 )
 
 if TYPE_CHECKING:
@@ -130,19 +131,13 @@ async def async_setup_entry(
     @callback
     def _async_add_epex_sensors() -> None:
         """Add the EPEX price sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
+        if not (new_bans := runtime_data.claim_new_dynamic_bans(known_epex_bans)):
             return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_epex_bans
-        ]
-        if not new_bans:
-            return
-        known_epex_bans.update(new_bans)
+        if TYPE_CHECKING:
+            assert runtime_data.epex is not None
         async_add_entities(
             EngieBeEpexPriceSensor(
-                epex,
+                runtime_data.epex,
                 ban=ban,
                 device_info=runtime_data.households[ban].prices.device_info,
                 description=description,
@@ -225,7 +220,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
     @property
     @override
     def available(self) -> bool:
-        """Return True only when this entity's slot is present in the current data."""
+        """Return True when the slot is present and, for per m³ sensors, the gas coefficient is known."""
         data = self.coordinator.data
         return (
             super().available
@@ -246,9 +241,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         if self._per_cubic_meter:
             return price * data.gas_conversion_coefficients[bare_ean(self._ean)]
         return price
-
-
-_EPEX_PRECISION = 4
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -324,7 +316,7 @@ class EngieBeEpexPriceSensor(CoordinatorEntity[EngieBeEpexCoordinator], SensorEn
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
     _attr_native_unit_of_measurement = _UNIT
-    _attr_suggested_display_precision = _EPEX_PRECISION
+    _attr_suggested_display_precision = 4
 
     entity_description: EngieBeEpexSensorEntityDescription
 
@@ -415,6 +407,23 @@ class EngieBePeaksSensorEntityDescription(SensorEntityDescription):
     """Describes a capacity tariff peak sensor entity."""
 
     value_fn: Callable[[EngieBePeaksSensor], float | datetime | None]
+    attributes_fn: Callable[[EngieBePeaksData], dict[str, Any]] | None = None
+
+
+def _monthly_peak_attributes(data: EngieBePeaksData) -> dict[str, Any]:
+    """Return which month the displayed peak belongs to and last month's peak."""
+    attributes: dict[str, Any] = {
+        "peak_month": data.peak_month,
+        "peak_is_fallback": data.is_fallback,
+    }
+    if (previous := data.monthly.previous_peak_of_the_month) is not None:
+        attributes["previous_peak"] = peak_as_dict(previous)
+    return attributes
+
+
+def _daily_peak_attributes(data: EngieBePeaksData) -> dict[str, Any]:
+    """Return every daily peak of the current month."""
+    return {"daily_peaks": [peak_as_dict(peak) for peak in data.monthly.daily_peaks]}
 
 
 _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
@@ -425,6 +434,7 @@ _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         value_fn=_peak_power_kw,
+        attributes_fn=_monthly_peak_attributes,
     ),
     EngieBePeaksSensorEntityDescription(
         key="capacity_tariff_monthly_energy_peak",
@@ -455,6 +465,7 @@ _CAPACITY_TARIFF_SENSORS: tuple[EngieBePeaksSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         value_fn=_daily_peak_power_kw,
+        attributes_fn=_daily_peak_attributes,
     ),
 )
 
@@ -489,33 +500,8 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return peak provenance and daily peak details."""
-        data = self.coordinator.data
-        if self.entity_description.key == "capacity_tariff_monthly_power_peak":
-            attributes: dict[str, Any] = {
-                "peak_month": data.peak_month,
-                "peak_is_fallback": data.is_fallback,
-            }
-            previous = data.monthly.previous_peak_of_the_month
-            if previous is not None:
-                attributes["previous_peak"] = {
-                    "power_kw": previous.peak_kw,
-                    "energy_kwh": previous.peak_kwh,
-                    "start": previous.start.isoformat(),
-                    "end": previous.end.isoformat(),
-                }
-            return attributes
-        if self.entity_description.key == "capacity_tariff_daily_power_peak":
-            return {
-                "daily_peaks": [
-                    {
-                        "power_kw": peak.peak_kw,
-                        "energy_kwh": peak.peak_kwh,
-                        "start": peak.start.isoformat(),
-                        "end": peak.end.isoformat(),
-                    }
-                    for peak in data.monthly.daily_peaks
-                ]
-            }
-        return {}
+        if (attributes_fn := self.entity_description.attributes_fn) is None:
+            return None
+        return attributes_fn(self.coordinator.data)

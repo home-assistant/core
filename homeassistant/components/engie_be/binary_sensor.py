@@ -11,8 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
-from .coordinator import BRUSSELS_TIME_ZONE, EngieBeEpexCoordinator, epex_day_available
+from .const import ATTRIBUTION, BRUSSELS_TIME_ZONE
+from .coordinator import EngieBeEpexCoordinator, epex_day_available
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
@@ -32,19 +32,13 @@ async def async_setup_entry(
     @callback
     def _async_add_tomorrow_available_sensors() -> None:
         """Add the tomorrow-available binary sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
+        if not (new_bans := runtime_data.claim_new_dynamic_bans(known_bans)):
             return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_bans
-        ]
-        if not new_bans:
-            return
-        known_bans.update(new_bans)
+        if TYPE_CHECKING:
+            assert runtime_data.epex is not None
         async_add_entities(
             EngieBeEpexTomorrowAvailableSensor(
-                epex,
+                runtime_data.epex,
                 ban=ban,
                 device_info=runtime_data.households[ban].prices.device_info,
             )
