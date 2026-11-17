@@ -1,10 +1,10 @@
 """Select platform for Lyngdorf integration."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf import LyngdorfInvalidValueError, LyngdorfReceiver
+from lyngdorf import LyngdorfInvalidValueError, LyngdorfReceiver, Selector
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -23,25 +23,19 @@ PARALLEL_UPDATES = 1
 class LyngdorfSelectEntityDescription(SelectEntityDescription):
     """Describe a Lyngdorf select entity."""
 
-    current_option_fn: Callable[[LyngdorfReceiver], str | None]
-    options_fn: Callable[[LyngdorfReceiver], list[str]]
-    select_option_fn: Callable[[LyngdorfReceiver, str], Awaitable[None]]
+    selector_fn: Callable[[LyngdorfReceiver], Selector | None]
 
 
 SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
     LyngdorfSelectEntityDescription(
         key="room_perfect_position",
         translation_key="room_perfect_position",
-        current_option_fn=lambda r: r.room_perfect_position,
-        options_fn=lambda r: r.room_perfect_positions,
-        select_option_fn=lambda r, o: r.set_room_perfect_position(o),
+        selector_fn=lambda r: r.room_perfect_position_selector,
     ),
     LyngdorfSelectEntityDescription(
         key="voicing",
         translation_key="voicing",
-        current_option_fn=lambda r: r.voicing,
-        options_fn=lambda r: r.voicings,
-        select_option_fn=lambda r, o: r.set_voicing(o),
+        selector_fn=lambda r: r.voicing_selector,
     ),
 )
 
@@ -59,6 +53,7 @@ async def async_setup_entry(
             runtime_data.receiver, config_entry, runtime_data.device_info, description
         )
         for description in SELECT_ENTITIES
+        if description.selector_fn(runtime_data.receiver) is not None
     )
 
 
@@ -81,23 +76,30 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{config_entry.unique_id}_{description.key}"
 
+    @property
+    def _selector(self) -> Selector:
+        selector = self.entity_description.selector_fn(self._receiver)
+        if TYPE_CHECKING:
+            assert selector is not None
+        return selector
+
     @override
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        return self.entity_description.current_option_fn(self._receiver)
+        return self._selector.value
 
     @override
     @property
     def options(self) -> list[str]:
         """Return available options."""
-        return self.entity_description.options_fn(self._receiver)
+        return self._selector.options
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
         try:
-            await self.entity_description.select_option_fn(self._receiver, option)
+            await self._selector.select(option)
         except LyngdorfInvalidValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
