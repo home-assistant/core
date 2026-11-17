@@ -325,6 +325,57 @@ async def test_empty_websocket_resync_recovers_failed_coordinator(
     assert _available(hass)
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiounifi.RequestError, id="request_error"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(aiounifi.Forbidden, id="forbidden"),
+    ],
+)
+async def test_empty_websocket_resync_survives_older_fallback_failure(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    exception: type[Exception],
+) -> None:
+    """An older failed fallback cannot undo a successful empty resync."""
+    fallback_started = asyncio.Event()
+    release_fallback = asyncio.Event()
+    resync_finished = asyncio.Event()
+
+    async def update() -> None:
+        if not fallback_started.is_set():
+            fallback_started.set()
+            await release_fallback.wait()
+            raise exception
+        resync_finished.set()
+
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
+    with (
+        patch.object(hub.api.clients, "update", side_effect=update),
+        patch(JITTER, return_value=1),
+    ):
+        _fire(hass, WEBSOCKET_FALLBACK_INTERVAL.total_seconds() + 1)
+        await _wait(fallback_started)
+
+        went_down = _availability_reached(hass, config_entry_setup, False)
+        mock_websocket_state.set()
+        await _wait(went_down)
+        mock_websocket_state.clear()
+        _fire(hass, RETRY_DELAYS[0] + 1)
+        await _wait(resync_finished)
+        await hass.async_block_till_done()
+        assert _available(hass)
+
+        release_fallback.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.last_update_success
+    assert _available(hass)
+
+
 async def test_failed_websocket_resync_keeps_coordinator_unavailable(
     hass: HomeAssistant,
     hub: UnifiHub,
