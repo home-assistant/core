@@ -43,13 +43,19 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "quiet": "Quiet"
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
           "swing_mode": {
             "state": {
-              "floorheatingairflow": "Floor heating airflow",
-              "windnice": "Comfort airflow"
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
             }
           }
         }
@@ -59,13 +65,19 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "quiet": "Quiet"
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
           "swing_mode": {
             "state": {
-              "floorheatingairflow": "Floor heating airflow",
-              "windnice": "Comfort airflow"
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
             }
           }
         }
@@ -75,13 +87,19 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "quiet": "Quiet"
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
           "swing_mode": {
             "state": {
-              "floorheatingairflow": "Floor heating airflow",
-              "windnice": "Comfort airflow"
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
             }
           }
         }
@@ -98,6 +116,12 @@
             "state": {
               "floorheatingairflow": "Floor heating airflow",
               "windnice": "Comfort airflow"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
             }
           }
         }

@@ -5,6 +5,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from daikin_onecta import ClimateControlClient
 from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import ManagementPoint
 import pytest
@@ -55,6 +56,18 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
+
+
+async def _replay_command(coordinator: MagicMock) -> AsyncMock:
+    """Run a captured coordinator command against a minimal library client."""
+    command = coordinator.async_execute_command.await_args.args[0]
+    client = MagicMock()
+    client.patch_characteristic = AsyncMock()
+    client.climate_control.side_effect = lambda gateway_id, management_point_id: (
+        ClimateControlClient(client, gateway_id, management_point_id)
+    )
+    await command(client)
+    return client.patch_characteristic
 
 
 def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
@@ -233,7 +246,6 @@ async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     entity = object.__new__(DaikinClimate)
     device = MagicMock()
     device.id = "device"
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     fan_speed = SimpleNamespace(
@@ -254,7 +266,13 @@ async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
 
     await entity.async_set_fan_mode("2")
 
-    coordinator.async_execute_command.assert_awaited_once()
+    (await _replay_command(coordinator)).assert_awaited_once_with(
+        "device",
+        "zone",
+        "fanControl",
+        2,
+        path="/operationModes/heating/fanSpeed/modes/fixed",
+    )
     assert fan_speed.modes[FANMODE_FIXED].value == 2
     coordinator.async_update_listeners.assert_called_once_with()
 
@@ -284,7 +302,6 @@ async def test_set_hvac_mode_keeps_power_state_when_power_command_fails() -> Non
     device = MagicMock()
     device.id = "device"
     device.name = "Device"
-    device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=False)
     climate_control = SimpleNamespace(
@@ -357,7 +374,6 @@ async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
     """Reject an unsupported HVAC mode before changing the temperature."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock()
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_device", device)
@@ -393,8 +409,8 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
     """Do not enable boost when the prerequisite turn-on fails."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
+    coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
@@ -404,7 +420,7 @@ async def test_enable_boost_stops_after_failed_turn_on() -> None:
     assert not await entity._async_enable_preset_mode(PRESET_BOOST)
 
     entity.async_turn_on.assert_awaited_once()
-    device.patch.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
 
 
 async def test_enable_and_disable_away_preset_updates_cache(
@@ -454,7 +470,6 @@ async def test_enable_and_disable_preset_updates_cache() -> None:
     """Update a non-holiday preset only after its cloud command succeeds."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     powerful_mode = SimpleNamespace(value="off")
@@ -487,7 +502,6 @@ async def test_preset_command_failure_keeps_cached_state(
     device = MagicMock()
     device.id = "device"
     device.name = "Device"
-    device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=False)
     powerful_mode = SimpleNamespace(value=initial_value)
@@ -514,8 +528,8 @@ async def test_turn_ignores_already_matching_power_state(
     device = MagicMock()
     device.id = "device"
     device.name = "Device"
-    device.patch = AsyncMock()
     coordinator = MagicMock()
+    coordinator.async_execute_command = AsyncMock()
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value=initial_value, settable=True)
     )
@@ -526,7 +540,7 @@ async def test_turn_ignores_already_matching_power_state(
 
     await getattr(entity, method)()
 
-    device.patch.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
     coordinator.async_update_listeners.assert_not_called()
 
 
@@ -542,7 +556,6 @@ async def test_turn_handles_management_point_removed_after_command(
     device = MagicMock()
     device.id = "device"
     device.name = "Device"
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     climate_control = SimpleNamespace(
@@ -574,7 +587,6 @@ async def test_turn_keeps_cached_power_state_after_failed_command(
     """Do not publish an unsuccessful power command."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
-    device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=False)
     climate_control = SimpleNamespace(
@@ -598,7 +610,6 @@ async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
-    device.patch = AsyncMock(side_effect=[True, False])
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(side_effect=[True, False])
     climate_control = SimpleNamespace(
@@ -630,7 +641,6 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_management_point = SimpleNamespace(
@@ -678,7 +688,8 @@ async def test_set_hvac_mode_preserves_matching_native_mode(
     """Keep the current native mode when it already maps to the requested mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock()
+    coordinator = MagicMock()
+    coordinator.async_execute_command = AsyncMock()
     operation_mode = SimpleNamespace(
         value=native_mode, settable=True, values=[native_mode]
     )
@@ -689,19 +700,19 @@ async def test_set_hvac_mode_preserves_matching_native_mode(
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", hvac_mode)
+    entity.coordinator = coordinator
     entity._climate_control = MagicMock(return_value=climate_control)
 
     await entity.async_set_hvac_mode(hvac_mode)
 
     assert entity._get_hvac_modes() == [HVACMode.OFF, hvac_mode]
-    device.patch.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
 
 
 async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
     """Use an advertised native mode instead of a generic Daikin value."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     operation_mode = SimpleNamespace(
@@ -720,7 +731,9 @@ async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
 
     await entity.async_set_hvac_mode(HVACMode.HEAT)
 
-    coordinator.async_execute_command.assert_awaited_once()
+    (await _replay_command(coordinator)).assert_awaited_once_with(
+        "device", "zone", "operationMode", "heatingNight", path=None
+    )
     assert operation_mode.value == "heatingNight"
 
 
@@ -728,7 +741,8 @@ async def test_set_hvac_mode_rejects_unknown_native_mode() -> None:
     """Reject a mode without a Home Assistant equivalent before writing power."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock()
+    coordinator = MagicMock()
+    coordinator.async_execute_command = AsyncMock()
     operation_mode = SimpleNamespace(
         value="vendorMode", settable=True, values=["vendorMode"]
     )
@@ -740,6 +754,7 @@ async def test_set_hvac_mode_rejects_unknown_native_mode() -> None:
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_setpoint", "roomTemperature")
     object.__setattr__(entity, "_attr_hvac_mode", None)
+    entity.coordinator = coordinator
     entity._climate_control = MagicMock(return_value=climate_control)
 
     with pytest.raises(ServiceValidationError) as err:
@@ -748,7 +763,7 @@ async def test_set_hvac_mode_rejects_unknown_native_mode() -> None:
     assert err.value.translation_key == "climate_hvac_mode_unavailable"
     assert entity._get_hvac_mode() is None
     assert entity._get_hvac_modes() == [HVACMode.OFF]
-    device.patch.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
 
 
 def test_missing_power_characteristic_uses_operation_mode() -> None:
@@ -900,7 +915,6 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
-    device.patch = AsyncMock(side_effect=[True, False])
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(side_effect=[True, False])
     fan_speed = SimpleNamespace(
@@ -991,7 +1005,6 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     """Update the targeted fan mode when polling replaces the active mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_fan = SimpleNamespace(
@@ -1039,14 +1052,19 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
 
     assert captured_fan.fan_speed.current_mode.value == "quiet"
     assert active_fan.fan_speed.current_mode.value == "auto"
-    coordinator.async_execute_command.assert_awaited_once()
+    (await _replay_command(coordinator)).assert_awaited_once_with(
+        "device",
+        "zone",
+        "fanControl",
+        "quiet",
+        path="/operationModes/heating/fanSpeed/currentMode",
+    )
 
 
 async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     """Update the targeted swing mode when polling replaces the active mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
     coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_fan = SimpleNamespace(
@@ -1104,14 +1122,21 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
 
     assert captured_fan.fan_direction.vertical.current_mode.value == "swing"
     assert active_fan.fan_direction.vertical.current_mode.value == "stop"
-    coordinator.async_execute_command.assert_awaited_once()
+    (await _replay_command(coordinator)).assert_awaited_once_with(
+        "device",
+        "zone",
+        "fanControl",
+        "swing",
+        path="/operationModes/heating/fanDirection/vertical/currentMode",
+    )
 
 
 async def test_set_swing_mode_rejects_unsupported_value() -> None:
     """Do not turn an unsupported swing value into a stop command."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
-    device.patch = AsyncMock()
+    coordinator = MagicMock()
+    coordinator.async_execute_command = AsyncMock()
     management_point = SimpleNamespace(
         operation_mode=SimpleNamespace(value="heating"),
     )
@@ -1128,11 +1153,12 @@ async def test_set_swing_mode_rejects_unsupported_value() -> None:
     )
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
+    entity.coordinator = coordinator
     entity._climate_control = MagicMock(return_value=management_point)
 
     assert not await entity._async_set_swing("vertical", "unsupported")
 
-    device.patch.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
 
 
 async def test_set_preset_mode_stops_after_failed_disable() -> None:
@@ -2061,7 +2087,6 @@ def _make_fan_command_entity(
     """Build a minimally initialized climate entity for fan command tests."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="gateway", name="Device")
-    device.patch = AsyncMock(return_value=True)
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     entity.coordinator = MagicMock()
