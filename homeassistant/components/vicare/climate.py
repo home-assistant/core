@@ -28,9 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, HOLIDAY_PROGRAM_AT_HOME
 from .entity import ViCareEntity
-from .services import HOLIDAY_PROGRAM_AT_HOME
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
 from .utils import VICARE_API_ERRORS, get_burners, get_circuits, get_compressors
 
