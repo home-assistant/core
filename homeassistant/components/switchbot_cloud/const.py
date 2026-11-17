@@ -182,10 +182,10 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Plug": SwitchbotCloudDeviceConfig(False, entity_config=(Platform.SWITCH,)),
     "Plug Mini (US)": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
     ),
     "Plug Mini (JP)": SwitchbotCloudDeviceConfig(
-        False, entity_config=(Platform.SWITCH, Platform.SENSOR)
+        True, entity_config=(Platform.SWITCH, Platform.SENSOR)
     ),
     "Plug Mini (EU)": SwitchbotCloudDeviceConfig(
         False, entity_config=(Platform.SWITCH, Platform.SENSOR)
