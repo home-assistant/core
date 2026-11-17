@@ -163,6 +163,23 @@
         }
       }
     },
+    "fan": {
+      "air_purifier": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "anti_pollen": "Anti-pollen",
+              "auto": "[%key:common::state::auto%]",
+              "auto_fan": "Auto fan",
+              "circulator": "Circulator",
+              "econo": "Econo",
+              "moist": "Moist",
+              "off": "[%key:common::state::off%]"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "schedule": {
         "name": "Schedule",

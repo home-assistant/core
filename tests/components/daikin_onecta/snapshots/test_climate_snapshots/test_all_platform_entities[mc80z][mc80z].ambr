@@ -1061,9 +1061,9 @@
         'area_id': None,
         'capabilities': dict({
           <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'autoFan',
+            'auto_fan',
             'econo',
-            'antiPollen',
+            'anti_pollen',
             'circulator',
             'auto',
             'moist',
@@ -1094,7 +1094,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': <FanEntityFeature: 57>,
-        'translation_key': None,
+        'translation_key': 'air_purifier',
         'unique_id': '00000000-0000-4000-8000-000000000104_climateControl_air_purifier',
         'unit_of_measurement': None,
       }),
@@ -1105,9 +1105,9 @@
           <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
           <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'econo',
           <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'autoFan',
+            'auto_fan',
             'econo',
-            'antiPollen',
+            'anti_pollen',
             'circulator',
             'auto',
             'moist',

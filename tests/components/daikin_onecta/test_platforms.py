@@ -240,9 +240,9 @@ def test_primary_entities_use_device_name() -> None:
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             "fan.air_purifier_climatecontrol",
-            {FanServiceArgument.PRESET_MODE: "autoFan"},
+            {FanServiceArgument.PRESET_MODE: "auto_fan"},
             FanEntityStateAttribute.PRESET_MODE,
-            "autoFan",
+            "auto_fan",
         ),
         (
             "mc80z",

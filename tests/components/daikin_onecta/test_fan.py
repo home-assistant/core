@@ -92,7 +92,7 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     [
         ("async_turn_on", (), "air_purifier_power_unavailable"),
         ("async_turn_off", (), "air_purifier_power_unavailable"),
-        ("async_set_preset_mode", ("autoFan",), "air_purifier_mode_unavailable"),
+        ("async_set_preset_mode", ("auto_fan",), "air_purifier_mode_unavailable"),
         ("async_set_percentage", (100,), "air_purifier_speed_unavailable"),
     ],
 )
@@ -124,14 +124,17 @@ async def test_air_purifier_preset_updates_cached_state(
         SERVICE_SET_PRESET_MODE,
         {
             ATTR_ENTITY_ID: "fan.air_purifier_climatecontrol",
-            FanServiceArgument.PRESET_MODE: "autoFan",
+            FanServiceArgument.PRESET_MODE: "auto_fan",
         },
         blocking=True,
     )
 
     state = hass.states.get("fan.air_purifier_climatecontrol")
     assert state is not None
-    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] == "autoFan"
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] == "auto_fan"
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert point.air_purification.mode.value == "autoFan"
 
 
 async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
@@ -476,9 +479,9 @@ async def test_air_purifier_turn_on_applies_optional_controls() -> None:
     entity.async_set_preset_mode = AsyncMock()
     entity.async_set_percentage = AsyncMock()
 
-    await entity.async_turn_on(percentage=65, preset_mode="autoFan")
+    await entity.async_turn_on(percentage=65, preset_mode="auto_fan")
 
-    entity.async_set_preset_mode.assert_awaited_once_with("autoFan")
+    entity.async_set_preset_mode.assert_awaited_once_with("auto_fan")
     entity.async_set_percentage.assert_awaited_once_with(65)
 
 

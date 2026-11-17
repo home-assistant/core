@@ -1,6 +1,7 @@
 """Support for Daikin air purifiers."""
 
 from collections.abc import Awaitable, Callable
+import re
 from typing import Any, override
 
 from daikin_onecta.air_purification import AirPurificationClient
@@ -20,6 +21,11 @@ from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 
 PARALLEL_UPDATES = 1
+
+
+def _preset_mode_state(mode: str) -> str:
+    """Return a translated Home Assistant state key for a Daikin mode."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
 
 
 async def async_setup_entry(
@@ -49,6 +55,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     """Representation of a Daikin air purifier."""
 
     _attr_name = None
+    _attr_translation_key = "air_purifier"
 
     def __init__(
         self,
@@ -158,10 +165,16 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         )
         mode = purification.mode
         self._attr_preset_mode = (
-            mode.value if mode is not None and mode.value != "manualFan" else None
+            _preset_mode_state(mode.value)
+            if mode is not None and mode.value not in (None, "manualFan")
+            else None
         )
         self._attr_preset_modes = (
-            [preset for preset in purification.modes if preset != "manualFan"]
+            [
+                _preset_mode_state(preset)
+                for preset in purification.modes
+                if preset != "manualFan"
+            ]
             if mode and mode.settable
             else []
         )
@@ -244,9 +257,22 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Select an automatic air-purification preset, not a manual speed."""
-        if preset_mode == "manualFan":
+        purification = self._air_purification()
+        native_mode = (
+            next(
+                (
+                    mode
+                    for mode in purification.modes
+                    if mode != "manualFan" and _preset_mode_state(mode) == preset_mode
+                ),
+                None,
+            )
+            if purification is not None
+            else None
+        )
+        if native_mode is None:
             self._raise_service_validation_error("air_purifier_mode_unavailable")
-        await self._async_set_mode(preset_mode)
+        await self._async_set_mode(native_mode)
 
     async def _async_set_mode(self, mode: str) -> None:
         """Select a native mode, including manual mode for percentage commands."""
