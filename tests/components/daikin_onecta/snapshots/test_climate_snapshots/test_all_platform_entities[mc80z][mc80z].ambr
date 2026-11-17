@@ -1244,7 +1244,18 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'manual_fan',
+            'auto_fan',
+            'econo',
+            'anti_pollen',
+            'circulator',
+            'auto',
+            'moist',
+            'off',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -1263,7 +1274,7 @@
         'object_id_base': 'Air purification mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Air purification mode',
         'platform': 'daikin_onecta',
@@ -1276,7 +1287,18 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Air purification mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'manual_fan',
+            'auto_fan',
+            'econo',
+            'anti_pollen',
+            'circulator',
+            'auto',
+            'moist',
+            'off',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.air_purifier_climatecontrol_air_purification_mode',
@@ -1734,7 +1756,13 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'leaving_water_temperature',
+            'external_room_temperature',
+            'room_temperature',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -1753,7 +1781,7 @@
         'object_id_base': 'Control mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Control mode',
         'platform': 'daikin_onecta',
@@ -1766,14 +1794,20 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Control mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'leaving_water_temperature',
+            'external_room_temperature',
+            'room_temperature',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.test_floor_heating_climatecontrol_control_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'externalRoomTemperature',
+        'state': 'external_room_temperature',
       }),
     }),
     'sensor.test_floor_heating_climatecontrol_cooling_daily_electrical_consumption': dict({
@@ -2390,7 +2424,14 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'fixed',
+            'weather_dependent',
+            'weather_dependent_heating_fixed_cooling',
+            'weather_dependent_cooling_fixed_heating',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -2409,7 +2450,7 @@
         'object_id_base': 'Setpoint mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
@@ -2422,14 +2463,21 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Setpoint mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'fixed',
+            'weather_dependent',
+            'weather_dependent_heating_fixed_cooling',
+            'weather_dependent_cooling_fixed_heating',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.test_floor_heating_climatecontrol_setpoint_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'weatherDependent',
+        'state': 'weather_dependent',
       }),
     }),
     'sensor.test_floor_heating_domestichotwatertank_error_code': dict({
@@ -2486,7 +2534,14 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'reheat_only',
+            'reheat_schedule',
+            'schedule_only',
+            'scheduled_reheat',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -2505,7 +2560,7 @@
         'object_id_base': 'Heat up mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Heat up mode',
         'platform': 'daikin_onecta',
@@ -2518,14 +2573,21 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DomesticHotWaterTank Heat up mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'reheat_only',
+            'reheat_schedule',
+            'schedule_only',
+            'scheduled_reheat',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.test_floor_heating_domestichotwatertank_heat_up_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'scheduleOnly',
+        'state': 'schedule_only',
       }),
     }),
     'sensor.test_floor_heating_domestichotwatertank_heating_daily_electrical_consumption': dict({
@@ -2758,7 +2820,14 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'fixed',
+            'weather_dependent',
+            'weather_dependent_heating_fixed_cooling',
+            'weather_dependent_cooling_fixed_heating',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -2777,7 +2846,7 @@
         'object_id_base': 'Setpoint mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
@@ -2790,7 +2859,14 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DomesticHotWaterTank Setpoint mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'fixed',
+            'weather_dependent',
+            'weather_dependent_heating_fixed_cooling',
+            'weather_dependent_cooling_fixed_heating',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.test_floor_heating_domestichotwatertank_setpoint_mode',

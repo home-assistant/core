@@ -40,6 +40,7 @@ class DaikinEntityMetadata:
     entity_category: EntityCategory | None
     translation_key: str
     model_attribute: str | None = None
+    options: tuple[str, ...] | None = None
 
 
 ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
@@ -65,13 +66,18 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
     ),
     DaikinEntityMetadata(
         key="controlMode",
-        device_class=None,
+        device_class=SensorDeviceClass.ENUM,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="controlmode",
         model_attribute=None,
+        options=(
+            "leaving_water_temperature",
+            "external_room_temperature",
+            "room_temperature",
+        ),
     ),
     DaikinEntityMetadata(
         key="onOffMode",
@@ -85,43 +91,71 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
     ),
     DaikinEntityMetadata(
         key="operationMode",
-        device_class=None,
+        device_class=SensorDeviceClass.ENUM,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="operationmode",
         model_attribute=None,
+        options=(
+            "fan_only",
+            "heating",
+            "cooling",
+            "auto",
+            "dry",
+            "off",
+            "heating_day",
+            "heating_night",
+            "humidification",
+        ),
     ),
     DaikinEntityMetadata(
         key="airPurificationMode",
-        device_class=None,
+        device_class=SensorDeviceClass.ENUM,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="airpurificationmode",
         model_attribute=None,
+        options=(
+            "manual_fan",
+            "auto_fan",
+            "econo",
+            "anti_pollen",
+            "circulator",
+            "auto",
+            "moist",
+            "off",
+        ),
     ),
     DaikinEntityMetadata(
         key="setpointMode",
-        device_class=None,
+        device_class=SensorDeviceClass.ENUM,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="setpointmode",
         model_attribute=None,
+        options=(
+            "fixed",
+            "weather_dependent",
+            "weather_dependent_heating_fixed_cooling",
+            "weather_dependent_cooling_fixed_heating",
+        ),
     ),
     DaikinEntityMetadata(
         key="heatupMode",
-        device_class=None,
+        device_class=SensorDeviceClass.ENUM,
         state_class=None,
         native_unit_of_measurement=None,
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatupmode",
         model_attribute=None,
+        options=("reheat_only", "reheat_schedule", "schedule_only", "scheduled_reheat"),
     ),
     DaikinEntityMetadata(
         key="wifiConnectionSSID",
@@ -769,6 +803,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     metadata.key: SensorEntityDescription(
         key=metadata.key,
         device_class=metadata.device_class,
+        options=list(metadata.options) if metadata.options is not None else None,
         native_unit_of_measurement=metadata.native_unit_of_measurement,
         state_class=metadata.state_class,
         **_entity_description_kwargs(metadata),

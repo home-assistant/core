@@ -20,12 +20,102 @@ from homeassistant.components.daikin_onecta.sensor import (
     _native_unit,
     add_energy_sensors,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+
+
+@pytest.mark.parametrize(
+    ("key", "options"),
+    [
+        (
+            "controlMode",
+            [
+                "leaving_water_temperature",
+                "external_room_temperature",
+                "room_temperature",
+            ],
+        ),
+        (
+            "heatupMode",
+            ["reheat_only", "reheat_schedule", "schedule_only", "scheduled_reheat"],
+        ),
+        (
+            "setpointMode",
+            [
+                "fixed",
+                "weather_dependent",
+                "weather_dependent_heating_fixed_cooling",
+                "weather_dependent_cooling_fixed_heating",
+            ],
+        ),
+        (
+            "airPurificationMode",
+            [
+                "manual_fan",
+                "auto_fan",
+                "econo",
+                "anti_pollen",
+                "circulator",
+                "auto",
+                "moist",
+                "off",
+            ],
+        ),
+        (
+            "operationMode",
+            [
+                "fan_only",
+                "heating",
+                "cooling",
+                "auto",
+                "dry",
+                "off",
+                "heating_day",
+                "heating_night",
+                "humidification",
+            ],
+        ),
+    ],
+)
+def test_string_mode_sensors_use_enum_options(key: str, options: list[str]) -> None:
+    """Describe Daikin mode values as translated enums, not opaque strings."""
+    description = SENSOR_DESCRIPTIONS[key]
+
+    assert description.device_class is SensorDeviceClass.ENUM
+    assert description.options == options
+
+
+@pytest.mark.parametrize(
+    ("key", "native_value", "expected_value"),
+    [
+        (
+            "setpointMode",
+            "weatherDependentHeatingFixedCooling",
+            "weather_dependent_heating_fixed_cooling",
+        ),
+        ("airPurificationMode", "antiPollen", "anti_pollen"),
+        ("operationMode", "fanOnly", "fan_only"),
+    ],
+)
+def test_string_mode_sensor_normalizes_enum_state(
+    key: str, native_value: str, expected_value: str
+) -> None:
+    """Normalize native camelCase values to the translated enum state keys."""
+    point = SimpleNamespace(
+        scalar_characteristic=lambda _: SimpleNamespace(value=native_value)
+    )
+    entity = object.__new__(DaikinValueSensor)
+    entity._device = SimpleNamespace(management_point=lambda _: point)
+    entity._embedded_id = "point"
+    entity._sub_type = None
+    entity._value = key
+    entity.entity_description = SENSOR_DESCRIPTIONS[key]
+
+    assert entity.sensor_value() == expected_value
 
 
 @pytest.mark.parametrize(

@@ -615,7 +615,13 @@
           None,
         ]),
         'area_id': None,
-        'capabilities': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'leaving_water_temperature',
+            'external_room_temperature',
+            'room_temperature',
+          ]),
+        }),
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
@@ -634,7 +640,7 @@
         'object_id_base': 'Control mode',
         'options': dict({
         }),
-        'original_device_class': None,
+        'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
         'original_icon': None,
         'original_name': 'Control mode',
         'platform': 'daikin_onecta',
@@ -647,14 +653,20 @@
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
+          <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Control mode',
+          <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+            'leaving_water_temperature',
+            'external_room_temperature',
+            'room_temperature',
+          ]),
         }),
         'context': <ANY>,
         'entity_id': 'sensor.ndj_climatecontrol_control_mode',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'roomTemperature',
+        'state': 'room_temperature',
       }),
     }),
     'sensor.ndj_climatecontrol_error_code': dict({

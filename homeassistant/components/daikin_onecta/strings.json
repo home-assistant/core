@@ -173,13 +173,28 @@
     },
     "sensor": {
       "airpurificationmode": {
-        "name": "Air purification mode"
+        "name": "Air purification mode",
+        "state": {
+          "anti_pollen": "Anti-pollen",
+          "auto": "[%key:component::daikin_onecta::entity::sensor::operationmode::state::auto%]",
+          "auto_fan": "Auto fan",
+          "circulator": "Circulator",
+          "econo": "Econo",
+          "manual_fan": "Manual fan",
+          "moist": "Moist",
+          "off": "[%key:common::state::off%]"
+        }
       },
       "calculatedleavingwatertemperature": {
         "name": "Calculated leaving water temperature"
       },
       "controlmode": {
-        "name": "Control mode"
+        "name": "Control mode",
+        "state": {
+          "external_room_temperature": "External room temperature",
+          "leaving_water_temperature": "Leaving water temperature",
+          "room_temperature": "Room temperature"
+        }
       },
       "coolingdailyelectricalconsumption": {
         "name": "Cooling daily electrical consumption"
@@ -272,7 +287,13 @@
         "name": "Heating yearly thermal output"
       },
       "heatupmode": {
-        "name": "Heat up mode"
+        "name": "Heat up mode",
+        "state": {
+          "reheat_only": "Reheat only",
+          "reheat_schedule": "Reheat schedule",
+          "schedule_only": "Schedule only",
+          "scheduled_reheat": "Scheduled reheat"
+        }
       },
       "ipaddress": {
         "name": "IP address"
@@ -308,7 +329,18 @@
         "name": "On/Off mode"
       },
       "operationmode": {
-        "name": "Operation mode"
+        "name": "Operation mode",
+        "state": {
+          "auto": "Auto",
+          "cooling": "Cooling",
+          "dry": "Dry",
+          "fan_only": "Fan only",
+          "heating": "Heating",
+          "heating_day": "Heating day",
+          "heating_night": "Heating night",
+          "humidification": "Humidification",
+          "off": "[%key:common::state::off%]"
+        }
       },
       "outdoortemperature": {
         "name": "Outdoor temperature"
@@ -341,7 +373,13 @@
         "name": "Schedule"
       },
       "setpointmode": {
-        "name": "Setpoint mode"
+        "name": "Setpoint mode",
+        "state": {
+          "fixed": "Fixed",
+          "weather_dependent": "Weather dependent",
+          "weather_dependent_cooling_fixed_heating": "Weather-dependent cooling, fixed heating",
+          "weather_dependent_heating_fixed_cooling": "Weather-dependent heating, fixed cooling"
+        }
       },
       "sgtin": {
         "name": "SGTIN"

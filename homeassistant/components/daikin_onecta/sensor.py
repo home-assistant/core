@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+import re
 from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import EnergyAggregate, ManagementPoint
@@ -50,6 +51,11 @@ def _native_unit(unit: str | None, description: SensorEntityDescription) -> str 
     except ValueError:
         return unit
     return unit
+
+
+def _enum_state(value: str) -> str:
+    """Normalize Daikin's camelCase enum values for HA enum state translations."""
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", value).lower()
 
 
 @dataclass(frozen=True)
@@ -404,7 +410,12 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             characteristic = point.sensory_characteristic(self._value)
         else:
             characteristic = point.scalar_characteristic(self._value)
-        result = characteristic.value if characteristic is not None else None
+        result: object = characteristic.value if characteristic is not None else None
+        if (
+            isinstance(result, str)
+            and self.entity_description.device_class is SensorDeviceClass.ENUM
+        ):
+            return _enum_state(result)
         return result if isinstance(result, str | int | float) else None
 
     @property
