@@ -75,6 +75,34 @@ async def test_setup_does_not_serialize_independent_requests(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize("load_device_file", ["4_devices.json"])
+async def test_action_requests_are_concurrent(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the actions of all appliances are fetched concurrently."""
+    started: set[str] = set()
+    multiple_started = asyncio.Event()
+
+    async def _get_actions(device_id: str) -> dict[str, Any]:
+        started.add(device_id)
+        if len(started) > 1:
+            multiple_started.set()
+        try:
+            await asyncio.wait_for(multiple_started.wait(), timeout=2)
+        except TimeoutError as err:
+            raise AssertionError("actions requests did not overlap") from err
+        return {}
+
+    mock_miele_client.get_actions.side_effect = _get_actions
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(started) == 5
+
+
 @pytest.mark.parametrize(
     ("expires_at", "status", "expected_state"),
     [
