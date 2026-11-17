@@ -54,6 +54,7 @@ from .const import (
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
 CONF_REQUEST_NEW_CODE = "request_new_code"
+CONF_CODE_FROM_APPLE_DEVICE = "code_from_apple_device"
 TERMS_URL = "https://www.icloud.com/terms"
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._trusted_device = None
         self._verification_code = None
+        self._code_from_apple_device = True
         self._forced_2fa = False
 
         self._accept_terms = False
@@ -611,6 +613,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_verification_code_form(errors)
 
+        self._code_from_apple_device = user_input[CONF_CODE_FROM_APPLE_DEVICE]
+
         if user_input[CONF_REQUEST_NEW_CODE]:
             # If the user requested a new code, request it
             errors = await self._request_2fa_code(errors)
@@ -628,6 +632,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             if self._requires_2fa:
+                if self._code_from_apple_device:
+                    await self.hass.async_add_executor_job(
+                        self.api.use_existing_trusted_device_code
+                    )
+                elif self.api.two_factor_delivery_method != "sms":
+                    errors["base"] = "sms_code_not_requested"
+                    return await self._show_verification_code_form(errors)
                 if not await self.hass.async_add_executor_job(
                     self.api.validate_2fa_code, self._verification_code
                 ):
@@ -671,6 +682,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Optional(CONF_VERIFICATION_CODE): str,
+                    probatio.Optional(
+                        CONF_CODE_FROM_APPLE_DEVICE,
+                        default=self._code_from_apple_device,
+                    ): bool,
                     probatio.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
                 }
             ),
