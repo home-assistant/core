@@ -32,7 +32,7 @@ async def test_config_flow_invalid_data(
             result["flow_id"],
             {
                 "host": "localhost",
-                "port": 7000,
+                "port": 8000,
             },
         )
 
@@ -45,6 +45,11 @@ async def test_config_flow_invalid_data(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "connection_failed"}
+    suggested_values = {
+        str(key): key.description["suggested_value"]
+        for key in result["data_schema"].schema
+    }
+    assert suggested_values == {"host": "localhost", "port": 8000}
 
     client.data = {"mac_address": "1:2:3:4:5:6"}
 
@@ -59,13 +64,14 @@ async def test_config_flow_invalid_data(
             result["flow_id"],
             {
                 "host": "localhost",
-                "port": 7000,
+                "port": 8000,
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == "1:2:3:4:5:6"
+    assert result["data"] == {"host": "localhost", "port": 8000}
 
 
 async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) -> None:

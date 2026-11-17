@@ -15,12 +15,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -90,7 +85,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+            TargetKey.ENTITY_ID: "select.theater_dryer",
             SelectServiceArgument.OPTION: "run",
         },
         blocking=True,
@@ -125,7 +120,7 @@ async def test_select_option_map(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.vulcan_lamp",
+            TargetKey.ENTITY_ID: "select.vulcan_lamp",
             SelectServiceArgument.OPTION: "extra_high",
         },
         blocking=True,
@@ -170,7 +165,7 @@ async def test_select_tv_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -211,7 +206,7 @@ async def test_tv_picture_mode_unmapped_name(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
+            TargetKey.ENTITY_ID: "select.theater_tv_samsung_8_series_49_picture_mode",
             SelectServiceArgument.OPTION: "Dynamisch",
         },
         blocking=True,
@@ -266,7 +261,7 @@ async def test_select_option_without_remote_control(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.theater_dryer",
+                TargetKey.ENTITY_ID: "select.theater_dryer",
                 SelectServiceArgument.OPTION: "run",
             },
             blocking=True,
@@ -326,7 +321,7 @@ async def test_select_option_as_integer(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
+            TargetKey.ENTITY_ID: "select.clim_salon_dust_filter_alarm_threshold",
             SelectServiceArgument.OPTION: "300",
         },
         blocking=True,
@@ -369,7 +364,7 @@ async def test_select_dishwasher_washing_course_with_wrong_machine_state(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+                TargetKey.ENTITY_ID: "select.dishwasher_1_cycle",
                 SelectServiceArgument.OPTION: "eco",
             },
             blocking=True,
@@ -395,7 +390,7 @@ async def test_select_dishwasher_washing_course(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_cycle",
+            TargetKey.ENTITY_ID: "select.dishwasher_1_cycle",
             SelectServiceArgument.OPTION: "eco",
         },
         blocking=True,
@@ -438,7 +433,7 @@ async def test_select_dishwasher_washing_option_with_wrong_machine_state(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+                TargetKey.ENTITY_ID: "select.dishwasher_1_selected_zone",
                 SelectServiceArgument.OPTION: "lower",
             },
             blocking=True,
@@ -465,7 +460,7 @@ async def test_select_dishwasher_washing_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.dishwasher_1_selected_zone",
+            TargetKey.ENTITY_ID: "select.dishwasher_1_selected_zone",
             SelectServiceArgument.OPTION: "lower",
         },
         blocking=True,

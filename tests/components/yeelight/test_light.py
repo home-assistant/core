@@ -95,6 +95,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -473,7 +474,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
             DOMAIN,
             YeelightService.SET_MUSIC_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_LIGHT,
+                TargetKey.ENTITY_ID: ENTITY_LIGHT,
                 YeelightServiceArgument.MUSIC_MODE: "true",
             },
             blocking=True,

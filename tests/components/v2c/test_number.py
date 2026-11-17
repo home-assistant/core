@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,7 +47,7 @@ async def test_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.evse_1_1_1_1_installation_voltage",
+            TargetKey.ENTITY_ID: "number.evse_1_1_1_1_installation_voltage",
             NumberServiceArgument.VALUE: 240,
         },
         blocking=True,

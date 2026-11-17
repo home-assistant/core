@@ -52,6 +52,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -912,7 +913,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         DOMAIN,
         TPLinkService.RANDOM_EFFECT,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
         },
@@ -941,7 +942,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         DOMAIN,
         TPLinkService.RANDOM_EFFECT,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "random_seed": 600,
         },
@@ -1000,7 +1001,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         DOMAIN,
         TPLinkService.RANDOM_EFFECT,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
             "backgrounds": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
             "random_seed": 50,
@@ -1188,7 +1189,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
         DOMAIN,
         TPLinkService.SEQUENCE_EFFECT,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
         },
         blocking=True,
@@ -1391,7 +1392,7 @@ async def test_scene_effect_light(
         SCENE_DOMAIN,
         SceneService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "scene.effect_off_scene",
+            TargetKey.ENTITY_ID: "scene.effect_off_scene",
         },
         blocking=True,
     )

@@ -26,8 +26,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -73,7 +73,7 @@ async def test_block_device_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -82,7 +82,7 @@ async def test_block_device_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -111,7 +111,7 @@ async def test_block_motion_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     monkeypatch.setattr(mock_block_device.blocks[MOTION_BLOCK_ID], "motionActive", 0)
@@ -127,7 +127,7 @@ async def test_block_motion_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     monkeypatch.setattr(mock_block_device.blocks[MOTION_BLOCK_ID], "motionActive", 1)
@@ -269,7 +269,7 @@ async def test_block_set_state_connection_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_name_channel_1"},
+            {TargetKey.ENTITY_ID: "switch.test_name_channel_1"},
             blocking=True,
         )
 
@@ -290,7 +290,7 @@ async def test_block_set_state_auth_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_channel_1"},
+        {TargetKey.ENTITY_ID: "switch.test_name_channel_1"},
         blocking=True,
     )
 
@@ -403,7 +403,7 @@ async def test_rpc_device_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert (state := hass.states.get(entity_id))
@@ -414,7 +414,7 @@ async def test_rpc_device_services(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -524,7 +524,7 @@ async def test_rpc_set_state_errors(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_name_test_switch_0"},
+            {TargetKey.ENTITY_ID: "switch.test_name_test_switch_0"},
             blocking=True,
         )
 
@@ -543,7 +543,7 @@ async def test_rpc_auth_error(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_test_switch_0"},
+        {TargetKey.ENTITY_ID: "switch.test_name_test_switch_0"},
         blocking=True,
     )
 
@@ -638,7 +638,7 @@ async def test_rpc_device_virtual_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -650,7 +650,7 @@ async def test_rpc_device_virtual_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -797,7 +797,7 @@ async def test_rpc_device_script_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -810,7 +810,7 @@ async def test_rpc_device_script_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -869,7 +869,7 @@ async def test_cury_switch_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_left_slot"},
+        {TargetKey.ENTITY_ID: "switch.test_name_left_slot"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -878,7 +878,7 @@ async def test_cury_switch_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_right_slot"},
+        {TargetKey.ENTITY_ID: "switch.test_name_right_slot"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -887,7 +887,7 @@ async def test_cury_switch_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_left_slot_boost"},
+        {TargetKey.ENTITY_ID: "switch.test_name_left_slot_boost"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -896,7 +896,7 @@ async def test_cury_switch_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_name_right_slot_boost"},
+        {TargetKey.ENTITY_ID: "switch.test_name_right_slot_boost"},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -991,7 +991,7 @@ async def test_rpc_fan_boost_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.fan_boost.assert_called_once_with(0)
@@ -1007,7 +1007,7 @@ async def test_rpc_fan_boost_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.fan_stop_boost.assert_called_once_with(0)
@@ -1078,7 +1078,7 @@ async def test_rpc_circuit_breaker_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.cb_set.assert_called_once_with(0, True)
@@ -1092,7 +1092,7 @@ async def test_rpc_circuit_breaker_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.cb_set.assert_called_with(0, False)
@@ -1163,7 +1163,7 @@ async def test_rpc_circuit_breaker_turn_on_errors(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_name"},
+            {TargetKey.ENTITY_ID: "switch.test_name"},
             blocking=True,
         )
 
@@ -1191,7 +1191,7 @@ async def test_rpc_camera_privacy_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_camera_rpc_device.mock_update()
@@ -1220,7 +1220,7 @@ async def test_rpc_ledstrip_reverse_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: LEDSTRIP_ENTITY_ID},
+        {TargetKey.ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": False})
@@ -1237,7 +1237,7 @@ async def test_rpc_ledstrip_reverse_switch(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: LEDSTRIP_ENTITY_ID},
+        {TargetKey.ENTITY_ID: LEDSTRIP_ENTITY_ID},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {"reverse": True})

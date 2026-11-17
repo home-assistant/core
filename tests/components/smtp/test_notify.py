@@ -31,12 +31,7 @@ from homeassistant.components.smtp.const import (
 )
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_RECIPIENT,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-)
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT, STATE_UNKNOWN, TargetKey
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -277,7 +272,7 @@ async def test_notify_send_message(
         NOTIFY_DOMAIN,
         NotifyService.SEND_MESSAGE,
         {
-            CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
             NotifyServiceArgument.MESSAGE: "Hello World",
         },
         blocking=True,
@@ -323,7 +318,7 @@ async def test_notify_send_message_exceptions(
             NOTIFY_DOMAIN,
             NotifyService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 NotifyServiceArgument.MESSAGE: "Hello World",
             },
             blocking=True,
@@ -356,7 +351,7 @@ async def test_notify_send_message_reauth_flow(
             NOTIFY_DOMAIN,
             NotifyService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 NotifyServiceArgument.MESSAGE: "Hello World",
             },
             blocking=True,
@@ -432,7 +427,7 @@ async def test_smtp_send_message(
         DOMAIN,
         SMTPService.SEND_MESSAGE,
         {
-            CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
             SMTPServiceArgument.MESSAGE: "Hello World",
             SMTPServiceArgument.HTML: """<html><body><img src="https://example.com/avatar.png"></body></html>""",
             SMTPServiceArgument.PRIORITY: "highest",
@@ -468,7 +463,7 @@ async def test_smtp_send_message_local_media_source(
         DOMAIN,
         SMTPService.SEND_MESSAGE,
         {
-            CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+            TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
             SMTPServiceArgument.MESSAGE: "Hello World",
             SMTPServiceArgument.ATTACHMENTS: [
                 {
@@ -514,7 +509,7 @@ async def test_smtp_send_message_camera_source(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.HTML: """<html><body><img src="cid:1312"></body></html>""",
                 SMTPServiceArgument.ATTACHMENTS: [
@@ -560,7 +555,7 @@ async def test_smtp_send_message_image_source(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.HTML: """<html><body><img src="cid:1312"></body></html>""",
                 SMTPServiceArgument.ATTACHMENTS: [
@@ -611,7 +606,7 @@ async def test_smtp_send_message_tts_source(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.HTML: """<html><body>Hello World</body></html>""",
                 SMTPServiceArgument.ATTACHMENTS: [
@@ -664,7 +659,7 @@ async def test_smtp_send_message_media_source_not_supported(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.ATTACHMENTS: [
                     {
@@ -707,7 +702,7 @@ async def test_smtp_send_message_os_read_errors(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.ATTACHMENTS: [
                     {
@@ -756,7 +751,7 @@ async def test_smtp_send_message_media_source_missing_filename(
             DOMAIN,
             SMTPService.SEND_MESSAGE,
             {
-                CommonServiceArgument.ENTITY_ID: "notify.home_assistant_recipient",
+                TargetKey.ENTITY_ID: "notify.home_assistant_recipient",
                 SMTPServiceArgument.MESSAGE: "Hello World",
                 SMTPServiceArgument.ATTACHMENTS: [
                     {
