@@ -5,11 +5,13 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from httpx2 import HTTPStatusError, RequestError
 from pyocat import (
     AsyncApiClient,
     WTCApiDisabledError,
-    WTCApiTemporaryError,
+    WTCApiQuotaExceededError,
+    WTCApiRequestError,
+    WTCApiServerError,
+    WTCApiTimeoutError,
     WTCApiUnauthorizedError,
 )
 from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
@@ -60,10 +62,10 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
         try:
             return await self._async_fetch_data()
         except (
-            WTCApiTemporaryError,
-            HTTPStatusError,
-            RequestError,
-            TimeoutError,
+            WTCApiQuotaExceededError,
+            WTCApiRequestError,
+            WTCApiServerError,
+            WTCApiTimeoutError,
         ) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
