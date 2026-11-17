@@ -345,6 +345,35 @@ async def test_endpoint_child_devices_pruned_when_unnamed(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize("attributes", [{"1/319486977/319422472": None}])
+async def test_endpoint_child_devices_pruned_with_new_entity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a node update that stops a split and adds an entity reloads cleanly.
+
+    The new entity is only created by the reload, not also by the node setup
+    that schedules it, so its unique ID isn't added twice.
+    """
+    assert entity_registry.async_get("sensor.eve_energy_20ecn4101_voltage_top") is None
+
+    # Drop the orientation label of the bottom socket, so it can't be named, and
+    # report the voltage, which adds an entity.
+    set_node_attribute(matter_node, 2, 64, 0, [{"0": "id", "1": "2"}])
+    set_node_attribute(matter_node, 1, 319486977, 319422472, 123.0)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.eve_energy_20ecn4101_voltage_top")
+    assert state is not None
+    assert state.state == "123.0"
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_endpoint_child_devices_pruned_on_reload(
     hass: HomeAssistant,
     matter_client: MagicMock,
