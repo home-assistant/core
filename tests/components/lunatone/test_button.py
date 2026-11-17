@@ -1,13 +1,17 @@
 """Tests for the button entities provided by the Lunatone integration."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import ScanState, StartScanData
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.components.lunatone.coordinator import DEFAULT_INFO_UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -145,4 +149,51 @@ async def test_pressing_button(
                 ATTR_ENTITY_ID: "button.test_dali_scan_cancel",
             },
             blocking=True,
+        )
+
+
+async def test_line_buttons_added_and_removed(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test line-specific buttons are added and removed with their line."""
+    await setup_integration(hass, mock_config_entry)
+
+    updated_info_data = deepcopy(mock_lunatone_info.data)
+    updated_info_data.lines["2"] = updated_info_data.lines["1"]
+    mock_lunatone_info.data = updated_info_data
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.unique_id is not None
+    unique_ids = (
+        f"{mock_config_entry.unique_id}-line2-scan",
+        f"{mock_config_entry.unique_id}-line2-scan-new",
+        f"{mock_config_entry.unique_id}-line2-scan-current",
+    )
+    line_button_entity_ids = [
+        entity_registry.async_get_entity_id(Platform.BUTTON, DOMAIN, unique_id)
+        for unique_id in unique_ids
+    ]
+    assert all(line_button_entity_ids)
+
+    del updated_info_data.lines["2"]
+    mock_lunatone_info.data = updated_info_data
+
+    freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for unique_id in unique_ids:
+        assert (
+            entity_registry.async_get_entity_id(Platform.BUTTON, DOMAIN, unique_id)
+            is None
         )
