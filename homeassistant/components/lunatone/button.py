@@ -250,14 +250,13 @@ class DALIScanButtonEntity(
     @override
     async def async_press(self) -> None:
         """Press the button."""
-        if not self.entity_description.press_allowed_fn(
-            self.coordinator.dali_scan_api, self._line_id
-        ):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=self.entity_description.press_not_allowed_error_key,
-            )
-        await self.entity_description.press_fn(
-            self.coordinator.dali_scan_api, self._line_id
-        )
-        await self.coordinator.async_request_refresh()
+        async with self.coordinator.scan_lock:
+            client = self.coordinator.dali_scan_api
+            description = self.entity_description
+            if not description.press_allowed_fn(client, self._line_id):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key=description.press_not_allowed_error_key,
+                )
+            await description.press_fn(client, self._line_id)
+            await self.coordinator.async_refresh()
