@@ -44,7 +44,6 @@ class UnifiEntityLoader:
         self._startup_only_api_updaters = (self._async_update_clients_all,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        # Version optional v2 endpoints 404 on controllers without them
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
             id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
