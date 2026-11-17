@@ -1402,6 +1402,63 @@ async def test_repository_uninstall_releases_a_shared_domain(
     assert fork.data.installed is True
 
 
+async def test_repository_uninstall_answers_in_use_after_a_race(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the uninstall answers in use when the sharing install went meanwhile."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    MockConfigEntry(domain=repository.data.domain).add_to_hass(hass)
+    fork = IntegrationRepository(marketplace, "fork/example")
+
+    # Shared when the command checks, no longer once the uninstall has the lock
+    with (
+        patch.object(
+            IntegrationRepository, "sharing_install", side_effect=[fork, None]
+        ),
+        patch.object(type(repository), "remove_local_directory") as remove,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_in_use"
+    remove.assert_not_called()
+    assert repository.data.installed is True
+
+
+async def test_sharing_install_needs_an_integration_domain(
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test only integrations with a domain share their install."""
+    plugin = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert plugin.sharing_install() is None
+
+    first = IntegrationRepository(marketplace, "alice/example")
+    second = IntegrationRepository(marketplace, "bob/example")
+    for number, repository in enumerate((first, second)):
+        repository.data.id = f"900{number}"
+        repository.data.installed = True
+        marketplace.repositories.register(repository)
+    assert first.sharing_install() is None
+
+    first.data.domain = second.data.domain = "example"
+    assert first.sharing_install() is second
+
+
 async def test_repository_uninstall_removes_shared_files_by_default(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,
