@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -111,7 +111,7 @@ async def test_sleep_timer_services(
             DOMAIN,
             ModernFormsService.SET_LIGHT_SLEEP_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light",
+                TargetKey.ENTITY_ID: "light.modernformsfan_light",
                 ModernFormsServiceArgument.SLEEP_TIME: 1,
             },
             blocking=True,
@@ -123,7 +123,7 @@ async def test_sleep_timer_services(
         await hass.services.async_call(
             DOMAIN,
             ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
-            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_light"},
+            {TargetKey.ENTITY_ID: "light.modernformsfan_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -357,7 +357,7 @@ async def test_light_sleep_timer_not_supported_gen4(
             DOMAIN,
             ModernFormsService.SET_LIGHT_SLEEP_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight",
+                TargetKey.ENTITY_ID: "light.modernformsfan_uplight",
                 ModernFormsServiceArgument.SLEEP_TIME: 1,
             },
             blocking=True,
@@ -378,7 +378,7 @@ async def test_clear_light_sleep_timer_not_supported_gen4(
         await hass.services.async_call(
             DOMAIN,
             ModernFormsService.CLEAR_LIGHT_SLEEP_TIMER,
-            {CommonServiceArgument.ENTITY_ID: "light.modernformsfan_uplight"},
+            {TargetKey.ENTITY_ID: "light.modernformsfan_uplight"},
             blocking=True,
         )
 

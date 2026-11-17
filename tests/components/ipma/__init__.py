@@ -32,7 +32,23 @@ class MockLocation:
                 startTime=datetime(2024, 12, 26, 12, 24),
                 awarenessLevelID="yellow",
                 endTime=datetime(2024, 12, 28, 6, 0),
-            )
+            ),
+            Warning(
+                text="Rajadas até 90 km/h nas terras altas.",
+                awarenessTypeName="Vento",
+                idAreaAviso="FAR",
+                startTime=datetime(2024, 12, 27, 0, 0),
+                awarenessLevelID="orange",
+                endTime=datetime(2024, 12, 27, 12, 0),
+            ),
+            Warning(
+                text="Períodos de chuva forte.",
+                awarenessTypeName="Precipitação",
+                idAreaAviso="FAR",
+                startTime=datetime(2024, 12, 29, 0, 0),
+                awarenessLevelID="red",
+                endTime=datetime(2024, 12, 29, 6, 0),
+            ),
         ]
 
     async def fire_risk(self, api):

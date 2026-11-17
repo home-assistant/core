@@ -6,7 +6,6 @@ import logging
 from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -26,6 +25,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
 from .coordinator import ViCareCoordinator
+from .types import ViCareDevice
 from .utils import get_device_identifier
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,23 +40,23 @@ class ViCareEntity(Entity):
     def __init__(
         self,
         unique_id_suffix: str,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
-        gateway_serial = device_config.getConfig().serial
-        model = device_config.getModel().replace("_", " ")
-        identifier = get_device_identifier(device_config, device_serial)
+        gateway_serial = device.config.getConfig().serial
+        model = device.config.getModel().replace("_", " ")
+        identifier = get_device_identifier(device.config, device.serial)
 
-        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = component or device
+        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
+            component or device.api
+        )
         self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
         if component:
             self._attr_unique_id += f"-{component.id}"
 
         self._gateway_serial = gateway_serial
-        self._device_serial = device_serial
+        self._device_serial = device.serial
         self._device_identifier = identifier
         self._model = model
         self._room_id = component.id if isinstance(component, PyViCareRoom) else None
@@ -165,16 +165,12 @@ class ViCareCoordinatorEntity(CoordinatorEntity[ViCareCoordinator], ViCareEntity
         self,
         coordinator: ViCareCoordinator,
         unique_id_suffix: str,
-        device_serial: str | None,
-        device_config: PyViCareDeviceConfig,
-        device: PyViCareDevice,
+        device: ViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
-        ViCareEntity.__init__(
-            self, unique_id_suffix, device_serial, device_config, device, component
-        )
+        ViCareEntity.__init__(self, unique_id_suffix, device, component)
 
     @override
     async def async_added_to_hass(self) -> None:
