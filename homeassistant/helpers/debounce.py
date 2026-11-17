@@ -29,7 +29,7 @@ class Debouncer[_R_co]:
                    wait <cooldown> until executing next invocation.
         function: optional and can be instantiated later.
         cancel_on_shutdown: drop a pending call when Home Assistant stops,
-                   instead of running it during the stop or close stages.
+                   so it isn't made after shared resources are closed.
         """
         self.hass = hass
         self.logger = logger

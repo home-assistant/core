@@ -651,7 +651,10 @@ async def test_concurrent_async_call_does_not_orphan_timer(
 
 @pytest.mark.parametrize(
     ("cancel_on_shutdown", "expected_calls"),
-    [(False, 1), (True, 0)],
+    [
+        pytest.param(False, 1, id="kept"),
+        pytest.param(True, 0, id="dropped"),
+    ],
 )
 async def test_cancel_on_shutdown(
     hass: HomeAssistant, cancel_on_shutdown: bool, expected_calls: int

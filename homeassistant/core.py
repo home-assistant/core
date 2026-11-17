@@ -1325,6 +1325,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks("close")
 
+        self._cancel_cancellable_timers()
         self.set_state(CoreState.stopped)
         self.import_executor.shutdown()
 

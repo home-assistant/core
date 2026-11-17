@@ -1,6 +1,7 @@
 """Tests for the update coordinator."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -777,16 +778,21 @@ async def test_no_refresh_after_ha_close(
 
 
 @pytest.mark.parametrize(
-    ("debouncer_kwargs", "requests", "calls_at_stop"),
+    ("debouncer_factory", "calls_at_stop"),
     [
-        pytest.param({"cooldown": 0.35, "immediate": False}, 1, 0, id="delayed"),
-        pytest.param(None, 2, 1, id="default"),
+        pytest.param(
+            lambda hass: Debouncer(hass, _LOGGER, cooldown=0.35, immediate=False),
+            0,
+            id="delayed",
+        ),
+        pytest.param(lambda hass: None, 1, id="default"),
     ],
 )
 async def test_no_requested_refresh_after_ha_close(
     hass: HomeAssistant,
-    debouncer_kwargs: dict[str, Any] | None,
-    requests: int,
+    debouncer_factory: Callable[
+        [HomeAssistant], Debouncer[Coroutine[Any, Any, None]] | None
+    ],
     calls_at_stop: int,
 ) -> None:
     """Test a debounced refresh request does not fire once Home Assistant closed."""
@@ -804,14 +810,12 @@ async def test_no_requested_refresh_after_ha_close(
         name="test",
         update_method=refresh,
         update_interval=DEFAULT_UPDATE_INTERVAL,
-        request_refresh_debouncer=(
-            Debouncer(hass, _LOGGER, **debouncer_kwargs) if debouncer_kwargs else None
-        ),
+        request_refresh_debouncer=debouncer_factory(hass),
     )
     crd.async_add_listener(Mock())
 
-    for _ in range(requests):
-        await crd.async_request_refresh()
+    await crd.async_request_refresh()
+    await crd.async_request_refresh()
     await hass.async_stop()
     assert calls == calls_at_stop
 
@@ -828,9 +832,8 @@ async def test_no_refresh_rescheduled_after_ha_close(hass: HomeAssistant) -> Non
     async def refresh() -> int:
         nonlocal calls
         calls += 1
-        if calls == 1:
-            update_started.set()
-            await asyncio.Event().wait()
+        update_started.set()
+        await asyncio.Event().wait()
         return calls
 
     async def slow_close(_: Event) -> None:
