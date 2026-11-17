@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock
 
-import botocore.exceptions
+from place.errors import (
+    PlaceInvalidCredentialsError,
+    PlaceLoginConnectionError,
+    PlaceLoginError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -67,15 +71,23 @@ async def test_unique_configurations(
     "aioclient_mock_fixture",
     "mock_setup_entry",
 )
-async def test_login_client_error(
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(PlaceInvalidCredentialsError(), "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            PlaceLoginConnectionError(), "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+async def test_login_error(
     hass: HomeAssistant,
     mock_login: MagicMock,
+    error: Exception,
+    expected: str,
 ) -> None:
-    """Test handling of botocore ClientError during login."""
-    mock_login.side_effect = botocore.exceptions.ClientError(
-        {"Error": {"Code": "NotAuthorizedException", "Message": "Bad creds"}},
-        "InitiateAuth",
-    )
+    """Test handling of expected login failures and retrying."""
+    mock_login.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -88,7 +100,7 @@ async def test_login_client_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "srp_auth_failed"}
+    assert result["errors"] == {"base": expected}
 
     mock_login.side_effect = None
 
@@ -104,12 +116,20 @@ async def test_login_client_error(
     "aioclient_mock_fixture",
     "mock_setup_entry",
 )
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(PlaceLoginError("service error"), id="unexpected_service_error"),
+        pytest.param(Exception("unexpected"), id="unexpected_error"),
+    ],
+)
 async def test_login_unknown_error(
     hass: HomeAssistant,
     mock_login: MagicMock,
+    error: Exception,
 ) -> None:
     """Test error handling for unexpected login failures."""
-    mock_login.side_effect = Exception("unexpected")
+    mock_login.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

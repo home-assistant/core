@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
-import botocore.exceptions
 from place.auth import decode_sub, login
+from place.errors import PlaceInvalidCredentialsError, PlaceLoginConnectionError
 import probatio
 
 from homeassistant.config_entries import ConfigFlowResult
@@ -41,9 +41,10 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],
                 )
-            except botocore.exceptions.ClientError as err:
-                _LOGGER.error("Failed to get tokens: %s", err)
-                errors["base"] = "srp_auth_failed"
+            except PlaceInvalidCredentialsError:
+                errors["base"] = "invalid_auth"
+            except PlaceLoginConnectionError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
