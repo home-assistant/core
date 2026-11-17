@@ -858,14 +858,21 @@ async def test_service_point_fetched_once_per_meter(
     mock_engie_client.return_value.async_get_service_point.assert_called_once_with(
         OFFTAKE_ONLY_EAN
     )
-    for ean in (OFFTAKE_ONLY_EAN, second_suffix_ean):
-        state = hass.states.get(
-            get_entity_id(
-                entity_registry, "sensor", f"{BAN}_{ean}_offtake_TOTAL_HOURS_per_m3"
-            )
+    expected = str(round(0.2 * GAS_CONVERSION_COEFFICIENT, 6))
+    first_state = hass.states.get(
+        get_entity_id(entity_registry, "sensor", GAS_PER_M3_UNIQUE_ID)
+    )
+    second_state = hass.states.get(
+        get_entity_id(
+            entity_registry,
+            "sensor",
+            f"{BAN}_{second_suffix_ean}_offtake_TOTAL_HOURS_per_m3",
         )
-        assert state is not None
-        assert state.state == str(round(0.2 * GAS_CONVERSION_COEFFICIENT, 6))
+    )
+    assert first_state is not None
+    assert first_state.state == expected
+    assert second_state is not None
+    assert second_state.state == expected
 
 
 GAS_PER_M3_UNIQUE_ID = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS_per_m3"

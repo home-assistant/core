@@ -58,6 +58,11 @@ def auth_failed() -> ConfigEntryAuthFailed:
     )
 
 
+def _cannot_connect() -> UpdateFailed:
+    """Return the error for a failed fetch from ENGIE."""
+    return UpdateFailed(translation_domain=DOMAIN, translation_key="cannot_connect")
+
+
 @contextmanager
 def _raise_update_errors() -> Iterator[None]:
     """Turn client errors into the matching coordinator update errors."""
@@ -66,10 +71,7 @@ def _raise_update_errors() -> Iterator[None]:
     except EngieBeAuthenticationError as err:
         raise auth_failed() from err
     except EngieBeError as err:
-        raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
+        raise _cannot_connect() from err
 
 
 def _brussels_day(slot: EpexSlot) -> date:
@@ -384,20 +386,18 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
     async def _async_update_data(self) -> EngieBePeaksData:
         """Fetch this month's peaks, plus last month's when this month has no peak yet."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
+        last_month = today.replace(day=1) - timedelta(days=1)
         with _raise_update_errors():
             monthly = await self.client.async_get_monthly_peaks(
                 self.ban, today.year, today.month
             )
-            previous_month: MonthlyPeaks | None = None
-            if monthly.peak_of_the_month is None:
-                prev_year, prev_month = (
-                    (today.year - 1, 12)
-                    if today.month == 1
-                    else (today.year, today.month - 1)
+            previous_month = (
+                await self.client.async_get_monthly_peaks(
+                    self.ban, last_month.year, last_month.month
                 )
-                previous_month = await self.client.async_get_monthly_peaks(
-                    self.ban, prev_year, prev_month
-                )
+                if monthly.peak_of_the_month is None
+                else None
+            )
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 
@@ -465,16 +465,15 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                 if epex_slots_cover_day(slots[granularity], day, granularity):
                     continue
                 try:
-                    with _raise_update_errors():
-                        payload = await self.client.async_get_epex_prices(
-                            *epex_window(day), granularity=granularity
-                        )
-                except UpdateFailed as err:
-                    if required:
-                        raise
-                    LOGGER.debug(
-                        "Fetching EPEX prices for %s failed: %s", day, err.__cause__
+                    payload = await self.client.async_get_epex_prices(
+                        *epex_window(day), granularity=granularity
                     )
+                except EngieBeAuthenticationError as err:
+                    raise auth_failed() from err
+                except EngieBeError as err:
+                    if required:
+                        raise _cannot_connect() from err
+                    LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
                     continue
                 slots[granularity] = [
                     slot for slot in slots[granularity] if _brussels_day(slot) != day
