@@ -111,9 +111,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("heating_off", duration=None)
+            mock_fcn.assert_awaited_once_with("heating_off")
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("off", duration=None)
+            mock_fcn.assert_awaited_once_with("off")
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -130,9 +130,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("auto", duration=None)
+            mock_fcn.assert_awaited_once_with("auto")
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("heat", duration=None)
+            mock_fcn.assert_awaited_once_with("heat")
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -181,9 +181,9 @@ async def test_ctl_turn_off(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("heating_off", duration=None)
+            mock_fcn.assert_awaited_once_with("heating_off")
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("off", duration=None)
+            mock_fcn.assert_awaited_once_with("off")
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -217,7 +217,7 @@ async def test_ctl_set_preset_mode(
             blocking=True,
         )
 
-    mock_fcn.assert_awaited_once_with(expected_mode, duration=None)
+    mock_fcn.assert_awaited_once_with(expected_mode)
 
 
 @pytest.mark.parametrize("install", ["sys_006"])
@@ -288,9 +288,9 @@ async def test_ctl_turn_on(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with("auto", duration=None)
+            mock_fcn.assert_awaited_once_with("auto")
         except AssertionError:
-            mock_fcn.assert_awaited_once_with("heat", duration=None)
+            mock_fcn.assert_awaited_once_with("heat")
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 

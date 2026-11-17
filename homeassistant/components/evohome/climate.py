@@ -1,5 +1,6 @@
 """Support for Climate entities of the Evohome integration."""
 
+from collections.abc import Awaitable
 from datetime import timedelta
 import logging
 from typing import Any, Final, override
@@ -26,7 +27,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -350,9 +351,6 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.location.name
 
-        self._evo_modes = {
-            m[SZ_SYSTEM_MODE].value: m for m in evo_device.allowed_system_modes
-        }
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[mode]
             for m in evo_device.allowed_system_modes
@@ -383,6 +381,12 @@ class EvoController(EvoClimateEntity):
         else:
             client_api = self._evo_device.set_mode(evo_mode, duration=duration)
 
+        await self._async_set_mode(client_api, mode)
+
+    async def _async_set_mode(
+        self, client_api: Awaitable[evo.CommTask], mode: str
+    ) -> None:
+        """Set the system mode, raising a translated error if the client rejects it."""
         try:
             await self.coordinator.call_client_api(client_api)
         except evo.InvalidSetModeError as err:
@@ -430,30 +434,18 @@ class EvoController(EvoClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
 
-        evo_mode: EvoSystemMode
-
-        if hvac_mode == HVACMode.HEAT:
-            evo_mode = (
-                EvoSystemMode.AUTO
-                if EvoSystemMode.AUTO in self._evo_modes
-                else EvoSystemMode.HEAT
-            )
-        elif hvac_mode == HVACMode.OFF:
-            evo_mode = (
-                EvoSystemMode.HEATING_OFF
-                if EvoSystemMode.HEATING_OFF in self._evo_modes
-                else EvoSystemMode.OFF
-            )
-        else:
-            raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self.async_set_system_mode(evo_mode)
+        # the client falls back to Off/Heat, if HeatingOff/Auto aren't allowed
+        if hvac_mode == HVACMode.OFF:
+            client_api = self._evo_device.set_heatingoff()
+        else:  # HA limits hvac_mode to hvac_modes, i.e. off or heat
+            client_api = self._evo_device.set_auto()
+        await self._async_set_mode(client_api, hvac_mode)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
-        await self.async_set_system_mode(
-            HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO)
-        )
+        evo_mode = HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO)
+        await self._async_set_mode(self._evo_device.set_mode(evo_mode), preset_mode)
 
     @callback
     @override

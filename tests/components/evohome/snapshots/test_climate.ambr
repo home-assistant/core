@@ -2,192 +2,192 @@
 # name: test_ctl_set_hvac_mode[default]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h032585]
   list([
     tuple(
-      'off',
+      <SystemMode.OFF: 'off'>,
     ),
     tuple(
-      'heat',
+      <SystemMode.HEAT: 'heat'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h099625]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h139906]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h157546]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[minimal]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[sys_004]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[sys_006]
   list([
     tuple(
-      'off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h032585]
   list([
     tuple(
-      'off',
+      <SystemMode.OFF: 'off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h099625]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h139906]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h157546]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[minimal]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
   list([
     tuple(
-      'heating_off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[sys_006]
   list([
     tuple(
-      'off',
+      <SystemMode.HEATING_OFF: 'heating_off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[default]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h032585]
   list([
     tuple(
-      'heat',
+      <SystemMode.HEAT: 'heat'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h099625]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h139906]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h157546]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[minimal]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[sys_004]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[sys_006]
   list([
     tuple(
-      'auto',
+      <SystemMode.AUTO: 'auto'>,
     ),
   ])
 # ---
