@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
     EngieBeCommunicationError,
+    EngieBeEpexNotPublishedError,
     EpexGranularity,
     EpexPayload,
     EpexSlot,
@@ -24,17 +25,47 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     BAN,
     BRUSSELS_TIME_ZONE,
     build_epex_payload,
-    build_epex_payload_with_partial_tomorrow,
-    build_epex_payload_without_tomorrow,
     get_entity_id,
     get_state,
     setup_dynamic_entry,
 )
+
+
+def _after_today(moment: datetime) -> bool:
+    """Return True when the moment falls on a later Brussels day than today."""
+    return (
+        moment.astimezone(BRUSSELS_TIME_ZONE).date()
+        > dt_util.now(BRUSSELS_TIME_ZONE).date()
+    )
+
+
+def build_epex_payload_without_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Raise for any window after today and build a payload otherwise."""
+    if _after_today(start):
+        raise EngieBeEpexNotPublishedError("not published")
+    return build_epex_payload(start, end, granularity)
+
+
+def build_epex_payload_with_partial_tomorrow(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return one slot for tomorrow windows and a full payload otherwise."""
+    if _after_today(start):
+        payload = build_epex_payload(start, end, granularity)
+        return EpexPayload(slots=payload.slots[:1], slot_duration=payload.slot_duration)
+    return build_epex_payload(start, end, granularity)
 
 
 @pytest.mark.usefixtures("frozen_afternoon")

@@ -15,7 +15,6 @@ from aioengiebelgium import (
     EnergyContract,
     EnergyContractsResponse,
     EngieBeCommunicationError,
-    EngieBeEpexNotPublishedError,
     EpexGranularity,
     EpexPayload,
     EpexSlot,
@@ -43,7 +42,6 @@ from homeassistant.components.engie_be.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"
@@ -215,53 +213,6 @@ def build_epex_payload(
         )
         moment = moment + step
     return EpexPayload(slots=tuple(slots), slot_duration=step)
-
-
-def _after_today(moment: datetime) -> bool:
-    """Return True when the moment falls on a later Brussels day than today."""
-    return (
-        moment.astimezone(BRUSSELS_TIME_ZONE).date()
-        > dt_util.now(BRUSSELS_TIME_ZONE).date()
-    )
-
-
-def build_epex_payload_without_tomorrow(
-    start: datetime,
-    end: datetime,
-    granularity: EpexGranularity = EpexGranularity.HOURLY,
-) -> EpexPayload:
-    """Raise for any window after today and build a payload otherwise."""
-    if _after_today(start):
-        raise EngieBeEpexNotPublishedError("not published")
-    return build_epex_payload(start, end, granularity)
-
-
-def build_epex_payload_with_gap(
-    start: datetime,
-    end: datetime,
-    granularity: EpexGranularity = EpexGranularity.HOURLY,
-) -> EpexPayload:
-    """Return an hourly payload without the slot covering the frozen afternoon."""
-    payload = build_epex_payload(start, end, granularity)
-    if granularity is not EpexGranularity.HOURLY:
-        return payload
-    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
-    return EpexPayload(
-        slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
-        slot_duration=payload.slot_duration,
-    )
-
-
-def build_epex_payload_with_partial_tomorrow(
-    start: datetime,
-    end: datetime,
-    granularity: EpexGranularity = EpexGranularity.HOURLY,
-) -> EpexPayload:
-    """Return one slot for tomorrow windows and a full payload otherwise."""
-    if _after_today(start):
-        payload = build_epex_payload(start, end, granularity)
-        return EpexPayload(slots=payload.slots[:1], slot_duration=payload.slot_duration)
-    return build_epex_payload(start, end, granularity)
 
 
 def build_peak(start: datetime, *, power_kw: float = 4.2) -> Peak:

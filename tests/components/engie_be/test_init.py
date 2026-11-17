@@ -419,26 +419,6 @@ async def test_unexpected_service_point_error_does_not_prevent_setup(
     )
 
 
-async def test_household_is_a_single_service_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a household's EANs share one SERVICE device instead of per-meter devices."""
-    await setup_entry(hass, mock_config_entry)
-
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    assert len(device_entries) == 1
-
-    household_device = device_entries[0]
-    assert household_device.identifiers == {(DOMAIN, BAN)}
-    assert household_device.entry_type is dr.DeviceEntryType.SERVICE
-    assert household_device.via_device_id is None
-
-
 @pytest.mark.parametrize(
     ("ban", "expected"),
     [

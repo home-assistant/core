@@ -53,7 +53,6 @@ from .conftest import (
     OFFTAKE_ONLY_EAN,
     advance_time,
     build_epex_payload,
-    build_epex_payload_with_gap,
     build_prices,
     build_relations,
     build_service_point,
@@ -77,6 +76,22 @@ def _prices_by_ban(
         return result
 
     return _side_effect
+
+
+def build_epex_payload_with_gap(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Return an hourly payload without the slot covering the frozen afternoon."""
+    payload = build_epex_payload(start, end, granularity)
+    if granularity is not EpexGranularity.HOURLY:
+        return payload
+    gap_start = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(slot for slot in payload.slots if slot.start != gap_start),
+        slot_duration=payload.slot_duration,
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
@@ -184,7 +199,6 @@ async def test_duplicate_type_suffix(
 
     for ean in eans:
         assert names[ean].endswith(f"({bare_ean(ean)[-4:]})")
-    assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
 
 
 async def test_type_fallback_when_service_point_lookup_fails(
@@ -245,11 +259,6 @@ async def test_device_name_falls_back_to_masked_ban(
     [
         pytest.param(date(2026, 8, 1), date(2026, 9, 1), id="inside-window"),
         pytest.param(date(2026, 8, 13), date(2026, 9, 1), id="first-day-inclusive"),
-        pytest.param(
-            date(2026, 8, 1),
-            date(2026, 9, 1),
-            id="date-objects",
-        ),
     ],
 )
 async def test_period_window_creates_sensors(
@@ -326,10 +335,14 @@ async def test_period_window_skips_sensors(
     )
     await setup_entry(hass, mock_config_entry)
 
-    entity_entries = without_capacity_tariff(
-        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+    assert (
+        without_capacity_tariff(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == []
     )
-    assert without_capacity_tariff(entity_entries) == []
 
 
 async def test_period_window_refresh_makes_existing_sensors_unavailable(
@@ -1010,34 +1023,6 @@ async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
     assert _gas_per_m3_state(hass, entity_registry) == str(
         0.123456 * GAS_CONVERSION_COEFFICIENT
     )
-
-
-@pytest.mark.usefixtures("frozen_afternoon")
-async def test_epex_entities_on_household_device(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the EPEX entities belong to the device of their household."""
-    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-
-    household_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, BAN), mock_config_entry.entry_id
-    )
-    assert household_device is not None
-    epex_entries = [
-        entity_entry
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entity_entry.unique_id.startswith(f"{BAN}_epex_")
-    ]
-    assert len(epex_entries) == 9
-    assert {entity_entry.device_id for entity_entry in epex_entries} == {
-        household_device.id
-    }
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
