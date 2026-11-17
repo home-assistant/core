@@ -1014,6 +1014,15 @@ async def test_service_point_success_without_ean_is_cached_once(
 GAS_PER_M3_UNIQUE_ID = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS_per_m3"
 
 
+async def _advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
+) -> None:
+    """Move the clock forward and let the scheduled refreshes finish."""
+    freezer.tick(delta)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
 def _gas_service_point_side_effect(
     coefficient: float | None,
 ) -> Callable[[str], ServicePoint]:
@@ -1080,15 +1089,11 @@ async def test_gas_conversion_coefficient_refreshes_daily(
     client.async_get_service_point.side_effect = _gas_service_point_side_effect(
         coefficient
     )
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert client.async_get_service_point.call_count == 1
 
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, timedelta(days=1))
 
     assert client.async_get_service_point.call_count == 2
     assert _gas_per_m3_state(hass, entity_registry) == expected_state
@@ -1108,9 +1113,7 @@ async def test_failed_daily_coefficient_refresh_is_retried(
     client = mock_engie_client.return_value
 
     client.async_get_service_point.side_effect = EngieBeCommunicationError("boom")
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, timedelta(days=1))
 
     assert client.async_get_service_point.call_count == 2
     assert _gas_per_m3_state(hass, entity_registry) == str(
@@ -1118,9 +1121,7 @@ async def test_failed_daily_coefficient_refresh_is_retried(
     )
 
     client.async_get_service_point.side_effect = _gas_service_point_side_effect(12.0)
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     assert client.async_get_service_point.call_count == 3
     assert _gas_per_m3_state(hass, entity_registry) == str(0.123456 * 12.0)
@@ -1153,9 +1154,7 @@ async def test_failing_service_point_does_not_refetch_healthy_ones(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
     fetched = [call.args[0] for call in client.async_get_service_point.call_args_list]
     assert fetched.count(OFFTAKE_ONLY_EAN) == 1
@@ -1180,9 +1179,7 @@ async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
     mock_engie_client.return_value.async_get_service_point.side_effect = (
         _gas_service_point_side_effect(GAS_CONVERSION_COEFFICIENT)
     )
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _advance_time(hass, freezer, timedelta(days=1))
 
     assert _gas_per_m3_state(hass, entity_registry) == str(
         0.123456 * GAS_CONVERSION_COEFFICIENT

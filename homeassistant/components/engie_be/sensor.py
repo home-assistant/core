@@ -91,14 +91,16 @@ async def async_setup_entry(
             for ean, direction, slot_code in prices_data.slots:
                 type_key = _energy_type_key(ean, household.prices.ean_energy_types)
                 ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
-                units = [False]
+                per_cubic_meter_options = [False]
                 if (
                     type_key == "gas"
                     and direction == "offtake"
                     and bare_ean(ean) in prices_data.gas_conversion_coefficients
                 ):
-                    units.append(True)
-                for per_cubic_meter, excl_vat in product(units, (False, True)):
+                    per_cubic_meter_options.append(True)
+                for per_cubic_meter, excl_vat in product(
+                    per_cubic_meter_options, (False, True)
+                ):
                     entity = EngieBePriceSensor(
                         household.prices,
                         business_agreement_number=ban,
