@@ -103,13 +103,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     @override
     async def async_request_refresh(self) -> None:
         """Refresh on request, even while scheduled polling is rate limited."""
+        # Keep the bypass until the debouncer runs a refresh. A scheduled
+        # refresh may consume it first, which still gives the request a cloud
+        # update without making multiple calls for multiple climate entities.
         self._bypass_polling_backoff = True
-        try:
-            # async_refresh runs immediately; the debounced request API can
-            # defer a manual request until after the one-shot bypass expires.
-            await self.async_refresh()
-        finally:
-            self._bypass_polling_backoff = False
+        await super().async_request_refresh()
 
     async def _async_get_cloud_devices(
         self,
@@ -319,6 +317,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 # Preserve transient token errors so the coordinator retries.
                 raise
             except OnectaRateLimitError as err:
+                if bypass_polling_backoff and self.last_update_success:
+                    # A manual refresh can still be rate limited. Keep the
+                    # last known good state available while scheduled polls
+                    # wait for the Retry-After deadline.
+                    if remaining := self._polling_backoff_remaining():
+                        self.update_interval = remaining
+                    _LOGGER.debug(
+                        "Daikin rate-limited a refresh that bypassed polling backoff"
+                    )
+                    return devices
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_exceeded",

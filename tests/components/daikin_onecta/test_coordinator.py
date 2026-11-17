@@ -35,7 +35,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
@@ -529,26 +529,44 @@ class TestOnectaDataUpdateCoordinator:
         """Manual entity refreshes query Daikin during a polling backoff."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
         coordinator = config_entry.runtime_data
+        coordinator._polling_backoff_until = (
+            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        )
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         coordinator.client.get_gateway_devices = AsyncMock(
-            side_effect=[
-                OnectaRateLimitError(
-                    RateLimit(retry_after=60),
-                    method="GET",
-                    path="/v1/gateway-devices",
-                ),
-                _load_gateway_devices("minimal_data"),
-            ]
+            return_value=_load_gateway_devices("minimal_data")
         )
 
         await async_update_entity(hass, entity_id)
-        coordinator.client.get_gateway_devices.assert_awaited_once()
+
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
         assert coordinator._polling_backoff_until is not None
+
+    async def test_manual_update_rate_limit_keeps_cached_state_available(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+    ) -> None:
+        """Keep the cached state available if a manual refresh is rate limited."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        state_before = hass.states.get(entity_id)
+        assert state_before is not None
+        coordinator.client.get_gateway_devices = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        )
 
         await async_update_entity(hass, entity_id)
 
-        assert coordinator.client.get_gateway_devices.await_count == 2
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+        assert coordinator.last_update_success
         assert coordinator._polling_backoff_until is not None
+        assert hass.states.get(entity_id) == state_before
 
     async def test_manual_update_bypasses_write_polling_backoff(
         self,
@@ -570,6 +588,39 @@ class TestOnectaDataUpdateCoordinator:
 
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
         assert coordinator._polling_backoff_until is not None
+
+    async def test_manual_updates_for_multiple_entities_are_debounced(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+    ) -> None:
+        """One manual update for multiple climate entities makes one cloud call."""
+        await _async_setup_fixture(hass, config_entry, "altherma")
+        coordinator = config_entry.runtime_data
+        coordinator.client.get_gateway_devices = AsyncMock(
+            return_value=_load_gateway_devices("altherma")
+        )
+        registry = er.async_get(hass)
+        entity_ids_by_device: dict[str, list[str]] = {}
+        for entry in registry.entities.values():
+            if (
+                entry.config_entry_id == config_entry.entry_id
+                and entry.device_id is not None
+            ):
+                entity_ids_by_device.setdefault(entry.device_id, []).append(
+                    entry.entity_id
+                )
+        entity_ids = next(
+            entity_ids
+            for entity_ids in entity_ids_by_device.values()
+            if len(entity_ids) > 1
+        )
+
+        await asyncio.gather(
+            *(async_update_entity(hass, entity_id) for entity_id in entity_ids)
+        )
+
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_scheduled_update_respects_write_polling_backoff(
         self, coordinator: OnectaDataUpdateCoordinator
@@ -611,7 +662,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_utcnow.return_value += timedelta(seconds=60)
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            cooldown=timedelta(seconds=30)
+            cooldown=timedelta(seconds=30), bypass_polling_backoff=False
         )
         assert coordinator._polling_backoff_until is None
 
@@ -792,7 +843,7 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            cooldown=timedelta(seconds=30)
+            cooldown=timedelta(seconds=30), bypass_polling_backoff=False
         )
         assert coordinator.update_interval == timedelta(seconds=30)
 
@@ -819,7 +870,7 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            cooldown=timedelta(seconds=30)
+            cooldown=timedelta(seconds=30), bypass_polling_backoff=False
         )
 
     async def test_connection_error_uses_update_failed(self, coordinator):
