@@ -36,7 +36,8 @@
   "entity": {
     "binary_sensor": {
       "is_disable": { "name": "Charging enabled" },
-      "is_lock": { "name": "Cable lock state" }
+      "is_lock": { "name": "Cable lock state" },
+      "vehicle_connected": { "name": "Vehicle connected" }
     },
     "sensor": {
       "access_level": {
