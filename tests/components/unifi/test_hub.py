@@ -11,6 +11,7 @@ import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -21,6 +22,7 @@ from homeassistant.components.unifi.coordinator import (
     IDLE_POLL_INTERVAL,
     POLL_INTERVAL,
     UPDATE_TIMEOUT,
+    WEBSOCKET_FALLBACK_INTERVAL,
 )
 from homeassistant.components.unifi.errors import (
     AuthenticationRequired,
@@ -90,8 +92,8 @@ async def test_coordinators_preserve_handler_update_sources(
 
     clients_coordinator = loader.get_data_update_coordinator(api.clients)
     devices_coordinator = loader.get_data_update_coordinator(api.devices)
-    assert clients_coordinator.update_interval is None
-    assert devices_coordinator.update_interval is None
+    assert clients_coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
+    assert devices_coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
 
     assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
     assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
@@ -114,6 +116,64 @@ async def test_get_data_update_coordinator_requires_registered_handler(
 
     with pytest.raises(KeyError):
         loader.get_data_update_coordinator(api.sites)
+
+
+async def test_websocket_fallback_refresh_and_push_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """A handler update postpones its fallback, which repeats while quiet."""
+    api = config_entry_setup.runtime_data.api
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            api.clients
+        )
+    )
+    with patch.object(api.clients, "update", wraps=api.clients.update) as update:
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        update.assert_not_called()
+
+        mock_websocket_message(
+            message=MessageKey.CLIENT,
+            data={"mac": "00:00:00:00:00:01", "hostname": "client"},
+        )
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=15))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        update.assert_not_called()
+
+        freezer.tick(timedelta(seconds=16))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert update.call_count == 1
+        assert coordinator.update_interval == WEBSOCKET_FALLBACK_INTERVAL
+
+        freezer.tick(WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert update.call_count == 2
+
+
+async def test_websocket_fallback_respects_disabled_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Do not schedule fallback polling when polling is disabled."""
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
+    await config_entry_factory()
+    api = config_entry.runtime_data.api
+
+    with patch.object(api.devices, "update", wraps=api.devices.update) as update:
+        async_fire_time_changed(hass, dt_util.utcnow() + WEBSOCKET_FALLBACK_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        update.assert_not_called()
 
 
 async def test_polling_coordinator_refreshes_after_interval(
