@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 
 async def test_lock_entity(
@@ -149,6 +150,7 @@ async def test_coordinator_refresh_updates_lock_state(
     """Test a coordinator refresh awaits the lock state update."""
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
     lock.updateState.reset_mock()
+    assert await async_setup_component(hass, "homeassistant", {})
 
     async def update_state(bolt_state: str) -> None:
         lock.bolt_state = bolt_state
@@ -159,7 +161,12 @@ async def test_coordinator_refresh_updates_lock_state(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
         return_value={**lock_status, "bolt_state": "night_lock"},
     ):
-        await integration.runtime_data.async_refresh()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: "lock.home"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     lock.updateState.assert_awaited_once_with("night_lock")
@@ -174,12 +181,18 @@ async def test_coordinator_refresh_without_bolt_state(
     """Test a refresh without a bolt state does not update the lock state."""
     lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
     lock.updateState.reset_mock()
+    assert await async_setup_component(hass, "homeassistant", {})
 
     with patch(
         "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
         return_value={k: v for k, v in lock_status.items() if k != "bolt_state"},
     ):
-        await integration.runtime_data.async_refresh()
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {ATTR_ENTITY_ID: "lock.home"},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     lock.updateState.assert_not_awaited()
