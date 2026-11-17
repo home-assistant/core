@@ -167,7 +167,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.agreement = agreement
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
-        self._service_points_refreshed_at: datetime | None = None
+        self._service_points_refreshed_at: dict[str, datetime] = {}
         device_name = (
             agreement.consumption_address.format()
             if agreement.consumption_address is not None
@@ -178,6 +178,14 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ENGIE Belgium",
             name=device_name,
+        )
+
+    def _service_point_due(self, ean: str, now: datetime) -> bool:
+        """Return True when the service point of a bare EAN needs a fresh fetch."""
+        refreshed_at = self._service_points_refreshed_at.get(ean)
+        return (
+            refreshed_at is None
+            or now - refreshed_at >= _SERVICE_POINT_REFRESH_INTERVAL
         )
 
     @override
@@ -196,19 +204,13 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             ) from err
 
         now = dt_util.utcnow()
-        refresh_all = (
-            self._service_points_refreshed_at is None
-            or now - self._service_points_refreshed_at
-            >= _SERVICE_POINT_REFRESH_INTERVAL
-        )
         fetch_eans = list(
             dict.fromkeys(
                 ean_prices.ean
                 for ean_prices in prices.items
-                if refresh_all or bare_ean(ean_prices.ean) not in self.ean_energy_types
+                if self._service_point_due(bare_ean(ean_prices.ean), now)
             )
         )
-        all_fetched = True
         if fetch_eans:
             service_points = await asyncio.gather(
                 *(self.client.async_get_service_point(ean) for ean in fetch_eans),
@@ -227,7 +229,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                         mask_identifier(bare_ean(ean)),
                         service_point_result,
                     )
-                    all_fetched = False
                     continue
                 if isinstance(service_point_result, BaseException):
                     raise service_point_result
@@ -239,8 +240,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                     self.gas_conversion_coefficients.pop(bare_ean(ean), None)
                 else:
                     self.gas_conversion_coefficients[bare_ean(ean)] = coefficient
-        if refresh_all and all_fetched:
-            self._service_points_refreshed_at = now
+                self._service_points_refreshed_at[bare_ean(ean)] = now
 
         brussels = dt_util.get_time_zone("Europe/Brussels")
         assert brussels is not None

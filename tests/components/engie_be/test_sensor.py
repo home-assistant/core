@@ -1126,6 +1126,42 @@ async def test_failed_daily_coefficient_refresh_is_retried(
     assert _gas_per_m3_state(hass, entity_registry) == str(0.123456 * 12.0)
 
 
+def _service_points_failing_for(failing_ean: str) -> Callable[[str], ServicePoint]:
+    """Return an async_get_service_point side_effect that fails for one EAN."""
+
+    def _side_effect(ean: str) -> ServicePoint:
+        """Raise for the failing EAN and build a service point otherwise."""
+        if ean == failing_ean:
+            raise EngieBeCommunicationError("boom")
+        return build_service_point(ean)
+
+    return _side_effect
+
+
+async def test_failing_service_point_does_not_refetch_healthy_ones(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test only the failing service point is retried on the next poll."""
+    client = mock_engie_client.return_value
+    client.async_get_service_point.side_effect = _service_points_failing_for(
+        OFFTAKE_INJECTION_EAN
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    fetched = [call.args[0] for call in client.async_get_service_point.call_args_list]
+    assert fetched.count(OFFTAKE_ONLY_EAN) == 1
+    assert fetched.count(OFFTAKE_INJECTION_EAN) == 2
+
+
 async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
