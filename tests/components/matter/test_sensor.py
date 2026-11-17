@@ -1414,11 +1414,31 @@ async def test_commodity_price_sensor(
     assert state.state == "0.25"
     assert state.attributes["unit_of_measurement"] == "EUR/kWh"
 
-    # Null CurrentPrice
+    # Null CurrentPrice: keep the last known value
     set_node_attribute(matter_node, 1, 149, 2, None)
 
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "0.25"
+    assert state.attributes["unit_of_measurement"] == "EUR/kWh"
+
+    # CurrentPrice without Price
+    set_node_attribute(
+        matter_node,
+        1,
+        149,
+        2,
+        {
+            0: None,
+            1: None,
+            3: 2,
+        },
+    )
+
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.25"
