@@ -159,12 +159,14 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
 
         @callback
         def _handle_update() -> None:
+            if not self.last_update_success or self.data is None:
+                return
             registry = dr.async_get(hass)
             device = registry.async_get_device_by_identifier(
-                identifier=(DOMAIN, config_entry.entry_id),
+                identifier=(DOMAIN, self.data.biocat_serial),
                 config_entry_id=config_entry.entry_id,
             )
-            if device and self.last_update_success and self.data is not None:
+            if device:
                 registry.async_update_device(
                     device.id,
                     sw_version=self.data.current_firmware_version,
