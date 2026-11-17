@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
@@ -27,7 +27,7 @@ async def _get_forecast(
         WEATHER_DOMAIN,
         WeatherService.GET_FORECASTS,
         {
-            CommonServiceArgument.ENTITY_ID: WEATHER_ENTITY_ID,
+            TargetKey.ENTITY_ID: WEATHER_ENTITY_ID,
             "type": forecast_type,
         },
         blocking=True,

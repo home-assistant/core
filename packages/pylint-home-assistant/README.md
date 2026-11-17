@@ -175,6 +175,7 @@ Every check has a code following the
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
 | `W7454` | [`home-assistant-sequential-add-entities`](#w7454-home-assistant-sequential-add-entities) | Sequential `async_add_entities` calls should be grouped |
+| `W7455` | [`home-assistant-coordinator-entity-should-poll`](#w7455-home-assistant-coordinator-entity-should-poll) | `_attr_should_poll` has no effect on a `CoordinatorEntity` |
 | `W7457` | [`home-assistant-flow-call-in-try`](#w7457-home-assistant-flow-call-in-try) | Flow creates an entry, shows a form, handles the unique ID or moves on to another step inside a `try` block |
 | `W7460` | [`home-assistant-runtime-data-untyped-config-entry`](#w7460-home-assistant-runtime-data-untyped-config-entry) | Config entry that sets `runtime_data` should use a typed config entry instead of `ConfigEntry` |
 | `W7463` | [`home-assistant-callback-override-missing-decorator`](#w7463-home-assistant-callback-override-missing-decorator) | Override of a `@callback` method should be decorated with `@callback` |
@@ -523,6 +524,18 @@ or `_attr_available`, are not flagged. Neither are entities of a push
 coordinator, one that never sets an `update_interval` and gets its data
 through `async_set_updated_data`: its `last_update_success` doesn't show
 whether the device is reachable.
+
+
+## `home_assistant_coordinator_entity_should_poll` checker
+
+Checks for `_attr_should_poll` on coordinator entities.
+
+### `W7455`: `home-assistant-coordinator-entity-should-poll`
+
+`CoordinatorEntity` overrides `should_poll` to always return `False`, as the
+coordinator tells its entities when it has new data. `_attr_should_poll` is
+only read by `Entity.should_poll`, so setting it on a coordinator entity has
+no effect and can be removed.
 
 
 ## `home_assistant_log_and_raise` checker

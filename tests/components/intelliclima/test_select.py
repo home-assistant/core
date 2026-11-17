@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -85,7 +85,7 @@ async def test_select_option_keeps_current_speed(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -111,7 +111,7 @@ async def test_select_option_when_off_defaults_speed_to_sleep(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
             SelectServiceArgument.OPTION: "forward",
         },
         blocking=True,
@@ -135,7 +135,7 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
             SelectServiceArgument.OPTION: "reverse",
         },
         blocking=True,
@@ -156,7 +156,7 @@ async def test_select_option_does_not_call_turn_off(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -175,7 +175,7 @@ async def test_select_option_triggers_coordinator_refresh(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_ENTITY_ID,
+            TargetKey.ENTITY_ID: SELECT_ENTITY_ID,
             SelectServiceArgument.OPTION: "sensor",
         },
         blocking=True,

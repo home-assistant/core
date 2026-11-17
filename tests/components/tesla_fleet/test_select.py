@@ -15,7 +15,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.tesla_fleet.select import HIGH, LOW, OFF
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -110,7 +110,7 @@ async def test_select_services(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: LOW,
             },
             blocking=True,
@@ -135,7 +135,7 @@ async def test_select_services(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: LOW,
             },
             blocking=True,
@@ -154,7 +154,7 @@ async def test_select_services(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: EnergyOperationMode.AUTONOMOUS.value,
             },
             blocking=True,
@@ -172,7 +172,7 @@ async def test_select_services(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: EnergyExportMode.BATTERY_OK.value,
             },
             blocking=True,
@@ -216,7 +216,7 @@ async def test_select_steering_wheel_heat_level(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: option,
             },
             blocking=True,

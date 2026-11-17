@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,7 +53,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.home_assistant_test_restriction_mode",
+            TargetKey.ENTITY_ID: "select.home_assistant_test_restriction_mode",
             SelectServiceArgument.OPTION: DeviceTimerMode.EACH_DAY_OF_THE_WEEK.name.lower(),
         },
         blocking=True,

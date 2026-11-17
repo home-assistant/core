@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -575,7 +575,7 @@ async def test_turn_on_without_remote_control(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -609,7 +609,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -643,7 +643,7 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
