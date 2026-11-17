@@ -195,7 +195,6 @@
         "name": "Invalid controller value"
       }
     },
-    {  
     "number": {
       "domestic_hot_water_temperature_setpoint": {
         "name": "Domestic hot water temperature setpoint"
