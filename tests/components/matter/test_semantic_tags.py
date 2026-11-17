@@ -251,8 +251,8 @@ def test_source_precedence() -> None:
     }
 
 
-def test_semantic_tags_before_vendor_labels() -> None:
-    """Test semantic tags win over vendor labels when both name the group."""
+def test_position_tags_before_vendor_labels() -> None:
+    """Test position tags win over vendor labels when both name the group."""
     node = create_node_from_fixture(
         NODE_FIXTURE,
         {
@@ -261,6 +261,24 @@ def test_semantic_tags_before_vendor_labels() -> None:
             "2/29/4": _position(BOTTOM),
             "1/64/0": _fixed_label("Position", "1"),
             "2/64/0": _fixed_label("Position", "2"),
+        },
+    )
+    assert get_child_device_names(node) == {
+        1: _key("position_top"),
+        2: _key("position_bottom"),
+    }
+
+
+def test_vendor_labels_before_common_number() -> None:
+    """Test curated vendor labels win over Common Number tags."""
+    node = create_node_from_fixture(
+        NODE_FIXTURE,
+        {
+            **TP_LINK_DUAL_OUTDOOR_PLUG,
+            "1/29/4": _number(1),
+            "2/29/4": _number(2),
+            "1/64/0": _fixed_label("Position", "Top"),
+            "2/64/0": _fixed_label("Position", "Bottom"),
         },
     )
     assert get_child_device_names(node) == {

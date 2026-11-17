@@ -254,14 +254,15 @@ def _per_endpoint(
 
 
 # Name sources in order of preference. Semantic tags are the standard source,
-# the curated vendor labels come before free text manufacturer tag labels.
+# but a Common Number tag only tells which output comes first, so the curated
+# vendor labels come before it. Free text manufacturer tag labels come last.
 NAME_SOURCES: tuple[
     Callable[[Sequence[MatterEndpoint]], dict[int, ChildDeviceName] | None], ...
 ] = (
     _per_endpoint(_position_name),
     _per_endpoint(_row_column_name),
-    _per_endpoint(_number_name),
     _vendor_label_names,
+    _per_endpoint(_number_name),
     _per_endpoint(_manufacturer_tag_label_name),
 )
 
