@@ -100,6 +100,6 @@ class ControllerUpdate(UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_install_failed",
-                translation_placeholders={"name": self._title, "error": str(err)},
+                translation_placeholders={"name": self._title},
             ) from err
         self.update()
