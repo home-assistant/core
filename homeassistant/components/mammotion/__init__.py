@@ -16,7 +16,7 @@ from pymammotion.transport.base import (
 )
 from Tea.exceptions import UnretryableException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -193,6 +193,10 @@ async def async_remove_config_entry_device(
     device_entry: AnyDeviceEntry,
 ) -> bool:
     """Allow removing a device only once its mower is gone from the account."""
+    # The mower list is unknown while unloaded; a mower still on the account
+    # gets its device back on the next setup.
+    if config_entry.state is not ConfigEntryState.LOADED:
+        return True
     mower_names = {mower.name for mower in config_entry.runtime_data.mowers}
     return not any(
         domain == DOMAIN and name in mower_names

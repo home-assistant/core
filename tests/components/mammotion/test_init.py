@@ -673,3 +673,29 @@ async def test_remove_orphaned_mower(
 
     assert response["success"]
     assert device_registry.async_get(device.id) is None
+
+
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_remove_mower_of_unloaded_entry(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a mower of an unloaded entry can be removed.
+
+    The entry holds no mower list while unloaded, so the check used to raise
+    AttributeError instead of answering.
+    """
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEFAULT_NAME), mock_config_entry.entry_id
+    )
+    assert device is not None
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    response = await _remove_device(hass, hass_ws_client, device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
