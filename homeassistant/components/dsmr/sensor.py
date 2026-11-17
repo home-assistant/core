@@ -5,7 +5,6 @@ from asyncio import CancelledError
 from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from typing import override
@@ -43,7 +42,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import Throttle
 
 from . import DsmrConfigEntry
 from .const import (
@@ -51,10 +49,8 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
-    CONF_TIME_BETWEEN_UPDATE,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
-    DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
     DEVICE_NAME_HEAT,
@@ -798,11 +794,7 @@ async def async_setup_entry(
     add_entities_handler = async_dispatcher_connect(
         hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
     )
-    min_time_between_updates = timedelta(
-        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
-    )
 
-    @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram: Telegram | None) -> None:
         """Update entities with latest telegram and trigger state update."""
         nonlocal initialized
