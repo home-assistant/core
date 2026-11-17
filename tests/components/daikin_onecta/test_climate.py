@@ -322,6 +322,10 @@ async def test_set_vertical_swing_mode(command_result: bool) -> None:
     entity.coordinator = coordinator
     entity._async_set_swing = AsyncMock(return_value=command_result)
     entity._get_swing_modes = MagicMock(return_value=[SWING_OFF, SWING_ON])
+    entity._get_swing_mode = MagicMock(return_value=SWING_ON)
+    coordinator.async_update_listeners.side_effect = lambda: setattr(
+        entity, "_attr_swing_mode", entity._get_swing_mode()
+    )
 
     if not command_result:
         with pytest.raises(HomeAssistantError) as err:
@@ -408,6 +412,9 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
     entity._get_setpoint = MagicMock(return_value=setpoint)
+    coordinator.async_update_listeners.side_effect = lambda: setattr(
+        entity, "_attr_native_target_temperature", setpoint.value
+    )
     await entity.async_set_temperature(temperature=21)
 
     assert setpoint.value == 21
@@ -514,6 +521,10 @@ async def test_set_swing_horizontal_mode(
     entity.coordinator = coordinator
     entity._async_set_swing = AsyncMock(return_value=command_result)
     entity._get_swing_horizontal_modes = MagicMock(return_value=[SWING_OFF, SWING_ON])
+    entity._get_swing_horizontal_mode = MagicMock(return_value=requested_mode)
+    coordinator.async_update_listeners.side_effect = lambda: setattr(
+        entity, "_attr_swing_horizontal_mode", entity._get_swing_horizontal_mode()
+    )
 
     if current_mode != requested_mode and not command_result:
         with pytest.raises(HomeAssistantError) as err:
@@ -654,6 +665,9 @@ async def test_turn_updates_cached_power_state(
     entity.coordinator = coordinator
     entity._climate_control = MagicMock(return_value=climate_control)
     entity._get_hvac_mode = MagicMock(return_value=hvac_mode)
+    coordinator.async_update_listeners.side_effect = lambda: setattr(
+        entity, "_attr_hvac_mode", entity._get_hvac_mode()
+    )
 
     await getattr(entity, method)()
 
@@ -983,6 +997,36 @@ def test_omitted_swing_value_uses_unknown_mode(direction: str) -> None:
     )
 
     assert entity._get_swing_mode_for_direction(direction) is None
+
+
+@pytest.mark.parametrize("direction", ["vertical", "horizontal"])
+@pytest.mark.parametrize("missing", ["operation", "direction", "axis"])
+def test_missing_swing_axis_uses_unknown_mode(direction: str, missing: str) -> None:
+    """Do not expose an empty string when a swing axis is absent."""
+    entity = object.__new__(DaikinClimate)
+    if missing == "operation":
+        entity._fan_operation = MagicMock(return_value=None)
+    elif missing == "direction":
+        entity._fan_operation = MagicMock(
+            return_value=SimpleNamespace(fan_direction=None)
+        )
+    else:
+        entity._fan_operation = MagicMock(
+            return_value=SimpleNamespace(
+                fan_direction=SimpleNamespace(vertical=None, horizontal=None)
+            )
+        )
+
+    assert entity._get_swing_mode_for_direction(direction) is None
+
+
+def test_unknown_temperature_unit_defaults_to_celsius() -> None:
+    """Ignore an unrecognized Daikin unit instead of failing entity setup."""
+    entity = object.__new__(DaikinClimate)
+    entity._get_setpoint = MagicMock(return_value=SimpleNamespace(unit="°K"))
+    entity._climate_control = MagicMock(return_value=None)
+
+    assert entity._get_native_temperature_unit() == UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize("power_settable", [False, None])
@@ -1422,6 +1466,7 @@ async def test_climate_service_updates_entity_state(
         mac_address=None,
         management_points_by_type=lambda _: (climate_control,),
     )
+    device.gateway_metadata = (None, None, None)
     device.management_point.return_value = climate_control
     device.patch = AsyncMock(return_value=patch_result)
     gateway_entry = device_registry.async_get_or_create(
@@ -1748,6 +1793,7 @@ async def test_climate_platform_services_and_management_points(
         mac_address=None,
         management_points_by_type=lambda _: tuple(climate_controls.values()),
     )
+    device.gateway_metadata = (None, None, None)
     device.management_point.side_effect = climate_controls.get
     device.patch = AsyncMock(return_value=True)
 

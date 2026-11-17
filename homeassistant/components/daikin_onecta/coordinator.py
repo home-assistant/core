@@ -215,11 +215,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             if gateway.mac_address
             else set()
         )
-        model, serial_number, sw_version = (
-            (point.model, point.serial, point.version)
-            if (point := gateway.gateway_management_point) is not None
-            else (None, None, None)
-        )
+        model, serial_number, sw_version = device.gateway_metadata
         registry = dr.async_get(self.hass)
         if (
             existing_entry := registry.async_get_device_by_identifier(

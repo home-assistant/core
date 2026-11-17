@@ -1,13 +1,8 @@
 """Base entity for the Daikin Onecta integration."""
 
-from typing import Never, override
+from typing import Never
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    ChildDeviceInfo,
-    DeviceInfo,
-)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -42,30 +37,3 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
             translation_key=translation_key,
             translation_placeholders={"device": self._device.name},
         )
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
-        """Return the gateway device registry information."""
-        gateway = self._device.device
-        connections = set()
-        if gateway.mac_address:
-            connections.add((CONNECTION_NETWORK_MAC, gateway.mac_address))
-
-        info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.id)},
-            connections=connections,
-            manufacturer="Daikin",
-            model_id=gateway.device_model,
-            name=self._device.name,
-        )
-        if (embedded_id := gateway.gateway_embedded_id) is not None and (
-            management_point := gateway.management_point(embedded_id)
-        ) is not None:
-            if management_point.model is not None:
-                info["model"] = management_point.model
-            if management_point.serial is not None:
-                info["serial_number"] = management_point.serial
-            if management_point.version is not None:
-                info["sw_version"] = management_point.version
-        return info

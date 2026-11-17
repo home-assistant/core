@@ -290,9 +290,14 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             )
             sensory_data = cc.sensory_data(sensory_target) if cc is not None else None
             unit = sensory_data.unit if sensory_data is not None else None
-        return (
-            UnitOfTemperature(unit) if unit is not None else UnitOfTemperature.CELSIUS
-        )
+        try:
+            return (
+                UnitOfTemperature(unit)
+                if unit is not None
+                else UnitOfTemperature.CELSIUS
+            )
+        except ValueError:
+            return UnitOfTemperature.CELSIUS
 
     def _get_max_temp(self) -> float:
         """Return the maximum configurable temperature."""
@@ -362,7 +367,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     setpointdict = self._get_setpoint(omv)
                     if setpointdict is not None:
                         setpointdict.value = value
-                        self._attr_native_target_temperature = value
                         self.coordinator.async_update_listeners()
                 else:
                     self._raise_command_failed("set_temperature_failed")
@@ -582,7 +586,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 fan_speed.current_mode.value = FANMODE_FIXED
                 # The fan is already in fixed mode even if the following speed
                 # write fails, so publish this confirmed intermediate state.
-                self._attr_fan_mode = self._get_fan_mode()
                 self.coordinator.async_update_listeners()
             fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
             new_fixed_mode = int(fan_mode)
@@ -614,7 +617,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             fan_speed = fan_operation.fan_speed
             fan_speed.current_mode.value = fan_mode
 
-        self._attr_fan_mode = self._get_fan_mode()
         self.coordinator.async_update_listeners()
 
     def _get_swing_mode_for_direction(
@@ -623,12 +625,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Return current swing mode for an axis."""
         fan_operation = self._fan_operation()
         if fan_operation is None or fan_operation.fan_direction is None:
-            return ""
+            return None
         axis = cast(
             "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
         )
         if axis is None:
-            return ""
+            return None
         if (value := cast("str | None", axis.current_mode.value)) is None:
             return None
         mode = value.lower()
@@ -723,7 +725,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             res = await self._async_set_swing("vertical", swing_mode)
 
             if res is True:
-                self._attr_swing_mode = swing_mode
                 self.coordinator.async_update_listeners()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
@@ -738,7 +739,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             res = await self._async_set_swing("horizontal", swing_horizontal_mode)
 
             if res is True:
-                self._attr_swing_horizontal_mode = swing_horizontal_mode
                 self.coordinator.async_update_listeners()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
@@ -841,7 +841,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn device CLIMATE on."""
         cc = self._climate_control()
-        result = True
         if cc is None or cc.on_off_mode is None:
             self._raise_service_validation_error("climate_power_unavailable")
         if cc.on_off_mode.value not in {"on", "off"}:
@@ -849,24 +848,21 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         if cc.on_off_mode.value == "off":
             if not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
-            result &= await self._async_execute_climate_command(
+            if not await self._async_execute_climate_command(
                 lambda climate: climate.set_power(True)
-            )
-            if result is False:
+            ):
                 self._raise_command_failed("turn_on_failed")
             else:
                 cc = self._climate_control()
                 if cc is None or cc.on_off_mode is None:
                     return
                 cc.on_off_mode.value = "on"
-                self._attr_hvac_mode = self._get_hvac_mode()
                 self.coordinator.async_update_listeners()
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the climate entity off."""
         cc = self._climate_control()
-        result = True
         if cc is None or cc.on_off_mode is None:
             self._raise_service_validation_error("climate_power_unavailable")
         if cc.on_off_mode.value not in {"on", "off"}:
@@ -874,15 +870,13 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         if cc.on_off_mode.value == "on":
             if not cc.on_off_mode.settable:
                 self._raise_service_validation_error("climate_power_unavailable")
-            result &= await self._async_execute_climate_command(
+            if not await self._async_execute_climate_command(
                 lambda climate: climate.set_power(False)
-            )
-            if result is False:
+            ):
                 self._raise_command_failed("turn_off_failed")
             else:
                 cc = self._climate_control()
                 if cc is None or cc.on_off_mode is None:
                     return
                 cc.on_off_mode.value = "off"
-                self._attr_hvac_mode = self._get_hvac_mode()
                 self.coordinator.async_update_listeners()
