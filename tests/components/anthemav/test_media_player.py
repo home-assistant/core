@@ -8,12 +8,21 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityFeature,
     MediaPlayerEntityStateAttribute,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_MODEL,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -175,3 +184,111 @@ async def test_select_source_other_models(
         )
     open_connection.assert_not_called()
     assert mock_anthemav.protocol.zones[1].input_name == "INPUT 2"
+
+
+ALM_NUMBERS = {"None": 0, "AnthemLogic Cinema": 1, "PLII Music": 4}
+
+
+async def test_sound_mode_state(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_connection_create: AsyncMock,
+) -> None:
+    """Test zone 1 reports the listening mode and zone 2 doesn't."""
+    mock_anthemav.protocol.audio_listening_mode_list = list(ALM_NUMBERS)
+    mock_anthemav.protocol.audio_listening_mode_text = "PLII Music"
+    mock_anthemav.protocol.zones[1].power = True
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.anthem_av")
+    assert state.attributes[ATTR_SOUND_MODE] == "PLII Music"
+    assert state.attributes[ATTR_SOUND_MODE_LIST] == list(ALM_NUMBERS)
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+    zone_2 = hass.states.get("media_player.zone_2")
+    assert not (
+        zone_2.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+
+
+async def test_select_sound_mode_other_models(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_connection_create: AsyncMock,
+) -> None:
+    """Test other models change the listening mode over the existing connection."""
+    mock_anthemav.protocol._alm_number = ALM_NUMBERS
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch("asyncio.open_connection") as open_connection:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_ENTITY_ID: "media_player.anthem_av", ATTR_SOUND_MODE: "PLII Music"},
+            blocking=True,
+        )
+    open_connection.assert_not_called()
+    assert mock_anthemav.protocol.audio_listening_mode == 4
+
+
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_select_sound_mode_x10_uses_new_connection(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test MRX x10 listening mode changes are sent over a new connection."""
+    mock_anthemav.protocol._alm_number = ALM_NUMBERS
+    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+    writer = MagicMock()
+    writer.drain = AsyncMock()
+    writer.wait_closed = AsyncMock()
+
+    with (
+        patch("asyncio.open_connection", return_value=(MagicMock(), writer)),
+        patch(
+            "homeassistant.components.anthemav.single_command.SINGLE_COMMAND_LINGER_SECONDS",
+            0,
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_ENTITY_ID: "media_player.anthem_av", ATTR_SOUND_MODE: "PLII Music"},
+            blocking=True,
+        )
+
+    writer.write.assert_called_once_with(b"Z1ALM04;")
+    mock_anthemav.protocol.query.assert_called_with("Z1ALM")
+
+
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_select_sound_mode_unknown(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test selecting a listening mode the receiver doesn't have."""
+    mock_anthemav.protocol._alm_number = ALM_NUMBERS
+    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+
+    with (
+        patch("asyncio.open_connection") as open_connection,
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_ENTITY_ID: "media_player.anthem_av", ATTR_SOUND_MODE: "Nope"},
+            blocking=True,
+        )
+    open_connection.assert_not_called()

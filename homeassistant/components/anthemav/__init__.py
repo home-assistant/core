@@ -100,6 +100,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
                         return
                     zone.query(command)
                     await asyncio.sleep(POLL_COMMAND_SPACING_SECONDS)
+            if (
+                avr.protocol.zones[1].power
+                and avr.protocol.support_audio_listening_mode
+                and avr.protocol.transport is not None
+            ):
+                avr.protocol.query("Z1ALM")
 
         entry.async_on_unload(
             async_track_time_interval(hass, poll_zones, POLL_INTERVAL)

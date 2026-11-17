@@ -25,6 +25,9 @@
     },
     "unknown_source": {
       "message": "Unknown source: {source}"
+    },
+    "unknown_sound_mode": {
+      "message": "Unknown sound mode: {sound_mode}"
     }
   }
 }

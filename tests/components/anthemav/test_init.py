@@ -138,6 +138,8 @@ async def test_poll_x10_zones(
         call("INP"),
     ]
     assert zone_2.query.call_args_list == [call("POW")]
+    # The listening mode is a zone 1 setting, polled while zone 1 is on.
+    mock_anthemav.protocol.query.assert_called_once_with("Z1ALM")
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     zone_1.query.reset_mock()

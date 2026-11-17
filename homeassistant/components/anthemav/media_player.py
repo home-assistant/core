@@ -94,6 +94,9 @@ class AnthemAVR(MediaPlayerEntity):
         self._host = host
         self._port = port
         self._is_x10 = model.strip() in X10_MODELS
+        # The listening mode (ALM) is a zone 1 setting.
+        if zone_number == 1 and avr.support_audio_listening_mode:
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
@@ -149,6 +152,11 @@ class AnthemAVR(MediaPlayerEntity):
         self._attr_app_name = self._zone.input_format
         self._attr_source = self._zone.input_name
         self._attr_source_list = self.avr.input_list
+        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE:
+            self._attr_sound_mode = (
+                self.avr.audio_listening_mode_text if self._zone.power else None
+            )
+            self._attr_sound_mode_list = self.avr.audio_listening_mode_list
 
     @override
     async def async_select_source(self, source: str) -> None:
@@ -168,6 +176,22 @@ class AnthemAVR(MediaPlayerEntity):
         )
         # The long-lived connection may not get the change pushed, so ask.
         self._zone.query("INP")
+
+    @override
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
+        """Change the zone 1 listening mode (by name)."""
+        number = self.avr._alm_number.get(sound_mode)  # noqa: SLF001
+        if number is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_sound_mode",
+                translation_placeholders={"sound_mode": sound_mode},
+            )
+        if not self._is_x10:
+            self.avr.audio_listening_mode = number
+            return
+        await async_send_single_command(self._host, self._port, f"Z1ALM{number:02d}")
+        self.avr.query("Z1ALM")
 
     @override
     async def async_turn_off(self) -> None:
