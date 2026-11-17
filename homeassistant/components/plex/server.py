@@ -45,6 +45,7 @@ from .const import (
 from .errors import (
     MediaNotFound,
     NoServersFound,
+    ServerNotFound,
     ServerNotSpecified,
     ShouldUpdateConfigEntry,
 )
@@ -154,11 +155,13 @@ class PlexServer:
                 raise ServerNotSpecified(available_servers)
 
             self.server_choice = self._server_id or available_servers[0][1]
-            self._plex_server = next(
-                x.connect(timeout=10)
-                for x in all_servers
-                if x.clientIdentifier == self.server_choice
+            server = next(
+                (x for x in all_servers if x.clientIdentifier == self.server_choice),
+                None,
             )
+            if server is None:
+                raise ServerNotFound
+            self._plex_server = server.connect(timeout=10)
 
         def _connect_with_url():
             session = None
