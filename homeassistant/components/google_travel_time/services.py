@@ -6,12 +6,7 @@ from typing import Any, cast
 from google_maps_routing_api import ComputeRoutesResponse, GoogleMapsRoutingApiAuthError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
-    CONF_API_KEY,
-    CONF_LANGUAGE,
-    CONF_MODE,
-)
+from homeassistant.const import CONF_API_KEY, CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -23,17 +18,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_get_config_entry
 
 from .const import (
-    CONF_ARRIVAL_TIME,
-    CONF_AVOID,
-    CONF_DEPARTURE_TIME,
-    CONF_DESTINATION,
-    CONF_ORIGIN,
-    CONF_TRAFFIC_MODEL,
-    CONF_TRANSIT_MODE,
-    CONF_TRANSIT_ROUTING_PREFERENCE,
-    CONF_UNITS,
     DOMAIN,
     TRAVEL_MODES_TO_API_ENUM,
+    GoogleTravelTimeService,
+    GoogleTravelTimeServiceArgument,
 )
 from .helpers import (
     async_compute_routes,
@@ -44,9 +32,6 @@ from .helpers import (
     is_routes_api_disabled,
 )
 from .schemas import SERVICE_GET_TRANSIT_TIMES_SCHEMA, SERVICE_GET_TRAVEL_TIMES_SCHEMA
-
-SERVICE_GET_TRAVEL_TIMES = "get_travel_times"
-SERVICE_GET_TRANSIT_TIMES = "get_transit_times"
 
 
 def _seconds(value: dt.timedelta | None) -> int:
@@ -117,26 +102,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
         """Handle the service call to get travel times (non-transit modes)."""
         entry = async_get_config_entry(
-            service.hass, DOMAIN, service.data[ATTR_CONFIG_ENTRY_ID]
+            service.hass, DOMAIN, service.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         api_key = entry.data[CONF_API_KEY]
 
-        travel_mode = TRAVEL_MODES_TO_API_ENUM[service.data[CONF_MODE]]
+        travel_mode = TRAVEL_MODES_TO_API_ENUM[
+            service.data[GoogleTravelTimeServiceArgument.MODE]
+        ]
 
         client = get_client(hass, api_key)
 
         try:
             response = await async_compute_routes(
                 client=client,
-                origin=service.data[CONF_ORIGIN],
-                destination=service.data[CONF_DESTINATION],
+                origin=service.data[GoogleTravelTimeServiceArgument.ORIGIN],
+                destination=service.data[GoogleTravelTimeServiceArgument.DESTINATION],
                 hass=hass,
                 travel_mode=travel_mode,
-                units=service.data[CONF_UNITS],
-                language=service.data.get(CONF_LANGUAGE),
-                avoid=service.data.get(CONF_AVOID),
-                traffic_model=service.data.get(CONF_TRAFFIC_MODEL),
-                departure_time=service.data.get(CONF_DEPARTURE_TIME),
+                units=service.data[GoogleTravelTimeServiceArgument.UNITS],
+                language=service.data.get(GoogleTravelTimeServiceArgument.LANGUAGE),
+                avoid=service.data.get(GoogleTravelTimeServiceArgument.AVOID),
+                traffic_model=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRAFFIC_MODEL
+                ),
+                departure_time=service.data.get(
+                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME,
+                ),
+                travel_routing_preference=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRAVEL_ROUTING_PREFERENCE,
+                ),
             )
         except Exception as ex:  # noqa: BLE001
             _raise_service_error(hass, entry, ex)
@@ -147,7 +141,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_get_transit_times_service(service: ServiceCall) -> ServiceResponse:
         """Handle the service call to get transit times."""
         entry = async_get_config_entry(
-            service.hass, DOMAIN, service.data[ATTR_CONFIG_ENTRY_ID]
+            service.hass, DOMAIN, service.data[CommonServiceArgument.CONFIG_ENTRY_ID]
         )
         api_key = entry.data[CONF_API_KEY]
 
@@ -156,18 +150,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
         try:
             response = await async_compute_routes(
                 client=client,
-                origin=service.data[CONF_ORIGIN],
-                destination=service.data[CONF_DESTINATION],
+                origin=service.data[GoogleTravelTimeServiceArgument.ORIGIN],
+                destination=service.data[GoogleTravelTimeServiceArgument.DESTINATION],
                 hass=hass,
                 travel_mode=TRAVEL_MODES_TO_API_ENUM["transit"],
-                units=service.data[CONF_UNITS],
-                language=service.data.get(CONF_LANGUAGE),
-                transit_mode=service.data.get(CONF_TRANSIT_MODE),
-                transit_routing_preference=service.data.get(
-                    CONF_TRANSIT_ROUTING_PREFERENCE
+                units=service.data[GoogleTravelTimeServiceArgument.UNITS],
+                language=service.data.get(GoogleTravelTimeServiceArgument.LANGUAGE),
+                transit_mode=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRANSIT_MODE
                 ),
-                departure_time=service.data.get(CONF_DEPARTURE_TIME),
-                arrival_time=service.data.get(CONF_ARRIVAL_TIME),
+                transit_routing_preference=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRANSIT_ROUTING_PREFERENCE
+                ),
+                departure_time=service.data.get(
+                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME
+                ),
+                arrival_time=service.data.get(
+                    GoogleTravelTimeServiceArgument.ARRIVAL_TIME
+                ),
             )
         except Exception as ex:  # noqa: BLE001
             _raise_service_error(hass, entry, ex)
@@ -178,7 +178,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_TRAVEL_TIMES,
+        GoogleTravelTimeService.GET_TRAVEL_TIMES,
         async_get_travel_times_service,
         SERVICE_GET_TRAVEL_TIMES_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -186,7 +186,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_TRANSIT_TIMES,
+        GoogleTravelTimeService.GET_TRANSIT_TIMES,
         async_get_transit_times_service,
         SERVICE_GET_TRANSIT_TIMES_SCHEMA,
         supports_response=SupportsResponse.ONLY,

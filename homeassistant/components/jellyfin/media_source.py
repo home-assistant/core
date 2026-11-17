@@ -1,5 +1,6 @@
 """The Media Source implementation for the Jellyfin integration."""
 
+from functools import partial
 import logging
 import mimetypes
 import os
@@ -193,8 +194,16 @@ class JellyfinSource(MediaSource):
         return result
 
     async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
-        """Return all artists in the music library."""
-        artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
+        """Return all album artists in the music library.
+
+        Artists are not necessarily parents of their albums in Jellyfin (for
+        example when albums are not stored in an artist folder), so the album
+        artists endpoint is used instead of looking up MusicArtist children.
+        """
+        result = await self.hass.async_add_executor_job(
+            partial(self.api.get_album_artists, parent_id=library_id)
+        )
+        artists: list[dict[str, Any]] = result["Items"]
         artists = sorted(
             artists,
             # Sort by whether an artist has an name first, then by name
@@ -227,13 +236,15 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MediaClass.ALBUM
-            result.children = await self._build_albums(artist_id)
+            result.children = await self._build_albums(artist_id, "AlbumArtistIds")
 
         return result
 
-    async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
+    async def _build_albums(
+        self, parent_id: str, parent_key: str = "ParentId"
+    ) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
-        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
+        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM, parent_key)
         albums = sorted(
             albums,
             # Sort by whether an album has an name first, then by name
@@ -503,12 +514,12 @@ class JellyfinSource(MediaSource):
         )
 
     async def _get_children(
-        self, parent_id: str, item_type: str
+        self, parent_id: str, item_type: str, parent_key: str = "ParentId"
     ) -> list[dict[str, Any]]:
         """Return all children for the parent_id whose item type is item_type."""
         params = {
             "Recursive": "true",
-            "ParentId": parent_id,
+            parent_key: parent_id,
             "IncludeItemTypes": item_type,
         }
         if item_type in PLAYABLE_ITEM_TYPES:

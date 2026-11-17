@@ -1,6 +1,7 @@
 """Module for color_extractor (RGB extraction from images) component."""
 
 import asyncio
+from enum import StrEnum
 from http import HTTPStatus
 import io
 import logging
@@ -12,36 +13,63 @@ from PIL import UnidentifiedImageError
 import probatio
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class ColorExtractorService(StrEnum):
+    """Store keys for Color extractor services."""
+
+    TURN_ON = "turn_on"
+    GET_COLOR = "get_color"
+
+
+class ColorExtractorServiceArgument(StrEnum):
+    """Store keys for Color extractor service arguments."""
+
+    URL = "color_extract_url"
+    PATH = "color_extract_path"
+
+
 # Extend the existing light.turn_on service schema
 TURN_ON_SERVICE_SCHEMA = probatio.All(
-    probatio.AtLeastOne(ATTR_URL, ATTR_PATH),
+    probatio.AtLeastOne(
+        ColorExtractorServiceArgument.URL, ColorExtractorServiceArgument.PATH
+    ),
     cv.make_entity_service_schema(
         {
             **LIGHT_TURN_ON_SCHEMA,
-            probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
-            probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+            probatio.Exclusive(
+                ColorExtractorServiceArgument.PATH, "color_extractor"
+            ): cv.isfile,
+            probatio.Exclusive(
+                ColorExtractorServiceArgument.URL, "color_extractor"
+            ): cv.url,
         }
     ),
 )
 
 GET_COLOR_SERVICE_SCHEMA = probatio.All(
-    probatio.AtLeastOne(ATTR_URL, ATTR_PATH),
+    probatio.AtLeastOne(
+        ColorExtractorServiceArgument.URL, ColorExtractorServiceArgument.PATH
+    ),
     {
-        probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
-        probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+        probatio.Exclusive(
+            ColorExtractorServiceArgument.PATH, "color_extractor"
+        ): cv.isfile,
+        probatio.Exclusive(
+            ColorExtractorServiceArgument.URL, "color_extractor"
+        ): cv.url,
     },
 )
 
@@ -137,16 +165,16 @@ async def async_handle_service(service_call: ServiceCall) -> None:
     service_data = dict(service_call.data)
 
     try:
-        if ATTR_URL in service_data:
+        if ColorExtractorServiceArgument.URL in service_data:
             image_type = "URL"
-            image_reference = service_data.pop(ATTR_URL)
+            image_reference = service_data.pop(ColorExtractorServiceArgument.URL)
             color = await _async_extract_color_from_url(
                 service_call.hass, image_reference
             )
 
-        elif ATTR_PATH in service_data:
+        elif ColorExtractorServiceArgument.PATH in service_data:
             image_type = "file path"
-            image_reference = service_data.pop(ATTR_PATH)
+            image_reference = service_data.pop(ColorExtractorServiceArgument.PATH)
             color = await service_call.hass.async_add_executor_job(
                 _extract_color_from_path, service_call.hass, image_reference
             )
@@ -161,10 +189,10 @@ async def async_handle_service(service_call: ServiceCall) -> None:
             },
         ) from ex
 
-    service_data[ATTR_RGB_COLOR] = color
+    service_data[LightServiceArgument.RGB_COLOR] = color
 
     await service_call.hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_ON, service_data, blocking=True
     )
 
 
@@ -175,16 +203,16 @@ async def async_handle_get_color(
     service_data = dict(service_call.data)
 
     try:
-        if ATTR_URL in service_data:
+        if ColorExtractorServiceArgument.URL in service_data:
             image_type = "URL"
-            image_reference = service_data.pop(ATTR_URL)
+            image_reference = service_data.pop(ColorExtractorServiceArgument.URL)
             color = await _async_extract_color_from_url(
                 service_call.hass, image_reference
             )
 
-        elif ATTR_PATH in service_data:
+        elif ColorExtractorServiceArgument.PATH in service_data:
             image_type = "file path"
-            image_reference = service_data.pop(ATTR_PATH)
+            image_reference = service_data.pop(ColorExtractorServiceArgument.PATH)
             color = await service_call.hass.async_add_executor_job(
                 _extract_color_from_path, service_call.hass, image_reference
             )
@@ -208,14 +236,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_TURN_ON,
+        ColorExtractorService.TURN_ON,
         async_handle_service,
         schema=TURN_ON_SERVICE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_COLOR,
+        ColorExtractorService.GET_COLOR,
         async_handle_get_color,
         schema=GET_COLOR_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,

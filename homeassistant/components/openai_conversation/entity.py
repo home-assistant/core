@@ -369,7 +369,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             tool_name="web_search_call",
                             tool_args={
                                 "action": event.item.action.to_dict()
-                                if event.item.action
+                                if event.item.action is not None
                                 else None,
                             },
                             external=True,
@@ -737,7 +737,8 @@ class OpenAIBaseLLMEntity(Entity):
                     ir.async_create_issue(
                         self.hass,
                         DOMAIN,
-                        "organization_verification_required",
+                        f"organization_verification_required_{self.entry.entry_id}",
+                        config_entry_id=self.entry.entry_id,
                         is_fixable=False,
                         is_persistent=False,
                         learn_more_url="https://help.openai.com/en/articles/10910291-api-organization-verification",

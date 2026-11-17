@@ -274,6 +274,7 @@
     'serial_number': '**REDACTED**',
     'strings': 2,
     'updated': list([
+      'controls',
       'inverter',
       'mppt',
       'status',

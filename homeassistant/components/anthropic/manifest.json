@@ -5,6 +5,7 @@
   "categories": ["ai_voice.ai_models"],
   "codeowners": ["@Shulyaka"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/anthropic",
   "integration_type": "service",

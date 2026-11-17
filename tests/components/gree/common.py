@@ -67,13 +67,14 @@ def build_device_info_mock(
 
 
 def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"):
-    """Build mock device object."""
-    return Mock(
+    """Build a device mock that captures registered response callbacks."""
+    mock = Mock(
         device_info=build_device_info_mock(name, ipAddress, mac),
         name=name,
         bind=AsyncMock(),
         update_state=AsyncMock(),
         push_state_update=AsyncMock(),
+        raw_properties={},
         temperature_units=0,
         mode=0,
         fan_speed=0,
@@ -87,7 +88,10 @@ def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc1122
         turbo=False,
         power_save=False,
         steady_heat=False,
+        callbacks={},
     )
+    mock.add_handler.side_effect = mock.callbacks.__setitem__
+    return mock
 
 
 async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:

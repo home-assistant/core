@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import UNIT_MAPPING
@@ -128,6 +128,7 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         super().__init__(coordinator, serial_number, device_info, description, "select")
         self._async_update_attrs()
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

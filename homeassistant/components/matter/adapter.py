@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
@@ -36,6 +36,35 @@ def get_clean_name(name: str | None) -> str | None:
         return name
     name = name.replace("\x00", "")
     return name.strip() or None
+
+
+def get_suggested_area(endpoint: MatterEndpoint) -> str | None:
+    """Return the Matter Actions cluster Room name for the endpoint's device.
+
+    A bridge (e.g. a Hue Bridge) advertises its rooms as EndpointListStruct entries of
+    type Room on the Actions cluster, wherever it exposes that cluster, each listing the
+    bridged endpoints in that room. Returns None rather than guessing when the endpoint
+    is in no room, or in more than one with conflicting names.
+    """
+    candidate_ids = {
+        endpoint.endpoint_id,
+        *endpoint.node.get_compose_child_ids(endpoint.endpoint_id),
+    }
+    room_names: set[str] = set()
+    for action_endpoint in endpoint.node.endpoints.values():
+        actions = action_endpoint.get_cluster(clusters.Actions)
+        if actions is None:
+            continue
+        for endpoint_list in actions.endpointLists:
+            if endpoint_list.type != clusters.Actions.Enums.EndpointListTypeEnum.kRoom:
+                continue
+            if not candidate_ids & set(endpoint_list.endpoints or ()):
+                continue
+            if room_name := get_clean_name(endpoint_list.name):
+                room_names.add(room_name)
+    if len(room_names) == 1:
+        return room_names.pop()
+    return None
 
 
 class MatterAdapter:
@@ -204,7 +233,7 @@ class MatterAdapter:
         device_registry = dr.async_get(self.hass)
 
         # handle bridged devices
-        via_device_id: str | UndefinedType = UNDEFINED
+        via_device_id: str | Undefined = Undefined
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
@@ -242,7 +271,7 @@ class MatterAdapter:
         # the bridge's device entry keeps every identifier that was ever merged onto
         # it, so a bridged device can still resolve to it through one left behind
         if (
-            via_device_id is not UNDEFINED
+            via_device_id is not Undefined
             and (via_device := device_registry.async_get(via_device_id))
             and (stale_identifiers := via_device.identifiers & identifiers)
         ):
@@ -279,6 +308,7 @@ class MatterAdapter:
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
+            suggested_area=get_suggested_area(endpoint),
             via_device_id=via_device_id,
         )
 

@@ -16,6 +16,8 @@ from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
+    "audio_delay": False,
+    "balance": False,
     "bass": True,
     "dialogue_level": False,
     "dialogue_lift": False,
@@ -23,7 +25,10 @@ PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
     "equalizer_high": False,
     "equalizer_low": False,
     "equalizer_mid": False,
+    "music_surround_level": False,
+    "sub_crossover": False,
     "subwoofer_volume": True,
+    "surround_level": False,
     "treble": True,
 }
 

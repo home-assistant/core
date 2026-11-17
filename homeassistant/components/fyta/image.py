@@ -13,7 +13,6 @@ from homeassistant.components.image import (
     ImageEntityDescription,
     valid_image_content_type,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -78,7 +77,7 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
     def __init__(
         self,
         coordinator: FytaCoordinator,
-        entry: ConfigEntry,
+        entry: FytaConfigEntry,
         description: FytaImageEntityDescription,
         plant_id: int,
     ) -> None:

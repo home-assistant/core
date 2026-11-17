@@ -12,15 +12,9 @@ from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -83,8 +77,8 @@ async def test_update_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: UPDATE_ENTITY_ID},
+        UpdateService.INSTALL,
+        {TargetKey.ENTITY_ID: UPDATE_ENTITY_ID},
         blocking=True,
     )
 

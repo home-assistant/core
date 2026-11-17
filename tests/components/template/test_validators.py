@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.template import validators as cv
 from homeassistant.components.template.template_entity import TemplateEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import Template
 
@@ -1152,3 +1153,36 @@ async def test_string(
     entity = create_test_entity(hass, config)
     assert cv.string(entity, "state")(value) == expected
     check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("name", "entity_config", "expected"),
+    [
+        pytest.param("Kitchen", {}, "name: Kitchen", id="name"),
+        pytest.param(
+            "Kitchen",
+            {"default_entity_id": "sensor.kitchen", "unique_id": "kitchen"},
+            "name: Kitchen",
+            id="name_wins",
+        ),
+        pytest.param(
+            "Template Sensor",
+            {"default_entity_id": "sensor.kitchen", "unique_id": "kitchen"},
+            "default_entity_id: sensor.kitchen",
+            id="default_entity_id",
+        ),
+        pytest.param(
+            "Template Sensor",
+            {"unique_id": "kitchen"},
+            "unique_id: kitchen",
+            id="unique_id",
+        ),
+        pytest.param("Template Sensor", {}, "name: Template Sensor", id="default_name"),
+    ],
+)
+def test_entity_config_identifier(
+    hass: HomeAssistant, name: str, entity_config: dict[str, str], expected: str
+) -> None:
+    """Test the entity config identifier for every fallback."""
+    config = {"name": Template(name, hass), **entity_config}
+    assert cv.entity_config_identifier(Platform.SENSOR, config) == expected

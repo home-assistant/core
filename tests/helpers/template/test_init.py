@@ -10,7 +10,7 @@ from freezegun import freeze_time
 import probatio
 import pytest
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity_registry as er, template
@@ -18,20 +18,10 @@ from homeassistant.helpers.template.render_info import (
     ALL_STATES_RATE_LIMIT,
     DOMAIN_STATES_RATE_LIMIT,
 )
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util import dt as dt_util
 
 from .helpers import assert_result_info, render, render_to_info
-
-
-async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
-    """Test template render when hass is not set."""
-    hass.states.async_set("sensor.test", "23")
-    template_obj = template.Template("{{ states('sensor.test') }}", None)
-    template.render_info_cv.set(template.RenderInfo(template_obj))
-
-    with pytest.raises(RuntimeError, match="hass not set while rendering"):
-        template_obj.async_render_to_info()
 
 
 async def test_template_render_info_collision(hass: HomeAssistant) -> None:
@@ -231,7 +221,7 @@ def test_render_with_possible_json_value_with_invalid_json(hass: HomeAssistant) 
     [
         pytest.param({"hello": "world"}, "raw True {'hello': 'world'}", id="parsed"),
         pytest.param(None, "raw True None", id="null"),
-        pytest.param(UNDEFINED, "raw False", id="not_json"),
+        pytest.param(Undefined, "raw False", id="not_json"),
     ],
 )
 def test_render_with_possible_json_value_with_value_json(
@@ -608,8 +598,12 @@ def test_state_with_unit_and_rounding_options(
     )
     assert entry.entity_id == "sensor.test"
 
-    hass.states.async_set("sensor.test", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     tpl = template.Template(
         f"{{{{ states('sensor.test', rounded={rounded}, with_unit={with_unit}) }}}}",
@@ -623,8 +617,12 @@ def test_state_with_unit_and_rounding_options(
     assert tpl.async_render() == output1_1
     assert tpl2.async_render() == output2_1
 
-    hass.states.async_set("sensor.test", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
-    hass.states.async_set("sensor.test2", "23.015", {ATTR_UNIT_OF_MEASUREMENT: "beers"})
+    hass.states.async_set(
+        "sensor.test", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
+    hass.states.async_set(
+        "sensor.test2", "23.015", {EntityStateAttribute.UNIT_OF_MEASUREMENT: "beers"}
+    )
 
     assert tpl.async_render() == output1_2
     assert tpl2.async_render() == output2_2

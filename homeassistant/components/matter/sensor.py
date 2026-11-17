@@ -47,7 +47,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONCENTRATION_BECQUERELS_PER_CUBIC_METER
+from .const import (
+    CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+    MATTER_2000_TO_UNIX_EPOCH_OFFSET,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
@@ -261,9 +264,6 @@ TVOC_DEVICE_CLASS_MAP: dict[int, SensorDeviceClass] = {
     _mu.kUgm3: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
 }
 
-MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
-    946684800  # Seconds from Matter 2000 epoch to Unix epoch
-)
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
@@ -618,6 +618,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatTimeRemaining,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -645,6 +646,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.PowerSource.Attributes.BatTimeToFullCharge,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -659,6 +661,18 @@ DISCOVERY_SCHEMAS = [
         ),
         # Some manufacturers returns an empty string
         value_is_not="",
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatQuantity",
+            translation_key="battery_quantity",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatQuantity,),
+        # Some devices report 0 when the value is not filled in
+        value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

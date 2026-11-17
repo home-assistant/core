@@ -781,6 +781,106 @@ async def test_dst4(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("hass_time_zone", "current_time", "expected_after", "expected_before"),
+    [
+        pytest.param(
+            "Europe/London",
+            "2026-10-25T19:44:00+00:00",
+            "2026-10-26T00:05:00+00:00",
+            "2026-10-26T07:30:00+00:00",
+            id="london-fall-back",
+        ),
+        pytest.param(
+            "America/Los_Angeles",
+            "2026-11-01T19:44:00-08:00",
+            "2026-11-02T00:05:00-08:00",
+            "2026-11-02T07:30:00-08:00",
+            id="los-angeles-fall-back",
+        ),
+        pytest.param(
+            "Europe/Berlin",
+            "2026-10-25T19:44:00+01:00",
+            "2026-10-26T00:05:00+01:00",
+            "2026-10-26T07:30:00+01:00",
+            id="berlin-fall-back",
+        ),
+        pytest.param(
+            "Australia/Sydney",
+            "2026-10-04T19:44:00+11:00",
+            "2026-10-05T00:05:00+11:00",
+            "2026-10-05T07:30:00+11:00",
+            id="sydney-spring-forward-control",
+        ),
+        pytest.param(
+            "Europe/London",
+            "2026-10-23T19:44:00+01:00",
+            "2026-10-24T00:05:00+01:00",
+            "2026-10-24T07:30:00+01:00",
+            id="ordinary-day-control",
+        ),
+    ],
+)
+async def test_dst_fall_back_next_day_boundaries(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    current_time: str,
+    expected_after: str,
+    expected_before: str,
+) -> None:
+    """Advance both boundaries to tomorrow after today's period has ended."""
+    freezer.move_to(datetime.fromisoformat(current_time))
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "00:05", "before": "07:30"}
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.day")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[TodEntityStateAttribute.AFTER] == expected_after
+    assert state.attributes[TodEntityStateAttribute.BEFORE] == expected_before
+    assert state.attributes[TodEntityStateAttribute.NEXT_UPDATE] == expected_after
+
+
+@pytest.mark.parametrize("hass_time_zone", ["Europe/London"])
+async def test_dst_fall_back_scheduled_off_transition(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Finish today's period before scheduling the next local day."""
+    freezer.move_to(datetime.fromisoformat("2026-10-25T07:29:00+00:00"))
+    config = {
+        "binary_sensor": [
+            {"platform": "tod", "name": "Day", "after": "00:05", "before": "07:30"}
+        ]
+    }
+    await async_setup_component(hass, "binary_sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.day")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    freezer.move_to(datetime.fromisoformat("2026-10-25T07:30:00+00:00"))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.day")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes[TodEntityStateAttribute.AFTER] == "2026-10-26T00:05:00+00:00"
+    )
+    assert (
+        state.attributes[TodEntityStateAttribute.NEXT_UPDATE]
+        == "2026-10-26T00:05:00+00:00"
+    )
+
+
 async def test_dst5(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_tz_info
 ) -> None:

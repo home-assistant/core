@@ -206,16 +206,41 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
 async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
     """Test config flow works when user fails."""
     with requests_mock.Mocker() as mock:
+        _mock_success(mock)
         mock.post("https://id.starline.ru/apiV3/user/login/", text='{"state": 0}')
-        flow = config_flow.StarlineFlowHandler()
-        flow.hass = hass
-        result = await flow.async_step_auth_user(
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             user_input={
-                config_flow.CONF_USERNAME: TEST_APP_USERNAME,
-                config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
-            }
+                config_flow.CONF_APP_ID: TEST_APP_ID,
+                config_flow.CONF_APP_SECRET: TEST_APP_SECRET,
+            },
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                config_flow.CONF_USERNAME: TEST_APP_USERNAME,
+                config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_user"
         assert result["errors"] == {"base": "error_auth_user"}
+
+        _mock_success(mock)
+        with patch(
+            "homeassistant.components.starline.async_setup_entry", return_value=None
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_USERNAME: TEST_APP_USERNAME,
+                    config_flow.CONF_PASSWORD: TEST_APP_PASSWORD,
+                },
+            )
+        assert result["type"] is FlowResultType.CREATE_ENTRY

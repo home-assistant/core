@@ -7,12 +7,7 @@ from canary.api import Api
 import probatio
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
@@ -22,6 +17,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+from .coordinator import CanaryConfigEntry
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -49,7 +45,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: CanaryConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return CanaryOptionsFlowHandler()
 

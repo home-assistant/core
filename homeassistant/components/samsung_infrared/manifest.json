@@ -7,6 +7,7 @@
   ],
   "codeowners": ["@lmaertin"],
   "config_flow": true,
+  "connectivity": ["infrared"],
   "dependencies": ["infrared"],
   "documentation": "https://www.home-assistant.io/integrations/samsung_infrared",
   "integration_type": "device",

@@ -4,18 +4,21 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed, patch
 
 from homeassistant.components import device_tracker, mikrotik
+from homeassistant.components.mikrotik.const import ARP, DHCP, MIKROTIK_SERVICES, PING
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import setup_mikrotik_entry
+from . import build_mock_command, setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
 from .const import (
+    ARP_DATA,
     DEVICE_1_DHCP,
     DEVICE_1_WIRELESS,
     DEVICE_2_DHCP,
@@ -49,6 +52,25 @@ def mock_command(
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.UPDATE]:
         return UPDATE_DATA
     return {}
+
+
+async def _poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    responses: dict[str, Any],
+    delay: timedelta = timedelta(seconds=10),
+) -> None:
+    """Run a coordinator poll with the given service responses."""
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=build_mock_command(
+            {MIKROTIK_SERVICES[key]: value for key, value in responses.items()}
+        ),
+    ):
+        freezer.tick(delay)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -136,6 +158,46 @@ async def test_tracker_device(
     assert device is not None
     assert device.name == expected_device_name
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")}
+
+
+async def test_existing_device_name_kept_without_hostname(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client without a DHCP lease does not rename its existing device."""
+    config_entry = await setup_mikrotik_entry(hass, dhcp_data=[], wireless_data=[])
+    # The device is left over from before a restart, the lease is gone since
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, DEVICE_1_WIRELESS["mac-address"])},
+        name="phone",
+    )
+
+    with patch.object(
+        mikrotik.coordinator.MikrotikData,
+        "command",
+        new=build_mock_command(
+            {
+                mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]: [
+                    DEVICE_1_WIRELESS
+                ]
+            }
+        ),
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    tracker_entity_id = entity_registry.async_get_entity_id(
+        device_tracker.DOMAIN, mikrotik.DOMAIN, DEVICE_1_WIRELESS["mac-address"]
+    )
+    assert tracker_entity_id is not None
+    tracker_entry = entity_registry.async_get(tracker_entity_id)
+    assert tracker_entry is not None
+    assert tracker_entry.device_id == device_entry.id
+    device_entry = device_registry.async_get(device_entry.id)
+    assert device_entry is not None
+    assert device_entry.name == "phone"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -231,8 +293,9 @@ async def test_hub_wireless_and_wifi(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_wired_device_without_active_address_is_not_home(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a wired device without an active-address is marked away."""
+    """Test a wired device is tracked once active and marked away when inactive."""
     device_without_active_address = {
         key: value for key, value in DEVICE_2_DHCP.items() if key != "active-address"
     }
@@ -243,6 +306,20 @@ async def test_wired_device_without_active_address_is_not_home(
         dhcp_data=[DEVICE_1_DHCP, device_without_active_address],
     )
 
+    # A new client with an inactive lease is not tracked yet
+    assert hass.states.get("device_tracker.device_2") is None
+
+    await _poll(hass, freezer, {DHCP: [DEVICE_1_DHCP, DEVICE_2_DHCP]})
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
+
+    await _poll(
+        hass,
+        freezer,
+        {DHCP: [DEVICE_1_DHCP, device_without_active_address]},
+        timedelta(minutes=6),
+    )
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2
     assert device_2.state == "not_home"
@@ -264,9 +341,12 @@ async def test_arp_ping_success(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
+async def test_arp_ping_timeout(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test arp ping timeout so devices are shown away."""
-    ping_replies = [
+    ping_replies = [{"seq": "0"}, {"seq": "1"}, {"seq": "2"}]
+    ping_timeouts = [
         {"status": "timeout"},
         {"status": "timeout"},
         {"status": "timeout"},
@@ -275,8 +355,17 @@ async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     await setup_mikrotik_entry(
         hass, arp_ping=True, force_dhcp=True, ping_data=ping_replies
     )
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
 
     # test wired device_2 shows as not_home if every arp ping reply times out
+    await _poll(
+        hass,
+        freezer,
+        {DHCP: DHCP_DATA, ARP: ARP_DATA, PING: ping_timeouts},
+        timedelta(minutes=6),
+    )
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2
     assert device_2.state == "not_home"
