@@ -255,12 +255,10 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data.uptime))
-                if data.uptime is not None
-                else None
-            )
+        value_fn=lambda data: (
+            dt_util.utcnow() - timedelta(seconds=data.uptime)
+            if data.status is OperationalStatus.RUNNING and data.uptime
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -374,12 +372,10 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data.uptime))
-                if data.uptime is not None
-                else None
-            )
+        value_fn=lambda data: (
+            dt_util.utcnow() - timedelta(seconds=data.uptime)
+            if data.status is OperationalStatus.RUNNING and data.uptime
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,

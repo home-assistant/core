@@ -7,7 +7,7 @@ from typing import Any, override
 import requests
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.exceptions import TuyaSDKException
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
@@ -15,6 +15,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+TUYA_ERROR_CODE_GENERIC = "-9999999"
+TUYA_ERROR_RATE_LIMITED = "API_QPS_LIMIT_OR_DEGRADE"
+TUYA_ERROR_SIGN_INVALID = "sign invalid"
+
+# Matched on (code, message) first, then on code alone (message None)
+_API_ERROR_TRANSLATION_KEYS: dict[tuple[str, str | None], str] = {
+    ("2008", None): "command_not_accepted",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_SIGN_INVALID): "command_sign_invalid",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_RATE_LIMITED): "command_rate_limited",
+}
 
 
 @dataclass(frozen=True)
@@ -132,6 +143,19 @@ class TuyaEntity(Entity):
             await self.hass.async_add_executor_job(
                 self.device_manager.send_commands, self.device.id, commands
             )
+        except ApiRequestException as err:
+            # error_code is typed as str, but is passed through from the JSON response
+            code = str(err.error_code)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=_API_ERROR_TRANSLATION_KEYS.get(
+                    (code, err.error_message)
+                )
+                or _API_ERROR_TRANSLATION_KEYS.get(
+                    (code, None), "command_rejected_with_reason"
+                ),
+                translation_placeholders={"code": code},
+            ) from err
         except TuyaSDKException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_rejected"

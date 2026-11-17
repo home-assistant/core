@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
     STATE_ON,
     SwitchService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -27,6 +27,7 @@ from . import (
     AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
     PLUG_MINI_EU_SERVICE_INFO,
+    PLUG_MINI_IT_SERVICE_INFO,
     RELAY_SWITCH_1_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     STANDING_FAN_SERVICE_INFO,
@@ -122,6 +123,7 @@ async def test_exception_handling_switch(
     ("sensor_type", "service_info"),
     [
         ("plug_mini_eu", PLUG_MINI_EU_SERVICE_INFO),
+        ("plug_mini_it", PLUG_MINI_IT_SERVICE_INFO),
         ("relay_switch_1", RELAY_SWITCH_1_SERVICE_INFO),
         ("relay_switch_1pm", WORELAY_SWITCH_1PM_SERVICE_INFO),
     ],
@@ -234,6 +236,12 @@ async def test_relay_switch_2pm_control(
         (
             "plug_mini_eu",
             PLUG_MINI_EU_SERVICE_INFO,
+            "switch.test_name",
+            "SwitchbotRelaySwitch",
+        ),
+        (
+            "plug_mini_it",
+            PLUG_MINI_IT_SERVICE_INFO,
             "switch.test_name",
             "SwitchbotRelaySwitch",
         ),
@@ -384,7 +392,7 @@ async def test_air_purifier_switch_control(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -393,7 +401,7 @@ async def test_air_purifier_switch_control(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -443,7 +451,7 @@ async def test_standing_fan_oscillation_switches(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mocked_set.assert_awaited_once_with(True)
@@ -451,7 +459,7 @@ async def test_standing_fan_oscillation_switches(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         assert mocked_set.await_count == 2

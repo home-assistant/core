@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -517,7 +517,7 @@ async def test_zone_switch_updates_zone_climate(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: switch_entity_id},
+        {TargetKey.ENTITY_ID: switch_entity_id},
         blocking=True,
     )
 

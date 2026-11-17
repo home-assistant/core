@@ -26,7 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -181,7 +181,7 @@ async def test_float(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH},
+        {TargetKey.ENTITY_ID: ENTITY_SWITCH},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -200,7 +200,7 @@ async def test_float(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH},
+        {TargetKey.ENTITY_ID: ENTITY_SWITCH},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -232,7 +232,7 @@ async def test_switch_power(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH},
+        {TargetKey.ENTITY_ID: ENTITY_SWITCH},
         blocking=True,
     )
 
@@ -240,7 +240,7 @@ async def test_switch_power(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH},
+        {TargetKey.ENTITY_ID: ENTITY_SWITCH},
         blocking=True,
     )
 
@@ -446,7 +446,7 @@ async def test_multiple_devices(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH},
+        {TargetKey.ENTITY_ID: ENTITY_SWITCH},
         blocking=True,
     )
     await hass.services.async_call(

@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import CONF_SERIAL, LIFXService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -26,6 +26,7 @@ SERVICES = (
     LIFXService.EFFECT_SKY,
     LIFXService.EFFECT_STOP,
     LIFXService.PAINT_THEME,
+    LIFXService.SET_MOOD,
 )
 
 
@@ -35,7 +36,12 @@ async def test_services_registered_without_entry(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    for service in (*SERVICES, "set_state", "set_hev_cycle_state"):
+    for service in (
+        *SERVICES,
+        LIFXService.SET_MOOD,
+        "set_state",
+        "set_hev_cycle_state",
+    ):
         assert hass.services.has_service(DOMAIN, service)
 
 
@@ -50,7 +56,7 @@ async def test_service_without_loaded_entry_raises(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: "light.test"},
+            {TargetKey.ENTITY_ID: "light.test"},
             blocking=True,
         )
 

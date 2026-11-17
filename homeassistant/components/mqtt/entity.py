@@ -1583,20 +1583,49 @@ def _resolve_via_device_id(
     hass: HomeAssistant,
     specifications: dict[str, Any] | None,
     config_entry: ConfigEntry,
+    device_info: DeviceInfo,
 ) -> str | None:
     """Resolve the referenced via device to its device registry id.
 
-    Best-effort read-only lookup: returns None when no via device is referenced
-    or the referenced device is not (yet) registered. It never raises, so a
-    missing parent cannot abort entity setup given MQTT's non-deterministic
-    discovery order.
+    Best-effort read-only lookup: returns None when no via device is referenced,
+    the referenced device is not (yet) registered or it is the device itself. It
+    never raises, so a missing parent cannot abort entity setup given MQTT's
+    non-deterministic discovery order.
     """
     if (identifier := _via_device_identifier(specifications)) is None:
         return None
-    via_device = dr.async_get(hass).async_get_device_by_identifier(
+    if TYPE_CHECKING:
+        assert specifications is not None
+    device_registry = dr.async_get(hass)
+    via_device = device_registry.async_get_device_by_identifier(
         identifier, config_entry.entry_id
     )
-    return via_device.id if via_device else None
+    if via_device is None:
+        return None
+    # The via device can resolve to the device itself, through an identifier the
+    # device registry retained from an earlier registration or through a matching
+    # connection. A device can not be its own via device, so the reference is ignored.
+    identifiers = device_info.identifiers
+    connections = device_info.connections
+    if any(
+        device.id == via_device.id
+        for device in device_registry.async_get_devices(
+            identifiers=None if identifiers is Undefined else identifiers,
+            connections=None if connections is Undefined else connections,
+            config_entry_id=config_entry.entry_id,
+        )
+    ):
+        _LOGGER.warning(
+            "The device with identifiers %s and connections %s has via_device '%s' "
+            "that references the device itself, the via_device is ignored. A device "
+            "can not be its own via device, update the device configuration to remove "
+            "or correct via_device",
+            specifications[CONF_IDENTIFIERS],
+            specifications[CONF_CONNECTIONS],
+            identifier[1],
+        )
+        return None
+    return via_device.id
 
 
 class MqttEntityDeviceInfo(Entity):
@@ -1728,7 +1757,7 @@ class MqttEntityDeviceInfo(Entity):
         info = device_info_from_specifications(device_specifications)
         if info is not None and (
             via_device_id := _resolve_via_device_id(
-                self.hass, device_specifications, self._config_entry
+                self.hass, device_specifications, self._config_entry, info
             )
         ):
             info.via_device_id = via_device_id
@@ -2219,7 +2248,9 @@ def update_device(
     device_info = device_info_from_specifications(specifications)
 
     if config_entry_id is not None and device_info is not None:
-        if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
+        if via_device_id := _resolve_via_device_id(
+            hass, specifications, config_entry, device_info
+        ):
             device_info.via_device_id = via_device_id
         device = device_registry.async_get_or_create_from_info(
             config_entry_id=config_entry_id, device_info=device_info
