@@ -9,8 +9,9 @@ from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
 from pymammotion.messaging.command_queue import Priority
+from pymammotion.state.device_state import DeviceSnapshot
 from pymammotion.transport import NoTransportAvailableError
-from pymammotion.transport.base import AuthError
+from pymammotion.transport.base import AuthError, Subscription
 from pymammotion.utility.constant.device_constant import WorkMode
 
 from homeassistant.core import HomeAssistant, callback
@@ -24,8 +25,7 @@ from .exceptions import CommandFailedError
 if TYPE_CHECKING:
     from . import MammotionConfigEntry
 
-DEFAULT_INTERVAL = timedelta(minutes=1)
-MODE_WAIT_TIMEOUT = 60
+MODE_WAIT_TIMEOUT = 30
 
 
 class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
@@ -37,7 +37,7 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         config_entry: MammotionConfigEntry,
         device: Device,
         api: HomeAssistantMowerApi,
-        update_interval: timedelta,
+        update_interval: timedelta | None,
     ) -> None:
         """Initialize global mammotion data updater."""
         super().__init__(
@@ -101,9 +101,11 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
             config_entry=config_entry,
             device=device,
             api=api,
-            update_interval=DEFAULT_INTERVAL,
+            # The library's own keep-alive asks for reports; they arrive by push.
+            update_interval=None,
         )
         self.store = store
+        self._state_subscription: Subscription | None = None
 
     @callback
     def restore_data(self) -> None:
@@ -120,6 +122,29 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
             handle.restore_device(mower_state)
 
     @override
+    async def _async_setup(self) -> None:
+        """Subscribe to the state the mower pushes."""
+        if (handle := self.api.mammotion.mower(self.device_name)) is None:
+            raise UpdateFailed(f"{self.device_name} is not registered")
+        self._state_subscription = handle.subscribe_state_changed(
+            self._async_handle_state_changed
+        )
+
+    async def _async_handle_state_changed(self, snapshot: DeviceSnapshot) -> None:
+        """Push the mower's new state to the entities."""
+        data = cast(MowingDevice, snapshot.raw)
+        self.store.async_update_mower_data(self.device_name, data)
+        self.async_set_updated_data(data)
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop listening to the mower."""
+        if self._state_subscription is not None:
+            self._state_subscription.cancel()
+            self._state_subscription = None
+        await super().async_shutdown()
+
+    @override
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
         try:
@@ -131,6 +156,6 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
 
         if data is None:
             raise UpdateFailed(f"No data returned for {self.device_name}")
-        self.store.async_update_mower_data(self.device_name, data.to_dict())
+        self.store.async_update_mower_data(self.device_name, data)
 
         return data

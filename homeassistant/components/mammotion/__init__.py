@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
+    __version__ as HA_VERSION,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
@@ -53,7 +54,7 @@ type MammotionConfigEntry = ConfigEntry[MammotionDevices]
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Set up Mammotion Luba from a config entry."""
     session = async_get_clientsession(hass)
-    api = HomeAssistantMowerApi(ha_version="1.0.0", session=session)
+    api = HomeAssistantMowerApi(ha_version=HA_VERSION, session=session)
     mammotion = api.mammotion
 
     async def shutdown_mammotion(_: Event | None = None) -> None:

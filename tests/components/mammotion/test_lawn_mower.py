@@ -1,6 +1,8 @@
 """Test for the Mammotion lawn_mower platform."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
+from datetime import timedelta
 from unittest.mock import ANY, MagicMock, call
 
 from aiohttp import ClientConnectionError
@@ -15,9 +17,11 @@ from pymammotion.aliyun.exceptions import (
 from pymammotion.data.model.device import Device, MowingDevice
 from pymammotion.device.handle import DeviceStateTimeoutError
 from pymammotion.messaging.command_queue import Priority
+from pymammotion.state.device_state import DeviceSnapshot
 from pymammotion.transport.base import (
     AccountInUseError,
     AuthError,
+    EventBus,
     NoTransportAvailableError,
     ReLoginRequiredError,
     TransportError,
@@ -41,13 +45,12 @@ from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
 )
 from homeassistant.components.mammotion.const import DOMAIN
-from homeassistant.components.mammotion.coordinator import DEFAULT_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import ACCOUNT_ID, DEFAULT_NAME, setup_integration
+from . import ACCOUNT_ID, DEFAULT_NAME, push_state, reporting, setup_integration
 
 ENTITY_ID = "lawn_mower.luba"
 
@@ -66,13 +69,6 @@ COMMAND_ERRORS = [
     pytest.param(AuthError("rejected"), id="auth_error"),
     pytest.param(KeyError(DEFAULT_NAME), id="not_registered"),
 ]
-
-
-def _reporting(mode: WorkMode) -> MowingDevice:
-    """Return the state of a mower reporting the given mode."""
-    device = MowingDevice()
-    device.report_data.dev.sys_status = mode
-    return device
 
 
 def _command(command: str) -> object:
@@ -386,7 +382,7 @@ async def test_services_command_failure(
     """Test each step of an action raises its own translated error."""
     mock_mowing_device.report_data.dev.sys_status = sys_status
     mock_mammotion.send_command_with_args.side_effect = results
-    mock_mammotion.wait_for.return_value = _reporting(WorkMode.MODE_PAUSE)
+    mock_mammotion.wait_for.return_value = reporting(WorkMode.MODE_PAUSE)
 
     await setup_integration(hass, mock_config_entry)
 
@@ -452,9 +448,9 @@ async def test_stop(
     # Reports that must not end the wait come first.
     mock_mammotion.wait_for.side_effect = _reports(
         Device(),
-        _reporting(WorkMode.MODE_WORKING),
-        _reporting(WorkMode.MODE_RETURNING),
-        _reporting(reported_mode),
+        reporting(WorkMode.MODE_WORKING),
+        reporting(WorkMode.MODE_RETURNING),
+        reporting(reported_mode),
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -466,7 +462,7 @@ async def test_stop(
     ]
     assert (
         mock_mammotion.wait_for.call_args_list
-        == [call(DEFAULT_NAME, ANY, timeout=60)] * waits
+        == [call(DEFAULT_NAME, ANY, timeout=30)] * waits
     )
     mock_mammotion.request_report_snapshot.assert_awaited_once_with(DEFAULT_NAME)
 
@@ -531,31 +527,80 @@ async def test_stop_wait_failure(
     mock_mammotion.request_report_snapshot.assert_awaited_once_with(DEFAULT_NAME)
 
 
-async def test_availability(
+def _never_reported(
+    waiting: asyncio.Event,
+) -> Callable[..., Awaitable[Device]]:
+    """Return a wait that, as the library does, times out on a mode never reported."""
+
+    async def _wait_for(
+        device_name: str, predicate: Callable[[Device], bool], *, timeout: float
+    ) -> Device:
+        waiting.set()
+        try:
+            async with asyncio.timeout(timeout):
+                await asyncio.Event().wait()
+        except TimeoutError:
+            raise DeviceStateTimeoutError(device_name, timeout) from None
+        raise AssertionError("unreachable")
+
+    return _wait_for
+
+
+async def test_stop_gives_up_after_30_seconds(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_mower_api: MagicMock,
+    mock_mammotion: MagicMock,
     mock_mowing_device: MowingDevice,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the entity becomes unavailable on failed updates or offline device."""
+    """Test stopping waits 30 seconds for the pause before failing."""
+    mock_mowing_device.report_data.dev.sys_status = WorkMode.MODE_WORKING
+    waiting = asyncio.Event()
+    mock_mammotion.wait_for.side_effect = _never_reported(waiting)
+    await setup_integration(hass, mock_config_entry)
+
+    # Not async_block_till_done: it would wait for the stop it is timing.
+    stop = hass.async_create_background_task(
+        _call_service(hass, SERVICE_STOP), "stop mower"
+    )
+    await waiting.wait()
+    freezer.tick(timedelta(seconds=29))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    assert not stop.done()
+
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    # A few loop turns, not await: with time frozen a missed deadline never fires.
+    for _ in range(5):
+        await asyncio.sleep(0)
+    gave_up_at_30_seconds = stop.done()
+    # Ends a wait that missed the deadline, so a failure does not hang teardown.
+    async_fire_time_changed(hass, fire_all=True)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await stop
+    assert gave_up_at_30_seconds
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "pause_failed"
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_state_bus: EventBus[DeviceSnapshot],
+) -> None:
+    """Test the entity follows the mower's availability as reports arrive."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
-    mock_mower_api.update.return_value = None
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_mower_api.is_online.return_value = False
+    await push_state(mock_state_bus, MowingDevice())
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
-    mock_mower_api.update.return_value = mock_mowing_device
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_mower_api.is_online.return_value = True
+    await push_state(mock_state_bus, MowingDevice())
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
-
-    mock_mower_api.is_online.return_value = False
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

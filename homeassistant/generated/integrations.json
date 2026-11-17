@@ -8675,7 +8675,7 @@
     },
     "mammotion": {
       "name": "Mammotion",
-      "integration_type": "device",
+      "integration_type": "hub",
       "categories": [
         "garden_plants"
       ],
@@ -8684,7 +8684,7 @@
         "cloud"
       ],
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "marantz": {
       "name": "Marantz",

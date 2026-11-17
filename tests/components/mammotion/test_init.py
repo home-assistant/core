@@ -1,19 +1,21 @@
 """Tests for the Mammotion integration setup."""
 
 import asyncio
+from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock, create_autospec
+from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from pymammotion.aliyun.exceptions import CloudSetupError, DeviceOfflineException
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
-from pymammotion.device.handle import DeviceHandle
 from pymammotion.http.model.http import UnauthorizedExceptionError
+from pymammotion.state.device_state import DeviceSnapshot
 from pymammotion.transport import NoTransportAvailableError
 from pymammotion.transport.base import (
     AuthError,
+    EventBus,
     LoginFailedError,
     ReLoginRequiredError,
     TransportType,
@@ -32,18 +34,26 @@ from homeassistant.components.mammotion.const import (
     CONF_MAMMOTION_MQTT,
     DOMAIN,
 )
-from homeassistant.components.mammotion.coordinator import DEFAULT_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import ACCOUNT_ID, ACCOUNT_NAME, DEFAULT_NAME, cloud_device, setup_integration
+from . import (
+    ACCOUNT_ID,
+    ACCOUNT_NAME,
+    DEFAULT_NAME,
+    cloud_device,
+    push_state,
+    reporting,
+    setup_integration,
+)
 
 ENTITY_ID = "lawn_mower.luba"
 
@@ -80,6 +90,17 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_mammotion.stop.assert_awaited_once()
     mock_mammotion.remove_device.assert_awaited_once_with(DEFAULT_NAME)
+
+
+async def test_api_reports_home_assistant_version(
+    hass: HomeAssistant,
+    mock_mower_api_class: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the library is told which Home Assistant version is running."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_mower_api_class.call_args.kwargs["ha_version"] == HA_VERSION
 
 
 @pytest.mark.parametrize(
@@ -182,14 +203,46 @@ async def test_setup_retry_on_failed_refresh(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_state_bus: EventBus[DeviceSnapshot],
 ) -> None:
-    """Test the entry is retried, and the client stopped, when the first poll fails."""
+    """Test the entry is retried, the client stopped and the push dropped, when the first poll fails."""
     mock_mower_api.update.return_value = None
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_mower_api.mammotion.stop.assert_awaited_once()
+    assert len(mock_state_bus) == 0
+
+
+async def test_setup_retry_when_mower_not_registered(
+    hass: HomeAssistant,
+    mock_mammotion: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry is retried when the library holds no handle to push from."""
+    mock_mammotion.mower.return_value = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_mammotion.stop.assert_awaited_once()
+
+
+async def test_auth_error_on_first_refresh_starts_reauth(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an auth failure fetching the first state prompts for reauth."""
+    mock_mower_api.update.side_effect = AuthError("token rejected")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.parametrize(
@@ -328,14 +381,13 @@ async def test_state_restored_from_store(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_device_handle: MagicMock,
     hass_storage: dict[str, Any],
     stored: dict[str, Any],
     expected_restored: MowingDevice,
     expected_state: str,
 ) -> None:
     """Test the stored state is shown until an offline mower reports again."""
-    handle = create_autospec(DeviceHandle, instance=True)
-    mock_mower_api.mammotion.mower.return_value = handle
     mock_mower_api.update.side_effect = DeviceOfflineException(1, "iot")
     _stored_state(
         hass_storage, f"{DOMAIN}.{mock_config_entry.entry_id}", {DEFAULT_NAME: stored}
@@ -343,7 +395,7 @@ async def test_state_restored_from_store(
 
     await setup_integration(hass, mock_config_entry)
 
-    handle.restore_device.assert_called_once_with(expected_restored)
+    mock_device_handle.restore_device.assert_called_once_with(expected_restored)
     assert hass.states.get(ENTITY_ID).state == expected_state
 
 
@@ -354,61 +406,115 @@ async def test_state_restored_from_store(
         pytest.param(NoTransportAvailableError("no transport"), id="no_transport"),
     ],
 )
-async def test_poll_keeps_state_while_unreachable(
+async def test_setup_keeps_stored_state_while_unreachable(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
-    mock_mowing_device: MowingDevice,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    hass_storage: dict[str, Any],
     error: Exception,
 ) -> None:
-    """Test a poll that cannot reach the mower keeps the last state."""
-    mock_mowing_device.report_data.dev.sys_status = WorkMode.MODE_WORKING
+    """Test a mower that cannot be reached at setup keeps its stored state."""
+    mock_mower_api.update.side_effect = error
+    _stored_state(
+        hass_storage,
+        f"{DOMAIN}.{mock_config_entry.entry_id}",
+        {DEFAULT_NAME: MOWING_STATE.to_dict()},
+    )
+
     await setup_integration(hass, mock_config_entry)
 
-    mock_mower_api.update.side_effect = error
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_mower_api.update.await_count == 2
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID).state == LawnMowerActivity.MOWING
 
 
-async def test_poll_without_data_makes_entity_unavailable(
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_pushed_state_updates_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_state_bus: EventBus[DeviceSnapshot],
+) -> None:
+    """Test a report the mower pushes is shown without waiting for a poll."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+    await push_state(mock_state_bus, reporting(WorkMode.MODE_WORKING))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == LawnMowerActivity.MOWING
+
+
+async def test_state_not_polled(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a poll that returns nothing marks the mower unavailable."""
+    """Test the state is fetched once at setup and then only pushed."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_mower_api.update.return_value = None
-    freezer.tick(DEFAULT_INTERVAL)
+    mock_mower_api.update.return_value = reporting(WorkMode.MODE_WORKING)
+    freezer.tick(timedelta(hours=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_push_after_unload_ignored(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_state_bus: EventBus[DeviceSnapshot],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a report arriving after unload reaches nothing and raises nothing."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await push_state(mock_state_bus, reporting(WorkMode.MODE_WORKING))
+    await hass.async_block_till_done()
+
+    assert len(mock_state_bus) == 0
+    # The bus logs, rather than raises, what a handler raises.
+    assert "EventBus handler raised" not in caplog.text
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_reload_subscribes_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_state_bus: EventBus[DeviceSnapshot],
+) -> None:
+    """Test a reload replaces the push subscription instead of adding one."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    await push_state(mock_state_bus, reporting(WorkMode.MODE_WORKING))
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_state_bus) == 1
+    assert hass.states.get(ENTITY_ID).state == LawnMowerActivity.MOWING
 
 
 @pytest.mark.usefixtures("mock_mower_api")
 async def test_state_persisted_on_final_write(
     hass: HomeAssistant,
-    mock_mowing_device: MowingDevice,
     mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
+    mock_state_bus: EventBus[DeviceSnapshot],
 ) -> None:
-    """Test mower state is not written on every poll but on Home Assistant stop."""
-    mock_mowing_device.report_data.dev.sys_status = WorkMode.MODE_WORKING
+    """Test pushed state is not written on every push but on Home Assistant stop."""
     await setup_integration(hass, mock_config_entry)
     storage_key = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    pushed = reporting(WorkMode.MODE_RETURNING)
 
     assert storage_key not in hass_storage
 
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
+    await push_state(mock_state_bus, pushed)
     await hass.async_block_till_done()
 
     assert storage_key not in hass_storage
@@ -416,9 +522,7 @@ async def test_state_persisted_on_final_write(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
     await hass.async_block_till_done()
 
-    assert hass_storage[storage_key]["data"] == {
-        DEFAULT_NAME: mock_mowing_device.to_dict()
-    }
+    assert hass_storage[storage_key]["data"] == {DEFAULT_NAME: pushed.to_dict()}
 
 
 @pytest.mark.usefixtures("mock_mower_api")
@@ -517,26 +621,6 @@ async def test_reload_does_not_overlap_clients(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert call_order == ["stop", "login"]
-
-
-async def test_auth_error_while_polling_starts_reauth(
-    hass: HomeAssistant,
-    mock_mower_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test an auth failure during a poll prompts for reauth."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_mower_api.update.side_effect = AuthError("token rejected")
-
-    freezer.tick(DEFAULT_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def _remove_device(

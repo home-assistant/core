@@ -1,11 +1,16 @@
 """Tests for the Mammotion integration."""
 
 from pymammotion.aliyun.model.dev_by_account_response import Device
+from pymammotion.data.model.device import MowingDevice
 from pymammotion.http.model.http import LoginResponseData
+from pymammotion.state.device_state import DeviceConnectionState, DeviceSnapshot
+from pymammotion.transport.base import EventBus
+from pymammotion.utility.constant.device_constant import WorkMode
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+from homeassistant.util import dt as dt_util
 
 DEFAULT_NAME = "Luba-ABC123"
 DEFAULT_ADDRESS = "AA:BB:CC:DD:EE:FF"
@@ -88,3 +93,25 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def reporting(mode: WorkMode) -> MowingDevice:
+    """Return the state of a mower reporting the given mode."""
+    device = MowingDevice()
+    device.report_data.dev.sys_status = mode
+    return device
+
+
+async def push_state(bus: EventBus[DeviceSnapshot], device: MowingDevice) -> None:
+    """Push a state change as the library does when a report arrives."""
+    await bus.emit(
+        DeviceSnapshot(
+            sequence=1,
+            timestamp=dt_util.utcnow(),
+            connection_state=DeviceConnectionState.CONNECTED,
+            online=True,
+            enabled=True,
+            battery_level=0,
+            raw=device,
+        )
+    )

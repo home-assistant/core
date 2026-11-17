@@ -19,8 +19,8 @@
   "connectivity": ["bluetooth", "cloud"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
-  "integration_type": "device",
-  "iot_class": "cloud_polling",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
   "loggers": ["pymammotion"],
   "quality_scale": "bronze",
   "requirements": ["pymammotion==0.10.15"]

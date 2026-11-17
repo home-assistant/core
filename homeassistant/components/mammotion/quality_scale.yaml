@@ -4,7 +4,10 @@ rules:
     status: exempt
     comment: |
       No custom actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The mower pushes its state; the coordinator only fetches once at setup.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -22,7 +25,8 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      Does not subscribe to event explicitly.
+      Entities only listen to the coordinator, which holds the subscription
+      to the library's pushed state.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
