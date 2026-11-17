@@ -91,6 +91,18 @@
         "name": "PTZ up"
       }
     },
+    "event": {
+      "motion": {
+        "name": "Motion",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "motion": "Motion"
+            }
+          }
+        }
+      }
+    },
     "image": {
       "last_motion_image": {
         "name": "Last motion image"
