@@ -226,6 +226,10 @@
         "scene_name": {
           "description": "Name of Hue scene from the Hue app.",
           "name": "Scene"
+        },
+        "transition": {
+          "description": "[%key:component::hue::services::activate_scene::fields::transition::description%]",
+          "name": "[%key:component::hue::services::activate_scene::fields::transition::name%]"
         }
       },
       "name": "Activate scene"
