@@ -1200,7 +1200,7 @@ class DSMRBelgiumDemandHistory(DSMREntity):
     def __init__(
         self,
         entity_description: DSMRSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: DsmrConfigEntry,
         telegram: Telegram,
     ) -> None:
         """Initialize historical maximum demand sensor."""
