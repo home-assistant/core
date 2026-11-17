@@ -593,6 +593,7 @@ class TestOnectaDataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
+        entity_registry: er.EntityRegistry,
     ) -> None:
         """One manual update for multiple climate entities makes one cloud call."""
         await _async_setup_fixture(hass, config_entry, "altherma")
@@ -600,7 +601,7 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.client.get_gateway_devices = AsyncMock(
             return_value=_load_gateway_devices("altherma")
         )
-        registry = er.async_get(hass)
+        registry = entity_registry
         entity_ids_by_device: dict[str, list[str]] = {}
         for entry in registry.entities.values():
             if (
