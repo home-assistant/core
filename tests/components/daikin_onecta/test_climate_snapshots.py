@@ -30,7 +30,6 @@ FIXTURES = (
     "altherma",
     "altherma3m",
     "altherma_boost",
-    "altherma_schedule",
     "climate_fixedfanmode",
     "climate_floorheatingairflow",
     "dry",
@@ -42,7 +41,6 @@ FIXTURES = (
     "minimal_data",
     "nomodel_id",
     "offlinedevice",
-    "schedule",
     "skyair",
     "ururu",
 )
