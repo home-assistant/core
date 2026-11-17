@@ -5,8 +5,8 @@ from typing import Any, override
 
 from aiohttp import ClientError
 from bleak.backends.device import BLEDevice
+import probatio
 from pymammotion.http.http import MammotionHTTP
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
@@ -74,7 +74,8 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         ) not in device_entry.connections and formatted_ble is not None:
             dr.async_get(self.hass).async_update_device(
                 device_entry.id,
-                merge_connections={(CONNECTION_BLUETOOTH, formatted_ble)},
+                new_connections=device_entry.connections
+                | {(CONNECTION_BLUETOOTH, formatted_ble)},
             )
             if entry.state is config_entries.ConfigEntryState.LOADED:
                 # reload the entry now we have a ble address
@@ -189,9 +190,11 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             last_step=False,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_ADDRESS): vol.In(self._discovered_devices),
+                    probatio.Optional(CONF_ADDRESS): probatio.In(
+                        self._discovered_devices
+                    ),
                 },
             ),
             step_id="user",
@@ -244,12 +247,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = {
-            vol.Required(CONF_ACCOUNTNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
+            probatio.Required(CONF_ACCOUNTNAME): cv.string,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         }
 
         return self.async_show_form(
-            step_id="wifi", data_schema=vol.Schema(schema), errors=errors
+            step_id="wifi", data_schema=probatio.Schema(schema), errors=errors
         )
 
     async def async_step_reauth(
@@ -280,8 +283,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): cv.string}),
-            description_placeholders={CONF_ACCOUNTNAME: entry.data[CONF_ACCOUNTNAME]},
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string}
+            ),
+            description_placeholders={"account_name": entry.data[CONF_ACCOUNTNAME]},
             errors=errors,
         )
 
@@ -311,16 +316,16 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = {
-            vol.Required(
+            probatio.Required(
                 CONF_ACCOUNTNAME, default=entry.data.get(CONF_ACCOUNTNAME)
             ): cv.string,
-            vol.Required(
-                CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD)
+            probatio.Required(
+                probatio.Secret(CONF_PASSWORD), default=entry.data.get(CONF_PASSWORD)
             ): cv.string,
         }
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             errors=errors,
         )

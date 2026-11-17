@@ -14,8 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MammotionConfigEntry, MammotionMowerUpdateCoordinator
+from . import MammotionConfigEntry
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
+from .coordinator import MammotionMowerUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 PARALLEL_UPDATES = 0

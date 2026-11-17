@@ -8,6 +8,7 @@ from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.transport.base import AuthError, LoginFailedError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from Tea.exceptions import UnretryableException
 
 from homeassistant.components.mammotion.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import DEFAULT_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_entry(

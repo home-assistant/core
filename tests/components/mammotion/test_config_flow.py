@@ -1,10 +1,12 @@
 """Test the Mammotion Luba config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError
 from bleak.backends.device import BLEDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mammotion.const import (
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from .conftest import LOGIN_INFO
 
 
 def _get_mock_device(name="Luba-ABC123", address="AA:BB:CC:DD:EE:FF"):
@@ -35,7 +37,7 @@ def _get_discovery_info(name="Luba-ABC123", address="aa:bb:cc:dd:ee:ff"):
     return discovery_info
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_mammotion_http")
 async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
     """Test successful bluetooth discovery flow."""
     discovery_info = _get_discovery_info()
@@ -59,24 +61,17 @@ async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "wifi"
 
-    mock_http = MagicMock()
-    mock_http.login_info.userInformation.userAccount = "user123"
-    mock_http.login_v2 = AsyncMock(return_value=None)
-
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "user@example.com",
-                CONF_PASSWORD: "password",
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCOUNTNAME: "user@example.com",
+            CONF_PASSWORD: "password",
+        },
+    )
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "user@example.com"
+    assert result2["result"].unique_id == "user123"
     assert result2["data"] == {
         CONF_ACCOUNTNAME: "user@example.com",
         CONF_PASSWORD: "password",
@@ -186,27 +181,26 @@ async def test_user_step_pick_discovery(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "wifi"
 
 
-async def test_user_step_manual_entry(hass: HomeAssistant) -> None:
-    """Test user step with manual entry."""
-    device = _get_mock_device()
-
-    mock_mammotion = MagicMock()
-    mock_mammotion.login_v2 = AsyncMock()
-    mock_mammotion.login_info.userInformation.userAccount = "user123"
-
+async def test_user_step_skip_discovered_device(hass: HomeAssistant) -> None:
+    """Test submitting the picker without a device continues to the login."""
     with (
         patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=device,
+            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
+            return_value=[_get_discovery_info()],
         ),
         patch(
-            "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-            return_value=mock_mammotion,
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=_get_mock_device(),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "wifi"
@@ -226,57 +220,49 @@ async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
     assert result["step_id"] == "wifi"
 
 
-async def test_wifi_step_invalid_auth(hass: HomeAssistant) -> None:
-    """Test wifi step returns error on invalid auth."""
+@pytest.mark.parametrize(
+    ("failure", "expected_error"),
+    [
+        pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            {"login_v2.side_effect": ClientConnectionError("Conn Err")},
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_wifi_step_errors(
+    hass: HomeAssistant,
+    mock_mammotion_http: MagicMock,
+    failure: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test the login step shows an error and recovers once the login works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    mock_mammotion_http.configure_mock(**failure)
 
-    mock_http = MagicMock()
-    mock_http.login_info = None
-    mock_http.login_v2 = AsyncMock(return_value=None)
-
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "user@example.com",
-                CONF_PASSWORD: "wrong",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "wifi"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_wifi_step_connection_error(hass: HomeAssistant) -> None:
-    """Test wifi step returns error on connection issue."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "user@example.com", CONF_PASSWORD: "password"},
     )
 
-    mock_http = MagicMock()
-    mock_http.login_v2 = AsyncMock(side_effect=ClientConnectionError("Conn Err"))
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "wifi"
+    assert result["errors"] == {"base": expected_error}
 
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "user@example.com",
-                CONF_PASSWORD: "password",
-            },
-        )
+    mock_mammotion_http.configure_mock(
+        **{"login_info": LOGIN_INFO, "login_v2.side_effect": None}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "user@example.com", CONF_PASSWORD: "password"},
+    )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "wifi"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "user123"
 
 
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:
@@ -318,8 +304,25 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert entry.data[CONF_ACCOUNT_ID] == "user123"
 
 
-async def test_reconfigure_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """Test reconfiguration flow shows an error on invalid credentials."""
+@pytest.mark.parametrize(
+    ("failure", "expected_error"),
+    [
+        pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            {"login_v2.side_effect": ClientConnectionError("Conn Err")},
+            "cannot_connect",
+            id="cannot_connect",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_mammotion_http: MagicMock,
+    failure: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test reconfiguration shows an error and recovers once the login works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_ACCOUNTNAME: "old@example.com", CONF_PASSWORD: "old_password"},
@@ -328,28 +331,30 @@ async def test_reconfigure_flow_invalid_auth(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
+    mock_mammotion_http.configure_mock(**failure)
 
-    mock_http = MagicMock()
-    mock_http.login_v2 = AsyncMock(return_value=None)
-    mock_http.login_info = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "new@example.com", CONF_PASSWORD: "wrong"},
+    )
 
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "new@example.com",
-                CONF_PASSWORD: "wrong",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "reconfigure"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
     assert entry.data[CONF_ACCOUNTNAME] == "old@example.com"
+
+    mock_mammotion_http.configure_mock(
+        **{"login_info": LOGIN_INFO, "login_v2.side_effect": None}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "new@example.com", CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_ACCOUNTNAME] == "new@example.com"
+    assert entry.data[CONF_PASSWORD] == "new_password"
 
 
 async def test_reconfigure_flow_account_mismatch(hass: HomeAssistant) -> None:

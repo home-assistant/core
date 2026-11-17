@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.utility.constant.device_constant import WorkMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lawn_mower import (
@@ -23,8 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "lawn_mower.garden_luba"
 

@@ -13,8 +13,10 @@
       "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["garden_plants"],
   "codeowners": ["@mikey0000"],
   "config_flow": true,
+  "connectivity": ["bluetooth", "cloud"],
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
   "integration_type": "device",

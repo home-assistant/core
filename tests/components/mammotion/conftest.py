@@ -4,7 +4,9 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from pymammotion.data.model.device import MowingDevice
+from pymammotion.http.model.http import LoginResponseData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mammotion.const import (
     CONF_ACCOUNT_ID,
@@ -13,9 +15,24 @@ from homeassistant.components.mammotion.const import (
 )
 from homeassistant.const import CONF_PASSWORD
 
-from tests.common import MockConfigEntry
-
 DEFAULT_NAME = "Luba-ABC123"
+
+LOGIN_INFO = LoginResponseData.from_dict(
+    {
+        "access_token": "access",
+        "token_type": "bearer",
+        "refresh_token": "refresh",
+        "expires_in": 3600,
+        "authorization_code": "code",
+        "userInformation": {
+            "areaCode": "NZ",
+            "domainAbbreviation": "AU",
+            "userId": "1",
+            "userAccount": "user123",
+            "authType": "0",
+        },
+    }
+)
 
 
 @pytest.fixture(autouse=True)
@@ -30,6 +47,18 @@ def mock_setup_entry() -> Generator[MagicMock]:
         "homeassistant.components.mammotion.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def mock_mammotion_http() -> Generator[MagicMock]:
+    """Mock the HTTP client the config flow validates the login with."""
+    with patch(
+        "homeassistant.components.mammotion.config_flow.MammotionHTTP"
+    ) as mock_http:
+        client = mock_http.return_value
+        client.login_v2 = AsyncMock()
+        client.login_info = LOGIN_INFO
+        yield client
 
 
 @pytest.fixture

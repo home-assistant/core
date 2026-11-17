@@ -1,9 +1,9 @@
 """Tests for the Mammotion integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 BLE_DEVICE_LUBA = BluetoothServiceInfo(
     name="Luba-ABC123",

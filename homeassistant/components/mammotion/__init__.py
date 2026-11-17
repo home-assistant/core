@@ -24,7 +24,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .config import MammotionConfigStore
 from .const import (
@@ -45,7 +45,7 @@ PLATFORMS: list[Platform] = [Platform.LAWN_MOWER]
 type MammotionConfigEntry = ConfigEntry[MammotionDevices]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Set up Mammotion Luba from a config entry."""
 
     api = HomeAssistantMowerApi(
@@ -147,8 +147,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 def store_cloud_credentials(
     hass: HomeAssistant,
@@ -173,19 +171,18 @@ def _load_cached_credentials(entry: MammotionConfigEntry) -> dict[str, Any]:
     return dict(entry.data) if (has_aliyun or has_mammotion) else {}
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Unload a config entry."""
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        for mower in entry.runtime_data.mowers:
-            mower.coordinator.store_cloud_credentials()
-            with contextlib.suppress(TimeoutError):
-                await mower.api.mammotion.remove_device(mower.name)
+    for mower in entry.runtime_data.mowers:
+        mower.coordinator.store_cloud_credentials()
+        with contextlib.suppress(TimeoutError):
+            await mower.api.mammotion.remove_device(mower.name)
 
-        if mowers := entry.runtime_data.mowers:
-            await mowers[0].coordinator.store.async_flush_mower_data()
-            await mowers[0].api.mammotion.stop()
-    return unload_ok
+    if mowers := entry.runtime_data.mowers:
+        await mowers[0].coordinator.store.async_flush_mower_data()
+        await mowers[0].api.mammotion.stop()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
@@ -195,7 +192,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: MammotionConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant,
+    config_entry: MammotionConfigEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     mower_names = (
