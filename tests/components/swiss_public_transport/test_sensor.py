@@ -269,10 +269,10 @@ async def test_departed_connection_replaced_by_spare(
     """Test a spare connection moves up without another request."""
     mock_opendata_client.connections = (
         await async_load_json_array_fixture(hass, "connections.json", DOMAIN)
-    )[0:6]
+    )[0:5]
     await setup_integration(hass, swiss_public_transport_config_entry)
 
-    assert mock_opendata_client.limit == 6
+    assert mock_opendata_client.limit == 5
     assert (
         hass.states.get("sensor.zurich_bern_departure_2").state
         == "2024-01-06T17:05:00+00:00"

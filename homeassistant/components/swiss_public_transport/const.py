@@ -13,7 +13,7 @@ CONF_TIME_FIXED: Final = "time_fixed"
 CONF_TIME_OFFSET: Final = "time_offset"
 
 DEFAULT_NAME = "Next Destination"
-DEFAULT_UPDATE_TIME = 180
+DEFAULT_UPDATE_TIME = 90
 DEFAULT_TIME_STATION = "departure"
 DEFAULT_TIME_MODE = "now"
 
