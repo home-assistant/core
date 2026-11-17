@@ -137,7 +137,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         async with self._cloud_lock:
             try:
                 await command(self._client)
-            except OnectaAuthenticationError:
+            except OnectaAuthenticationError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed authentication with HTTP %s",
+                    err.method,
+                    err.path,
+                    err.status,
+                )
                 return False
             except OnectaRateLimitError as err:
                 self._set_polling_backoff(err.retry_after)

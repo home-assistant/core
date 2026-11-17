@@ -71,7 +71,6 @@ DAIKIN_HVAC_TO_HA = {
     "heatingNight": HVACMode.HEAT,
     "auto": HVACMode.HEAT_COOL,
     "off": HVACMode.OFF,
-    "humidification": HVACMode.DRY,
 }
 
 HA_PRESET_TO_DAIKIN = {
@@ -161,11 +160,16 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         assert self._device.ha_device_id is not None
         management_point = self._device.management_point(self._embedded_id)
         assert management_point is not None
-        management_point_type = management_point.management_point_type
+        name = (
+            management_point.name.value
+            if management_point.name is not None
+            else None
+        )
         return ChildDeviceInfo(
-            identifiers={(DOMAIN, f"{self._device.id}{self._embedded_id}")},
-            name=management_point_type[0].upper() + management_point_type[1:],
+            identifiers={(DOMAIN, f"{self._device.id}_{self._embedded_id}")},
+            name=name or None,
             parent_device_id=self._device.ha_device_id,
+            translation_key="climate_zone" if not name else None,
         )
 
     def _update_state(self) -> None:

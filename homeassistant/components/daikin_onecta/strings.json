@@ -36,6 +36,11 @@
       }
     }
   },
+  "device": {
+    "climate_zone": {
+      "name": "Climate zone"
+    }
+  },
   "entity": {
     "climate": {
       "calculated_leaving_water_temperature": {
