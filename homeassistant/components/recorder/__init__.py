@@ -27,6 +27,7 @@ from homeassistant.util.event_type import EventType
 # startup
 from . import (
     backup,  # noqa: F401
+    database_usage,
     entity_options,
     entity_registry,
     websocket_api,
@@ -187,6 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
+    database_usage.async_setup(hass)
     entity_options.async_setup(hass)
     instance.async_initialize()
     instance.async_register()

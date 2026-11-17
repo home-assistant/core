@@ -46,12 +46,10 @@ from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
 )
 from homeassistant.components.squeezebox.services import (
-    ATTR_PARAMETERS,
-    SERVICE_CALL_METHOD,
-    SERVICE_CALL_QUERY,
+    SqueezeboxService,
+    SqueezeboxServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -71,6 +69,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -776,11 +775,11 @@ async def test_squeezebox_call_query(
     """Test query service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_QUERY,
+        SqueezeboxService.CALL_QUERY,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )
@@ -793,11 +792,11 @@ async def test_squeezebox_call_method(
     """Test method call service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_METHOD,
+        SqueezeboxService.CALL_METHOD,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )

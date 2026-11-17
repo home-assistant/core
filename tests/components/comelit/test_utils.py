@@ -16,9 +16,9 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.components.humidifier import ATTR_HUMIDITY
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -107,8 +107,8 @@ async def test_bridge_api_call_exceptions(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID_0},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID_0},
             blocking=True,
         )
 
@@ -134,8 +134,8 @@ async def test_bridge_api_call_reauth(
     # Call API
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID_0},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID_0},
         blocking=True,
     )
 

@@ -153,10 +153,10 @@ LOWPASS_SCHEMA = probatio.Schema(
 RANGE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_FILTER_LOWER_BOUND): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step="any", mode=NumberSelectorMode.BOX)
         ),
         probatio.Optional(CONF_FILTER_UPPER_BOUND): NumberSelector(
-            NumberSelectorConfig(min=0, step="any", mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(step="any", mode=NumberSelectorMode.BOX)
         ),
     }
 ).extend(BASE_OPTIONS_SCHEMA)

@@ -5,11 +5,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
 
 from homeassistant.components.silvercrest_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     SilverCrestIrDeviceType,
 )
@@ -39,6 +43,7 @@ def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
                 else SilverCrestIrDeviceType.SSVS85A1
             ),
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
 

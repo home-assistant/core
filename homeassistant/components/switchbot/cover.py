@@ -69,9 +69,21 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Initialize the Switchbot."""
         super().__init__(coordinator)
         self._attr_is_closed = None
-        # Only the Curtain 3 honours the speed byte; expose cover speeds
-        # (e.g. silent mode) for that model only.
-        if self._device.data.get("modelFriendlyName") == CURTAIN_3_MODEL_FRIENDLY_NAME:
+        self._async_update_speed_support()
+
+    @callback
+    def _async_update_speed_support(self) -> None:
+        """Expose cover speeds once the device is identified as a Curtain 3.
+
+        Only the Curtain 3 honours the speed byte. An advertisement without
+        service data is parsed as the configured model, so a Curtain 3 added
+        as a curtain may only be identified by a later advertisement.
+        """
+        if (
+            not self.supported_features & CoverEntityFeature.SPEED
+            and self._device.data.get("modelFriendlyName")
+            == CURTAIN_3_MODEL_FRIENDLY_NAME
+        ):
             self._attr_supported_features |= CoverEntityFeature.SPEED
             self._attr_supported_speeds = list(CURTAIN_SPEED_TO_VALUE)
 
@@ -161,6 +173,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._async_update_speed_support()
         self._attr_is_closing = self._device.is_closing()
         self._attr_is_opening = self._device.is_opening()
         self._attr_current_cover_position = self.parsed_data["position"]
