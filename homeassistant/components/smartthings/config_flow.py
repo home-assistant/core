@@ -178,7 +178,10 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self._app_id = existing_app.app_id
                 # Another flow may have just provisioned this app; regenerating its
                 # credentials would invalidate the secret that flow still uses.
-                implementations = await async_get_implementations(self.hass, DOMAIN)
+                try:
+                    implementations = await async_get_implementations(self.hass, DOMAIN)
+                except ImplementationUnavailableError:
+                    implementations = {}
                 if (
                     implementation := implementations.get(app_auth_domain(self._app_id))
                 ) is not None:

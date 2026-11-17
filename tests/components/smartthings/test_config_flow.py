@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 from pysmartthings import (
     SmartThingsAuthenticationFailedError,
@@ -284,6 +284,50 @@ async def test_pat_flow_only_reuses_owned_app(
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert f"client_id={expected_client_id}" in result["url"]
     assert hass_storage[STORAGE_KEY]["data"]["apps"][expected_app_id] == REDIRECT_URI
+
+
+@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
+async def test_pat_flow_reuses_owned_app_when_provider_unavailable(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Check an owned app's credentials are regenerated while a provider is down."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": STORAGE_KEY,
+        "data": {"apps": {"existing-app-id": REDIRECT_URI}},
+    }
+    mock_smartthings.list_apps.return_value = [
+        SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
+    ]
+    mock_smartthings.regenerate_oauth.return_value = SimpleNamespace(
+        client_id="regenerated-client-id",
+        client_secret="regenerated-client-secret",
+    )
+
+    # The first two lookups fail, the one after importing the credential succeeds.
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_implementations",
+        wraps=config_entry_oauth2_flow.async_get_implementations,
+        side_effect=[
+            ImplementationUnavailableError(),
+            ImplementationUnavailableError(),
+            DEFAULT,
+        ],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["step_id"] == "pat"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=regenerated-client-id" in result["url"]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
