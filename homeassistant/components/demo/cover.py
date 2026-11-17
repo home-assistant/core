@@ -97,6 +97,8 @@ class DemoCover(CoverEntity):
         self._unsub_listener_cover_tilt: CALLBACK_TYPE | None = None
         self._is_opening = False
         self._is_closing = False
+        self._is_opening_tilt = False
+        self._is_closing_tilt = False
         if position is None:
             self._closed = True
         else:
@@ -138,13 +140,13 @@ class DemoCover(CoverEntity):
     @override
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._is_closing
+        return self._is_closing or self._is_closing_tilt
 
     @property
     @override
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        return self._is_opening
+        return self._is_opening or self._is_opening_tilt
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -168,8 +170,11 @@ class DemoCover(CoverEntity):
         if self._tilt_position in (0, None):
             return
 
+        self._is_opening_tilt = False
+        self._is_closing_tilt = True
         self._listen_cover_tilt()
         self._requested_closing_tilt = True
+        self.async_write_ha_state()
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -193,8 +198,11 @@ class DemoCover(CoverEntity):
         if self._tilt_position in (100, None):
             return
 
+        self._is_opening_tilt = True
+        self._is_closing_tilt = False
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
+        self.async_write_ha_state()
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -225,26 +233,38 @@ class DemoCover(CoverEntity):
         self._requested_closing_tilt = (
             self._tilt_position is not None and tilt_position < self._tilt_position
         )
+        self._is_closing_tilt = self._requested_closing_tilt
+        self._is_opening_tilt = not self._requested_closing_tilt
+        self.async_write_ha_state()
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
+        self._stop_position()
+        self._stop_tilt()
+        self.async_write_ha_state()
+
+    @override
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        self._stop_tilt()
+        self.async_write_ha_state()
+
+    @callback
+    def _stop_position(self) -> None:
+        """Stop the position movement."""
         self._is_closing = False
         self._is_opening = False
-        self.async_write_ha_state()
-        if self._position is None:
-            return
         if self._unsub_listener_cover is not None:
             self._unsub_listener_cover()
             self._unsub_listener_cover = None
             self._set_position = None
 
-    @override
-    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
-        """Stop the cover tilt."""
-        if self._tilt_position is None:
-            return
-
+    @callback
+    def _stop_tilt(self) -> None:
+        """Stop the tilt movement."""
+        self._is_closing_tilt = False
+        self._is_opening_tilt = False
         if self._unsub_listener_cover_tilt is not None:
             self._unsub_listener_cover_tilt()
             self._unsub_listener_cover_tilt = None
@@ -268,7 +288,7 @@ class DemoCover(CoverEntity):
             self._position += 10
 
         if self._position in (100, 0, self._set_position):
-            await self.async_stop_cover()
+            self._stop_position()
 
         self._closed = (
             self.current_cover_position is not None and self.current_cover_position <= 0
@@ -293,6 +313,6 @@ class DemoCover(CoverEntity):
             self._tilt_position += 10
 
         if self._tilt_position in (100, 0, self._set_tilt_position):
-            await self.async_stop_cover_tilt()
+            self._stop_tilt()
 
         self.async_write_ha_state()
