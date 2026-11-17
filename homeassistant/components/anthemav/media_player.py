@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -190,8 +190,20 @@ class AnthemAVR(MediaPlayerEntity):
         if not self._is_x10:
             self.avr.audio_listening_mode = number
             return
-        await async_send_single_command(self._host, self._port, f"Z1ALM{number:02d}")
+        command = f"Z1ALM{number:02d}"
+        if self.avr.audio_listening_mode == command[5:]:
+            # The receiver doesn't confirm a mode that is already active.
+            return
+        replies = await async_send_single_command(self._host, self._port, command)
         self.avr.query("Z1ALM")
+        # An applied mode is reported back; one the current source doesn't
+        # allow gets no reply at all.
+        if command not in replies:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sound_mode_not_applied",
+                translation_placeholders={"sound_mode": sound_mode},
+            )
 
     @override
     async def async_turn_off(self) -> None:
