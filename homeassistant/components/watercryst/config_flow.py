@@ -3,13 +3,15 @@
 import logging
 from typing import Any, override
 
-from httpx2 import HTTPStatusError, RequestError
 import probatio
 from pyocat import (
     AsyncApiClient,
     AsyncAuth,
     WTCApiDisabledError,
-    WTCApiTemporaryError,
+    WTCApiQuotaExceededError,
+    WTCApiRequestError,
+    WTCApiServerError,
+    WTCApiTimeoutError,
     WTCApiUnauthorizedError,
 )
 
@@ -54,18 +56,26 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "api_disabled"
             except WTCApiUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except WTCApiTemporaryError, HTTPStatusError, RequestError:
+            except (
+                WTCApiQuotaExceededError,
+                WTCApiRequestError,
+                WTCApiServerError,
+                WTCApiTimeoutError,
+            ):
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info.biocat_serial)
-                self._abort_if_unique_id_configured()
+                if not info.biocat_serial:
+                    errors["base"] = "cannot_connect"
+                else:
+                    await self.async_set_unique_id(info.biocat_serial)
+                    self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=info.name or info.biocat_serial, data=user_input
-                )
+                    return self.async_create_entry(
+                        title=info.name or info.biocat_serial, data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=_STEP_USER_DATA_SCHEMA, errors=errors
