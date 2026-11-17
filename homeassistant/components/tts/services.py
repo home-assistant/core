@@ -14,12 +14,20 @@ from .const import (
     TextToSpeechServiceArgument,
 )
 
-SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema({})
+SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema(
+    {
+        probatio.Optional(TextToSpeechServiceArgument.DAYS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=3650)
+        )
+    }
+)
 
 
 async def _async_clear_cache_handle(service: ServiceCall) -> None:
     """Handle clear cache service call."""
-    await service.hass.data[DATA_TTS_MANAGER].async_clear_cache()
+    await service.hass.data[DATA_TTS_MANAGER].async_clear_cache(
+        service.data.get(TextToSpeechServiceArgument.DAYS)
+    )
 
 
 @callback

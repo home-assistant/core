@@ -6,62 +6,55 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, ATTR_NAME, ATTR_TIME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import (
-    ATTR_ADDRESS,
-    ATTR_CHANNEL,
-    ATTR_INTERFACE,
-    ATTR_PARAM,
-    ATTR_PARAMSET,
-    ATTR_PARAMSET_KEY,
-    ATTR_RX_MODE,
-    ATTR_VALUE,
-    ATTR_VALUE_TYPE,
     DATA_HOMEMATIC,
     DATA_HUBS,
     DOMAIN,
-    SERVICE_PUT_PARAMSET,
-    SERVICE_RECONNECT,
-    SERVICE_SET_DEVICE_VALUE,
-    SERVICE_SET_INSTALL_MODE,
-    SERVICE_SET_VARIABLE_VALUE,
-    SERVICE_VIRTUALKEY,
+    HomematicService,
+    HomematicServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCHEMA_SERVICE_VIRTUALKEY = probatio.Schema(
     {
-        probatio.Required(ATTR_ADDRESS): probatio.All(cv.string, probatio.Upper),
-        probatio.Required(ATTR_CHANNEL): probatio.Coerce(int),
-        probatio.Required(ATTR_PARAM): cv.string,
-        probatio.Optional(ATTR_INTERFACE): cv.string,
+        probatio.Required(HomematicServiceArgument.ADDRESS): probatio.All(
+            cv.string, probatio.Upper
+        ),
+        probatio.Required(HomematicServiceArgument.CHANNEL): probatio.Coerce(int),
+        probatio.Required(HomematicServiceArgument.PARAM): cv.string,
+        probatio.Optional(HomematicServiceArgument.INTERFACE): cv.string,
     }
 )
 
 SCHEMA_SERVICE_SET_VARIABLE_VALUE = probatio.Schema(
     {
-        probatio.Required(ATTR_NAME): cv.string,
-        probatio.Required(ATTR_VALUE): cv.match_all,
-        probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(HomematicServiceArgument.NAME): cv.string,
+        probatio.Required(HomematicServiceArgument.VALUE): cv.match_all,
+        probatio.Optional(CommonServiceArgument.ENTITY_ID): cv.entity_ids,
     }
 )
 
 SCHEMA_SERVICE_SET_DEVICE_VALUE = probatio.Schema(
     {
-        probatio.Required(ATTR_ADDRESS): probatio.All(cv.string, probatio.Upper),
-        probatio.Required(ATTR_CHANNEL): probatio.Coerce(int),
-        probatio.Required(ATTR_PARAM): probatio.All(cv.string, probatio.Upper),
-        probatio.Required(ATTR_VALUE): cv.match_all,
-        probatio.Optional(ATTR_VALUE_TYPE): probatio.In(
+        probatio.Required(HomematicServiceArgument.ADDRESS): probatio.All(
+            cv.string, probatio.Upper
+        ),
+        probatio.Required(HomematicServiceArgument.CHANNEL): probatio.Coerce(int),
+        probatio.Required(HomematicServiceArgument.PARAM): probatio.All(
+            cv.string, probatio.Upper
+        ),
+        probatio.Required(HomematicServiceArgument.VALUE): cv.match_all,
+        probatio.Optional(HomematicServiceArgument.VALUE_TYPE): probatio.In(
             ["boolean", "dateTime.iso8601", "double", "int", "string"]
         ),
-        probatio.Optional(ATTR_INTERFACE): cv.string,
+        probatio.Optional(HomematicServiceArgument.INTERFACE): cv.string,
     }
 )
 
@@ -69,30 +62,38 @@ SCHEMA_SERVICE_RECONNECT = probatio.Schema({})
 
 SCHEMA_SERVICE_SET_INSTALL_MODE = probatio.Schema(
     {
-        probatio.Required(ATTR_INTERFACE): cv.string,
-        probatio.Optional(ATTR_TIME, default=60): cv.positive_int,
-        probatio.Optional(ATTR_MODE, default=1): probatio.All(
+        probatio.Required(HomematicServiceArgument.INTERFACE): cv.string,
+        probatio.Optional(HomematicServiceArgument.TIME, default=60): cv.positive_int,
+        probatio.Optional(HomematicServiceArgument.MODE, default=1): probatio.All(
             probatio.Coerce(int), probatio.In([1, 2])
         ),
-        probatio.Optional(ATTR_ADDRESS): probatio.All(cv.string, probatio.Upper),
+        probatio.Optional(HomematicServiceArgument.ADDRESS): probatio.All(
+            cv.string, probatio.Upper
+        ),
     }
 )
 
 SCHEMA_SERVICE_PUT_PARAMSET = probatio.Schema(
     {
-        probatio.Required(ATTR_INTERFACE): cv.string,
-        probatio.Required(ATTR_ADDRESS): probatio.All(cv.string, probatio.Upper),
-        probatio.Required(ATTR_PARAMSET_KEY): probatio.All(cv.string, probatio.Upper),
-        probatio.Required(ATTR_PARAMSET): dict,
-        probatio.Optional(ATTR_RX_MODE): probatio.All(cv.string, probatio.Upper),
+        probatio.Required(HomematicServiceArgument.INTERFACE): cv.string,
+        probatio.Required(HomematicServiceArgument.ADDRESS): probatio.All(
+            cv.string, probatio.Upper
+        ),
+        probatio.Required(HomematicServiceArgument.PARAMSET_KEY): probatio.All(
+            cv.string, probatio.Upper
+        ),
+        probatio.Required(HomematicServiceArgument.PARAMSET): dict,
+        probatio.Optional(HomematicServiceArgument.RX_MODE): probatio.All(
+            cv.string, probatio.Upper
+        ),
     }
 )
 
 
 def _device_from_servicecall(hass: HomeAssistant, service: ServiceCall) -> Any:
     """Extract HomeMatic device from service call."""
-    address = service.data.get(ATTR_ADDRESS)
-    interface = service.data.get(ATTR_INTERFACE)
+    address = service.data.get(HomematicServiceArgument.ADDRESS)
+    interface = service.data.get(HomematicServiceArgument.INTERFACE)
     if address == "BIDCOS-RF":
         address = "BidCoS-RF"
     if address == "HMIP-RCV-1":
@@ -109,9 +110,9 @@ def _device_from_servicecall(hass: HomeAssistant, service: ServiceCall) -> Any:
 
 def _hm_service_virtualkey(service: ServiceCall) -> None:
     """Service to handle virtualkey servicecalls."""
-    address = service.data.get(ATTR_ADDRESS)
-    channel = service.data.get(ATTR_CHANNEL)
-    param = service.data.get(ATTR_PARAM)
+    address = service.data.get(HomematicServiceArgument.ADDRESS)
+    channel = service.data.get(HomematicServiceArgument.CHANNEL)
+    param = service.data.get(HomematicServiceArgument.PARAM)
 
     # Device not found
     hmdevice = _device_from_servicecall(service.hass, service)
@@ -136,9 +137,9 @@ def _hm_service_virtualkey(service: ServiceCall) -> None:
 def _service_handle_value(service: ServiceCall) -> None:
     """Service to call setValue method for HomeMatic system variable."""
     entity_hubs = service.hass.data[DATA_HUBS]
-    entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
-    name = service.data[ATTR_NAME]
-    value = service.data[ATTR_VALUE]
+    entity_ids: list[str] | None = service.data.get(CommonServiceArgument.ENTITY_ID)
+    name = service.data[HomematicServiceArgument.NAME]
+    value = service.data[HomematicServiceArgument.VALUE]
 
     if entity_ids:
         entities = [entity for entity in entity_hubs if entity.entity_id in entity_ids]
@@ -155,11 +156,11 @@ def _service_handle_value(service: ServiceCall) -> None:
 
 def _service_handle_device(service: ServiceCall) -> None:
     """Service to call setValue method for HomeMatic devices."""
-    address = service.data[ATTR_ADDRESS]
-    channel = service.data[ATTR_CHANNEL]
-    param = service.data[ATTR_PARAM]
-    value = service.data[ATTR_VALUE]
-    value_type = service.data.get(ATTR_VALUE_TYPE)
+    address = service.data[HomematicServiceArgument.ADDRESS]
+    channel = service.data[HomematicServiceArgument.CHANNEL]
+    param = service.data[HomematicServiceArgument.PARAM]
+    value = service.data[HomematicServiceArgument.VALUE]
+    value_type = service.data.get(HomematicServiceArgument.VALUE_TYPE)
 
     # Convert value into correct XML-RPC Type.
     # https://docs.python.org/3/library/xmlrpc.client.html#xmlrpc.client.ServerProxy
@@ -192,10 +193,10 @@ def _service_handle_reconnect(service: ServiceCall) -> None:
 
 def _service_handle_install_mode(service: ServiceCall) -> None:
     """Service to set interface into install mode."""
-    interface = service.data.get(ATTR_INTERFACE)
-    mode = service.data.get(ATTR_MODE)
-    time = service.data.get(ATTR_TIME)
-    address = service.data.get(ATTR_ADDRESS)
+    interface = service.data.get(HomematicServiceArgument.INTERFACE)
+    mode = service.data.get(HomematicServiceArgument.MODE)
+    time = service.data.get(HomematicServiceArgument.TIME)
+    address = service.data.get(HomematicServiceArgument.ADDRESS)
 
     service.hass.data[DATA_HOMEMATIC].setInstallMode(
         interface, t=time, mode=mode, address=address
@@ -204,14 +205,14 @@ def _service_handle_install_mode(service: ServiceCall) -> None:
 
 def _service_put_paramset(service: ServiceCall) -> None:
     """Service to call the putParamset method on a HomeMatic connection."""
-    interface = service.data[ATTR_INTERFACE]
-    address = service.data[ATTR_ADDRESS]
-    paramset_key = service.data[ATTR_PARAMSET_KEY]
+    interface = service.data[HomematicServiceArgument.INTERFACE]
+    address = service.data[HomematicServiceArgument.ADDRESS]
+    paramset_key = service.data[HomematicServiceArgument.PARAMSET_KEY]
     # When passing in the paramset from a YAML file we get an OrderedDict
     # here instead of a dict, so add this explicit cast.
     # The service schema makes sure that this cast works.
-    paramset = dict(service.data[ATTR_PARAMSET])
-    rx_mode = service.data.get(ATTR_RX_MODE)
+    paramset = dict(service.data[HomematicServiceArgument.PARAMSET])
+    rx_mode = service.data.get(HomematicServiceArgument.RX_MODE)
 
     _LOGGER.debug(
         "Calling putParamset: %s, %s, %s, %s, %s",
@@ -230,28 +231,28 @@ def setup_services(hass: HomeAssistant) -> None:
     """Register the Homematic services."""
     hass.services.register(
         DOMAIN,
-        SERVICE_VIRTUALKEY,
+        HomematicService.VIRTUALKEY,
         _hm_service_virtualkey,
         schema=SCHEMA_SERVICE_VIRTUALKEY,
     )
 
     hass.services.register(
         DOMAIN,
-        SERVICE_SET_VARIABLE_VALUE,
+        HomematicService.SET_VARIABLE_VALUE,
         _service_handle_value,
         schema=SCHEMA_SERVICE_SET_VARIABLE_VALUE,
     )
 
     hass.services.register(
         DOMAIN,
-        SERVICE_SET_DEVICE_VALUE,
+        HomematicService.SET_DEVICE_VALUE,
         _service_handle_device,
         schema=SCHEMA_SERVICE_SET_DEVICE_VALUE,
     )
 
     hass.services.register(
         DOMAIN,
-        SERVICE_RECONNECT,
+        HomematicService.RECONNECT,
         _service_handle_reconnect,
         schema=SCHEMA_SERVICE_RECONNECT,
     )
@@ -261,14 +262,14 @@ def setup_services(hass: HomeAssistant) -> None:
         async_register_admin_service,
         hass,
         DOMAIN,
-        SERVICE_SET_INSTALL_MODE,
+        HomematicService.SET_INSTALL_MODE,
         _service_handle_install_mode,
         SCHEMA_SERVICE_SET_INSTALL_MODE,
     ).result()
 
     hass.services.register(
         DOMAIN,
-        SERVICE_PUT_PARAMSET,
+        HomematicService.PUT_PARAMSET,
         _service_put_paramset,
         schema=SCHEMA_SERVICE_PUT_PARAMSET,
     )

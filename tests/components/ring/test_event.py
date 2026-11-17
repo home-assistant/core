@@ -11,7 +11,7 @@ from ring_doorbell import Ring, RingEvent
 from ring_doorbell.listen import RingEventListener
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, DoorbellEventType
+from homeassistant.components.event import DoorbellEventType, EventEntityStateAttribute
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -107,4 +107,4 @@ async def test_event(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == start_time_str
-    assert state.attributes[ATTR_EVENT_TYPE] == event_type
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == event_type
