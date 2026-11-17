@@ -9,11 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from yoto_api import YotoError
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -86,8 +86,11 @@ async def test_set_value(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: time(8, 30)},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: time(8, 30),
+        },
         blocking=True,
     )
 
@@ -111,7 +114,10 @@ async def test_set_value_failure(
     ):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "time.nursery_yoto_day_mode_start", ATTR_TIME: time(7, 0)},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: "time.nursery_yoto_day_mode_start",
+                TimeServiceArgument.TIME: time(7, 0),
+            },
             blocking=True,
         )

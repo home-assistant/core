@@ -73,14 +73,47 @@ async def test_unload_releases_the_department(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # The last entry is gone, so the shared registry is cleaned up entirely.
-    assert METEO_FRANCE_DATA not in hass.data
+    assert not hass.data[METEO_FRANCE_DATA]
 
     second_entry = _second_city(hass)
     await hass.config_entries.async_setup(second_entry.entry_id)
     await hass.async_block_till_done()
 
     assert second_entry.runtime_data.alert_coordinator is not None
+
+
+async def test_unload_the_city_with_alerts_first(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a city without alerts unloads after the city with alerts."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_entry = _second_city(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_unload(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_closes_the_session(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_requests: MagicMock,
+) -> None:
+    """Test unloading closes the HTTP session of the client."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    patch_requests.session.close.assert_called_once()
 
 
 async def test_setup_retry_when_forecast_fails(

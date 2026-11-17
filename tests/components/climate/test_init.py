@@ -53,9 +53,15 @@ from homeassistant.components.climate.services import (
     SET_TEMPERATURE_SCHEMA,
     _async_service_temperature_set,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    STATE_UNAVAILABLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
@@ -777,6 +783,11 @@ async def test_temperature_validation_display_rounding(
                 blocking=True,
             )
         assert exc.value.translation_key == "temp_out_of_range"
+        assert exc.value.translation_placeholders == {
+            "check_temp": str(temperature),
+            "min_temp": "16",
+            "max_temp": "32",
+        }
     assert test_climate.native_target_temperature == 89.5
 
     # 62 °F is 16.7 °C, shown as 17 °C. Temperatures between the native and the
@@ -804,6 +815,11 @@ async def test_temperature_validation_display_rounding(
             blocking=True,
         )
     assert exc.value.translation_key == "temp_out_of_range"
+    assert exc.value.translation_placeholders == {
+        "check_temp": "16.5",
+        "min_temp": "17",
+        "max_temp": "32",
+    }
 
 
 async def test_target_temp_high_higher_than_low(
@@ -1144,7 +1160,8 @@ async def test_native_temperature_unit_conversion(
     )
     # The published unit is the one the published temperatures are converted to
     assert (
-        state.attributes[ClimateEntityStateAttribute.TEMPERATURE_UNIT] == expected_unit
+        state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == expected_unit
     )
 
 
@@ -2216,7 +2233,7 @@ def _restored(
             US_CUSTOMARY_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2229,7 +2246,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2242,7 +2259,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 **ATTRIBUTES_FAHRENHEIT,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: (
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: (
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
@@ -2279,7 +2296,7 @@ def _restored(
             METRIC_SYSTEM,
             {
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 20,
-                ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
+                ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: "invalid",
             },
             None,
             False,
@@ -2487,3 +2504,32 @@ async def test_restore_climate_no_last_state(
     await hass.async_block_till_done()
 
     assert entity.restored is None
+
+
+async def test_temperature_unit_when_unavailable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    register_test_integration: MockConfigEntry,
+) -> None:
+    """Test the temperature unit is kept when the entity is unavailable."""
+    entity = MockClimateEntity(name="Test", unique_id="unique_climate_test")
+    entity._attr_available = False
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[entity], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.state == STATE_UNAVAILABLE
+    assert (
+        state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )
+    # The entity registry restores the capabilities before the entity is added
+    entry = entity_registry.async_get("climate.test")
+    assert (
+        entry.capabilities[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == UnitOfTemperature.CELSIUS
+    )

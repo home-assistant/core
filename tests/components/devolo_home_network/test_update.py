@@ -11,9 +11,9 @@ from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     FIRMWARE_UPDATE_INTERVAL,
 )
-from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
+from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -61,8 +61,8 @@ async def test_update_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: entity_id},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_device.device.async_start_firmware_update.call_count == 1
@@ -133,8 +133,8 @@ async def test_device_failure_update(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -153,8 +153,8 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     with pytest.raises(HomeAssistantError):
         assert await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: entity_id},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()

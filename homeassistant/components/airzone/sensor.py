@@ -2,7 +2,9 @@
 
 from typing import Any, Final, override
 
+from aioairzone.common import EcoAdapt
 from aioairzone.const import (
+    AZD_ECO_ADAPT,
     AZD_HOT_WATER,
     AZD_HUMIDITY,
     AZD_TEMP,
@@ -77,6 +79,13 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         key=AZD_THERMOSTAT_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        key=AZD_ECO_ADAPT,
+        options=[option.value for option in EcoAdapt],
+        translation_key="eco_adapt",
     ),
     SensorEntityDescription(
         entity_category=EntityCategory.DIAGNOSTIC,

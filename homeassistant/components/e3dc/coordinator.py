@@ -18,8 +18,14 @@ from .const import DEFAULT_NAME, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-# The components the entities read
-POLLED_COMPONENTS = ("power",)
+# The components the entities read. The poll skips those the firmware doesn't serve.
+POLLED_COMPONENTS = (
+    "power",
+    "battery_limits",
+    "wide_power_meters",
+    "inverter_mode_control",
+    "grid_control",
+)
 # The components that tell which optional hardware is installed, read once
 HARDWARE_COMPONENTS = ("wallboxes", "power_meters")
 
@@ -27,7 +33,7 @@ type E3dcConfigEntry = ConfigEntry[E3dcDataUpdateCoordinator]
 
 
 class E3dcDataUpdateCoordinator(DataUpdateCoordinator[None]):
-    """Poll the power flows of the power station."""
+    """Poll the power station."""
 
     config_entry: E3dcConfigEntry
 
