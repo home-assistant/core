@@ -242,7 +242,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
-        devices = self.data or {}
+        previous_devices = self.data_or_none
+        devices = previous_devices or {}
         if (
             self._scheduled_refresh
             and (remaining := self._polling_backoff_remaining()) is not None
@@ -348,7 +349,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device
                         registry_metadata_changed = True
-                    if registry_metadata_changed and self.data is not None:
+                    if registry_metadata_changed and previous_devices is not None:
                         self._async_register_device(device)
 
                 self.update_interval = self._determine_update_interval()
