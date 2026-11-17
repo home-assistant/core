@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import override
 
+import aiohttp
 from lunatone_rest_api_client import DALIScan
 from lunatone_rest_api_client.models import StartScanData
 
@@ -258,5 +259,14 @@ class DALIScanButtonEntity(
                     translation_domain=DOMAIN,
                     translation_key=description.press_not_allowed_error_key,
                 )
-            await description.press_fn(client, self._line_id)
+
+            try:
+                await description.press_fn(client, self._line_id)
+            except aiohttp.ClientConnectionError as ex:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_control_dali_scan",
+                    translation_placeholders={"entity": self.entity_id},
+                ) from ex
+
             await self.coordinator.async_refresh()

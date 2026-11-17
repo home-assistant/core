@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import ScanState, StartScanData
 import pytest
@@ -150,6 +151,41 @@ async def test_pressing_button(
             },
             blocking=True,
         )
+
+
+async def test_pressing_button_handles_connection_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test pressing a scan button handles connection errors."""
+    await setup_integration(hass, mock_config_entry)
+    await enable_entities(
+        hass, entity_registry, mock_config_entry.entry_id, Platform.BUTTON
+    )
+
+    mock_lunatone_scan.async_start.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.test_dali_scan_start_system_extension",
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "cannot_control_dali_scan"
+    assert err.value.translation_placeholders == {
+        "entity": "button.test_dali_scan_start_system_extension"
+    }
+    assert isinstance(err.value.__cause__, aiohttp.ClientConnectionError)
 
 
 async def test_line_buttons_added_and_removed(
