@@ -187,11 +187,11 @@ async def test_queue_switch_action(
     )
 
 
-async def test_queue_switch_follows_added_queue(
+async def test_queue_switch_follows_queue(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test a queue switch becomes available when the server adds the queue."""
+    """Test a queue switch follows its queue, from the moment the server adds it."""
     music_assistant_client.server_info.schema_version = 101
     # the server registers the player before its queue
     with patch(
@@ -215,3 +215,11 @@ async def test_queue_switch_follows_added_queue(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
+
+    queue.crossfade_enabled = False
+    await trigger_subscription_callback(
+        hass, music_assistant_client, EventType.QUEUE_UPDATED, queue.queue_id
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
