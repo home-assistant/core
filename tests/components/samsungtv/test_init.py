@@ -1,10 +1,17 @@
 """Tests for the Samsung TV Integration."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock, patch
 
+import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
@@ -131,6 +138,42 @@ async def test_setup_rendering_control_fallback(
     entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
 
     assert entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION) == expected
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_rendering_control_probe_on_power_on(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the renderer location is probed again when the TV turns on."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.get("http://10.10.12.34:9197/dmr", exc=aiohttp.ClientError)
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_is_on",
+        return_value=False,
+    ) as mock_is_on:
+        entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+        assert not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+
+        aioclient_mock.clear_requests()
+        aioclient_mock.get(
+            "http://10.10.12.34:9197/dmr", text=UPNP_SVC_RENDERING_CONTROL
+        )
+        mock_is_on.return_value = True
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (
+            entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+            == "http://10.10.12.34:9197/dmr"
+        )
+
+        # Let the entry reload triggered by the update finish
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")

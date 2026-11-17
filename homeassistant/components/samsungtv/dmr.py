@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Sequence
 
+import aiohttp
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.client_factory import UpnpFactory
@@ -20,7 +21,29 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, UPNP_SVC_RENDERING_CONTROL
+
+
+async def async_probe_rendering_control_location(
+    hass: HomeAssistant, host: str
+) -> str | None:
+    """Return the renderer location of a Tizen TV, without SSDP.
+
+    SSDP doesn't cross subnets/VLANs, but Tizen TVs serve their
+    renderer description on a fixed URL, so try it directly.
+    """
+    location = f"http://{host}:9197/dmr"
+    try:
+        async with async_get_clientsession(hass).get(
+            location, timeout=aiohttp.ClientTimeout(total=5)
+        ) as resp:
+            description = await resp.text()
+    except aiohttp.ClientError, TimeoutError:
+        LOGGER.debug("No renderer description at %s", location)
+        return None
+    if resp.status == 200 and UPNP_SVC_RENDERING_CONTROL in description:
+        return location
+    return None
 
 
 class SamsungTVDmrDevice:

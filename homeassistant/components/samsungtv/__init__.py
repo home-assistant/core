@@ -4,8 +4,6 @@ from collections.abc import Coroutine, Mapping
 from typing import Any
 from urllib.parse import urlparse
 
-import aiohttp
-
 from homeassistant.components import ssdp
 from homeassistant.const import (
     CONF_HOST,
@@ -20,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import SamsungTVBridge, mac_from_device_info, model_requires_encryption
@@ -37,6 +34,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
+from .dmr import async_probe_rendering_control_location
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
@@ -113,20 +111,13 @@ async def _async_update_ssdp_locations(
         entry.data[CONF_METHOD] == METHOD_WEBSOCKET
         and CONF_SSDP_RENDERING_CONTROL_LOCATION not in updates
         and not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
+        and (
+            location := await async_probe_rendering_control_location(
+                hass, entry.data[CONF_HOST]
+            )
+        )
     ):
-        # SSDP doesn't cross subnets/VLANs, but Tizen TVs serve their
-        # renderer description on a fixed URL, so try it directly.
-        location = f"http://{entry.data[CONF_HOST]}:9197/dmr"
-        try:
-            async with async_get_clientsession(hass).get(
-                location, timeout=aiohttp.ClientTimeout(total=5)
-            ) as resp:
-                description = await resp.text()
-        except aiohttp.ClientError, TimeoutError:
-            LOGGER.debug("No renderer description at %s", location)
-        else:
-            if resp.status == 200 and UPNP_SVC_RENDERING_CONTROL in description:
-                updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = location
+        updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = location
 
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
