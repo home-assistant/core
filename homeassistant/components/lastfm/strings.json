@@ -4,14 +4,31 @@
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "authorization_not_granted": "Access was not granted on Last.fm. Open the link, allow access, then submit again.",
+      "wrong_account": "You authorized a different Last.fm account than the selected user."
+    },
+    "abort": {
+      "reconfigure_successful": "Scrobbling was enabled for the selected user."
     },
     "step": {
+      "authorize": {
+        "title": "Authorize on Last.fm",
+        "description": "Log in as the selected user on Last.fm, then [open the authorization page]({auth_url}), allow access and press Submit."
+      },
       "friends": {
         "data": {
           "users": "Last.fm usernames"
         },
         "description": "Fill in other users you want to add."
+      },
+      "reconfigure": {
+        "title": "Enable scrobbling",
+        "description": "Choose the user to authorize for scrobbling. You need the API secret from your Last.fm [API account]({api_account_url}). Repeat this for every user who should be able to scrobble.",
+        "data": {
+          "username": "Username",
+          "api_secret": "API secret"
+        }
       },
       "user": {
         "data": {
@@ -25,6 +42,15 @@
   "exceptions": {
     "update_failed": {
       "message": "Could not retrieve data from Last.fm for any of the configured users"
+    },
+    "user_not_authorized": {
+      "message": "{username} is not authorized to scrobble. Use Reconfigure on the integration to authorize them."
+    },
+    "timestamp_out_of_range": {
+      "message": "The timestamp must be in the past 14 days and not in the future."
+    },
+    "scrobble_failed": {
+      "message": "Scrobbling failed: {error}"
     }
   },
   "options": {
@@ -40,6 +66,21 @@
           "users": "[%key:component::lastfm::config::step::friends::data::users%]"
         },
         "description": "[%key:component::lastfm::config::step::friends::description%]"
+      }
+    }
+  },
+  "services": {
+    "scrobble": {
+      "name": "Scrobble",
+      "description": "Manually scrobbles a track to the Last.fm account of the selected user.",
+      "fields": {
+        "artist": { "name": "Artist", "description": "Artist name." },
+        "title": { "name": "Title", "description": "Track name." },
+        "album": { "name": "Album", "description": "Album name." },
+        "timestamp": {
+          "name": "Timestamp",
+          "description": "When the track was played. Defaults to now. Must be within the past 14 days."
+        }
       }
     }
   }

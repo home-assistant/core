@@ -107,6 +107,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
     data: dict[str, Any] = {}
+    _api_secret: str
+    _username: str
+    _auth_url: str
 
     @staticmethod
     @callback
@@ -184,10 +187,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input or {CONF_USERS: []},
             ),
         )
-    
-    _api_secret: str
-    _username: str
-    _auth_url: str
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
