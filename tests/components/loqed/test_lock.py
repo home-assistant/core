@@ -1,11 +1,14 @@
 """Tests the lock platform of the Loqed integration."""
 
+from unittest.mock import patch
+
 import aiohttp
 from loqedAPI import loqed
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.lock import LockService, LockState
+from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -138,3 +141,45 @@ async def test_lock_action_raises_on_communication_failure(
         await hass.services.async_call(
             "lock", service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
+
+
+async def test_coordinator_refresh_updates_lock_state(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test a coordinator refresh awaits the lock state update."""
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    lock.updateState.reset_mock()
+
+    async def update_state(bolt_state: str) -> None:
+        lock.bolt_state = bolt_state
+
+    lock.updateState.side_effect = update_state
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={**lock_status, "bolt_state": "night_lock"},
+    ):
+        await integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    lock.updateState.assert_awaited_once_with("night_lock")
+    state = hass.states.get("lock.home")
+    assert state
+    assert state.state == LockState.LOCKED
+
+
+async def test_coordinator_refresh_without_bolt_state(
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test a refresh without a bolt state does not update the lock state."""
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    lock.updateState.reset_mock()
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock_details",
+        return_value={k: v for k, v in lock_status.items() if k != "bolt_state"},
+    ):
+        await integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    lock.updateState.assert_not_awaited()
