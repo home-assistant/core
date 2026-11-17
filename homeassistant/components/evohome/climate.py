@@ -1,6 +1,6 @@
 """Support for Climate entities of the Evohome integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any, Final, override
 
@@ -392,22 +392,6 @@ class EvoController(EvoClimateEntity):
                 translation_placeholders={"mode": mode},
             ) from err
 
-    async def _set_tcs_mode(
-        self, mode: EvoSystemMode, until: datetime | None = None
-    ) -> None:
-        """Set a Controller to any of its native operating modes."""
-        until = dt_util.as_utc(until) if until else None
-        try:
-            await self.coordinator.call_client_api(
-                self._evo_device.set_mode(mode, until=until)
-            )
-        except evo.InvalidModeRequestError as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_system_mode",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
     @property
     @override
     def hvac_mode(self) -> HVACMode:
@@ -462,12 +446,14 @@ class EvoController(EvoClimateEntity):
             )
         else:
             raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self._set_tcs_mode(evo_mode)
+        await self.async_set_system_mode(evo_mode)
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
-        await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
+        await self.async_set_system_mode(
+            HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO)
+        )
 
     @callback
     @override

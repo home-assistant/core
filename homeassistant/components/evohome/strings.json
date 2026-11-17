@@ -6,9 +6,6 @@
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
     },
-    "invalid_system_mode": {
-      "message": "The requested system mode is not supported: {error}"
-    },
     "mode_cant_be_temporary": {
       "message": "The mode `{mode}` does not support 'Duration' or 'Period'"
     },
