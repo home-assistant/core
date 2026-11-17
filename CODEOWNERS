@@ -942,6 +942,8 @@ AGENTS.md @home-assistant/core
 /tests/components/influxdb/ @mdegat01 @Robbie1221
 /homeassistant/components/infrared/ @home-assistant/core
 /tests/components/infrared/ @home-assistant/core
+/homeassistant/components/infrared_button/ @home-assistant/core
+/tests/components/infrared_button/ @home-assistant/core
 /homeassistant/components/inkbird/ @bdraco
 /tests/components/inkbird/ @bdraco
 /homeassistant/components/input_boolean/ @home-assistant/core

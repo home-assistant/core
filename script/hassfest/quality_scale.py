@@ -1952,6 +1952,7 @@ NO_QUALITY_SCALE = [
     "humidity",
     "illuminance",
     "image_upload",
+    "infrared_button",
     "input_boolean",
     "input_button",
     "input_datetime",

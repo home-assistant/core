@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "no_infrared_emitters": "[%key:common::config_flow::abort::no_infrared_emitters%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "The infrared emitter that sends the commands of this device.",
+          "name": "The name of the device that you control, for example, Living room TV."
+        },
+        "description": "Create a device that you control with infrared commands. After you create it, add a command for each button of your remote.",
+        "title": "Create an infrared device"
+      }
+    }
+  },
+  "config_subentries": {
+    "command": {
+      "abort": {
+        "no_infrared_receivers": "No infrared receiver entities found. Set up an infrared receiver first."
+      },
+      "entry_type": "Command",
+      "error": {
+        "no_signal": "No signal received. Point your remote at the infrared receiver and try again."
+      },
+      "initiate_flow": {
+        "user": "Add command"
+      },
+      "progress": {
+        "wait_for_signal": "Point your remote at the infrared receiver and press the button that you want to learn."
+      },
+      "step": {
+        "name": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "name": "The name of the command, for example, Power."
+          },
+          "description": "The command is learned. Give it a name.",
+          "title": "Name the command"
+        },
+        "user": {
+          "data": {
+            "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          },
+          "data_description": {
+            "infrared_receiver_entity_id": "The infrared receiver that learns the command from your remote."
+          },
+          "description": "After you select **Submit**, you have 30 seconds to press the button on your remote.",
+          "title": "Learn a command"
+        }
+      }
+    }
+  },
+  "title": "Infrared button"
+}

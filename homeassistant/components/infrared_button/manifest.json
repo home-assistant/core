@@ -1,0 +1,12 @@
+{
+  "domain": "infrared_button",
+  "name": "Infrared button",
+  "categories": ["helpers", "buttons_remotes"],
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["infrared"],
+  "documentation": "https://www.home-assistant.io/integrations/infrared_button",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}

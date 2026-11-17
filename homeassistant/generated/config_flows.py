@@ -12,6 +12,7 @@ FLOWS = {
         "generic_thermostat",
         "group",
         "history_stats",
+        "infrared_button",
         "integration",
         "min_max",
         "mold_indicator",
