@@ -335,41 +335,6 @@ def test_get_current_temperature_uses_leaving_water_for_offset() -> None:
     assert entity._get_current_temperature() == 32.5
 
 
-async def test_set_temperature_rejects_missing_operation_mode() -> None:
-    """Reject a temperature write when Daikin omits the operation mode."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(name="Device")
-    object.__setattr__(entity, "_device", device)
-    entity.coordinator = MagicMock()
-    entity.coordinator.async_execute_command = AsyncMock()
-    object.__setattr__(entity, "_attr_native_target_temperature", 20)
-    entity._operation_mode = MagicMock(return_value=None)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_temperature(temperature=21)
-
-    assert err.value.translation_key == "climate_operation_mode_unavailable"
-    entity.coordinator.async_execute_command.assert_not_awaited()
-
-
-async def test_set_temperature_rejects_unavailable_setpoint() -> None:
-    """Reject a temperature write when its setpoint is not writable."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(name="Device")
-    object.__setattr__(entity, "_device", device)
-    entity.coordinator = MagicMock()
-    entity.coordinator.async_execute_command = AsyncMock()
-    object.__setattr__(entity, "_attr_native_target_temperature", 20)
-    entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
-    entity._get_setpoint = MagicMock(return_value=MagicMock(settable=False))
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_temperature(temperature=21)
-
-    assert err.value.translation_key == "climate_temperature_unavailable"
-    entity.coordinator.async_execute_command.assert_not_awaited()
-
-
 async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
     """Reject an unsupported HVAC mode before changing the temperature."""
     entity = object.__new__(DaikinClimate)
@@ -1307,14 +1272,12 @@ async def test_climate_service_updates_entity_state(
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, "gateway_zone_roomTemperature"
     )
-    assert entity_id == "climate.daikin_climate_zone_room_temperature"
+    assert entity_id == "climate.daikin_room_temperature"
     child_entry = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, "gateway_zone"), config_entry.entry_id
     )
-    assert child_entry is not None
-    assert child_entry.name == "Climate zone"
-    assert child_entry.parent_device_id == gateway_entry.id
-    assert entity_registry.async_get(entity_id).device_id == child_entry.id
+    assert child_entry is None
+    assert entity_registry.async_get(entity_id).device_id == gateway_entry.id
 
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -1596,6 +1559,7 @@ async def test_climate_platform_services_and_management_points(
         "living_room": climate_control("living_room", 20),
         "bedroom": climate_control("bedroom", 18),
     }
+    climate_controls["bedroom"].name = None
     device = MagicMock(id="gateway", available=True)
     device.name = "Daikin"
     device.device = SimpleNamespace(
@@ -1646,7 +1610,7 @@ async def test_climate_platform_services_and_management_points(
     assert living_room_device is not None
     assert bedroom_device is not None
     assert living_room_device.name == "Living Room"
-    assert bedroom_device.name == "Bedroom"
+    assert bedroom_device.name == "Climate zone"
 
     async def call_service(service: str, **service_data: str | int | HVACMode) -> None:
         """Call a climate service for the living room entity."""
@@ -1797,6 +1761,18 @@ async def test_climate_platform_services_and_management_points(
         with pytest.raises(ServiceValidationError) as err:
             await call_service(service, **{argument: value})
         assert err.value.translation_key == translation_key
+
+    setpoint = climate_controls["living_room"].setpoint("roomTemperature")
+    assert setpoint is not None
+    setpoint.settable = False
+    with pytest.raises(ServiceValidationError) as err:
+        await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
+    assert err.value.translation_key == "climate_temperature_unavailable"
+
+    climate_controls["living_room"].operation_mode = None
+    with pytest.raises(ServiceValidationError) as err:
+        await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
+    assert err.value.translation_key == "climate_operation_mode_unavailable"
 
     mock_onecta_client.patch_characteristic.assert_not_awaited()
 

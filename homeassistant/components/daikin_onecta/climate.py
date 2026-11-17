@@ -28,7 +28,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import ChildDeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -155,8 +155,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     @property
     @override
-    def device_info(self) -> ChildDeviceInfo:
-        """Return the climate zone as a child of its gateway."""
+    def device_info(self) -> ChildDeviceInfo | DeviceInfo:
+        """Return the gateway or, for multiple zones, its climate zone child."""
+        if len(self._device.device.management_points_by_type("climateControl")) <= 1:
+            return DeviceInfo(identifiers={(DOMAIN, self._device.id)})
+
         assert self._device.ha_device_id is not None
         management_point = self._device.management_point(self._embedded_id)
         assert management_point is not None

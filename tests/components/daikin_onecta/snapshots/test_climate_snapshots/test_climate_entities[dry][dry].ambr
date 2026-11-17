@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_climate_entities[dry][dry]
   dict({
-    'climate.bedroom_1_bedroom_1_room_temperature': dict({
+    'climate.bedroom_1_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -25,11 +25,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000114_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000114')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_1_bedroom_1_room_temperature',
+        'entity_id': 'climate.bedroom_1_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -72,14 +72,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_1_bedroom_1_room_temperature',
+        'entity_id': 'climate.bedroom_1_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'dry',
       }),
     }),
-    'climate.bedroom_2_bedroom_2_room_temperature': dict({
+    'climate.bedroom_2_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -103,11 +103,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000120_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000120')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_2_bedroom_2_room_temperature',
+        'entity_id': 'climate.bedroom_2_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -150,14 +150,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_2_bedroom_2_room_temperature',
+        'entity_id': 'climate.bedroom_2_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.bedroom_3_bedroom_3_room_temperature': dict({
+    'climate.bedroom_3_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -186,11 +186,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000108_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000108')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_3_bedroom_3_room_temperature',
+        'entity_id': 'climate.bedroom_3_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -239,14 +239,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_3_bedroom_3_room_temperature',
+        'entity_id': 'climate.bedroom_3_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.kitchen_kitchen_room_temperature': dict({
+    'climate.kitchen_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -270,11 +270,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000112_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000112')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.kitchen_kitchen_room_temperature',
+        'entity_id': 'climate.kitchen_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -317,14 +317,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.kitchen_kitchen_room_temperature',
+        'entity_id': 'climate.kitchen_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.lounge_lounge_room_temperature': dict({
+    'climate.lounge_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -348,11 +348,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000103_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000103')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.lounge_lounge_room_temperature',
+        'entity_id': 'climate.lounge_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -395,14 +395,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.lounge_lounge_room_temperature',
+        'entity_id': 'climate.lounge_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'dry',
       }),
     }),
-    'climate.master_bathroom_master_bathroom_room_temperature': dict({
+    'climate.master_bathroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -426,11 +426,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000102_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000102')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.master_bathroom_master_bathroom_room_temperature',
+        'entity_id': 'climate.master_bathroom_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -473,14 +473,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.master_bathroom_master_bathroom_room_temperature',
+        'entity_id': 'climate.master_bathroom_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.master_bedroom_master_bedroom_room_temperature': dict({
+    'climate.master_bedroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -504,11 +504,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000119_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000119')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.master_bedroom_master_bedroom_room_temperature',
+        'entity_id': 'climate.master_bedroom_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -551,7 +551,7 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.master_bedroom_master_bedroom_room_temperature',
+        'entity_id': 'climate.master_bedroom_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
