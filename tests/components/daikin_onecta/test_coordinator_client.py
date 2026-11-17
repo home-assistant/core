@@ -1,4 +1,4 @@
-"""Tests for the Daikin Onecta API client."""
+"""Tests for the Daikin Onecta coordinator client adapter."""
 
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch

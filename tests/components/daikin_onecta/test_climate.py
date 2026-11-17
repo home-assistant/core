@@ -975,32 +975,6 @@ async def test_set_fan_mode_rejects_unadvertised_value() -> None:
     entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    ("method", "value"),
-    [
-        ("async_set_swing_mode", SWING_ON),
-        ("async_set_swing_horizontal_mode", SWING_ON),
-        ("async_set_preset_mode", PRESET_BOOST),
-    ],
-)
-async def test_climate_rejects_unavailable_controls(method: str, value: str) -> None:
-    """Reject controls that are not advertised by the device."""
-    entity = object.__new__(DaikinClimate)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_preset_mode", PRESET_NONE)
-    entity._get_swing_modes = MagicMock(return_value=[])
-    entity._get_swing_horizontal_modes = MagicMock(return_value=[])
-    entity._get_preset_modes = MagicMock(return_value=[PRESET_NONE])
-
-    with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)(value)
-
-    assert err.value.translation_key in {
-        "swing_control_unavailable",
-        "preset_mode_unavailable",
-    }
-
-
 async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     """Update the targeted fan mode when polling replaces the active mode."""
     entity = object.__new__(DaikinClimate)
@@ -1587,31 +1561,6 @@ async def test_native_temperature_unit(
     assert entity.native_temperature_unit == expected_unit
 
 
-@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
-async def test_climate_turn_rejects_unknown_power_state(
-    method: str,
-) -> None:
-    """Reject turn actions when Daikin omits the current power value."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(id="device", name="Device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock(return_value=True)
-    climate_control = SimpleNamespace(
-        on_off_mode=SimpleNamespace(value=None, settable=True)
-    )
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    entity.coordinator = coordinator
-    entity._climate_control = MagicMock(return_value=climate_control)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await getattr(entity, method)()
-
-    assert err.value.translation_key == "climate_power_unavailable"
-    coordinator.async_execute_command.assert_not_awaited()
-    coordinator.async_update_listeners.assert_not_called()
-
-
 async def test_climate_platform_services_and_management_points(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1821,6 +1770,54 @@ async def test_climate_platform_services_and_management_points(
         assert state_after_failure is not None
         assert state_after_failure.attributes[state_attribute] == SWING_ON
         mock_onecta_client.patch_characteristic.side_effect = None
+
+    mock_onecta_client.patch_characteristic.reset_mock()
+    unavailable_controls = (
+        (
+            "vertical_swing",
+            SERVICE_SET_SWING_MODE,
+            "swing_mode",
+            SWING_OFF,
+            "swing_control_unavailable",
+        ),
+        (
+            "horizontal_swing",
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            "swing_horizontal_mode",
+            SWING_OFF,
+            "swing_control_unavailable",
+        ),
+        (
+            "preset",
+            SERVICE_SET_PRESET_MODE,
+            "preset_mode",
+            PRESET_BOOST,
+            "preset_mode_unavailable",
+        ),
+    )
+    for control, service, argument, value, translation_key in unavailable_controls:
+        if control == "preset":
+            characteristic = climate_controls["living_room"].mode_characteristic(
+                "powerfulMode"
+            )
+            assert characteristic is not None
+            characteristic.settable = False
+        else:
+            direction = (
+                "vertical" if control == "vertical_swing" else "horizontal"
+            )
+            fan_operation = climate_controls["living_room"].fan_operation()
+            assert fan_operation is not None
+            assert fan_operation.fan_direction is not None
+            axis = getattr(fan_operation.fan_direction, direction)
+            assert axis is not None
+            axis.current_mode.settable = False
+
+        with pytest.raises(ServiceValidationError) as err:
+            await call_service(service, **{argument: value})
+        assert err.value.translation_key == translation_key
+
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 async def test_setup_creates_entities_per_management_point(
