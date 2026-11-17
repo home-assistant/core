@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "api_disabled": "API endpoint disabled",
+      "api_disabled": "API endpoint disabled. Please visit app.watercryst.com and navigate to your device. Under 'Smart Home API' enable the API for your device and/or your specific API endpoint.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -15,7 +15,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "BIOCAT Smart Home API Key"
+          "api_key": "BIOCAT Smart Home API Endpoint Key. Please visit app.watercryst.com and navigate to your device. Under 'Smart Home API' copy the key for your API endpoint."
         }
       }
     }
