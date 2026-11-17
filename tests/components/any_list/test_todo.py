@@ -17,7 +17,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -61,7 +61,7 @@ async def test_add_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Apples", ATTR_DESCRIPTION: "Honeycrisp"},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -89,7 +89,7 @@ async def test_update_item(
             ATTR_STATUS: "completed",
             ATTR_DESCRIPTION: "Unsweetened",
         },
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -117,7 +117,7 @@ async def test_delete_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ITEM_ID},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -169,7 +169,7 @@ async def test_todo_action_errors(
             TODO_DOMAIN,
             service,
             data,
-            target={ATTR_ENTITY_ID: ENTITY_ID},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
