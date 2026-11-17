@@ -1,8 +1,24 @@
 """Update entity for Tasmota."""
 
+import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from http import HTTPStatus
+import logging
 import re
 from typing import Any, override
+
+import aiohttp
+from hatasmota.update import (
+    TasmotaFirmware,
+    TasmotaUpdate,
+    TasmotaUpdateConfig,
+    UpgradeResult,
+    UpgradeState,
+    get_install_blocker,
+    is_official_ota_url,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -11,16 +27,41 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_track_device_registry_updated_event
+from homeassistant.helpers.event import (
+    async_call_later,
+    async_track_device_registry_updated_event,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_REMOVE_DISCOVER_COMPONENT
+from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN
 from .coordinator import TasmotaConfigEntry, TasmotaLatestReleaseUpdateCoordinator
 from .discovery import TASMOTA_DISCOVERY_DEVICE_DISCOVERED
+
+_LOGGER = logging.getLogger(__name__)
+
+# Time the device has to answer an OtaUrl command
+COMMAND_TIMEOUT = 10
+# Time to check that the firmware image can be downloaded
+DOWNLOAD_CHECK_TIMEOUT = 10
+# Time the device has to download the image, restart and report a new version
+INSTALL_TIMEOUT = timedelta(minutes=10)
+
+
+def _error(
+    translation_key: str, placeholders: dict[str, str] | None = None
+) -> HomeAssistantError:
+    """Return a translated install error."""
+    return HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key=translation_key,
+        translation_placeholders=placeholders,
+    )
 
 
 async def async_setup_entry(
@@ -29,22 +70,34 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota update entities."""
-    coordinator = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     device_registry = dr.async_get(hass)
-    added_macs: set[str] = set()
+    entities: dict[str, TasmotaUpdateEntity] = {}
 
     @callback
-    def async_device_discovered(mac: str) -> None:
-        """Create update entity for a newly discovered Tasmota device."""
-        if mac not in added_macs and (
-            device := device_registry.async_get_device_by_connection(
-                (CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
-            )
+    def async_device_discovered(mac: str, update_config: TasmotaUpdateConfig) -> None:
+        """Create or update the update entity of a discovered Tasmota device."""
+        if (entity := entities.get(mac)) is not None:
+            entity.async_discovery_update(update_config)
+            return
+        if device := device_registry.async_get_device_by_connection(
+            (CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
         ):
-            added_macs.add(mac)
-            entity = TasmotaUpdateEntity(coordinator, device)
-            entity.async_on_remove(lambda: added_macs.discard(mac))
+            entity = TasmotaUpdateEntity(
+                runtime_data.coordinator,
+                device,
+                TasmotaUpdate(
+                    config=update_config, mqtt_client=runtime_data.mqtt_client
+                ),
+            )
+            entities[mac] = entity
+
+            @callback
+            def _async_forget_entity() -> None:
+                entities.pop(mac, None)
+
+            entity.async_on_remove(_async_forget_entity)
             async_add_entities([entity])
 
     hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(Platform.UPDATE)] = (
@@ -54,6 +107,15 @@ async def async_setup_entry(
             async_device_discovered,
         )
     )
+
+
+@dataclass
+class _Install:
+    """State of a running firmware install."""
+
+    previous_version: str
+    ota_url: str
+    done: asyncio.Future[None]
 
 
 class TasmotaUpdateEntity(
@@ -72,6 +134,7 @@ class TasmotaUpdateEntity(
         self,
         coordinator: TasmotaLatestReleaseUpdateCoordinator,
         device_entry: DeviceEntry,
+        tasmota_update: TasmotaUpdate,
     ) -> None:
         """Initialize the Tasmota update entity."""
         super().__init__(coordinator=coordinator)
@@ -82,13 +145,20 @@ class TasmotaUpdateEntity(
                 self._connection = (connection_type, connection_value)
                 self._attr_unique_id = connection_value
                 break
+        self._tasmota_update = tasmota_update
+        self._device_online = False
+        self._removed = False
+        self._install: _Install | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to device-registry updates for firmware changes."""
+        """Subscribe to device-registry updates and to the device's MQTT topics."""
         await super().async_added_to_hass()
-        if self.hass is None:
-            return
+        self._tasmota_update.set_on_state_callback(self._firmware_updated)
+        self._tasmota_update.set_on_restart_callback(self._device_restarted)
+        self._tasmota_update.set_on_availability_callback(self._availability_updated)
+        self._tasmota_update.set_on_upgrade_callback(self._upgrade_updated)
+        await self._tasmota_update.subscribe_topics()
         device = dr.async_get(self.hass).async_get_device_by_connection(
             self._connection, self._config_entry_id
         )
@@ -102,6 +172,30 @@ class TasmotaUpdateEntity(
         )
         self.async_on_remove(self._unsubscribe_device_updates)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT and abort a running install."""
+        self._removed = True
+        self._async_finish_install(_error("install_interrupted"))
+        await self._tasmota_update.unsubscribe_topics()
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def async_discovery_update(self, update_config: TasmotaUpdateConfig) -> None:
+        """Handle an updated discovery message of the device."""
+        if self._tasmota_update.config_same(update_config):
+            return
+        self._tasmota_update.config_update(update_config)
+        if self.hass is not None and not self._removed:
+            self.hass.async_create_task(self._async_resubscribe(), eager_start=True)
+
+    async def _async_resubscribe(self) -> None:
+        """Subscribe to the topics of an updated discovery message."""
+        await self._tasmota_update.subscribe_topics()
+        if self._removed:
+            # Removed while subscribing
+            await self._tasmota_update.unsubscribe_topics()
+
     @callback
     def _handle_device_registry_update(
         self, event: Event[dr.EventDeviceRegistryUpdatedData]
@@ -113,6 +207,14 @@ class TasmotaUpdateEntity(
         changes = data.get("changes", {})
         if not isinstance(changes, dict) or "sw_version" not in changes:
             return
+        # Discovery is only sent by complete firmware images, never by the
+        # minimal or safeboot image a device runs during its upgrade
+        if (
+            self._install is not None
+            and (installed_version := self.installed_version) is not None
+            and installed_version != self._install.previous_version
+        ):
+            self._async_finish_install()
         self.async_write_ha_state()
 
     @callback
@@ -121,6 +223,196 @@ class TasmotaUpdateEntity(
         if self._unsub_tasmota_device_updates is not None:
             self._unsub_tasmota_device_updates()
             self._unsub_tasmota_device_updates = None
+
+    @callback
+    def _firmware_updated(self, firmware: TasmotaFirmware) -> None:
+        """Handle firmware details reported in STATUS2 or INFO1."""
+        install = self._install
+        if install is None or not firmware.is_intermediate:
+            # Keep the features while the device runs an intermediate image
+            self._update_install_feature(firmware)
+        if (
+            install is not None
+            and not firmware.is_intermediate
+            and firmware.version != install.previous_version
+        ):
+            self._async_finish_install()
+        self.async_write_ha_state()
+
+    def _update_install_feature(self, firmware: TasmotaFirmware) -> None:
+        """Offer install only for official release builds."""
+        blocker = get_install_blocker(firmware)
+        if blocker is None and not self._tasmota_update.deep_sleep_enabled:
+            self._attr_supported_features |= UpdateEntityFeature.INSTALL
+            return
+        _LOGGER.debug(
+            "%s: no firmware install for %s(%s): %s",
+            self.entity_id,
+            firmware.version,
+            firmware.image,
+            blocker or "deep sleep",
+        )
+        self._attr_supported_features &= ~UpdateEntityFeature.INSTALL
+
+    @callback
+    def _device_restarted(self, firmware: TasmotaFirmware) -> None:
+        """Handle a device which has booted, as told by INFO1.
+
+        A minimal or safeboot image is a step of the device's own upgrade.
+        """
+        if (install := self._install) is None or firmware.is_intermediate:
+            return
+        if firmware.version != install.previous_version:
+            self._async_finish_install()
+        else:
+            self._async_finish_install(
+                _error("same_version", {"version": firmware.version})
+            )
+
+    async def _availability_updated(self, available: bool) -> None:
+        """Track whether the device is online."""
+        self._device_online = available
+
+    @callback
+    def _upgrade_updated(self, result: UpgradeResult) -> None:
+        """Handle an upgrade state reported by the device."""
+        if (install := self._install) is None:
+            return
+        if result.state in (UpgradeState.FAILED, UpgradeState.REJECTED):
+            self._async_finish_install(
+                _error("upgrade_failed", {"message": result.message})
+            )
+        elif result.state is UpgradeState.STARTED and result.url != install.ota_url:
+            # The OtaUrl was changed after it was checked
+            self._async_finish_install(
+                _error("upgrade_url_mismatch", {"url": str(result.url)})
+            )
+
+    @callback
+    def _async_install_timeout(self, _now: datetime) -> None:
+        """Fail the install if the device did not report a new version in time."""
+        self._async_finish_install(
+            _error(
+                "install_timeout",
+                {"minutes": str(int(INSTALL_TIMEOUT.total_seconds() // 60))},
+            )
+        )
+
+    @callback
+    def _async_finish_install(self, error: HomeAssistantError | None = None) -> None:
+        """Finish a running install, with an error if it failed."""
+        if self._install is None or self._install.done.done():
+            return
+        if error is None:
+            self._install.done.set_result(None)
+        else:
+            self._install.done.set_exception(error)
+
+    @override
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Let the device download the latest release from ota.tasmota.com."""
+        firmware = self._tasmota_update.firmware
+        if (
+            firmware is None
+            or get_install_blocker(firmware) is not None
+            or self._tasmota_update.deep_sleep_enabled
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="install_not_supported",
+                translation_placeholders={
+                    "version": firmware.version if firmware else "unknown"
+                },
+            )
+        command_topic = self._tasmota_update.command_topic
+        if ir.async_get(self.hass).async_get_issue(
+            DOMAIN, f"topic_duplicated_{command_topic}"
+        ):
+            # Every device on the topic would act on OtaUrl and Upgrade
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="topic_duplicated",
+                translation_placeholders={"topic": command_topic},
+            )
+        if not self._device_online:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="device_offline"
+            )
+        try:
+            previous_ota_url = await self._tasmota_update.get_ota_url(COMMAND_TIMEOUT)
+        except TimeoutError as err:
+            raise _error("no_response") from err
+        ota_url: str | None = None
+        try:
+            ota_url = await self._async_reset_ota_url()
+            await self._async_verify_ota_url(ota_url, firmware)
+            await self._async_upgrade(firmware, ota_url)
+        except HomeAssistantError:
+            if not self._removed and previous_ota_url not in ("", ota_url):
+                await self._async_restore_ota_url(previous_ota_url)
+            raise
+
+    async def _async_reset_ota_url(self) -> str:
+        """Let the device report the OtaUrl its firmware was built with.
+
+        For official builds this is the image of the device's own variant.
+        """
+        try:
+            return await self._tasmota_update.reset_ota_url(COMMAND_TIMEOUT)
+        except TimeoutError as err:
+            raise _error("no_response") from err
+
+    async def _async_verify_ota_url(self, url: str, firmware: TasmotaFirmware) -> None:
+        """Check that url is the official image for the device and available."""
+        if not is_official_ota_url(url, firmware):
+            raise _error("unexpected_ota_url", {"url": url})
+        session = async_get_clientsession(self.hass)
+        try:
+            # ota.tasmota.com serves the images directly. A redirect is not
+            # followed by the ESP8266 HTTP client, so it counts as unavailable.
+            async with session.head(
+                url,
+                allow_redirects=False,
+                timeout=aiohttp.ClientTimeout(total=DOWNLOAD_CHECK_TIMEOUT),
+            ) as response:
+                status = response.status
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise _error(
+                "download_check_failed",
+                {"url": url, "error": str(err) or type(err).__name__},
+            ) from err
+        if status != HTTPStatus.OK:
+            raise _error("firmware_not_available", {"url": url, "status": str(status)})
+
+    async def _async_upgrade(self, firmware: TasmotaFirmware, ota_url: str) -> None:
+        """Send Upgrade 1 and wait until the device reports the result."""
+        if self._removed:
+            raise _error("install_interrupted")
+        self._install = _Install(
+            previous_version=firmware.version,
+            ota_url=ota_url,
+            done=self.hass.loop.create_future(),
+        )
+        cancel_timeout = async_call_later(
+            self.hass, INSTALL_TIMEOUT, self._async_install_timeout
+        )
+        try:
+            await self._tasmota_update.start_upgrade()
+            await self._install.done
+        finally:
+            cancel_timeout()
+            self._install = None
+
+    async def _async_restore_ota_url(self, previous_url: str) -> None:
+        """Restore the OtaUrl the device had before a failed install."""
+        try:
+            await self._tasmota_update.set_ota_url(previous_url, COMMAND_TIMEOUT)
+        except TimeoutError, ValueError:
+            _LOGGER.warning(
+                "%s: could not restore OtaUrl %s", self.entity_id, previous_url
+            )
 
     @property
     @override

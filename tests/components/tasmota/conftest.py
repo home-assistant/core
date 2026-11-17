@@ -61,6 +61,25 @@ def mock_github_api():
         yield
 
 
+@pytest.fixture
+def update_entity_mqtt_disabled() -> bool:
+    """Fixture to allow enabling MQTT for the firmware update entity."""
+    return True
+
+
+@pytest.fixture(autouse=True)
+def disable_update_entity_mqtt(update_entity_mqtt_disabled: bool):
+    """Keep the firmware update entity off MQTT.
+
+    Its subscriptions and STATUS2 polls would disturb tests of other platforms.
+    """
+    if not update_entity_mqtt_disabled:
+        yield
+        return
+    with patch("hatasmota.update.TasmotaUpdate.subscribe_topics"):
+        yield
+
+
 async def setup_tasmota_helper(hass: HomeAssistant) -> None:
     """Set up Tasmota."""
     hass.config.components.add("tasmota")

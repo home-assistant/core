@@ -18,6 +18,7 @@ from hatasmota.entity import TasmotaEntityConfig
 from hatasmota.models import DiscoveryHashType, TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 from hatasmota.sensor import TasmotaBaseSensorConfig
+from hatasmota.update import TasmotaUpdateConfig
 from hatasmota.utils import get_topic_command, get_topic_stat
 
 from homeassistant.components import sensor
@@ -301,7 +302,12 @@ async def async_start(  # noqa: C901
             for tasmota_entity_config, discovery_hash in tasmota_entities:
                 _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
-        async_dispatcher_send(hass, TASMOTA_DISCOVERY_DEVICE_DISCOVERED, mac)
+        async_dispatcher_send(
+            hass,
+            TASMOTA_DISCOVERY_DEVICE_DISCOVERED,
+            mac,
+            TasmotaUpdateConfig.from_discovery_message(payload),
+        )
 
     async def async_sensors_discovered(
         sensors: list[tuple[TasmotaBaseSensorConfig, DiscoveryHashType]], mac: str

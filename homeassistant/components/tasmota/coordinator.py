@@ -1,5 +1,6 @@
 """Data update coordinators for Tasmota."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -11,13 +12,14 @@ from aiogithubapi import (
     GitHubRatelimitException,
     GitHubReleaseModel,
 )
+from hatasmota.mqtt import TasmotaMQTTClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-type TasmotaConfigEntry = ConfigEntry[TasmotaLatestReleaseUpdateCoordinator]
+type TasmotaConfigEntry = ConfigEntry[TasmotaData]
 
 
 class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
@@ -48,3 +50,11 @@ class TasmotaLatestReleaseUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseM
             raise UpdateFailed(ex) from ex
         else:
             return response.data
+
+
+@dataclass
+class TasmotaData:
+    """Runtime data of the Tasmota config entry."""
+
+    coordinator: TasmotaLatestReleaseUpdateCoordinator
+    mqtt_client: TasmotaMQTTClient

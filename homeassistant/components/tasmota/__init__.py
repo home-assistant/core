@@ -31,7 +31,11 @@ from .const import (
     DATA_UNSUB,
     PLATFORMS,
 )
-from .coordinator import TasmotaConfigEntry, TasmotaLatestReleaseUpdateCoordinator
+from .coordinator import (
+    TasmotaConfigEntry,
+    TasmotaData,
+    TasmotaLatestReleaseUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,13 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TasmotaConfigEntry) -> N
 
     device_registry = dr.async_get(hass)
 
-    entry.runtime_data = TasmotaLatestReleaseUpdateCoordinator(hass, entry)
+    entry.runtime_data = TasmotaData(
+        coordinator=TasmotaLatestReleaseUpdateCoordinator(hass, entry),
+        mqtt_client=tasmota_mqtt,
+    )
 
     # Do a fire-and-forget first background refresh of firmware update availability.
     # This is of secondary importance for this integration,
     # and we don't want it to delay the setup even if it happens to take some time.
     entry.async_create_task(
-        hass, entry.runtime_data.async_refresh(), name="Tasmota latest release refresh"
+        hass,
+        entry.runtime_data.coordinator.async_refresh(),
+        name="Tasmota latest release refresh",
     )
 
     async def async_discover_device(config: TasmotaDeviceConfig, mac: str) -> None:
