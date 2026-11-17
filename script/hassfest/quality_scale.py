@@ -967,7 +967,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "yamaha_musiccast",
     "yandex_transport",
     "yandextts",
-    "yardian",
     "yeelight",
     "yeelightsunflower",
     "yi",
