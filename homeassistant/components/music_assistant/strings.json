@@ -277,6 +277,9 @@
       "ir_repeater": {
         "name": "IR repeater"
       },
+      "ir_signal_light": {
+        "name": "IR signal light"
+      },
       "loudness": {
         "name": "Loudness"
       },
@@ -288,9 +291,6 @@
       },
       "pure_direct": {
         "name": "Pure direct"
-      },
-      "remote_led_feedback": {
-        "name": "Status light on remote control"
       },
       "speaker_a": {
         "name": "Speaker A"
