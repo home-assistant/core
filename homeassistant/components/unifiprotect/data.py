@@ -311,13 +311,16 @@ class ProtectData:
         # arriving while update_public() primes are buffered and replayed by
         # the library, so the subscribe/prime order is not load-bearing.
         self._unsubs = [
-            api.subscribe_devices_websocket(
-                self._async_process_public_devices_ws_message
-            ),
+            # State callbacks first: unsubscribing the last message callback
+            # stops the websocket, and its disconnect would mark the entities
+            # unavailable at shutdown.
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
             # The events websocket is public in both modes (see
             # ``async_subscribe_public_events``), so track its state in both.
             api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
             api.subscribe_public_resync(self._async_public_resync_done),
         ]
         if api.is_public_only:
@@ -669,6 +672,9 @@ class ProtectData:
                 self._auth_failures += 1
             else:
                 await self.async_stop()
+                # The stopped public websockets no longer report their state.
+                self.last_public_update_success = False
+                self._async_process_public_updates()
                 _LOGGER.exception("Reauthentication required")
                 self._entry.async_start_reauth(self._hass)
             self._async_update_change(False, exception=ex)
