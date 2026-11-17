@@ -148,7 +148,10 @@ async def test_bluetooth_discovery_no_longer_present(hass: HomeAssistant) -> Non
     assert result["reason"] == "no_longer_present"
 
 
-async def test_bluetooth_discovery_skips_ignored_entries(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_bluetooth_discovery_skips_ignored_entries(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test an ignored entry for another mower does not claim this one."""
     MockConfigEntry(
         domain=DOMAIN, source=SOURCE_IGNORE, unique_id="11:22:33:44:55:66"
@@ -159,6 +162,16 @@ async def test_bluetooth_discovery_skips_ignored_entries(hass: HomeAssistant) ->
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_ID
+    assert result["data"][CONF_BLE_DEVICES] == {DEFAULT_NAME: DEFAULT_MAC}
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -331,10 +344,12 @@ async def test_user_step_discovered_mower(
     mock_setup_entry.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_offers_only_new_mowers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
 ) -> None:
     """Test the picker leaves out ignored, owned and unsupported devices."""
     MockConfigEntry(
@@ -366,8 +381,25 @@ async def test_user_step_offers_only_new_mowers(
         "99:88:77:66:55:44": "Yuka-NEW"
     }
 
+    mock_mammotion_http.login_info = OTHER_LOGIN_INFO
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ADDRESS: "99:88:77:66:55:44"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "other@example.com", CONF_PASSWORD: "password"},
+    )
 
-async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "other_user"
+    assert result["data"][CONF_BLE_DEVICES] == {"Yuka-NEW": "99:88:77:66:55:44"}
+    assert result["result"].state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_user_step_no_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test the user step goes straight to the login without discovered mowers."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -375,6 +407,15 @@ async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_ID
+    assert CONF_BLE_DEVICES not in result["data"]
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -428,7 +469,10 @@ async def test_wifi_step_alias_of_configured_account(
     mock_mammotion_http.login_v2.assert_awaited_once_with("+64211234567", "pw")
 
 
-async def test_user_step_skips_ignored_mower(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_user_step_skips_ignored_mower(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test a mower whose discovery was ignored is not offered again."""
     MockConfigEntry(
         domain=DOMAIN, source=SOURCE_IGNORE, unique_id=DEFAULT_MAC
@@ -442,6 +486,15 @@ async def test_user_step_skips_ignored_mower(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_ID
+    assert CONF_BLE_DEVICES not in result["data"]
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(("failure", "expected_error"), LOGIN_ERRORS)
