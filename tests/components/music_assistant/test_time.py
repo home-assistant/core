@@ -91,7 +91,10 @@ async def test_set_value_action(
     )
 
     music_assistant_client.send_command.assert_called_once_with(
-        "players/sleep_timer/set", player_id=MASS_PLAYER_ID, seconds=expected_seconds
+        "players/sleep_timer/set",
+        player_id=MASS_PLAYER_ID,
+        seconds=expected_seconds,
+        require_schema=None,
     )
 
 
