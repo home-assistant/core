@@ -223,7 +223,8 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await mammotion_http.login_v2(account, password)
-        except ClientError, TimeoutError, OSError:
+        except (ClientError, OSError) as err:
+            LOGGER.debug("Cannot connect: %s", err)
             errors["base"] = "cannot_connect"
             return errors, None
         except Exception:  # noqa: BLE001

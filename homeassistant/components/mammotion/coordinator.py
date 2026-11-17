@@ -149,7 +149,8 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
         """Get data from the device."""
         try:
             data = await self.api.update(self.device_name)
-        except DeviceOfflineException, NoTransportAvailableError:
+        except (DeviceOfflineException, NoTransportAvailableError) as err:
+            LOGGER.debug("Keeping last state of %s: %s", self.device_name, err)
             return self.data
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
