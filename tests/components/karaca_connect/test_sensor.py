@@ -6,16 +6,17 @@ from unittest.mock import AsyncMock
 from karaca_connect_client import KaracaConnectionError
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.karaca_connect.const import DOMAIN, UPDATE_INTERVAL_SECONDS
+from homeassistant.components.karaca_connect.const import (
+    DOMAIN,
+    UPDATE_INTERVAL_SECONDS,
+)
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 
-async def _setup_sensor(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> str:
+async def _setup_sensor(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     """Set up the sensor and return its registered entity ID."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
