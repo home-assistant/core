@@ -65,17 +65,17 @@ class LyngdorfRemote(LyngdorfEntity, RemoteEntity):
     @property
     def is_on(self) -> bool | None:
         """Return whether the device is on."""
-        return self._receiver.power_on
+        return self._receiver.power.value
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self._receiver.set_power(True)
+        await self._receiver.power.set(True)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._receiver.set_power(False)
+        await self._receiver.power.set(False)
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
