@@ -6,17 +6,16 @@ from unittest.mock import AsyncMock, patch
 from pyoverkiz.converter import converter
 from pyoverkiz.models import PersistedActionGroup
 import pytest
+from pytest_homeassistant.common import load_json_array_fixture, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, Platform
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOverkizClient, SetupOverkizIntegration
-
-from tests.common import load_json_array_fixture, snapshot_platform
 
 SCENARIO_FIXTURES = [
     "scenarios/cozytouch.json",
@@ -69,8 +68,8 @@ async def test_scene_activate(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.i_m_arriving"},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "scene.i_m_arriving"},
         blocking=True,
     )
 
@@ -93,8 +92,8 @@ async def test_scene_activate_multiple(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.label_1"},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "scene.label_1"},
         blocking=True,
     )
 
@@ -106,8 +105,8 @@ async def test_scene_activate_multiple(
 
     await hass.services.async_call(
         SCENE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "scene.label_2"},
+        SceneService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "scene.label_2"},
         blocking=True,
     )
 

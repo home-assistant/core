@@ -4,19 +4,18 @@ from unittest.mock import AsyncMock
 
 from pyairobotrest.exceptions import AirobotError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -44,10 +43,10 @@ async def test_number_set_hysteresis_band(
     """Test setting hysteresis band value."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "number.test_thermostat_hysteresis_band",
-            ATTR_VALUE: 0.3,
+            CommonServiceArgument.ENTITY_ID: "number.test_thermostat_hysteresis_band",
+            NumberServiceArgument.VALUE: 0.3,
         },
         blocking=True,
     )
@@ -66,10 +65,10 @@ async def test_number_set_value_error(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: "number.test_thermostat_hysteresis_band",
-                ATTR_VALUE: 0.3,
+                CommonServiceArgument.ENTITY_ID: "number.test_thermostat_hysteresis_band",
+                NumberServiceArgument.VALUE: 0.3,
             },
             blocking=True,
         )

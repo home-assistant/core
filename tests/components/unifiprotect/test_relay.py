@@ -19,16 +19,14 @@ from uiprotect.data import (
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -537,16 +535,16 @@ async def test_relay_channel_devices_ws_disconnect_reconnect_resync(
     await hass.async_block_till_done()
     assert _state(hass, channel.entity_id) == STATE_UNAVAILABLE
 
-    async def resync_public_bootstrap() -> Mock:
-        _set_channel_state(relay, channel, channel.on)
-        return ufp.api.public_bootstrap
-
-    ufp.api.update_public.side_effect = resync_public_bootstrap
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    # Back from the pre-disconnect cache until the library resync lands.
+    assert _state(hass, channel.entity_id) == STATE_OFF
+
+    _set_channel_state(relay, channel, channel.on)
+    ufp.public_resync()
     await hass.async_block_till_done()
 
     assert _state(hass, channel.entity_id) == STATE_ON
-    ufp.api.update_public.assert_awaited()
 
 
 @_CHANNELS
@@ -585,14 +583,12 @@ async def test_public_only_relay_channels_resignaled_after_reconnect(
     await setup_public_only()
     assert hass.states.get(BINARY_SENSOR_ENTITY_ID) is None
 
-    async def resync_public_bootstrap() -> Mock:
-        relay.inputs = [_make_input()]
-        return public_bootstrap
-
-    ufp_public_only.api.update_public.side_effect = resync_public_bootstrap
     assert ufp_public_only.devices_ws_state_subscription is not None
     ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    # The library resync applies the new input silently.
+    relay.inputs = [_make_input()]
+    ufp_public_only.public_resync()
     await hass.async_block_till_done()
 
     state = hass.states.get(BINARY_SENSOR_ENTITY_ID)
@@ -657,8 +653,8 @@ async def test_relay_readopted_with_new_id(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -676,21 +672,18 @@ async def test_relay_readopted_during_websocket_outage(
     readopted.id = "relay-id-2"
     _set_channel_state(readopted, _OUTPUT, RelayOutputState.ON)
 
-    async def resync_public_bootstrap() -> Mock:
-        ufp.api.public_bootstrap.relays = {readopted.id: readopted}
-        return ufp.api.public_bootstrap
-
-    ufp.api.update_public.side_effect = resync_public_bootstrap
     assert ufp.devices_ws_state_subscription is not None
     ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.api.public_bootstrap.relays = {readopted.id: readopted}
+    ufp.public_resync(added=[readopted], removed=[relay])
     await hass.async_block_till_done()
 
     assert _state(hass, SWITCH_ENTITY_ID) == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
@@ -741,8 +734,8 @@ async def test_relay_switch_turn_on_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="on")
@@ -750,8 +743,8 @@ async def test_relay_switch_turn_on_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(output_id, state="off")
@@ -777,8 +770,8 @@ async def test_relay_switch_command_error_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
 
@@ -812,8 +805,8 @@ async def test_relay_switch_command_without_output_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
             blocking=True,
         )
     relay.activate_output.assert_not_awaited()
@@ -941,8 +934,8 @@ async def test_relay_switch_public_only(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: SWITCH_ENTITY_ID},
         blocking=True,
     )
     relay.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")

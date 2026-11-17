@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from httpx2 import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CONFIG
-
-from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],
@@ -53,7 +52,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
             return_value=[DEVICE, SECOND_DEVICE],
         ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG
@@ -95,7 +94,7 @@ async def test_user_flow_errors(
             "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
             return_value=[DEVICE],
         ),
-        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=INPUT_CONFIG

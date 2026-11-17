@@ -4,22 +4,23 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.lg.ac import LGACCode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lg_infrared.const import LGDeviceType
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 _ION_ENTITY_ID = "switch.lg_ac_ion_generator"
 _AUTO_CLEAN_ENTITY_ID = "switch.lg_ac_auto_clean"
@@ -81,7 +82,10 @@ async def test_switch_sends_correct_code(
 ) -> None:
     """Test turning a switch on and off sends the matching discrete IR codes."""
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
@@ -93,7 +97,10 @@ async def test_switch_sends_correct_code(
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 2

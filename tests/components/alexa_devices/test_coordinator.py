@@ -9,6 +9,7 @@ from aioamazondevices.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -19,8 +20,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_coordinator_stale_device(

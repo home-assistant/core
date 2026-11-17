@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_CONNECTED, AppleTvConfigEntry
+from . import AppleTvConfigEntry
+from .const import SIGNAL_CONNECTED
 from .entity import AppleTVEntity
 
 PARALLEL_UPDATES = 0

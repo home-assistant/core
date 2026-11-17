@@ -1,10 +1,10 @@
 """Tests for the Envertech EVT800 integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.envertech_evt800.const import TYPE_TCP_SERVER_MODE
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE = {
     "manufacturer": "Envertech",

@@ -1,5 +1,6 @@
 """Tests for script.quality_scale_review.__main__."""
 
+from dataclasses import replace
 import json
 from pathlib import Path
 
@@ -172,6 +173,28 @@ def test_skips_a_pull_request_without_a_quality_scale(
     assert results["domains"] == []
     assert not (tmp_path / "pr-diff.patch").exists()
     assert not (tmp_path / "rules-index.txt").exists()
+
+
+def test_skips_a_pull_request_that_only_changes_snapshots(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Snapshots are left out of the diff, so they do not make a domain touched."""
+    pr = replace(
+        _pull_request(1, 1, 1, snapshot_lines=2, snapshot_files=1),
+        file_statuses={
+            "tests/components/peblar/snapshots/test_sensor.ambr": "modified"
+        },
+    )
+    monkeypatch.setattr(github_api, "fetch_pull_request", lambda *args: pr)
+    monkeypatch.setattr(integrations, "with_quality_scale", lambda domains, *a: domains)
+
+    assert __main__.main(["--pr-number", "42", "--output", str(tmp_path)]) == 0
+
+    results = json.loads((tmp_path / "results.json").read_text())
+    assert results["skip"] is True
+    assert results["too_long"] is False
+    assert results["domains"] == []
+    assert not (tmp_path / "pr-diff.patch").exists()
 
 
 def test_skips_a_pull_request_that_is_too_long(

@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from wled import Releases, WLEDError, WLEDUpgradeError
 
@@ -17,7 +23,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_URL,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.components.wled import WLED_KEY
 from homeassistant.components.wled.const import (
@@ -32,6 +38,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -39,13 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -121,8 +121,8 @@ async def test_update_error(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
 
@@ -148,8 +148,8 @@ async def test_update_stay_stable(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -174,8 +174,8 @@ async def test_update_beta_to_stable(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgbw_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgbw_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -199,8 +199,8 @@ async def test_update_stay_beta(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
@@ -328,8 +328,8 @@ async def test_update_install_refused(
     ) as exc_info:
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.wled_rgb_light_firmware"},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: "update.wled_rgb_light_firmware"},
             blocking=True,
         )
 

@@ -15,6 +15,7 @@ from elgato import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.elgato.const import (
@@ -33,7 +34,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
-    SERVICE_INSTALL,
+    UpdateService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -44,13 +45,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "update.frenck_firmware"
 
@@ -160,8 +160,8 @@ async def test_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -201,8 +201,8 @@ async def test_install_that_never_comes_back(
     """
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -229,8 +229,8 @@ async def test_install_on_a_device_that_stays_away(
     """
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -259,8 +259,8 @@ async def test_a_second_install_is_turned_away(
         *[
             hass.services.async_call(
                 UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: ENTITY_ID},
+                UpdateService.INSTALL,
+                {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
                 blocking=True,
             )
             for _ in range(2)
@@ -302,8 +302,8 @@ async def test_catalog_refresh_during_an_install(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -344,8 +344,8 @@ async def test_download_does_not_hold_the_device(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -373,8 +373,8 @@ async def test_device_page_follows_the_firmware(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -404,8 +404,8 @@ async def test_install_error(
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -474,8 +474,8 @@ async def test_download_failure_leaves_the_light_alone(
     with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -500,8 +500,8 @@ async def test_install_rejected_by_the_device(
     with pytest.raises(HomeAssistantError, match="Battery is at 11%"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
-            SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            UpdateService.INSTALL,
+            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -542,8 +542,8 @@ async def test_install_keeps_the_device_to_itself(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -610,8 +610,8 @@ async def test_install_keeps_the_device_from_everyone(
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        UpdateService.INSTALL,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

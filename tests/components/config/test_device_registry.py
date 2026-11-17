@@ -5,6 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.config import DOMAIN, device_registry
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="client")

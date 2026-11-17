@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera.const import (
     DATA_CAMERA_PREFS,
@@ -18,8 +19,6 @@ from homeassistant.components.stream import Orientation
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed
 
 
 async def test_get_dynamic_camera_stream_settings_missing_prefs(

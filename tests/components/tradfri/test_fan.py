@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 
@@ -191,3 +192,16 @@ async def test_services(
     assert state.state == expected_state
     assert state.attributes[ATTR_PERCENTAGE] == expected_percentage
     assert state.attributes[ATTR_PRESET_MODE] == expected_preset_mode
+
+
+@pytest.mark.parametrize("device", ["air_purifier_without_values"], indirect=True)
+@pytest.mark.usefixtures("device")
+async def test_fan_without_values(hass: HomeAssistant) -> None:
+    """Test a fan whose control reports no values."""
+    await setup_integration(hass)
+
+    state = hass.states.get("fan.test")
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_PERCENTAGE] is None
+    assert state.attributes[ATTR_PRESET_MODE] is None

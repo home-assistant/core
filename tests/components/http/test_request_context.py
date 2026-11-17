@@ -4,10 +4,9 @@ from contextvars import ContextVar
 from http import HTTPStatus
 
 from aiohttp import web
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http.request_context import setup_request_context
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_request_context_middleware(

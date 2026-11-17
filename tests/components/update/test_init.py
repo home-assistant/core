@@ -6,6 +6,19 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    MockUser,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.update import (
     ATTR_BACKUP,
@@ -51,20 +64,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from .common import MockUpdateEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    MockUser,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
 
@@ -999,12 +998,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.UPDATE]
         )
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -1130,6 +1128,12 @@ async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
         pytest.param("1.0.0", "1.0.1", True, id="newer-version"),
         pytest.param("1.0.0", "0.9.0", False, id="older-version"),
         pytest.param("1.0.0", "awesome_update", True, id="incomparable-version"),
+        pytest.param("latest", "1.1.0", True, id="installed-special-latest"),
+        pytest.param("dev", "1.1.0", True, id="installed-special-dev"),
+        pytest.param("beta", "1.1.0", True, id="installed-special-beta"),
+        pytest.param("stable", "1.1.0", True, id="installed-special-stable"),
+        pytest.param("1.0.0", "latest", True, id="latest-special"),
+        pytest.param("latest", "latest", False, id="same-special-version"),
     ],
 )
 def test_has_update(

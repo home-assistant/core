@@ -9,7 +9,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 
@@ -65,10 +64,6 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         """Turn off state."""
         self._state = STATE_OFF
 
-    def standby(self):
-        """Put device in standby."""
-        self._state = STATE_STANDBY
-
     def idle(self):
         """Put device in idle."""
         self._state = STATE_IDLE
@@ -96,7 +91,7 @@ class ExtendedMediaPlayer(SimpleMediaPlayer):
 
     def toggle(self):
         """Toggle the power on the media player."""
-        if self._state in [STATE_OFF, STATE_STANDBY]:
+        if self._state == STATE_OFF:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
@@ -187,10 +182,6 @@ async def test_toggle(player) -> None:
     assert player.state == STATE_ON
     await player.async_toggle()
     assert player.state == STATE_OFF
-    player.standby()
-    assert player.state == STATE_STANDBY
-    await player.async_toggle()
-    assert player.state == STATE_ON
     player.idle()
     assert player.state == STATE_IDLE
     await player.async_toggle()

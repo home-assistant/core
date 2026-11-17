@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -11,9 +14,6 @@ from homeassistant.setup import async_setup_component
 
 from . import async_load_json_fixture
 from .const import TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_config_entry_not_ready(

@@ -3,17 +3,16 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from pyotgw.vars import OTGW_MODE_RESET
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ID
+from homeassistant.const import CONF_ID, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MINIMAL_STATUS
-
-from tests.common import MockConfigEntry
 
 
 async def test_cancel_room_setpoint_override_button(
@@ -40,9 +39,9 @@ async def test_cancel_room_setpoint_override_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: button_entity_id,
+            CommonServiceArgument.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )
@@ -74,9 +73,9 @@ async def test_hot_water_push_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: button_entity_id,
+            CommonServiceArgument.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )
@@ -108,9 +107,9 @@ async def test_restart_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
+        ButtonService.PRESS,
         {
-            ATTR_ENTITY_ID: button_entity_id,
+            CommonServiceArgument.ENTITY_ID: button_entity_id,
         },
         blocking=True,
     )

@@ -3,31 +3,30 @@
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from synology_dsm.api.core.hardware import FanSpeed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -123,10 +122,10 @@ async def test_fan_speed_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.nas_meontheinternet_com_fan_speed_mode",
-            ATTR_OPTION: fan_speed,
+            CommonServiceArgument.ENTITY_ID: "select.nas_meontheinternet_com_fan_speed_mode",
+            SelectServiceArgument.OPTION: fan_speed,
         },
         blocking=True,
     )

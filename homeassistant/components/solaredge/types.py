@@ -6,7 +6,7 @@ from aiosolaredge import SolarEdge
 
 from homeassistant.config_entries import ConfigEntry
 
-from .coordinator import SolarEdgeModulesCoordinator
+from .coordinator import SolarEdgeDataService, SolarEdgeModulesCoordinator
 
 type SolarEdgeConfigEntry = ConfigEntry[SolarEdgeData]
 
@@ -16,3 +16,4 @@ class SolarEdgeData(TypedDict, total=False):
 
     api_client: SolarEdge
     modules_coordinator: SolarEdgeModulesCoordinator
+    data_services: list[SolarEdgeDataService]

@@ -96,7 +96,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                         "error": str(ex),
                     },
                 ) from ex
-        return None
+        return None  # pragma: no cover
 
     @override
     async def _async_update_data(self) -> CometBlueCoordinatorData:

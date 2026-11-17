@@ -1,11 +1,11 @@
 """The Electra Air Conditioner integration."""
 
-from electrasmart.api import ElectraAPI, ElectraApiError
+from electrasmart.api import ElectraAPI, ElectraApiError, ElectraIntruderLockoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_IMEI
@@ -24,6 +24,8 @@ async def async_setup_entry(
     )
     try:
         await api.fetch_devices()
+    except ElectraIntruderLockoutError as exp:
+        raise ConfigEntryAuthFailed(f"Electra account is locked out: {exp}") from exp
     except ElectraApiError as exp:
         raise ConfigEntryNotReady(f"Error communicating with API: {exp}") from exp
 

@@ -447,10 +447,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                         corrupt_path,
                         err,
                     )
-                    from .issue_registry import (  # noqa: PLC0415
-                        IssueSeverity,
-                        async_create_issue,
-                    )
+                    from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
                     issue_domain = HOMEASSISTANT_DOMAIN
                     if (
@@ -666,8 +663,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def async_remove(self) -> None:
         """Remove all data."""
-        self._io.async_invalidate_cache()
+        self._data = None
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        await self._io.async_remove()
+        async with self._write_lock:
+            self._io.async_invalidate_cache()
+            await self._io.async_remove()

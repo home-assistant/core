@@ -4,23 +4,15 @@ from unittest.mock import patch
 
 from greeclimate.exceptions import DeviceTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gree.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID_PANEL_LIGHT = f"{SWITCH_DOMAIN}.fake_device_1_panel_light"
 ENTITY_ID_HEALTH_MODE = f"{SWITCH_DOMAIN}.fake_device_1_health_mode"
@@ -68,8 +60,8 @@ async def test_send_switch_on(hass: HomeAssistant, entity: str) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 
@@ -99,8 +91,8 @@ async def test_send_switch_on_device_timeout(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 
@@ -126,8 +118,8 @@ async def test_send_switch_off(hass: HomeAssistant, entity: str) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 
@@ -154,8 +146,8 @@ async def test_send_switch_toggle(hass: HomeAssistant, entity: str) -> None:
     # Turn the service on first
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 
@@ -166,8 +158,8 @@ async def test_send_switch_toggle(hass: HomeAssistant, entity: str) -> None:
     # Toggle it off
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 
@@ -178,8 +170,8 @@ async def test_send_switch_toggle(hass: HomeAssistant, entity: str) -> None:
     # Toggle is back on
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: entity},
+        SwitchService.TOGGLE,
+        {CommonServiceArgument.ENTITY_ID: entity},
         blocking=True,
     )
 

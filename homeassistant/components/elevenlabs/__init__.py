@@ -6,6 +6,7 @@ import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
+from elevenlabs.types import Voice
 from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
@@ -56,6 +57,7 @@ class ElevenLabsData:
 
     client: AsyncElevenLabs
     model: Model
+    voices: list[Voice]
     stt_model: str
 
 
@@ -72,18 +74,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     model_id = entry.options[CONF_MODEL]
     try:
         model = await get_model_by_id(client, model_id)
+        voices = (await client.voices.get_all()).voices
     except ConnectError as err:
         raise ConfigEntryNotReady("Failed to connect") from err
     except ApiError as err:
         if _is_invalid_api_key(err):
             raise ConfigEntryAuthFailed("Auth failed") from err
-        raise ConfigEntryNotReady("Failed to fetch models") from err
+        raise ConfigEntryNotReady("Failed to fetch models or voices") from err
 
     if model is None or (not model.languages):
         raise ConfigEntryError("Model could not be resolved")
 
     entry.runtime_data = ElevenLabsData(
-        client=client, model=model, stt_model=entry.options[CONF_STT_MODEL]
+        client=client,
+        model=model,
+        voices=voices,
+        stt_model=entry.options[CONF_STT_MODEL],
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import SHCMotionDetector2, SHCSmokeDetector
+from boschshcpy import SHCMotionDetector2, SHCOutdoorSiren, SHCSmokeDetector
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -39,6 +39,13 @@ TAMPER_RESET_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
     press_fn=lambda device: device.reset_tampered_state(),
 )
 
+SIREN_TEST_ALARM_DESCRIPTION = SHCButtonEntityDescription[SHCOutdoorSiren](
+    key="siren_test_alarm",
+    translation_key="siren_test_alarm",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    press_fn=lambda device: device.trigger_test_alarm(),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -52,7 +59,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[SHCButton] = [
         SHCButton(
             hass=hass,
             device=device,
@@ -61,8 +68,8 @@ async def async_setup_entry(
             description=SMOKE_TEST_DESCRIPTION,
         )
         for device in session.device_helper.smoke_detectors
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         SHCButton(
             hass=hass,
             device=device,
@@ -73,6 +80,17 @@ async def async_setup_entry(
         for device in session.device_helper.motion_detectors2
         if device.supports_tamper_reset
     )
+    entities.extend(
+        SHCButton(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SIREN_TEST_ALARM_DESCRIPTION,
+        )
+        for device in session.device_helper.outdoor_sirens
+    )
+    async_add_entities(entities)
 
 
 class SHCButton[_DeviceT: SHCDevice](SHCEntity, ButtonEntity):

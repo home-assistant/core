@@ -38,6 +38,7 @@ __all__ = [
     "DOMAIN",
     "MEDIA_CLASS_MAP",
     "MEDIA_MIME_TYPES",
+    "URI_SCHEME",
     "BrowseMediaSource",
     "MediaImage",
     "MediaSource",

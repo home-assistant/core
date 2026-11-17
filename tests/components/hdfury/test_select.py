@@ -6,20 +6,24 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from hdfury import HDFuryError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_select_entities(
@@ -45,10 +49,10 @@ async def test_select_operation_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
-            ATTR_OPTION: "1",
+            CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
+            SelectServiceArgument.OPTION: "1",
         },
         blocking=True,
     )
@@ -75,10 +79,10 @@ async def test_select_tx_ports(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "1",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "1",
         },
         blocking=True,
     )
@@ -103,10 +107,10 @@ async def test_select_operation_mode_error(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
-                ATTR_OPTION: "1",
+                CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
+                SelectServiceArgument.OPTION: "1",
             },
             blocking=True,
         )
@@ -133,10 +137,10 @@ async def test_select_ports_missing_state(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.hdfury_vrroom_02_port_select_tx0",
-                ATTR_OPTION: "0",
+                CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_port_select_tx0",
+                SelectServiceArgument.OPTION: "0",
             },
             blocking=True,
         )

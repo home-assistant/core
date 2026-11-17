@@ -1,0 +1,6 @@
+extend = "../../tests/ruff.toml"
+
+[lint]
+extend-ignore = [
+    "PTH", # Preserve the existing test helpers' pathlib exemptions.
+]

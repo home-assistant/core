@@ -18,11 +18,7 @@ from . import (
     binary_sensor as binary_sensor_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
 )
-from .const import (  # noqa: F401  # noqa: F401
-    DOMAIN,
-    STATE_ABOVE_HORIZON,
-    STATE_BELOW_HORIZON,
-)
+from .const import DOMAIN, STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from .entity import Sun, SunConfigEntry
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -30,6 +26,12 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
+__all__ = [
+    "DOMAIN",
+    "STATE_ABOVE_HORIZON",
+    "STATE_BELOW_HORIZON",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

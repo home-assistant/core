@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockEntity, MockEntityPlatform
 
 from homeassistant.components import automation
 from homeassistant.components.samsungtv.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
 from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
-
-from tests.common import MockEntity, MockEntityPlatform
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")

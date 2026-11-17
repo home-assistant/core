@@ -6,6 +6,7 @@ import logging
 from typing import Any, Final, override
 
 from aiohttp import ClientResponseError
+from pymiele import MieleDevice
 
 from homeassistant.components.light import (
     ColorMode,
@@ -19,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppliance
 from .coordinator import MieleConfigEntry
-from .entity import MieleDevice, MieleEntity
+from .entity import MieleEntity
 
 PARALLEL_UPDATES = 1
 

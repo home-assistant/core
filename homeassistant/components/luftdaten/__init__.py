@@ -8,6 +8,7 @@ from luftdaten import Luftdaten
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_SENSOR_ID
 from .coordinator import LuftdatenConfigEntry, LuftdatenDataUpdateCoordinator
@@ -24,7 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LuftdatenConfigEntry) ->
             entry, unique_id=str(entry.data[CONF_SENSOR_ID])
         )
 
-    sensor_community = Luftdaten(entry.data[CONF_SENSOR_ID])
+    sensor_community = Luftdaten(
+        entry.data[CONF_SENSOR_ID], httpx_client=get_async_client(hass)
+    )
 
     coordinator = LuftdatenDataUpdateCoordinator(hass, entry, sensor_community)
     await coordinator.async_config_entry_first_refresh()

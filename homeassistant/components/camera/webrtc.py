@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial, wraps
 import logging
@@ -370,3 +370,18 @@ async def async_get_supported_provider(
             return provider
 
     return None
+
+
+async def async_call_webrtc_provider(
+    coro: Coroutine[Any, Any, None], description: str, entity_id: str
+) -> None:
+    """Await a WebRTC provider callback without letting exceptions propagate.
+
+    Provider callbacks can do I/O and must not break camera setup or removal.
+    """
+    try:
+        await coro
+    except HomeAssistantError as ex:
+        _LOGGER.error("Error %s %s: %s", description, entity_id, ex)
+    except Exception:
+        _LOGGER.exception("Unexpected error %s %s", description, entity_id)

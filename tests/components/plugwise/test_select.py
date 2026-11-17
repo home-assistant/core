@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
@@ -14,16 +15,14 @@ from homeassistant.components.plugwise.const import (
     SELECT_ZONE_PROFILE,
 )
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_smile_adam")
@@ -46,10 +45,10 @@ async def test_adam_change_select_entity(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.woonkamer_thermostat_schedule",
-            ATTR_OPTION: "Badkamer Schema",
+            CommonServiceArgument.ENTITY_ID: "select.woonkamer_thermostat_schedule",
+            SelectServiceArgument.OPTION: "Badkamer Schema",
         },
         blocking=True,
     )
@@ -90,10 +89,10 @@ async def test_adam_select_regulation_mode(
     """
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.adam_regulation_mode",
-            ATTR_OPTION: "heating",
+            CommonServiceArgument.ENTITY_ID: "select.adam_regulation_mode",
+            SelectServiceArgument.OPTION: "heating",
         },
         blocking=True,
     )
@@ -107,10 +106,10 @@ async def test_adam_select_regulation_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.adam_gateway_mode",
-            ATTR_OPTION: "vacation",
+            CommonServiceArgument.ENTITY_ID: "select.adam_gateway_mode",
+            SelectServiceArgument.OPTION: "vacation",
         },
         blocking=True,
     )
@@ -133,10 +132,10 @@ async def test_adam_select_zone_profile(
     """Test changing the zone_profile select."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.living_room_zone_profile",
-            ATTR_OPTION: "passive",
+            CommonServiceArgument.ENTITY_ID: "select.living_room_zone_profile",
+            SelectServiceArgument.OPTION: "passive",
         },
         blocking=True,
     )
@@ -170,10 +169,10 @@ async def test_anna_select_unavailable_schedule_mode(
     with pytest.raises(ServiceValidationError, match="valid options"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
+            SelectService.SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.anna_thermostat_schedule",
-                ATTR_OPTION: "Winter",
+                CommonServiceArgument.ENTITY_ID: "select.anna_thermostat_schedule",
+                SelectServiceArgument.OPTION: "Winter",
             },
             blocking=True,
         )
@@ -207,10 +206,10 @@ async def test_anna_select_dhw_mode(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
-            ATTR_OPTION: "boost",
+            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            SelectServiceArgument.OPTION: "boost",
         },
         blocking=True,
     )
@@ -233,10 +232,10 @@ async def test_anna_select_dhw_mode_with_two_options(
     """Test changing the DHW mode select with two options."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
-            ATTR_OPTION: "comfort",
+            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            SelectServiceArgument.OPTION: "comfort",
         },
         blocking=True,
     )
@@ -256,10 +255,10 @@ async def test_anna_select_dhw_mode_select_with_two_options(
     """Test changing the select_dhw_mode select with two options."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
-            ATTR_OPTION: "eco",
+            CommonServiceArgument.ENTITY_ID: "select.opentherm_dhw_mode",
+            SelectServiceArgument.OPTION: "eco",
         },
         blocking=True,
     )

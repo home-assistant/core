@@ -12,6 +12,7 @@ from pyanglianwater.exceptions import (
     UnknownEndpointError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

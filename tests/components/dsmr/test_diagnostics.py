@@ -1,6 +1,6 @@
 """Test DSMR diagnostics."""
 
-import datetime
+import datetime as dt
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -10,13 +10,12 @@ from dsmr_parser.obis_references import (
     GAS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -58,7 +57,7 @@ async def test_diagnostics(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m³"},
             ],
         ),

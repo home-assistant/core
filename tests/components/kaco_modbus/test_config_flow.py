@@ -8,6 +8,7 @@ from kaco_modbus.testing import BLUEPLANET_86TL3, with_manufacturer
 from modbus_connection import ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 TARGET = "homeassistant.components.kaco_modbus.config_flow.async_get_temporary_unit"
 

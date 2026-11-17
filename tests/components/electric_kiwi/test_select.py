@@ -6,21 +6,20 @@ from aiohttp import ClientError
 from electrickiwi_api.exceptions import ApiException, AuthException
 from electrickiwi_api.model import Hop
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 ENTITY_ID = "select.hour_of_free_power"
 OPTION = "12:00 AM - 1:00 AM"
@@ -41,8 +40,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: OPTION},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            SelectServiceArgument.OPTION: OPTION,
+        },
         blocking=True,
     )
 
@@ -73,8 +75,11 @@ async def test_select_option_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: OPTION},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: OPTION,
+            },
             blocking=True,
         )
 
@@ -95,8 +100,11 @@ async def test_select_option_auth_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: OPTION},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                SelectServiceArgument.OPTION: OPTION,
+            },
             blocking=True,
         )
 

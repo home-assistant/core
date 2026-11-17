@@ -7,22 +7,28 @@ from unittest.mock import MagicMock, call
 from demetriek import LaMetricConnectionError, LaMetricError, ScreensaverMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import SCAN_INTERVAL
-from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.time import (
+    DOMAIN as TIME_DOMAIN,
+    TimeService,
+    TimeServiceArgument,
+)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TIME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_START_TIME = "time.frenck_s_lametric_screensaver_start_time"
 ENTITY_END_TIME = "time.frenck_s_lametric_screensaver_end_time"
@@ -65,8 +71,11 @@ async def test_set_value(
     """
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -106,8 +115,11 @@ async def test_set_value_around_dst(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: value},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+            TimeServiceArgument.TIME: value,
+        },
         blocking=True,
     )
 
@@ -156,8 +168,11 @@ async def test_set_values_in_quick_succession(
     ):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TIME: value},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: entity_id,
+                TimeServiceArgument.TIME: value,
+            },
             blocking=True,
         )
 
@@ -231,8 +246,11 @@ async def test_set_value_without_both_times(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
 
@@ -263,8 +281,11 @@ async def test_set_value_keeps_when_dark(
 
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: "20:00:00"},
+        TimeService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+            TimeServiceArgument.TIME: "20:00:00",
+        },
         blocking=True,
     )
 
@@ -319,8 +340,11 @@ async def test_time_errors(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_START_TIME, ATTR_TIME: "20:00:00"},
+            TimeService.SET_VALUE,
+            {
+                CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+                TimeServiceArgument.TIME: "20:00:00",
+            },
             blocking=True,
         )
 

@@ -4,13 +4,12 @@ from unittest.mock import patch
 
 from elvia import error as ElviaError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elvia.const import CONF_METERING_POINT_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("recorder_mock")

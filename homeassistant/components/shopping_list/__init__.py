@@ -7,12 +7,11 @@ from typing import Any
 from aiohttp import web
 import probatio
 
-from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .common import (
@@ -28,39 +27,19 @@ PLATFORMS = [Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = probatio.Schema({DOMAIN: {}}, extra=probatio.ALLOW_EXTRA)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+__all__ = [
+    "DOMAIN",
+    "ShoppingData",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the shopping list."""
     async_setup_services(hass)
 
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_setup(hass))
-
     return True
-
-
-async def _async_setup(hass: HomeAssistant) -> None:
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2026.11.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Shopping list",
-        },
-    )
 
 
 async def async_setup_entry(

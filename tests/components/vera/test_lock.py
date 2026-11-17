@@ -21,7 +21,7 @@ async def test_lock(
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_LOCK
     vera_device.is_locked = MagicMock(return_value=False)
-    entity_id = "lock.dev1_1"
+    entity_id = "lock.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

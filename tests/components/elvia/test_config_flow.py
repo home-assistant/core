@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from elvia import error as ElviaError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.elvia.const import CONF_METERING_POINT_ID, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.components.recorder.core import Recorder
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
-
-from tests.common import MockConfigEntry
 
 TEST_API_TOKEN = "xxx-xxx-xxx-xxx"
 

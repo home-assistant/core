@@ -30,14 +30,13 @@ from duco_connectivity import (
     VentilationTemperatureInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
@@ -348,7 +347,7 @@ def mock_duco_client(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.duco.async_setup_entry", return_value=True
+        "homeassistant.components.duco.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

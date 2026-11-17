@@ -2,20 +2,19 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_number(
@@ -50,9 +49,9 @@ async def test_set_number(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_VALUE: "120"},
-        target={ATTR_ENTITY_ID: "number.home_assistant_test_max_screentime_today"},
+        NumberService.SET_VALUE,
+        service_data={NumberServiceArgument.VALUE: "120"},
+        target={TargetKey.ENTITY_ID: "number.home_assistant_test_max_screentime_today"},
         blocking=True,
     )
     assert len(mock_nintendo_device.update_max_daily_playtime.mock_calls) == 1

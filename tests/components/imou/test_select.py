@@ -16,25 +16,26 @@ from pyimouapi.const import (
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_OPTION,
-    SERVICE_SELECT_OPTION,
-    STATE_UNAVAILABLE,
-    Platform,
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectService,
+    SelectServiceArgument,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import UNKNOWN_SELECT_KEY, create_online_device, select_mock_devices
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SELECT]], indirect=True)
@@ -132,8 +133,11 @@ async def test_select_option_via_domain_service(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select_entry.entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: select_entry.entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -170,8 +174,11 @@ async def test_select_option_propagates_api_error(
     with pytest.raises(HomeAssistantError, match="Imou rejected the new option"):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: volume_entry.entity_id, ATTR_OPTION: "high"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: volume_entry.entity_id,
+                SelectServiceArgument.OPTION: "high",
+            },
             blocking=True,
         )
 
@@ -203,8 +210,11 @@ async def test_select_option_invalid_auth_starts_reauth(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: volume_entry.entity_id, ATTR_OPTION: "high"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: volume_entry.entity_id,
+                SelectServiceArgument.OPTION: "high",
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -265,8 +275,11 @@ async def test_select_option_unavailable_offline_device(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: night_entry.entity_id, ATTR_OPTION: "fullcolor"},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: night_entry.entity_id,
+            SelectServiceArgument.OPTION: "fullcolor",
+        },
         blocking=True,
     )
 

@@ -5,6 +5,7 @@ from unittest import mock
 
 from pymodbus.exceptions import ModbusException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
@@ -21,7 +22,7 @@ from homeassistant.components.modbus.const import (
     CONF_WRITE_TYPE,
     DOMAIN,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ADDRESS,
@@ -34,19 +35,16 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    CommonServiceArgument,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 ENTITY_ID2 = f"{ENTITY_ID}_2"
@@ -353,12 +351,16 @@ async def test_switch_service_turn(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -366,26 +368,34 @@ async def test_switch_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     mock_modbus.read_holding_registers.return_value = ReadResult([0x03])
     assert hass.states.get(ENTITY_ID3).state == STATE_OFF
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_OFF
@@ -393,32 +403,42 @@ async def test_switch_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x03])
     assert hass.states.get(ENTITY_ID4).state == STATE_OFF
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID4}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID4},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID4).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID4}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID4},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID4).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
     mock_modbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID3}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_UNAVAILABLE
@@ -545,7 +565,9 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF

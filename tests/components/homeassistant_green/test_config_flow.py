@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import GreenOptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_green.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +38,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.homeassistant_green.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}
@@ -73,7 +72,7 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.homeassistant_green.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "system"}

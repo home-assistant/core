@@ -4,19 +4,14 @@ from unittest.mock import AsyncMock
 
 from bring_api import BringNotificationType, BringRequestException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.components.bring.services import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from homeassistant.components.bring.services import BringService, BringServiceArgument
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 async def test_send_notification(
@@ -34,11 +29,11 @@ async def test_send_notification(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PUSH_NOTIFICATION,
+        BringService.SEND_MESSAGE,
         service_data={
-            ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
+            BringServiceArgument.MESSAGE: "GOING_SHOPPING",
         },
-        target={ATTR_ENTITY_ID: "todo.einkauf"},
+        target={TargetKey.ENTITY_ID: "todo.einkauf"},
         blocking=True,
     )
 
@@ -65,11 +60,11 @@ async def test_send_notification_exception(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
+            BringService.SEND_MESSAGE,
             service_data={
-                ATTR_NOTIFICATION_TYPE: "GOING_SHOPPING",
+                BringServiceArgument.MESSAGE: "GOING_SHOPPING",
             },
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "notify_request_failed"
@@ -91,9 +86,12 @@ async def test_send_notification_service_validation_error(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUSH_NOTIFICATION,
-            service_data={ATTR_NOTIFICATION_TYPE: "URGENT_MESSAGE", ATTR_ITEM_NAME: ""},
-            target={ATTR_ENTITY_ID: "todo.einkauf"},
+            BringService.SEND_MESSAGE,
+            service_data={
+                BringServiceArgument.MESSAGE: "URGENT_MESSAGE",
+                BringServiceArgument.ITEM: "",
+            },
+            target={TargetKey.ENTITY_ID: "todo.einkauf"},
             blocking=True,
         )
     assert err.value.translation_key == "notify_missing_argument"

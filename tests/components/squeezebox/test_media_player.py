@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -41,12 +46,10 @@ from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
 )
 from homeassistant.components.squeezebox.services import (
-    ATTR_PARAMETERS,
-    SERVICE_CALL_METHOD,
-    SERVICE_CALL_QUERY,
+    SqueezeboxService,
+    SqueezeboxServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -73,8 +76,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
 from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, VOLUME_STEP
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -773,11 +774,11 @@ async def test_squeezebox_call_query(
     """Test query service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_QUERY,
+        SqueezeboxService.CALL_QUERY,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )
@@ -790,11 +791,11 @@ async def test_squeezebox_call_method(
     """Test method call service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_METHOD,
+        SqueezeboxService.CALL_METHOD,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )

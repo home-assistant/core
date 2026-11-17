@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.indevolt.const import (
     CONF_GENERATION,
@@ -20,8 +21,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_DEVICE_SN_GEN2, TEST_HOST, TEST_HOST_ALT, TEST_MODEL_GEN2
-
-from tests.common import MockConfigEntry
 
 
 def _make_zeroconf_discovery(ip: str) -> ZeroconfServiceInfo:

@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from requests.exceptions import ReadTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -23,9 +25,6 @@ from .const import (
     MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 GUEST_WIFI_CHANGED: dict[str, dict] = {
     "WLANConfiguration1": {},

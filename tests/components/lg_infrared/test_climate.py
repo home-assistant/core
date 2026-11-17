@@ -11,6 +11,24 @@ from infrared_protocols.commands.lg_ac import (
     LgAcMode,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -26,6 +44,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -46,23 +66,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
 )
 
 _CLIMATE_ENTITY_ID = "climate.lg_ac"
@@ -164,6 +172,126 @@ async def test_set_hvac_mode_off(
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert timings == LgAcCommand(mode=LgAcMode.OFF).get_raw_timings()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_off(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test turning off sends power-off timings."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == LgAcCommand(mode=LgAcMode.OFF).get_raw_timings()
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("previous_modes", "expected_mode", "expected_cmd"),
+    [
+        pytest.param(
+            [],
+            HVACMode.COOL,
+            LgAcCommand(
+                mode=LgAcMode.COOL, temperature=MIN_TEMP, fan=LgAcFanSpeed.AUTO
+            ),
+            id="first_configured_mode_by_default",
+        ),
+        pytest.param(
+            [HVACMode.DRY, HVACMode.OFF],
+            HVACMode.DRY,
+            LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.AUTO),
+            id="last_on_mode",
+        ),
+    ],
+)
+async def test_turn_on(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    previous_modes: list[HVACMode],
+    expected_mode: HVACMode,
+    expected_cmd: LgAcCommand,
+) -> None:
+    """Test turning on resumes the mode the unit was last on in."""
+    for hvac_mode in previous_modes:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+            blocking=True,
+        )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == expected_cmd.get_raw_timings()
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_mode
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_after_set_temperature_with_hvac_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test a mode switched to through set_temperature is the one turned back on."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 25,
+            "hvac_mode": HVACMode.DRY,
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.AUTO).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -493,6 +621,38 @@ async def test_receiver_updates_state_on_off_signal(
 
 @pytest.mark.parametrize("has_receiver", [True])
 @pytest.mark.usefixtures("init_integration")
+async def test_turn_on_resumes_the_mode_seen_by_the_receiver(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test turning on resumes a mode set from the physical remote."""
+    for command in (
+        LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.MEDIUM),
+        LgAcCommand(mode=LgAcMode.OFF),
+    ):
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(timings=command.get_raw_timings())
+        )
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.MEDIUM).get_raw_timings()
+    )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
 async def test_receiver_ignores_unconfigured_hvac_mode(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
@@ -538,14 +698,18 @@ async def test_receiver_ignores_non_lg_ac_signal(
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF,
             id="with_temperature_mode",
         ),
         pytest.param(
             [HVACMode.DRY, HVACMode.FAN_ONLY],
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            | ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF,
             id="without_temperature_mode",
         ),
     ],
@@ -738,6 +902,112 @@ async def test_restore_temperature_unit(
             mode=LgAcMode.COOL, temperature=expected_native, fan=LgAcFanSpeed.AUTO
         ).get_raw_timings()
     )
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "extra_data", "expected_cmd"),
+    [
+        pytest.param(
+            HVACMode.OFF,
+            {**_STORED_CLIMATE_DATA, "last_on_hvac_mode": HVACMode.DRY.value},
+            LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.AUTO),
+            id="off_with_last_on_mode",
+        ),
+        pytest.param(
+            HVACMode.OFF,
+            {**_STORED_CLIMATE_DATA, "last_on_hvac_mode": HVACMode.HEAT.value},
+            LgAcCommand(mode=LgAcMode.COOL, temperature=25, fan=LgAcFanSpeed.AUTO),
+            id="off_with_unconfigured_last_on_mode",
+        ),
+        pytest.param(
+            HVACMode.OFF,
+            _STORED_CLIMATE_DATA,
+            LgAcCommand(mode=LgAcMode.COOL, temperature=25, fan=LgAcFanSpeed.AUTO),
+            id="off_without_last_on_mode",
+        ),
+        pytest.param(
+            HVACMode.OFF,
+            {"last_on_hvac_mode": HVACMode.DRY.value},
+            LgAcCommand(
+                mode=LgAcMode.COOL, temperature=MIN_TEMP, fan=LgAcFanSpeed.AUTO
+            ),
+            id="off_without_climate_data",
+        ),
+        pytest.param(
+            STATE_UNAVAILABLE,
+            {**_STORED_CLIMATE_DATA, "last_on_hvac_mode": HVACMode.DRY.value},
+            LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.AUTO),
+            id="unavailable_with_last_on_mode",
+        ),
+        pytest.param(
+            HVACMode.DRY,
+            _STORED_CLIMATE_DATA,
+            LgAcCommand(mode=LgAcMode.DRY, fan=LgAcFanSpeed.AUTO),
+            id="on_without_last_on_mode",
+        ),
+    ],
+)
+async def test_last_on_mode_restored_on_restart(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_state: str,
+    extra_data: dict[str, Any],
+    expected_cmd: LgAcCommand,
+) -> None:
+    """Test turning on after a restart resumes the mode the unit was last on in.
+
+    Once the unit is off the visible state only records off, so the mode to turn
+    back on in comes from the extra restore data.
+    """
+    mock_restore_cache_with_extra_data(
+        hass, [(State(_CLIMATE_ENTITY_ID, restored_state), extra_data)]
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert timings == expected_cmd.get_raw_timings()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_restore_data_saved(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the native temperatures are stored along with the last on mode."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ATTR_TEMPERATURE: 25,
+            "hvac_mode": HVACMode.DRY,
+        },
+        blocking=True,
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    stored = {
+        data["state"]["entity_id"]: data["extra_data"]
+        for data in hass_storage[RESTORE_STATE_KEY]["data"]
+    }
+    assert stored[_CLIMATE_ENTITY_ID] == {
+        **_STORED_CLIMATE_DATA,
+        "last_on_hvac_mode": HVACMode.DRY.value,
+    }
 
 
 @pytest.mark.usefixtures("init_integration")

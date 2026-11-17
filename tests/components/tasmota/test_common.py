@@ -21,14 +21,17 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import MockMqttReasonCode, async_fire_mqtt_message
+from pytest_homeassistant.typing import (
+    MqttMockHAClient,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockMqttReasonCode, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, MqttMockPahoClient, WebSocketGenerator
 
 DEFAULT_CONFIG = {
     "ip": "192.168.15.10",

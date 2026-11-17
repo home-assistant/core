@@ -1,16 +1,33 @@
 """Home Assistant trigger dispatcher."""
 
-from typing import cast
+from typing import cast, override
 
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+import probatio
+
+from homeassistant.config import DATA_PREVIOUS_VERSION
+from homeassistant.const import (
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+    EVENT_HOMEASSISTANT_STARTED,
+    __version__,
+)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers import system_state
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
     TriggerActionType,
     TriggerInfo,
+    TriggerNotTriggeredReporter,
     TriggerProtocol,
 )
 from homeassistant.helpers.typing import ConfigType
+
+_SYSTEM_STATE_TRIGGER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): {}}
+)
+_UPDATED_TRIGGER_SCHEMA = probatio.Schema({})
 
 
 async def _async_get_trigger_platform(
@@ -43,3 +60,134 @@ async def async_attach_trigger(
     """Attach trigger of specified platform."""
     platform = await _async_get_trigger_platform(hass, config[CONF_PLATFORM])
     return await platform.async_attach_trigger(hass, config, action, trigger_info)
+
+
+class _SystemStateTrigger(Trigger):
+    """Base class for triggers that fire when a system state flag gets set."""
+
+    _description: str
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _SYSTEM_STATE_TRIGGER_SCHEMA(config))
+
+    def _is_set(self, state: system_state.SystemState) -> bool:
+        """Return if the flag this trigger watches is set."""
+        raise NotImplementedError
+
+    def _trigger_payload(self, state: system_state.SystemState) -> dict[str, object]:
+        """Return the trigger payload."""
+        return {}
+
+    @override
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+        was_set = self._is_set(system_state.async_get(self._hass))
+
+        @callback
+        def check_state(state: system_state.SystemState) -> None:
+            nonlocal was_set
+            is_set = self._is_set(state)
+            fire = is_set and not was_set
+
+            # Record the transition before running the action: it starts
+            # eagerly and may change the system state, re-entering here.
+            was_set = is_set
+
+            if fire:
+                run_action(self._trigger_payload(state), self._description)
+
+        return system_state.async_subscribe(self._hass, check_state)
+
+
+class RestartRequiredTrigger(_SystemStateTrigger):
+    """Trigger that fires when Home Assistant needs a restart."""
+
+    _description = "Home Assistant restart required"
+
+    @override
+    def _is_set(self, state: system_state.SystemState) -> bool:
+        """Return if a restart of Home Assistant is required."""
+        return state.home_assistant_restart_required
+
+    @override
+    def _trigger_payload(self, state: system_state.SystemState) -> dict[str, object]:
+        """Return the integrations that asked for the restart."""
+        return {"sources": sorted(state.home_assistant_restart_sources)}
+
+
+class HostRebootRequiredTrigger(_SystemStateTrigger):
+    """Trigger that fires when the host needs a reboot."""
+
+    _description = "host reboot required"
+
+    @override
+    def _is_set(self, state: system_state.SystemState) -> bool:
+        """Return if a reboot of the host is required."""
+        return state.host_reboot_required
+
+
+class HomeAssistantUpdatedTrigger(Trigger):
+    """Trigger that fires once after Home Assistant started on a new version."""
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _UPDATED_TRIGGER_SCHEMA(config))
+
+    @override
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+        unsub: CALLBACK_TYPE | None = None
+
+        @callback
+        def remove() -> None:
+            if unsub is not None:
+                unsub()
+
+        if (previous_version := self._hass.data.get(DATA_PREVIOUS_VERSION)) is None:
+            return remove
+
+        @callback
+        def hass_started(_: Event) -> None:
+            nonlocal unsub
+            unsub = None
+            # A downgrade, like restoring an older backup, counts as well
+            run_action(
+                {"from_version": previous_version, "to_version": __version__},
+                "Home Assistant updated",
+            )
+
+        # Only fires if armed before Home Assistant started, like the start
+        # event of the legacy trigger.
+        unsub = self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, hass_started
+        )
+        return remove
+
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    "host_reboot_required": HostRebootRequiredTrigger,
+    "restart_required": RestartRequiredTrigger,
+    "updated": HomeAssistantUpdatedTrigger,
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the new-style triggers for Home Assistant."""
+    return TRIGGERS

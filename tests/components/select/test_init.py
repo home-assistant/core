@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components.select import (
     ATTR_CYCLE,
@@ -20,8 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import setup_test_component_platform
 
 
 class MockSelectEntity(SelectEntity):

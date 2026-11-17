@@ -3,6 +3,8 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -22,9 +24,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import MULTI_SENSOR_TOKEN, mock_responses, setup_platform
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)

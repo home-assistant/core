@@ -4,13 +4,12 @@ from unittest.mock import MagicMock
 
 from fullykiosk import FullyKioskError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_camera(
@@ -59,4 +58,4 @@ async def test_camera(
 
     with pytest.raises(HomeAssistantError) as error:
         await async_get_image(hass, entity_camera)
-    assert error.value.args[0] == "Camera is off"
+    assert error.value.translation_key == "camera_off"

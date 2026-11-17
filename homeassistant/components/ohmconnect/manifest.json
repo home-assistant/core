@@ -1,7 +1,9 @@
 {
   "domain": "ohmconnect",
   "name": "OhmConnect",
+  "categories": ["energy"],
   "codeowners": ["@robbiet480"],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",

@@ -19,10 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import ElkM1ConfigEntry
 from .const import ATTR_CHANGED_BY_ID, ATTR_CHANGED_BY_KEYPAD, ATTR_CHANGED_BY_TIME
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
-from .models import ELKM1Data
+from .models import ElkM1ConfigEntry, ELKM1Data
 
 
 async def async_setup_entry(

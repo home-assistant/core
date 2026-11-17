@@ -499,7 +499,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=data,
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
     @override
@@ -562,7 +561,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_URL: self.url},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"url": self.url},
@@ -578,7 +576,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if we're returning from the external auth step with a token
         if user_input is not None:
             if "error" in user_input:
-                return self.async_abort(reason="auth_error")
+                return self.async_external_step_done(next_step_id="auth_error")
             # OAuth2 callback sends token as "code" parameter
             if "code" in user_input:
                 self.token = user_input["code"]
@@ -605,6 +603,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         login_url = f"{self.url}/login?{params}"
         return self.async_external_step(step_id="auth", url=login_url)
+
+    async def async_step_auth_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Abort after the external authentication returned an error."""
+        return self.async_abort(reason="auth_error")
 
     async def async_step_finish_auth(
         self, user_input: dict[str, Any] | None = None
@@ -718,6 +722,37 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={"url": self.url},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server URL."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            try:
+                server_info = await _get_server_info(self.hass, user_input[CONF_URL])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidServerVersion:
+                errors["base"] = "invalid_server_version"
+            except MusicAssistantClientException:
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(server_info.server_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_MANUAL_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
     @override

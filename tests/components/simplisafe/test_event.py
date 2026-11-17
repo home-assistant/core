@@ -3,14 +3,13 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_SERIAL = "1234567890"
 CAMERA_EVENT_ENTITY_ID = "event.camera_camera_motion"

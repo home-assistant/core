@@ -1,10 +1,10 @@
 """Test the roon server."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.components.roon.server import RoonServer
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "media_player.kitchen"
 RENAMED_ENTITY_ID = "media_player.renamed_kitchen"

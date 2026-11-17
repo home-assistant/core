@@ -13,7 +13,11 @@ from pylamarzocco import (
     LaMarzoccoMachine,
 )
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.exceptions import (
+    AuthFail,
+    PolicyAcceptanceRequired,
+    RequestNotSuccessful,
+)
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
 from homeassistant.components.bluetooth import (
@@ -149,6 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
+        except PolicyAcceptanceRequired as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
+            ) from ex
         except (RequestNotSuccessful, TimeoutError) as ex:
             _LOGGER.debug(ex, exc_info=True)
             if not bluetooth_client:
@@ -161,17 +170,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 settings.firmwares[FirmwareType.GATEWAY].build_version
             )
 
+            issue_id = f"unsupported_gateway_firmware_{entry.entry_id}"
             if gateway_version < version.parse("v5.0.9"):
                 # incompatible gateway firmware, create an issue
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
-                    "unsupported_gateway_firmware",
+                    issue_id,
                     is_fixable=False,
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="unsupported_gateway_firmware",
-                    translation_placeholders={"gateway_version": str(gateway_version)},
+                    translation_placeholders={
+                        "gateway_version": str(gateway_version),
+                        "name": entry.title,
+                    },
+                    config_entry_id=entry.entry_id,
                 )
+            else:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
             # Update BLE Token if exists
             if settings.ble_auth_token:
                 hass.config_entries.async_update_entry(
@@ -184,6 +200,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     if not (local_mode := entry.options.get(CONF_OFFLINE_MODE, False)):
         await _get_thing_settings()
+
+    issue_id = f"missing_bluetooth_token_{entry.entry_id}"
+    if entry.options.get(CONF_USE_BLUETOOTH, True) and not entry.data.get(CONF_TOKEN):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="missing_bluetooth_token",
+            data={"entry_id": entry.entry_id},
+            translation_placeholders={"name": entry.title},
+            config_entry_id=entry.entry_id,
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,

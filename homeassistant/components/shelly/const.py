@@ -36,7 +36,6 @@ PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to 
 CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
-FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
 # max BLOCK light transition time in milliseconds (min=0)
 BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
@@ -251,6 +250,8 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
+IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
+IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
@@ -354,7 +355,21 @@ RPC_ERROR_CODE_REMOTE_DISABLED = -110
 
 TRV_CHANNEL = 0
 
-ATTR_KEY = "key"
-ATTR_VALUE = "value"
-
 DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"
+
+
+class ShellyService(StrEnum):
+    """Store keys for Shelly services."""
+
+    GET_KVS_VALUE = "get_kvs_value"
+    SET_KVS_VALUE = "set_kvs_value"
+    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+
+
+class ShellyServiceArgument(StrEnum):
+    """Store keys for Shelly service arguments."""
+
+    KEY = "key"
+    VALUE = "value"
+    POSITION = "position"
+    TILT_POSITION = "tilt_position"

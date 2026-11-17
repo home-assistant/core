@@ -1,12 +1,12 @@
 """Enforce that the integration supports discovery.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/discovery/
+https://contributors.home-assistant.io/core/quality-scale/discovery/
 """
 
 import ast
 
-from script.hassfest import ast_parse_module
-from script.hassfest.model import Config, Integration
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
 
 MANIFEST_KEYS = [
     "bluetooth",

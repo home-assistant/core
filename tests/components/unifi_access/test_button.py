@@ -4,18 +4,17 @@ from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_ENTITY = "button.front_door_unlock"
 BACK_DOOR_ENTITY = "button.back_door_unlock"
@@ -53,8 +52,8 @@ async def test_unlock_door(
     """Test pressing the unlock button."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.front_door_unlock"},
+        ButtonService.PRESS,
+        {CommonServiceArgument.ENTITY_ID: "button.front_door_unlock"},
         blocking=True,
     )
 
@@ -72,8 +71,8 @@ async def test_unlock_door_api_error(
     with pytest.raises(HomeAssistantError, match="Failed to unlock the door"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.front_door_unlock"},
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: "button.front_door_unlock"},
             blocking=True,
         )
 

@@ -3,29 +3,21 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareNotSupportedFeatureError,
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 VENTILATION_FIXTURES: list[Fixture] = [
     Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
@@ -108,8 +100,8 @@ async def test_turn_on_activates_quickmode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.model2_intensive"},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: "switch.model2_intensive"},
         blocking=True,
     )
 
@@ -129,8 +121,8 @@ async def test_turn_off_deactivates_quickmode(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.model0_boost"},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: "switch.model0_boost"},
         blocking=True,
     )
 
@@ -168,8 +160,8 @@ async def test_turn_on_error_is_raised(
     with pytest.raises(PyViCareNotSupportedFeatureError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.model2_intensive"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.model2_intensive"},
             blocking=True,
         )
 
@@ -188,8 +180,8 @@ async def test_turn_on_refused_while_another_quickmode_runs(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.model2_intensive"},
+            SwitchService.TURN_ON,
+            {CommonServiceArgument.ENTITY_ID: "switch.model2_intensive"},
             blocking=True,
         )
 

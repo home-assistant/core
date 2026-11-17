@@ -64,10 +64,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> Non
             translation_placeholders={"error": str(ex)},
         ) from ex
 
-    if (
-        "X_AVM-DE_UPnP1" in avm_wrapper.connection.services
-        and not (await avm_wrapper.async_get_upnp_configuration())["NewEnable"]
-    ):
+    if "X_AVM-DE_UPnP1" in avm_wrapper.connection.services and not (
+        await avm_wrapper.async_get_upnp_configuration()
+    ).get("NewEnable"):
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="error_upnp_disabled",
@@ -88,6 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> No
     fritz_data = hass.data[FRITZ_DATA_KEY]
 
     if avm_wrapper.unique_id in fritz_data.tracked:
+        fritz_data.link_sensors.pop(avm_wrapper.unique_id)
         fritz_data.tracked.pop(avm_wrapper.unique_id)
         fritz_data.profile_switches.pop(avm_wrapper.unique_id)
         fritz_data.wol_buttons.pop(avm_wrapper.unique_id)

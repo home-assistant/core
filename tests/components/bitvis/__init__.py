@@ -5,10 +5,9 @@ from collections.abc import Callable
 from bitvis_protobuf.listener import FilterMac
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

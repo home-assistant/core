@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, call, patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cloud import GACTIONS_SCHEMA, google_config
 from homeassistant.components.cloud.const import (
@@ -34,8 +35,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

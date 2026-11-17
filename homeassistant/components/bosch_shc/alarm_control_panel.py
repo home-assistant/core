@@ -70,7 +70,7 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
                 (DOMAIN, device.root_device_id), entry_id
             )
         ):
-            device_info["via_device_id"] = hub.id
+            device_info.via_device_id = hub.id
         self._attr_device_info = device_info
 
     @override

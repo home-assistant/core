@@ -6,25 +6,21 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
-    SERVICE_DOCK,
-    SERVICE_PAUSE,
-    SERVICE_START_MOWING,
-    SERVICE_STOP,
     LawnMowerActivity,
+    LawnMowerService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_PLATFORM,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 ENTITY_LAWN_MOWER = "lawn_mower.my_lawn_mower"
 
@@ -59,8 +55,8 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     """Test if methods call the services as expected."""
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
-        SERVICE_START_MOWING,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        LawnMowerService.START_MOWING,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -69,8 +65,8 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
 
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
-        SERVICE_STOP,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        LawnMowerService.STOP,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -79,8 +75,8 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
 
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
-        SERVICE_PAUSE,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        LawnMowerService.PAUSE,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -89,8 +85,8 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
 
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
-        SERVICE_DOCK,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        LawnMowerService.DOCK,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     state = hass.states.get(ENTITY_LAWN_MOWER)
@@ -106,9 +102,11 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
-        pytest.param(SERVICE_START_MOWING, LawnMowerActivity.MOWING, id="start"),
-        pytest.param(SERVICE_PAUSE, LawnMowerActivity.PAUSED, id="pause"),
-        pytest.param(SERVICE_STOP, LawnMowerActivity.IDLE, id="stop"),
+        pytest.param(
+            LawnMowerService.START_MOWING, LawnMowerActivity.MOWING, id="start"
+        ),
+        pytest.param(LawnMowerService.PAUSE, LawnMowerActivity.PAUSED, id="pause"),
+        pytest.param(LawnMowerService.STOP, LawnMowerActivity.IDLE, id="stop"),
     ],
 )
 async def test_command_cancels_pending_dock(
@@ -120,8 +118,8 @@ async def test_command_cancels_pending_dock(
     """Test a command issued while returning is not overwritten by the dock timer."""
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
-        SERVICE_DOCK,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        LawnMowerService.DOCK,
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     assert hass.states.get(ENTITY_LAWN_MOWER).state == LawnMowerActivity.RETURNING
@@ -129,7 +127,7 @@ async def test_command_cancels_pending_dock(
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_LAWN_MOWER},
+        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     assert hass.states.get(ENTITY_LAWN_MOWER).state == expected_state

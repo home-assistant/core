@@ -1,7 +1,7 @@
 """Update coordinators for Yardian."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -18,7 +18,7 @@ from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = dt.timedelta(seconds=30)
 
 
 @dataclass(slots=True)

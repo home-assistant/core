@@ -562,7 +562,10 @@ class RpcShellyLedStrip(RpcShellyLightBase):
     @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
-        return list(self.coordinator.device.config[self.key]["effects"])
+        if self.coordinator.device.initialized:
+            return list(self.coordinator.device.config[self.key]["effects"])
+
+        return []
 
     @property
     @override

@@ -8,6 +8,8 @@ from music_assistant_models.enums import DashboardType, EventType
 from music_assistant_models.errors import MusicAssistantError
 from music_assistant_models.player import PlayerMedia
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -18,12 +20,11 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import (
-    ATTR_URL,
-    DASHBOARD_ID_PREFIX,
-    DOMAIN,
+from homeassistant.components.music_assistant.const import DASHBOARD_ID_PREFIX, DOMAIN
+from homeassistant.components.music_assistant.services import (
+    MusicAssistantService,
+    MusicAssistantServiceArgument,
 )
-from homeassistant.components.music_assistant.services import SERVICE_PLAY_ANNOUNCEMENT
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -42,9 +43,6 @@ from .common import (
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 KITCHEN_ENTITY_ID = "media_player.kitchen_display"
 HALLWAY_ENTITY_ID = "media_player.hallway_display"
@@ -1060,10 +1058,10 @@ async def test_platform_entity_service_rejects_display(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_ANNOUNCEMENT,
+            MusicAssistantService.PLAY_ANNOUNCEMENT,
             {
                 ATTR_ENTITY_ID: KITCHEN_ENTITY_ID,
-                ATTR_URL: "http://blah.com/announcement.mp3",
+                MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
             },
             blocking=True,
         )
@@ -1095,10 +1093,10 @@ async def test_platform_entity_service_skips_display_indirect_target(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_ANNOUNCEMENT,
+        MusicAssistantService.PLAY_ANNOUNCEMENT,
         {
             ATTR_DEVICE_ID: [player_device.id, display_device.id],
-            ATTR_URL: "http://blah.com/announcement.mp3",
+            MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
         },
         blocking=True,
     )
@@ -1113,4 +1111,5 @@ async def test_platform_entity_service_skips_display_indirect_target(
         pre_announce_url=None,
         message=None,
         tts_engine=None,
+        language=None,
     )

@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import aiohue
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_capture_events, async_fire_time_changed
 
 from homeassistant.components import hue
 from homeassistant.components.hue.const import ATTR_HUE_EVENT
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import create_mock_bridge, setup_platform
-
-from tests.common import async_capture_events, async_fire_time_changed
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -297,6 +296,8 @@ async def test_sensors_with_multiple_bridges(
 ) -> None:
     """Test the update_items function with some sensors."""
     mock_bridge_2 = create_mock_bridge(hass, api_version=1)
+    mock_bridge_2.api.config.bridge_id = "ff:ff:ff:ff:ff:fe"
+    mock_bridge_2.api.config.bridgeid = "ff:ff:ff:ff:ff:fe"
     mock_bridge_2.mock_sensor_responses.append(
         {
             "1": PRESENCE_SENSOR_3_PRESENT,

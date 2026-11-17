@@ -1,21 +1,24 @@
 """Test the Silla Prism numbers."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import fire_burst, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message, snapshot_platform
-from tests.typing import MqttMockHAClient
 
 USER_CURRENT_ENTITY_ID = "number.silla_prism_maximum_charging_current"
 USER_AMP_TOPIC = "prism/1/user_amp"
@@ -47,8 +50,11 @@ async def test_set_user_current(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: USER_CURRENT_ENTITY_ID, ATTR_VALUE: 16},
+        NumberService.SET_VALUE,
+        {
+            CommonServiceArgument.ENTITY_ID: USER_CURRENT_ENTITY_ID,
+            NumberServiceArgument.VALUE: 16,
+        },
         blocking=True,
     )
 

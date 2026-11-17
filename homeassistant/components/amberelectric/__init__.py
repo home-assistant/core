@@ -2,10 +2,10 @@
 
 import amberelectric
 
-from homeassistant.components.sensor import ConfigType
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SITE_ID, DOMAIN, PLATFORMS
 from .coordinator import AmberConfigEntry, AmberUpdateCoordinator

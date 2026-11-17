@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.edifier_infrared import PLATFORMS
 from homeassistant.components.edifier_infrared.const import (
@@ -14,12 +19,6 @@ from homeassistant.components.edifier_infrared.const import (
 )
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture
@@ -35,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_COMMAND_SET: EdifierCommandSet.R1700BTS.value,
         },
         unique_id=f"r1700bts_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
-        version=3,
+        version=4,
     )
 
 
@@ -80,6 +79,16 @@ def mock_edifier_code_to_command() -> Generator[None]:
         ),
         patch(
             "infrared_protocols.codes.edifier.rc20g.EdifierRC20GCode.to_command",
+            autospec=True,
+            side_effect=lambda self: self,
+        ),
+        patch(
+            "infrared_protocols.codes.edifier.rc80b.EdifierRC80BCode.to_command",
+            autospec=True,
+            side_effect=lambda self: self,
+        ),
+        patch(
+            "infrared_protocols.codes.edifier.r2600.EdifierR2600Code.to_command",
             autospec=True,
             side_effect=lambda self: self,
         ),

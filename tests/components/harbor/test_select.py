@@ -5,23 +5,22 @@ from unittest.mock import AsyncMock, patch
 
 from harbor import HarborCommandError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import SETTINGS_TOPIC, emit_message
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 NIGHT_MODE_ENTITY = "select.harbor_camera_1234567890_night_mode"
 
@@ -68,8 +67,11 @@ async def test_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: NIGHT_MODE_ENTITY, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            CommonServiceArgument.ENTITY_ID: NIGHT_MODE_ENTITY,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -100,8 +102,11 @@ async def test_select_option_failure_raises(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: NIGHT_MODE_ENTITY, ATTR_OPTION: "off"},
+            SelectService.SELECT_OPTION,
+            {
+                CommonServiceArgument.ENTITY_ID: NIGHT_MODE_ENTITY,
+                SelectServiceArgument.OPTION: "off",
+            },
             blocking=True,
         )
 
