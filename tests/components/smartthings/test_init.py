@@ -295,20 +295,35 @@ async def test_delete_stale_subscription_quota_exceeded(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            SmartThingsAuthenticationFailedError("Authentication failed"),
+            "authentication_failed",
+            id="authentication_failed",
+        ),
+        pytest.param(
+            SmartThingsForbiddenError("Forbidden"),
+            "entitlement_required",
+            id="forbidden",
+        ),
+    ],
+)
 async def test_initial_fetch_authentication_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
+    translation_key: str,
 ) -> None:
-    """Test starting reauth when authentication fails while fetching."""
-    devices.get_devices.side_effect = SmartThingsAuthenticationFailedError(
-        "Authentication failed"
-    )
+    """Test starting reauth when authorization fails while fetching."""
+    devices.get_devices.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.error_reason_translation_key == "authentication_failed"
+    assert mock_config_entry.error_reason_translation_key == translation_key
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 

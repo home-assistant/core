@@ -33,6 +33,7 @@ from homeassistant.components.smartthings.const import (
     CONF_PAT_TOKEN,
     CONF_SUBSCRIPTION_ID,
     DOMAIN,
+    HOME_ASSISTANT_CLOUD_CLIENT_ID,
     MANAGE_PLANS_URL,
     PAT_TOKEN_URL,
     REQUESTED_SCOPES,
@@ -332,6 +333,52 @@ async def test_pat_flow_reuses_owned_app_when_provider_unavailable(
     assert "client_id=regenerated-client-id" in result["url"]
 
 
+@pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
+@pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
+async def test_pat_flow_keeps_credential_in_use(
+    hass: HomeAssistant,
+    mock_smartthings: AsyncMock,
+    mock_config_entry_with_app_id: MockConfigEntry,
+) -> None:
+    """Check regenerating an app in use keeps its old credential for the entry."""
+    mock_config_entry_with_app_id.add_to_hass(hass)
+    mock_smartthings.list_apps.return_value = [
+        SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
+    ]
+    mock_smartthings.regenerate_oauth.return_value = SimpleNamespace(
+        client_id="regenerated-client-id",
+        client_secret="regenerated-client-secret",
+    )
+
+    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+
+    with (
+        patch(
+            "homeassistant.components.smartthings.config_flow.async_get_implementations",
+            wraps=config_entry_oauth2_flow.async_get_implementations,
+            side_effect=[
+                ImplementationUnavailableError(),
+                ImplementationUnavailableError(),
+                DEFAULT,
+            ],
+        ),
+        patch.object(credentials, "async_delete_item", side_effect=HomeAssistantError),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=regenerated-client-id" in result["url"]
+    assert {item["client_id"] for item in credentials.async_items()} == {
+        "PROVISIONED_CLIENT_ID",
+        "regenerated-client-id",
+    }
+
+
 @pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
 async def test_concurrent_pat_flows_share_app(
     hass: HomeAssistant,
@@ -617,24 +664,34 @@ async def test_reauthentication_new_app_reuses_unused_app(
 
 @pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
 @pytest.mark.parametrize(
-    "error",
+    "patch_kwargs",
     [
-        pytest.param(ImplementationUnavailableError(), id="unavailable"),
-        pytest.param(UnknownImplementationError(), id="unknown"),
+        pytest.param(
+            {"side_effect": ImplementationUnavailableError()}, id="unavailable"
+        ),
+        pytest.param({"side_effect": UnknownImplementationError()}, id="unknown"),
+        pytest.param(
+            {
+                "return_value": SimpleNamespace(
+                    domain=DOMAIN, client_id=HOME_ASSISTANT_CLOUD_CLIENT_ID
+                )
+            },
+            id="cloud_client_id",
+        ),
     ],
 )
 async def test_reauthentication_implementation_error_restarts_flow(
     hass: HomeAssistant,
     mock_config_entry_with_app_id: MockConfigEntry,
-    error: Exception,
+    patch_kwargs: dict[str, Any],
 ) -> None:
-    """Check reauth falls back to the user step when the implementation is gone."""
+    """Check reauth falls back to the user step without a usable implementation."""
     mock_config_entry_with_app_id.add_to_hass(hass)
 
     result = await mock_config_entry_with_app_id.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.smartthings.config_flow.async_get_config_entry_implementation",
-        side_effect=error,
+        **patch_kwargs,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1326,6 +1383,54 @@ async def test_migration_no_cloud_uses_stored_credential(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+
+@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
+async def test_migration_provisions_app(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Check migrating an old entry via a PAT stores the provisioned app id."""
+    mock_old_config_entry.add_to_hass(hass)
+    mock_smartthings.list_apps.return_value = []
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = hass.config_entries.flow.async_progress()[0]
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "pat"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": " ".join(REQUESTED_SCOPES),
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_old_config_entry.data["auth_implementation"] == f"{DOMAIN}_mock-app-id"
+    assert mock_old_config_entry.data[CONF_APP_ID] == "mock-app-id"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
