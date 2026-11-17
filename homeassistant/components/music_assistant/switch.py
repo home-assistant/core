@@ -56,11 +56,22 @@ PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
     "clear_voice": False,
     "enhancer": True,
     "extra_bass": False,
+    "ir_repeater": False,
+    "ir_signal_light": False,
+    "loudness": True,
+    "night_mode": True,
     "party_mode": False,
     "pure_direct": True,
     "speaker_a": True,
     "speaker_b": True,
+    "speech_enhancement": True,
+    "status_light": False,
+    "sub_enabled": False,
     "surround_3d": False,
+    "surround_enabled": False,
+    "surround_mode": False,
+    "touch_controls": False,
+    "trueplay": False,
 }
 
 

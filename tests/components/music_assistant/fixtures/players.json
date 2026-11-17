@@ -81,6 +81,19 @@
           "options": null
         },
         {
+          "key": "status_light",
+          "name": "Status light",
+          "type": "boolean",
+          "translation_key": "status_light",
+          "translation_params": null,
+          "value": true,
+          "read_only": false,
+          "min_value": null,
+          "max_value": null,
+          "step": null,
+          "options": null
+        },
+        {
           "key": "enhancer_ro",
           "name": "Enhancer RO",
           "type": "boolean",
