@@ -1640,6 +1640,13 @@ async def test_media_player_get_queue_action_items(
             101,
             id="calling_user",
         ),
+        pytest.param(
+            100,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user_older_server",
+        ),
         pytest.param(100, {}, None, None, id="older_server"),
     ],
 )
@@ -1673,26 +1680,11 @@ async def test_media_player_get_queue_action_user(
     assert sent["require_schema"] == expected_schema
 
 
-@pytest.mark.parametrize(
-    ("extra_data", "translation_key", "sent"),
-    [
-        # a username is refused before anything is sent
-        (
-            {MusicAssistantServiceArgument.USERNAME: "john"},
-            "username_not_supported",
-            False,
-        ),
-        ({}, "server_too_old", True),
-    ],
-)
 async def test_media_player_get_queue_action_older_server(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    extra_data: dict[str, Any],
-    translation_key: str,
-    sent: bool,
 ) -> None:
-    """Test get_queue on a server that can't act as a user or lacks the command."""
+    """Test get_queue as a given user on a server that can't act as a user."""
     music_assistant_client.server_info.schema_version = 100
     music_assistant_client.send_command.side_effect = InvalidServerVersion(
         "Command requires schema 101"
@@ -1705,13 +1697,12 @@ async def test_media_player_get_queue_action_older_server(
             {
                 ATTR_ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.LIMIT: 5,
-            }
-            | extra_data,
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
             blocking=True,
             return_response=True,
         )
-    assert err.value.translation_key == translation_key
-    assert music_assistant_client.send_command.called is sent
+    assert err.value.translation_key == "server_too_old"
 
 
 async def test_media_player_get_queue_action_no_active_queue(
