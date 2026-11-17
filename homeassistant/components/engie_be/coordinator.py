@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
@@ -42,7 +42,6 @@ from .const import (
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
 
-_DIRECTIONS = ("offtake", "injection")
 _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
 _SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
@@ -53,15 +52,20 @@ def mask_identifier(identifier: str) -> str:
     return f"…{identifier[-4:]}"
 
 
+def auth_failed() -> ConfigEntryAuthFailed:
+    """Return the error that asks the user to sign in again."""
+    return ConfigEntryAuthFailed(
+        translation_domain=DOMAIN, translation_key="invalid_auth"
+    )
+
+
 @contextmanager
 def _raise_update_errors() -> Iterator[None]:
     """Turn client errors into the matching coordinator update errors."""
     try:
         yield
     except EngieBeAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="invalid_auth"
-        ) from err
+        raise auth_failed() from err
     except EngieBeError as err:
         raise UpdateFailed(
             translation_domain=DOMAIN,
@@ -216,26 +220,23 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             prices = await self.client.async_get_prices(self.ban)
 
         now = dt_util.utcnow()
-        fetch_eans = list(
-            dict.fromkeys(
-                ean_prices.ean
-                for ean_prices in prices.items
-                if self._service_point_due(bare_ean(ean_prices.ean), now)
-            )
-        )
+        fetch_eans: dict[str, str] = {}
+        for ean_prices in prices.items:
+            if self._service_point_due(bare := bare_ean(ean_prices.ean), now):
+                fetch_eans.setdefault(bare, ean_prices.ean)
         if fetch_eans:
             service_points = await asyncio.gather(
-                *(self.client.async_get_service_point(ean) for ean in fetch_eans),
+                *(
+                    self.client.async_get_service_point(ean)
+                    for ean in fetch_eans.values()
+                ),
                 return_exceptions=True,
             )
-            for ean, service_point_result in zip(
+            for bare, service_point_result in zip(
                 fetch_eans, service_points, strict=True
             ):
-                bare = bare_ean(ean)
                 if isinstance(service_point_result, EngieBeAuthenticationError):
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN, translation_key="invalid_auth"
-                    ) from service_point_result
+                    raise auth_failed() from service_point_result
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
@@ -260,10 +261,10 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
             period = _current_period(ean_prices.periods, today)
             if period is None:
                 continue
-            for direction in _DIRECTIONS:
-                direction_slots = (
-                    period.offtake if direction == "offtake" else period.injection
-                )
+            for direction, direction_slots in (
+                ("offtake", period.offtake),
+                ("injection", period.injection),
+            ):
                 for slot in direction_slots:
                     normalized = normalize_slot_code(slot.time_of_use_slot_code)
                     if normalized == _BLENDED_SLOT_CODE:
@@ -281,15 +282,11 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
 class EngieBeEpexData:
     """Merged EPEX day-ahead price slots covering today and tomorrow."""
 
-    hourly: tuple[EpexSlot, ...]
-    quarter_hourly: tuple[EpexSlot, ...]
+    by_granularity: Mapping[EpexGranularity, tuple[EpexSlot, ...]]
 
     def slots(self, granularity: EpexGranularity) -> tuple[EpexSlot, ...]:
         """Return the merged slots for one granularity."""
-        return {
-            EpexGranularity.HOURLY: self.hourly,
-            EpexGranularity.QUARTER_HOURLY: self.quarter_hourly,
-        }[granularity]
+        return self.by_granularity.get(granularity, ())
 
 
 def epex_slots_for_day(slots: Iterable[EpexSlot], day: date) -> tuple[EpexSlot, ...]:
@@ -431,7 +428,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             update_interval=EPEX_SCAN_INTERVAL,
         )
         self.client = client
-        self.data = EngieBeEpexData(hourly=(), quarter_hourly=())
+        self.data = EngieBeEpexData(by_granularity={})
         self._listener_unsub: Callable[[], None] | None = None
 
     @callback
@@ -461,9 +458,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     async def _async_update_data(self) -> EngieBeEpexData:
         """Fetch EPEX prices for each day and granularity without full coverage."""
         data = (
-            self.data
-            if self.data is not None
-            else EngieBeEpexData(hourly=(), quarter_hourly=())
+            self.data if self.data is not None else EngieBeEpexData(by_granularity={})
         )
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
@@ -482,9 +477,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                         *epex_window(day), granularity=granularity
                     )
                 except EngieBeAuthenticationError as err:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN, translation_key="invalid_auth"
-                    ) from err
+                    raise auth_failed() from err
                 except EngieBeError as err:
                     if required:
                         raise UpdateFailed(
@@ -497,13 +490,10 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     slot for slot in slots[granularity] if brussels_day(slot) != day
                 ] + list(payload.slots)
         return EngieBeEpexData(
-            hourly=tuple(
-                sorted(slots[EpexGranularity.HOURLY], key=lambda slot: slot.start)
-            ),
-            quarter_hourly=tuple(
-                sorted(
-                    slots[EpexGranularity.QUARTER_HOURLY],
-                    key=lambda slot: slot.start,
+            by_granularity={
+                granularity: tuple(
+                    sorted(granularity_slots, key=lambda slot: slot.start)
                 )
-            ),
+                for granularity, granularity_slots in slots.items()
+            }
         )

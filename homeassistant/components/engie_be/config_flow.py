@@ -90,24 +90,21 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "unknown"}
         return {}
 
-    async def _async_submit_mfa(
-        self, code: str
-    ) -> tuple[dict[str, str], tuple[str, str] | None]:
-        """Submit the MFA code and return (errors, tokens)."""
+    async def _async_submit_mfa(self, code: str) -> tuple[str, str] | str:
+        """Submit the MFA code and return the tokens, or the form error key."""
         if TYPE_CHECKING:
             assert self._auth_flow is not None
         try:
-            tokens = await self._auth_flow.async_submit_mfa(code)
+            return await self._auth_flow.async_submit_mfa(code)
         except EngieBeMfaError:
-            return {"base": "invalid_mfa_code"}, None
+            return "invalid_mfa_code"
         except EngieBeAuthenticationError:
-            return {"base": "invalid_auth"}, None
+            return "invalid_auth"
         except EngieBeCommunicationError:
-            return {"base": "cannot_connect"}, None
+            return "cannot_connect"
         except EngieBeError:
             LOGGER.exception("Unexpected error during MFA submission")
-            return {"base": "unknown"}, None
-        return {}, tokens
+            return "unknown"
 
     @override
     async def async_step_user(
@@ -192,52 +189,45 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the MFA code entry step."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and self._email is not None:
-            errors, tokens = await self._async_submit_mfa(user_input["code"])
-            if not errors and tokens is not None:
-                access_token, refresh_token = tokens
-                if TYPE_CHECKING:
-                    assert self._client is not None
-                subject = self._client.subject
-                if subject is None:
-                    return self.async_show_form(
-                        step_id="mfa",
-                        data_schema=_CODE_SCHEMA,
-                        errors={"base": "invalid_auth"},
-                    )
-                await self.async_set_unique_id(subject)
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(),
-                        data_updates={
-                            CONF_ACCESS_TOKEN: access_token,
-                            CONF_REFRESH_TOKEN: refresh_token,
-                        },
-                    )
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(),
-                        data_updates={
-                            CONF_EMAIL: self._email,
-                            CONF_MFA_METHOD: self._mfa_method.value,
-                            CONF_ACCESS_TOKEN: access_token,
-                            CONF_REFRESH_TOKEN: refresh_token,
-                        },
-                        title=self._email,
-                    )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=self._email,
-                    data={
-                        CONF_EMAIL: self._email,
-                        CONF_MFA_METHOD: self._mfa_method.value,
-                        CONF_ACCESS_TOKEN: access_token,
-                        CONF_REFRESH_TOKEN: refresh_token,
-                    },
-                )
+        if user_input is not None:
+            result = await self._async_submit_mfa(user_input["code"])
+            if not isinstance(result, str):
+                return await self._async_finish_login(*result)
+            errors["base"] = result
 
         return self.async_show_form(
             step_id="mfa", data_schema=_CODE_SCHEMA, errors=errors
         )
+
+    async def _async_finish_login(
+        self, access_token: str, refresh_token: str
+    ) -> ConfigFlowResult:
+        """Create, update or reload the entry after a successful login."""
+        if TYPE_CHECKING:
+            assert self._client is not None
+            assert self._email is not None
+        if (subject := self._client.subject) is None:
+            return self.async_show_form(
+                step_id="mfa",
+                data_schema=_CODE_SCHEMA,
+                errors={"base": "invalid_auth"},
+            )
+        await self.async_set_unique_id(subject)
+        data = {
+            CONF_EMAIL: self._email,
+            CONF_MFA_METHOD: self._mfa_method.value,
+            CONF_ACCESS_TOKEN: access_token,
+            CONF_REFRESH_TOKEN: refresh_token,
+        }
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=data
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data, title=self._email
+            )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=self._email, data=data)
