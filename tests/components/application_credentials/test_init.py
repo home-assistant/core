@@ -410,6 +410,35 @@ async def test_websocket_delete_imported_auth_domain_in_use(
     assert resp.get("success")
 
 
+async def test_websocket_delete_shadowed_auth_domain_credential(
+    hass: HomeAssistant, ws_client: ClientFixture
+) -> None:
+    """Test an unused credential shadowed by another for its auth domain can be deleted."""
+    await async_import_client_credential(
+        hass, TEST_DOMAIN, DEVELOPER_CREDENTIAL, auth_domain="fake_integration_app"
+    )
+    await async_import_client_credential(
+        hass,
+        TEST_DOMAIN,
+        ClientCredential("other-client-id", CLIENT_SECRET),
+        auth_domain="fake_integration_app",
+    )
+    MockConfigEntry(
+        domain=TEST_DOMAIN, data={"auth_implementation": "fake_integration_app"}
+    ).add_to_hass(hass)
+    client = await ws_client()
+
+    # The last imported credential is the one in use
+    resp = await client.cmd(
+        "delete", {"application_credentials_id": "fake_integration_other_client_id"}
+    )
+    assert not resp.get("success")
+    assert resp["error"].get("code") == "home_assistant_error"
+
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
+    assert resp.get("success")
+
+
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_websocket_import_config(
     ws_client: ClientFixture,
