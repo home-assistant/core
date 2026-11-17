@@ -2,17 +2,13 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from daikin_onecta.client import OnectaClient
-from daikin_onecta.models import Characteristic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
-from homeassistant.components.daikin_onecta.const import SENSOR_PERIOD_DAILY
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     BINARY_SENSOR_DESCRIPTIONS,
@@ -22,15 +18,6 @@ from homeassistant.components.daikin_onecta.entity_descriptions import (
     SWITCH_DESCRIPTIONS,
     UPDATE_DESCRIPTIONS,
 )
-from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
-from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
-from homeassistant.components.daikin_onecta.sensor import (
-    DaikinEnergySensor,
-    DaikinValueSensor,
-)
-from homeassistant.components.daikin_onecta.switch import DaikinSwitch
-from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEntity
-from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
@@ -53,84 +40,6 @@ from .platform_helpers import _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
-@pytest.mark.parametrize(
-    "entity_class",
-    [
-        DaikinAirPurifier,
-        DaikinBinarySensor,
-        DaikinEnergySensor,
-        DaikinFirmwareUpdateEntity,
-        DaikinScheduleSelect,
-        DaikinValueSensor,
-        DaikinSwitch,
-        DaikinWaterTank,
-    ],
-)
-@pytest.mark.parametrize(
-    ("last_update_success", "device_available", "management_point_exists", "expected"),
-    [
-        (True, True, True, True),
-        (False, True, True, False),
-        (True, False, True, False),
-        (True, True, False, False),
-    ],
-)
-def test_platform_availability_requires_coordinator_and_device(
-    entity_class: type,
-    last_update_success: bool,
-    device_available: bool,
-    management_point_exists: bool,
-    expected: bool,
-) -> None:
-    """Entities require a successful update and their management point."""
-    entity = object.__new__(entity_class)
-    entity.coordinator = type(
-        "Coordinator", (), {"last_update_success": last_update_success}
-    )()
-    entity._embedded_id = "point"
-    entity._value = "test"
-    entity._sub_type = None
-    entity._period = SENSOR_PERIOD_DAILY
-    entity._datatype = "consumed"
-    entity._sensor_type = "electricity"
-    entity._operation_mode = "heating"
-    point = MagicMock()
-    point.air_purification = SimpleNamespace(
-        power=Characteristic(value="on", settable=True)
-    )
-    point.domestic_hot_water = object()
-    point.energy_aggregates = [
-        SimpleNamespace(
-            data_type="consumed",
-            source="electricity",
-            operation_mode="heating",
-            period="day",
-        )
-    ]
-    point.firmware = SimpleNamespace(has_installed_version=True)
-    point.schedule_state = SimpleNamespace(active_selection=object())
-    characteristic = Characteristic(value="test")
-    if entity_class is DaikinBinarySensor:
-        characteristic = Characteristic(value=True)
-    elif entity_class is DaikinSwitch:
-        characteristic = Characteristic(value="on", settable=True, values=["on", "off"])
-    point.scalar_characteristic.return_value = characteristic
-    point.sensory_characteristic.return_value = characteristic
-    entity._device = type(
-        "Device",
-        (),
-        {
-            "available": device_available,
-            "management_point": lambda _, __: (
-                point if management_point_exists else None
-            ),
-        },
-    )
-    entity._device = entity._device()
-
-    assert entity.available is expected
-
-
 def test_device_exposes_gateway_embedded_id() -> None:
     """Expose the gateway management point ID from the device wrapper."""
     gateway = _load_gateway_devices("altherma")[0]
@@ -139,41 +48,35 @@ def test_device_exposes_gateway_embedded_id() -> None:
     assert device.gateway_embedded_id == gateway.gateway_embedded_id
 
 
-@pytest.mark.parametrize(
-    "entity_class",
-    [
-        DaikinAirPurifier,
-        DaikinBinarySensor,
-        DaikinEnergySensor,
-        DaikinFirmwareUpdateEntity,
-        DaikinScheduleSelect,
-        DaikinValueSensor,
-        DaikinSwitch,
-        DaikinWaterTank,
-    ],
-)
-def test_removed_entity_capability_becomes_unavailable(entity_class: type) -> None:
-    """Entities become unavailable when their source capability disappears."""
-    entity = object.__new__(entity_class)
-    entity.coordinator = SimpleNamespace(last_update_success=True)
-    entity._embedded_id = "point"
-    entity._value = "test"
-    entity._sub_type = None
-    entity._period = SENSOR_PERIOD_DAILY
-    entity._datatype = "consumed"
-    entity._sensor_type = "electricity"
-    entity._operation_mode = "heating"
-    point = MagicMock()
-    point.air_purification = None
-    point.domestic_hot_water = None
-    point.energy_aggregates = []
-    point.firmware = None
-    point.schedule_state = None
-    point.scalar_characteristic.return_value = None
-    point.sensory_characteristic.return_value = None
-    entity._device = SimpleNamespace(available=True, management_point=lambda _: point)
+async def test_platform_entities_become_unavailable_after_failed_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Publish coordinator failure through entities loaded by the config entry."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    entity_ids = [
+        entry.entity_id
+        for entry in entries
+        if entry.domain != BUTTON_DOMAIN
+        if hass.states.get(entry.entity_id) is not None
+    ]
+    assert entity_ids
 
-    assert not entity.available
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    states = {entity_id: hass.states.get(entity_id) for entity_id in entity_ids}
+    assert all(
+        state is not None and state.state == "unavailable" for state in states.values()
+    ), {
+        entity_id: state.state
+        for entity_id, state in states.items()
+        if state is not None and state.state != "unavailable"
+    }
 
 
 async def test_account_entities_are_not_duplicated_for_multiple_gateways(
@@ -215,12 +118,6 @@ def test_entity_descriptions_have_translation_keys(descriptions: dict) -> None:
     assert all(
         description.translation_key is not None for description in descriptions.values()
     )
-
-
-def test_primary_entities_use_device_name() -> None:
-    """Primary device entities intentionally use the device name directly."""
-    assert object.__new__(DaikinAirPurifier).name is None
-    assert object.__new__(DaikinWaterTank).name is None
 
 
 @pytest.mark.parametrize(

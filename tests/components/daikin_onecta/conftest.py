@@ -19,6 +19,7 @@ class MockOnectaClient:
         """Initialize the mock client and its recorded calls."""
         self.patch_characteristic = AsyncMock()
         self.get_gateway_devices = AsyncMock()
+        self.post_management_point = AsyncMock()
 
 
 @pytest.fixture
@@ -46,6 +47,17 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
     async def mock_get_gateway_devices(_client: object) -> list[GatewayDevice]:
         return await mock_client.get_gateway_devices()
 
+    async def mock_post_management_point(
+        _client: object,
+        gateway_id: str,
+        management_point_id: str,
+        resource: str,
+        value: object,
+    ) -> object:
+        return await mock_client.post_management_point(
+            gateway_id, management_point_id, resource, value
+        )
+
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.patch_characteristic",
         mock_patch_characteristic,
@@ -53,6 +65,10 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
         mock_get_gateway_devices,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.daikin_onecta.coordinator.OnectaClient.post_management_point",
+        mock_post_management_point,
     )
     return mock_client
 
