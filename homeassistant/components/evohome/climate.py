@@ -371,8 +371,7 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set the system mode, either indefinitely or for a duration/period."""
 
-        # the client checks the mode is allowed, and works out when it ends (in the
-        # location's time zone, which need not be HA's)
+        # the client checks the mode is allowed, and works out when it ends
         evo_mode = as_snake_case(mode)
 
         # service schema makes duration & period mutually exclusive (can be neither)
