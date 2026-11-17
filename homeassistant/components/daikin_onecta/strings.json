@@ -562,5 +562,18 @@
     "water_heater_turn_on_failed": {
       "message": "Failed to turn on {device}"
     }
+  },
+  "system_health": {
+    "info": {
+      "api_status": "Daikin API status",
+      "max_day": "Daily API request limit",
+      "max_minute": "Per-minute API request limit",
+      "oauth2_status": "Daikin OAuth service status",
+      "oauth2_token_valid": "OAuth token valid",
+      "ratelimit_reset": "Rate limit reset time",
+      "remaining_day": "Daily API requests remaining",
+      "remaining_minute": "Per-minute API requests remaining",
+      "retry_after": "Retry after"
+    }
   }
 }
