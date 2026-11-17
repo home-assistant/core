@@ -15,6 +15,7 @@ from pyocat import (
 from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_INFO_POLLING_INTERVAL = timedelta(hours=24)
 STATE_POLLING_INTERVAL = timedelta(seconds=30)
 MEASUREMENTS_POLLING_INTERVAL = timedelta(seconds=60)
+RETRY_INTERVAL = 60
 
 
 class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
@@ -58,7 +60,6 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
         try:
             return await self._async_fetch_data()
         except (
-            WTCApiDisabledError,
             WTCApiTemporaryError,
             HTTPStatusError,
             RequestError,
@@ -67,18 +68,17 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-                translation_placeholders={
-                    "coordinator_name": self.name,
-                },
-                retry_after=60,
+                retry_after=RETRY_INTERVAL,
             ) from err
         except WTCApiUnauthorizedError as err:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="update_failed_unauthorized",
-                translation_placeholders={
-                    "coordinator_name": self.name,
-                },
+            ) from err
+        except WTCApiDisabledError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_api_disabled",
             ) from err
 
     @abstractmethod
