@@ -15,11 +15,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.rest import DOMAIN
+from homeassistant.components.rest.services import RestService
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     CONTENT_TYPE_JSON,
-    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -523,7 +523,7 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )

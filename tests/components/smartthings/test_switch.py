@@ -18,7 +18,7 @@ from homeassistant.components import automation, script
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings.const import DOMAIN, MAIN, MANAGE_PLANS_URL
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -632,8 +633,8 @@ async def test_turn_on_without_remote_control(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -666,8 +667,8 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()
@@ -700,8 +701,8 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.dishwasher_1_speed_booster"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.dishwasher_1_speed_booster"},
             blocking=True,
         )
     devices.execute_device_command.assert_not_called()

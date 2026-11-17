@@ -22,6 +22,9 @@
     "held": {
       "trigger": "mdi:gesture-tap-hold"
     },
+    "hold_ended": {
+      "trigger": "mdi:gesture-tap-hold"
+    },
     "pressed": {
       "trigger": "mdi:gesture-tap-button"
     }

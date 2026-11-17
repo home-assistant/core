@@ -71,6 +71,7 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_name = None
+    _attr_translation_key = "ventilation"
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
