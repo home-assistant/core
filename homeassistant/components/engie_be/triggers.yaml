@@ -1,0 +1,61 @@
+.device: &device
+  required: true
+  selector:
+    device:
+      filter:
+        - integration: engie_be
+      multiple: true
+
+.price: &price
+  required: false
+  selector:
+    number:
+      min: -1
+      max: 5
+      step: 0.001
+      mode: box
+      unit_of_measurement: EUR/kWh
+
+epex_hour_price_became_negative:
+  fields:
+    device_id: *device
+
+epex_hour_price_no_longer_negative:
+  fields:
+    device_id: *device
+
+epex_quarter_hour_price_became_negative:
+  fields:
+    device_id: *device
+
+epex_quarter_hour_price_no_longer_negative:
+  fields:
+    device_id: *device
+
+epex_tomorrow_prices_published:
+  fields:
+    device_id: *device
+
+epex_current_hour_crossed_threshold:
+  fields:
+    device_id: *device
+    above: *price
+    below: *price
+
+epex_next_hour_crossed_threshold:
+  fields:
+    device_id: *device
+    above: *price
+    below: *price
+
+epex_current_quarter_hour_crossed_threshold:
+  fields:
+    device_id: *device
+    above: *price
+    below: *price
+
+epex_next_quarter_hour_crossed_threshold:
+  fields:
+    device_id: *device
+    above: *price
+    below: *price
