@@ -1,4 +1,4 @@
-"""Tests for the Daikin Onecta API client."""
+"""Tests for the Daikin Onecta coordinator client adapter."""
 
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -134,6 +134,7 @@ async def test_write_authentication_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Start reauthentication and use the platform's translated write failure."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
@@ -145,11 +146,18 @@ async def test_write_authentication_error(
         )
     )
 
-    with patch.object(config_entry, "async_start_reauth") as start_reauth:
+    with (
+        caplog.at_level("DEBUG"),
+        patch.object(config_entry, "async_start_reauth") as start_reauth,
+    ):
         assert not await api.async_execute_command(command)
 
     start_reauth.assert_called_once_with(hass)
     assert api.last_patch_call is None
+    assert (
+        f"Daikin request PATCH /v1/management-points/point failed authentication "
+        f"with HTTP {status}" in caplog.text
+    )
 
 
 async def test_write_preserves_oauth_token_rejection(

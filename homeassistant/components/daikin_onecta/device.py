@@ -49,7 +49,7 @@ class DaikinOnectaDevice:
 
     def _metadata(self) -> tuple[object, ...]:
         """Return the cloud identity and descriptive metadata."""
-        model, serial_number, sw_version = self._gateway_metadata()
+        model, serial_number, sw_version = self.gateway_metadata
         return (
             self.name,
             self.device.device_model,
@@ -72,15 +72,9 @@ class DaikinOnectaDevice:
             ),
         )
 
-    def _gateway_metadata(self) -> tuple[str | None, str | None, str | None]:
+    @property
+    def gateway_metadata(self) -> tuple[str | None, str | None, str | None]:
         """Return model, serial number, and firmware from the gateway point."""
-        gateway = self.device
-        if (embedded_id := gateway.gateway_embedded_id) is not None and (
-            management_point := gateway.management_point(embedded_id)
-        ) is not None:
-            return (
-                management_point.model,
-                management_point.serial,
-                management_point.version,
-            )
-        return None, None, None
+        if (gateway_point := self.device.gateway_management_point) is None:
+            return None, None, None
+        return gateway_point.model, gateway_point.serial, gateway_point.version

@@ -20,7 +20,7 @@ from daikin_onecta.exceptions import (
 from daikin_onecta.models import GatewayDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     OAuth2TokenRequestError,
@@ -29,6 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -82,10 +83,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         )
         self._last_patch_call: datetime | None = None
         self._polling_backoff_until: datetime | None = None
+        self._bypass_polling_backoff = False
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
         self._reload_pending = False
-        self._scheduled_refresh = True
+        self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
 
         super().__init__(
             hass,
@@ -94,27 +96,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             name=DOMAIN,
             update_interval=self._determine_update_interval(),
         )
-
-    @override
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Track scheduled refreshes so manual requests can bypass poll backoff."""
-        previous_scheduled_refresh = self._scheduled_refresh
-        self._scheduled_refresh = scheduled
-        try:
-            await super()._async_refresh(
-                log_failures=log_failures,
-                raise_on_auth_failed=raise_on_auth_failed,
-                scheduled=scheduled,
-                raise_on_entry_error=raise_on_entry_error,
-            )
-        finally:
-            self._scheduled_refresh = previous_scheduled_refresh
 
     @property
     def client(self) -> OnectaClient:
@@ -144,16 +125,28 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         await self.session.async_ensure_token_valid()
         return cast("str", self.session.token["access_token"])
 
+    @override
+    async def async_request_refresh(self) -> None:
+        """Refresh on request, even while scheduled polling is rate limited."""
+        # Keep the bypass until the debouncer runs a refresh. A scheduled
+        # refresh may consume it first, which still gives the request a cloud
+        # update without making multiple calls for multiple climate entities.
+        # If a debounced request is dropped while another refresh is running,
+        # the flag may instead reach the next scheduled poll, causing one
+        # extra GET. Accept that rare request to preserve the manual bypass.
+        self._bypass_polling_backoff = True
+        await super().async_request_refresh()
+
     async def _async_get_cloud_devices(
         self,
         *,
         cooldown: timedelta | None = None,
-        respect_polling_backoff: bool = True,
+        bypass_polling_backoff: bool = False,
     ) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
         async with self._cloud_lock:
             if (
-                respect_polling_backoff
+                not bypass_polling_backoff
                 and self._polling_backoff_remaining() is not None
             ):
                 return None
@@ -163,7 +156,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 and dt_util.utcnow() - self._last_patch_call < cooldown
             ):
                 return None
-            return await self._client.get_gateway_devices()
+            try:
+                return await self._client.get_gateway_devices()
+            except OnectaRateLimitError as err:
+                self._set_polling_backoff(err.retry_after)
+                raise
 
     async def async_get_sites(self) -> list[Site]:
         """Return account sites for explicit, non-polling diagnostics."""
@@ -192,17 +189,17 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return False
             except OAuth2TokenRequestError:
                 return False
-            except OnectaAuthenticationError:
+            except OnectaAuthenticationError as err:
+                _LOGGER.debug(
+                    "Daikin request %s %s failed authentication with HTTP %s",
+                    err.method,
+                    err.path,
+                    err.status,
+                )
                 self.config_entry.async_start_reauth(self.hass)
                 return False
             except OnectaRateLimitError as err:
-                if err.retry_after is not None and err.retry_after > 0:
-                    retry_at = dt_util.utcnow() + timedelta(seconds=err.retry_after)
-                    if (
-                        self._polling_backoff_until is None
-                        or retry_at > self._polling_backoff_until
-                    ):
-                        self._polling_backoff_until = retry_at
+                self._set_polling_backoff(err.retry_after)
                 _LOGGER.debug(
                     "Daikin request %s %s was rate limited; retry after %s seconds",
                     err.method,
@@ -232,11 +229,47 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             had_polling_backoff = self._polling_backoff_remaining() is not None
             self._polling_backoff_until = None
             self._last_patch_call = dt_util.utcnow()
-            if had_polling_backoff:
-                self.update_interval = _POST_WRITE_COOLDOWN
-                if self._listeners:
-                    self._schedule_refresh()
+            if had_polling_backoff or self._unsub_post_write_refresh is not None:
+                self._schedule_post_write_refresh()
             return True
+
+    def _schedule_post_write_refresh(self) -> None:
+        """Request cloud state after a successful write's cooldown."""
+        self._cancel_post_write_refresh()
+        self._unsub_post_write_refresh = async_track_point_in_utc_time(
+            self.hass,
+            self._async_post_write_refresh,
+            dt_util.utcnow() + _POST_WRITE_COOLDOWN,
+        )
+
+    def _set_polling_backoff(self, retry_after: float | None) -> None:
+        """Retain Daikin's Retry-After deadline for every later refresh."""
+        if retry_after is None or retry_after <= 0:
+            return
+        retry_at = dt_util.utcnow() + timedelta(seconds=retry_after)
+        if (
+            self._polling_backoff_until is None
+            or retry_at > self._polling_backoff_until
+        ):
+            self._polling_backoff_until = retry_at
+
+    async def _async_post_write_refresh(self, _now: datetime) -> None:
+        """Refresh after the successful write cooldown expires."""
+        self._unsub_post_write_refresh = None
+        await self.async_refresh()
+
+    @callback
+    def _cancel_post_write_refresh(self) -> None:
+        """Cancel a pending post-write refresh."""
+        if self._unsub_post_write_refresh is not None:
+            self._unsub_post_write_refresh()
+            self._unsub_post_write_refresh = None
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Cancel the post-write refresh timer when shutting down."""
+        self._cancel_post_write_refresh()
+        await super().async_shutdown()
 
     def async_register_devices(self) -> None:
         """Register all gateways before forwarding platform setup."""
@@ -251,11 +284,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             if gateway.mac_address
             else set()
         )
-        model, serial_number, sw_version = (
-            (point.model, point.serial, point.version)
-            if (point := gateway.gateway_management_point) is not None
-            else (None, None, None)
-        )
+        model, serial_number, sw_version = device.gateway_metadata
         registry = dr.async_get(self.hass)
         if (
             existing_entry := registry.async_get_device_by_identifier(
@@ -283,10 +312,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
-        previous_devices = self.data
+        previous_devices = self.data_or_none
         devices = previous_devices or {}
+        bypass_polling_backoff = self._bypass_polling_backoff
+        self._bypass_polling_backoff = False
         if (
-            self._scheduled_refresh
+            not bypass_polling_backoff
             and (remaining := self._polling_backoff_remaining()) is not None
         ):
             self.update_interval = remaining
@@ -315,15 +346,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             # request fails, retries must not remain at the cooldown cadence.
             self.update_interval = self._determine_update_interval()
             try:
-                if self._scheduled_refresh:
-                    cloud_devices = await self._async_get_cloud_devices(
-                        cooldown=_POST_WRITE_COOLDOWN
-                    )
-                else:
-                    cloud_devices = await self._async_get_cloud_devices(
-                        cooldown=_POST_WRITE_COOLDOWN,
-                        respect_polling_backoff=False,
-                    )
+                cloud_devices = await self._async_get_cloud_devices(
+                    cooldown=_POST_WRITE_COOLDOWN,
+                    bypass_polling_backoff=bypass_polling_backoff,
+                )
             except OAuth2TokenRequestReauthError as err:
                 # Convert reauth failures so the coordinator notifies entities
                 # that their state is no longer current.
@@ -335,7 +361,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 # Preserve transient token errors so the coordinator retries.
                 raise
             except OnectaRateLimitError as err:
-                # Retry-After delays scheduled polling; manual updates still poll.
+                if bypass_polling_backoff and self.last_update_success:
+                    # A manual refresh can still be rate limited. Keep the
+                    # last known good state available while scheduled polls
+                    # wait for the Retry-After deadline.
+                    if remaining := self._polling_backoff_remaining():
+                        self.update_interval = remaining
+                    _LOGGER.debug(
+                        "Daikin rate-limited a refresh that bypassed polling backoff"
+                    )
+                    return devices
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_exceeded",
@@ -397,7 +432,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device
                         registry_metadata_changed = True
-                    if registry_metadata_changed:
+                    if registry_metadata_changed and previous_devices is not None:
                         self._async_register_device(device)
 
                 if has_new_topology and not self._reload_pending:

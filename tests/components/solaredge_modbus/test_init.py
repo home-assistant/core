@@ -1297,16 +1297,16 @@ async def test_only_a_block_a_check_reloads_for_is_kept(
     assert mock_config_entry.data[CONF_SILENT_BLOCKS] == ["power_control"]
 
 
-async def test_reads_wait_longer_than_the_probe(
+async def test_timeout_is_set_before_probing(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """Polls get a longer timeout, the probe keeps the link's default.
+    """The read timeout is set before probing opens the connection.
 
-    Over Wi-Fi some answers come late, and one late answer fails a whole poll.
-    The probe waits out a full timeout for every block the inverter never
-    answers, so raising it there would only make setting up slower.
+    Raising the timeout after probing tears down and reopens the underlying
+    socket, and SolarEdge inverters refuse or ignore a TCP reconnect that
+    follows immediately after closing the previous connection.
     """
     during_probe: list[float | None] = []
     probe = SolarEdge.async_probe
@@ -1320,5 +1320,5 @@ async def test_reads_wait_longer_than_the_probe(
     with patch.object(SolarEdge, "async_probe", recording_probe):
         await _setup(hass, mock_config_entry)
 
-    assert during_probe == [None]
+    assert during_probe == [READ_TIMEOUT]
     assert mock_modbus_unit.required_timeout == READ_TIMEOUT

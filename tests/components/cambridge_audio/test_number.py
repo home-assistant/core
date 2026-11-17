@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,7 +46,7 @@ async def test_setting_value(
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 13},
         target={
-            ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_room_correction_intensity"
+            TargetKey.ENTITY_ID: "number.cambridge_audio_cxnv2_room_correction_intensity"
         },
         blocking=True,
     )
@@ -68,7 +68,7 @@ async def test_setting_volume_limit(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
+        target={TargetKey.ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
         blocking=True,
     )
 
@@ -93,7 +93,7 @@ async def test_setting_volume_limit_unavailable_when_pre_amp_mode_off(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: 50},
-        target={ATTR_ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
+        target={TargetKey.ENTITY_ID: "number.cambridge_audio_cxnv2_volume_limit"},
         blocking=True,
     )
 

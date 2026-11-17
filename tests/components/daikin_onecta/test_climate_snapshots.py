@@ -48,8 +48,8 @@ FIXTURES = (
     "minimal_data",
     "nomodel_id",
     "offlinedevice",
-    "schedule",
     "skyair",
+    "schedule",
     "ururu",
 )
 
@@ -158,17 +158,18 @@ async def test_fan_mode_changes_with_hvac_mode(
     await _async_setup_fixture(hass, config_entry, "fanmode")
     api = config_entry.runtime_data
     api.client.patch_characteristic = AsyncMock()
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            "entity_id": "climate.sala_climatecontrol_room_temperature",
+            "entity_id": entity_id,
             ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
-    state = hass.states.get("climate.sala_climatecontrol_room_temperature")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == HVACMode.COOL
     assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "3"
@@ -177,12 +178,12 @@ async def test_fan_mode_changes_with_hvac_mode(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            "entity_id": "climate.sala_climatecontrol_room_temperature",
+            "entity_id": entity_id,
             ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
         },
         blocking=True,
     )
-    state = hass.states.get("climate.sala_climatecontrol_room_temperature")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == HVACMode.DRY
     assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == "auto"

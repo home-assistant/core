@@ -1,6 +1,7 @@
 """Update coordinator for Bravia TV integration."""
 
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
@@ -337,7 +338,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     @catch_braviatv_errors
     async def async_turn_off(self) -> None:
         """Turn off device."""
-        await self.client.turn_off()
+        with suppress(BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
+            await self.client.turn_off()
 
     @catch_braviatv_errors
     async def async_set_volume_level(self, volume: float) -> None:

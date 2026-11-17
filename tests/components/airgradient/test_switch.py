@@ -14,7 +14,7 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -47,7 +47,7 @@ async def test_setting_value(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
+        target={TargetKey.ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
     mock_airgradient_client.enable_sharing_data.assert_called_once()
@@ -56,7 +56,7 @@ async def test_setting_value(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
+        target={TargetKey.ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
         blocking=True,
     )
     mock_airgradient_client.enable_sharing_data.assert_called_once()
@@ -103,7 +103,7 @@ async def test_v1_switch_writes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -174,6 +174,6 @@ async def test_exception_handling(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            target={ATTR_ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
+            target={TargetKey.ENTITY_ID: "switch.airgradient_post_data_to_airgradient"},
             blocking=True,
         )

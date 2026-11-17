@@ -41,6 +41,11 @@
       }
     }
   },
+  "device": {
+    "climate_zone": {
+      "name": "Climate zone"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "daylightsavingtimeenabled": {
@@ -90,13 +95,55 @@
     },
     "climate": {
       "calculated_leaving_water_temperature": {
-        "name": "Calculated leaving water temperature"
+        "name": "Calculated leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
       },
       "leaving_water_offset": {
-        "name": "Leaving water offset"
+        "name": "Leaving water offset",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
       },
       "leaving_water_temperature": {
-        "name": "Leaving water temperature"
+        "name": "Leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
+            }
+          }
+        }
       },
       "room_temperature": {
         "name": "Room temperature",
@@ -108,6 +155,7 @@
           },
           "swing_mode": {
             "state": {
+              "fixed": "Fixed",
               "floorheatingairflow": "Floor heating airflow",
               "windnice": "Comfort airflow"
             }

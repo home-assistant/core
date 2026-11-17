@@ -10,8 +10,8 @@ from pyvesync.devices.vesynchumidifier import VeSyncHumid200S
 from pyvesync.utils.errors import ResponseInfo
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -64,19 +64,19 @@ async def test_switch_state(
     ("action", "last_response", "message"),
     [
         pytest.param(
-            SERVICE_TURN_ON, DEVICE_ERROR, "Device error", id="on_last_response"
+            SwitchService.TURN_ON, DEVICE_ERROR, "Device error", id="on_last_response"
         ),
         pytest.param(
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             None,
             "Unknown error turning on device, no response.",
             id="on_no_last_response",
         ),
         pytest.param(
-            SERVICE_TURN_OFF, DEVICE_ERROR, "Device error", id="off_last_response"
+            SwitchService.TURN_OFF, DEVICE_ERROR, "Device error", id="off_last_response"
         ),
         pytest.param(
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             None,
             "Unknown error turning off device, no response.",
             id="off_no_last_response",
@@ -111,7 +111,7 @@ async def test_turn_on_off_display_raises_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: ENTITY_SWITCH_DISPLAY},
+            {CommonServiceArgument.ENTITY_ID: ENTITY_SWITCH_DISPLAY},
             blocking=True,
         )
 
@@ -125,7 +125,7 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Outlet",
             "switch.outlet",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_on",
             "Device does not support toggling power.",
             id="power_on",
@@ -133,7 +133,7 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Outlet",
             "switch.outlet",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_off",
             "Device does not support toggling power.",
             id="power_off",
@@ -141,7 +141,7 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Humidifier 200s",
             "switch.humidifier_200s_display",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
             "Device does not support toggling display.",
             id="display",
@@ -149,7 +149,7 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Humidifier 6000s",
             "switch.humidifier_6000s_child_lock",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
             "Device does not support toggling child lock.",
             id="child_lock",
@@ -157,7 +157,7 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Humidifier 200s",
             "switch.humidifier_200s_auto_off",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
             "Device does not support toggling automatic stop.",
             id="auto_stop",
@@ -165,10 +165,26 @@ async def test_turn_on_off_display_raises_error(
         pytest.param(
             "Humidifier 6000s",
             "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
             "Device does not support toggling drying mode.",
             id="drying_mode",
+        ),
+        pytest.param(
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SwitchService.TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+            "Device does not support toggling light detection.",
+            id="light_detection",
+        ),
+        pytest.param(
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SwitchService.TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+            "Device does not support toggling mute.",
+            id="mute",
         ),
     ],
 )
@@ -196,7 +212,7 @@ async def test_switch_unsupported_command(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -208,66 +224,92 @@ async def test_switch_unsupported_command(
         (
             "Outlet",
             "switch.outlet",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_on",
         ),
         (
             "Outlet",
             "switch.outlet",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesyncoutlet.VeSyncOutlet.turn_off",
         ),
         # display switch for humidifier
         (
             "Humidifier 200s",
             "switch.humidifier_200s_display",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
         ),
         (
             "Humidifier 200s",
             "switch.humidifier_200s_display",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_display",
         ),
         # auto_off_config switch for humidifier
         (
             "Humidifier 200s",
             "switch.humidifier_200s_auto_off",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
         ),
         (
             "Humidifier 200s",
             "switch.humidifier_200s_auto_off",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncHumid200S.toggle_automatic_stop",
         ),
         # child_lock switch for humidifier
         (
             "Humidifier 6000s",
             "switch.humidifier_6000s_child_lock",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
         ),
         (
             "Humidifier 6000s",
             "switch.humidifier_6000s_child_lock",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_child_lock",
         ),
         # drying_mode_power_off switch for humidifier with drying mode
         (
             "Humidifier 6000s",
             "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
         (
             "Humidifier 6000s",
             "switch.humidifier_6000s_enable_drying_mode_while_power_is_off",
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
+        ),
+        # light_detection switch for purifier
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SwitchService.TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SwitchService.TURN_OFF,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        # mute switch for fan
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SwitchService.TURN_ON,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
+        ),
+        (
+            "SmartTowerFan",
+            "switch.smarttowerfan_mute",
+            SwitchService.TURN_OFF,
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_mute",
         ),
     ],
 )
@@ -301,10 +343,39 @@ async def test_switch_operations(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             action,
-            {ATTR_ENTITY_ID: entity_id},
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
 
     await hass.async_block_till_done()
     method_mock.assert_called_once()
     update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("light_detection_switch", "expected_state"),
+    [
+        pytest.param(0, STATE_OFF, id="off"),
+        pytest.param(1, STATE_ON, id="on"),
+    ],
+)
+async def test_light_detection_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    light_detection_switch: int,
+    expected_state: str,
+) -> None:
+    """Test the light detection switch reflects the device state."""
+    mock_devices_response(
+        aioclient_mock,
+        "Air Purifier Vital 200S",
+        details_override={"lightDetectionSwitch": light_detection_switch},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.air_purifier_vital_200s_light_detection")
+    assert state
+    assert state.state == expected_state

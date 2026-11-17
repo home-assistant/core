@@ -3122,7 +3122,7 @@
         'state': 'unknown',
       }),
     }),
-    'climate.bedroom_1_climatecontrol_room_temperature': dict({
+    'climate.bedroom_1_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3146,11 +3146,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000114_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000114')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_1_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_1_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3175,7 +3175,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 1 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3193,14 +3193,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_1_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_1_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.bedroom_2_climatecontrol_room_temperature': dict({
+    'climate.bedroom_2_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3224,11 +3224,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000120_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000120')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_2_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_2_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3253,7 +3253,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.7,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 2 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3271,14 +3271,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_2_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_2_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.bedroom_3_climatecontrol_room_temperature': dict({
+    'climate.bedroom_3_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3307,11 +3307,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000108_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000108')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.bedroom_3_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_3_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3336,7 +3336,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.2,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom 3 Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3360,14 +3360,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.bedroom_3_climatecontrol_room_temperature',
+        'entity_id': 'climate.bedroom_3_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.kitchen_climatecontrol_room_temperature': dict({
+    'climate.kitchen_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3391,11 +3391,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000112_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000112')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.kitchen_climatecontrol_room_temperature',
+        'entity_id': 'climate.kitchen_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3420,7 +3420,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.8,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3438,14 +3438,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.kitchen_climatecontrol_room_temperature',
+        'entity_id': 'climate.kitchen_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.lounge_climatecontrol_room_temperature': dict({
+    'climate.lounge_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3469,11 +3469,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000103_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000103')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.lounge_climatecontrol_room_temperature',
+        'entity_id': 'climate.lounge_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3498,7 +3498,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3516,14 +3516,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.lounge_climatecontrol_room_temperature',
+        'entity_id': 'climate.lounge_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'dry',
       }),
     }),
-    'climate.master_bathroom_climatecontrol_room_temperature': dict({
+    'climate.master_bathroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3547,11 +3547,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000102_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000102')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.master_bathroom_climatecontrol_room_temperature',
+        'entity_id': 'climate.master_bathroom_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3576,7 +3576,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25.7,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bathroom Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3594,14 +3594,14 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.master_bathroom_climatecontrol_room_temperature',
+        'entity_id': 'climate.master_bathroom_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'off',
       }),
     }),
-    'climate.master_bedroom_climatecontrol_room_temperature': dict({
+    'climate.master_bedroom_room_temperature': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -3625,11 +3625,11 @@
         'config_entry_id': <ANY>,
         'config_subentry_id': None,
         'device_class': None,
-        'device_id': <ChildDeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000119_climateControl')]>,
+        'device_id': <DeviceEntry identifiers=[('daikin_onecta', '00000000-0000-4000-8000-000000000119')]>,
         'disabled_by': None,
         'domain': 'climate',
         'entity_category': None,
-        'entity_id': 'climate.master_bedroom_climatecontrol_room_temperature',
+        'entity_id': 'climate.master_bedroom_room_temperature',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -3654,7 +3654,7 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25.1,
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ClimateControl Room temperature',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bedroom Room temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
             <HVACMode.OFF: 'off'>,
             <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -3672,7 +3672,7 @@
           <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
         'context': <ANY>,
-        'entity_id': 'climate.master_bedroom_climatecontrol_room_temperature',
+        'entity_id': 'climate.master_bedroom_room_temperature',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

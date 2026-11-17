@@ -62,7 +62,7 @@ async def test_switch_updates_sibling_climate_preset(
     config_entry.runtime_data.async_execute_command = _execute_typed_command(
         config_entry
     )
-    entity_id = "climate.test_living_room_climatecontrol_room_temperature"
+    entity_id = "climate.test_living_room_room_temperature"
     assert (
         hass.states.get(entity_id).attributes[ClimateEntityStateAttribute.PRESET_MODE]
         == "eco"

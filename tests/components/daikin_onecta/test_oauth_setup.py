@@ -22,6 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
+from .conftest import MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
 
 
@@ -35,8 +36,12 @@ async def test_setup_rejected_cloud_token_requires_authentication(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Handle the library's real authentication exception during initial polling."""
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+        status=status, method="GET", path="/v1/gateway-devices"
+    )
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -46,15 +51,10 @@ async def test_setup_rejected_cloud_token_requires_authentication(
             "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value="token",
         ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-            side_effect=OnectaAuthenticationError(
-                status=status, method="GET", path="/v1/gateway-devices"
-            ),
-        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -82,20 +82,18 @@ async def test_poll_rejected_cloud_token_starts_reauthentication(
     config_entry: MockConfigEntry,
     status: int,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A real library authentication failure during polling starts the HA flow."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
-    with patch(
-        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-        side_effect=OnectaAuthenticationError(
-            status=status, method="GET", path="/v1/gateway-devices"
-        ),
-    ):
-        assert coordinator.update_interval is not None
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+        status=status, method="GET", path="/v1/gateway-devices"
+    )
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -108,6 +106,7 @@ async def test_poll_refresh_token_rejection_marks_climate_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Mark climate entities unavailable when OAuth refresh requires reauth."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -115,14 +114,11 @@ async def test_poll_refresh_token_rejection_marks_climate_unavailable(
     climate_entity_id = hass.states.async_entity_ids("climate")[0]
     assert hass.states.get(climate_entity_id).state != STATE_UNAVAILABLE
 
-    with patch(
-        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-        side_effect=_reauth_error(),
-    ):
-        assert coordinator.update_interval is not None
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_onecta_client.get_gateway_devices.side_effect = _reauth_error()
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     assert hass.states.get(climate_entity_id).state == STATE_UNAVAILABLE
