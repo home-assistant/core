@@ -19,7 +19,7 @@ from pytest_homeassistant.common import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
+from homeassistant.components.engie_be.const import EPEX_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -31,6 +31,7 @@ from .conftest import (
     build_epex_payload,
     build_epex_payload_with_partial_tomorrow,
     build_epex_payload_without_tomorrow,
+    get_entity_id,
     setup_dynamic_entry,
 )
 
@@ -49,19 +50,17 @@ async def test_tomorrow_prices_not_published(
         build_epex_payload_without_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
 
-    current_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+    current_entity_id = get_entity_id(
+        entity_registry, "sensor", f"{BAN}_epex_current_hour"
     )
-    assert current_entity_id is not None
     current_state = hass.states.get(current_entity_id)
     assert current_state is not None
     assert float(current_state.state) == pytest.approx(0.15)
@@ -81,10 +80,9 @@ async def test_tomorrow_prices_partial(
         build_epex_payload_with_partial_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -116,10 +114,9 @@ async def test_tomorrow_prices_unavailable_when_fetch_fails(
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -156,10 +153,9 @@ async def test_tomorrow_prices_with_stretched_slot(
         _stretched_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = entity_registry.async_get_entity_id(
-        "binary_sensor", DOMAIN, f"{BAN}_epex_tomorrow_available"
+    entity_id = get_entity_id(
+        entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
     )
-    assert entity_id is not None
 
     state = hass.states.get(entity_id)
     assert state is not None

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
@@ -126,7 +126,7 @@ class EngieBePricesData:
 
     slots: dict[tuple[str, str, str], PriceSlot]
     eans: tuple[str, ...]
-    gas_conversion_coefficients: dict[str, float] = field(default_factory=dict)
+    gas_conversion_coefficients: dict[str, float]
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
@@ -192,18 +192,19 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
+        address = (
+            agreement.consumption_address.format()
+            if agreement.consumption_address is not None
+            else ""
+        )
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, ban)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ENGIE Belgium",
+            name=address or None,
+            translation_key=None if address else "business_agreement",
+            translation_placeholders={"ban": mask_identifier(ban)},
         )
-        if agreement.consumption_address is not None and (
-            address := agreement.consumption_address.format()
-        ):
-            self.device_info["name"] = address
-        else:
-            self.device_info["translation_key"] = "business_agreement"
-            self.device_info["translation_placeholders"] = {"ban": mask_identifier(ban)}
 
     def _service_point_due(self, ean: str, now: datetime) -> bool:
         """Return True when the service point of a bare EAN needs a fresh fetch."""
@@ -457,14 +458,13 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
     @override
     async def _async_update_data(self) -> EngieBeEpexData:
         """Fetch EPEX prices for each day and granularity without full coverage."""
-        data = (
-            self.data if self.data is not None else EngieBeEpexData(by_granularity={})
-        )
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
         tomorrow = today + timedelta(days=1)
         slots = {
             granularity: [
-                slot for slot in data.slots(granularity) if brussels_day(slot) >= today
+                slot
+                for slot in self.data.slots(granularity)
+                if brussels_day(slot) >= today
             ]
             for granularity in EpexGranularity
         }
