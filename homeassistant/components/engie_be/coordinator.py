@@ -72,7 +72,7 @@ def _raise_update_errors() -> Iterator[None]:
         ) from err
 
 
-def brussels_day(slot: EpexSlot) -> date:
+def _brussels_day(slot: EpexSlot) -> date:
     """Return the Brussels calendar day an EPEX slot starts on."""
     return slot.start.astimezone(BRUSSELS_TIME_ZONE).date()
 
@@ -179,7 +179,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.client = client
         self.ban = ban
         self.ean_energy_types: dict[str, str | None] = {}
-        self.gas_conversion_coefficients: dict[str, float] = {}
+        self._gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
         address = (
             agreement.consumption_address.format()
@@ -240,9 +240,9 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 if (
                     coefficient := _gas_conversion_coefficient(service_point_result)
                 ) is None:
-                    self.gas_conversion_coefficients.pop(bare, None)
+                    self._gas_conversion_coefficients.pop(bare, None)
                 else:
-                    self.gas_conversion_coefficients[bare] = coefficient
+                    self._gas_conversion_coefficients[bare] = coefficient
                 self._service_points_refreshed_at[bare] = now
 
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
@@ -267,7 +267,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         return EngieBePricesData(
             slots=slots,
             eans=tuple(ean_prices.ean for ean_prices in prices.items),
-            gas_conversion_coefficients=dict(self.gas_conversion_coefficients),
+            gas_conversion_coefficients=dict(self._gas_conversion_coefficients),
         )
 
 
@@ -284,7 +284,7 @@ class EngieBeEpexData:
 
 def epex_slots_for_day(slots: Iterable[EpexSlot], day: date) -> tuple[EpexSlot, ...]:
     """Return the EPEX slots that start on the given Brussels calendar day."""
-    return tuple(slot for slot in slots if brussels_day(slot) == day)
+    return tuple(slot for slot in slots if _brussels_day(slot) == day)
 
 
 def epex_slot_covering(slots: Iterable[EpexSlot], moment: datetime) -> EpexSlot | None:
@@ -342,7 +342,7 @@ class EngieBePeaksData:
     @property
     def peak(self) -> Peak | None:
         """Return the peak to display, falling back to the previous month early in the month."""
-        return None if self._source is None else self._source.peak_of_the_month
+        return None if (source := self._source) is None else source.peak_of_the_month
 
     @property
     def is_fallback(self) -> bool:
@@ -456,7 +456,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
             granularity: [
                 slot
                 for slot in self.data.slots(granularity)
-                if brussels_day(slot) >= today
+                if _brussels_day(slot) >= today
             ]
             for granularity in EpexGranularity
         }
@@ -477,7 +477,7 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                     )
                     continue
                 slots[granularity] = [
-                    slot for slot in slots[granularity] if brussels_day(slot) != day
+                    slot for slot in slots[granularity] if _brussels_day(slot) != day
                 ] + list(payload.slots)
         return EngieBeEpexData(
             by_granularity={

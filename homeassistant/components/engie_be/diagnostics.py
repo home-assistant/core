@@ -15,6 +15,7 @@ from .const import BRUSSELS_TIME_ZONE, CONF_REFRESH_TOKEN
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
+    EngieBePeaksData,
     epex_day_available,
     epex_slots_for_day,
     peak_as_dict,
@@ -58,20 +59,23 @@ def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
 
 def _peaks_diagnostics(peaks: EngieBePeaksCoordinator) -> dict[str, Any]:
     """Return the diagnostics of the capacity tariff peaks coordinator."""
-    data = peaks.data
-    return {
+    status = {
         "last_update_success": peaks.last_update_success,
         "update_interval": str(peaks.update_interval),
-        "monthly": (
-            _monthly_peaks_diagnostics(data.monthly) if data is not None else None
-        ),
+    }
+    data: EngieBePeaksData | None = peaks.data
+    if data is None:
+        return status
+    return {
+        **status,
+        "monthly": _monthly_peaks_diagnostics(data.monthly),
         "previous_month": (
-            _monthly_peaks_diagnostics(data.previous_month)
-            if data is not None and data.previous_month is not None
-            else None
+            None
+            if data.previous_month is None
+            else _monthly_peaks_diagnostics(data.previous_month)
         ),
-        "peak_month": data.peak_month if data is not None else None,
-        "is_fallback": data.is_fallback if data is not None else None,
+        "peak_month": data.peak_month,
+        "is_fallback": data.is_fallback,
     }
 
 
