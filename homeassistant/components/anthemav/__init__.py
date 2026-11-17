@@ -1,5 +1,6 @@
 """The Anthem A/V Receivers integration."""
 
+import asyncio
 from datetime import datetime
 import logging
 
@@ -27,6 +28,7 @@ from .const import (
     DEVICE_TIMEOUT_SECONDS,
     DOMAIN,
     MANUFACTURER,
+    POLL_COMMAND_SPACING_SECONDS,
     POLL_INTERVAL,
     X10_MODELS,
 )
@@ -86,17 +88,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
 
     if entry.data[CONF_MODEL].strip() in X10_MODELS:
 
-        @callback
-        def poll_zones(now: datetime) -> None:
+        async def poll_zones(now: datetime) -> None:
             # Replies arrive through the update callback like pushed changes.
-            if avr.protocol.transport is None:
-                return
+            # The receiver answers "!I" (invalid) to queries sent back to back,
+            # so space them out like the library's own refresh does.
             for zone in avr.protocol.zones.values():
-                zone.query("POW")
-                if zone.power:
-                    zone.query("VOL")
-                    zone.query("MUT")
-                    zone.query("INP")
+                for command in ("POW", "VOL", "MUT", "INP"):
+                    if command != "POW" and not zone.power:
+                        break
+                    if avr.protocol.transport is None:
+                        return
+                    zone.query(command)
+                    await asyncio.sleep(POLL_COMMAND_SPACING_SECONDS)
 
         entry.async_on_unload(
             async_track_time_interval(hass, poll_zones, POLL_INTERVAL)

@@ -1,6 +1,6 @@
 """Test the Anthem A/V Receivers config flow."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest.mock import ANY, AsyncMock, call, patch
 
 from anthemav.device_error import DeviceError
@@ -96,6 +96,13 @@ async def test_anthemav_dispatcher_signal(
     assert states.state == STATE_ON
 
 
+@pytest.fixture(autouse=True)
+def no_poll_spacing() -> Generator[None]:
+    """Don't wait between poll queries; the tests freeze time."""
+    with patch("homeassistant.components.anthemav.POLL_COMMAND_SPACING_SECONDS", 0):
+        yield
+
+
 async def _setup_with_model(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, model: str
 ) -> None:
@@ -122,7 +129,7 @@ async def test_poll_x10_zones(
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert zone_1.query.call_args_list == [
         call("POW"),
@@ -136,7 +143,7 @@ async def test_poll_x10_zones(
     zone_1.query.reset_mock()
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Polling stops once the entry is unloaded.
     zone_1.query.assert_not_called()
@@ -156,7 +163,7 @@ async def test_poll_x10_skipped_when_disconnected(
 
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for zone in mock_anthemav.protocol.zones.values():
         zone.query.assert_not_called()
@@ -172,7 +179,7 @@ async def test_no_poll_for_push_models(
     """Test models that push their state are not polled."""
     freezer.tick(POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for zone in mock_anthemav.protocol.zones.values():
         zone.query.assert_not_called()
