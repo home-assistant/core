@@ -109,6 +109,7 @@ Every check has a code following the
 | `C7458` | [`home-assistant-logger-const-name`](#c7458-home-assistant-logger-const-name) | Logger in an integration's `const.py` should use `__package__` |
 | `C7459` | [`home-assistant-placeholder-key`](#c7459-home-assistant-placeholder-key) | Placeholder keys should be string literals, not constants such as `CONF_*` |
 | `C7464` | [`home-assistant-type-checking-block-position`](#c7464-home-assistant-type-checking-block-position) | `if TYPE_CHECKING:` block should come after all module-level imports |
+| `C7465` | [`home-assistant-action-target-key`](#c7465-home-assistant-action-target-key) | Target key in the data of an action call in tests should be `TargetKey.ENTITY_ID` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
 | `E7402` | [`home-assistant-argument-type`](#e7402-home-assistant-argument-type) | Function argument should have the specified type hint |
 | `E7403` | [`home-assistant-return-type`](#e7403-home-assistant-return-type) | Function should have the specified return type hint |
@@ -1206,6 +1207,32 @@ self.context["title_placeholders"] = {CONF_HOST: discovery_info.host}
 
 # Good
 self.context["title_placeholders"] = {"host": discovery_info.host}
+```
+
+## `home_assistant_target_key` checker
+
+Checks the target keys in the data of `hass.services.async_call` calls in
+tests whose action is a `<Prefix>Service` enum member and whose data is a dict
+literal.
+
+### `C7465`: `home-assistant-action-target-key`
+
+When the action declares a `target` in its `services.yaml`, its `entity_id` is
+a target key, not a field of the action: use `TargetKey.ENTITY_ID` instead of
+`ATTR_ENTITY_ID`, `CONF_ENTITY_ID` or `CommonServiceArgument.ENTITY_ID`.
+`CommonServiceArgument.ENTITY_ID` is for actions with their own `entity_id`
+field.
+
+```python
+# Bad
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {ATTR_ENTITY_ID: "light.kitchen"}
+)
+
+# Good
+await hass.services.async_call(
+    LIGHT_DOMAIN, LightService.TURN_ON, {TargetKey.ENTITY_ID: "light.kitchen"}
+)
 ```
 
 ## `home_assistant_mdi_icons` checker
