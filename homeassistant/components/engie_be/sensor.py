@@ -42,9 +42,8 @@ PARALLEL_UPDATES = 0
 
 _UNIT = "EUR/kWh"
 _UNIT_PER_CUBIC_METER = f"EUR/{UnitOfVolume.CUBIC_METERS}"
-_ALL_DAY_SLOT_CODE = "TOTAL_HOURS"
 _SLOT_CODE_SUFFIXES = {
-    _ALL_DAY_SLOT_CODE: "",
+    "TOTAL_HOURS": "",
     "PEAK": "_peak",
     "OFFPEAK": "_offpeak",
     "SUPEROFFPEAK": "_superoffpeak",
@@ -95,8 +94,6 @@ async def async_setup_entry(
                 per_cubic_meter_options = [False]
                 if (
                     type_key == "gas"
-                    and direction == "offtake"
-                    and normalize_slot_code(slot_code) == _ALL_DAY_SLOT_CODE
                     and bare_ean(ean) in prices_data.gas_conversion_coefficients
                 ):
                     per_cubic_meter_options.append(True)
