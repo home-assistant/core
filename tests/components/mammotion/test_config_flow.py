@@ -239,18 +239,33 @@ async def test_bluetooth_discovery_of_mower_owned_by_unloaded_entry(
     assert device.connections == {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)}
 
 
+@pytest.mark.parametrize(
+    "stored_ble_devices",
+    [
+        pytest.param({}, id="no_stored_address"),
+        pytest.param({DEFAULT_NAME: "11:22:33:44:55:66"}, id="stale_stored_address"),
+    ],
+)
 async def test_bluetooth_confirm_mower_configured_meanwhile(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
+    stored_ble_devices: dict[str, str],
 ) -> None:
-    """Test confirming a mower another flow configured meanwhile aborts."""
+    """Test confirming a mower another flow configured meanwhile aborts.
+
+    The discovered address replaces one the entry stored for the same mower.
+    """
     inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
 
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_BLE_DEVICES: stored_ble_devices},
+    )
     _add_owned_mower(
         hass,
         device_registry,

@@ -30,6 +30,14 @@ from .const import (
 )
 
 
+def _with_ble_address(entry: ConfigEntry, device: BLEDevice) -> dict[str, str]:
+    """Return the entry's Bluetooth addresses with the discovered one recorded."""
+    return {
+        **entry.data.get(CONF_BLE_DEVICES, {}),
+        device.name: format_mac(device.address),
+    }
+
+
 class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Mammotion."""
 
@@ -107,15 +115,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device = device
 
         if entry := await self.check_and_update_bluetooth_device(device):
-            ble_devices = {
-                **entry.data.get(CONF_BLE_DEVICES, {}),
-                self._discovered_device.name: format_mac(
-                    self._discovered_device.address
-                ),
-            }
-
             self._abort_if_unique_id_configured(
-                updates={CONF_BLE_DEVICES: ble_devices}, reload_on_update=False
+                updates={CONF_BLE_DEVICES: _with_ble_address(entry, device)},
+                reload_on_update=False,
             )
 
         return await self.async_step_bluetooth_confirm()
@@ -130,12 +132,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         name = device.name or ""
         if entry := await self.check_and_update_bluetooth_device(device):
-            existing_devices = {
-                name: format_mac(device.address),
-                **entry.data.get(CONF_BLE_DEVICES, {}),
-            }
             self._abort_if_unique_id_configured(
-                updates={CONF_BLE_DEVICES: existing_devices}, reload_on_update=False
+                updates={CONF_BLE_DEVICES: _with_ble_address(entry, device)},
+                reload_on_update=False,
             )
 
         ble_devices: dict[str, str] = {name: format_mac(device.address)}
