@@ -14,14 +14,9 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 from wled import WLEDConnectionError, WLEDError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -77,8 +72,8 @@ async def test_button_restart(
     assert state.state == STATE_UNKNOWN
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.wled_rgb_light_restart"},
         blocking=True,
     )
     assert mock_wled.reset.call_count == 1
@@ -110,8 +105,8 @@ async def test_button_restart_errors(
     with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.wled_rgb_light_restart"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.wled_rgb_light_restart"},
             blocking=True,
         )
 
@@ -133,8 +128,8 @@ async def test_button_next_playlist_entry(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
         blocking=True,
     )
 
@@ -150,8 +145,8 @@ async def test_button_next_playlist_entry_without_playlist(
     with pytest.raises(ServiceValidationError) as ex:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
             blocking=True,
         )
 
@@ -180,8 +175,8 @@ async def test_button_next_playlist_entry_errors(
     with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.wled_websocket_next_playlist_entry"},
             blocking=True,
         )
 

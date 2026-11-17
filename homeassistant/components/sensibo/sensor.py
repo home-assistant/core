@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from pysensibo.model import MotionSensor, PureAQI, SensiboDevice
 
@@ -316,8 +316,6 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        if TYPE_CHECKING:
-            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 

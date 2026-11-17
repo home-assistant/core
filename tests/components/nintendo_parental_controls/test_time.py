@@ -8,11 +8,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
-    ATTR_TIME,
     DOMAIN as TIME_DOMAIN,
-    SERVICE_SET_VALUE,
+    TimeService,
+    TimeServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -65,9 +65,9 @@ async def test_set_time(
         await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         TIME_DOMAIN,
-        SERVICE_SET_VALUE,
-        service_data={ATTR_TIME: new_value},
-        target={ATTR_ENTITY_ID: entity_id},
+        TimeService.SET_VALUE,
+        service_data={TimeServiceArgument.TIME: new_value},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1
@@ -112,9 +112,9 @@ async def test_set_time_service_exceptions(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             TIME_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={ATTR_TIME: new_value},
-            target={ATTR_ENTITY_ID: entity_id},
+            TimeService.SET_VALUE,
+            service_data={TimeServiceArgument.TIME: new_value},
+            target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     assert len(getattr(mock_nintendo_device, called_function_name).mock_calls) == 1

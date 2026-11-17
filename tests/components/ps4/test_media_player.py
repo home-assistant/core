@@ -27,8 +27,8 @@ from homeassistant.components.ps4.const import (
     PS4_DATA,
 )
 from homeassistant.components.ps4.media_player import PS4Device
+from homeassistant.components.ps4.services import PS4ServiceArgument
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_LOCKED,
     CONF_HOST,
@@ -39,6 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
     STATE_UNKNOWN,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -552,7 +553,10 @@ async def test_ps4_send_command(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             "send_command",
-            {ATTR_ENTITY_ID: mock_entity_id, ATTR_COMMAND: "ps"},
+            {
+                CommonServiceArgument.ENTITY_ID: mock_entity_id,
+                PS4ServiceArgument.COMMAND: "ps",
+            },
             blocking=True,
         )
 

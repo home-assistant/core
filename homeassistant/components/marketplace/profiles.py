@@ -31,7 +31,7 @@ class Endpoint(StrEnum):
 class DownloadProfile:
     """The endpoints the Marketplace gets its content from.
 
-    An endpoint takes one URL, or several to try in order: a mirror that is
+    An endpoint takes one URL, or several to try in order: a relay that is
     down falls back to the next one.
     """
 
@@ -97,9 +97,9 @@ GITHUB = DownloadProfile(
     },
 )
 
-# The mirrors serve the same paths as GitHub, raw content below /raw. A public
-# third-party proxy is the last resort for downloads, it takes the full URL.
-CHINA_MIRRORS = DownloadProfile(
+# The relays serve the same paths as GitHub, raw content below /raw. A public
+# third-party relay is the last resort for downloads, it takes the full URL.
+CHINA_RELAYS = DownloadProfile(
     id="hasscn",
     operator="the Home Assistant China community (hasscn.top)",
     api="https://ghapi.hacs.vip",
@@ -125,7 +125,7 @@ CHINA_MIRRORS = DownloadProfile(
 
 # The profiles a user can choose from, by id
 PROFILES: dict[str, DownloadProfile] = {
-    profile.id: profile for profile in (GITHUB, CHINA_MIRRORS)
+    profile.id: profile for profile in (GITHUB, CHINA_RELAYS)
 }
 
 
@@ -137,7 +137,7 @@ def get_profile(profile_id: str | None) -> DownloadProfile:
 class ProfileEndpoints:
     """The endpoints of the active profile, as the downloads go through them.
 
-    Starts at the base that worked last, so a mirror that is down costs one
+    Starts at the base that worked last, so a relay that is down costs one
     failed request, not one on every download. A reload starts over.
     """
 
