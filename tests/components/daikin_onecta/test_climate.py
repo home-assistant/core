@@ -51,7 +51,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestConnectionError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityStateAttribute
 
@@ -1143,6 +1147,33 @@ async def test_climate_service_rejected_token_preserves_entity_state(
         "value": 22,
         "path": "/operationModes/heating/setpoints/roomTemperature",
     }
+
+
+async def test_climate_service_oauth_connection_error_is_translated(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Translate token-endpoint connectivity errors into climate action errors."""
+    await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
+    mock_onecta_client.patch_characteristic.side_effect = (
+        OAuth2TokenRequestConnectionError(domain=DOMAIN)
+    )
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+    state_before = hass.states.get(entity_id)
+    assert state_before is not None
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 22},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "set_temperature_failed"
+    assert hass.states.get(entity_id) == state_before
 
 
 @pytest.mark.parametrize(

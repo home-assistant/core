@@ -36,6 +36,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -422,6 +423,18 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+        assert coordinator.last_patch_call is None
+
+    async def test_command_token_connection_error_returns_failure(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
+        """Map OAuth transport failures to the platform's translated command error."""
+        error = OAuth2TokenRequestConnectionError(domain=DOMAIN)
+        coordinator.config_entry.async_start_reauth = MagicMock()
+
+        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+
+        coordinator.config_entry.async_start_reauth.assert_not_called()
         assert coordinator.last_patch_call is None
 
     def test_polling_intervals_use_reported_daily_limit(self, coordinator):
