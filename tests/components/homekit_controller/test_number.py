@@ -6,9 +6,10 @@ from unittest.mock import patch
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+import pytest
 
-from homeassistant.components.number import NumberDeviceClass
-from homeassistant.const import UnitOfTime
+from homeassistant.components.number import NumberDeviceClass, NumberMode
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import PlatformData
@@ -49,6 +50,29 @@ def create_valve_with_set_duration(accessory: Accessory) -> Service:
     set_duration.minValue = 0
     set_duration.maxValue = 5400
     set_duration.minStep = 60
+
+    return service
+
+
+def create_thermostat_with_ecobee_targets(accessory: Accessory) -> Service:
+    """Define a thermostat with Ecobee comfort setting target characteristics."""
+    service = accessory.add_service(ServicesTypes.THERMOSTAT, add_required=True)
+
+    for char_type, value, min_value, max_value in (
+        (CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT, 20.0, 7.2, 26.1),
+        (CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL, 24.0, 18.3, 33.3),
+        (CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT, 17.0, 7.2, 26.1),
+        (CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL, 25.5, 18.3, 33.3),
+        (CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT, 13.0, 7.2, 26.1),
+        (CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL, 28.0, 18.3, 33.3),
+    ):
+        char = service.add_char(char_type)
+        char.value = value
+        char.minValue = min_value
+        char.maxValue = max_value
+        char.minStep = 0.1
+        char.format = "float"
+        char.unit = "celsius"
 
     return service
 
@@ -225,4 +249,122 @@ async def test_valve_set_duration_number(
     set_duration.async_assert_service_values(
         ServicesTypes.VALVE,
         {CharacteristicsTypes.SET_DURATION: 600},
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "char_type",
+        "initial_value",
+        "updated_value",
+        "written_value",
+        "min_value",
+        "max_value",
+    ),
+    [
+        (
+            "number.testdevice_home_heating_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
+            20.0,
+            21.5,
+            20.5,
+            7.2,
+            26.1,
+        ),
+        (
+            "number.testdevice_home_cooling_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
+            24.0,
+            25.0,
+            23.5,
+            18.3,
+            33.3,
+        ),
+        (
+            "number.testdevice_sleep_heating_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
+            17.0,
+            18.0,
+            16.5,
+            7.2,
+            26.1,
+        ),
+        (
+            "number.testdevice_sleep_cooling_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
+            25.5,
+            26.0,
+            24.5,
+            18.3,
+            33.3,
+        ),
+        (
+            "number.testdevice_away_heating_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
+            13.0,
+            14.0,
+            12.5,
+            7.2,
+            26.1,
+        ),
+        (
+            "number.testdevice_away_cooling_target",
+            CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
+            28.0,
+            29.0,
+            27.5,
+            18.3,
+            33.3,
+        ),
+    ],
+)
+async def test_ecobee_comfort_target_numbers(
+    hass: HomeAssistant,
+    get_next_aid: Callable[[], int],
+    entity_id: str,
+    char_type: str,
+    initial_value: float,
+    updated_value: float,
+    written_value: float,
+    min_value: float,
+    max_value: float,
+) -> None:
+    """Test Ecobee comfort setting target characteristics are exposed as numbers."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_thermostat_with_ecobee_targets
+    )
+
+    target = Helper(
+        hass,
+        entity_id,
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    state = await target.poll_and_get_state()
+    assert float(state.state) == pytest.approx(initial_value)
+    assert state.attributes["device_class"] == NumberDeviceClass.TEMPERATURE
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+    assert state.attributes["mode"] == NumberMode.BOX
+    assert state.attributes["step"] == 0.1
+    assert state.attributes["min"] == min_value
+    assert state.attributes["max"] == max_value
+
+    state = await target.async_update(
+        ServicesTypes.THERMOSTAT,
+        {char_type: updated_value},
+    )
+    assert float(state.state) == pytest.approx(updated_value)
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": entity_id, "value": written_value},
+        blocking=True,
+    )
+    target.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {char_type: written_value},
     )
