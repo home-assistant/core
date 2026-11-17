@@ -160,10 +160,7 @@ rules:
   entity-device-class:
     status: todo
     comment: >-
-      (1) The current profile and cell state sensors report hard-coded English
-      strings. They should use the enum device class with translated states.
-      Note: Will be a breaking change.
-      (2) The post-heater binary sensor has no device class; running fits.
+      The post-heater binary sensor has no device class; running fits.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:

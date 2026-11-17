@@ -30,7 +30,7 @@ from homeassistant.components.livisi.const import (
     LIVISI_REACHABILITY_CHANGE,
     ON_STATE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -197,14 +198,14 @@ async def test_setup_entities_and_unload(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
