@@ -17,7 +17,7 @@
   "codeowners": ["@mikey0000"],
   "config_flow": true,
   "connectivity": ["bluetooth", "cloud"],
-  "dependencies": ["bluetooth"],
+  "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
   "integration_type": "hub",
   "iot_class": "cloud_push",
