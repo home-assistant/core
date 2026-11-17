@@ -42,7 +42,9 @@ rules:
   docs-installation-parameters:
     status: todo
     comment: Describe what the host and access token fields mean and where to find each value.
-  entity-unavailable: done
+  entity-unavailable:
+    status: todo
+    comment: Report unknown when a successful poll omits the standby or freeze-prevention value.
   integration-owner: done
   log-when-unavailable:
     status: todo
