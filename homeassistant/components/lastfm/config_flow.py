@@ -3,6 +3,7 @@
 from contextlib import suppress
 import logging
 from typing import Any, override
+from urllib.parse import parse_qs, urlparse
 
 import probatio
 from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, User, WSError
@@ -87,10 +88,12 @@ def get_user_friends(api_key: str, username: str) -> list[str]:
     user, _ = get_lastfm_user(api_key, username)
     return [friend.get_name() for friend in user.get_friends()]
 
+
 def get_auth_url(api_key: str, api_secret: str) -> str:
     """Request a token and return the URL the user must authorize."""
     network = LastFMNetwork(api_key=api_key, api_secret=api_secret)
     return SessionKeyGenerator(network).get_web_auth_url()
+
 
 def get_session_key(api_key: str, api_secret: str, auth_url: str) -> tuple[str, str]:
     """Exchange the authorized token for a session key.
@@ -98,9 +101,10 @@ def get_session_key(api_key: str, api_secret: str, auth_url: str) -> tuple[str, 
     Returns the session key and the name of the account that authorized it.
     """
     network = LastFMNetwork(api_key=api_key, api_secret=api_secret)
-    session_key = SessionKeyGenerator(network).get_web_auth_session_key(auth_url)
-    network.session_key = session_key
-    return session_key, network.get_authenticated_user().get_name()
+    token = parse_qs(urlparse(auth_url).query)["token"][0]
+    return SessionKeyGenerator(network).get_web_auth_session_key_username(
+        auth_url, token
+    )
 
 
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
