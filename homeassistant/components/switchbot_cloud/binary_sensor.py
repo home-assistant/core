@@ -80,9 +80,7 @@ OVERLOAD_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     name="Overload",
     translation_key="overload",
     device_class=BinarySensorDeviceClass.PROBLEM,
-    value_fn=lambda data: (
-        data["overload"] == "Warming" if "overload" in data else None
-    ),
+    on_value="Warming",
 )
 
 OVERTEMPERATURE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -90,9 +88,7 @@ OVERTEMPERATURE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     name="Overtemperature",
     translation_key="over_temperature",
     device_class=BinarySensorDeviceClass.PROBLEM,
-    value_fn=lambda data: (
-        data["overTemperature"] == "Warming" if "overTemperature" in data else None
-    ),
+    on_value="Warming",
 )
 
 
