@@ -98,7 +98,8 @@ async def async_setup_entry(
                 zone_sensors,
                 zone["number"] not in exclude,
             )
-            for zone in data.zones
+            # Excluded zones go last, so they don't take the entity ID of a used zone.
+            for zone in sorted(data.zones, key=lambda zone: zone["number"] in exclude)
         )
         watcher = NX584Watcher(
             create_client(entry.data[CONF_HOST], entry.data[CONF_PORT]),

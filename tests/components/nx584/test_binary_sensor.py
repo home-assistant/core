@@ -94,6 +94,36 @@ async def test_nx584_sensor_setup_zone_options(
     assert sorted(mock_watcher.call_args.args[1]) == [1, 3]
 
 
+@pytest.mark.usefixtures("mock_client", "mock_watcher")
+@pytest.mark.parametrize(
+    "fake_zones",
+    [
+        [
+            {"name": "window", "number": 1, "state": False, "bypassed": False},
+            {"name": "window", "number": 2, "state": False, "bypassed": False},
+        ]
+    ],
+)
+async def test_nx584_sensor_excluded_zone_keeps_entity_id_free(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an excluded zone does not take the entity ID of a zone in use."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
+        options={"exclude_zones": [1]},
+    )
+    await _async_setup_entry(hass, entry)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, f"{entry.entry_id}_2"
+        )
+        == "binary_sensor.window"
+    )
+    assert hass.states.get("binary_sensor.window")
+
+
 @pytest.mark.usefixtures("mock_client")
 @pytest.mark.parametrize(
     "config",
