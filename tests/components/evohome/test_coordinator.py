@@ -318,7 +318,7 @@ async def test_action_api_call_failed(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "api_call_failed"
+    assert exc_info.value.translation_key == "api_request_failed"
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -326,12 +326,9 @@ async def test_action_api_call_failed(
     ("reason", "translation_key"),
     [
         pytest.param(
-            evo_exc.ApiCallErrorReason.CALL_FAILED, "api_call_failed", id="call_failed"
-        ),
-        pytest.param(
-            evo_exc.ApiCallErrorReason.COMM_TASK_FAILED,
-            "api_comm_task_failed",
-            id="comm_task_failed",
+            evo_exc.ApiCallErrorReason.CALL_FAILED,
+            "api_request_failed",
+            id="call_failed",
         ),
         pytest.param(
             evo_exc.ApiCallErrorReason.CONNECTION_FAILED,
@@ -355,7 +352,7 @@ async def test_action_api_call_failed(
         ),
         pytest.param(
             evo_exc.ApiCallErrorReason.RESPONSE_NOT_JSON,
-            "api_call_failed",
+            "api_request_failed",
             id="fallback",
         ),
     ],

@@ -1,16 +1,13 @@
 {
   "exceptions": {
-    "api_call_failed": {
-      "message": "The request to the vendor's API failed"
-    },
-    "api_comm_task_failed": {
-      "message": "The vendor accepted the request, but it did not reach the system (is the gateway offline?)"
-    },
     "api_connection_failed": {
       "message": "Unable to connect to the vendor's API"
     },
     "api_rate_limited": {
       "message": "The vendor's API rate limit has been exceeded; try again later"
+    },
+    "api_request_failed": {
+      "message": "The request to the vendor's API failed"
     },
     "api_request_rejected": {
       "message": "The vendor's API rejected the request"

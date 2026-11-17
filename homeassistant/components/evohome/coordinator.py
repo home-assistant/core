@@ -35,10 +35,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
 
-# reasons with a message of their own; any other gets that of CALL_FAILED
+# reasons with a message of their own; any other gets api_request_failed
 _API_CALL_ERROR_REASONS: Final = frozenset(
     {
-        ec2.ApiCallErrorReason.COMM_TASK_FAILED,
         ec2.ApiCallErrorReason.CONNECTION_FAILED,
         ec2.ApiCallErrorReason.RATE_LIMITED,
         ec2.ApiCallErrorReason.REQUEST_REJECTED,
@@ -270,7 +269,7 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 translation_key=(
                     err.reason
                     if err.reason in _API_CALL_ERROR_REASONS
-                    else ec2.ApiCallErrorReason.CALL_FAILED
+                    else "api_request_failed"
                 ),
             ) from err
 
