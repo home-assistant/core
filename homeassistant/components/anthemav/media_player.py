@@ -11,15 +11,17 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_MAC, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthemavConfigEntry
-from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
+from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER, X10_MODELS
+from .single_command import async_send_single_command
 
 _LOGGER = logging.getLogger(__name__)
 VOLUME_STEP = 0.01
@@ -48,6 +50,8 @@ async def async_setup_entry(
             model,
             zone_number,
             config_entry.entry_id,
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
         )
         for zone_number in avr.protocol.zones
     )
@@ -78,6 +82,8 @@ class AnthemAVR(MediaPlayerEntity):
         model: str,
         zone_number: int,
         entry_id: str,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize entity with transport."""
         super().__init__()
@@ -85,6 +91,9 @@ class AnthemAVR(MediaPlayerEntity):
         self._entry_id = entry_id
         self._zone_number = zone_number
         self._zone = avr.zones[zone_number]
+        self._host = host
+        self._port = port
+        self._is_x10 = model.strip() in X10_MODELS
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
@@ -144,7 +153,21 @@ class AnthemAVR(MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Change AVR to the designated source (by name)."""
-        self._zone.input_name = source
+        if not self._is_x10:
+            self._zone.input_name = source
+            return
+        number = self.avr._input_numbers.get(source)  # noqa: SLF001
+        if not number:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_source",
+                translation_placeholders={"source": source},
+            )
+        await async_send_single_command(
+            self._host, self._port, f"Z{self._zone_number}INP{number}"
+        )
+        # The long-lived connection may not get the change pushed, so ask.
+        self._zone.query("INP")
 
     @override
     async def async_turn_off(self) -> None:

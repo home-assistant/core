@@ -28,7 +28,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     POLL_INTERVAL,
-    POLL_MODELS,
+    X10_MODELS,
 )
 
 type AnthemavConfigEntry = ConfigEntry[anthemav.Connection]
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_avr)
     )
 
-    if entry.data[CONF_MODEL].strip() in POLL_MODELS:
+    if entry.data[CONF_MODEL].strip() in X10_MODELS:
 
         @callback
         def poll_zones(now: datetime) -> None:
@@ -96,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
                 if zone.power:
                     zone.query("VOL")
                     zone.query("MUT")
+                    zone.query("INP")
 
         entry.async_on_unload(
             async_track_time_interval(hass, poll_zones, POLL_INTERVAL)

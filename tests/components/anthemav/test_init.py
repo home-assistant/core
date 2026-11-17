@@ -113,7 +113,7 @@ async def test_poll_x10_zones(
     mock_anthemav: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test MRX x10 zones are polled, with volume and mute only when powered on."""
+    """Test MRX x10 zones are polled, with volume, mute and input only when on."""
     mock_config_entry.add_to_hass(hass)
     # The receiver reports its model with a trailing space.
     await _setup_with_model(hass, mock_config_entry, "MRX 310 ")
@@ -124,7 +124,12 @@ async def test_poll_x10_zones(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert zone_1.query.call_args_list == [call("POW"), call("VOL"), call("MUT")]
+    assert zone_1.query.call_args_list == [
+        call("POW"),
+        call("VOL"),
+        call("MUT"),
+        call("INP"),
+    ]
     assert zone_2.query.call_args_list == [call("POW")]
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)

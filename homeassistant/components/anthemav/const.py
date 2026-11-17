@@ -11,5 +11,11 @@ MANUFACTURER = "Anthem"
 DEVICE_TIMEOUT_SECONDS = 4.0
 
 # MRX x10 receivers don't push volume changes, so poll their zone state.
-POLL_MODELS = ("MRX 310", "MRX 510", "MRX 710")
+# They also often ignore input changes sent over the long-lived connection,
+# but act on them when sent over a new connection.
+X10_MODELS = ("MRX 310", "MRX 510", "MRX 710")
 POLL_INTERVAL = timedelta(seconds=5)
+SINGLE_COMMAND_TIMEOUT_SECONDS = 5.0
+# Keep the connection open briefly after sending, so the receiver acts on the
+# command before the socket closes.
+SINGLE_COMMAND_LINGER_SECONDS = 1.0
