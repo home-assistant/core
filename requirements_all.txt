@@ -771,7 +771,7 @@ boto3==1.43.117
 bring-api==1.1.2
 
 # homeassistant.components.broadlink
-broadlink-async==1.2.1
+broadlink-async==1.3.0
 
 # homeassistant.components.brother
 brother==6.2.0
