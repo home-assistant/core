@@ -230,5 +230,7 @@ class BotPressButton(SwitchbotEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Pressing Bot %s", self._address)
+        self._last_run_success = False
+        self.async_write_ha_state()
         self._last_run_success = bool(await self._device.press())
         self.async_write_ha_state()

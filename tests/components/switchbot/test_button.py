@@ -458,6 +458,51 @@ async def test_bot_press_button(
     assert state.attributes["last_run_success"] is True
 
 
+async def test_bot_press_button_failure(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test a failed press does not retain a previous successful result."""
+    inject_bluetooth_service_info(hass, WOHAND_SERVICE_INFO)
+
+    entry = mock_entry_factory("bot")
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry, options={**entry.options, CONF_BOT_PRESS_BUTTON: True}
+    )
+
+    mock_press = AsyncMock(side_effect=[True, SwitchbotOperationError("Press failed")])
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.button.switchbot.Switchbot",
+        update=AsyncMock(return_value=None),
+        press=mock_press,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {CommonServiceArgument.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+            blocking=True,
+        )
+        state = hass.states.get(BOT_BUTTON_ENTITY_ID)
+        assert state.attributes["last_run_success"] is True
+
+        with pytest.raises(HomeAssistantError, match="Press failed"):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                ButtonService.PRESS,
+                {CommonServiceArgument.ENTITY_ID: BOT_BUTTON_ENTITY_ID},
+                blocking=True,
+            )
+
+    assert mock_press.await_count == 2
+    state = hass.states.get(BOT_BUTTON_ENTITY_ID)
+    assert state.attributes["last_run_success"] is False
+
+
 async def test_bot_press_button_option_toggle(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
