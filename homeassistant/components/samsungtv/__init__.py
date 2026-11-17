@@ -116,6 +116,8 @@ async def _async_update_ssdp_locations(
                 hass, entry.data[CONF_HOST]
             )
         )
+        # SSDP may have found the renderer while the probe was running
+        and not entry.data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
     ):
         updates[CONF_SSDP_RENDERING_CONTROL_LOCATION] = location
 

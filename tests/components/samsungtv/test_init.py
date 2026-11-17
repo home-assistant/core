@@ -176,6 +176,47 @@ async def test_rendering_control_probe_on_power_on(
         await hass.async_block_till_done(wait_background_tasks=True)
 
 
+@pytest.mark.usefixtures("remote_websocket", "rest_api")
+async def test_rendering_control_probe_keeps_entry_updates(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entry updates made while probing on power on are kept."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_is_on",
+        return_value=False,
+    ) as mock_is_on:
+        entry = await setup_samsungtv_entry(hass, ENTRYDATA_WEBSOCKET)
+
+        async def _probe(hass: HomeAssistant, host: str) -> str:
+            # The entry is updated (e.g. a new token) while the probe is running
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, "updated_during_probe": True}
+            )
+            return "http://10.10.12.34:9197/dmr"
+
+        mock_is_on.return_value = True
+        with patch(
+            "homeassistant.components.samsungtv.coordinator."
+            "async_probe_rendering_control_location",
+            side_effect=_probe,
+        ):
+            freezer.tick(timedelta(seconds=10))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert entry.data["updated_during_probe"] is True
+        assert (
+            entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
+            == "http://10.10.12.34:9197/dmr"
+        )
+
+        # Let the entry reload triggered by the updates finish
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")
 async def test_reauth_triggered_encrypted(hass: HomeAssistant) -> None:
     """Test reauth flow is triggered for encrypted TVs."""

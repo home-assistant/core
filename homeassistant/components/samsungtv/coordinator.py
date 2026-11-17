@@ -74,12 +74,18 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_probe_rendering_control_location(self) -> None:
         """Look for a renderer that wasn't found at setup, now that the TV is on."""
         data = self.config_entry.data
+        host = data[CONF_HOST]
         if data[CONF_METHOD] != METHOD_WEBSOCKET or data.get(
             CONF_SSDP_RENDERING_CONTROL_LOCATION
         ):
             return
-        if location := await async_probe_rendering_control_location(
-            self.hass, data[CONF_HOST]
+        location = await async_probe_rendering_control_location(self.hass, host)
+        # The entry may have been updated (token, SSDP) while the probe was running
+        data = self.config_entry.data
+        if (
+            location
+            and data[CONF_HOST] == host
+            and not data.get(CONF_SSDP_RENDERING_CONTROL_LOCATION)
         ):
             # Saving the location reloads the entry, which sets up the renderer
             self.hass.config_entries.async_update_entry(
