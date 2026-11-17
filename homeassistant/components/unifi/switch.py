@@ -137,8 +137,7 @@ async def async_firewall_policy_control_fn(
     hub: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control firewall policy state."""
-    policy = hub.api.firewall_policies[obj_id]
-    await hub.api.firewall_policies.save(policy, enabled=target)
+    await hub.async_save_firewall_policy(obj_id, enabled=target)
 
 
 async def async_object_oriented_network_config_control_fn(
@@ -434,28 +433,26 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        async with self.control_lock:
-            try:
-                await self.entity_description.control_fn(self.hub, self._obj_id, True)
-            except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
-            await self.async_refresh_after_control()
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, True)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
+        await self.async_refresh_after_control()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        async with self.control_lock:
-            try:
-                await self.entity_description.control_fn(self.hub, self._obj_id, False)
-            except aiounifi.AiounifiException as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_request_failed",
-                ) from err
-            await self.async_refresh_after_control()
+        try:
+            await self.entity_description.control_fn(self.hub, self._obj_id, False)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
+        await self.async_refresh_after_control()
 
     @callback
     @override

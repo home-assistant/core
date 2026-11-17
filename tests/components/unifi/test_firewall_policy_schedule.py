@@ -190,6 +190,7 @@ async def test_schedule_entities_follow_polling(
     assert hass.states.get(SELECT).state == "one_time"
 
 
+@pytest.mark.parametrize("json_response", [True, False])
 @pytest.mark.parametrize("firewall_policy_payload", [[FIREWALL_POLICY]])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_simultaneous_writes_are_not_lost(
@@ -197,15 +198,21 @@ async def test_simultaneous_writes_are_not_lost(
     aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
     mock_requests: Callable[[], None],
+    json_response: bool,
 ) -> None:
     """Writes from different platforms at the same time both take effect.
 
     Each write sends the whole policy, so they must not build on the same
-    cached copy.
+    cached copy, whether or not the controller sends the saved policy back.
     """
     config_entry = await config_entry_factory()
     controller = FakeController(
-        aioclient_mock, mock_requests, config_entry, FIREWALL_POLICY, put_delay=0.05
+        aioclient_mock,
+        mock_requests,
+        config_entry,
+        FIREWALL_POLICY,
+        json_response=json_response,
+        put_delay=0.05,
     )
 
     await asyncio.gather(

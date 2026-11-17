@@ -1,15 +1,14 @@
 """UniFi Network abstraction."""
 
-import asyncio
-from collections import defaultdict
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime, tzinfo
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import APIHandler
 from aiounifi.interfaces.sites import Sites
+from aiounifi.models.firewall_policy import FirewallPolicySchedule
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
@@ -102,18 +101,8 @@ class UnifiHub:
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
-        self._control_locks: defaultdict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
         self.time_zone: tzinfo | None = None
         """The controller's time zone. None means use Home Assistant's."""
-
-    def control_lock(self, handler: APIHandler) -> asyncio.Lock:
-        """Return the lock for writing a handler's objects.
-
-        Some writes send a whole object built from the cached copy. Entities
-        on different platforms can write the same object, so they hold this
-        lock from reading the cache until it has been refreshed.
-        """
-        return self._control_locks[id(handler)]
 
     @property
     def available(self) -> bool:
@@ -147,6 +136,19 @@ class UnifiHub:
     ) -> None:
         """Queue commands to execute them together per device."""
         self._entity_helper.queue_poe_port_command(device_id, port_idx, poe_mode)
+
+    async def async_save_firewall_policy(
+        self,
+        obj_id: str,
+        *,
+        enabled: bool | None = None,
+        schedule_fn: Callable[[Mapping[str, Any]], FirewallPolicySchedule]
+        | None = None,
+    ) -> None:
+        """Save a change to a firewall policy, one write per policy at a time."""
+        await self._entity_helper.save_firewall_policy(
+            obj_id, enabled=enabled, schedule_fn=schedule_fn
+        )
 
     @property
     def signal_reachable(self) -> str:
