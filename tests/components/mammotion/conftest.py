@@ -1,38 +1,26 @@
 """Fixtures for Mammotion tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
+from pymammotion.aliyun.model.dev_by_account_response import Device
+from pymammotion.client import MammotionClient
 from pymammotion.data.model.device import MowingDevice
-from pymammotion.http.model.http import LoginResponseData
+from pymammotion.homeassistant import HomeAssistantMowerApi
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.mammotion import MammotionConfigEntry
 from homeassistant.components.mammotion.const import (
     CONF_ACCOUNT_ID,
     CONF_ACCOUNTNAME,
     DOMAIN,
 )
+from homeassistant.components.mammotion.models import MammotionDevices
 from homeassistant.const import CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
-DEFAULT_NAME = "Luba-ABC123"
-
-LOGIN_INFO = LoginResponseData.from_dict(
-    {
-        "access_token": "access",
-        "token_type": "bearer",
-        "refresh_token": "refresh",
-        "expires_in": 3600,
-        "authorization_code": "code",
-        "userInformation": {
-            "areaCode": "NZ",
-            "domainAbbreviation": "AU",
-            "userId": "1",
-            "userAccount": "user123",
-            "authType": "0",
-        },
-    }
-)
+from . import ACCOUNT_ID, ACCOUNT_NAME, LOGIN_INFO, cloud_device
 
 
 @pytest.fixture(autouse=True)
@@ -41,10 +29,16 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[MagicMock]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
+
+    async def _setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
+        # Unloading the entry when the test ends reads its runtime data.
+        entry.runtime_data = MammotionDevices([])
+
     with patch(
-        "homeassistant.components.mammotion.async_setup_entry", return_value=True
+        "homeassistant.components.mammotion.async_setup_entry",
+        side_effect=_setup_entry,
     ) as mock_setup:
         yield mock_setup
 
@@ -53,10 +47,10 @@ def mock_setup_entry() -> Generator[MagicMock]:
 def mock_mammotion_http() -> Generator[MagicMock]:
     """Mock the HTTP client the config flow validates the login with."""
     with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP"
+        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
+        autospec=True,
     ) as mock_http:
-        client = mock_http.return_value
-        client.login_v2 = AsyncMock()
+        client: MagicMock = mock_http.return_value
         client.login_info = LOGIN_INFO
         yield client
 
@@ -66,13 +60,13 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="user@example.com",
+        title=ACCOUNT_NAME,
         data={
-            CONF_ACCOUNTNAME: "user@example.com",
+            CONF_ACCOUNTNAME: ACCOUNT_NAME,
             CONF_PASSWORD: "password",
-            CONF_ACCOUNT_ID: "user123",
+            CONF_ACCOUNT_ID: ACCOUNT_ID,
         },
-        unique_id="user123",
+        unique_id=ACCOUNT_ID,
     )
 
 
@@ -83,31 +77,37 @@ def mock_mowing_device() -> MowingDevice:
 
 
 @pytest.fixture
-def mock_mower_api(mock_mowing_device: MowingDevice) -> Generator[MagicMock]:
-    """Mock the pymammotion mower API."""
-    device = Mock()
-    device.device_name = DEFAULT_NAME
-    device.nick_name = "Luba"
-    device.product_model = "Luba 2 AWD"
+def mock_cloud_devices() -> list[Device]:
+    """Return the devices the cloud lists for the account."""
+    return [cloud_device()]
 
-    api = MagicMock()
-    api.update = AsyncMock(return_value=mock_mowing_device)
-    api.is_online = Mock(return_value=True)
-    api.async_send_command = AsyncMock(return_value=True)
-    api.async_request_iot_sync = AsyncMock()
-    api.mammotion.login_and_initiate_cloud = AsyncMock()
-    api.mammotion.restore_credentials = AsyncMock()
-    api.mammotion.stop = AsyncMock()
-    api.mammotion.remove_device = AsyncMock()
-    api.mammotion.to_cache = Mock(return_value={})
-    api.mammotion.get_device_by_name = Mock(return_value=None)
-    api.mammotion.mower = Mock(return_value=None)
-    api.mammotion.wait_for = AsyncMock()
-    api.mammotion.aliyun_device_list = [device]
-    api.mammotion.mammotion_device_list = []
+
+@pytest.fixture
+def mock_mower_api(
+    mock_mowing_device: MowingDevice, mock_cloud_devices: list[Device]
+) -> Generator[MagicMock]:
+    """Mock the pymammotion mower API."""
+    client = create_autospec(MammotionClient, instance=True)
+    client.aliyun_device_list = mock_cloud_devices
+    client.mammotion_device_list = []
+    client.reauth_required = None
+    client.to_cache.return_value = {}
+    client.get_device_by_name.return_value = None
+    client.mower.return_value = None
+
+    api = create_autospec(HomeAssistantMowerApi, instance=True)
+    api.mammotion = client
+    api.update.return_value = mock_mowing_device
+    api.is_online.return_value = True
 
     with patch(
         "homeassistant.components.mammotion.HomeAssistantMowerApi",
         return_value=api,
     ):
         yield api
+
+
+@pytest.fixture
+def mock_mammotion(mock_mower_api: MagicMock) -> MagicMock:
+    """Return the mocked cloud client the mower API wraps."""
+    return mock_mower_api.mammotion

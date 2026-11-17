@@ -1,6 +1,5 @@
 """The Mammotion integration."""
 
-import contextlib
 from typing import Any
 
 from aiohttp import ClientError
@@ -8,7 +7,13 @@ from pymammotion.aliyun.exceptions import CloudSetupError
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.client import MammotionClient
 from pymammotion.homeassistant import HomeAssistantMowerApi
-from pymammotion.transport.base import LoginFailedError, TransportType
+from pymammotion.http.model.http import UnauthorizedExceptionError
+from pymammotion.transport.base import (
+    AuthError,
+    LoginFailedError,
+    TransportType,
+    is_transient_network_error,
+)
 from Tea.exceptions import UnretryableException
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,10 +52,8 @@ type MammotionConfigEntry = ConfigEntry[MammotionDevices]
 
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Set up Mammotion Luba from a config entry."""
-
-    api = HomeAssistantMowerApi(
-        ha_version="1.0.0", session=async_get_clientsession(hass)
-    )
+    session = async_get_clientsession(hass)
+    api = HomeAssistantMowerApi(ha_version="1.0.0", session=session)
     mammotion = api.mammotion
 
     async def shutdown_mammotion(_: Event | None = None) -> None:
@@ -59,87 +62,83 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     # Registered before login so a failed setup does not leave the client's
     # MQTT session running into the retry, which reuses the same client_id.
     entry.async_on_unload(shutdown_mammotion)
+    # Not async_listen_once: unloading after the event fired would remove it twice.
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
     )
 
-    account = entry.data.get(CONF_ACCOUNTNAME)
-    password = entry.data.get(CONF_PASSWORD)
+    account = entry.data[CONF_ACCOUNTNAME]
+    password = entry.data[CONF_PASSWORD]
 
-    mammotion_mowers: list[MammotionMowerData] = []
-    mammotion_devices: MammotionDevices = MammotionDevices([])
     store = MammotionConfigStore(hass, entry.entry_id)
     await store.async_load_mower_data()
 
-    if account and password:
-        session = async_get_clientsession(hass)
-        cached = _load_cached_credentials(entry)
-
-        async def credentials_updated() -> None:
-            """Persist credentials the library rotated behind our back."""
-            store_cloud_credentials(hass, entry, mammotion)
-
-        async def unrecoverable_auth_error(
-            account_id: str, transport_type: TransportType, err: Exception
-        ) -> None:
-            """Surface a dead cloud session as a single reauth prompt."""
-            LOGGER.error(
-                "Mammotion cloud authentication failed for %s on %s: %s",
-                account_id,
-                transport_type.value,
-                err,
-            )
-            entry.async_start_reauth(hass)
-
-        # Wired before login so a rotation during it is not lost.
-        mammotion.on_credentials_updated = credentials_updated
-        mammotion.on_unrecoverable_auth_error = unrecoverable_auth_error
-
-        try:
-            if cached:
-                await mammotion.restore_credentials(account, password, cached, session)
-            else:
-                await mammotion.login_and_initiate_cloud(account, password, session)
-        except (ClientError, TimeoutError, ConnectionError, CloudSetupError) as err:
-            raise ConfigEntryNotReady(err) from err
-        except LoginFailedError as err:
-            raise ConfigEntryAuthFailed(err) from err
-        except UnretryableException as err:
-            raise ConfigEntryError(err) from err
-
+    async def credentials_updated() -> None:
+        """Persist credentials the library rotated behind our back."""
         store_cloud_credentials(hass, entry, mammotion)
 
-        device_list: list[Device] = [
-            device
-            for device in (
-                *mammotion.aliyun_device_list,
-                *mammotion.mammotion_device_list,
+    async def unrecoverable_auth_error(
+        account_id: str, transport_type: TransportType, err: Exception
+    ) -> None:
+        """Surface a dead cloud session as a single reauth prompt."""
+        LOGGER.error(
+            "Mammotion cloud authentication failed for %s on %s: %s",
+            account_id,
+            transport_type.value,
+            err,
+        )
+        entry.async_start_reauth(hass)
+
+    # Wired before login so a rotation during it is not lost.
+    mammotion.on_credentials_updated = credentials_updated
+    mammotion.on_unrecoverable_auth_error = unrecoverable_auth_error
+
+    try:
+        if cached := _load_cached_credentials(entry):
+            await mammotion.restore_credentials(account, password, cached, session)
+        else:
+            await mammotion.login_and_initiate_cloud(account, password, session)
+    except (ClientError, TimeoutError, ConnectionError, CloudSetupError) as err:
+        raise ConfigEntryNotReady(err) from err
+    except (AuthError, UnauthorizedExceptionError) as err:
+        # A transport-scoped refusal raises the same errors while the login holds.
+        if isinstance(err, LoginFailedError) or mammotion.reauth_required is not None:
+            raise ConfigEntryAuthFailed(err) from err
+        raise ConfigEntryNotReady(err) from err
+    except UnretryableException as err:
+        # Tea raises this once its retries of a network error are spent.
+        if is_transient_network_error(err):
+            raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryError(err) from err
+
+    store_cloud_credentials(hass, entry, mammotion)
+
+    device_list: list[Device] = [
+        device
+        for device in (*mammotion.aliyun_device_list, *mammotion.mammotion_device_list)
+        if device.device_name.startswith(DEVICE_SUPPORT)
+    ]
+
+    mowers: list[MammotionMowerData] = []
+    for device in device_list:
+        update_coordinator = MammotionMowerUpdateCoordinator(
+            hass, entry, device, api, store
+        )
+        update_coordinator.restore_data()
+        await update_coordinator.async_config_entry_first_refresh()
+        mowers.append(
+            MammotionMowerData(
+                name=device.device_name,
+                api=api,
+                coordinator=update_coordinator,
+                device=device,
             )
-            if device.device_name.startswith(DEVICE_SUPPORT)
-        ]
+        )
 
-        for device in device_list:
-            update_coordinator = MammotionMowerUpdateCoordinator(
-                hass, entry, device, api, store
-            )
-
-            update_coordinator.restore_data()
-            await update_coordinator.async_config_entry_first_refresh()
-
-            mammotion_mowers.append(
-                MammotionMowerData(
-                    name=device.device_name,
-                    api=api,
-                    coordinator=update_coordinator,
-                    device=device,
-                )
-            )
-
-    mammotion_devices.mowers = mammotion_mowers
-    entry.runtime_data = mammotion_devices
+    entry.runtime_data = MammotionDevices(mowers)
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(
+        hass.bus.async_listen(
             EVENT_HOMEASSISTANT_FINAL_WRITE, store.async_flush_mower_data
         )
     )
@@ -153,12 +152,10 @@ def store_cloud_credentials(
     mammotion: MammotionClient,
 ) -> None:
     """Store cloud credentials in config entry."""
-    cache = mammotion.to_cache()
-    if not cache:
-        return
-    hass.config_entries.async_update_entry(
-        config_entry, data={**config_entry.data, **cache}
-    )
+    if cache := mammotion.to_cache():
+        hass.config_entries.async_update_entry(
+            config_entry, data={**config_entry.data, **cache}
+        )
 
 
 def _load_cached_credentials(entry: MammotionConfigEntry) -> dict[str, Any]:
@@ -174,13 +171,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    for mower in entry.runtime_data.mowers:
-        mower.coordinator.store_cloud_credentials()
-        with contextlib.suppress(TimeoutError):
-            await mower.api.mammotion.remove_device(mower.name)
+    if not (mowers := entry.runtime_data.mowers):
+        return
 
-    if mowers := entry.runtime_data.mowers:
-        await mowers[0].coordinator.store.async_flush_mower_data()
+    store_cloud_credentials(hass, entry, mowers[0].api.mammotion)
+    for mower in mowers:
+        await mower.api.mammotion.remove_device(mower.name)
+    await mowers[0].coordinator.store.async_flush_mower_data()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
@@ -194,21 +191,9 @@ async def async_remove_config_entry_device(
     config_entry: MammotionConfigEntry,
     device_entry: AnyDeviceEntry,
 ) -> bool:
-    """Remove a config entry from a device."""
-    mower_names = (
-        next(
-            identifier[1]
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
+    """Allow removing a device only once its mower is gone from the account."""
+    mower_names = {mower.name for mower in config_entry.runtime_data.mowers}
+    return not any(
+        domain == DOMAIN and name in mower_names
+        for domain, name in device_entry.identifiers
     )
-    mower = next(
-        (
-            mower
-            for mower in config_entry.runtime_data.mowers
-            if mower.name in mower_names
-        ),
-        None,
-    )
-
-    return not bool(mower)

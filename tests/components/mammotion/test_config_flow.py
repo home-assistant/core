@@ -1,223 +1,364 @@
-"""Test the Mammotion Luba config flow."""
+"""Test the Mammotion config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientConnectionError
-from bleak.backends.device import BLEDevice
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
-from homeassistant import config_entries
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.mammotion.const import (
     CONF_ACCOUNT_ID,
     CONF_ACCOUNTNAME,
     CONF_BLE_DEVICES,
     DOMAIN,
 )
+from homeassistant.config_entries import (
+    SOURCE_BLUETOOTH,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import LOGIN_INFO
+from . import (
+    ACCOUNT_ID,
+    ACCOUNT_NAME,
+    DEFAULT_ADDRESS,
+    DEFAULT_MAC,
+    DEFAULT_NAME,
+    LOGIN_INFO,
+    LUBA_SERVICE_INFO,
+    OTHER_LOGIN_INFO,
+    service_info,
+)
+
+USER_INPUT = {CONF_ACCOUNTNAME: ACCOUNT_NAME, CONF_PASSWORD: "password"}
+
+LOGIN_ERRORS = [
+    pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
+    pytest.param(
+        {"login_v2.side_effect": ClientConnectionError("Conn Err")},
+        "cannot_connect",
+        id="cannot_connect",
+    ),
+    pytest.param(
+        {"login_v2.side_effect": RuntimeError("boom")}, "unknown", id="unknown"
+    ),
+]
 
 
-def _get_mock_device(name="Luba-ABC123", address="AA:BB:CC:DD:EE:FF"):
-    device = MagicMock(spec=BLEDevice)
-    device.name = name
-    device.address = address
-    return device
+def _login_succeeds(mock_mammotion_http: MagicMock) -> None:
+    """Make the next login succeed."""
+    mock_mammotion_http.configure_mock(
+        **{"login_info": LOGIN_INFO, "login_v2.side_effect": None}
+    )
 
 
-def _get_discovery_info(name="Luba-ABC123", address="aa:bb:cc:dd:ee:ff"):
-    discovery_info = MagicMock()
-    discovery_info.name = name
-    discovery_info.address = address.upper()
-    return discovery_info
+def _add_owned_mower(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entry: MockConfigEntry,
+    connections: set[tuple[str, str]],
+) -> dr.DeviceEntry:
+    """Register the default mower as a device of the entry."""
+    return device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, DEFAULT_NAME)},
+        connections=connections,
+    )
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_mammotion_http")
-async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
-    """Test successful bluetooth discovery flow."""
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_bluetooth_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a discovered mower is set up with its Bluetooth address."""
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.FORM
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
+    assert result["context"]["title_placeholders"] == {"name": DEFAULT_NAME}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCOUNTNAME: "user@example.com",
-            CONF_PASSWORD: "password",
-        },
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "user@example.com"
-    assert result2["result"].unique_id == "user123"
-    assert result2["data"] == {
-        CONF_ACCOUNTNAME: "user@example.com",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_NAME
+    assert result["result"].unique_id == ACCOUNT_ID
+    assert result["data"] == {
+        CONF_ACCOUNTNAME: ACCOUNT_NAME,
         CONF_PASSWORD: "password",
-        CONF_ACCOUNT_ID: "user123",
-        CONF_BLE_DEVICES: {"Luba-ABC123": "aa:bb:cc:dd:ee:ff"},
+        CONF_ACCOUNT_ID: ACCOUNT_ID,
+        CONF_BLE_DEVICES: {DEFAULT_NAME: DEFAULT_MAC},
     }
+    mock_setup_entry.assert_called_once()
 
 
-async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
-    """Test discovery aborts if already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNT_ID: "user123"},
-        unique_id="aa:bb:cc:dd:ee:ff",
+async def test_bluetooth_discovery_ignored(hass: HomeAssistant) -> None:
+    """Test discovery aborts for a mower the user ignored."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id=DEFAULT_MAC
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=LUBA_SERVICE_INFO
     )
-    entry.add_to_hass(hass)
 
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
-
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_bluetooth_discovery_not_supported(hass: HomeAssistant) -> None:
-    """Test discovery aborts if device name is not supported."""
-    discovery_info = _get_discovery_info(name="Unknown-Device")
-    device = _get_mock_device(name="Unknown-Device")
+    """Test discovery aborts for a device that is not a supported mower."""
+    other = service_info("RTK-ABC123", "11:22:33:44:55:66")
+    inject_bluetooth_service_info(hass, other)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=async_last_service_info(hass, other.address),
+    )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
 
 
-async def test_bluetooth_discovery_no_device(hass: HomeAssistant) -> None:
-    """Test discovery aborts if device is None (no longer present)."""
-    discovery_info = _get_discovery_info()
+async def test_bluetooth_discovery_no_longer_present(hass: HomeAssistant) -> None:
+    """Test discovery aborts when the mower is no longer advertising."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=LUBA_SERVICE_INFO
+    )
 
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_longer_present"
 
 
-async def test_user_step_pick_discovery(hass: HomeAssistant) -> None:
-    """Test user step picking a discovered device."""
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
+async def test_bluetooth_discovery_skips_ignored_entries(hass: HomeAssistant) -> None:
+    """Test an ignored entry for another mower does not claim this one."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="11:22:33:44:55:66"
+    ).add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-            return_value=[discovery_info],
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
+    assert result["step_id"] == "bluetooth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("stored_connections", "stored_ble_devices", "expected_logins"),
+    [
+        pytest.param(set(), {}, 2, id="new_address_reloads_once"),
+        pytest.param(
+            {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)},
+            {},
+            1,
+            id="known_address_missing_from_entry_data",
         ),
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=device,
+        pytest.param(
+            {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)},
+            {DEFAULT_NAME: DEFAULT_MAC},
+            1,
+            id="known_address_already_in_entry_data",
         ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    ],
+)
+async def test_bluetooth_discovery_of_owned_mower(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion: MagicMock,
+    stored_connections: set[tuple[str, str]],
+    stored_ble_devices: dict[str, str],
+    expected_logins: int,
+) -> None:
+    """Test discovering a configured mower records its address on the entry.
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    A reload stands up a second client alongside the running one, and the two
+    MQTT sessions share a client_id, so the broker rejects both. Only an address
+    the device registry did not know yet may reload the entry.
+    """
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_BLE_DEVICES: stored_ble_devices},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEFAULT_NAME), mock_config_entry.entry_id
+    )
+    assert device is not None
+    device_registry.async_update_device(device.id, new_connections=stored_connections)
 
-    mock_mammotion = MagicMock()
-    mock_mammotion.login_v2 = AsyncMock()
-    mock_mammotion.login_info.userInformation.userAccount = "user123"
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_mammotion,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"}
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "wifi"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_BLE_DEVICES] == {DEFAULT_NAME: DEFAULT_MAC}
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert (dr.CONNECTION_BLUETOOTH, DEFAULT_MAC) in device.connections
+    assert mock_mammotion.login_and_initiate_cloud.await_count == expected_logins
 
 
-async def test_user_step_skip_discovered_device(hass: HomeAssistant) -> None:
-    """Test submitting the picker without a device continues to the login."""
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-            return_value=[_get_discovery_info()],
-        ),
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=_get_mock_device(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+async def test_bluetooth_discovery_of_mower_owned_by_unloaded_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery records the address of an entry that is not loaded."""
+    mock_config_entry.add_to_hass(hass)
+    device = _add_owned_mower(hass, device_registry, mock_config_entry, set())
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.data[CONF_BLE_DEVICES] == {DEFAULT_NAME: DEFAULT_MAC}
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.connections == {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)}
+
+
+async def test_bluetooth_confirm_mower_configured_meanwhile(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test confirming a mower another flow configured meanwhile aborts."""
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
+    assert result["step_id"] == "bluetooth_confirm"
+
+    mock_config_entry.add_to_hass(hass)
+    _add_owned_mower(
+        hass,
+        device_registry,
+        mock_config_entry,
+        {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)},
+    )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_BLE_DEVICES] == {DEFAULT_NAME: DEFAULT_MAC}
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_ble_devices"),
+    [
+        pytest.param(
+            {CONF_ADDRESS: DEFAULT_ADDRESS},
+            {CONF_BLE_DEVICES: {DEFAULT_NAME: DEFAULT_MAC}},
+            id="pick",
+        ),
+        pytest.param({}, {}, id="skip"),
+    ],
+)
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_user_step_discovered_mower(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, str],
+    expected_ble_devices: dict[str, Any],
+) -> None:
+    """Test picking or skipping a discovered mower before logging in."""
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_ID
+    assert result["data"] == {
+        CONF_ACCOUNTNAME: ACCOUNT_NAME,
+        CONF_PASSWORD: "password",
+        CONF_ACCOUNT_ID: ACCOUNT_ID,
+        **expected_ble_devices,
+    }
+    mock_setup_entry.assert_called_once()
+
+
+async def test_user_step_offers_only_new_mowers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the picker leaves out ignored, owned and unsupported devices."""
+    MockConfigEntry(
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id="11:22:33:44:55:66"
+    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
+    _add_owned_mower(
+        hass,
+        device_registry,
+        mock_config_entry,
+        {(dr.CONNECTION_BLUETOOTH, DEFAULT_MAC)},
+    )
+    for info in (
+        service_info("Luba-IGNORED", "11:22:33:44:55:66"),
+        LUBA_SERVICE_INFO,
+        service_info("RTK-XYZ789", "22:33:44:55:66:77"),
+        service_info("Yuka-NEW", "99:88:77:66:55:44"),
+    ):
+        inject_bluetooth_service_info(hass, info)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema[CONF_ADDRESS].container == {
+        "99:88:77:66:55:44": "Yuka-NEW"
+    }
 
 
 async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
-    """Test user step with no discovered devices goes to wifi."""
-    with patch(
-        "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    """Test the user step goes straight to the login without discovered mowers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
 
 
@@ -225,7 +366,7 @@ async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
     "account",
     [
         pytest.param("User@Example.com", id="account_name"),
-        pytest.param("user123", id="account_id"),
+        pytest.param(ACCOUNT_ID, id="account_id"),
     ],
 )
 async def test_wifi_step_account_already_configured(
@@ -240,7 +381,7 @@ async def test_wifi_step_account_already_configured(
     """
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -252,150 +393,128 @@ async def test_wifi_step_account_already_configured(
     mock_mammotion_http.login_v2.assert_not_awaited()
 
 
+async def test_wifi_step_alias_of_configured_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
+) -> None:
+    """Test a login name that resolves to a configured account aborts."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ACCOUNTNAME: "+64211234567", CONF_PASSWORD: "pw"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_mammotion_http.login_v2.assert_awaited_once_with("+64211234567", "pw")
+
+
 async def test_user_step_skips_ignored_mower(hass: HomeAssistant) -> None:
     """Test a mower whose discovery was ignored is not offered again."""
     MockConfigEntry(
-        domain=DOMAIN,
-        source=config_entries.SOURCE_IGNORE,
-        unique_id="aa:bb:cc:dd:ee:ff",
+        domain=DOMAIN, source=SOURCE_IGNORE, unique_id=DEFAULT_MAC
     ).add_to_hass(hass)
+    inject_bluetooth_service_info(hass, LUBA_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-            return_value=[_get_discovery_info()],
-        ),
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=_get_mock_device(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
 
 
-@pytest.mark.parametrize(
-    ("failure", "expected_error"),
-    [
-        pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
-        pytest.param(
-            {"login_v2.side_effect": ClientConnectionError("Conn Err")},
-            "cannot_connect",
-            id="cannot_connect",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("failure", "expected_error"), LOGIN_ERRORS)
 async def test_wifi_step_errors(
     hass: HomeAssistant,
     mock_mammotion_http: MagicMock,
+    mock_setup_entry: AsyncMock,
     failure: dict[str, Any],
     expected_error: str,
 ) -> None:
     """Test the login step shows an error and recovers once the login works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     mock_mammotion_http.configure_mock(**failure)
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ACCOUNTNAME: "user@example.com", CONF_PASSWORD: "password"},
+        result["flow_id"], USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi"
     assert result["errors"] == {"base": expected_error}
 
-    mock_mammotion_http.configure_mock(
-        **{"login_info": LOGIN_INFO, "login_v2.side_effect": None}
-    )
+    _login_succeeds(mock_mammotion_http)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ACCOUNTNAME: "user@example.com", CONF_PASSWORD: "password"},
+        result["flow_id"], USER_INPUT
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "user123"
-
-
-async def test_reconfigure_flow(hass: HomeAssistant) -> None:
-    """Test reconfiguration flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNTNAME: "old@example.com", CONF_PASSWORD: "old_password"},
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    schema = result["data_schema"]
-    assert (
-        get_schema_suggested_value(schema.schema, CONF_ACCOUNTNAME) == "old@example.com"
-    )
-    # The stored password must not be sent to the browser as a default.
-    with pytest.raises(probatio.Invalid):
-        schema({CONF_ACCOUNTNAME: "old@example.com"})
-
-    mock_http = MagicMock()
-    mock_http.login_v2 = AsyncMock(return_value=None)
-    mock_http.login_info.userInformation.userAccount = "user123"
-
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "new@example.com",
-                CONF_PASSWORD: "new_password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
-
-    entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry.data[CONF_ACCOUNTNAME] == "new@example.com"
-    assert entry.data[CONF_PASSWORD] == "new_password"
-    assert entry.data[CONF_ACCOUNT_ID] == "user123"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == ACCOUNT_ID
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.parametrize(
-    ("failure", "expected_error"),
+    "account",
     [
-        pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
-        pytest.param(
-            {"login_v2.side_effect": ClientConnectionError("Conn Err")},
-            "cannot_connect",
-            id="cannot_connect",
-        ),
+        pytest.param("new@example.com", id="new_account_name"),
+        pytest.param(ACCOUNT_NAME, id="same_account_name"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_mammotion_http")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    account: str,
+) -> None:
+    """Test reconfiguring the account updates the entry and reloads it."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    schema = result["data_schema"]
+    assert get_schema_suggested_value(schema.schema, CONF_ACCOUNTNAME) == ACCOUNT_NAME
+    # The stored password must not be sent to the browser as a default.
+    with pytest.raises(probatio.Invalid):
+        schema({CONF_ACCOUNTNAME: ACCOUNT_NAME})
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: account, CONF_PASSWORD: "new_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_ACCOUNTNAME: account,
+        CONF_PASSWORD: "new_password",
+        CONF_ACCOUNT_ID: ACCOUNT_ID,
+    }
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.parametrize(("failure", "expected_error"), LOGIN_ERRORS)
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_mammotion_http: MagicMock,
+    mock_setup_entry: AsyncMock,
     failure: dict[str, Any],
     expected_error: str,
 ) -> None:
     """Test reconfiguration shows an error and recovers once the login works."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNTNAME: "old@example.com", CONF_PASSWORD: "old_password"},
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     mock_mammotion_http.configure_mock(**failure)
 
     result = await hass.config_entries.flow.async_configure(
@@ -403,324 +522,83 @@ async def test_reconfigure_flow_errors(
         {CONF_ACCOUNTNAME: "new@example.com", CONF_PASSWORD: "wrong"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": expected_error}
-    assert entry.data[CONF_ACCOUNTNAME] == "old@example.com"
+    assert mock_config_entry.data[CONF_ACCOUNTNAME] == ACCOUNT_NAME
 
-    mock_mammotion_http.configure_mock(
-        **{"login_info": LOGIN_INFO, "login_v2.side_effect": None}
-    )
+    _login_succeeds(mock_mammotion_http)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_ACCOUNTNAME: "new@example.com", CONF_PASSWORD: "new_password"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_ACCOUNTNAME] == "new@example.com"
-    assert entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_ACCOUNTNAME] == "new@example.com"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    mock_setup_entry.assert_called_once()
 
 
-async def test_reconfigure_flow_account_mismatch(hass: HomeAssistant) -> None:
-    """Test reconfiguration flow aborts when a different account is used."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNTNAME: "old@example.com", CONF_PASSWORD: "old_password"},
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-
-    mock_http = MagicMock()
-    mock_http.login_v2 = AsyncMock(return_value=None)
-    mock_http.login_info.userInformation.userAccount = "other_user"
-
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_http,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_ACCOUNTNAME: "other@example.com",
-                CONF_PASSWORD: "password",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "unique_id_mismatch"
-
-    assert entry.data[CONF_ACCOUNTNAME] == "old@example.com"
-
-
-async def test_bluetooth_discovery_update_existing_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
-    """Test bluetooth discovery updates existing entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNT_ID: "user123"},
-        unique_id="user123",
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    entry.add_to_hass(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "Luba-ABC123")},
-        connections=set(),
-    )
-
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
-
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    device_entry = device_registry.async_get(device_entry.id)
-    assert (dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff") in device_entry.connections
-
-
-async def test_bluetooth_step_no_discovery_info(hass: HomeAssistant) -> None:
-    """Test bluetooth step with no discovery info."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=None,
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-async def test_user_step_filtering(hass: HomeAssistant) -> None:
-    """Test user step filters discovered devices."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="AA:BB:CC:DD:EE:FF",
-    )
-
-    entry.add_to_hass(hass)
-
-    discovery_info_configured = _get_discovery_info(
-        name="existing entry", address="AA:BB:CC:DD:EE:FF"
-    )
-    discovery_info_unsupported = _get_discovery_info(
-        name="Unsupported", address="11:22:33:44:55:66"
-    )
-    discovery_info_valid = _get_discovery_info(
-        name="Luba-NEW", address="99:88:77:66:55:44"
-    )
-
-    device_valid = _get_mock_device(name="Luba-NEW", address="99:88:77:66:55:44")
-
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-            return_value=[
-                discovery_info_configured,
-                discovery_info_unsupported,
-                discovery_info_valid,
-            ],
-        ),
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=device_valid,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_bluetooth_confirm_race_condition(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
-    """Test bluetooth confirm step race condition where device is configured during flow."""
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNT_ID: "user123", CONF_BLE_DEVICES: {}},
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "Luba-ABC123")},
-        connections={(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
-    )
-
-    with (
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=device,
-        ),
-        patch(
-            "homeassistant.helpers.device_registry.async_entries_for_config_entry",
-            side_effect=[[], [device_entry]],
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_bluetooth_discovery_skip_no_account_id(hass: HomeAssistant) -> None:
-    """Test bluetooth discovery skips entries without account ID."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},  # No account ID
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
-
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-
-
-@pytest.mark.parametrize(
-    ("stored_connections", "stored_ble_devices", "expect_reload"),
-    [
-        pytest.param(set(), {}, True, id="new_ble_address_reloads_once"),
-        pytest.param(
-            {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
-            {},
-            False,
-            id="known_address_missing_from_entry_data",
-        ),
-        pytest.param(
-            {(dr.CONNECTION_BLUETOOTH, "aa:bb:cc:dd:ee:ff")},
-            {"Luba-ABC123": "aa:bb:cc:dd:ee:ff"},
-            False,
-            id="known_address_already_in_entry_data",
-        ),
-    ],
-)
-async def test_bluetooth_discovery_only_reloads_for_new_address(
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_account_mismatch(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    stored_connections: set[tuple[str, str]],
-    stored_ble_devices: dict[str, str],
-    expect_reload: bool,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
 ) -> None:
-    """Test an advertisement for a known address does not reload a loaded entry.
+    """Test reconfiguration aborts when the login is a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_mammotion_http.login_info = OTHER_LOGIN_INFO
 
-    A reload stands up a second client alongside the running one, and the two
-    MQTT sessions share a client_id, so the broker rejects both.  Writing
-    CONF_BLE_DEVICES must therefore not trigger a reload of its own — the
-    device-registry merge above already schedules the single one a genuinely
-    new address needs.
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "other@example.com", CONF_PASSWORD: "password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_ACCOUNTNAME] == ACCOUNT_NAME
+
+
+async def test_reconfigure_flow_account_of_other_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
+) -> None:
+    """Test reconfiguring to another entry's account aborts before logging in.
+
+    The login would supersede the cloud session the other entry uses.
     """
-    entry = MockConfigEntry(
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ACCOUNT_ID: "user123", CONF_BLE_DEVICES: stored_ble_devices},
-        unique_id="user123",
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    entry.add_to_hass(hass)
+        title="other@example.com",
+        data={
+            CONF_ACCOUNTNAME: "other@example.com",
+            CONF_PASSWORD: "password",
+            CONF_ACCOUNT_ID: "other_user",
+        },
+        unique_id="other_user",
+    ).add_to_hass(hass)
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "Luba-ABC123")},
-        connections=stored_connections,
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCOUNTNAME: "Other@Example.com", CONF_PASSWORD: "password"},
     )
-
-    with (
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=_get_mock_device(),
-        ),
-        patch.object(
-            hass.config_entries, "async_schedule_reload"
-        ) as mock_schedule_reload,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=_get_discovery_info(),
-        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert (mock_schedule_reload.call_count > 0) is expect_reload
+    mock_mammotion_http.login_v2.assert_not_awaited()
+    assert mock_config_entry.data[CONF_ACCOUNTNAME] == ACCOUNT_NAME
 
 
-async def test_user_step_does_not_reload_loaded_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
-    """Test listing candidates never reloads an entry that already owns a mower."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCOUNT_ID: "user123"},
-        unique_id="user123",
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    entry.add_to_hass(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "Luba-ABC123")},
-        connections=set(),
-    )
-
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
-            return_value=[_get_discovery_info()],
-        ),
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=_get_mock_device(),
-        ),
-        patch.object(
-            hass.config_entries, "async_schedule_reload"
-        ) as mock_schedule_reload,
-    ):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    mock_schedule_reload.assert_not_called()
-
-
+@pytest.mark.usefixtures("mock_mammotion_http")
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth updates the password and reloads the entry."""
     mock_config_entry.add_to_hass(hass)
@@ -728,22 +606,66 @@ async def test_reauth_flow(
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"]["account_name"] == ACCOUNT_NAME
 
-    with (
-        patch(
-            "homeassistant.components.mammotion.config_flow.MammotionHTTP"
-        ) as mock_http,
-        patch(
-            "homeassistant.components.mammotion.async_setup_entry", return_value=True
-        ),
-    ):
-        mock_http.return_value.login_v2 = AsyncMock()
-        mock_http.return_value.login_info.userInformation.userAccount = "user123"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "new-password"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.parametrize(("failure", "expected_error"), LOGIN_ERRORS)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
+    mock_setup_entry: AsyncMock,
+    failure: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test reauth shows an error and recovers once the login works."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    mock_mammotion_http.configure_mock(**failure)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "wrong"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    _login_succeeds(mock_mammotion_http)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    mock_setup_entry.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
+) -> None:
+    """Test reauth aborts when the password belongs to another account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_mammotion_http.login_info = OTHER_LOGIN_INFO
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "new-password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_PASSWORD] == "password"

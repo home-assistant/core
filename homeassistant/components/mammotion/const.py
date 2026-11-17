@@ -3,10 +3,15 @@
 import logging
 from typing import Final
 
-from bleak.exc import BleakError
-from bleak_retry_connector import BleakNotFoundError
-from pymammotion.aliyun.exceptions import DeviceOfflineException
-from pymammotion.transport.base import NoTransportAvailableError
+from aiohttp import ClientError
+from pymammotion.aliyun.exceptions import (
+    DeviceOfflineException,
+    DeviceUnboundException,
+    FailedRequestException,
+    GatewayTimeoutException,
+    TooManyRequestsException,
+)
+from pymammotion.transport.base import TransportError
 
 from .exceptions import CommandFailedError
 
@@ -16,24 +21,24 @@ DEVICE_SUPPORT = ("Luba", "Yuka")
 
 LOGGER: Final = logging.getLogger(__package__)
 
+# What a user-priority send or state wait raises when the command did not land.
+# TransportError covers NoTransportAvailableError, TransportRateLimitedError,
+# AccountInUseError and AuthError.
 COMMAND_EXCEPTIONS = (
-    BleakNotFoundError,
-    BleakError,
-    NoTransportAvailableError,
-    TimeoutError,
-    DeviceOfflineException,
+    ClientError,
     CommandFailedError,
+    DeviceOfflineException,
+    DeviceUnboundException,
+    FailedRequestException,
+    GatewayTimeoutException,
+    TimeoutError,
+    TooManyRequestsException,
+    TransportError,
 )
 
 CONF_ACCOUNTNAME: Final = "account_name"
 CONF_ACCOUNT_ID: Final = "mammotion_account_id"
 CONF_BLE_DEVICES: Final = "ble_devices"
-CONF_AUTH_DATA: Final = "auth_data"
-CONF_CONNECT_DATA: Final = "connect_response"
 CONF_AEP_DATA: Final = "aep_data"
-CONF_SESSION_DATA: Final = "session_data"
-CONF_REGION_DATA: Final = "region_data"
-CONF_DEVICE_DATA: Final = "device_data"
-CONF_MAMMOTION_DATA: Final = "mammotion_data"
 CONF_MAMMOTION_MQTT: Final = "mammotion_mqtt"
 CONF_MAMMOTION_DEVICE_RECORDS: Final = "mammotion_device_records"

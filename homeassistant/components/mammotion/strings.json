@@ -2,10 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "bluetooth_and_account_mismatch": "Bluetooth device not found in your account",
-      "missing_wifi_data": "Missing Wi-Fi configuration data",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "no_devices_found_in_account": "No devices present in your account",
       "no_longer_present": "Device is no longer present",
       "not_supported": "Device not supported",
       "unique_id_mismatch": "Please ensure you reconfigure using the same Mammotion account"
@@ -63,14 +59,7 @@
       }
     }
   },
-  "entity": {},
   "exceptions": {
-    "command_failed": {
-      "message": "Failed to send command to the mower."
-    },
-    "device_not_ready": {
-      "message": "Device is not ready."
-    },
     "dock_cancel_failed": {
       "message": "Failed to stop the mower returning to the dock."
     },

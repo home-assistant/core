@@ -8,17 +8,17 @@ from pymammotion.aliyun.exceptions import DeviceOfflineException
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.homeassistant import HomeAssistantMowerApi
+from pymammotion.messaging.command_queue import Priority
 from pymammotion.transport import NoTransportAvailableError
 from pymammotion.transport.base import AuthError
 from pymammotion.utility.constant.device_constant import WorkMode
 
-from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config import MammotionConfigStore
-from .const import CONF_ACCOUNTNAME, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .exceptions import CommandFailedError
 
 if TYPE_CHECKING:
@@ -47,37 +47,22 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
             update_interval=update_interval,
             config_entry=config_entry,
         )
-        assert config_entry.unique_id
         self.device: Device = device
         self.device_name = device.device_name
         self.api: HomeAssistantMowerApi = api
-        self.account = config_entry.data[CONF_ACCOUNTNAME]
-        self.password = config_entry.data[CONF_PASSWORD]
-        self.update_failures = 0
-
-    async def async_refresh_login(self) -> None:
-        """Refresh login credentials asynchronously."""
-        await self.api.mammotion.refresh_login(self.account)
-        self.store_cloud_credentials()
-
-    def store_cloud_credentials(self) -> None:
-        """Store cloud credentials in config entry."""
-        if config_entry := self.config_entry:
-            cache = self.api.mammotion.to_cache()
-            if not cache:
-                return
-            self.hass.config_entries.async_update_entry(
-                config_entry, data={**config_entry.data, **cache}
-            )
 
     def is_online(self) -> bool:
         """Check if device is online."""
         return self.api.is_online(self.device_name)
 
     async def async_send_command(self, command: str, **kwargs: Any) -> None:
-        """Send command via api."""
-        if not await self.api.async_send_command(self.device_name, command, **kwargs):
-            raise CommandFailedError(f"Command {command} failed for {self.device_name}")
+        """Send a user command now; raise if it did not reach the mower."""
+        try:
+            await self.api.mammotion.send_command_with_args(
+                self.device_name, command, priority=Priority.USER, **kwargs
+            )
+        except KeyError as err:
+            raise CommandFailedError(f"{self.device_name} is not registered") from err
 
     async def async_wait_for_mode(self, *modes: WorkMode) -> WorkMode:
         """Return the first of the modes the mower reports."""
@@ -93,6 +78,10 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         except KeyError as err:
             raise CommandFailedError(f"{self.device_name} is not registered") from err
         return WorkMode(cast(MowingDevice, device).report_data.dev.sys_status)
+
+    async def async_request_report(self) -> None:
+        """Ask the mower for a fresh report in the background."""
+        await self.api.mammotion.request_report_snapshot(self.device_name)
 
 
 class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):

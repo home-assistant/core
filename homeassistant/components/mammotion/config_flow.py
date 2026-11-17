@@ -11,7 +11,7 @@ from pymammotion.http.http import MammotionHTTP
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
+    BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -84,13 +84,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo | None
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
-
-        if discovery_info is None:
-            return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
@@ -201,8 +198,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
         )
 
-    def _account_configured(self, account: str) -> bool:
-        """Return whether an entry already holds this account name or ID."""
+    def _account_configured(
+        self, account: str, exclude_entry_id: str | None = None
+    ) -> bool:
+        """Return whether another entry already holds this account name or ID."""
         account = account.casefold()
         return any(
             account
@@ -211,6 +210,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry.data[CONF_ACCOUNT_ID].casefold(),
             )
             for entry in self._async_current_entries(include_ignore=False)
+            if entry.entry_id != exclude_entry_id
         )
 
     async def _async_validate_login(
@@ -226,6 +226,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             await mammotion_http.login_v2(account, password)
         except ClientError, TimeoutError, OSError:
             errors["base"] = "cannot_connect"
+            return errors, None
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
             return errors, None
 
         if (login_info := mammotion_http.login_info) is None:
@@ -317,6 +321,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             account = user_input[CONF_ACCOUNTNAME]
             password = user_input[CONF_PASSWORD]
+            # Logging in would supersede the cloud session of the entry holding it.
+            if self._account_configured(account, exclude_entry_id=entry.entry_id):
+                return self.async_abort(reason="already_configured")
             errors, user_account = await self._async_validate_login(account, password)
 
             if not errors:
