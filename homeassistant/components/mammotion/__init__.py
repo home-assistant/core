@@ -52,6 +52,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
         ha_version="1.0.0", session=async_get_clientsession(hass)
     )
     mammotion = api.mammotion
+
+    async def shutdown_mammotion(_: Event | None = None) -> None:
+        await mammotion.stop()
+
+    # Registered before login so a failed setup does not leave the client's
+    # MQTT session running into the retry, which reuses the same client_id.
+    entry.async_on_unload(shutdown_mammotion)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
+    )
+
     account = entry.data.get(CONF_ACCOUNTNAME)
     password = entry.data.get(CONF_PASSWORD)
 
@@ -127,13 +138,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     mammotion_devices.mowers = mammotion_mowers
     entry.runtime_data = mammotion_devices
 
-    async def shutdown_mammotion(_: Event | None = None) -> None:
-        await mammotion.stop()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
-    )
-
     entry.async_on_unload(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_FINAL_WRITE, store.async_flush_mower_data
@@ -177,7 +181,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
 
     if mowers := entry.runtime_data.mowers:
         await mowers[0].coordinator.store.async_flush_mower_data()
-        await mowers[0].api.mammotion.stop()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:

@@ -80,6 +80,45 @@ async def test_setup_retry_on_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("failure", "expected_state"),
+    [
+        pytest.param(
+            {"update.return_value": None},
+            ConfigEntryState.SETUP_RETRY,
+            id="first_refresh_failed",
+        ),
+        pytest.param(
+            {
+                "mammotion.login_and_initiate_cloud.side_effect": LoginFailedError(
+                    "user123", "bad password"
+                )
+            },
+            ConfigEntryState.SETUP_ERROR,
+            id="login_rejected",
+        ),
+    ],
+)
+async def test_failed_setup_stops_client(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    failure: dict[str, Any],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test a failed setup stops the client it created.
+
+    A client left running keeps its MQTT session, and the next attempt
+    connects with the same client_id, so the broker rejects both.
+    """
+    mock_mower_api.configure_mock(**failure)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+    mock_mower_api.mammotion.stop.assert_awaited_once()
+
+
 async def test_setup_restores_cached_credentials(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
