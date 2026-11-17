@@ -26,11 +26,7 @@ async def async_send_single_command(host: str, port: int, command: str) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={
-                "host": host,
-                "port": str(port),
-                "error": str(err),
-            },
+            translation_placeholders={"host": host, "port": str(port)},
         ) from err
     try:
         writer.write(f"{command};".encode())
@@ -40,7 +36,6 @@ async def async_send_single_command(host: str, port: int, command: str) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="send_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
     finally:
         writer.close()
