@@ -3,7 +3,8 @@
 import contextlib
 from typing import Any
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientError
+from pymammotion.aliyun.exceptions import CloudSetupError
 from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.client import MammotionClient
 from pymammotion.homeassistant import HomeAssistantMowerApi
@@ -34,7 +35,6 @@ from .const import (
     CONF_MAMMOTION_MQTT,
     DEVICE_SUPPORT,
     DOMAIN,
-    EXPIRED_CREDENTIAL_EXCEPTIONS,
     LOGGER,
 )
 from .coordinator import MammotionMowerUpdateCoordinator
@@ -86,15 +86,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
         try:
             if cached:
-                try:
-                    await mammotion.restore_credentials(
-                        account, password, cached, session
-                    )
-                except EXPIRED_CREDENTIAL_EXCEPTIONS:
-                    await mammotion.login_and_initiate_cloud(account, password, session)
+                await mammotion.restore_credentials(account, password, cached, session)
             else:
                 await mammotion.login_and_initiate_cloud(account, password, session)
-        except ClientConnectorError as err:
+        except (ClientError, TimeoutError, ConnectionError, CloudSetupError) as err:
             raise ConfigEntryNotReady(err) from err
         except LoginFailedError as err:
             raise ConfigEntryAuthFailed(err) from err

@@ -6,12 +6,18 @@ from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
+from pymammotion.aliyun.exceptions import CloudSetupError
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.transport.base import AuthError, LoginFailedError
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from Tea.exceptions import UnretryableException
 
-from homeassistant.components.mammotion.const import DOMAIN
+from homeassistant.components.mammotion.const import (
+    CONF_MAMMOTION_DEVICE_RECORDS,
+    CONF_MAMMOTION_MQTT,
+    DOMAIN,
+)
 from homeassistant.components.mammotion.coordinator import DEFAULT_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
@@ -51,19 +57,50 @@ async def test_setup_retry_on_failed_refresh(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(ClientConnectorError(Mock(), OSError("boom")), id="client"),
+        pytest.param(ConnectionError("HTTP 503"), id="server_unavailable"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(CloudSetupError("no session"), id="cloud_setup"),
+    ],
+)
 async def test_setup_retry_on_connection_error(
     hass: HomeAssistant,
     mock_mower_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    error: Exception,
 ) -> None:
     """Test the entry is retried when the cloud is unreachable."""
-    mock_mower_api.mammotion.login_and_initiate_cloud.side_effect = (
-        ClientConnectorError(Mock(), OSError("boom"))
-    )
+    mock_mower_api.mammotion.login_and_initiate_cloud.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_restores_cached_credentials(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cached credentials are restored instead of logging in again."""
+    cache = {
+        CONF_MAMMOTION_MQTT: {"host": "mqtt"},
+        CONF_MAMMOTION_DEVICE_RECORDS: {"records": [DEFAULT_NAME]},
+    }
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, **cache}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_mower_api.mammotion.restore_credentials.assert_awaited_once()
+    mock_mower_api.mammotion.login_and_initiate_cloud.assert_not_awaited()
 
 
 async def test_state_restored_from_store(

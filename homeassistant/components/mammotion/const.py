@@ -5,11 +5,7 @@ from typing import Final
 
 from bleak.exc import BleakError
 from bleak_retry_connector import BleakNotFoundError
-from pymammotion.aliyun.exceptions import (
-    CheckSessionException,
-    CloudSetupError,
-    DeviceOfflineException,
-)
+from pymammotion.aliyun.exceptions import DeviceOfflineException
 from pymammotion.transport.base import NoTransportAvailableError
 
 from .exceptions import CommandFailedError
@@ -28,8 +24,6 @@ COMMAND_EXCEPTIONS = (
     DeviceOfflineException,
     CommandFailedError,
 )
-
-EXPIRED_CREDENTIAL_EXCEPTIONS = (CheckSessionException, CloudSetupError)
 
 CONF_ACCOUNTNAME: Final = "account_name"
 CONF_ACCOUNT_ID: Final = "mammotion_account_id"

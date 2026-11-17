@@ -23,5 +23,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pymammotion"],
   "quality_scale": "bronze",
-  "requirements": ["pymammotion==0.8.14"]
+  "requirements": ["pymammotion==0.10.15"]
 }
