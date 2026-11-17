@@ -19,9 +19,9 @@ from homeassistant.components.bluetooth import (
     async_process_advertisements,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 
-from .const import DOMAIN
+from .const import CONF_FIRMWARE_VERSION, DOMAIN
 
 # number of seconds to wait for a device to be put in pairing mode
 WAIT_FOR_PAIRING_TIMEOUT = 30
@@ -44,6 +44,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Snooz."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -179,6 +180,8 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_ADDRESS: discovery.info.address,
                 CONF_TOKEN: discovery.device.password,
+                CONF_MODEL: discovery.device.model.value,
+                CONF_FIRMWARE_VERSION: discovery.device.firmware_version.value,
             },
         )
 

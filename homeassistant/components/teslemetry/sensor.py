@@ -6,9 +6,13 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import Any, override
 
-from aiopowerwall import component_float, current_power, pv_string_current
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla.powerwall import (
+    component_float,
+    current_power,
+    pv_string_current,
+)
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 from teslemetry_stream.const import CreditsEvent
 
@@ -41,7 +45,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PressureConverter
 from homeassistant.util.variance import ignore_variance
 
-from . import TeslemetryConfigEntry
 from .const import ENERGY_HISTORY_FIELDS
 from .coordinator import PERIOD_START, WALL_CONNECTOR_TOTALS
 from .entity import (
@@ -56,7 +59,7 @@ from .entity import (
     TeslemetryWallConnectorTotalsEntity,
 )
 from .helpers import async_remove_stale_vehicle_entities
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 

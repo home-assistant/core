@@ -8,14 +8,12 @@ from ring_doorbell import RingCapability
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ring.const import DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    CommonServiceArgument,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -99,8 +97,8 @@ async def test_switch_can_be_turned_on_and_off(hass: HomeAssistant, entity_id) -
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -111,8 +109,8 @@ async def test_switch_can_be_turned_on_and_off(hass: HomeAssistant, entity_id) -
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {CommonServiceArgument.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -165,7 +163,7 @@ async def test_in_home_chime_toggle_errors_when_type_unreadable(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {"entity_id": state.entity_id},
             blocking=True,
         )

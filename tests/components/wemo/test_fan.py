@@ -13,13 +13,15 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.wemo import fan
-from homeassistant.components.wemo.const import (
-    DOMAIN,
-    SERVICE_RESET_FILTER_LIFE,
-    SERVICE_SET_HUMIDITY,
+from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.components.wemo.services import WemoService, WemoServiceArgument
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    CommonServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -110,11 +112,11 @@ async def test_turn_off_state(hass: HomeAssistant, wemo_entity) -> None:
 async def test_fan_reset_filter_service(
     hass: HomeAssistant, pywemo_device, wemo_entity
 ) -> None:
-    """Verify that SERVICE_RESET_FILTER_LIFE is registered and works."""
+    """Verify that WemoService.RESET_FILTER_LIFE is registered and works."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RESET_FILTER_LIFE,
-        {ATTR_ENTITY_ID: wemo_entity.entity_id},
+        WemoService.RESET_FILTER_LIFE,
+        {CommonServiceArgument.ENTITY_ID: wemo_entity.entity_id},
         blocking=True,
     )
     pywemo_device.reset_filter_life.assert_called_with()
@@ -134,13 +136,13 @@ async def test_fan_reset_filter_service(
 async def test_fan_set_humidity_service(
     hass: HomeAssistant, pywemo_device, wemo_entity, test_input, expected
 ) -> None:
-    """Verify that SERVICE_SET_HUMIDITY is registered and works."""
+    """Verify that WemoService.SET_HUMIDITY is registered and works."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HUMIDITY,
+        WemoService.SET_HUMIDITY,
         {
-            ATTR_ENTITY_ID: wemo_entity.entity_id,
-            fan.ATTR_TARGET_HUMIDITY: test_input,
+            CommonServiceArgument.ENTITY_ID: wemo_entity.entity_id,
+            WemoServiceArgument.TARGET_HUMIDITY: test_input,
         },
         blocking=True,
     )

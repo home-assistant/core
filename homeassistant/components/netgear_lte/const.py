@@ -7,8 +7,6 @@ ATTR_HOST = "host"
 ATTR_SMS_ID = "sms_id"
 ATTR_FROM = "from"
 ATTR_MESSAGE = "message"
-ATTR_FAILOVER = "failover"
-ATTR_AUTOCONNECT = "autoconnect"
 AUTOCONNECT_MODES = ["never", "home", "always"]
 
 CONF_BINARY_SENSOR: Final = "binary_sensor"
