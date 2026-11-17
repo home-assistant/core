@@ -528,9 +528,30 @@ async def test_dry_contact_relay_via_device(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "has_generator"),
-    [("envoy_metered_batt_relay", True), ("envoy", False)],
+    (
+        "mock_envoy",
+        "has_generator",
+        "remove_config",
+        "remove_schedule",
+        "remove_mode",
+    ),
+    [
+        ("envoy_metered_batt_relay", True, False, False, False),
+        ("envoy_metered_batt_relay", True, True, False, False),
+        ("envoy_metered_batt_relay", True, False, True, False),
+        ("envoy_metered_batt_relay", True, False, False, True),
+        ("envoy_metered_batt_relay", True, True, True, True),
+        ("envoy", False, False, False, False),
+    ],
     indirect=["mock_envoy"],
+    ids=[
+        "generator",
+        "generator_no_config",
+        "generator_no_schedule",
+        "generator_no_mode",
+        "generator_only",
+        "no_generator",
+    ],
 )
 async def test_generator_device(
     hass: HomeAssistant,
@@ -539,8 +560,17 @@ async def test_generator_device(
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     has_generator: bool,
+    remove_config: bool,
+    remove_schedule: bool,
+    remove_mode: bool,
 ) -> None:
     """Test the standby generator device is created and can not be removed."""
+    if remove_config:
+        mock_envoy.data.generator_config = None
+    if remove_schedule:
+        mock_envoy.data.generator_schedule = None
+    if remove_mode:
+        mock_envoy.data.generator_mode = None
     assert await async_setup_component(hass, "config", {})
     await setup_integration(hass, config_entry)
 
@@ -553,8 +583,8 @@ async def test_generator_device(
     )
     if has_generator:
         assert generator_device is not None
-        assert generator_device.manufacturer == "Generac"
         assert generator_device.via_device_id == envoy_device.id
+        assert generator_device.manufacturer == (None if remove_config else "Generac")
     else:
         assert generator_device is None
 
