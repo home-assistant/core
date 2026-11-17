@@ -2,7 +2,8 @@
 
 Target keys select what an action applies to, so they use ``TargetKey``.
 Only ``hass.services.async_call`` calls in tests are checked: every constant
-key of their ``target=`` dict literal is a target key.
+key of their ``target=`` dict literal is a target key, and so is every constant
+key of its ``exclude`` dict literal.
 
 - ``C7465``: Target key of an action call should use ``TargetKey``
 """
@@ -31,6 +32,14 @@ def _is_async_call(node: nodes.Call) -> bool:
         and isinstance(func.expr, nodes.Attribute)
         and func.expr.attrname == "services"
     )
+
+
+def _is_exclude_key(key: nodes.NodeNG | None) -> bool:
+    """Check if a target key is the key of the exclude block."""
+    match key:
+        case nodes.Name(name="CONF_EXCLUDE") | nodes.Const(value="exclude"):
+            return True
+    return False
 
 
 def _keyword_value(node: nodes.Call, name: str) -> nodes.NodeNG | None:
@@ -68,9 +77,15 @@ class TargetKeyChecker(BaseChecker):
         if not self._in_test_module or not _is_async_call(node):
             return
         target = _keyword_value(node, "target")
-        if not isinstance(target, nodes.Dict):
-            return
-        for key, _ in target.items:
+        if isinstance(target, nodes.Dict):
+            self._check_target(target)
+
+    def _check_target(self, target: nodes.Dict) -> None:
+        """Report constant keys of a target dict and of its exclude dict."""
+        for key, value in target.items:
+            if _is_exclude_key(key) and isinstance(value, nodes.Dict):
+                self._check_target(value)
+                continue
             if not isinstance(key, (nodes.Name, nodes.Attribute)):
                 continue
             if match := _TARGET_KEY.fullmatch(key.as_string()):

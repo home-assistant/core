@@ -1212,7 +1212,7 @@ self.context["title_placeholders"] = {"host": discovery_info.host}
 ## `home_assistant_target_key` checker
 
 Checks the target keys of `hass.services.async_call` calls in tests: the keys
-of a `target=` dict literal.
+of a `target=` dict literal, including the keys of its `exclude` dict literal.
 
 ### `C7465`: `home-assistant-action-target-key`
 

@@ -124,6 +124,33 @@ hass.services.async_call(
             "TargetKey.DEVICE_ID",
             id="common_service_argument",
         ),
+        pytest.param(
+            """
+hass.services.async_call(
+    "light",
+    LightService.TURN_ON,
+    target={
+        TargetKey.ENTITY_ID: "all",
+        CONF_EXCLUDE: {ATTR_ENTITY_ID: "light.pantry"},
+    },
+)
+""",
+            "ATTR_ENTITY_ID",
+            "TargetKey.ENTITY_ID",
+            id="exclude_block_constant_key",
+        ),
+        pytest.param(
+            """
+hass.services.async_call(
+    "light",
+    LightService.TURN_ON,
+    target={TargetKey.AREA_ID: "kitchen", "exclude": {ATTR_LABEL_ID: "christmas"}},
+)
+""",
+            "ATTR_LABEL_ID",
+            "TargetKey.LABEL_ID",
+            id="exclude_block_string_key",
+        ),
     ],
 )
 def test_message(
