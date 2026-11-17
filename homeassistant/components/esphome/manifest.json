@@ -1,7 +1,7 @@
 {
   "domain": "esphome",
   "name": "ESPHome",
-  "after_dependencies": ["hassio", "tag", "usb", "zeroconf"],
+  "after_dependencies": ["hassio", "tag", "usb", "voice_support", "zeroconf"],
   "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco", "@arturpragacz"],
   "config_flow": true,

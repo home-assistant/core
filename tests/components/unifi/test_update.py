@@ -1,5 +1,6 @@
 """The tests for the UniFi Network update platform."""
 
+from collections.abc import Callable
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -29,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     ConfigEntryFactoryType,
@@ -107,11 +108,19 @@ async def test_entity_and_device_data(
 
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_device_updates(
-    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_websocket_message: WebsocketMessageMock,
 ) -> None:
     """Test the update_items function with some devices."""
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, DEVICE_1["mac"]), config_entry_setup.entry_id
+    )
+    assert device_entry is not None
+    assert device_entry.sw_version == "4.0.42.10433"
+
     device_1_state = hass.states.get("update.device_1_firmware")
     assert device_1_state.state == STATE_ON
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
@@ -141,6 +150,113 @@ async def test_device_updates(
     assert device_1_state.attributes[ATTR_INSTALLED_VERSION] == "4.3.17.11279"
     assert device_1_state.attributes[ATTR_LATEST_VERSION] == "4.3.17.11279"
     assert device_1_state.attributes[ATTR_IN_PROGRESS] is False
+    updated_device_entry = device_registry.async_get(device_entry.id)
+    assert updated_device_entry is not None
+    assert updated_device_entry.sw_version == "4.3.17.11279"
+
+
+@pytest.mark.parametrize("device_payload", [[GATEWAY_IPS]], indirect=True)
+async def test_device_version_updates_without_update_entities(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Keep firmware metadata current without enabled update entities."""
+    entity_registry.async_update_entity(
+        "update.gateway_firmware", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("update.gateway_firmware") is None
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID) is None
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, GATEWAY_IPS["mac"]),
+        config_entry_setup.entry_id,
+    )
+    assert device_entry is not None
+
+    with (
+        patch.object(
+            device_registry,
+            "async_get_device_by_connection",
+            wraps=device_registry.async_get_device_by_connection,
+        ) as get_device,
+        patch.object(
+            device_registry,
+            "async_update_device",
+            wraps=device_registry.async_update_device,
+        ) as update_device,
+    ):
+        mock_websocket_message(
+            message=MessageKey.DEVICE, data={**GATEWAY_IPS, "uptime": 100}
+        )
+        get_device.assert_not_called()
+        update_device.assert_not_called()
+
+        upgraded_device = {**GATEWAY_IPS, "version": "5.0.16.30693"}
+        mock_websocket_message(message=MessageKey.DEVICE, data=upgraded_device)
+        get_device.assert_called_once_with(
+            (dr.CONNECTION_NETWORK_MAC, GATEWAY_IPS["mac"]),
+            config_entry_setup.entry_id,
+        )
+        update_device.assert_called_once_with(
+            device_entry.id, sw_version="5.0.16.30693"
+        )
+
+        mock_websocket_message(
+            message=MessageKey.DEVICE, data={**upgraded_device, "uptime": 200}
+        )
+        get_device.assert_called_once()
+        update_device.assert_called_once()
+
+    updated_device_entry = device_registry.async_get(device_entry.id)
+    assert updated_device_entry is not None
+    assert updated_device_entry.sw_version == "5.0.16.30693"
+
+
+@pytest.mark.parametrize("device_payload", [[GATEWAY_IPS]], indirect=True)
+async def test_device_version_reconciled_on_recovery_and_reload(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    device_payload: list[dict[str, str | int]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_requests: Callable[[], None],
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Reconcile firmware metadata after missed updates and on initial load."""
+    entity_registry.async_update_entity(
+        "update.gateway_firmware", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, GATEWAY_IPS["mac"]),
+        config_entry_setup.entry_id,
+    )
+    assert device_entry is not None
+
+    await mock_websocket_state.disconnect()
+    device_payload[0] = {**GATEWAY_IPS, "version": "5.0.16.30693"}
+    aioclient_mock.clear_requests()
+    await mock_websocket_state.reconnect()
+
+    updated_device_entry = device_registry.async_get(device_entry.id)
+    assert updated_device_entry is not None
+    assert updated_device_entry.sw_version == "5.0.16.30693"
+
+    device_registry.async_update_device(device_entry.id, sw_version="outdated")
+    aioclient_mock.clear_requests()
+    mock_requests()
+    await hass.config_entries.async_reload(config_entry_setup.entry_id)
+    await hass.async_block_till_done()
+
+    updated_device_entry = device_registry.async_get(device_entry.id)
+    assert updated_device_entry is not None
+    assert updated_device_entry.sw_version == "5.0.16.30693"
+    assert hass.states.get("update.gateway_firmware") is None
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID) is None
 
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])

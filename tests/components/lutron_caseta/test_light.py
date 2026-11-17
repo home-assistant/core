@@ -12,7 +12,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -53,7 +53,7 @@ async def test_previous_brightness(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_BRIGHTNESS: 25},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -68,7 +68,7 @@ async def test_previous_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -80,7 +80,7 @@ async def test_previous_brightness(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -109,7 +109,7 @@ async def test_previous_brightness_physical_switch(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -119,7 +119,7 @@ async def test_previous_brightness_physical_switch(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -143,7 +143,7 @@ async def test_previous_brightness_zero_not_remembered(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_BRIGHTNESS: 25},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -153,7 +153,7 @@ async def test_previous_brightness_zero_not_remembered(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_BRIGHTNESS: 0},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -163,7 +163,7 @@ async def test_previous_brightness_zero_not_remembered(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {},
-        target={ATTR_ENTITY_ID: caseta_entity_id},
+        target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -188,7 +188,7 @@ async def test_color_only_turn_on_preserves_brightness(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_COLOR_TEMP_KELVIN: 3000},
-            target={ATTR_ENTITY_ID: entity_id},
+            target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -210,7 +210,7 @@ async def test_white_mode_turn_on_remembers_brightness(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_WHITE: 100},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -236,7 +236,7 @@ async def test_white_mode_turn_on_sends_level(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_WHITE: 100},
-            target={ATTR_ENTITY_ID: entity_id},
+            target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -266,7 +266,7 @@ async def test_white_mode_turn_on_with_transition(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_WHITE: 255, ATTR_TRANSITION: 2},
-            target={ATTR_ENTITY_ID: entity_id},
+            target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -294,14 +294,14 @@ async def test_async_update_syncs_previous_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
