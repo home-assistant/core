@@ -143,8 +143,7 @@ async def test_write_authentication_error(
     assert api.last_patch_call is None
     assert (
         f"Daikin request PATCH /v1/management-points/point failed authentication "
-        f"with HTTP {status}"
-        in caplog.text
+        f"with HTTP {status}" in caplog.text
     )
 
 

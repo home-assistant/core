@@ -164,9 +164,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         management_point = self._device.management_point(self._embedded_id)
         assert management_point is not None
         name = (
-            management_point.name.value
-            if management_point.name is not None
-            else None
+            management_point.name.value if management_point.name is not None else None
         )
         return ChildDeviceInfo(
             identifiers={(DOMAIN, f"{self._device.id}_{self._embedded_id}")},

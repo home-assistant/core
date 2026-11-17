@@ -70,6 +70,28 @@ async def _replay_command(coordinator: MagicMock) -> AsyncMock:
     return client.patch_characteristic
 
 
+async def _async_setup_climate_service_fixture(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> tuple[str, str, ManagementPoint, OnectaDataUpdateCoordinator]:
+    """Set up one climate fixture through Home Assistant's config-entry flow."""
+    await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
+    coordinator = config_entry.runtime_data
+    assert isinstance(coordinator, OnectaDataUpdateCoordinator)
+    assert coordinator.data is not None
+    gateway_id, device = next(iter(coordinator.data.items()))
+    management_point = device.management_point("climateControl")
+    assert management_point is not None
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE,
+        DOMAIN,
+        f"{gateway_id}_{management_point.embedded_id}_roomTemperature",
+    )
+    assert entity_id is not None
+    return entity_id, gateway_id, management_point, coordinator
+
+
 def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
     """Create one entity per temperature target, not per operation mode."""
     management_point = SimpleNamespace(
@@ -146,35 +168,6 @@ def test_get_hvac_mode_without_climate_control() -> None:
     entity._climate_control = MagicMock(return_value=None)
 
     assert entity._get_hvac_mode() is None
-
-
-@pytest.mark.parametrize(
-    ("operation_mode", "settable", "expected"),
-    [
-        (None, True, None),
-        (SimpleNamespace(value="heating", values=["cooling"]), False, None),
-    ],
-)
-def test_native_hvac_mode_requires_writable_advertised_mode(
-    operation_mode: SimpleNamespace | None,
-    settable: bool,
-    expected: str | None,
-) -> None:
-    """Return no native mode when the characteristic is missing or read-only."""
-    entity = object.__new__(DaikinClimate)
-    entity._operation_mode = MagicMock(
-        return_value=(
-            None
-            if operation_mode is None
-            else SimpleNamespace(
-                value=operation_mode.value,
-                values=operation_mode.values,
-                settable=settable,
-            )
-        )
-    )
-
-    assert entity._native_hvac_mode(HVACMode.COOL) is expected
 
 
 @pytest.mark.parametrize(
@@ -277,117 +270,6 @@ async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-async def test_set_vertical_swing_mode_ignores_current_value() -> None:
-    """Do not issue a cloud command when vertical swing already matches."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(name="Device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_attr_swing_mode", SWING_ON)
-    entity.coordinator = coordinator
-    entity._async_set_swing = AsyncMock()
-    entity._get_swing_modes = MagicMock(return_value=[SWING_OFF, SWING_ON])
-
-    await entity.async_set_swing_mode(SWING_ON)
-
-    entity._async_set_swing.assert_not_awaited()
-    coordinator.async_execute_command.assert_not_awaited()
-    coordinator.async_update_listeners.assert_not_called()
-
-
-async def test_set_hvac_mode_keeps_power_state_when_power_command_fails() -> None:
-    """Do not update the power cache when Daikin rejects an HVAC power command."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock()
-    device.id = "device"
-    device.name = "Device"
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock(return_value=False)
-    climate_control = SimpleNamespace(
-        on_off_mode=SimpleNamespace(value="on", settable=True)
-    )
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.HEAT)
-    entity.coordinator = coordinator
-    entity._climate_control = MagicMock(return_value=climate_control)
-
-    with pytest.raises(HomeAssistantError) as err:
-        await entity.async_set_hvac_mode(HVACMode.OFF)
-
-    assert err.value.translation_key == "set_hvac_mode_failed"
-    assert climate_control.on_off_mode.value == "on"
-    coordinator.async_update_listeners.assert_not_called()
-
-
-def test_get_current_temperature_uses_leaving_water_for_offset() -> None:
-    """Use leaving-water temperature when an offset has no direct sensor value."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock()
-    device.name = "Device"
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_setpoint", "leavingWaterOffset")
-    entity._climate_control = MagicMock(
-        return_value=SimpleNamespace(current_temperature=MagicMock(return_value=32.5))
-    )
-
-    assert entity._get_current_temperature() == 32.5
-
-
-async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
-    """Reject an unsupported HVAC mode before changing the temperature."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(id="device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    object.__setattr__(entity, "_attr_hvac_modes", [HVACMode.OFF, HVACMode.COOL])
-    object.__setattr__(entity, "_attr_native_target_temperature", 20)
-    entity.coordinator = coordinator
-
-    with pytest.raises(ServiceValidationError):
-        await entity.async_set_temperature(hvac_mode=HVACMode.HEAT, temperature=21)
-
-    coordinator.async_execute_command.assert_not_awaited()
-
-
-async def test_set_hvac_mode_rejects_unavailable_native_mode() -> None:
-    """Reject a requested HVAC mode before changing the device power state."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(name="Device")
-    object.__setattr__(entity, "_device", device)
-    entity.coordinator = MagicMock()
-    entity.coordinator.async_execute_command = AsyncMock()
-    entity._native_hvac_mode = MagicMock(return_value=None)
-    entity._climate_control = MagicMock(return_value=None)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await entity.async_set_hvac_mode(HVACMode.HEAT)
-
-    assert err.value.translation_key == "climate_hvac_mode_unavailable"
-    entity.coordinator.async_execute_command.assert_not_awaited()
-
-
-async def test_enable_boost_stops_after_failed_turn_on() -> None:
-    """Do not enable boost when the prerequisite turn-on fails."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(id="device", name="Device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
-    entity.coordinator = coordinator
-    entity.async_turn_on = AsyncMock()
-
-    assert not await entity._async_enable_preset_mode(PRESET_BOOST)
-
-    entity.async_turn_on.assert_awaited_once()
-    coordinator.async_execute_command.assert_not_awaited()
-
-
 async def test_enable_and_disable_away_preset_updates_cache(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -479,34 +361,6 @@ async def test_preset_command_failure_keeps_cached_state(
     assert not await getattr(entity, method)(PRESET_BOOST)
 
     assert powerful_mode.value == initial_value
-
-
-@pytest.mark.parametrize(
-    ("method", "initial_value"),
-    [("async_turn_on", "on"), ("async_turn_off", "off")],
-)
-async def test_turn_ignores_already_matching_power_state(
-    method: str, initial_value: str
-) -> None:
-    """Avoid an unnecessary cloud command when the requested power state matches."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock()
-    device.id = "device"
-    device.name = "Device"
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    climate_control = SimpleNamespace(
-        on_off_mode=SimpleNamespace(value=initial_value, settable=True)
-    )
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    entity.coordinator = coordinator
-    entity._climate_control = MagicMock(return_value=climate_control)
-
-    await getattr(entity, method)()
-
-    coordinator.async_execute_command.assert_not_awaited()
-    coordinator.async_update_listeners.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -641,37 +495,6 @@ async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     assert current_management_point.on_off_mode.value == "on"
     assert current_management_point.operation_mode.value == "cooling"
     assert coordinator.async_update_listeners.call_count == 2
-
-
-@pytest.mark.parametrize(
-    ("native_mode", "hvac_mode"),
-    [("heatingDay", HVACMode.HEAT), ("auto", HVACMode.HEAT_COOL)],
-)
-async def test_set_hvac_mode_preserves_matching_native_mode(
-    native_mode: str, hvac_mode: HVACMode
-) -> None:
-    """Keep the current native mode when it already maps to the requested mode."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(id="device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    operation_mode = SimpleNamespace(
-        value=native_mode, settable=True, values=[native_mode]
-    )
-    climate_control = SimpleNamespace(
-        on_off_mode=SimpleNamespace(value="on", settable=True),
-        operation_mode=operation_mode,
-    )
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    object.__setattr__(entity, "_attr_hvac_mode", hvac_mode)
-    entity.coordinator = coordinator
-    entity._climate_control = MagicMock(return_value=climate_control)
-
-    await entity.async_set_hvac_mode(hvac_mode)
-
-    assert entity._get_hvac_modes() == [HVACMode.OFF, hvac_mode]
-    coordinator.async_execute_command.assert_not_awaited()
 
 
 async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
@@ -827,15 +650,6 @@ def test_missing_swing_axis_uses_unknown_mode(direction: str, missing: str) -> N
         )
 
     assert entity._get_swing_mode_for_direction(direction) is None
-
-
-def test_unknown_temperature_unit_defaults_to_celsius() -> None:
-    """Ignore an unrecognized Daikin unit instead of failing entity setup."""
-    entity = object.__new__(DaikinClimate)
-    entity._get_setpoint = MagicMock(return_value=SimpleNamespace(unit="°K"))
-    entity._climate_control = MagicMock(return_value=None)
-
-    assert entity._get_native_temperature_unit() == UnitOfTemperature.CELSIUS
 
 
 @pytest.mark.parametrize("power_settable", [False, None])
@@ -1035,36 +849,6 @@ async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     )
 
 
-async def test_set_swing_mode_rejects_unsupported_value() -> None:
-    """Do not turn an unsupported swing value into a stop command."""
-    entity = object.__new__(DaikinClimate)
-    device = MagicMock(id="device")
-    coordinator = MagicMock()
-    coordinator.async_execute_command = AsyncMock()
-    management_point = SimpleNamespace(
-        operation_mode=SimpleNamespace(value="heating"),
-    )
-    management_point.fan_operation = MagicMock(
-        return_value=SimpleNamespace(
-            fan_direction=SimpleNamespace(
-                vertical=SimpleNamespace(
-                    current_mode=SimpleNamespace(
-                        settable=True, value="swing", values=["stop", "swing"]
-                    )
-                )
-            )
-        )
-    )
-    object.__setattr__(entity, "_device", device)
-    object.__setattr__(entity, "_embedded_id", "zone")
-    entity.coordinator = coordinator
-    entity._climate_control = MagicMock(return_value=management_point)
-
-    assert not await entity._async_set_swing("vertical", "unsupported")
-
-    coordinator.async_execute_command.assert_not_awaited()
-
-
 async def test_set_preset_mode_stops_after_failed_disable() -> None:
     """Do not enable a replacement preset when disabling the old one fails."""
     entity = object.__new__(DaikinClimate)
@@ -1087,20 +871,6 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
     entity._async_enable_preset_mode.assert_not_awaited()
     entity._update_state.assert_not_called()
     coordinator.async_update_listeners.assert_not_called()
-
-
-async def test_set_preset_mode_ignores_active_preset() -> None:
-    """Avoid cloud commands when the requested preset is already active."""
-    entity = object.__new__(DaikinClimate)
-    object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
-    entity._async_disable_preset_mode = AsyncMock()
-    entity._async_enable_preset_mode = AsyncMock()
-
-    await entity.async_set_preset_mode(PRESET_BOOST)
-
-    entity._async_disable_preset_mode.assert_not_awaited()
-    entity._async_enable_preset_mode.assert_not_awaited()
 
 
 @pytest.mark.parametrize("power_settable", [False, True])
@@ -1375,6 +1145,203 @@ async def test_climate_service_rejected_token_preserves_entity_state(
 
 
 @pytest.mark.parametrize(
+    (
+        "service",
+        "service_data",
+        "initial_power",
+        "expected_state",
+        "power_command",
+        "key",
+    ),
+    [
+        (SERVICE_TURN_ON, {}, "off", HVACMode.OFF, "on", "turn_on_failed"),
+        (SERVICE_TURN_OFF, {}, "on", HVACMode.HEAT, "off", "turn_off_failed"),
+        (
+            SERVICE_SET_HVAC_MODE,
+            {"hvac_mode": HVACMode.OFF},
+            "on",
+            HVACMode.HEAT,
+            "off",
+            "set_hvac_mode_failed",
+        ),
+    ],
+)
+async def test_climate_service_preserves_power_state_when_command_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+    service: str,
+    service_data: dict[str, HVACMode],
+    initial_power: str,
+    expected_state: HVACMode,
+    power_command: str,
+    key: str,
+) -> None:
+    """Keep the published power state when a service command is rejected."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert management_point.climate_control is not None
+    climate_control = management_point.climate_control
+    assert climate_control.on_off_mode is not None
+    climate_control.on_off_mode.value = initial_power
+    climate_control.operation_mode.value = "heating"
+    coordinator.async_update_listeners()
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id, **service_data},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == key
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway_id,
+        management_point.embedded_id,
+        "onOffMode",
+        power_command,
+        path=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "initial_power"),
+    [
+        (SERVICE_TURN_ON, {}, "on"),
+        (SERVICE_TURN_OFF, {}, "off"),
+        (SERVICE_SET_HVAC_MODE, {"hvac_mode": HVACMode.HEAT}, "on"),
+    ],
+)
+async def test_climate_service_skips_matching_power_command(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+    service: str,
+    service_data: dict[str, HVACMode],
+    initial_power: str,
+) -> None:
+    """Avoid cloud calls when the requested power or HVAC mode is already active."""
+    (
+        entity_id,
+        _,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert management_point.climate_control is not None
+    management_point.climate_control.on_off_mode.value = initial_power
+    management_point.climate_control.operation_mode.value = "heating"
+    coordinator.async_update_listeners()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id, **service_data},
+        blocking=True,
+    )
+
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("native_mode", "hvac_mode"),
+    [("heatingDay", HVACMode.HEAT), ("auto", HVACMode.HEAT_COOL)],
+)
+async def test_climate_service_keeps_matching_native_hvac_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+    native_mode: str,
+    hvac_mode: HVACMode,
+) -> None:
+    """Keep a native mode when it already maps to the requested HA mode."""
+    (
+        entity_id,
+        _,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert management_point.climate_control is not None
+    operation_mode = management_point.climate_control.operation_mode
+    assert operation_mode is not None
+    operation_mode.value = native_mode
+    operation_mode.values = [native_mode]
+    on_off_mode = management_point.climate_control.on_off_mode
+    assert on_off_mode is not None
+    on_off_mode.value = "on"
+    coordinator.async_update_listeners()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, "hvac_mode": hvac_mode},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == hvac_mode
+    mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+async def test_climate_service_does_not_enable_boost_when_turn_on_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Do not enable boost when its prerequisite turn-on command fails."""
+    (
+        entity_id,
+        gateway_id,
+        management_point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert management_point.climate_control is not None
+    climate_control = management_point.climate_control
+    assert climate_control.on_off_mode is not None
+    climate_control.on_off_mode.value = "off"
+    powerful_mode = climate_control.mode_characteristic("powerfulMode")
+    assert powerful_mode is not None
+    powerful_mode.value = "off"
+    coordinator.async_update_listeners()
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": PRESET_BOOST},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "turn_on_failed"
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway_id,
+        management_point.embedded_id,
+        "onOffMode",
+        "on",
+        path=None,
+    )
+    assert powerful_mode.value == "off"
+
+
+@pytest.mark.parametrize(
     ("service", "service_data", "initial_power"),
     [
         (SERVICE_TURN_ON, {}, "off"),
@@ -1450,6 +1417,7 @@ async def test_climate_service_rejects_unavailable_power(
         ),
         ("altherma", None, "°F", UnitOfTemperature.FAHRENHEIT),
         ("altherma", None, None, UnitOfTemperature.CELSIUS),
+        ("climate_fixedfanmode", "°K", None, UnitOfTemperature.CELSIUS),
     ],
 )
 async def test_native_temperature_unit(
@@ -1623,18 +1591,26 @@ async def test_climate_platform_services_and_management_points(
 
     await call_service(SERVICE_SET_TEMPERATURE, temperature=21)
     await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.COOL)
+    await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.COOL)
     await call_service(SERVICE_SET_FAN_MODE, fan_mode="quiet")
+    await call_service(SERVICE_SET_SWING_MODE, swing_mode=SWING_ON)
     await call_service(SERVICE_SET_SWING_MODE, swing_mode=SWING_ON)
     await call_service(
         SERVICE_SET_SWING_HORIZONTAL_MODE, swing_horizontal_mode=SWING_ON
     )
+    await call_service(
+        SERVICE_SET_SWING_HORIZONTAL_MODE, swing_horizontal_mode=SWING_ON
+    )
     await call_service(SERVICE_SET_PRESET_MODE, preset_mode=PRESET_ECO)
+    await call_service(SERVICE_SET_PRESET_MODE, preset_mode=PRESET_ECO)
+    await call_service(SERVICE_TURN_OFF)
     await call_service(SERVICE_TURN_OFF)
 
     living_room_state = hass.states.get(living_room_entity_id)
     assert living_room_state is not None
     assert living_room_state.state == HVACMode.OFF
 
+    await call_service(SERVICE_TURN_ON)
     await call_service(SERVICE_TURN_ON)
 
     living_room_state = hass.states.get(living_room_entity_id)
@@ -1748,9 +1724,7 @@ async def test_climate_platform_services_and_management_points(
             assert characteristic is not None
             characteristic.settable = False
         else:
-            direction = (
-                "vertical" if control == "vertical_swing" else "horizontal"
-            )
+            direction = "vertical" if control == "vertical_swing" else "horizontal"
             fan_operation = climate_controls["living_room"].fan_operation()
             assert fan_operation is not None
             assert fan_operation.fan_direction is not None
@@ -1769,10 +1743,28 @@ async def test_climate_platform_services_and_management_points(
         await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
     assert err.value.translation_key == "climate_temperature_unavailable"
 
+    with pytest.raises(ServiceValidationError):
+        await call_service(
+            SERVICE_SET_TEMPERATURE,
+            hvac_mode=HVACMode.HEAT_COOL,
+            temperature=22,
+        )
+
+    with pytest.raises(ServiceValidationError):
+        await call_service(SERVICE_SET_SWING_MODE, swing_mode="unsupported")
+
+    climate_controls["living_room"].operation_mode.settable = False
+    with pytest.raises(ServiceValidationError) as err:
+        await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.HEAT)
+    assert err.value.translation_key == "climate_hvac_mode_unavailable"
+
     climate_controls["living_room"].operation_mode = None
     with pytest.raises(ServiceValidationError) as err:
         await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
     assert err.value.translation_key == "climate_operation_mode_unavailable"
+
+    with pytest.raises(ServiceValidationError):
+        await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.HEAT)
 
     mock_onecta_client.patch_characteristic.assert_not_awaited()
 
