@@ -320,7 +320,7 @@ async def test_minute_forecast(
     response = await hass.services.async_call(
         DOMAIN,
         ForecaService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -342,7 +342,7 @@ async def test_minute_forecast_without_a_time_is_dropped(
     response = await hass.services.async_call(
         DOMAIN,
         ForecaService.GET_MINUTE_FORECAST,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -363,7 +363,7 @@ async def test_minute_forecast_error(
         await hass.services.async_call(
             DOMAIN,
             ForecaService.GET_MINUTE_FORECAST,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
