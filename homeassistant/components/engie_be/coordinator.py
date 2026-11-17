@@ -109,7 +109,7 @@ def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
     return coefficient
 
 
-@dataclass
+@dataclass(frozen=True)
 class EngieBePricesData:
     """Pre-processed price lookup for one business agreement."""
 

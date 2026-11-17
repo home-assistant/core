@@ -460,7 +460,7 @@ class EngieBePeaksSensor(CoordinatorEntity[EngieBePeaksCoordinator], SensorEntit
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return peak provenance and daily peak details."""
+        """Return the extra peak attributes of this sensor."""
         if (attributes_fn := self.entity_description.attributes_fn) is None:
             return None
         return attributes_fn(self.coordinator.data)

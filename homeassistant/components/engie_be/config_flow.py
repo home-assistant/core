@@ -195,7 +195,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_finish_login(
         self, access_token: str, refresh_token: str
     ) -> ConfigFlowResult:
-        """Create, update or reload the entry after a successful login."""
+        """Create the entry, or update and reload it, after a successful login."""
         if TYPE_CHECKING:
             assert self._client is not None
             assert self._email is not None

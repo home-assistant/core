@@ -16,6 +16,7 @@ from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePeaksData,
+    EngieBePricesData,
     epex_day_available,
     epex_slots_for_day,
     peak_as_dict,
@@ -84,9 +85,10 @@ def _household_diagnostics(
 ) -> dict[str, Any]:
     """Return the diagnostics of one business agreement."""
     prices = household.prices
+    prices_data: EngieBePricesData | None = prices.data
     slots: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
     for (ean, direction, slot_code), price_slot in (
-        prices.data.slots.items() if prices.data is not None else ()
+        prices_data.slots.items() if prices_data is not None else ()
     ):
         per_ean = slots.setdefault(_hashed_identifier(bare_ean(ean)), {})
         per_direction = per_ean.setdefault(direction, {})
@@ -95,7 +97,7 @@ def _household_diagnostics(
             "price_value_excl_vat": price_slot.price_value_excl_vat,
         }
     return {
-        "ean_count": len(prices.data.eans) if prices.data is not None else None,
+        "ean_count": len(prices_data.eans) if prices_data is not None else None,
         "is_dynamic": household.is_dynamic,
         "last_update_success": prices.last_update_success,
         "update_interval": str(prices.update_interval),

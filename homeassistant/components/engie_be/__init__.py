@@ -76,7 +76,7 @@ type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 
 
 async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
-    """Return whether one business agreement has a dynamic electricity tariff."""
+    """Return whether one business agreement has a dynamic tariff, or None when the lookup fails."""
     try:
         contracts = await client.async_get_energy_contracts(ban)
     except EngieBeAuthenticationError as err:
