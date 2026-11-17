@@ -79,18 +79,18 @@ def _prices_by_ban(
     return _side_effect
 
 
-@pytest.mark.usefixtures("mock_engie_client", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the energy-price sensors for an offtake-only and a dual-direction EAN."""
-    freezer.move_to(datetime(2026, 11, 15, 12, 0, tzinfo=BRUSSELS_TIME_ZONE))
-    await setup_entry(hass, mock_config_entry)
+    """Test the sensors of a dynamic-tariff household with an offtake-only and a dual-direction EAN."""
+    with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
+        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
@@ -99,41 +99,6 @@ async def test_sensors(
         assert device_entry == snapshot(name=f"{device_entry.name}-device")
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("mock_engie_client")
-async def test_slot_aware_naming(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test slot-aware translation keys drive friendly names while unique_ids keep the raw slot code."""
-    await setup_entry(hass, mock_config_entry)
-
-    total_hours_state = get_state(
-        hass, entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
-    )
-    assert "total_hours" not in total_hours_state.name.lower()
-
-    peak_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_PEAK"
-    peak_entity_id = get_entity_id(entity_registry, "sensor", peak_unique_id)
-    peak_entry = entity_registry.async_get(peak_entity_id)
-    assert peak_entry is not None
-    assert peak_entry.unique_id == peak_unique_id
-    peak_state = hass.states.get(peak_entity_id)
-    assert peak_state is not None
-    assert peak_state.name.endswith("Electricity peak offtake price")
-
-    fallback_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_WEEKEND"
-    fallback_state = get_state(hass, entity_registry, "sensor", fallback_unique_id)
-    assert fallback_state.name.endswith("Electricity offtake price (weekend)")
-
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_EN"
-        )
-        is None
-    )
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -1272,18 +1237,3 @@ async def test_epex_slot_gap_heals_on_next_refresh(
     assert float(
         get_state(hass, entity_registry, "sensor", f"{BAN}_epex_low_today_hour").state
     ) == pytest.approx(0.01)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "frozen_afternoon")
-async def test_epex_sensors_snapshot(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the sensors of a household with a dynamic tariff."""
-    with patch("homeassistant.components.engie_be._PLATFORMS", [Platform.SENSOR]):
-        await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
