@@ -1,7 +1,7 @@
 """Config flow for Gree using shared user and DHCP discovery."""
 
 import logging
-from typing import Any, Self, override
+from typing import TYPE_CHECKING, Any, Self, override
 
 from greeclimate.air_conditioner import AirConditionerDevice
 from greeclimate.device import DeviceInfo
@@ -201,21 +201,22 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
             or self.unique_id != other_flow.unique_id
         ):
             return False
-        assert self._selected is not None
-        if other_flow._selected is not None:
-            data = {
-                **self._selected,
-                CONF_IDENTIFIER: other_flow._selected[CONF_IDENTIFIER],
+        if TYPE_CHECKING:
+            assert self._selected is not None
+            assert other_flow._selected is not None
+        data = {
+            **self._selected,
+            CONF_IDENTIFIER: other_flow._selected[CONF_IDENTIFIER],
+        }
+        other_flow.init_data = self.init_data
+        if data != other_flow._selected:
+            other_flow._selected = data
+            other_flow.context["title_placeholders"] = {
+                "name": data[CONF_NAME] or data[CONF_IDENTIFIER],
+                "identifier": data[CONF_IDENTIFIER],
+                "host": data[CONF_HOST],
             }
-            other_flow.init_data = self.init_data
-            if data != other_flow._selected:
-                other_flow._selected = data
-                other_flow.context["title_placeholders"] = {
-                    "name": data[CONF_NAME] or data[CONF_IDENTIFIER],
-                    "identifier": data[CONF_IDENTIFIER],
-                    "host": data[CONF_HOST],
-                }
-                other_flow.async_notify_flow_changed()
+            other_flow.async_notify_flow_changed()
         return True
 
     async def async_step_discovery_confirm(

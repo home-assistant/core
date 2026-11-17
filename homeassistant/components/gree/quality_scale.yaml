@@ -26,11 +26,11 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure:
-    status: exempt
-    comment: Devices are discovered at runtime without user-provided connection details.
+    status: done
+    comment: Device entries validate binding before creation; the discovery-only entry has no device connection to validate.
   test-before-setup:
-    status: exempt
-    comment: The shared discovery entry has no device connection settings to validate during setup.
+    status: done
+    comment: Device entries bind and obtain initial state before loading platforms; the discovery-only entry has no device connection to validate.
   unique-config-entry: done
 
   # Silver
