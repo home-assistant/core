@@ -55,6 +55,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SWITCH,
     Platform.TEXT,
+    Platform.TIME,
 ]
 
 CONNECT_TIMEOUT = 10
@@ -286,7 +287,7 @@ async def async_setup_entry(  # noqa: C901
 
 async def _client_listen(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MusicAssistantConfigEntry,
     mass: MusicAssistantClient,
     init_ready: asyncio.Event,
 ) -> None:

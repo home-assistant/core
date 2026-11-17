@@ -886,8 +886,8 @@ class Recorder(threading.Thread):
         # has changed. This reduces the disk io.
         queue_ = self._queue
         startup_task_or_events: list[RecorderTask | Event] = []
-        while not queue_.empty() and (task_or_event := queue_.get_nowait()):
-            startup_task_or_events.append(task_or_event)
+        while not queue_.empty():
+            startup_task_or_events.append(queue_.get_nowait())
         self._pre_process_startup_events(startup_task_or_events)
         for task in startup_task_or_events:
             self._guarded_process_one_task_or_event_or_recover(task)

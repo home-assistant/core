@@ -3,6 +3,8 @@
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+import secrets
+from typing import TYPE_CHECKING
 
 import aiohttp
 from aiohttp.web import Request
@@ -19,16 +21,17 @@ import onvif_parsers.util
 from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
+
+if TYPE_CHECKING:
+    from .device import ONVIFConfigEntry
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
@@ -47,6 +50,7 @@ CREATE_ERRORS = (
     asyncio.TimeoutError,
     XMLParseError,
     ValidationError,
+    TransportError,
 )
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -106,7 +110,7 @@ class EventManager:
         self,
         hass: HomeAssistant,
         device: ONVIFCamera,
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
         name: str,
     ) -> None:
         """Initialize event manager."""
@@ -548,15 +552,10 @@ class WebHookManager:
         self._event_manager = event_manager
         self._device = event_manager.device
         self._hass = event_manager.hass
-        config_entry = event_manager.config_entry
 
-        self._old_webhook_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
         # Some cameras have a limit on the length of the webhook URL
-        # so we use a shorter unique ID for the webhook.
-        unique_id = config_entry.unique_id
-        assert unique_id is not None
-        webhook_id = format_mac(unique_id).replace(":", "").lower()
-        self._webhook_unique_id = f"{DOMAIN}{webhook_id}"
+        # so we use a short random ID for the webhook.
+        self._webhook_unique_id = f"{DOMAIN}{secrets.token_hex(6)}"
         self._name = event_manager.name
 
         self._webhook_url: str | None = None
@@ -571,7 +570,17 @@ class WebHookManager:
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
-        if not await self._async_start_webhook():
+        if self._webhook_url is None:
+            self.state = WebHookManagerState.FAILED
+            return False
+        # Unload skips stopping events if no event subscription started.
+        try:
+            started = await self._async_start_webhook()
+        except asyncio.CancelledError:
+            self._async_unregister_webhook()
+            raise
+        if not started:
+            self._async_unregister_webhook()
             self.state = WebHookManagerState.FAILED
             return False
         self.state = WebHookManagerState.STARTED
@@ -636,10 +645,10 @@ class WebHookManager:
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
-            try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                return
+            LOGGER.debug(
+                "%s: No URL available, not using webhook for events", self._name
+            )
+            return
 
         webhook_id = self._webhook_unique_id
         self._async_unregister_webhook()
@@ -656,7 +665,6 @@ class WebHookManager:
         LOGGER.debug(
             "%s: Unregistering webhook %s", self._name, self._webhook_unique_id
         )
-        webhook.async_unregister(self._hass, self._old_webhook_unique_id)
         webhook.async_unregister(self._hass, self._webhook_unique_id)
         self._webhook_url = None
 

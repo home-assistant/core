@@ -206,7 +206,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     try:
         subscription = await client.create_subscription(
             entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         raise ConfigEntryNotReady(
@@ -221,7 +220,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         hass,
         client.subscribe(
             entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
             subscription,
         ),
         "smartthings_socket",
@@ -354,7 +352,9 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: SmartThingsConfigEntry
+) -> None:
     """Handle config entry migration."""
 
     if entry.version < 3:

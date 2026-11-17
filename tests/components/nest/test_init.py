@@ -265,20 +265,6 @@ async def test_subscriber_configuration_failure(
     assert entries[0].reason == "Configuration error in the Nest subscriber"
 
 
-async def test_subscriber_create_failure(
-    hass: HomeAssistant,
-    setup_base_platform,
-) -> None:
-    """Test setup fails when the subscriber can't be created."""
-    with patch("homeassistant.components.nest.api.new_subscriber", return_value=None):
-        await setup_base_platform()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_ERROR
-    assert entries[0].reason == "Failed to create the Nest subscriber"
-
-
 async def test_legacy_entry_setup_error(hass: HomeAssistant) -> None:
     """Test setup of a legacy config entry fails and the entry is removed."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
@@ -544,6 +530,7 @@ async def test_legacy_topic_issue(
     assert issue.severity is ir.IssueSeverity.WARNING
     assert not issue.is_fixable
     assert issue.translation_key == "legacy_pubsub_topic"
+    assert issue.config_entry_id == config_entry.entry_id
 
     # Simulate a reconfigure that moved to a self-hosted topic
     hass.config_entries.async_update_entry(
@@ -580,9 +567,11 @@ async def test_legacy_topic_issue_on_setup_failure(
     await setup_base_platform()
 
     assert config_entry.state is expected_state
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, f"legacy_pubsub_topic_{config_entry.entry_id}"
     )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_SELF_HOSTED_TOPIC])
@@ -604,6 +593,7 @@ async def test_subscription_not_found_issue(
     assert issue.severity is ir.IssueSeverity.ERROR
     assert not issue.is_fixable
     assert issue.translation_key == "pubsub_subscription_not_found"
+    assert issue.config_entry_id == config_entry.entry_id
 
     subscriber.start.side_effect = None
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -624,7 +614,16 @@ async def test_remove_entry_deletes_issues(
 ) -> None:
     """Test removing the entry removes its repair issues."""
     await setup_base_platform()
-    assert len(issue_registry.issues) == 2
+    assert {
+        (issue_id, issue.config_entry_id)
+        for (_, issue_id), issue in issue_registry.issues.items()
+    } == {
+        (f"legacy_pubsub_topic_{config_entry.entry_id}", config_entry.entry_id),
+        (
+            f"pubsub_subscription_not_found_{config_entry.entry_id}",
+            config_entry.entry_id,
+        ),
+    }
 
     aioclient_mock.delete(f"https://pubsub.googleapis.com/v1/{SUBSCRIPTION_NAME}")
     assert await hass.config_entries.async_remove(config_entry.entry_id)

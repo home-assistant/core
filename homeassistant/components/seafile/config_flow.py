@@ -19,7 +19,6 @@ from yarl import URL
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -54,6 +53,7 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_LIBRARY,
 )
+from .coordinator import SeafileConfigEntry
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -369,7 +369,7 @@ class SeafileConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SeafileConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_LIBRARY: LibrarySubentryFlowHandler}

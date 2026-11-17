@@ -1,0 +1,57 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "TION Breezer 4S",
+  "category": "ntq",
+  "product_id": "rllylqfcd3lfe3s3",
+  "product_name": "TION Breezer 4S",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2026-11-06T10:00:00+00:00",
+  "create_time": "2026-11-06T10:00:00+00:00",
+  "update_time": "2026-11-06T10:00:00+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "inlet_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -60,
+        "max": 60,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": "un_known"
+    },
+    "outlet_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": -20,
+        "max": 50,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": "un_known"
+    }
+  },
+  "status": {
+    "switch": true,
+    "inlet_temp": 3,
+    "outlet_temp": 15
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -42,11 +42,11 @@ async def test_sensor(
     with patch("homeassistant.components.energyzero.PLATFORMS", ["sensor"]):
         await setup_integration(hass, mock_config_entry)
 
-    gas_state = hass.states.get("sensor.energyzero_today_gas_current_hour_price")
+    gas_state = hass.states.get("sensor.gas_market_price_current_hour")
     assert gas_state
     assert gas_state.state == "0.5468407201224"
 
-    energy_state = hass.states.get("sensor.energyzero_today_energy_current_hour_price")
+    energy_state = hass.states.get("sensor.electricity_price_current_market_price")
     assert energy_state
     assert energy_state.state == "0.17191075"
 
@@ -72,7 +72,7 @@ async def test_sensor_ignores_missing_tomorrow_prices(
     with patch("homeassistant.components.energyzero.PLATFORMS", ["sensor"]):
         await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("sensor.energyzero_today_energy_current_hour_price")
+    assert hass.states.get("sensor.electricity_price_current_market_price")
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -81,12 +81,12 @@ async def test_sensor_ignores_missing_tomorrow_prices(
     [
         (
             "get_gas_prices",
-            "sensor.energyzero_today_gas_current_hour_price",
+            "sensor.gas_market_price_current_hour",
             STATE_UNKNOWN,
         ),
         (
             "get_electricity_prices",
-            "sensor.energyzero_today_energy_current_hour_price",
+            "sensor.electricity_price_current_market_price",
             STATE_UNAVAILABLE,
         ),
     ],
@@ -217,9 +217,9 @@ async def test_gas_prices_after_fresh_start(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
     assert state.state == current
-    assert (state := hass.states.get("sensor.energyzero_today_gas_next_hour_price"))
+    assert (state := hass.states.get("sensor.gas_market_price_next_hour"))
     assert state.state == next_hour
 
 
@@ -257,15 +257,13 @@ async def test_gas_price_expires_at_boundary(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            state := hass.states.get("sensor.energyzero_today_gas_current_hour_price")
-        )
+        assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
         assert state.state == "0.54345990633176"
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
     assert state.state == expected
 
 
@@ -288,9 +286,7 @@ async def test_gas_price_survives_calendar_rollover(
     ) as request:
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            state := hass.states.get("sensor.energyzero_today_gas_current_hour_price")
-        )
+        assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
         assert state.state == "0.54345990633176"
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -298,5 +294,5 @@ async def test_gas_price_survives_calendar_rollover(
 
     assert request.await_args_list[1].kwargs["params"]["date"] == "09-04-2026"
     assert request.await_args_list[4].kwargs["params"]["date"] == "10-04-2026"
-    assert (state := hass.states.get("sensor.energyzero_today_gas_current_hour_price"))
+    assert (state := hass.states.get("sensor.gas_market_price_current_hour"))
     assert state.state == "0.54345990633176"

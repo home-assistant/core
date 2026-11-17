@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unique_id_mismatch": "The device at this address is not the device configured for this entry."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -9,6 +10,14 @@
     "step": {
       "discovery_confirm": {
         "description": "Do you want to add {name} ({host}) to Home Assistant?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::palazzetti::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {

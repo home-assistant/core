@@ -7,7 +7,6 @@ import probatio
 from pyws66i import WS66i, get_ws66i
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -27,6 +26,7 @@ from .const import (
     DOMAIN,
     INIT_OPTIONS_DEFAULT,
 )
+from .models import Ws66iConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: Ws66iConfigEntry,
     ) -> Ws66iOptionsFlowHandler:
         """Define the config flow to handle options."""
         return Ws66iOptionsFlowHandler()

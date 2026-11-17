@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import Any, Final, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -19,9 +19,7 @@ from .entity import (
     ModbusValues,
     async_add_entities_for_seen_keys,
 )
-
-if TYPE_CHECKING:
-    from . import FroniusConfigEntry
+from .solar_net import FroniusConfigEntry
 
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
