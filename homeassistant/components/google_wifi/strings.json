@@ -1,0 +1,75 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "[%key:component::google_wifi::config::error::invalid_response%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The device at this address is a different Google Wifi device than the one configured.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "The device did not return Google Wifi status data.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of this Google Wifi device."
+        },
+        "description": "Update the address used to reach this Google Wifi device.",
+        "title": "Reconfigure Google Wifi"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Google Wifi or OnHub device. Add each device on your network separately."
+        },
+        "description": "Connect to a Google Wifi or OnHub device. Repeat this step for each device you want to monitor.",
+        "title": "Add Google Wifi"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_version": {
+        "name": "Current version"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      },
+      "local_ip": {
+        "name": "Local IP"
+      },
+      "new_version": {
+        "name": "New version"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "uptime": {
+        "name": "Uptime"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nHome Assistant could not reach the device while importing your configuration. Check the host and restart to retry the import, or remove the Google Wifi sensor YAML and add each device from the UI.",
+      "title": "{domain} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_response": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nThe device did not return Google Wifi status data, so the YAML configuration was not imported. Remove the Google Wifi sensor YAML and add each device from the UI.",
+      "title": "[%key:component::google_wifi::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} using the YAML sensor platform is deprecated.\n\nAn unexpected error occurred while importing your configuration. Restart Home Assistant to try again, or remove the Google Wifi sensor YAML and add each device from the UI.",
+      "title": "[%key:component::google_wifi::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  }
+}

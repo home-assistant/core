@@ -6,21 +6,31 @@ from typing import override
 from googlewifiapi import GoogleWifiAPI, GoogleWifiStatus
 from googlewifiapi.exception import GoogleWifiClientError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
+type GoogleWifiConfigEntry = ConfigEntry[GoogleWifiCoordinator]
+
 
 class GoogleWifiCoordinator(DataUpdateCoordinator[GoogleWifiStatus]):
-    """Coordinates entities for the Google Wifi integration."""
+    """Coordinates entities for one Google Wifi device."""
 
-    def __init__(self, hass: HomeAssistant, api: GoogleWifiAPI) -> None:
+    config_entry: GoogleWifiConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: GoogleWifiConfigEntry,
+        api: GoogleWifiAPI,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            config_entry=None,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )

@@ -7,6 +7,11 @@ from googlewifiapi.const import DEFAULT_HOST, ENDPOINT
 RESOURCE_URL = f"http://{DEFAULT_HOST}{ENDPOINT}"
 
 
+def status_url(host: str) -> str:
+    """Return the status URL for a Google Wifi host."""
+    return f"http://{host}{ENDPOINT}"
+
+
 def build_response(
     *,
     software_version: str = "softwareVersion",
@@ -14,6 +19,7 @@ def build_response(
     uptime: int = 86_400,
     online: bool = True,
     local_ip: str = "10.0.0.10",
+    hardware_id: str = "GALE [REDACTED]",
 ) -> dict[str, Any]:
     """Build a Google Wifi status response payload."""
     return {
@@ -31,7 +37,7 @@ def build_response(
         "system": {
             "countryCode": "us",
             "groupRole": "root",
-            "hardwareId": "GALE [REDACTED]",
+            "hardwareId": hardware_id,
             "lan0Link": False,
             "ledAnimation": "CONNECTED",
             "ledIntensity": 6,
