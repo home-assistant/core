@@ -18,12 +18,7 @@ from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.components.humidifier import ATTR_HUMIDITY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    STATE_ON,
-    CommonServiceArgument,
-)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -113,7 +108,7 @@ async def test_bridge_api_call_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID_0},
+            {TargetKey.ENTITY_ID: ENTITY_ID_0},
             blocking=True,
         )
 
@@ -140,7 +135,7 @@ async def test_bridge_api_call_reauth(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID_0},
+        {TargetKey.ENTITY_ID: ENTITY_ID_0},
         blocking=True,
     )
 

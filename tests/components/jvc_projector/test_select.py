@@ -18,7 +18,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,7 +44,7 @@ async def test_input_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: INPUT_ENTITY_ID,
+            TargetKey.ENTITY_ID: INPUT_ENTITY_ID,
             SelectServiceArgument.OPTION: cmd.Input.HDMI2,
         },
         blocking=True,

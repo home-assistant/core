@@ -207,12 +207,15 @@ jobs:
 
           # We need to run the full suite on certain branches.
           # Or, in case core files are touched, for the full suite as well.
+          # Or, when the partial matrix would exceed the GitHub limit of 256 jobs.
           if [[ "${GITHUB_REF}" == "refs/heads/dev" ]] \
             || [[ "${GITHUB_REF}" == "refs/heads/master" ]] \
             || [[ "${GITHUB_REF}" == "refs/heads/rc" ]] \
             || [[ "${CORE_ANY}" == "true" ]] \
             || [[ "${INPUT_FULL}" == "true" ]] \
-            || [[ "${HAS_CI_FULL_RUN_LABEL}" == "true" ]];
+            || [[ "${HAS_CI_FULL_RUN_LABEL}" == "true" ]] \
+            || [[ $(jq -n --argjson tests "${tests}" --argjson python_versions "${all_python_versions}" \
+              '($tests | length) * ($python_versions | length) > 256') == "true" ]];
           then
             mariadb_groups=${MARIADB_VERSIONS}
             postgresql_groups=${POSTGRESQL_VERSIONS}

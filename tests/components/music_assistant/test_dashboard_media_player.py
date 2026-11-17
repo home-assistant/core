@@ -32,6 +32,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -1060,7 +1061,7 @@ async def test_platform_entity_service_rejects_display(
             DOMAIN,
             MusicAssistantService.PLAY_ANNOUNCEMENT,
             {
-                ATTR_ENTITY_ID: KITCHEN_ENTITY_ID,
+                TargetKey.ENTITY_ID: KITCHEN_ENTITY_ID,
                 MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
             },
             blocking=True,

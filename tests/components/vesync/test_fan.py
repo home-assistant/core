@@ -18,7 +18,7 @@ from homeassistant.components.fan import (
     FanService,
     FanServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -197,7 +197,7 @@ async def test_set_preset_mode(
                 FAN_DOMAIN,
                 FanService.TURN_ON,
                 {
-                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                    TargetKey.ENTITY_ID: ENTITY_FAN,
                     FanServiceArgument.PRESET_MODE: preset_mode,
                 },
                 blocking=True,
@@ -260,7 +260,7 @@ async def test_set_preset_mode_eco(
             FAN_DOMAIN,
             FanService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                TargetKey.ENTITY_ID: ENTITY_PEDESTAL_FAN,
                 FanServiceArgument.PRESET_MODE: "eco",
             },
             blocking=True,
@@ -315,7 +315,7 @@ async def test_pedestal_fan_oscillation(
                 FAN_DOMAIN,
                 FanService.OSCILLATE,
                 {
-                    CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                    TargetKey.ENTITY_ID: ENTITY_PEDESTAL_FAN,
                     FanServiceArgument.OSCILLATING: action,
                 },
                 blocking=True,
@@ -364,7 +364,7 @@ async def test_oscillation_success(
                 FAN_DOMAIN,
                 FanService.OSCILLATE,
                 {
-                    CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                    TargetKey.ENTITY_ID: ENTITY_FAN,
                     FanServiceArgument.OSCILLATING: action,
                 },
                 blocking=True,
@@ -550,7 +550,7 @@ async def test_set_percentage_failure(
             FAN_DOMAIN,
             FanService.SET_PERCENTAGE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_FAN,
+                TargetKey.ENTITY_ID: ENTITY_FAN,
                 FanServiceArgument.PERCENTAGE: percentage,
             },
             blocking=True,
@@ -700,7 +700,7 @@ async def test_pedestal_fan_oscillation_failure_without_response(
             FAN_DOMAIN,
             FanService.OSCILLATE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_PEDESTAL_FAN,
+                TargetKey.ENTITY_ID: ENTITY_PEDESTAL_FAN,
                 FanServiceArgument.OSCILLATING: True,
             },
             blocking=True,
@@ -798,7 +798,7 @@ async def test_set_preset_mode_pet(
             FAN_DOMAIN,
             FanService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: "fan.air_purifier_vital_200s",
+                TargetKey.ENTITY_ID: "fan.air_purifier_vital_200s",
                 FanServiceArgument.PRESET_MODE: "pet",
             },
             blocking=True,

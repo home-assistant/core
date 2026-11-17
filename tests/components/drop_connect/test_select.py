@@ -9,7 +9,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -58,7 +58,7 @@ async def test_selects_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
         SelectService.SELECT_OPTION,
         {
             SelectServiceArgument.OPTION: "away",
-            CommonServiceArgument.ENTITY_ID: protect_mode_select_name,
+            TargetKey.ENTITY_ID: protect_mode_select_name,
         },
         blocking=True,
     )

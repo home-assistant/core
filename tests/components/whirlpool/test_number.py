@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -83,7 +83,7 @@ async def test_set_target_temperature(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 220},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 220},
         blocking=True,
     )
     mock.set_cook.assert_called_once_with(
@@ -106,7 +106,7 @@ async def test_set_fractional_target_temperature(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 220.5,
         },
         blocking=True,
@@ -132,7 +132,7 @@ async def test_set_target_temperature_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 220,
             },
             blocking=True,
@@ -155,7 +155,7 @@ async def test_set_target_temperature_value_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 220,
             },
             blocking=True,
@@ -178,7 +178,7 @@ async def test_set_target_temperature_from_idle(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 220},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 220},
         blocking=True,
     )
     mock.set_cook.assert_called_once_with(

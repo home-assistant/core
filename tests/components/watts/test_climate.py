@@ -28,7 +28,7 @@ from homeassistant.components.watts.services import (
     WattsVisionService,
     WattsVisionServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -312,7 +312,7 @@ async def test_activate_timer_mode(
         DOMAIN,
         WattsVisionService.ACTIVATE_TIMER_MODE,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+            TargetKey.ENTITY_ID: "climate.living_room_living_room_thermostat",
             WattsVisionServiceArgument.TEMPERATURE: 20.5,
             WattsVisionServiceArgument.DURATION: duration,
         },
@@ -339,7 +339,7 @@ async def test_activate_timer_mode_temperature_out_of_range(
             DOMAIN,
             WattsVisionService.ACTIVATE_TIMER_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+                TargetKey.ENTITY_ID: "climate.living_room_living_room_thermostat",
                 WattsVisionServiceArgument.TEMPERATURE: temperature,
                 WattsVisionServiceArgument.DURATION: timedelta(minutes=90),
             },
@@ -366,7 +366,7 @@ async def test_activate_timer_mode_error(
             DOMAIN,
             WattsVisionService.ACTIVATE_TIMER_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: "climate.living_room_living_room_thermostat",
+                TargetKey.ENTITY_ID: "climate.living_room_living_room_thermostat",
                 WattsVisionServiceArgument.TEMPERATURE: 20.5,
                 WattsVisionServiceArgument.DURATION: timedelta(minutes=90),
             },
