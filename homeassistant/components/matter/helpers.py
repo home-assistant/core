@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import OnOffPlugInUnit
+from matter_server.common.custom_clusters import EveCluster
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -15,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
     from matter_ble_proxy import MatterBleProxy
     from matter_server.client.models.device_types import DeviceType
     from matter_server.client.models.node import MatterEndpoint, MatterNode
@@ -35,6 +37,12 @@ if TYPE_CHECKING:
 CHILD_DEVICE_TYPES: set[type[DeviceType]] = {
     OnOffPlugInUnit,
 }
+
+# Vendor clusters whose entities stay on the node device, also on an endpoint that
+# splits into a child device. The Eve Energy dual outlet carries the Eve cluster
+# only on its first outlet's endpoint, while its readings appear to cover the
+# whole device.
+NODE_DEVICE_CLUSTER_IDS: set[int] = {EveCluster.id}
 
 
 class MissingNode(HomeAssistantError):
@@ -192,8 +200,9 @@ def endpoint_requires_child_device(endpoint: MatterEndpoint) -> bool:
 
     True for an endpoint that maps to the node device and exposes an application
     device type (see CHILD_DEVICE_TYPES) also present on a sibling endpoint that
-    maps to the same node device, e.g. one socket of a multi-socket plug. Every
-    entity of such an endpoint is then placed on its own child device.
+    maps to the same node device, e.g. one socket of a multi-socket plug. Its
+    entities are then placed on its own child device, apart from those of a
+    vendor cluster covering the node, see `get_entity_child_device_owner`.
     """
     if not _endpoint_maps_to_node_device(endpoint):
         return False
@@ -249,6 +258,19 @@ def get_child_device_owner(endpoint: MatterEndpoint) -> MatterEndpoint | None:
     ):
         return measured
     return None
+
+
+def get_entity_child_device_owner(
+    endpoint: MatterEndpoint, primary_attribute: type[ClusterAttributeDescriptor]
+) -> MatterEndpoint | None:
+    """Return the endpoint whose child device holds an entity of the endpoint.
+
+    Like `get_child_device_owner`, except that the entities of a vendor cluster
+    covering the whole node stay on the node device.
+    """
+    if primary_attribute.cluster_id in NODE_DEVICE_CLUSTER_IDS:
+        return None
+    return get_child_device_owner(endpoint)
 
 
 def get_node_device_identifier(

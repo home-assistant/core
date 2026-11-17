@@ -96,6 +96,15 @@ def _get_unique_id_prefixes(
     )
 
 
+def _child_device_unique_id_prefix(child_device: dr.ChildDeviceEntry) -> str | None:
+    """Return the unique_id prefix of the entities of a child device's endpoint."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    for domain, value in child_device.identifiers:
+        if domain == DOMAIN and value.startswith(prefix):
+            return f"{value.removeprefix(prefix)}-"
+    return None
+
+
 def _child_device_endpoint_id(child_device: dr.ChildDeviceEntry) -> int | None:
     """Return the endpoint id encoded in a child device's Matter identifier."""
     prefix = f"{ID_TYPE_DEVICE_ID}_"
@@ -341,6 +350,15 @@ class MatterAdapter:
                 self._forget_endpoint_entities(
                     node.node_id, _get_child_device_endpoint_ids(node, endpoint_id)
                 )
+                # Entities of the gone endpoint placed on the node device, like
+                # those of a vendor cluster covering the node, aren't removed
+                # with the child device.
+                if unique_id_prefix := _child_device_unique_id_prefix(child_device):
+                    for entity_entry in er.async_entries_for_device(
+                        entity_registry, node_device.id, include_disabled_entities=True
+                    ):
+                        if entity_entry.unique_id.startswith(unique_id_prefix):
+                            entity_registry.async_remove(entity_entry.entity_id)
             device_registry.async_remove_device(child_device.id)
         if moved_entities and node_was_set_up:
             self._schedule_reload()

@@ -16,6 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import (
     EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
     create_node_from_fixture,
+    load_and_parse_node_fixture,
     set_node_attribute,
 )
 
@@ -360,7 +361,7 @@ async def test_pruned_collapsed_child_preserves_disabled_entities(
 ) -> None:
     """Test a disabled entity is migrated, not deleted, when its child collapses."""
     entity_registry.async_update_entity(
-        "switch.eve_energy_20ecn4101_top_child_lock",
+        "select.eve_energy_20ecn4101_top_power_on_behavior",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
     entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
@@ -374,7 +375,9 @@ async def test_pruned_collapsed_child_preserves_disabled_entities(
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
 
-    migrated = entity_registry.async_get("switch.eve_energy_20ecn4101_top_child_lock")
+    migrated = entity_registry.async_get(
+        "select.eve_energy_20ecn4101_top_power_on_behavior"
+    )
     assert migrated is not None
     assert migrated.device_id == parent.id
     assert migrated.disabled_by is er.RegistryEntryDisabler.USER
@@ -447,6 +450,101 @@ async def test_endpoint_child_device_part_removed_first(
         remove_endpoint(matter_client, matter_node, endpoint_id)
     assert entity_registry.async_get(light_entity_id) is None
     assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is None
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_node_device_cluster_entities_removed_with_endpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test Eve cluster entities stay on the node device and go with the endpoint."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    power_entity_id = "sensor.eve_energy_20ecn4101_power_top"
+    power_entry = entity_registry.async_get(power_entity_id)
+    assert power_entry is not None
+    assert power_entry.device_id == parent.id
+
+    remove_endpoint(matter_client, matter_node, 1)
+    assert entity_registry.async_get(power_entity_id) is None
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    matter_node.update(matter_node.node_data)
+    fire_node_updated_event(matter_client, matter_node)
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 1)
+    await hass.async_block_till_done()
+
+    power_entry = entity_registry.async_get(power_entity_id)
+    assert power_entry is not None
+    assert power_entry.device_id == parent.id
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_node_device_cluster_entities_pruned_with_endpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Eve cluster entities go with an endpoint that vanished while unloaded."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    assert entity_registry.async_get("sensor.eve_energy_20ecn4101_power_top")
+    assert await hass.config_entries.async_unload(entry_id)
+    matter_node.endpoints.pop(1)
+
+    assert await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "sensor.eve_energy_20ecn4101_power_top",
+        "switch.eve_energy_20ecn4101_child_lock_top",
+        "switch.eve_energy_20ecn4101_top",
+    ):
+        assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        {
+            **{
+                f"2/319486977/{attribute_id}": value
+                for path, value in load_and_parse_node_fixture("eve_energy_20ecn4101")[
+                    "attributes"
+                ].items()
+                if path.startswith("1/319486977/")
+                and (attribute_id := path.rsplit("/", 1)[1])
+            },
+            "2/29/1": [3, 4, 6, 29, 64, 319486977],
+            "1/64/0": [{"0": "id", "1": "1"}],
+            "2/64/0": [{"0": "id", "1": "2"}],
+        }
+    ],
+)
+async def test_node_device_cluster_entities_on_several_endpoints(
+    hass: HomeAssistant,
+    matter_node: MatterNode,
+) -> None:
+    """Test Eve cluster entities of several split endpoints keep endpoint suffixes."""
+    names = {
+        state.name
+        for state in hass.states.async_all("sensor")
+        if state.name.startswith("Eve Energy 20ECN4101 Power")
+    }
+    assert names == {
+        "Eve Energy 20ECN4101 Power (1)",
+        "Eve Energy 20ECN4101 Power (2)",
+    }
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
@@ -647,6 +745,16 @@ async def test_existing_endpoint_entities_move_to_child_devices(
         suggested_object_id="eve_energy_20ecn4101_child_lock_1",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
+    power_on_entry = entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "00000000000004D2-00000000000000C7-MatterNodeDevice-1-"
+        "MatterStartUpOnOff-6-16387",
+        config_entry=config_entry,
+        device_id=parent.id,
+        suggested_object_id="eve_energy_20ecn4101_power_on_behavior_1",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
 
@@ -668,14 +776,19 @@ async def test_existing_endpoint_entities_move_to_child_devices(
     assert switch_entry.entity_id == "switch.eve_energy_20ecn4101_switch_1"
     assert switch_entry.name == "Kettle"
     assert switch_entry.device_id == top.id
+    power_on_entry = entity_registry.async_get(power_on_entry.entity_id)
+    assert power_on_entry is not None
+    assert power_on_entry.disabled_by is er.RegistryEntryDisabler.USER
+    assert power_on_entry.device_id == top.id
+    # The Eve cluster's entities cover the whole device and stay on it.
     power_entry = entity_registry.async_get(power_entry.entity_id)
     assert power_entry is not None
     assert power_entry.entity_id == "sensor.eve_energy_20ecn4101_power_1"
-    assert power_entry.device_id == top.id
+    assert power_entry.device_id == parent.id
     child_lock_entry = entity_registry.async_get(child_lock_entry.entity_id)
     assert child_lock_entry is not None
     assert child_lock_entry.disabled_by is er.RegistryEntryDisabler.USER
-    assert child_lock_entry.device_id == top.id
+    assert child_lock_entry.device_id == parent.id
 
 
 TAPO_STRIP_SWITCH_1 = "switch.smart_wi_fi_power_strip_endpoint_1"

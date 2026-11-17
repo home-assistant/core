@@ -28,9 +28,9 @@ from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import (
     MatterConfigEntry,
     get_child_device_identifier,
-    get_child_device_owner,
     get_device_id,
     get_discovery_key,
+    get_entity_child_device_owner,
     get_entity_unique_id,
 )
 
@@ -131,8 +131,11 @@ class MatterEntity(Entity):
             node_device_id, endpoint, entity_info
         )
         # Entities of a split endpoint, its parts and its Power Topology
-        # measurement endpoint go to the split endpoint's child device.
-        self._child_device_endpoint = get_child_device_owner(endpoint)
+        # measurement endpoint go to the split endpoint's child device, apart
+        # from those of a vendor cluster that covers the whole node.
+        self._child_device_endpoint = get_entity_child_device_owner(
+            endpoint, entity_info.primary_attribute
+        )
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )
@@ -147,7 +150,8 @@ class MatterEntity(Entity):
                 for ep in self._endpoint.node.endpoints.values()
                 if ep != self._endpoint
                 and ep.has_attribute(None, entity_info.primary_attribute)
-                and get_child_device_owner(ep) == owner
+                and get_entity_child_device_owner(ep, entity_info.primary_attribute)
+                == owner
             )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
