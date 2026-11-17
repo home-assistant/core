@@ -32,6 +32,7 @@ from .conftest import (
     build_epex_payload_with_partial_tomorrow,
     build_epex_payload_without_tomorrow,
     get_entity_id,
+    get_state,
     setup_dynamic_entry,
 )
 
@@ -58,11 +59,9 @@ async def test_tomorrow_prices_not_published(
     assert state is not None
     assert state.state == STATE_OFF
 
-    current_entity_id = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_epex_current_hour"
+    current_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_current_hour"
     )
-    current_state = hass.states.get(current_entity_id)
-    assert current_state is not None
     assert float(current_state.state) == pytest.approx(0.15)
     assert "Fetching EPEX prices for 2026-10-04 failed" in caplog.text
 

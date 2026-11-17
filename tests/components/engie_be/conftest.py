@@ -1,6 +1,6 @@
 """Common fixtures for the ENGIE Belgium tests."""
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,6 +14,7 @@ from aioengiebelgium import (
     EanPrices,
     EnergyContract,
     EnergyContractsResponse,
+    EngieBeCommunicationError,
     EngieBeEpexNotPublishedError,
     EpexGranularity,
     EpexPayload,
@@ -40,7 +41,7 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -58,23 +59,14 @@ _SERVICE_POINT_ENERGY_TYPES = {
 }
 
 
-def _business_agreement(ban: str, *, with_address: bool = True) -> BusinessAgreement:
-    """Build a single active business agreement."""
-    return BusinessAgreement(
-        business_agreement_number=ban,
-        active=True,
-        consumption_address=ConsumptionAddress(
-            street="Main street",
-            house_number="1",
-            postal_code="1000",
-            city="Brussels",
-        )
-        if with_address
-        else None,
-    )
+MAIN_STREET_ADDRESS = ConsumptionAddress(
+    street="Main street", house_number="1", postal_code="1000", city="Brussels"
+)
 
 
-def build_relations(*bans: str, with_address: bool = True) -> CustomerAccountRelations:
+def build_relations(
+    *bans: str, address: ConsumptionAddress | None = MAIN_STREET_ADDRESS
+) -> CustomerAccountRelations:
     """Build a customer-account-relations response with the given active BANs."""
     bans = bans or (BAN,)
     return CustomerAccountRelations(
@@ -85,7 +77,11 @@ def build_relations(*bans: str, with_address: bool = True) -> CustomerAccountRel
                 customer_account=CustomerAccount(
                     customer_account_number="can-1",
                     business_agreements=tuple(
-                        _business_agreement(ban, with_address=with_address)
+                        BusinessAgreement(
+                            business_agreement_number=ban,
+                            active=True,
+                            consumption_address=address,
+                        )
                         for ban in bans
                     ),
                 ),
@@ -268,13 +264,11 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
-def build_peak(
-    start: datetime, *, power_kw: float = 4.2, energy_kwh: float = 1.05
-) -> Peak:
+def build_peak(start: datetime, *, power_kw: float = 4.2) -> Peak:
     """Build a 15-minute capacity tariff peak starting at the given moment."""
     return Peak(
         peak_kw=power_kw,
-        peak_kwh=energy_kwh,
+        peak_kwh=1.05,
         start=start,
         end=start + timedelta(minutes=15),
     )
@@ -390,6 +384,31 @@ async def advance_time(
     freezer.tick(delta)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def contracts_failing_for(
+    failing_ban: str, *, dynamic: bool = False
+) -> Callable[[str], EnergyContractsResponse]:
+    """Return a contracts side effect that fails for one household only."""
+
+    def _contracts(ban: str) -> EnergyContractsResponse:
+        if ban == failing_ban:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts(dynamic=dynamic)
+
+    return _contracts
+
+
+def get_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    unique_id: str,
+) -> State:
+    """Return the state of an ENGIE Belgium entity and assert it exists."""
+    state = hass.states.get(get_entity_id(entity_registry, platform, unique_id))
+    assert state is not None
+    return state
 
 
 def get_entity_id(

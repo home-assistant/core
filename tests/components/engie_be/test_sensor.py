@@ -6,10 +6,7 @@ from datetime import UTC, date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from aioengiebelgium import (
-    AccountRelation,
-    BusinessAgreement,
     ConsumptionAddress,
-    CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
     EngieBeCommunicationError,
@@ -61,6 +58,7 @@ from .conftest import (
     build_relations,
     build_service_point,
     get_entity_id,
+    get_state,
     setup_dynamic_entry,
     setup_entry,
     without_capacity_tariff,
@@ -112,11 +110,9 @@ async def test_slot_aware_naming(
     """Test slot-aware translation keys drive friendly names while unique_ids keep the raw slot code."""
     await setup_entry(hass, mock_config_entry)
 
-    total_hours_entity_id = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    total_hours_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
     )
-    total_hours_state = hass.states.get(total_hours_entity_id)
-    assert total_hours_state is not None
     assert "total_hours" not in total_hours_state.name.lower()
 
     peak_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_PEAK"
@@ -129,9 +125,7 @@ async def test_slot_aware_naming(
     assert peak_state.name.endswith("Electricity peak offtake price")
 
     fallback_unique_id = f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_WEEKEND"
-    fallback_entity_id = get_entity_id(entity_registry, "sensor", fallback_unique_id)
-    fallback_state = hass.states.get(fallback_entity_id)
-    assert fallback_state is not None
+    fallback_state = get_state(hass, entity_registry, "sensor", fallback_unique_id)
     assert fallback_state.name.endswith("Electricity offtake price (weekend)")
 
     assert (
@@ -218,11 +212,9 @@ async def test_duplicate_type_suffix(
 
     names: dict[str, str] = {}
     for ean in eans:
-        entity_id = get_entity_id(
-            entity_registry, "sensor", f"{BAN}_{ean}_offtake_TOTAL_HOURS"
+        state = get_state(
+            hass, entity_registry, "sensor", f"{BAN}_{ean}_offtake_TOTAL_HOURS"
         )
-        state = hass.states.get(entity_id)
-        assert state is not None
         names[ean] = state.name
 
     for ean in eans:
@@ -243,46 +235,24 @@ async def test_type_fallback_when_service_point_lookup_fails(
     ]
     await setup_entry(hass, mock_config_entry)
 
-    entity_id = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
     assert state.name.endswith("Offtake price")
-
-
-def _empty_address_relations() -> CustomerAccountRelations:
-    """Build relations for a single BAN with an all-empty consumption address."""
-    return CustomerAccountRelations(
-        accounts=(
-            AccountRelation(
-                id="account-1",
-                admin=True,
-                customer_account=CustomerAccount(
-                    customer_account_number="can-1",
-                    business_agreements=(
-                        BusinessAgreement(
-                            business_agreement_number=BAN,
-                            active=True,
-                            consumption_address=ConsumptionAddress(
-                                street="",
-                                house_number="",
-                                postal_code="",
-                                city="",
-                            ),
-                        ),
-                    ),
-                ),
-            ),
-        )
-    )
 
 
 @pytest.mark.parametrize(
     "relations",
     [
-        pytest.param(build_relations(with_address=False), id="no-address"),
-        pytest.param(_empty_address_relations(), id="empty-address"),
+        pytest.param(build_relations(address=None), id="no-address"),
+        pytest.param(
+            build_relations(
+                address=ConsumptionAddress(
+                    street="", house_number="", postal_code="", city=""
+                )
+            ),
+            id="empty-address",
+        ),
     ],
 )
 async def test_device_name_falls_back_to_masked_ban(
@@ -649,13 +619,12 @@ async def test_late_service_point_failure_falls_back(
     )
     await advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
 
-    entity_id = get_entity_id(
+    state = get_state(
+        hass,
         entity_registry,
         "sensor",
         f"{BAN_2}_{SECOND_ELECTRICITY_EAN}_offtake_TOTAL_HOURS",
     )
-    state = hass.states.get(entity_id)
-    assert state is not None
     assert state.name.endswith("Offtake price")
 
 
@@ -950,9 +919,7 @@ async def _setup_single_gas_ean(
 
 def _gas_per_m3_state(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> str:
     """Return the state of the gas price per m³ sensor."""
-    entity_id = get_entity_id(entity_registry, "sensor", GAS_PER_M3_UNIQUE_ID)
-    state = hass.states.get(entity_id)
-    assert state is not None
+    state = get_state(hass, entity_registry, "sensor", GAS_PER_M3_UNIQUE_ID)
     return state.state
 
 
@@ -1121,42 +1088,34 @@ async def test_epex_sensors_unknown_during_slot_gap(
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
-    hourly_current = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_epex_current_hour"
+    hourly_current_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_current_hour"
     )
-    hourly_current_state = hass.states.get(hourly_current)
-    assert hourly_current_state is not None
     assert hourly_current_state.state == STATE_UNKNOWN
 
-    quarter_current = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_epex_current_quarter_hour"
+    quarter_current_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_current_quarter_hour"
     )
-    quarter_current_state = hass.states.get(quarter_current)
-    assert quarter_current_state is not None
     assert float(quarter_current_state.state) == pytest.approx(0.15)
 
-    next_hour = get_entity_id(entity_registry, "sensor", f"{BAN}_epex_next_hour")
-    next_hour_state = hass.states.get(next_hour)
-    assert next_hour_state is not None
+    next_hour_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_next_hour"
+    )
     assert float(next_hour_state.state) == pytest.approx(0.16)
 
-    hourly_low = get_entity_id(entity_registry, "sensor", f"{BAN}_epex_low_today_hour")
-    hourly_low_state = hass.states.get(hourly_low)
-    assert hourly_low_state is not None
+    hourly_low_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_low_today_hour"
+    )
     assert hourly_low_state.state == STATE_UNKNOWN
 
-    hourly_high = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_epex_high_today_hour"
+    hourly_high_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_high_today_hour"
     )
-    hourly_high_state = hass.states.get(hourly_high)
-    assert hourly_high_state is not None
     assert hourly_high_state.state == STATE_UNKNOWN
 
-    quarter_low = get_entity_id(
-        entity_registry, "sensor", f"{BAN}_epex_low_today_quarter_hour"
+    quarter_low_state = get_state(
+        hass, entity_registry, "sensor", f"{BAN}_epex_low_today_quarter_hour"
     )
-    quarter_low_state = hass.states.get(quarter_low)
-    assert quarter_low_state is not None
     assert float(quarter_low_state.state) == pytest.approx(0.01)
 
 
@@ -1189,18 +1148,6 @@ async def test_epex_sensors_update_on_quarter_boundaries(
     assert mock_engie_client.return_value.async_get_epex_prices.call_count == (
         call_count
     )
-
-
-def _epex_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, key: str
-) -> str:
-    """Return the state of one EPEX entity of the dynamic household."""
-    platform = "binary_sensor" if key == "epex_tomorrow_available" else "sensor"
-    entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, f"{BAN}_{key}")
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    return state.state
 
 
 @pytest.mark.parametrize(
@@ -1238,8 +1185,15 @@ async def test_epex_sensors_on_dst_days(
         "epex_high_today_quarter_hour": 0.2475,
     }
     for key, value in expected.items():
-        assert float(_epex_state(hass, entity_registry, key)) == pytest.approx(value)
-    assert _epex_state(hass, entity_registry, "epex_tomorrow_available") == STATE_ON
+        assert float(
+            get_state(hass, entity_registry, "sensor", f"{BAN}_{key}").state
+        ) == pytest.approx(value)
+    assert (
+        get_state(
+            hass, entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
+        ).state
+        == STATE_ON
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -1265,9 +1219,20 @@ async def test_epex_empty_payload_keeps_entities_unknown(
     client.async_get_epex_prices.side_effect = _empty_payload
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
 
-    assert _epex_state(hass, entity_registry, "epex_current_hour") == STATE_UNKNOWN
-    assert _epex_state(hass, entity_registry, "epex_low_today_hour") == STATE_UNKNOWN
-    assert _epex_state(hass, entity_registry, "epex_tomorrow_available") == STATE_OFF
+    assert (
+        get_state(hass, entity_registry, "sensor", f"{BAN}_epex_current_hour").state
+        == STATE_UNKNOWN
+    )
+    assert (
+        get_state(hass, entity_registry, "sensor", f"{BAN}_epex_low_today_hour").state
+        == STATE_UNKNOWN
+    )
+    assert (
+        get_state(
+            hass, entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
+        ).state
+        == STATE_OFF
+    )
 
     call_count = client.async_get_epex_prices.call_count
     freezer.tick(EPEX_SCAN_INTERVAL)
@@ -1289,7 +1254,10 @@ async def test_epex_slot_gap_heals_on_next_refresh(
     client = mock_engie_client.return_value
     client.async_get_epex_prices.side_effect = build_epex_payload_with_gap
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    assert _epex_state(hass, entity_registry, "epex_low_today_hour") == STATE_UNKNOWN
+    assert (
+        get_state(hass, entity_registry, "sensor", f"{BAN}_epex_low_today_hour").state
+        == STATE_UNKNOWN
+    )
 
     call_count = client.async_get_epex_prices.call_count
     client.async_get_epex_prices.side_effect = build_epex_payload
@@ -1299,10 +1267,10 @@ async def test_epex_slot_gap_heals_on_next_refresh(
 
     assert client.async_get_epex_prices.call_count == call_count + 1
     assert float(
-        _epex_state(hass, entity_registry, "epex_current_hour")
+        get_state(hass, entity_registry, "sensor", f"{BAN}_epex_current_hour").state
     ) == pytest.approx(0.16)
     assert float(
-        _epex_state(hass, entity_registry, "epex_low_today_hour")
+        get_state(hass, entity_registry, "sensor", f"{BAN}_epex_low_today_hour").state
     ) == pytest.approx(0.01)
 
 
