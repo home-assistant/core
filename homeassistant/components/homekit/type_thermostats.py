@@ -320,7 +320,8 @@ class Thermostat(HomeKitClimateAccessory):
                             target_hc,
                             hc_fallback,
                         )
-                        self.char_target_heat_cool.value = target_hc = hc_fallback
+                        target_hc = hc_fallback
+                        self.char_target_heat_cool.set_value(target_hc)
                         break
 
             params[ClimateServiceArgument.HVAC_MODE] = self.hc_homekit_to_hass[
