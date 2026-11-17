@@ -23,7 +23,7 @@ SYSLOG_FACILITY = {
     "user": "LOG_USER",
     "mail": "LOG_MAIL",
     "daemon": "LOG_DAEMON",
-    "auth": "LOG_KERN",
+    "auth": "LOG_AUTH",
     "LPR": "LOG_LPR",
     "news": "LOG_NEWS",
     "uucp": "LOG_UUCP",
@@ -90,7 +90,7 @@ def get_service(
 class SyslogNotificationService(BaseNotificationService):
     """Implement the syslog notification service."""
 
-    def __init__(self, facility, option, priority):
+    def __init__(self, facility, option, priority) -> None:
         """Initialize the service."""
         self._facility = facility
         self._option = option
