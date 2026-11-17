@@ -1,7 +1,8 @@
 """Test the Anthem A/V Receivers media player."""
 
+import asyncio
 from collections.abc import Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -193,6 +194,9 @@ async def test_select_source_other_models(
 
 
 ALM_NUMBERS = {"None": 0, "AnthemLogic Cinema": 1, "PLII Music": 4}
+SINGLE_COMMAND_LINGER = (
+    "homeassistant.components.anthemav.single_command.SINGLE_COMMAND_LINGER_SECONDS"
+)
 
 
 async def test_sound_mode_state(
@@ -246,28 +250,58 @@ async def test_select_sound_mode_other_models(
     assert mock_anthemav.protocol.audio_listening_mode == 4
 
 
-@pytest.mark.usefixtures("mock_connection_create")
-async def test_select_sound_mode_x10_uses_new_connection(
-    hass: HomeAssistant,
-    mock_anthemav: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test MRX x10 listening mode changes are sent over a new connection."""
-    mock_anthemav.protocol._alm_number = ALM_NUMBERS
-    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+def _receiver(answers: dict[bytes, bytes]) -> tuple[MagicMock, MagicMock]:
+    """Return a stream reader and writer for a receiver giving these answers.
+
+    A command without an answer gets no reply at all.
+    """
+    pending: asyncio.Queue[bytes] = asyncio.Queue()
     writer = MagicMock()
+    writer.write.side_effect = lambda data: pending.put_nowait(answers.get(data, b""))
     writer.drain = AsyncMock()
     writer.wait_closed = AsyncMock()
 
+    async def read(_: int) -> bytes:
+        while not (data := await pending.get()):
+            pass
+        return data
+
+    reader = MagicMock()
+    reader.read = read
+    return reader, writer
+
+
+@pytest.mark.parametrize(
+    ("answers", "sent"),
+    [
+        pytest.param(
+            {b"Z1ALM04;": b"Z1AIF0;Z1ALM04;Z1AIF3;"},
+            [b"Z1ALM04;"],
+            id="applied",
+        ),
+        pytest.param(
+            {b"Z1ALM04;": b";", b"Z1ALM?;": b"Z1ALM04;"},
+            [b"Z1ALM04;", b"Z1ALM?;"],
+            id="already_active",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_select_sound_mode_x10(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    answers: dict[bytes, bytes],
+    sent: list[bytes],
+) -> None:
+    """Test MRX x10 listening mode changes are sent and confirmed."""
+    mock_anthemav.protocol._alm_number = ALM_NUMBERS
+    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+    reader, writer = _receiver(answers)
+
     with (
-        patch(
-            "asyncio.open_connection",
-            return_value=(_reader(b"Z1AIF0;Z1ALM04;Z1AIF3;"), writer),
-        ),
-        patch(
-            "homeassistant.components.anthemav.single_command.SINGLE_COMMAND_LINGER_SECONDS",
-            0.01,
-        ),
+        patch("asyncio.open_connection", return_value=(reader, writer)),
+        patch(SINGLE_COMMAND_LINGER, 0.05),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -276,7 +310,8 @@ async def test_select_sound_mode_x10_uses_new_connection(
             blocking=True,
         )
 
-    writer.write.assert_called_once_with(b"Z1ALM04;")
+    assert writer.write.call_args_list == [call(data) for data in sent]
+    writer.close.assert_called_once()
     mock_anthemav.protocol.query.assert_called_with("Z1ALM")
 
 
@@ -304,10 +339,13 @@ async def test_select_sound_mode_unknown(
 
 
 @pytest.mark.parametrize(
-    ("replies", "current_mode"),
+    "answers",
     [
-        pytest.param([], "03", id="no_reply"),
-        pytest.param([b"!RZ1ALM04;"], "03", id="out_of_range"),
+        pytest.param({b"Z1ALM?;": b"Z1ALM03;"}, id="not_available_for_source"),
+        pytest.param(
+            {b"Z1ALM04;": b"!RZ1ALM04;", b"Z1ALM?;": b"Z1ALM03;"},
+            id="out_of_range",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_connection_create")
@@ -315,26 +353,16 @@ async def test_select_sound_mode_x10_not_applied(
     hass: HomeAssistant,
     mock_anthemav: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    replies: list[bytes],
-    current_mode: str,
+    answers: dict[bytes, bytes],
 ) -> None:
-    """Test an error is raised when the receiver doesn't confirm the mode."""
+    """Test an error is raised when the receiver doesn't switch modes."""
     mock_anthemav.protocol._alm_number = ALM_NUMBERS
-    mock_anthemav.protocol.audio_listening_mode = current_mode
     await _setup_x10(hass, mock_config_entry, mock_anthemav)
-    writer = MagicMock()
-    writer.drain = AsyncMock()
-    writer.wait_closed = AsyncMock()
+    reader, writer = _receiver(answers)
 
     with (
-        patch(
-            "asyncio.open_connection",
-            return_value=(_reader(*replies), writer),
-        ),
-        patch(
-            "homeassistant.components.anthemav.single_command.SINGLE_COMMAND_LINGER_SECONDS",
-            0.01,
-        ),
+        patch("asyncio.open_connection", return_value=(reader, writer)),
+        patch(SINGLE_COMMAND_LINGER, 0.05),
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
@@ -348,22 +376,22 @@ async def test_select_sound_mode_x10_not_applied(
     mock_anthemav.protocol.query.assert_called_with("Z1ALM")
 
 
-@pytest.mark.usefixtures("mock_connection_create")
-async def test_select_sound_mode_x10_already_active(
+async def test_no_sound_mode_for_x40(
     hass: HomeAssistant,
     mock_anthemav: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_connection_create: AsyncMock,
 ) -> None:
-    """Test selecting the active mode sends nothing."""
-    mock_anthemav.protocol._alm_number = ALM_NUMBERS
-    mock_anthemav.protocol.audio_listening_mode = "04"
-    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+    """Test x40 receivers get no sound mode, as the library misnames their modes."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_MODEL: "MRX 740"}
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("asyncio.open_connection") as open_connection:
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            {ATTR_ENTITY_ID: "media_player.anthem_av", ATTR_SOUND_MODE: "PLII Music"},
-            blocking=True,
-        )
-    open_connection.assert_not_called()
+    state = hass.states.get("media_player.anthem_av")
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )

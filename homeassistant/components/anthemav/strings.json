@@ -23,14 +23,14 @@
     "send_failed": {
       "message": "Could not send the command to the receiver"
     },
-    "unknown_source": {
-      "message": "Unknown source: {source}"
+    "sound_mode_not_applied": {
+      "message": "The receiver didn't switch to {sound_mode}. It isn't available for the current source"
     },
     "unknown_sound_mode": {
       "message": "Unknown sound mode: {sound_mode}"
     },
-    "sound_mode_not_applied": {
-      "message": "The receiver didn't switch to {sound_mode}. It isn't available for the current source"
+    "unknown_source": {
+      "message": "Unknown source: {source}"
     }
   }
 }

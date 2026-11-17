@@ -20,8 +20,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthemavConfigEntry
-from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER, X10_MODELS
-from .single_command import async_send_single_command
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    DOMAIN,
+    MANUFACTURER,
+    SOUND_MODE_MODELS,
+    X10_MODELS,
+)
+from .single_command import async_single_command_connection
 
 _LOGGER = logging.getLogger(__name__)
 VOLUME_STEP = 0.01
@@ -94,8 +100,9 @@ class AnthemAVR(MediaPlayerEntity):
         self._host = host
         self._port = port
         self._is_x10 = model.strip() in X10_MODELS
-        # The listening mode (ALM) is a zone 1 setting.
-        if zone_number == 1 and avr.support_audio_listening_mode:
+        # The listening mode (ALM) is a zone 1 setting. The library names the
+        # modes from the x20 table, which is wrong for other model series.
+        if zone_number == 1 and model.strip() in SOUND_MODE_MODELS:
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
@@ -171,9 +178,8 @@ class AnthemAVR(MediaPlayerEntity):
                 translation_key="unknown_source",
                 translation_placeholders={"source": source},
             )
-        await async_send_single_command(
-            self._host, self._port, f"Z{self._zone_number}INP{number}"
-        )
+        async with async_single_command_connection(self._host, self._port) as conn:
+            await conn.send(f"Z{self._zone_number}INP{number}")
         # The long-lived connection may not get the change pushed, so ask.
         self._zone.query("INP")
 
@@ -191,13 +197,13 @@ class AnthemAVR(MediaPlayerEntity):
             self.avr.audio_listening_mode = number
             return
         command = f"Z1ALM{number:02d}"
-        if self.avr.audio_listening_mode == command[5:]:
-            # The receiver doesn't confirm a mode that is already active.
-            return
-        replies = await async_send_single_command(self._host, self._port, command)
+        async with async_single_command_connection(self._host, self._port) as conn:
+            # An applied mode is reported back; one the current source doesn't
+            # allow gets no reply, and neither does the mode already active.
+            replies = await conn.send(command, until=command)
+            if command not in replies:
+                replies = await conn.send("Z1ALM?", until=command)
         self.avr.query("Z1ALM")
-        # An applied mode is reported back; one the current source doesn't
-        # allow gets no reply at all.
         if command not in replies:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
