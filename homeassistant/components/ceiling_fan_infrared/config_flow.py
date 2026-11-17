@@ -32,7 +32,9 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
-            if emitter_id := user_input.get(CONF_INFRARED_ENTITY_ID):
+            if emitter_id := self._resolve_emitter_id(
+                emitter_entity_ids, user_input.get(CONF_INFRARED_ENTITY_ID)
+            ):
                 self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
                 return self.async_create_entry(
                     title=f"Ceiling fan via {self._emitter_name(emitter_id)}",
@@ -68,7 +70,9 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
-            if emitter_id := user_input.get(CONF_INFRARED_ENTITY_ID):
+            if emitter_id := self._resolve_emitter_id(
+                emitter_entity_ids, user_input.get(CONF_INFRARED_ENTITY_ID)
+            ):
                 self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
                 return self.async_update_reload_and_abort(
                     entry, data={CONF_INFRARED_ENTITY_ID: emitter_id}
@@ -92,6 +96,23 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @callback
+    def _resolve_emitter_id(
+        self, emitter_entity_ids: list[str], selection: str | None
+    ) -> str | None:
+        """Resolve a selection to a currently loaded emitter entity ID.
+
+        The entity selector also accepts an entity registry UUID, so resolve the
+        selection and confirm it is an emitter before storing it. Storing anything
+        else would leave the fan unavailable and slip past the duplicate check.
+        """
+        if not selection:
+            return None
+        entity_id = er.async_resolve_entity_id(er.async_get(self.hass), selection)
+        if entity_id is None or entity_id not in emitter_entity_ids:
+            return None
+        return entity_id
 
     @callback
     def _emitter_name(self, entity_id: str) -> str:

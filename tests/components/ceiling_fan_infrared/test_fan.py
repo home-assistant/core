@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -53,6 +54,25 @@ async def test_setup(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_state_is_unknown_before_the_first_command(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the assumed state is unknown until a command establishes it."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        FAN_DOMAIN, "ceiling_fan_infrared", config_entry.entry_id
+    )
+    assert entity_id is not None
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == STATE_UNKNOWN
 
 
 _FAN_ACTIONS: list[tuple[str, dict[str, int], E27FanLightCode, str, int | None]] = [

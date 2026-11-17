@@ -47,7 +47,7 @@ class CeilingFanIrFanEntity(
 
     The remote has a single key to toggle the fan on and off and dedicated keys
     for the three speeds, so the speed is known but the on and off state is
-    assumed.
+    assumed. Until the first command is sent, the on and off state is unknown.
     """
 
     _attr_assumed_state = True
@@ -67,9 +67,13 @@ class CeilingFanIrFanEntity(
 
     @property
     @override
-    def is_on(self) -> bool:
-        """Return true if the fan is on."""
-        return self._attr_is_on or False
+    def is_on(self) -> bool | None:
+        """Return true if the fan is on, or None if the state is unknown.
+
+        ``ToggleEntity.is_on`` is cached, which would keep the initial unknown
+        state after the first command, so it is overridden as a plain property.
+        """
+        return self._attr_is_on
 
     @override
     async def async_turn_on(
