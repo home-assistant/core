@@ -53,8 +53,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
-from .coordinator import SMHIConfigEntry
-from .entity import SmhiWeatherEntity
+from .coordinator import SMHIConfigEntry, SMHIDataUpdateCoordinator
+from .entity import SmhiEntity
 
 PARALLEL_UPDATES = 0
 
@@ -102,7 +102,9 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
+class SmhiWeather(
+    SmhiEntity[SMHIDataUpdateCoordinator], SingleCoordinatorWeatherEntity
+):
     """Representation of a weather entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS

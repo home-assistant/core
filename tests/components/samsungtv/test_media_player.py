@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 from datetime import timedelta
-import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, Mock, call, patch
 
 from async_upnp_client.exceptions import (
@@ -815,16 +814,21 @@ async def test_turn_off_websocket_frame(
     )
     # key called
     assert remote_websocket.send_commands.call_count == 1
-    commands = remote_websocket.send_commands.call_args_list[0].args[0]
-    assert len(commands) == 3
-    assert isinstance(commands[0], SendRemoteKey)
-    assert commands[0].params["Cmd"] == "Press"
-    assert commands[0].params["DataOfCmd"] == "KEY_POWER"
-    assert isinstance(commands[1], SamsungTVSleepCommand)
-    assert commands[1].delay == 3
-    assert isinstance(commands[2], SendRemoteKey)
-    assert commands[2].params["Cmd"] == "Release"
-    assert commands[2].params["DataOfCmd"] == "KEY_POWER"
+    call_args = remote_websocket.send_commands.call_args_list[0]
+    commands = call_args.args[0]
+    # Repeated presses must not be slowed down by the default key delay
+    assert call_args.kwargs["key_press_delay"] == 0
+    assert len(commands) == 81
+    presses = commands[0:-1:2]
+    sleeps = commands[1:-1:2]
+    assert all(isinstance(command, SendRemoteKey) for command in presses)
+    assert {command.params["Cmd"] for command in presses} == {"Press"}
+    assert {command.params["DataOfCmd"] for command in presses} == {"KEY_POWER"}
+    assert all(isinstance(command, SamsungTVSleepCommand) for command in sleeps)
+    assert {command.delay for command in sleeps} == {0.1}
+    assert isinstance(commands[-1], SendRemoteKey)
+    assert commands[-1].params["Cmd"] == "Release"
+    assert commands[-1].params["DataOfCmd"] == "KEY_POWER"
 
 
 async def test_turn_off_encrypted_websocket(
@@ -909,7 +913,6 @@ async def test_turn_off_ws_os_error(
     hass: HomeAssistant, remote_websocket: Mock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, MOCK_CONFIGWS)
     remote_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
@@ -925,7 +928,6 @@ async def test_turn_off_encryptedws_os_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for turn_off with OSError."""
-    caplog.set_level(logging.DEBUG)
     await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     remote_encrypted_websocket.close = Mock(side_effect=OSError("BOOM"))
     await hass.services.async_call(
@@ -1426,6 +1428,24 @@ async def test_upnp_subscribe_events_upnpresponseerror(
 
     upnp_notify_server.async_stop_server.assert_not_called()
     assert "Device rejected subscription" in caplog.text
+
+
+@pytest.mark.usefixtures("remote_websocket", "rest_api", "upnp_notify_server")
+async def test_upnp_keeps_existing_subscription(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dmr_device: Mock,
+) -> None:
+    """Test an active Upnp subscription is not renewed on update."""
+    await setup_samsungtv_entry(hass, MOCK_ENTRY_WS)
+    assert dmr_device.async_subscribe_services.call_count == 1
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert dmr_device.async_subscribe_services.call_count == 1
 
 
 @pytest.mark.usefixtures("rest_api", "upnp_notify_server")

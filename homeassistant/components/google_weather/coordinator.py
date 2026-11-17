@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import timedelta, tzinfo
 from functools import partial
 import logging
 from typing import override
@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -138,6 +139,8 @@ class GoogleWeatherDailyForecastCoordinator(
 ):
     """Handle fetching daily weather forecast."""
 
+    time_zone: tzinfo | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -154,6 +157,13 @@ class GoogleWeatherDailyForecastCoordinator(
             timedelta(hours=1),
             api.async_get_daily_forecast,
         )
+
+    @override
+    async def _async_update_data(self) -> DailyForecastResponse:
+        """Fetch daily forecast and resolve its time zone."""
+        data = await super()._async_update_data()
+        self.time_zone = await dt_util.async_get_time_zone(data.time_zone.id)
+        return data
 
 
 class GoogleWeatherHourlyForecastCoordinator(

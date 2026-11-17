@@ -160,5 +160,10 @@
         "default": "mdi:cash"
       }
     }
+  },
+  "services": {
+    "get_electricity_prices": {
+      "service": "mdi:cash-clock"
+    }
   }
 }
