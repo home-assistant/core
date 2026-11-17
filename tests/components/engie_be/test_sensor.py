@@ -1161,6 +1161,43 @@ async def test_failing_service_point_does_not_refetch_healthy_ones(
     assert fetched.count(OFFTAKE_INJECTION_EAN) == 2
 
 
+async def test_gas_peak_slot_has_no_per_m3_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test only the all-day gas price gets a per m³ sensor."""
+    mock_engie_client.return_value.async_get_prices.return_value = _add_offtake_slot(
+        build_prices(),
+        OFFTAKE_ONLY_EAN,
+        PriceSlot(
+            time_of_use_slot_code="S_TOU1_OFFTAKE_PEAK",
+            price_value=0.15,
+            price_value_excl_vat=0.141509,
+        ),
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    peak_unique_id = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_S_TOU1_OFFTAKE_PEAK"
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, peak_unique_id)
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{peak_unique_id}_per_m3"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, GAS_PER_M3_UNIQUE_ID)
+        is not None
+    )
+
+
 async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
