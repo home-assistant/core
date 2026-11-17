@@ -1,6 +1,6 @@
 """Unit tests for platform/plant.py."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
@@ -266,3 +266,22 @@ def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     for i, value in enumerate(days):
         dh.add_measurement(values[i], value)
         assert max_values[i] == dh.max
+
+
+async def test_daily_history_timezone_date_boundaries(hass: HomeAssistant) -> None:
+    """Test UTC timestamps are grouped by local date."""
+    await hass.config.async_set_time_zone("America/New_York")
+    dh = DailyHistory(2)
+
+    dh.add_measurement(10, datetime(2026, 1, 1, 23, 0, tzinfo=UTC))
+    dh.add_measurement(25, datetime(2026, 1, 2, 3, 0, tzinfo=UTC))
+    assert len(dh._days) == 1
+    assert dh.max == 25
+
+    dh.add_measurement(15, datetime(2026, 1, 2, 6, 0, tzinfo=UTC))
+    assert len(dh._days) == 2
+    assert dh.max == 25
+
+    dh.add_measurement(12, datetime(2026, 1, 3, 6, 0, tzinfo=UTC))
+    assert len(dh._days) == 2
+    assert dh.max == 15
