@@ -160,10 +160,7 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        if (
-            not hasattr(self.config_entry, "runtime_data")
-            or not self.config_entry.runtime_data
-        ):
+        if not hasattr(self.config_entry, "runtime_data"):
             return self.async_abort(reason="not_initialized")
 
         router = self.config_entry.runtime_data

@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -75,7 +75,7 @@ async def test_select_entities(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: selected_option,
             },
             blocking=True,
@@ -97,7 +97,7 @@ async def test_select_option_value_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.beer_fridge_temperature_level",
+                TargetKey.ENTITY_ID: "select.beer_fridge_temperature_level",
                 SelectServiceArgument.OPTION: "something",
             },
             blocking=True,
@@ -160,7 +160,7 @@ async def test_oven_cook_mode_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "broil",
         },
         blocking=True,
@@ -185,7 +185,7 @@ async def test_oven_cook_mode_select_from_idle(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "broil",
         },
         blocking=True,
@@ -209,7 +209,7 @@ async def test_oven_cook_mode_select_standby(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "standby",
         },
         blocking=True,
@@ -234,7 +234,7 @@ async def test_oven_cook_mode_select_value_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: "broil",
             },
             blocking=True,

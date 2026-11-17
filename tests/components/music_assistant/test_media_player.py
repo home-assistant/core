@@ -81,6 +81,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -481,7 +482,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
         },
         blocking=True,
@@ -508,7 +509,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_MEDIA_ENQUEUE: "add",
         },
@@ -536,7 +537,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_RADIO_MODE: True,
         },
@@ -565,7 +566,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "1",
             ATTR_MEDIA_TYPE: "track",
         },
@@ -598,7 +599,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "test",
             MusicAssistantServiceArgument.ARTIST: "artist",
             ATTR_ALBUM: "album",
@@ -636,7 +637,7 @@ async def test_media_player_play_media_action_legacy(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_MEDIA_ENQUEUE: "add",
             MusicAssistantServiceArgument.USERNAME: "user_user",
@@ -685,7 +686,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
         },
         blocking=True,
@@ -712,7 +713,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_MEDIA_ENQUEUE: "add",
         },
@@ -740,7 +741,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_RADIO_MODE: True,
         },
@@ -769,7 +770,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "1",
             ATTR_MEDIA_TYPE: "audiobook",
             ATTR_MEDIA_ENQUEUE: "add",
@@ -803,7 +804,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "test",
             MusicAssistantServiceArgument.ARTIST: "artist",
             ATTR_ALBUM: "album",
@@ -842,7 +843,7 @@ async def test_media_player_play_media_action(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             ATTR_MEDIA_ENQUEUE: "add",
             MusicAssistantServiceArgument.USERNAME: "user_user",
@@ -888,7 +889,7 @@ async def test_media_player_play_media_default_user(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
         },
         blocking=True,
@@ -929,7 +930,7 @@ async def test_media_player_play_media_default_user_older_server(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
         },
         blocking=True,
@@ -967,7 +968,7 @@ async def test_media_player_play_media_explicit_user_override(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             MusicAssistantServiceArgument.USERNAME: "user_admin",
         },
@@ -1010,7 +1011,7 @@ async def test_media_player_play_media_unknown_username(
             DOMAIN,
             MusicAssistantService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
                 MusicAssistantServiceArgument.USERNAME: "nobody",
             },
@@ -1039,7 +1040,7 @@ async def test_media_player_play_media_user_not_found_without_username(
             DOMAIN,
             MusicAssistantService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 MusicAssistantServiceArgument.MEDIA_ID: "spotify://track/1234",
             },
             blocking=True,
@@ -1116,7 +1117,7 @@ async def test_media_player_play_media_start_item(
     await hass.services.async_call(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
-        {ATTR_ENTITY_ID: entity_id, **service_data},
+        {TargetKey.ENTITY_ID: entity_id, **service_data},
         blocking=True,
     )
     assert music_assistant_client.send_command.call_count == 1
@@ -1148,7 +1149,7 @@ async def test_media_player_play_media_start_item_invalid(
             DOMAIN,
             MusicAssistantService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
                 MusicAssistantServiceArgument.MEDIA_ID: "spotify://podcast/1234",
                 MusicAssistantServiceArgument.START_ITEM: ["latest", "newest"],
             },
@@ -1174,7 +1175,7 @@ async def test_media_player_play_media_shuffle(
         DOMAIN,
         MusicAssistantService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MEDIA_ID: "spotify://playlist/1234",
             ATTR_MEDIA_SHUFFLE: shuffle,
         },
@@ -1281,7 +1282,7 @@ async def test_media_player_play_announcement_action(
         DOMAIN,
         MusicAssistantService.PLAY_ANNOUNCEMENT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
             MusicAssistantServiceArgument.USE_PRE_ANNOUNCE: True,
             MusicAssistantServiceArgument.PRE_ANNOUNCE_URL: "http://blah.com/chime.mp3",
@@ -1362,7 +1363,7 @@ async def test_media_player_play_announcement_action_with_message(
         DOMAIN,
         MusicAssistantService.PLAY_ANNOUNCEMENT,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.MESSAGE: "Dinner is ready!",
             MusicAssistantServiceArgument.TTS_ENTITY_ID: tts_entity_id,
             MusicAssistantServiceArgument.USE_PRE_ANNOUNCE: True,
@@ -1430,7 +1431,7 @@ async def test_media_player_play_announcement_action_invalid_input(
             DOMAIN,
             MusicAssistantService.PLAY_ANNOUNCEMENT,
             {
-                ATTR_ENTITY_ID: "media_player.test_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
                 **announcement_data,
             },
             blocking=True,
@@ -1456,7 +1457,7 @@ async def test_media_player_play_announcement_action_unusable_tts_entity(
             DOMAIN,
             MusicAssistantService.PLAY_ANNOUNCEMENT,
             {
-                ATTR_ENTITY_ID: "media_player.test_player_1",
+                TargetKey.ENTITY_ID: "media_player.test_player_1",
                 MusicAssistantServiceArgument.MESSAGE: "Dinner is ready!",
                 MusicAssistantServiceArgument.TTS_ENTITY_ID: tts_entity_id,
             },
@@ -1479,7 +1480,7 @@ async def test_media_player_transfer_queue_action(
         DOMAIN,
         MusicAssistantService.TRANSFER_QUEUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             MusicAssistantServiceArgument.SOURCE_PLAYER: "media_player.my_super_test_player_2",
             MusicAssistantServiceArgument.AUTO_PLAY: True,
         },
@@ -1500,7 +1501,7 @@ async def test_media_player_transfer_queue_action(
             DOMAIN,
             MusicAssistantService.TRANSFER_QUEUE,
             {
-                ATTR_ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 MusicAssistantServiceArgument.SOURCE_PLAYER: "media_player.blah_blah",
             },
             blocking=True,
@@ -1511,7 +1512,7 @@ async def test_media_player_transfer_queue_action(
         DOMAIN,
         MusicAssistantService.TRANSFER_QUEUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -1572,7 +1573,7 @@ async def test_media_player_get_queue_action(
         DOMAIN,
         MusicAssistantService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
         return_response=True,
@@ -1639,6 +1640,13 @@ async def test_media_player_get_queue_action_items(
             101,
             id="calling_user",
         ),
+        pytest.param(
+            100,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user_older_server",
+        ),
         pytest.param(100, {}, None, None, id="older_server"),
     ],
 )
@@ -1672,26 +1680,11 @@ async def test_media_player_get_queue_action_user(
     assert sent["require_schema"] == expected_schema
 
 
-@pytest.mark.parametrize(
-    ("extra_data", "translation_key", "sent"),
-    [
-        # a username is refused before anything is sent
-        (
-            {MusicAssistantServiceArgument.USERNAME: "john"},
-            "username_not_supported",
-            False,
-        ),
-        ({}, "server_too_old", True),
-    ],
-)
 async def test_media_player_get_queue_action_older_server(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    extra_data: dict[str, Any],
-    translation_key: str,
-    sent: bool,
 ) -> None:
-    """Test get_queue on a server that can't act as a user or lacks the command."""
+    """Test get_queue as a given user on a server that can't act as a user."""
     music_assistant_client.server_info.schema_version = 100
     music_assistant_client.send_command.side_effect = InvalidServerVersion(
         "Command requires schema 101"
@@ -1704,13 +1697,12 @@ async def test_media_player_get_queue_action_older_server(
             {
                 ATTR_ENTITY_ID: "media_player.test_group_player_1",
                 MusicAssistantServiceArgument.LIMIT: 5,
-            }
-            | extra_data,
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
             blocking=True,
             return_response=True,
         )
-    assert err.value.translation_key == translation_key
-    assert music_assistant_client.send_command.called is sent
+    assert err.value.translation_key == "server_too_old"
 
 
 async def test_media_player_get_queue_action_no_active_queue(

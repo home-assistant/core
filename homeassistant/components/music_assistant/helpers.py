@@ -5,7 +5,6 @@ from contextlib import contextmanager
 import functools
 from typing import TYPE_CHECKING, Any
 
-from music_assistant_client.constants import IMPERSONATION_SCHEMA_VERSION
 from music_assistant_client.exceptions import InvalidServerVersion
 from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.auth import AuthProviderType
@@ -76,24 +75,6 @@ def user_from_context(context: Context | None) -> LinkedUser | None:
         user_id=context.user_id,
         required=False,
     )
-
-
-def acting_user(
-    mass: MusicAssistantClient, username: str | None, context: Context | None
-) -> str | LinkedUser | None:
-    """Return the Music Assistant user to act as for a command that accepts a user."""
-    # older servers refuse a user on these commands, so the caller only goes to newer ones
-    if TYPE_CHECKING:
-        assert mass.server_info is not None
-    supported = mass.server_info.schema_version >= IMPERSONATION_SCHEMA_VERSION
-    if username is not None:
-        if not supported:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="username_not_supported",
-            )
-        return username
-    return user_from_context(context) if supported else None
 
 
 @callback

@@ -67,7 +67,6 @@ from .const import (
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
 from .helpers import (
-    acting_user,
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
@@ -719,7 +718,11 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     active_queue.queue_id,
                     limit,
                     offset,
-                    user=acting_user(self.mass, username, self._context),
+                    user=(
+                        username
+                        if username is not None
+                        else user_from_context(self._context)
+                    ),
                 )
             details[ATTR_QUEUE_ITEMS] = [
                 queue_item_dict_from_mass_item(self.mass, item) for item in queue_items

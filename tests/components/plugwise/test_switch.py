@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,7 +46,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.cv_pomp_relay"},
+        {TargetKey.ENTITY_ID: "switch.cv_pomp_relay"},
         blocking=True,
     )
 
@@ -58,7 +58,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.fibaro_hc2_relay"},
+        {TargetKey.ENTITY_ID: "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -70,7 +70,7 @@ async def test_adam_climate_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.fibaro_hc2_relay"},
+        {TargetKey.ENTITY_ID: "switch.fibaro_hc2_relay"},
         blocking=True,
     )
 
@@ -90,7 +90,7 @@ async def test_adam_climate_switch_negative_testing(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.cv_pomp_relay"},
+            {TargetKey.ENTITY_ID: "switch.cv_pomp_relay"},
             blocking=True,
         )
 
@@ -103,7 +103,7 @@ async def test_adam_climate_switch_negative_testing(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.fibaro_hc2_relay"},
+            {TargetKey.ENTITY_ID: "switch.fibaro_hc2_relay"},
             blocking=True,
         )
 
@@ -162,13 +162,13 @@ async def test_deprecated_dhw_comfort_switch_warning(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -411,7 +411,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.koelkast_92c4a_relay"},
+        {TargetKey.ENTITY_ID: "switch.koelkast_92c4a_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 1
@@ -422,7 +422,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.droger_52559_relay"},
+        {TargetKey.ENTITY_ID: "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 2
@@ -433,7 +433,7 @@ async def test_stretch_switch_changes(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.droger_52559_relay"},
+        {TargetKey.ENTITY_ID: "switch.droger_52559_relay"},
         blocking=True,
     )
     assert mock_stretch.set_switch_state.call_count == 3

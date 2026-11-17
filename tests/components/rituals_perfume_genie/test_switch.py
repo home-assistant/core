@@ -18,8 +18,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -112,7 +112,7 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.genie"},
+        {TargetKey.ENTITY_ID: "switch.genie"},
         blocking=True,
     )
 
@@ -124,7 +124,7 @@ async def test_set_switch_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.genie"},
+        {TargetKey.ENTITY_ID: "switch.genie"},
         blocking=True,
     )
 
@@ -154,7 +154,7 @@ async def test_standby_led(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.genie_standby_led"},
+        {TargetKey.ENTITY_ID: "switch.genie_standby_led"},
         blocking=True,
     )
 
@@ -167,7 +167,7 @@ async def test_standby_led(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.genie_standby_led"},
+        {TargetKey.ENTITY_ID: "switch.genie_standby_led"},
         blocking=True,
     )
 
@@ -208,7 +208,7 @@ async def test_switch_action_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.genie"},
+            {TargetKey.ENTITY_ID: "switch.genie"},
             blocking=True,
         )
 
@@ -228,7 +228,7 @@ async def test_switch_action_authentication_error(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.genie"},
+            {TargetKey.ENTITY_ID: "switch.genie"},
             blocking=True,
         )
     await hass.async_block_till_done()

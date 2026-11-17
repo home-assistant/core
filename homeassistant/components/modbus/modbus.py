@@ -341,12 +341,6 @@ class ModbusHub:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
-        if not result:
-            error = (
-                f"Error: device: {slave} address: {address} -> pymodbus returned None"
-            )
-            self._log_error(error)
-            return None
         if not hasattr(result, entry.attr):
             error = f"Error: device: {slave} address: {address} -> {result!s}"
             self._log_error(error)
