@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError
 from bleak.backends.device import BLEDevice
+import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.mammotion.const import (
@@ -221,6 +222,63 @@ async def test_user_step_no_discovery(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    "account",
+    [
+        pytest.param("User@Example.com", id="account_name"),
+        pytest.param("user123", id="account_id"),
+    ],
+)
+async def test_wifi_step_account_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mammotion_http: MagicMock,
+    account: str,
+) -> None:
+    """Test a configured account aborts before logging in.
+
+    The login would supersede the cloud session the configured entry uses.
+    """
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ACCOUNTNAME: account, CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_mammotion_http.login_v2.assert_not_awaited()
+
+
+async def test_user_step_skips_ignored_mower(hass: HomeAssistant) -> None:
+    """Test a mower whose discovery was ignored is not offered again."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="aa:bb:cc:dd:ee:ff",
+    ).add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.mammotion.config_flow.async_discovered_service_info",
+            return_value=[_get_discovery_info()],
+        ),
+        patch(
+            "homeassistant.components.bluetooth.async_ble_device_from_address",
+            return_value=_get_mock_device(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "wifi"
+
+
+@pytest.mark.parametrize(
     ("failure", "expected_error"),
     [
         pytest.param({"login_info": None}, "invalid_auth", id="invalid_auth"),
@@ -278,6 +336,13 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    schema = result["data_schema"]
+    assert (
+        get_schema_suggested_value(schema.schema, CONF_ACCOUNTNAME) == "old@example.com"
+    )
+    # The stored password must not be sent to the browser as a default.
+    with pytest.raises(probatio.Invalid):
+        schema({CONF_ACCOUNTNAME: "old@example.com"})
 
     mock_http = MagicMock()
     mock_http.login_v2 = AsyncMock(return_value=None)

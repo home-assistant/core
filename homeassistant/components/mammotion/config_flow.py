@@ -169,11 +169,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             return await self.async_step_wifi()
 
-        current_addresses = self._async_current_ids()
+        # Ignored discoveries count too, so a dismissed mower is not offered again.
+        current_ids = {format_mac(uid) for uid in self._async_current_ids() if uid}
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             name = discovery_info.name
-            if address in current_addresses:
+            if format_mac(address) in current_ids:
                 continue
             if name is None or not name.startswith(DEVICE_SUPPORT):
                 continue
@@ -198,6 +199,18 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             step_id="user",
+        )
+
+    def _account_configured(self, account: str) -> bool:
+        """Return whether an entry already holds this account name or ID."""
+        account = account.casefold()
+        return any(
+            account
+            in (
+                entry.data[CONF_ACCOUNTNAME].casefold(),
+                entry.data[CONF_ACCOUNT_ID].casefold(),
+            )
+            for entry in self._async_current_entries(include_ignore=False)
         )
 
     async def _async_validate_login(
@@ -230,6 +243,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             account = user_input[CONF_ACCOUNTNAME]
             password = user_input[CONF_PASSWORD]
+            # A login supersedes the account's cloud session, which the
+            # configured entry is still using.
+            if self._account_configured(account):
+                return self.async_abort(reason="already_configured")
             errors, user_account = await self._async_validate_login(account, password)
 
             if not errors:
@@ -315,17 +332,18 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        schema = {
-            probatio.Required(
-                CONF_ACCOUNTNAME, default=entry.data.get(CONF_ACCOUNTNAME)
-            ): cv.string,
-            probatio.Required(
-                probatio.Secret(CONF_PASSWORD), default=entry.data.get(CONF_PASSWORD)
-            ): cv.string,
-        }
+        # No default for the password, which would send it to the browser.
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_ACCOUNTNAME): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+            }
+        )
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=probatio.Schema(schema),
+            data_schema=self.add_suggested_values_to_schema(
+                schema, {CONF_ACCOUNTNAME: entry.data[CONF_ACCOUNTNAME]}
+            ),
             errors=errors,
         )
