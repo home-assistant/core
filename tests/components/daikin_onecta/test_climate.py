@@ -5,7 +5,6 @@ from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
-from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaConnectionError
 from daikin_onecta.models import ManagementPoint
 import pytest
@@ -54,10 +53,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import DOMAIN, MockOnectaClient
+from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
-
-_ACTUAL_PATCH_CHARACTERISTIC = OnectaClient.patch_characteristic
 
 
 def test_create_climate_entities_deduplicates_targets_per_management_point() -> None:
@@ -231,16 +228,14 @@ async def test_async_climate_command_uses_bound_library_client() -> None:
     climate.set_fan_mode.assert_awaited_once_with("heating", "quiet")
 
 
-async def test_set_fixed_fan_mode_updates_cached_speed(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     """Write a fixed fan speed and update the captured cached operation mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock()
     device.id = "device"
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     fan_speed = SimpleNamespace(
         current_mode=SimpleNamespace(
             settable=True, value=FANMODE_FIXED, values=[FANMODE_FIXED]
@@ -259,25 +254,17 @@ async def test_set_fixed_fan_mode_updates_cached_speed(
 
     await entity.async_set_fan_mode("2")
 
-    device.patch.assert_awaited_once_with(
-        "device",
-        "zone",
-        "fanControl",
-        "/operationModes/heating/fanSpeed/modes/fixed",
-        2,
-    )
+    coordinator.async_execute_command.assert_awaited_once()
     assert fan_speed.modes[FANMODE_FIXED].value == 2
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-async def test_set_vertical_swing_mode_ignores_current_value(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_vertical_swing_mode_ignores_current_value() -> None:
     """Do not issue a cloud command when vertical swing already matches."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(name="Device")
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_attr_swing_mode", SWING_ON)
     entity.coordinator = coordinator
@@ -287,13 +274,11 @@ async def test_set_vertical_swing_mode_ignores_current_value(
     await entity.async_set_swing_mode(SWING_ON)
 
     entity._async_set_swing.assert_not_awaited()
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
     coordinator.async_update_listeners.assert_not_called()
 
 
-async def test_set_hvac_mode_keeps_power_state_when_power_command_fails(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_hvac_mode_keeps_power_state_when_power_command_fails() -> None:
     """Do not update the power cache when Daikin rejects an HVAC power command."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock()
@@ -301,7 +286,7 @@ async def test_set_hvac_mode_keeps_power_state_when_power_command_fails(
     device.name = "Device"
     device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=False)
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="on", settable=True)
     )
@@ -333,15 +318,13 @@ def test_get_current_temperature_uses_leaving_water_for_offset() -> None:
     assert entity._get_current_temperature() == 32.5
 
 
-async def test_set_temperature_rejects_missing_operation_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_temperature_rejects_missing_operation_mode() -> None:
     """Reject a temperature write when Daikin omits the operation mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(name="Device")
     object.__setattr__(entity, "_device", device)
     entity.coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(entity.coordinator, device)
+    entity.coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=None)
 
@@ -349,18 +332,16 @@ async def test_set_temperature_rejects_missing_operation_mode(
         await entity.async_set_temperature(temperature=21)
 
     assert err.value.translation_key == "climate_operation_mode_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_set_temperature_rejects_unavailable_setpoint(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_temperature_rejects_unavailable_setpoint() -> None:
     """Reject a temperature write when its setpoint is not writable."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(name="Device")
     object.__setattr__(entity, "_device", device)
     entity.coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(entity.coordinator, device)
+    entity.coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
     entity._get_setpoint = MagicMock(return_value=MagicMock(settable=False))
@@ -369,18 +350,16 @@ async def test_set_temperature_rejects_unavailable_setpoint(
         await entity.async_set_temperature(temperature=21)
 
     assert err.value.translation_key == "climate_temperature_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_set_temperature_rejects_unsupported_hvac_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
     """Reject an unsupported HVAC mode before changing the temperature."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.patch = AsyncMock()
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock()
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_modes", [HVACMode.OFF, HVACMode.COOL])
@@ -390,18 +369,16 @@ async def test_set_temperature_rejects_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await entity.async_set_temperature(hvac_mode=HVACMode.HEAT, temperature=21)
 
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_set_hvac_mode_rejects_unavailable_native_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_hvac_mode_rejects_unavailable_native_mode() -> None:
     """Reject a requested HVAC mode before changing the device power state."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(name="Device")
     object.__setattr__(entity, "_device", device)
     entity.coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(entity.coordinator, device)
+    entity.coordinator.async_execute_command = AsyncMock()
     entity._native_hvac_mode = MagicMock(return_value=None)
     entity._climate_control = MagicMock(return_value=None)
 
@@ -409,18 +386,15 @@ async def test_set_hvac_mode_rejects_unavailable_native_mode(
         await entity.async_set_hvac_mode(HVACMode.HEAT)
 
     assert err.value.translation_key == "climate_hvac_mode_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_enable_boost_stops_after_failed_turn_on(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_enable_boost_stops_after_failed_turn_on() -> None:
     """Do not enable boost when the prerequisite turn-on fails."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_mode", HVACMode.OFF)
@@ -476,15 +450,13 @@ async def test_enable_and_disable_away_preset_updates_cache(
     assert not holiday_mode.value.enabled
 
 
-async def test_enable_and_disable_preset_updates_cache(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_enable_and_disable_preset_updates_cache() -> None:
     """Update a non-holiday preset only after its cloud command succeeds."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     powerful_mode = SimpleNamespace(value="off")
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -497,10 +469,7 @@ async def test_enable_and_disable_preset_updates_cache(
     assert await entity._async_disable_preset_mode(PRESET_BOOST)
     assert powerful_mode.value == "off"
 
-    assert device.patch.await_args_list == [
-        (("device", "zone", "powerfulMode", "", "on"), {}),
-        (("device", "zone", "powerfulMode", "", "off"), {}),
-    ]
+    assert coordinator.async_execute_command.await_count == 2
 
 
 @pytest.mark.parametrize(
@@ -511,7 +480,7 @@ async def test_enable_and_disable_preset_updates_cache(
     ],
 )
 async def test_preset_command_failure_keeps_cached_state(
-    method: str, initial_value: str, mock_onecta_client: MockOnectaClient
+    method: str, initial_value: str
 ) -> None:
     """Leave the cached preset unchanged when Daikin rejects its command."""
     entity = object.__new__(DaikinClimate)
@@ -520,7 +489,7 @@ async def test_preset_command_failure_keeps_cached_state(
     device.name = "Device"
     device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=False)
     powerful_mode = SimpleNamespace(value=initial_value)
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
@@ -566,7 +535,7 @@ async def test_turn_ignores_already_matching_power_state(
     [("async_turn_on", "off"), ("async_turn_off", "on")],
 )
 async def test_turn_handles_management_point_removed_after_command(
-    method: str, initial_value: str, mock_onecta_client: MockOnectaClient
+    method: str, initial_value: str
 ) -> None:
     """Do not update stale cached state after its management point disappears."""
     entity = object.__new__(DaikinClimate)
@@ -575,7 +544,7 @@ async def test_turn_handles_management_point_removed_after_command(
     device.name = "Device"
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value=initial_value, settable=True)
     )
@@ -586,6 +555,7 @@ async def test_turn_handles_management_point_removed_after_command(
 
     await getattr(entity, method)()
 
+    coordinator.async_execute_command.assert_awaited_once()
     coordinator.async_update_listeners.assert_not_called()
 
 
@@ -600,14 +570,13 @@ async def test_turn_keeps_cached_power_state_after_failed_command(
     method: str,
     initial_value: str,
     translation_key: str,
-    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not publish an unsuccessful power command."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
     device.patch = AsyncMock(return_value=False)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=False)
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value=initial_value, settable=True)
     )
@@ -624,16 +593,14 @@ async def test_turn_keeps_cached_power_state_after_failed_command(
     coordinator.async_update_listeners.assert_not_called()
 
 
-async def test_set_hvac_mode_publishes_successful_power_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_hvac_mode_publishes_successful_power_write() -> None:
     """Publish a successful power write before a failed mode write."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
     device.patch = AsyncMock(side_effect=[True, False])
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(side_effect=[True, False])
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="off", settable=True),
         operation_mode=SimpleNamespace(
@@ -658,16 +625,14 @@ async def test_set_hvac_mode_publishes_successful_power_write(
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-async def test_set_hvac_mode_updates_replaced_management_point(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_hvac_mode_updates_replaced_management_point() -> None:
     """Update the current model when polling replaces it during a command."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_management_point = SimpleNamespace(
         on_off_mode=SimpleNamespace(value="off", settable=True),
         operation_mode=SimpleNamespace(
@@ -732,15 +697,13 @@ async def test_set_hvac_mode_preserves_matching_native_mode(
     device.patch.assert_not_awaited()
 
 
-async def test_set_hvac_mode_uses_advertised_native_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_hvac_mode_uses_advertised_native_mode() -> None:
     """Use an advertised native mode instead of a generic Daikin value."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     operation_mode = SimpleNamespace(
         value="cooling", settable=True, values=["cooling", "heatingNight"]
     )
@@ -757,9 +720,7 @@ async def test_set_hvac_mode_uses_advertised_native_mode(
 
     await entity.async_set_hvac_mode(HVACMode.HEAT)
 
-    device.patch.assert_awaited_once_with(
-        "device", "zone", "operationMode", "", "heatingNight"
-    )
+    coordinator.async_execute_command.assert_awaited_once()
     assert operation_mode.value == "heatingNight"
 
 
@@ -934,16 +895,14 @@ def test_observed_off_state_is_not_advertised_without_writable_power() -> None:
     assert entity._get_hvac_modes() == [HVACMode.HEAT]
 
 
-async def test_set_fan_mode_publishes_successful_fixed_mode_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     """Publish fixed mode when the following fan-speed write fails."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.name = "Device"
     device.patch = AsyncMock(side_effect=[True, False])
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(side_effect=[True, False])
     fan_speed = SimpleNamespace(
         current_mode=SimpleNamespace(settable=True, value="auto"),
         modes={FANMODE_FIXED: SimpleNamespace(value=1, settable=True)},
@@ -980,15 +939,13 @@ async def test_set_fan_mode_rejects_missing_control_data() -> None:
     assert err.value.translation_key == "fan_control_unavailable"
 
 
-async def test_set_fan_mode_rejects_unadvertised_value(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_rejects_unadvertised_value() -> None:
     """Reject a fan mode that the device does not advertise."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(name="Device")
     object.__setattr__(entity, "_device", device)
     entity.coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(entity.coordinator, device)
+    entity.coordinator.async_execute_command = AsyncMock()
     entity._fan_operation = MagicMock(
         return_value=SimpleNamespace(fan_speed=SimpleNamespace())
     )
@@ -1001,7 +958,7 @@ async def test_set_fan_mode_rejects_unadvertised_value(
         await entity.async_set_fan_mode("quiet")
 
     assert err.value.translation_key == "fan_mode_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -1030,15 +987,13 @@ async def test_climate_rejects_unavailable_controls(method: str, value: str) -> 
     }
 
 
-async def test_set_fan_mode_updates_captured_operation_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_updates_captured_operation_mode() -> None:
     """Update the targeted fan mode when polling replaces the active mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_fan = SimpleNamespace(
         fan_speed=SimpleNamespace(
             current_mode=SimpleNamespace(settable=True, value="auto"), modes={}
@@ -1084,24 +1039,16 @@ async def test_set_fan_mode_updates_captured_operation_mode(
 
     assert captured_fan.fan_speed.current_mode.value == "quiet"
     assert active_fan.fan_speed.current_mode.value == "auto"
-    device.patch.assert_awaited_once_with(
-        "device",
-        "zone",
-        "fanControl",
-        "/operationModes/heating/fanSpeed/currentMode",
-        "quiet",
-    )
+    coordinator.async_execute_command.assert_awaited_once()
 
 
-async def test_set_swing_mode_updates_captured_operation_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_swing_mode_updates_captured_operation_mode() -> None:
     """Update the targeted swing mode when polling replaces the active mode."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device")
     device.patch = AsyncMock(return_value=True)
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     previous_fan = SimpleNamespace(
         fan_direction=SimpleNamespace(
             vertical=SimpleNamespace(
@@ -1157,13 +1104,7 @@ async def test_set_swing_mode_updates_captured_operation_mode(
 
     assert captured_fan.fan_direction.vertical.current_mode.value == "swing"
     assert active_fan.fan_direction.vertical.current_mode.value == "stop"
-    device.patch.assert_awaited_once_with(
-        "device",
-        "zone",
-        "fanControl",
-        "/operationModes/heating/fanDirection/vertical/currentMode",
-        "swing",
-    )
+    coordinator.async_execute_command.assert_awaited_once()
 
 
 async def test_set_swing_mode_rejects_unsupported_value() -> None:
@@ -1315,19 +1256,14 @@ async def test_set_preset_mode_publishes_successful_disable() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
-@pytest.mark.parametrize(
-    ("patch_result", "token_rejected"),
-    [(True, False), (False, False), (False, True)],
-)
+@pytest.mark.parametrize("patch_result", [True, False])
 async def test_climate_service_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     patch_result: bool,
-    token_rejected: bool,
     mock_onecta_client: MockOnectaClient,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate services through the Home Assistant integration API."""
     setpoint = SimpleNamespace(
@@ -1368,12 +1304,7 @@ async def test_climate_service_updates_entity_state(
     )
     device.gateway_metadata = (None, None, None)
     device.management_point.return_value = climate_control
-    if token_rejected:
-        monkeypatch.setattr(
-            "homeassistant.components.daikin_onecta.coordinator.OnectaClient.patch_characteristic",
-            _ACTUAL_PATCH_CHARACTERISTIC,
-        )
-    elif not patch_result:
+    if not patch_result:
         mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
             "test connection failure", method="PATCH", path="/test"
         )
@@ -1418,19 +1349,6 @@ async def test_climate_service_updates_entity_state(
     assert child_entry.parent_device_id == gateway_entry.id
     assert entity_registry.async_get(entity_id).device_id == child_entry.id
 
-    if token_rejected:
-        # Exercise the pinned library's real request contract and the climate
-        # adapter using a simulated API rejection.
-        response = MagicMock(status=401, headers={})
-        response.text = AsyncMock(return_value="Unauthorized")
-        request_context = MagicMock()
-        request_context.__aenter__ = AsyncMock(return_value=response)
-        request_context.__aexit__ = AsyncMock(return_value=None)
-        session = MagicMock()
-        session.request = MagicMock(return_value=request_context)
-        coordinator.client._session = session
-        coordinator.client._token_provider = AsyncMock(return_value="test-token")
-
     service_call = hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
@@ -1455,35 +1373,75 @@ async def test_climate_service_updates_entity_state(
         == expected_temperature
     )
 
-    if token_rejected:
-        request = coordinator.client._session.request
-        request.assert_called_once()
-        assert request.call_args.args == (
-            "PATCH",
-            "https://api.onecta.daikineurope.com/v1/gateway-devices/gateway/"
-            "management-points/zone/characteristics/temperatureControl",
-        )
-        assert request.call_args.kwargs["headers"]["Authorization"] == (
-            "Bearer test-token"
-        )
-        assert request.call_args.kwargs["json"] == {
-            "value": 21,
-            "path": "/operationModes/heating/setpoints/roomTemperature",
-        }
-        mock_onecta_client.patch_characteristic.assert_not_awaited()
-        assert coordinator.last_patch_call is None
-    else:
-        mock_onecta_client.patch_characteristic.assert_awaited_once_with(
-            "gateway",
-            "zone",
-            "temperatureControl",
-            21,
-            path="/operationModes/heating/setpoints/roomTemperature",
-        )
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        "gateway",
+        "zone",
+        "temperatureControl",
+        21,
+        path="/operationModes/heating/setpoints/roomTemperature",
+    )
 
     device.async_update_device_registry.reset_mock()
     coordinator.async_update_listeners()
     device.async_update_device_registry.assert_not_called()
+
+
+async def test_climate_service_rejected_token_preserves_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Translate rejected credentials when a climate action reaches Daikin."""
+    response = MagicMock(status=401, headers={})
+    response.text = AsyncMock(return_value="Unauthorized")
+    request_context = MagicMock()
+    request_context.__aenter__ = AsyncMock(return_value=response)
+    request_context.__aexit__ = AsyncMock(return_value=None)
+    session = MagicMock()
+    session.request = MagicMock(return_value=request_context)
+    with patch(
+        "homeassistant.components.daikin_onecta.coordinator.async_get_clientsession",
+        return_value=session,
+    ):
+        await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
+    coordinator = config_entry.runtime_data
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+    state_before = hass.states.get(entity_id)
+    assert state_before is not None
+    temperature_before = state_before.attributes[
+        ClimateEntityStateAttribute.TARGET_TEMPERATURE
+    ]
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 22},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "set_temperature_failed"
+    state_after = hass.states.get(entity_id)
+    assert state_after is not None
+    assert (
+        state_after.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
+        == temperature_before
+    )
+    session.request.assert_called_once()
+    request = session.request
+    assert request.call_args.args == (
+        "PATCH",
+        "https://api.onecta.daikineurope.com/v1/gateway-devices/"
+        f"{next(iter(coordinator.data))}/management-points/climateControl/"
+        "characteristics/temperatureControl",
+    )
+    assert request.call_args.kwargs["headers"]["Authorization"] == (
+        f"Bearer {FAKE_ACCESS_TOKEN}"
+    )
+    assert request.call_args.kwargs["json"] == {
+        "value": 22,
+        "path": "/operationModes/heating/setpoints/roomTemperature",
+    }
 
 
 @pytest.mark.parametrize(
@@ -1605,13 +1563,13 @@ async def test_native_temperature_unit(
 
 @pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
 async def test_climate_turn_rejects_unknown_power_state(
-    method: str, mock_onecta_client: MockOnectaClient
+    method: str,
 ) -> None:
     """Reject turn actions when Daikin omits the current power value."""
     entity = object.__new__(DaikinClimate)
     device = MagicMock(id="device", name="Device")
     coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(coordinator, device)
+    coordinator.async_execute_command = AsyncMock(return_value=True)
     climate_control = SimpleNamespace(
         on_off_mode=SimpleNamespace(value=None, settable=True)
     )
@@ -1624,7 +1582,7 @@ async def test_climate_turn_rejects_unknown_power_state(
         await getattr(entity, method)()
 
     assert err.value.translation_key == "climate_power_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    coordinator.async_execute_command.assert_not_awaited()
     coordinator.async_update_listeners.assert_not_called()
 
 
@@ -2099,7 +2057,6 @@ def test_get_fan_mode_handles_omitted_values(
 
 def _make_fan_command_entity(
     fan_operation: SimpleNamespace,
-    mock_onecta_client: MockOnectaClient,
 ) -> DaikinClimate:
     """Build a minimally initialized climate entity for fan command tests."""
     entity = object.__new__(DaikinClimate)
@@ -2108,7 +2065,7 @@ def _make_fan_command_entity(
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     entity.coordinator = MagicMock()
-    mock_onecta_client.bind_coordinator(entity.coordinator, device)
+    entity.coordinator.async_execute_command = AsyncMock(return_value=True)
     entity._fan_operation = MagicMock(return_value=fan_operation)
     entity._climate_control = MagicMock(
         return_value=SimpleNamespace(operation_mode=SimpleNamespace(value="heating"))
@@ -2132,27 +2089,23 @@ def _fan_operation(
     )
 
 
-async def test_set_fan_mode_rejects_fixed_speed_without_writable_control(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_rejects_fixed_speed_without_writable_control() -> None:
     """Reject a numeric fan speed if its fixed-speed control is not writable."""
     fan_operation = _fan_operation("auto")
     fan_operation.fan_speed.modes[FANMODE_FIXED].settable = False
-    entity = _make_fan_command_entity(fan_operation, mock_onecta_client)
+    entity = _make_fan_command_entity(fan_operation)
 
     with pytest.raises(ServiceValidationError) as err:
         await entity.async_set_fan_mode("2")
 
     assert err.value.translation_key == "fan_control_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_set_fan_mode_reports_failed_fixed_mode_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_reports_failed_fixed_mode_write() -> None:
     """Report when the cloud rejects switching to fixed fan mode."""
-    entity = _make_fan_command_entity(_fan_operation("auto"), mock_onecta_client)
-    entity._device.patch.return_value = False
+    entity = _make_fan_command_entity(_fan_operation("auto"))
+    entity.coordinator.async_execute_command.return_value = False
 
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_fan_mode("2")
@@ -2160,37 +2113,31 @@ async def test_set_fan_mode_reports_failed_fixed_mode_write(
     assert err.value.translation_key == "set_fan_mode_failed"
 
 
-async def test_set_fan_mode_handles_disappearing_data_after_fixed_mode_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_handles_disappearing_data_after_fixed_mode_write() -> None:
     """Stop safely if a successful mode write is followed by missing state."""
-    entity = _make_fan_command_entity(_fan_operation("auto"), mock_onecta_client)
+    entity = _make_fan_command_entity(_fan_operation("auto"))
     entity._fan_operation = MagicMock(side_effect=[_fan_operation("auto"), None])
 
     await entity.async_set_fan_mode("2")
 
-    assert mock_onecta_client.patch_characteristic.await_count == 1
+    entity.coordinator.async_execute_command.assert_awaited_once()
 
 
-async def test_set_fan_mode_handles_disappearing_data_after_speed_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_handles_disappearing_data_after_speed_write() -> None:
     """Stop safely if updated fan state disappears after setting its speed."""
-    entity = _make_fan_command_entity(_fan_operation("auto"), mock_onecta_client)
+    entity = _make_fan_command_entity(_fan_operation("auto"))
     entity._fan_operation = MagicMock(
         side_effect=[_fan_operation("auto"), _fan_operation(FANMODE_FIXED), None]
     )
 
     await entity.async_set_fan_mode("2")
 
-    assert mock_onecta_client.patch_characteristic.await_count == 2
+    assert entity.coordinator.async_execute_command.await_count == 2
 
 
-async def test_set_fan_mode_handles_missing_fixed_speed_after_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_handles_missing_fixed_speed_after_write() -> None:
     """Stop safely if fixed-speed metadata disappears after the write."""
-    entity = _make_fan_command_entity(_fan_operation("auto"), mock_onecta_client)
+    entity = _make_fan_command_entity(_fan_operation("auto"))
     updated = _fan_operation(FANMODE_FIXED)
     after_speed_write = _fan_operation(FANMODE_FIXED)
     after_speed_write.fan_speed.modes = {}
@@ -2200,42 +2147,36 @@ async def test_set_fan_mode_handles_missing_fixed_speed_after_write(
 
     await entity.async_set_fan_mode("2")
 
-    assert mock_onecta_client.patch_characteristic.await_count == 2
+    assert entity.coordinator.async_execute_command.await_count == 2
 
 
-async def test_set_fan_mode_rejects_read_only_current_mode(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_rejects_read_only_current_mode() -> None:
     """Reject a standard fan-mode write when the characteristic is read-only."""
     entity = _make_fan_command_entity(
         SimpleNamespace(
             fan_speed=SimpleNamespace(
                 current_mode=SimpleNamespace(value="auto", settable=False), modes={}
             )
-        ),
-        mock_onecta_client,
+        )
     )
 
     with pytest.raises(ServiceValidationError) as err:
         await entity.async_set_fan_mode("quiet")
 
     assert err.value.translation_key == "fan_control_unavailable"
-    mock_onecta_client.patch_characteristic.assert_not_awaited()
+    entity.coordinator.async_execute_command.assert_not_awaited()
 
 
-async def test_set_fan_mode_reports_failed_standard_mode_write(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_reports_failed_standard_mode_write() -> None:
     """Report when the cloud rejects a standard fan-mode write."""
     entity = _make_fan_command_entity(
         SimpleNamespace(
             fan_speed=SimpleNamespace(
                 current_mode=SimpleNamespace(value="auto", settable=True), modes={}
             )
-        ),
-        mock_onecta_client,
+        )
     )
-    entity._device.patch.return_value = False
+    entity.coordinator.async_execute_command.return_value = False
 
     with pytest.raises(HomeAssistantError) as err:
         await entity.async_set_fan_mode("quiet")
@@ -2243,17 +2184,14 @@ async def test_set_fan_mode_reports_failed_standard_mode_write(
     assert err.value.translation_key == "set_fan_mode_failed"
 
 
-async def test_set_fan_mode_handles_disappearing_standard_mode_data(
-    mock_onecta_client: MockOnectaClient,
-) -> None:
+async def test_set_fan_mode_handles_disappearing_standard_mode_data() -> None:
     """Stop safely if fan data disappears after a standard mode write."""
     entity = _make_fan_command_entity(
         SimpleNamespace(
             fan_speed=SimpleNamespace(
                 current_mode=SimpleNamespace(value="auto", settable=True), modes={}
             )
-        ),
-        mock_onecta_client,
+        )
     )
     entity._fan_operation = MagicMock(
         side_effect=[
@@ -2269,7 +2207,7 @@ async def test_set_fan_mode_handles_disappearing_standard_mode_data(
 
     await entity.async_set_fan_mode("quiet")
 
-    assert mock_onecta_client.patch_characteristic.await_count == 1
+    entity.coordinator.async_execute_command.assert_awaited_once()
 
 
 @pytest.mark.parametrize(

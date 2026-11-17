@@ -1,11 +1,10 @@
 """Shared fixtures for the Daikin Onecta integration tests."""
 
-from collections.abc import Awaitable, Callable
 import time
-from typing import cast
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
-from daikin_onecta import ClimateControlClient, OnectaClient, get_account_id
+from daikin_onecta import get_account_id
+from daikin_onecta.models import GatewayDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -14,64 +13,17 @@ from homeassistant.core import HomeAssistant
 
 
 class MockOnectaClient:
-    """Shared library-client mock for Daikin climate command tests."""
+    """Mocks for the Onecta client's cloud API methods."""
 
     def __init__(self) -> None:
         """Initialize the mock client and its recorded calls."""
         self.patch_characteristic = AsyncMock()
-        self.post_management_point = AsyncMock()
-        self.client = MagicMock()
-        self.client.patch_characteristic = self.patch_characteristic
-        self.client.post_management_point = self.post_management_point
-        self.client.climate_control.side_effect = (
-            lambda gateway_id, management_point_id: ClimateControlClient(
-                self.client, gateway_id, management_point_id
-            )
-        )
-
-    def bind_coordinator(
-        self, coordinator: MagicMock, device: MagicMock | None = None
-    ) -> None:
-        """Route a lightweight coordinator mock through the shared client."""
-        result = True
-
-        async def patch_characteristic(
-            gateway_id: str,
-            management_point_id: str,
-            characteristic: str,
-            value: object,
-            *,
-            path: str | None = None,
-        ) -> None:
-            nonlocal result
-            if device is not None and isinstance(device.patch, AsyncMock):
-                result = bool(
-                    await device.patch(
-                        gateway_id,
-                        management_point_id,
-                        characteristic,
-                        path or "",
-                        value,
-                    )
-                )
-            else:
-                result = True
-
-        async def execute_command(
-            command: Callable[[OnectaClient], Awaitable[None]],
-        ) -> bool:
-            nonlocal result
-            result = True
-            self.patch_characteristic.side_effect = patch_characteristic
-            await command(cast("OnectaClient", self.client))
-            return result
-
-        coordinator.async_execute_command = AsyncMock(side_effect=execute_command)
+        self.get_gateway_devices = AsyncMock()
 
 
 @pytest.fixture
 def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
-    """Mock writes made by the shared Onecta client."""
+    """Mock calls made by the shared Onecta client."""
     mock_client = MockOnectaClient()
 
     async def mock_patch_characteristic(
@@ -91,9 +43,16 @@ def mock_onecta_client(monkeypatch: pytest.MonkeyPatch) -> MockOnectaClient:
             path=path,
         )
 
+    async def mock_get_gateway_devices(_client: object) -> list[GatewayDevice]:
+        return await mock_client.get_gateway_devices()
+
     monkeypatch.setattr(
         "homeassistant.components.daikin_onecta.coordinator.OnectaClient.patch_characteristic",
         mock_patch_characteristic,
+    )
+    monkeypatch.setattr(
+        "homeassistant.components.daikin_onecta.coordinator.OnectaClient.get_gateway_devices",
+        mock_get_gateway_devices,
     )
     return mock_client
 

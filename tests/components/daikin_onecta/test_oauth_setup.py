@@ -1,6 +1,6 @@
 """Tests for OAuth2 setup error handling (HA 2026.3+)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
 from daikin_onecta import OnectaAuthenticationError
@@ -22,6 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
+from .conftest import MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
 
 
@@ -30,8 +31,12 @@ async def test_setup_rejected_cloud_token_requires_authentication(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Classify rejected API tokens as authentication failures, not retries."""
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+        status=status, method="GET", path="/v1/gateway-devices"
+    )
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -41,14 +46,10 @@ async def test_setup_rejected_cloud_token_requires_authentication(
             "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
             return_value="token",
         ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-            side_effect=OnectaAuthenticationError(
-                status=status, method="GET", path="/v1/gateway-devices"
-            ),
-        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -60,30 +61,26 @@ async def test_poll_rejected_cloud_token_stops_polling_without_reauth(
     config_entry: MockConfigEntry,
     status: int,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Report authentication failure without adding a reauthentication flow."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
-    with patch(
-        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-        new=AsyncMock(
-            side_effect=OnectaAuthenticationError(
-                status=status, method="GET", path="/v1/gateway-devices"
-            )
-        ),
-    ) as get_cloud_devices:
-        assert coordinator.update_interval is not None
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaAuthenticationError(
+        status=status, method="GET", path="/v1/gateway-devices"
+    )
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        get_cloud_devices.assert_awaited_once()
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
-        # An auth failure stops scheduled polling when no reauth flow is supported.
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        get_cloud_devices.assert_awaited_once()
+    # An auth failure stops scheduled polling when no reauth flow is supported.
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
     assert not coordinator.last_update_success
     assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
@@ -96,6 +93,7 @@ async def test_poll_refresh_token_rejection_marks_climate_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Mark climate entities unavailable when OAuth refresh requires reauth."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
@@ -103,14 +101,11 @@ async def test_poll_refresh_token_rejection_marks_climate_unavailable(
     climate_entity_id = hass.states.async_entity_ids("climate")[0]
     assert hass.states.get(climate_entity_id).state != STATE_UNAVAILABLE
 
-    with patch(
-        "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator._async_get_cloud_devices",
-        new=AsyncMock(side_effect=_reauth_error()),
-    ):
-        assert coordinator.update_interval is not None
-        freezer.tick(coordinator.update_interval)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    mock_onecta_client.get_gateway_devices.side_effect = _reauth_error()
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert not coordinator.last_update_success
     assert hass.states.get(climate_entity_id).state == STATE_UNAVAILABLE

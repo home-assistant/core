@@ -39,13 +39,52 @@
   "entity": {
     "climate": {
       "calculated_leaving_water_temperature": {
-        "name": "Calculated leaving water temperature"
+        "name": "Calculated leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          }
+        }
       },
       "leaving_water_offset": {
-        "name": "Leaving water offset"
+        "name": "Leaving water offset",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          }
+        }
       },
       "leaving_water_temperature": {
-        "name": "Leaving water temperature"
+        "name": "Leaving water temperature",
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "quiet": "Quiet"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          }
+        }
       },
       "room_temperature": {
         "name": "Room temperature",
