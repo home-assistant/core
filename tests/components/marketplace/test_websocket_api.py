@@ -1402,6 +1402,34 @@ async def test_repository_uninstall_releases_a_shared_domain(
     assert fork.data.installed is True
 
 
+async def test_repository_uninstall_removes_shared_files_by_default(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test an uninstall not asking for a release removes shared files too.
+
+    A critical repository is removed that way, its files must not stay loadable
+    because another repository shares them.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.domain = "example"
+    repository.data.installed = True
+    fork = IntegrationRepository(marketplace, "fork/example")
+    fork.data.id = "9001"
+    fork.data.domain = "example"
+    fork.data.installed = True
+    marketplace.repositories.register(fork)
+
+    with (
+        patch.object(type(repository), "_async_uninstall") as uninstall,
+        patch.object(type(repository), "_async_release") as release,
+    ):
+        await repository.uninstall()
+
+    uninstall.assert_awaited_once()
+    release.assert_not_called()
+
+
 async def test_repository_release_refused_once_nothing_shares(
     hass: HomeAssistant,
     marketplace: MarketplaceManager,

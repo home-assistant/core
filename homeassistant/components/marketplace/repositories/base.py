@@ -990,8 +990,9 @@ class Repository:
     async def uninstall(self, *, release_only: bool = False) -> None:
         """Uninstall, not while an install of the repository is running.
 
-        With release_only, only forget it while another installed repository
-        shares its files, and keep them otherwise.
+        With release_only, the files stay and the install is only forgotten,
+        which another installed repository sharing them must allow. Otherwise
+        the files are removed, shared or not, as a critical repository needs.
         """
         if self.installing:
             raise RepositoryBusyError(self.data.full_name)
@@ -1004,13 +1005,13 @@ class Repository:
                     translation_key="repository_not_installed",
                     translation_placeholders={"repository": self.data.full_name},
                 )
-            if (owner := self.sharing_install()) is not None:
+            if not release_only:
+                await self._async_uninstall()
+            elif (owner := self.sharing_install()) is not None:
                 await self._async_release(owner)
-            elif release_only:
+            else:
                 # The repository sharing them was uninstalled meanwhile
                 raise RepositoryInUseError(self.data.full_name)
-            else:
-                await self._async_uninstall()
 
     def sharing_install(self) -> Repository | None:
         """Return another installed repository using the same files, if any."""
