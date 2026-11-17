@@ -11,6 +11,7 @@ from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 from json.decoder import JSONDecodeError
 import logging
+import re
 from socket import gethostbyaddr
 from typing import Any, Concatenate, Final
 
@@ -122,6 +123,24 @@ class AccessMethod(Enum):
     WEBSOCKET = "websocket"
 
 
+def auth_error_message(
+    username: str | None,
+    remote_host: str,
+    remote_addr: IPv4Address | IPv6Address,
+    access_method: AccessMethod,
+) -> str:
+    """Generate an authentication error message for the purpose of logging. Returns a string."""
+    if access_method is AccessMethod.LOGIN:
+        msg = f"Failed login attempt (incorrect MFA code) from {remote_host} ({remote_addr})."
+
+        if isinstance(username, str):
+            msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
+    elif access_method is AccessMethod.HTTP or access_method is AccessMethod.WEBSOCKET:
+        msg = f"Failed API access attempt from {remote_host} ({remote_addr})."
+
+    return msg
+
+
 async def process_wrong_login(request: Request, access_method: AccessMethod) -> None:
     """Process a wrong login attempt.
 
@@ -143,25 +162,34 @@ async def process_wrong_login(request: Request, access_method: AccessMethod) -> 
                 gethostbyaddr, request.remote
             )
 
-    if access_method is AccessMethod.LOGIN:
-        base_msg = f"Failed login attempt (incorrect MFA code) from {remote_host} ({remote_addr})."
+    raw_username: str | None = None
 
-        with suppress(JSONDecodeError):
-            form_data = await request.json()
-            if isinstance(form_data, dict) and isinstance(
-                raw_username := form_data.get("username"), str
-            ):
-                username = html.escape(repr(raw_username)[1:-1])
+    base_notif_msg = auth_error_message(None, remote_host, remote_addr, access_method)
 
-                base_msg = f"Failed login attempt (with username: '{username}') from {remote_host} ({remote_addr})."
-    else:
-        base_msg = f"Failed API access attempt from {remote_host} ({remote_addr})."
+    with suppress(JSONDecodeError):
+        form_data = await request.json()
+        if isinstance(form_data, dict) and isinstance(form_data.get("username"), str):
+            raw_username = form_data.get("username")
+            username = re.sub(r"[^a-z ]", "", str(raw_username))
+            base_notif_msg = auth_error_message(
+                username, remote_host, remote_addr, access_method
+            )
+
+    notification_msg = f"{base_notif_msg} See the log for details."
 
     # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    log_msg = f"{base_msg} Requested URL: '{request.rel_url}'. Access method: '{access_method}'. ({user_agent})"
+    if isinstance(raw_username, str):
+        base_log_msg = auth_error_message(
+            html.escape(repr(raw_username)[1:-1]),
+            remote_host,
+            remote_addr,
+            access_method,
+        )
+    else:
+        base_log_msg = auth_error_message(None, remote_host, remote_addr, access_method)
 
-    notification_msg = f"{base_msg} See the log for details."
+    log_msg = f"{base_log_msg} Requested URL: '{request.rel_url}'. Access method: '{access_method}'. ({user_agent})"
 
     _LOGGER.warning(log_msg)
 
