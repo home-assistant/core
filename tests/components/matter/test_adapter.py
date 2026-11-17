@@ -13,7 +13,11 @@ from homeassistant.components.matter.helpers import get_child_device_id, get_dev
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import EVE_ENERGY_LIGHT_PART_ATTRIBUTES, create_node_from_fixture
+from .common import (
+    EVE_ENERGY_LIGHT_PART_ATTRIBUTES,
+    create_node_from_fixture,
+    set_node_attribute,
+)
 
 
 def identifier_for(
@@ -30,17 +34,29 @@ def fire_endpoint_event(
     """Fire an endpoint added/removed event for a node endpoint."""
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == event
     )
     callback(event, {"node_id": node.node_id, "endpoint_id": endpoint_id})
+
+
+def remove_endpoint(
+    matter_client: MagicMock, node: MatterNode, endpoint_id: int
+) -> None:
+    """Remove an endpoint the way the client does.
+
+    The client calls the ENDPOINT_REMOVED subscribers first and then drops the
+    endpoint together with its composed parts and their compose relations.
+    """
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, node, endpoint_id)
+    node._remove_endpoint(endpoint_id)
 
 
 def fire_node_removed_event(matter_client: MagicMock, node: MatterNode) -> None:
     """Fire a node removed event for a node."""
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == EventType.NODE_REMOVED
     )
     callback(EventType.NODE_REMOVED, node.node_id)
@@ -52,7 +68,7 @@ def fire_node_updated_event(matter_client: MagicMock, node: MatterNode) -> None:
     # the per-entity subscriptions that also listen for NODE_UPDATED.
     callback = next(
         call.kwargs["callback"]
-        for call in matter_client.subscribe_events.call_args_list
+        for call in reversed(matter_client.subscribe_events.call_args_list)
         if call.kwargs["event_filter"] == EventType.NODE_UPDATED
         and call.kwargs.get("node_filter") is None
     )
@@ -250,6 +266,91 @@ async def test_endpoint_child_devices_pruned_on_setup(
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_endpoint_child_devices_collapsed_on_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a child device that collapsed while unloaded is pruned without a reload.
+
+    The entities are created after the prune, so they already get the names of
+    the node device.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    assert await hass.config_entries.async_unload(entry_id)
+    matter_node.endpoints.pop(2)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        assert await hass.config_entries.async_setup(entry_id)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+    state = hass.states.get("select.eve_energy_20ecn4101_top_power_on_behavior")
+    assert state is not None
+    assert state.name == "Eve Energy 20ECN4101 Power-on behavior (top)"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize("attributes", [{"1/319486977/319422472": None}])
+async def test_collapsed_with_new_entity_reloads_cleanly(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a node update that collapses a child and adds an entity reloads cleanly.
+
+    The new entity is only created by the reload, not also by the node setup
+    that schedules it, so its unique ID isn't added twice.
+    """
+    remove_endpoint(matter_client, matter_node, 2)
+    set_node_attribute(matter_node, 1, 319486977, 319422472, 123.0)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.eve_energy_20ecn4101_voltage_top")
+    assert state is not None
+    assert state.state == "123.0"
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_collapsed_disabled_entities_dont_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving only disabled entities to the node device doesn't reload."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    parent = device_registry.async_get_device_by_identifier(
+        identifier_for(matter_client, matter_node, 0), entry_id
+    )
+    assert parent is not None
+    for child in dr.async_entries_for_parent_device(device_registry, parent.id):
+        for entity_entry in er.async_entries_for_device(entity_registry, child.id):
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        matter_node.endpoints.pop(2)
+        fire_node_updated_event(matter_client, matter_node)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert not dr.async_entries_for_parent_device(device_registry, parent.id)
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
 async def test_pruned_collapsed_child_preserves_disabled_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -313,13 +414,12 @@ async def test_endpoint_child_device_with_part_removed_and_readded(
     light_entity_id = "light.eve_energy_20ecn4101_top_light_3"
     assert entity_registry.async_get(light_entity_id) is not None
 
-    fire_endpoint_event(matter_client, EventType.ENDPOINT_REMOVED, matter_node, 1)
+    remove_endpoint(matter_client, matter_node, 1)
     assert entity_registry.async_get(light_entity_id) is None
 
-    endpoint = matter_node.endpoints.pop(1)
     fire_node_updated_event(matter_client, matter_node)
     await hass.async_block_till_done()
-    matter_node.endpoints[1] = endpoint
+    matter_node.update(matter_node.node_data)
     fire_node_updated_event(matter_client, matter_node)
     fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 1)
     await hass.async_block_till_done()
@@ -329,6 +429,24 @@ async def test_endpoint_child_device_with_part_removed_and_readded(
     light_entry = entity_registry.async_get(light_entity_id)
     assert light_entry is not None
     assert light_entry.device_id == switch_entry.device_id
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+@pytest.mark.parametrize("attributes", [EVE_ENERGY_LIGHT_PART_ATTRIBUTES])
+async def test_endpoint_child_device_part_removed_first(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a split endpoint's part announced as removed first is removed."""
+    light_entity_id = "light.eve_energy_20ecn4101_top_light_3"
+    assert entity_registry.async_get(light_entity_id) is not None
+
+    for endpoint_id in (3, 1):
+        remove_endpoint(matter_client, matter_node, endpoint_id)
+    assert entity_registry.async_get(light_entity_id) is None
+    assert entity_registry.async_get("switch.eve_energy_20ecn4101_top") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
@@ -736,6 +854,123 @@ async def test_power_topology_entities_follow_collapsed_child(
         assert entity_entry.device_id == parent.id
 
 
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_entities_renamed_when_outlet_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test measurement entities moved off a removed outlet's child are renamed.
+
+    They were created on the child device without a name suffix, so the entry is
+    reloaded to recreate them with the suffixes of the node device.
+    """
+    for endpoint_id in (1, 2):
+        remove_endpoint(matter_client, matter_node, endpoint_id)
+        fire_node_updated_event(matter_client, matter_node)
+        await hass.async_block_till_done()
+
+    for entity_id, name in (
+        (TAPO_STRIP_POWER_1, "Smart Wi-Fi Power Strip Power (7)"),
+        (
+            "sensor.smart_wi_fi_power_strip_endpoint_2_power",
+            "Smart Wi-Fi Power Strip Power (8)",
+        ),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.name == name
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_energy_20ecn4101"])
+async def test_collapsed_endpoint_entities_renamed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the entities of an endpoint that stops splitting get its label."""
+    remove_endpoint(matter_client, matter_node, 1)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.eve_energy_20ecn4101_bottom_power_on_behavior")
+    assert state is not None
+    assert state.name == "Eve Energy 20ECN4101 Power-on behavior (bottom)"
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_outlet_readded_before_node_update(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test measurement entities return to an outlet that comes back at once.
+
+    The server sends one node update for both changes, and ENDPOINT_ADDED after
+    it, so the node update already has the outlet again.
+    """
+    remove_endpoint(matter_client, matter_node, 1)
+    matter_node.update(matter_node.node_data)
+    fire_node_updated_event(matter_client, matter_node)
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 1)
+    await hass.async_block_till_done()
+
+    switch_entry = entity_registry.async_get(TAPO_STRIP_SWITCH_1)
+    assert switch_entry is not None
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.device_id == switch_entry.device_id
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_disabled_entities_moved_dont_reload(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test moving only disabled measurement entities off an outlet doesn't reload."""
+    unique_id_prefix = (
+        f"{get_device_id(matter_client.server_info, matter_node.endpoints[7])}-7-"
+    )
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id):
+        if entity_entry.unique_id.startswith(unique_id_prefix):
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        remove_endpoint(matter_client, matter_node, 1)
+        fire_node_updated_event(matter_client, matter_node)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    power_entry = entity_registry.async_get(TAPO_STRIP_POWER_1)
+    assert power_entry is not None
+    assert power_entry.disabled_by is er.RegistryEntryDisabler.USER
+
+
+@pytest.mark.parametrize("node_fixture", ["tapo_smart_wi_fi_power_strip"])
+async def test_power_topology_outlet_removed_with_measurement_endpoint(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing an outlet with its measurement endpoint doesn't reload."""
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        for endpoint_id in (1, 7):
+            remove_endpoint(matter_client, matter_node, endpoint_id)
+        fire_node_updated_event(matter_client, matter_node)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+    assert entity_registry.async_get(TAPO_STRIP_SWITCH_1) is None
+    assert entity_registry.async_get(TAPO_STRIP_POWER_1) is None
+
+
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.skip("Waiting for a new test fixture")
 @pytest.mark.parametrize("node_fixture", ["fake_bridge_two_light"])
@@ -974,20 +1209,33 @@ async def test_composed_bridged_device_endpoint_removed(
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
+@pytest.mark.parametrize(
+    "removed_endpoint_ids",
+    [
+        pytest.param((4, 3, 2), id="parts_first"),
+        pytest.param((2,), id="parent_only"),
+    ],
+)
 async def test_bridged_device_readded_after_removal(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     entity_registry: er.EntityRegistry,
+    removed_endpoint_ids: tuple[int, ...],
 ) -> None:
-    """Test a bridged device's entities are rediscovered after remove and re-add."""
-    for endpoint_id in (4, 3, 2):
-        fire_endpoint_event(
-            matter_client, EventType.ENDPOINT_REMOVED, matter_node, endpoint_id
-        )
+    """Test a bridged device's entities are rediscovered after remove and re-add.
+
+    The server announces the removal of the parts before their parent's.
+    """
+    for endpoint_id in removed_endpoint_ids:
+        remove_endpoint(matter_client, matter_node, endpoint_id)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
     assert entity_registry.async_get("switch.kitchen_plug") is None
     assert entity_registry.async_get("sensor.kitchen_plug_temperature") is None
 
+    matter_node.update(matter_node.node_data)
+    fire_node_updated_event(matter_client, matter_node)
     for endpoint_id in (2, 3, 4):
         fire_endpoint_event(
             matter_client, EventType.ENDPOINT_ADDED, matter_node, endpoint_id
@@ -996,6 +1244,87 @@ async def test_bridged_device_readded_after_removal(
 
     assert entity_registry.async_get("switch.kitchen_plug") is not None
     assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
+async def test_bridged_device_part_removed_and_readded(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a part of a bridged device is removed and re-added on its own."""
+    remove_endpoint(matter_client, matter_node, 3)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("switch.kitchen_plug") is None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+
+    matter_node.update(matter_node.node_data)
+    fire_node_updated_event(matter_client, matter_node)
+    fire_endpoint_event(matter_client, EventType.ENDPOINT_ADDED, matter_node, 3)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("switch.kitchen_plug") is not None
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
+@pytest.mark.parametrize("attributes", [{"3/29/3": [4]}])
+async def test_bridged_device_nested_part_readded_after_removal(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a part below another part is rediscovered after remove and re-add.
+
+    Here the part is announced before its own part, which the client then drops
+    with it.
+    """
+    assert matter_node.get_closest_compose_parent(4) == matter_node.endpoints[3]
+    for endpoint_id in (3, 4, 2):
+        remove_endpoint(matter_client, matter_node, endpoint_id)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is None
+
+    matter_node.update(matter_node.node_data)
+    fire_node_updated_event(matter_client, matter_node)
+    for endpoint_id in (2, 3, 4):
+        fire_endpoint_event(
+            matter_client, EventType.ENDPOINT_ADDED, matter_node, endpoint_id
+        )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("switch.kitchen_plug") is not None
+    assert entity_registry.async_get("sensor.kitchen_plug_temperature") is not None
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
+async def test_composed_parts_removed_before_parent(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the parts of a composed device are removed when announced first."""
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    for endpoint_id in (2, 3, 4, 5, 1):
+        remove_endpoint(matter_client, matter_node, endpoint_id)
+    fire_node_updated_event(matter_client, matter_node)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("climate.mock_air_purifier") is None
+    assert entity_registry.async_get("sensor.mock_air_purifier_temperature") is None
+    # Only the root endpoint's entities are left.
+    root_prefix = (
+        f"{get_device_id(matter_client.server_info, matter_node.endpoints[0])}-0-"
+    )
+    for entity_entry in er.async_entries_for_config_entry(entity_registry, entry_id):
+        assert entity_entry.unique_id.startswith(root_prefix)
+    assert entity_registry.async_get("update.mock_air_purifier_firmware") is not None
 
 
 async def test_migrate_unique_id_for_part_nested_below_another_part(
