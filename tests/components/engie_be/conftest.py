@@ -297,12 +297,10 @@ def build_monthly_peaks(
     )
 
 
-def build_monthly_peaks_for_request(
-    ban: str, year: int, month: int, *, day: int | None = None
-) -> MonthlyPeaks:
+def build_monthly_peaks_for_request(ban: str, year: int, month: int) -> MonthlyPeaks:
     """Build a peaks response with one peak on the 15th of the requested month."""
     start = datetime(year, month, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE)
-    peak = build_peak(start, power_kw=4.2, energy_kwh=1.05)
+    peak = build_peak(start)
     return build_monthly_peaks(year, month, peak=peak, daily_peaks=(peak,))
 
 

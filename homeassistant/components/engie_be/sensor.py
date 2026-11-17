@@ -76,7 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     runtime_data = entry.runtime_data
-    known_unique_ids: set[str] = set()
+    known_unique_ids: set[str | None] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -115,9 +115,7 @@ async def async_setup_entry(
                     if entity.unique_id not in known_unique_ids:
                         new_entities.append(entity)
         if new_entities:
-            known_unique_ids.update(
-                unique_id for entity in new_entities if (unique_id := entity.unique_id)
-            )
+            known_unique_ids.update(entity.unique_id for entity in new_entities)
             async_add_entities(new_entities)
 
     for household in runtime_data.households.values():

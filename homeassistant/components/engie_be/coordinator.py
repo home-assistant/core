@@ -185,7 +185,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         )
         self.client = client
         self.ban = ban
-        self.agreement = agreement
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
@@ -247,7 +246,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 if isinstance(service_point_result, BaseException):
                     raise service_point_result
                 self.ean_energy_types.update(service_point_result.ean_energy_types)
-                self.ean_energy_types.setdefault(bare, None)
                 if (
                     coefficient := _gas_conversion_coefficient(service_point_result)
                 ) is None:

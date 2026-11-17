@@ -37,7 +37,7 @@ async def test_capacity_tariff_fallback_to_previous_month(
         datetime(2026, 9, 20, 19, 30, tzinfo=BRUSSELS_TIME_ZONE), power_kw=3.1
     )
 
-    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
+    def _peaks(ban: str, year: int, month: int):
         if (year, month) == (2026, 10):
             return build_monthly_peaks(2026, 10)
         return build_monthly_peaks(2026, 9, peak=september_peak)
@@ -77,7 +77,7 @@ async def test_capacity_tariff_previous_peak_attribute(
         datetime(2026, 10, 3, 12, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=4.2
     )
 
-    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
+    def _peaks(ban: str, year: int, month: int):
         return build_monthly_peaks(2026, 10, peak=current, previous_peak=replaced)
 
     mock_engie_client.return_value.async_get_monthly_peaks.side_effect = _peaks
@@ -107,7 +107,7 @@ async def test_capacity_tariff_no_peak_yet(
 ) -> None:
     """Test the sensors are unknown when neither month has a peak."""
     mock_engie_client.return_value.async_get_monthly_peaks.side_effect = (
-        lambda ban, year, month, *, day=None: build_monthly_peaks(year, month)
+        lambda ban, year, month: build_monthly_peaks(year, month)
     )
     await setup_entry(hass, mock_config_entry)
 
@@ -136,7 +136,7 @@ async def test_capacity_tariff_scheduled_refresh_across_year_rollover(
         datetime(2026, 11, 18, 19, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=3.3
     )
 
-    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
+    def _peaks(ban: str, year: int, month: int):
         if (year, month) == (2026, 11):
             return build_monthly_peaks(2026, 11, peak=november_peak)
         return build_monthly_peaks(year, month)
@@ -171,12 +171,12 @@ async def test_capacity_tariff_scheduled_refresh_across_year_rollover(
         datetime(2027, 1, 10, 18, 30, tzinfo=BRUSSELS_TIME_ZONE), power_kw=5.1
     )
 
-    def _peaks_with_january(ban: str, year: int, month: int, *, day: int | None = None):
+    def _peaks_with_january(ban: str, year: int, month: int):
         if (year, month) == (2027, 1):
             return build_monthly_peaks(
                 2027, 1, peak=january_peak, daily_peaks=(january_peak,)
             )
-        return _peaks(ban, year, month, day=day)
+        return _peaks(ban, year, month)
 
     peaks_mock.side_effect = _peaks_with_january
     freezer.tick(PEAKS_SCAN_INTERVAL + timedelta(seconds=30))
@@ -279,7 +279,7 @@ async def test_capacity_tariff_daily_peak_selection(
         datetime(2026, 10, 15, 18, 0, tzinfo=BRUSSELS_TIME_ZONE), power_kw=4.2
     )
 
-    def _peaks(ban: str, year: int, month: int, *, day: int | None = None):
+    def _peaks(ban: str, year: int, month: int):
         return build_monthly_peaks(2026, 10, peak=month_peak, daily_peaks=daily_peaks)
 
     mock_engie_client.return_value.async_get_monthly_peaks.side_effect = _peaks
