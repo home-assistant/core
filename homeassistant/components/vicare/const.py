@@ -34,6 +34,9 @@ CONF_CIRCUIT = "circuit"
 
 DEFAULT_CACHE_DURATION = 60
 
+HOLIDAY_PROGRAM_HOLIDAY = "holiday"
+HOLIDAY_PROGRAM_AT_HOME = "holiday_at_home"
+
 VICARE_BAR = "bar"
 VICARE_CELSIUS = "celsius"
 VICARE_CUBIC_METER = "cubicMeter"

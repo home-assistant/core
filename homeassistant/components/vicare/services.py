@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import DOMAIN
+from .const import DOMAIN, HOLIDAY_PROGRAM_AT_HOME, HOLIDAY_PROGRAM_HOLIDAY
 
 
 class ViCareService(StrEnum):
@@ -34,8 +34,6 @@ class ViCareServiceArgument(StrEnum):
     VICARE_MODE = "vicare_mode"
 
 
-HOLIDAY_PROGRAM_HOLIDAY = "holiday"
-HOLIDAY_PROGRAM_AT_HOME = "holiday_at_home"
 HOLIDAY_PROGRAM_SCHEMA = probatio.In([HOLIDAY_PROGRAM_HOLIDAY, HOLIDAY_PROGRAM_AT_HOME])
 
 WEEKDAYS = (
