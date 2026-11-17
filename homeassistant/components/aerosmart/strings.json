@@ -195,6 +195,15 @@
         "name": "Invalid controller value"
       }
     },
+    {  
+    "number": {
+      "domestic_hot_water_temperature_setpoint": {
+        "name": "Domestic hot water temperature setpoint"
+      },
+      "room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      }
+    },
     "sensor": {
       "air_condenser_solenoid_valve_operating_hours": {
         "name": "Air condenser solenoid valve operating hours"
@@ -360,6 +369,9 @@
     },
     "update_failed": {
       "message": "Error communicating with aerosmart: {error}"
+    },
+    "write_failed": {
+      "message": "Failed to write aerosmart control {field}."
     }
   }
 }
