@@ -187,6 +187,9 @@
           "low": "mdi:car-seat-heater",
           "medium": "mdi:car-seat-heater"
         }
+      },
+      "climate_state_steering_wheel_heat_level": {
+        "default": "mdi:steering"
       }
     },
     "sensor": {
