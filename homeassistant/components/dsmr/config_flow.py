@@ -261,7 +261,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                     # The port now holds the full address; sensor.py would
                     # otherwise prefix it with the legacy host.
                     data.pop(CONF_HOST, None)
-                    return self.async_update_and_abort(entry, data=data)
+                    return self.async_update_reload_and_abort(entry, data=data)
 
         suggested_port = entry.data[CONF_PORT]
         if CONF_HOST in entry.data:
