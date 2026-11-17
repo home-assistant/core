@@ -72,6 +72,18 @@ class RepositoryBusyError(MarketplaceError):
         )
 
 
+class RepositoryInUseError(MarketplaceError):
+    """For an integration whose config entries would run without its files."""
+
+    def __init__(self, repository: str) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="repository_in_use",
+            translation_placeholders={"repository": repository},
+        )
+
+
 class NotModifiedError(MarketplaceError):
     """For responses that are not modified."""
 

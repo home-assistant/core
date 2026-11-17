@@ -18,6 +18,7 @@ from ..exceptions import (
     MarketplaceError,
     ReplacesBuiltInNotConfirmedError,
     RepositoryBusyError,
+    RepositoryInUseError,
 )
 from ..utils.logger import LOGGER
 from ..utils.validate import valid_ref
@@ -347,12 +348,14 @@ async def marketplace_repository_uninstall(
         )
         return
 
-    # Its config entries run the installed code, ignored ones too, they go first
-    if (
+    # Its config entries run the installed code, ignored ones too, they go first,
+    # unless another installed repository keeps the files they run
+    release_only = (
         repository.data.category == RepositoryCategory.INTEGRATION
-        and repository.data.domain
-        and hass.config_entries.async_entries(repository.data.domain)
-    ):
+        and bool(repository.data.domain)
+        and bool(hass.config_entries.async_entries(repository.data.domain))
+    )
+    if release_only and repository.sharing_install() is None:
         send_translated_error(
             connection,
             msg["id"],
@@ -376,9 +379,18 @@ async def marketplace_repository_uninstall(
             repository.logger.error("%s %s", repository.string, exception)
 
     try:
-        await repository.uninstall()
+        await repository.uninstall(release_only=release_only)
     except RepositoryBusyError:
         _send_repository_busy(connection, msg["id"], repository)
+        return
+    except RepositoryInUseError:
+        send_translated_error(
+            connection,
+            msg["id"],
+            "repository_in_use",
+            "repository_in_use",
+            {"repository": repository.data.full_name},
+        )
         return
     except MarketplaceError:
         send_translated_error(

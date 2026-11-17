@@ -42,6 +42,7 @@ from ..exceptions import (
     RepositoryArchivedError,
     RepositoryBusyError,
     RepositoryExistsError,
+    RepositoryInUseError,
 )
 from ..types import DownloadableContent
 from ..utils.backup import Backup
@@ -986,8 +987,12 @@ class Repository:
         """Return True while the repository is being installed."""
         return self._install_lock.locked()
 
-    async def uninstall(self) -> None:
-        """Uninstall, not while an install of the repository is running."""
+    async def uninstall(self, *, release_only: bool = False) -> None:
+        """Uninstall, not while an install of the repository is running.
+
+        With release_only, only forget it while another installed repository
+        shares its files, and keep them otherwise.
+        """
         if self.installing:
             raise RepositoryBusyError(self.data.full_name)
 
@@ -999,7 +1004,27 @@ class Repository:
                     translation_key="repository_not_installed",
                     translation_placeholders={"repository": self.data.full_name},
                 )
-            await self._async_uninstall()
+            if (owner := self.sharing_install()) is not None:
+                await self._async_release(owner)
+            elif release_only:
+                # The repository sharing them was uninstalled meanwhile
+                raise RepositoryInUseError(self.data.full_name)
+            else:
+                await self._async_uninstall()
+
+    def sharing_install(self) -> Repository | None:
+        """Return another installed repository using the same files, if any."""
+        return None
+
+    async def _async_release(self, owner: Repository) -> None:
+        """Forget the install, the files stay for the repository sharing them."""
+        self.logger.info(
+            "%s Releasing its files to %s", self.string, owner.data.full_name
+        )
+        self.data.installed = False
+        self._forget_install()
+        await self.async_remove_entity_device()
+        ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
 
     async def _async_uninstall(self) -> None:
         """Run uninstall tasks."""
@@ -1013,13 +1038,16 @@ class Repository:
         self.data.installed = False
         await self._async_post_uninstall()
 
+        self._forget_install()
+        await self.async_remove_entity_device()
+        ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
+
+    def _forget_install(self) -> None:
+        """Forget what was installed."""
         self.data.installed_version = None
         self.data.installed_commit = None
         self._clear_readme_cache()
         self.async_dispatch_changed("uninstall")
-
-        await self.async_remove_entity_device()
-        ir.async_delete_issue(self.marketplace.hass, DOMAIN, f"removed_{self.data.id}")
 
     async def remove_local_directory(self) -> bool:
         """Remove the installed content, return if that worked."""
