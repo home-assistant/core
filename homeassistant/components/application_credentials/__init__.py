@@ -117,9 +117,10 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
         # Cannot delete a credential currently in use by a ConfigEntry
         current = self.data[item_id]
+        auth_domain = current.get(CONF_AUTH_DOMAIN, item_id)
         entries = self.hass.config_entries.async_entries(current[CONF_DOMAIN])
         for entry in entries:
-            if entry.data.get("auth_implementation") == item_id:
+            if entry.data.get("auth_implementation") == auth_domain:
                 raise HomeAssistantError(
                     f"Cannot delete credential in use by integration {entry.domain}"
                 )

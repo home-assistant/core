@@ -383,6 +383,33 @@ async def test_websocket_delete_item_not_found(ws_client: ClientFixture) -> None
     )
 
 
+async def test_websocket_delete_imported_auth_domain_in_use(
+    hass: HomeAssistant, ws_client: ClientFixture
+) -> None:
+    """Test a credential imported with a custom auth domain cannot be deleted in use."""
+    await async_import_client_credential(
+        hass, TEST_DOMAIN, DEVELOPER_CREDENTIAL, auth_domain="fake_integration_app"
+    )
+    entry = MockConfigEntry(
+        domain=TEST_DOMAIN, data={"auth_implementation": "fake_integration_app"}
+    )
+    entry.add_to_hass(hass)
+    client = await ws_client()
+
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
+    assert not resp.get("success")
+    assert resp["error"].get("code") == "home_assistant_error"
+    assert (
+        resp["error"].get("message")
+        == "Cannot delete credential in use by integration fake_integration"
+    )
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    resp = await client.cmd("delete", {"application_credentials_id": ID})
+    assert resp.get("success")
+
+
 @pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
 async def test_websocket_import_config(
     ws_client: ClientFixture,
