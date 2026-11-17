@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import httpx2
 import ollama
 import probatio
 
@@ -288,21 +289,25 @@ class OllamaBaseLLMEntity(Entity):
                     think=settings.get(CONF_THINK),
                     format=output_format,
                 )
-            except (ollama.RequestError, ollama.ResponseError) as err:
+                # The streamed request only runs while the response is consumed
+                message_history.messages.extend(
+                    [
+                        _convert_content(content)
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id, _transform_stream(response_generator)
+                        )
+                    ]
+                )
+            except (
+                ollama.RequestError,
+                ollama.ResponseError,
+                httpx2.HTTPError,
+            ) as err:
                 # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to the Ollama server: {err}"
                 ) from err
-
-            message_history.messages.extend(
-                [
-                    _convert_content(content)
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, _transform_stream(response_generator)
-                    )
-                ]
-            )
 
             if not chat_log.unresponded_tool_results:
                 break

@@ -6,6 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import operator
 import pathlib
 import time
 from typing import Any
@@ -37,8 +38,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     frame,
 )
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
+
+VIA_DEVICE_DEPRECATION = (
+    "calls `device_registry.async_get_or_create` with a deprecated `via_device` "
+    "parameter"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -602,7 +608,7 @@ async def test_migration_from_1_1(
     assert entry.id == "abcdefghijklm"
 
     deleted_entry = registry._deleted_devices["deletedid"]
-    assert deleted_entry.disabled_by is UNDEFINED
+    assert deleted_entry.disabled_by is Undefined
 
     # Update to trigger a store
     entry = registry.async_get_or_create(
@@ -4134,11 +4140,8 @@ async def test_specifying_via_device_create(
         model="light",
         via_device=("hue", "non_existing_123"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 2
+    assert caplog.text.count("`via_device`") == 2
     assert light_via_nonexisting_parent_device is not None
     assert light_via_nonexisting_parent_device.via_device_id is None
     nonexisting_parent_device = device_registry.async_get_device(
@@ -4200,11 +4203,8 @@ async def test_specifying_via_device_update(
         name="New light",
         via_device=("hue", "non_existing_abc"),
     )
-    assert {
-        "calls `device_registry.async_get_or_create` "
-        "referencing a non existing `via_device` "
-        '("hue","non_existing_123")' in caplog.text
-    }
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 3
+    assert caplog.text.count("`via_device`") == 3
     # Assert the name was updated correctly
     assert light.via_device_id == via.id
     assert light.name == "New light"
@@ -4492,6 +4492,31 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
 
 
 @pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_get_or_create_reports_each_deprecation_once(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a call with several deprecated arguments reports each of them once."""
+    invalid_type = "passes a non-string value of type int as default_manufacturer"
+    deprecated = "with a deprecated `default_manufacturer` parameter"
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        for _ in range(2):
+            device_registry.async_get_or_create(
+                config_entry_id=mock_config_entry.entry_id,
+                identifiers={("bridgeid", "0123")},
+                default_manufacturer=123,
+            )
+
+    assert caplog.text.count(invalid_type) == 1
+    assert caplog.text.count(deprecated) == 1
+
+
+@pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
         pytest.param(
@@ -4660,14 +4685,168 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     integration can still set them until they are removed. Passing them on to
     async_get_or_create is covered by its own deprecation tests.
     """
-    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+    assert dr.DeviceInfo(**{parameter: value}).as_dict() == {parameter: value}
 
     device_info = dr.DeviceInfo()
-    device_info[parameter] = value
-    assert dict(device_info) == {parameter: value}
+    setattr(device_info, parameter, value)
+    assert device_info.as_dict() == {parameter: value}
 
 
-def test_device_info_membership() -> None:
+@pytest.mark.parametrize(
+    ("use", "what"),
+    [
+        pytest.param(
+            lambda device_info: device_info["name"],
+            "reads `DeviceInfo['name']`",
+            id="getitem",
+        ),
+        pytest.param(
+            lambda device_info: operator.setitem(device_info, "name", "new"),
+            "sets `DeviceInfo['name']`",
+            id="setitem",
+        ),
+        pytest.param(
+            lambda device_info: "name" in device_info,
+            "checks if 'name' is in a `DeviceInfo`",
+            id="contains",
+        ),
+        pytest.param(
+            lambda device_info: device_info == {"name": "name"},
+            "compares a `DeviceInfo` to a mapping",
+            id="compare_to_mapping",
+        ),
+        pytest.param(
+            lambda device_info: device_info.keys(),
+            "calls `DeviceInfo.keys()` or unpacks it",
+            id="keys",
+        ),
+        pytest.param(dict, "calls `DeviceInfo.keys()` or unpacks it", id="dict"),
+        pytest.param(
+            lambda device_info: device_info.items(),
+            "calls `DeviceInfo.items()`",
+            id="items",
+        ),
+        pytest.param(
+            lambda device_info: device_info.get("name"),
+            "calls `DeviceInfo.get('name')`",
+            id="get",
+        ),
+        pytest.param(
+            lambda device_info: device_info.update({"model": "model"}),
+            "calls `DeviceInfo.update()`",
+            id="update",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__required_keys__,
+            "reads `DeviceInfo.__required_keys__`",
+            id="required_keys",
+        ),
+        pytest.param(
+            lambda device_info: type(device_info).__optional_keys__,
+            "reads `DeviceInfo.__optional_keys__`",
+            id="optional_keys",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            nullcontext(),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_use_deprecated(
+    caplog: pytest.LogCaptureFixture,
+    use: Callable[[dr.DeviceInfo], Any],
+    what: str,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test dict-style use of a device info is deprecated.
+
+    It logs for core and custom integrations, and raises for core.
+    """
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        use(device_info)
+
+    assert caplog.text.count(what) == expected_log
+
+
+def test_device_info_mapping_use_without_frame_helper(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test dict-style use of a device info logs before the frame helper is set up."""
+    device_info = dr.DeviceInfo(name="name")
+
+    with patch.object(frame._hass, "hass", None):
+        assert device_info["name"] == "name"
+
+    assert "Detected code that reads `DeviceInfo['name']`" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_access() -> None:
+    """Test reading and setting fields by key, until the deprecation ends."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert device_info["name"] == "name"
+    with pytest.raises(KeyError):
+        device_info["model"]
+    assert device_info.get("name") == "name"
+    assert device_info.get("model", "default") == "default"
+
+    device_info["model"] = "model"
+    assert device_info.model == "model"
+    assert device_info.keys() == ("model", "name")
+    assert device_info.items() == (("model", "model"), ("name", "name"))
+    assert dict(device_info) == {"model": "model", "name": "name"}
+    assert device_info == {"model": "model", "name": "name"}
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_update() -> None:
+    """Test update sets the fields of a mapping or another device info."""
+    device_info = dr.DeviceInfo(name="name")
+
+    device_info.update({"model": "model"})
+    device_info.update(dr.DeviceInfo(manufacturer="manufacturer"))
+    assert device_info.as_dict() == {
+        "manufacturer": "manufacturer",
+        "model": "model",
+        "name": "name",
+    }
+
+    with pytest.raises(KeyError):
+        device_info.update({"config_entry_id": "entry_id"})
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_membership() -> None:
     """Test `in` reports the set fields, while a device info is not iterable."""
     device_info = dr.DeviceInfo(name="name")
 
@@ -4678,7 +4857,11 @@ def test_device_info_membership() -> None:
         list(device_info)
 
 
-def test_device_info_typed_dict_keys() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_typed_dict_keys() -> None:
     """Test the TypedDict key attributes integrations read to check for a field."""
     assert dr.DeviceInfo.__required_keys__ == frozenset()
     assert "via_device_id" in dr.DeviceInfo.__optional_keys__
@@ -4692,7 +4875,11 @@ def test_device_info_typed_dict_keys() -> None:
     }
 
 
-def test_device_info_rejects_unknown_key() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")
     with pytest.raises(KeyError):
@@ -4892,7 +5079,7 @@ async def test_get_or_create_via_device_self_reference_ignored(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A device referencing itself via the deprecated via_device is ignored and logged."""
+    """A device referencing itself via the deprecated via_device is ignored."""
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -4907,10 +5094,9 @@ async def test_get_or_create_via_device_self_reference_ignored(
 
     assert updated.id == device.id
     assert updated.via_device_id is None
-    assert (
-        "calls `device_registry.async_get_or_create` with a `via_device` "
-        "referencing the device itself" in caplog.text
-    )
+    # Only the deprecation of via_device itself is reported
+    assert caplog.text.count(VIA_DEVICE_DEPRECATION) == 1
+    assert caplog.text.count("`via_device`") == 1
 
 
 async def test_get_or_create_via_device_id_self_reference_raises(
@@ -6059,7 +6245,7 @@ async def test_create_reflects_config_entry_disabled_state(
     device_registry.async_remove_device(device.id)
     deleted_entry = device_registry._deleted_devices[device.id]
     device_registry._deleted_devices[device.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
     restored = device_registry.async_get_or_create(
         config_entry_id=disabled_entry.entry_id, identifiers={("test", "1")}
@@ -7181,7 +7367,7 @@ async def test_deleted_device_to_device_entry_uses_reregistered_identity(
         (dr.DeviceEntryDisabler.CONFIG_ENTRY, None),
         (dr.DeviceEntryDisabler.INTEGRATION, dr.DeviceEntryDisabler.INTEGRATION),
         (dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER),
-        (UNDEFINED, None),
+        (Undefined, None),
     ],
 )
 @pytest.mark.usefixtures("freezer")
@@ -7189,7 +7375,7 @@ async def test_restore_migrated_device_disabled_by(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    device_disabled_by: dr.DeviceEntryDisabler | UndefinedType | None,
+    device_disabled_by: dr.DeviceEntryDisabler | Undefined | None,
     expected_disabled_by: dr.DeviceEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring a device."""
@@ -7224,7 +7410,7 @@ async def test_restore_migrated_device_disabled_by(
 
     deleted_entry = device_registry._deleted_devices[entry.id]
     device_registry._deleted_devices[entry.id] = attr.evolve(
-        deleted_entry, disabled_by=UNDEFINED
+        deleted_entry, disabled_by=Undefined
     )
 
     # This will restore the original device, user customizations of
@@ -10612,7 +10798,7 @@ def _create_parent_and_child(
     device_registry: dr.DeviceRegistry,
     config_entry_id: str,
     *,
-    config_subentry_id: str | UndefinedType = UNDEFINED,
+    config_subentry_id: str | Undefined = Undefined,
 ) -> tuple[dr.DeviceEntry, dr.ChildDeviceEntry]:
     """Create a parent device with one child device."""
     parent = device_registry.async_get_or_create(
@@ -11135,7 +11321,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
 ) -> None:
     """Test disabled_by=DEVICE matching a deleted device restores nothing.
 
-    A legacy deleted device (its stored disabled_by is UNDEFINED) restores with the
+    A legacy deleted device (its stored disabled_by is Undefined) restores with the
     caller's disabled_by verbatim, so without an early guard a caller-passed DEVICE
     would restore a main device disabled by DEVICE. The rejection must run before the
     restore.
@@ -11143,12 +11329,12 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     match = "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child device"
     identifiers = {("test", "restore")}
     device_id = "restore-device-id"
-    # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
+    # A legacy deleted device carries no recorded disabled_by (Undefined), so restore
     # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
     # a DEVICE value.
     device_registry._deleted_devices[device_id] = attr.evolve(
         _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
-        disabled_by=UNDEFINED,
+        disabled_by=Undefined,
     )
 
     with pytest.raises(HomeAssistantError, match=match):
@@ -11161,7 +11347,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     # Nothing was restored: no main device exists and the deleted entry is untouched
     assert len(device_registry.devices) == 0
     assert device_id in device_registry._deleted_devices
-    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
+    assert device_registry._deleted_devices[device_id].disabled_by is Undefined
 
 
 @pytest.mark.usefixtures("hass")

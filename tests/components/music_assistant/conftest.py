@@ -91,6 +91,7 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
                     values={},
                     provider=player.provider,
                     player_id=player.player_id,
+                    enabled=player.enabled,
                 )
                 for player in client.players
             ]

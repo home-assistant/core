@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@imicknl"],
   "config_flow": true,
+  "connectivity": ["cloud", "network"],
   "dependencies": ["application_credentials"],
   "dhcp": [
     {
@@ -15,7 +16,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["boto3", "botocore", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz[nexity]==2.3.1"],
+  "requirements": ["pyoverkiz[nexity]==2.3.2"],
   "zeroconf": [
     {
       "name": "gateway*",

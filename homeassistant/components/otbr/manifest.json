@@ -5,6 +5,7 @@
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["homeassistant_hardware", "thread"],
   "documentation": "https://www.home-assistant.io/integrations/otbr",
   "integration_type": "service",

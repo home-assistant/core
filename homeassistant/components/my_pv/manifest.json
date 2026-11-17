@@ -8,6 +8,7 @@
   ],
   "codeowners": ["@my-pv", "@rrooggiieerr"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true
@@ -21,6 +22,6 @@
   "iot_class": "local_polling",
   "loggers": ["my_pv"],
   "quality_scale": "silver",
-  "requirements": ["my-pv==0.0.16"],
+  "requirements": ["my-pv==0.0.17"],
   "zeroconf": ["_mypv._tcp.local."]
 }

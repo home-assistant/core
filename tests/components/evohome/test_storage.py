@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from typing import Any, Final, TypedDict
+from unittest.mock import MagicMock
 
 from evohomeasync.auth import SZ_SESSION_ID, SZ_SESSION_ID_EXPIRES
 from evohomeasync2.auth import (
@@ -9,10 +10,11 @@ from evohomeasync2.auth import (
     SZ_ACCESS_TOKEN_EXPIRES,
     SZ_REFRESH_TOKEN,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.evohome.const import DOMAIN, STORAGE_KEY, STORAGE_VER
-from homeassistant.components.evohome.storage import _TokenStoreT
+from homeassistant.components.evohome.storage import TokenManager, _TokenStoreT
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -48,6 +50,8 @@ TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
         SZ_SESSION_ID: SESSION_ID,
         SZ_SESSION_ID_EXPIRES: SESSION_ID_EXP_STR,
     },  # pyright: ignore[reportAssignmentType]
+    "with_session_id_sans_expires": _TEST_STORAGE_BASE  # as cached by older versions
+    | {SZ_SESSION_ID: SESSION_ID},  # pyright: ignore[reportAssignmentType]
 }
 
 TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
@@ -176,3 +180,22 @@ async def test_auth_tokens_diff(
 
     assert (expires := data[SZ_ACCESS_TOKEN_EXPIRES]) is not None
     assert dt_util.parse_datetime(expires, raise_on_error=True) > dt_util.now()
+
+
+async def test_session_id_sans_expires(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a cached session id without an expiry is reused, for 15 minutes."""
+
+    freezer.move_to("2024-07-10T12:00:00+00:00")
+
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_ROOT | {
+        "data": TEST_STORAGE_DATA["with_session_id_sans_expires"]
+    }
+
+    token_manager = TokenManager(hass, USERNAME, "password", MagicMock())
+
+    assert await token_manager.get_session_id() == SESSION_ID
+    assert token_manager.session_id_expires == dt_util.utcnow() + timedelta(minutes=15)

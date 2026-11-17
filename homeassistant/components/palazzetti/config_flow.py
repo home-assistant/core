@@ -9,15 +9,27 @@ from pypalazzetti.exceptions import CommunicationError
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, LOGGER
+
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Palazzetti config flow."""
 
     _discovered_device: PalazzettiClient
+
+    async def _async_connect(self, host: str) -> PalazzettiClient:
+        """Connect to the CBox at the given host."""
+        client = PalazzettiClient(
+            hostname=host,
+            session=async_get_clientsession(self.hass),
+        )
+        await client.connect()
+        return client
 
     @override
     async def async_step_user(
@@ -26,10 +38,8 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
         """User configuration step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            client = PalazzettiClient(hostname=host)
             try:
-                await client.connect()
+                client = await self._async_connect(user_input[CONF_HOST])
             except CommunicationError:
                 LOGGER.exception("Communication error")
                 errors["base"] = "cannot_connect"
@@ -49,7 +59,36 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the CBox connection."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                client = await self._async_connect(user_input[CONF_HOST])
+            except CommunicationError:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(dr.format_mac(client.mac))
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                user_input or reconfigure_entry.data,
+            ),
             errors=errors,
         )
 
@@ -65,7 +104,10 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(dr.format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
-        self._discovered_device = PalazzettiClient(hostname=discovery_info.ip)
+        self._discovered_device = PalazzettiClient(
+            hostname=discovery_info.ip,
+            session=async_get_clientsession(self.hass),
+        )
         try:
             await self._discovered_device.connect()
         except CommunicationError:

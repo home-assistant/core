@@ -67,10 +67,10 @@
   },
   "services": {
     "set_datapoint": {
-      "description": "Set value for datapoint.",
+      "description": "Sets the value for a datapoint on a device.",
       "fields": {
         "datapoint_id": {
-          "description": "The ID of the datapoint to set, typically a five-digit number",
+          "description": "The ID of the datapoint to set, typically a five-digit number.",
           "name": "Datapoint ID"
         },
         "device_id": {

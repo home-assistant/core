@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -176,7 +175,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: NWSConfigEntry,
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
     ) -> None:

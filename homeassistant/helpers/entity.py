@@ -67,7 +67,7 @@ from .event import (
 from .frame import report_non_thread_safe_operation, report_usage
 from .group import Group
 from .singleton import singleton
-from .typing import UNDEFINED, StateType, UndefinedType
+from .typing import StateType, Undefined
 
 timer = time.time
 
@@ -207,12 +207,12 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def get_device_class_or_undefined(
     hass: HomeAssistant, entity_id: str
-) -> str | UndefinedType | None:
-    """Get the device class of an entity or UNDEFINED if not found."""
+) -> str | Undefined | None:
+    """Get the device class of an entity or Undefined if not found."""
     try:
         return get_device_class(hass, entity_id)
     except HomeAssistantError:
-        return UNDEFINED
+        return Undefined
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -296,7 +296,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     force_update: bool = False
     icon: str | None = None
     has_entity_name: bool = False
-    name: str | UndefinedType | None = UNDEFINED
+    name: str | Undefined | None = Undefined
     translation_key: str | None = None
     translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
@@ -764,7 +764,7 @@ class Entity(
         self,
         device_class_name: str | None,
         platform_translations: dict[str, str],
-    ) -> str | UndefinedType | None:
+    ) -> str | Undefined | None:
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
@@ -776,7 +776,7 @@ class Entity(
             return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
-            if description_name is UNDEFINED and self._default_to_device_class_name():
+            if description_name is Undefined and self._default_to_device_class_name():
                 return device_class_name
             return description_name
 
@@ -785,7 +785,7 @@ class Entity(
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
             return device_class_name
-        return UNDEFINED
+        return Undefined
 
     @property
     def suggested_object_id(self) -> str | None:
@@ -808,10 +808,10 @@ class Entity(
         else:
             name = self.name
 
-        return None if name is UNDEFINED else name
+        return None if name is Undefined else name
 
     @cached_property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity."""
         # The check for self.platform_data guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
@@ -1188,7 +1188,7 @@ class Entity(
             attr[EntityStateAttribute.ICON] = icon
 
         original_name = self.name
-        if original_name is UNDEFINED:
+        if original_name is Undefined:
             original_name = None
 
         # Use cached friendly name if available and original_name hasn't changed.

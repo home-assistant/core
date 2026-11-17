@@ -4,11 +4,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "insufficient_permissions": "User has insufficient permissions to access FRITZ!Box settings and its phonebooks.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The FRITZ!Box at this address is not the one that was originally set up."
     },
     "error": {
       "insufficient_permissions": "[%key:component::fritzbox_callmonitor::config::abort::insufficient_permissions%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -21,6 +23,17 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::fritzbox_callmonitor::config::step::user::data_description::host%]"
         }
       },
       "user": {

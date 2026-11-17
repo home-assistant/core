@@ -194,7 +194,7 @@ def _connection_error(
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version

@@ -4,6 +4,7 @@
   "categories": ["security_safety.cameras"],
   "codeowners": ["@mosandlt"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/bosch_smart_camera",
   "integration_type": "hub",

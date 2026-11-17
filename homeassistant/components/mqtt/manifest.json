@@ -5,6 +5,7 @@
   "categories": ["diy_makers"],
   "codeowners": ["@emontnemery", "@jbouwh", "@bdraco"],
   "config_flow": true,
+  "connectivity": ["mqtt"],
   "dependencies": ["file_upload", "http"],
   "documentation": "https://www.home-assistant.io/integrations/mqtt",
   "integration_type": "service",

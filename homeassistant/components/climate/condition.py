@@ -18,7 +18,13 @@ from homeassistant.helpers.condition import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, ClimateEntityStateAttribute, HVACAction, HVACMode
+from .const import (
+    DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+    HVACAction,
+    HVACMode,
+)
 
 CONF_HVAC_MODE = "hvac_mode"
 
@@ -75,8 +81,9 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
-        # Climate entities convert temperatures to the system unit via show_temp
-        return self._hass.config.units.temperature_unit
+        return entity_state.attributes.get(
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT
+        )
 
 
 class ClimateTargetHumidityCondition(EntityNumericalConditionBase):

@@ -152,21 +152,20 @@ class TodSensor(BinarySensorEntity):
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
-        if time_zone := dt_util.get_default_time_zone():
-            return {
-                TodEntityStateAttribute.AFTER: self._time_after.astimezone(
-                    time_zone
-                ).isoformat(),
-                TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
-                    time_zone
-                ).isoformat(),
-                TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
-                    time_zone
-                ).isoformat(),
-            }
-        return None
+        time_zone = dt_util.get_default_time_zone()
+        return {
+            TodEntityStateAttribute.AFTER: self._time_after.astimezone(
+                time_zone
+            ).isoformat(),
+            TodEntityStateAttribute.BEFORE: self._time_before.astimezone(
+                time_zone
+            ).isoformat(),
+            TodEntityStateAttribute.NEXT_UPDATE: self._next_update.astimezone(
+                time_zone
+            ).isoformat(),
+        }
 
     def _naive_time_to_utc_datetime(self, naive_time: time) -> datetime:
         """Convert naive time from config to utc_datetime with current day."""
@@ -240,9 +239,8 @@ class TodSensor(BinarySensorEntity):
         self._time_before += self._before_offset
 
     def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
-        """Add 24 hours (1 day) but account for DST."""
-        tentative_new_date = a_date + timedelta(days=1)
-        tentative_new_date = dt_util.as_local(tentative_new_date)
+        """Advance to the next local calendar day, accounting for DST."""
+        tentative_new_date = dt_util.as_local(a_date) + timedelta(days=1)
         tentative_new_date = tentative_new_date.replace(
             hour=target_time.hour, minute=target_time.minute
         )

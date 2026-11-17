@@ -12,7 +12,6 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
@@ -221,6 +220,47 @@ async def test_lovelace_migration_completes_when_both_files_exist(
     assert response["result"] == {"views": [{"title": "New"}]}
 
 
+async def test_lovelace_migration_skipped_for_yaml_dashboard(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration is skipped when YAML defines the default dashboard."""
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Old"}]}},
+    }
+
+    with patch("homeassistant.components.lovelace.os.rename") as mock_rename:
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "lovelace": {
+                    "dashboards": {
+                        "lovelace": {
+                            "mode": "yaml",
+                            "filename": "ui-lovelace.yaml",
+                            "title": "Overview",
+                        }
+                    }
+                }
+            },
+        )
+
+    mock_rename.assert_not_called()
+    assert "Failed to create dashboard entry during migration" not in caplog.text
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert [item["mode"] for item in response["result"]] == ["yaml"]
+
+
 async def test_lovelace_migration_skipped_when_already_migrated(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -275,7 +315,21 @@ async def test_lovelace_from_yaml(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test we load lovelace config from yaml."""
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "lovelace": {
+                "dashboards": {
+                    "lovelace": {
+                        "mode": "yaml",
+                        "filename": "ui-lovelace.yaml",
+                        "title": "Overview",
+                    }
+                }
+            }
+        },
+    )
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
     client = await hass_ws_client(hass)
@@ -359,25 +413,6 @@ async def test_lovelace_from_yaml(
     assert response["result"] == {"hello": "yo3"}
 
     assert len(events) == 2
-
-
-async def test_lovelace_from_yaml_creates_repair_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test YAML mode creates a repair issue."""
-    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
-
-    # Panel should be registered as a YAML dashboard
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
-
-    # Repair issue should be created
-    issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.is_fixable is False
-    assert issue.breaks_in_ha_version == "2026.8.0"
 
 
 @pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
@@ -835,15 +870,20 @@ async def test_lovelace_info_yaml_resource_mode(
     assert response["result"] == {"resource_mode": "yaml"}
 
 
-async def test_lovelace_info_yaml_mode_fallback(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+async def test_legacy_yaml_mode_ignored(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test lovelace/info returns yaml resource_mode when mode is yaml."""
+    """Test the removed mode option is ignored instead of failing the setup."""
     assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "yaml"}})
+
+    assert "The 'mode' option has been removed" in caplog.text
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
 
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 5, "type": "lovelace/info"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"resource_mode": "yaml"}
+    assert response["result"] == {"resource_mode": "storage"}
