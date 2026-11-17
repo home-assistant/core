@@ -7,9 +7,15 @@ from aiohasupervisor.models import (
     StoreAddonUpdate,
 )
 
+from homeassistant.components.update import (
+    DOMAIN as UPDATE_DOMAIN,
+    async_snapshot_before_update,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
+from .const import ATTR_VERSION_LATEST, DOMAIN
 from .handler import get_supervisor_client
 
 
@@ -39,10 +45,25 @@ async def update_addon(
         ) from err
 
 
-async def update_core(hass: HomeAssistant, version: str | None, backup: bool) -> None:
+async def snapshot_core_before_update(hass: HomeAssistant) -> None:
+    """Save the run before a Core update for the update report of its entity."""
+    if entity_id := er.async_get(hass).async_get_entity_id(
+        UPDATE_DOMAIN, DOMAIN, f"home_assistant_core_{ATTR_VERSION_LATEST}"
+    ):
+        await async_snapshot_before_update(hass, entity_id)
+
+
+async def update_core(
+    hass: HomeAssistant,
+    version: str | None,
+    backup: bool,
+    *,
+    snapshot: bool = True,
+) -> None:
     """Update core.
 
-    Optionally make a backup before updating.
+    Optionally make a backup before updating. Callers that pass snapshot=False
+    save the update report snapshot themselves.
     """
     client = get_supervisor_client(hass)
 
@@ -51,6 +72,8 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
 
         await backup_core_before_update(hass)
 
+    if snapshot:
+        await snapshot_core_before_update(hass)
     try:
         await client.homeassistant.update(
             HomeAssistantUpdateOptions(version=version, backup=False)

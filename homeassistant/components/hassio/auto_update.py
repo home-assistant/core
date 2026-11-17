@@ -37,7 +37,7 @@ from .const import (
     OPTION_CORE_BACKUP_BEFORE_UPDATE,
 )
 from .coordinator import HassioMainDataUpdateCoordinator
-from .update_helper import update_core
+from .update_helper import snapshot_core_before_update, update_core
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -248,6 +248,14 @@ class AutoUpdateManager:
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
         )
+
+    @callback
+    def async_start(self) -> None:
+        """Start checking once Home Assistant has started.
+
+        Called after the platforms are set up, so the update report can save
+        a snapshot for the Core update entity.
+        """
         self._entry.async_on_unload(
             async_at_started(self._hass, self._async_start_checking)
         )
@@ -471,7 +479,9 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-            # Checked again, with nothing awaited until the request: the save
+            await snapshot_core_before_update(self._hass)
+
+            # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
             # stale or another update or backup start. The window only bounds
             # the start, so a long backup may run past its end. After our own
@@ -491,7 +501,7 @@ class AutoUpdateManager:
                 return
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)
-            await update_core(self._hass, version, False)
+            await update_core(self._hass, version, False, snapshot=False)
         except HomeAssistantError as err:
             _LOGGER.error(
                 "Automatic update to Home Assistant %s failed: %s", version, err
