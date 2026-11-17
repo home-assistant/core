@@ -2388,11 +2388,20 @@
     }
   },
   "exceptions": {
+    "cluster_command_response_unsupported": {
+      "message": "The installed ZHA library does not support cluster command responses."
+    },
     "no_gateway": {
       "message": "ZHA is not loaded, so this action cannot be performed."
     },
     "not_zigbee_device": {
       "message": "Device {ieee} is not a Zigbee device, so this action cannot be performed."
+    },
+    "weekly_schedule_clear_unsupported": {
+      "message": "The installed ZHA library or this climate entity does not support clearing weekly schedules."
+    },
+    "weekly_schedule_unsupported": {
+      "message": "The installed ZHA library or this climate entity does not support weekly schedules."
     }
   },
   "issues": {
@@ -2414,6 +2423,62 @@
         }
       },
       "title": "Zigbee network settings have changed"
+    },
+    "weekly_schedule_link_broken": {
+      "fix_flow": {
+        "abort": {
+          "clear_failed": "The link was not removed because the thermostat schedule could not be cleared: {error}",
+          "link_not_found": "The weekly schedule link no longer exists.",
+          "sync_failed": "The sync failed again: {error}"
+        },
+        "step": {
+          "confirm_unlink": {
+            "description": "{error}\n\nHome Assistant will not make further changes to the thermostat. Its schedule may still be active and may continue changing the heating target. Remove the link anyway only if you can manage the thermostat separately.",
+            "title": "Remove link without clearing the thermostat?"
+          },
+          "init": {
+            "description": "The weekly schedule link between `{thermostat}` and `{schedule}` cannot be synced: {error}\n\nThe thermostat keeps its current schedule. Restore the entity and sync again, or remove the link.",
+            "menu_option_descriptions": {
+              "remove_link": "Switch the thermostat from Auto to Heat, clear its weekly schedule and remove the link.",
+              "retry": "Fix the schedule helper first, then sync it to the thermostat again."
+            },
+            "menu_options": {
+              "remove_link": "Remove link",
+              "retry": "Sync again"
+            },
+            "title": "[%key:component::zha::issues::weekly_schedule_link_broken::title%]"
+          }
+        }
+      },
+      "title": "Weekly schedule link is broken"
+    },
+    "weekly_schedule_sync_failed": {
+      "fix_flow": {
+        "abort": {
+          "clear_failed": "The link was not removed because the thermostat schedule could not be cleared: {error}",
+          "link_not_found": "The weekly schedule link no longer exists.",
+          "sync_failed": "The sync failed again: {error}"
+        },
+        "step": {
+          "confirm_unlink": {
+            "description": "{error}\n\nHome Assistant will not make further changes to the thermostat. Its schedule may still be active and may continue changing the heating target. Remove the link anyway only if you can manage the thermostat separately.",
+            "title": "Remove link without clearing the thermostat?"
+          },
+          "init": {
+            "description": "The schedule helper `{schedule}` could not be synced to `{thermostat}`: {error}\n\nZHA retries device errors every 15 minutes and after every change to the helper. Days written before a failure are kept; nothing is rolled back. Fix the helper and sync again, or remove the link.",
+            "menu_option_descriptions": {
+              "remove_link": "Switch the thermostat from Auto to Heat, clear its weekly schedule and remove the link.",
+              "retry": "Fix the schedule helper first, then sync it to the thermostat again."
+            },
+            "menu_options": {
+              "remove_link": "Remove link",
+              "retry": "Sync again"
+            },
+            "title": "[%key:component::zha::issues::weekly_schedule_sync_failed::title%]"
+          }
+        }
+      },
+      "title": "Weekly schedule sync failed"
     },
     "wrong_silabs_firmware_installed_nabucasa": {
       "description": "Your Zigbee adapter is currently in an incorrect state: {firmware_type}.\n\nThe device may have Thread or multiprotocol firmware installed, or it may be stuck in the bootloader. To resolve this, try to unplug the adapter temporarily.\n\nIf the issue persists and you need to install Zigbee firmware:\n - Go to Settings > System > Hardware, select the device and select Configure.\n - Select the 'Migrate Zigbee to a new adapter' option and follow the instructions.",
@@ -2582,6 +2647,10 @@
       },
       "name": "Clear lock user"
     },
+    "clear_weekly_schedule": {
+      "description": "Clears the entire device schedule, including cooling schedules. Only heat schedules are read, snapshotted, and verified. Temperature targets may change; no automatic rollback is attempted.",
+      "name": "Clear thermostat weekly schedule"
+    },
     "disable_lock_user_code": {
       "description": "Disables a user code on a lock.",
       "fields": {
@@ -2602,8 +2671,18 @@
       },
       "name": "Enable lock user"
     },
+    "get_weekly_schedule": {
+      "description": "Reads the thermostat's heat schedule. Cached results may be stale or incomplete and are cleared on restart.",
+      "fields": {
+        "cache_only": {
+          "description": "Return cached days without reading the thermostat. Unknown days have null transitions.",
+          "name": "Cache only"
+        }
+      },
+      "name": "Get thermostat weekly schedule"
+    },
     "issue_zigbee_cluster_command": {
-      "description": "Issues a command on the specified cluster on the specified entity.",
+      "description": "Issues a command on the specified cluster on the specified entity, optionally returning its response. Raw schedule writes or clearing may change the heating target and bypass schedule validation.",
       "fields": {
         "args": {
           "description": "Arguments to pass to the command.",
@@ -2723,6 +2802,16 @@
         }
       },
       "name": "Set lock user code"
+    },
+    "set_weekly_schedule": {
+      "description": "Uploads a schedule helper as the thermostat's seven-day heat schedule. Each day must cover 00:00 to 24:00 without gaps, with data.temperature in Celsius on every time block. Uploading may change the heating target; the thermostat mode and clock are not changed.",
+      "fields": {
+        "schedule_entity": {
+          "description": "Schedule helper containing the complete heat schedule to upload.",
+          "name": "Schedule helper"
+        }
+      },
+      "name": "Upload thermostat weekly schedule"
     },
     "set_zigbee_cluster_attribute": {
       "description": "Sets an attribute value for the specified cluster on the specified entity.",

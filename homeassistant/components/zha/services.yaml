@@ -129,6 +129,35 @@ issue_zigbee_cluster_command:
       selector:
         text:
 
+clear_weekly_schedule:
+  target:
+    entity:
+      domain: climate
+      integration: zha
+
+get_weekly_schedule:
+  target:
+    entity:
+      domain: climate
+      integration: zha
+  fields:
+    cache_only:
+      default: false
+      selector:
+        boolean:
+
+set_weekly_schedule:
+  target:
+    entity:
+      domain: climate
+      integration: zha
+  fields:
+    schedule_entity:
+      required: true
+      selector:
+        entity:
+          domain: schedule
+
 issue_zigbee_group_command:
   fields:
     group:

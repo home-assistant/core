@@ -41,6 +41,7 @@ from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -74,9 +75,11 @@ from .helpers import (
     async_cluster_exists,
     cluster_command_schema_to_vol_schema,
     get_config_entry,
+    get_zha_data,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
+from .weekly_schedule import WeeklyScheduleRemovalError, WeeklyScheduleSyncManager
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api import ActiveConnection
@@ -1071,6 +1074,189 @@ async def websocket_update_zha_configuration(
     connection.send_result(msg[ID], status)
 
 
+def _weekly_schedule_sync(hass: HomeAssistant) -> WeeklyScheduleSyncManager:
+    """Return the weekly schedule sync manager of the loaded ZHA entry."""
+    if (manager := get_zha_data(hass).weekly_schedule_sync) is None:
+        raise ValueError("ZHA is not loaded")
+    return manager
+
+
+def _weekly_schedules_payload(manager: WeeklyScheduleSyncManager) -> dict[str, Any]:
+    return {
+        "thermostats": manager.async_supported_thermostats(),
+        "links": manager.async_links(),
+    }
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({probatio.Required(TYPE): "zha/weekly_schedules/list"})
+@callback
+def websocket_list_weekly_schedules(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """List thermostats with weekly schedule support and their helper links."""
+    try:
+        manager = _weekly_schedule_sync(hass)
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_NOT_FOUND, str(err))
+        return
+    connection.send_result(msg[ID], _weekly_schedules_payload(manager))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required(TYPE): "zha/weekly_schedules/subscribe"}
+)
+@callback
+def websocket_subscribe_weekly_schedules(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Send the weekly schedule list now and whenever a link changes."""
+    try:
+        manager = _weekly_schedule_sync(hass)
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_NOT_FOUND, str(err))
+        return
+
+    @callback
+    def forward() -> None:
+        connection.send_message(
+            websocket_api.event_message(msg[ID], _weekly_schedules_payload(manager))
+        )
+
+    connection.subscriptions[msg[ID]] = manager.async_subscribe(forward)
+    connection.send_result(msg[ID])
+    forward()
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zha/weekly_schedules/add",
+        probatio.Required("thermostat_entity_id"): cv.entity_domain("climate"),
+        probatio.Required("schedule_entity_id"): cv.entity_domain("schedule"),
+        probatio.Optional("block_temperature"): probatio.Any(
+            None, probatio.Coerce(float)
+        ),
+        probatio.Optional("gap_temperature"): probatio.Any(
+            None, probatio.Coerce(float)
+        ),
+    }
+)
+@callback
+def websocket_add_weekly_schedule(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Link a thermostat to a schedule helper and start syncing."""
+    try:
+        link = _weekly_schedule_sync(hass).async_add_link(
+            msg["thermostat_entity_id"],
+            msg["schedule_entity_id"],
+            block_temperature=msg.get("block_temperature"),
+            gap_temperature=msg.get("gap_temperature"),
+        )
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+    connection.send_result(msg[ID], link)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zha/weekly_schedules/update",
+        probatio.Required("link_id"): str,
+        probatio.Required("schedule_entity_id"): cv.entity_domain("schedule"),
+        probatio.Optional("block_temperature"): probatio.Any(
+            None, probatio.Coerce(float)
+        ),
+        probatio.Optional("gap_temperature"): probatio.Any(
+            None, probatio.Coerce(float)
+        ),
+    }
+)
+@websocket_api.async_response
+async def websocket_update_weekly_schedule(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Change the helper or fallback temperatures of a link and resync."""
+    try:
+        link = await _weekly_schedule_sync(hass).async_update_link(
+            msg["link_id"],
+            msg["schedule_entity_id"],
+            block_temperature=msg.get("block_temperature"),
+            gap_temperature=msg.get("gap_temperature"),
+        )
+    except KeyError:
+        connection.send_error(
+            msg[ID], websocket_api.ERR_NOT_FOUND, "Weekly schedule link not found"
+        )
+        return
+    except ValueError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_HOME_ASSISTANT_ERROR, str(err))
+        return
+    connection.send_result(msg[ID], link)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zha/weekly_schedules/remove",
+        probatio.Required("link_id"): str,
+        probatio.Optional("without_clearing", default=False): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_remove_weekly_schedule(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Leave Auto, clear the thermostat's schedule and remove the link."""
+    try:
+        await _weekly_schedule_sync(hass).async_remove_link(
+            msg["link_id"], without_clearing=msg["without_clearing"]
+        )
+    except KeyError, ValueError:
+        connection.send_error(
+            msg[ID], websocket_api.ERR_NOT_FOUND, "Weekly schedule link not found"
+        )
+        return
+    except WeeklyScheduleRemovalError as err:
+        connection.send_error(msg[ID], "weekly_schedule_clear_failed", str(err))
+        return
+    except HomeAssistantError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_HOME_ASSISTANT_ERROR, str(err))
+        return
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required(TYPE): "zha/weekly_schedules/sync",
+        probatio.Required("link_id"): str,
+    }
+)
+@callback
+def websocket_sync_weekly_schedule(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Re-read the thermostat and write the days that differ from the helper."""
+    try:
+        _weekly_schedule_sync(hass).async_request_sync(msg["link_id"])
+    except KeyError, ValueError:
+        connection.send_error(
+            msg[ID], websocket_api.ERR_NOT_FOUND, "Weekly schedule link not found"
+        )
+        return
+    except HomeAssistantError as err:
+        connection.send_error(msg[ID], websocket_api.ERR_HOME_ASSISTANT_ERROR, str(err))
+        return
+    connection.send_result(msg[ID])
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({probatio.Required(TYPE): "zha/network/settings"})
 @websocket_api.async_response
@@ -1207,6 +1393,12 @@ def async_load_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_get_configuration)
     websocket_api.async_register_command(hass, websocket_update_zha_configuration)
     websocket_api.async_register_command(hass, websocket_get_network_settings)
+    websocket_api.async_register_command(hass, websocket_list_weekly_schedules)
+    websocket_api.async_register_command(hass, websocket_subscribe_weekly_schedules)
+    websocket_api.async_register_command(hass, websocket_add_weekly_schedule)
+    websocket_api.async_register_command(hass, websocket_update_weekly_schedule)
+    websocket_api.async_register_command(hass, websocket_remove_weekly_schedule)
+    websocket_api.async_register_command(hass, websocket_sync_weekly_schedule)
     websocket_api.async_register_command(hass, websocket_list_network_backups)
     websocket_api.async_register_command(hass, websocket_create_network_backup)
     websocket_api.async_register_command(hass, websocket_restore_network_backup)

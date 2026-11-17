@@ -1,7 +1,7 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
-  "after_dependencies": ["hassio", "onboarding"],
+  "after_dependencies": ["hassio", "onboarding", "schedule"],
   "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
