@@ -117,14 +117,14 @@ async def test_poll_failure_and_recovery(
     )
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     aioclient_mock.clear_requests()
     mock_feed(aioclient_mock, "v3")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == "5"
 
 
@@ -189,7 +189,7 @@ async def test_new_vehicle_type_counts_in_its_group(
     )
     freezer.tick(timedelta(seconds=300))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "6"
 
@@ -227,7 +227,7 @@ async def test_docks_sensor_for_station_without_status_at_setup(
     mock_feed(aioclient_mock, "v3")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(entity_id).state == "5"
 
@@ -248,7 +248,7 @@ async def test_empty_vehicle_breakdown_counts_zero(
     await serve_edited_v3_feed(hass, aioclient_mock, {"station_status": empty_station})
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(f"{MAIN_ST}_classic_bikes").state == "0"
     assert hass.states.get(f"{MAIN_ST}_e_bikes").state == "0"

@@ -4,7 +4,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import override
 
-from aiomobilitydatabase.feeds import Station, VehicleType
+from aiomobilitydatabase.feeds import (
+    GbfsFormFactor,
+    GbfsPropulsionType,
+    GbfsStation,
+    GbfsVehicleType,
+)
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -33,22 +38,27 @@ GROUPS = (
 )
 
 _FORM_FACTOR_GROUPS = {
-    "cargo_bicycle": "cargo_bikes",
-    "scooter_standing": "scooters",
-    "scooter_seated": "scooters",
+    GbfsFormFactor.CARGO_BICYCLE: "cargo_bikes",
+    GbfsFormFactor.SCOOTER_STANDING: "scooters",
+    GbfsFormFactor.SCOOTER_SEATED: "scooters",
     # GBFS 2.2; 2.3 split it into standing and seated.
-    "scooter": "scooters",
-    "moped": "mopeds",
-    "car": "cars",
-    "other": "other_vehicles",
+    GbfsFormFactor.SCOOTER: "scooters",
+    GbfsFormFactor.MOPED: "mopeds",
+    GbfsFormFactor.CAR: "cars",
+    GbfsFormFactor.OTHER: "other_vehicles",
 }
 
 
-def vehicle_group(vehicle_type: VehicleType) -> str | None:
+def vehicle_group(vehicle_type: GbfsVehicleType) -> str | None:
     """Return the sensor group a vehicle type counts towards."""
-    if vehicle_type.form_factor == "bicycle":
-        # Unknown future propulsion types are motorized; human is the only unpowered one.
-        if vehicle_type.propulsion_type in ("human", None):
+    if vehicle_type.form_factor is GbfsFormFactor.BICYCLE:
+        propulsion = vehicle_type.propulsion_type
+        # Human is the only unpowered propulsion type, so one newer than the
+        # library (stated but unreadable) is motorized; none stated is not.
+        if propulsion is GbfsPropulsionType.HUMAN or (
+            propulsion is None
+            and "propulsion_type" not in vehicle_type.unreadable_fields
+        ):
             return "classic_bikes"
         return "e_bikes"
     if vehicle_type.form_factor is None:
@@ -60,7 +70,7 @@ def vehicle_group(vehicle_type: VehicleType) -> str | None:
 class GbfsSensorEntityDescription(SensorEntityDescription):
     """Describes a GBFS station sensor."""
 
-    value_fn: Callable[[Station, Mapping[str, VehicleType]], int | None]
+    value_fn: Callable[[GbfsStation, Mapping[str, GbfsVehicleType]], int | None]
 
 
 VEHICLES_AVAILABLE = GbfsSensorEntityDescription(
@@ -81,7 +91,9 @@ DOCKS_AVAILABLE = GbfsSensorEntityDescription(
 def _group_description(group: str) -> GbfsSensorEntityDescription:
     """Describe the sensor counting one group's vehicle types at a station."""
 
-    def value(station: Station, vehicle_types: Mapping[str, VehicleType]) -> int | None:
+    def value(
+        station: GbfsStation, vehicle_types: Mapping[str, GbfsVehicleType]
+    ) -> int | None:
         if station.vehicle_types_available is None:
             return None
         return sum(

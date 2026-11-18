@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
+from unittest.mock import patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -91,10 +92,16 @@ URL_ERROR_CASES = [
         id="invalid_feed",
     ),
     pytest.param(DOCKLESS_URL, _serve_dockless, "no_stations", id="no_stations"),
-    pytest.param(
-        V3_URL, lambda m: m.get(V3_URL, exc=RuntimeError()), "unknown", id="unknown"
-    ),
 ]
+
+
+# Any failure in the request itself is a connection error; an unexpected
+# error comes from reading the system once it was fetched.
+def _unexpected_error() -> Any:
+    return patch(
+        "aiomobilitydatabase.feeds.GbfsFeedHandle.get_system_info",
+        side_effect=RuntimeError,
+    )
 
 
 @pytest.mark.parametrize(("url", "serve", "error"), URL_ERROR_CASES)
@@ -119,6 +126,25 @@ async def test_user_flow_errors(
 
     aioclient_mock.clear_requests()
     mock_feed(aioclient_mock, "v3")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: V3_URL}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
+async def test_user_flow_unexpected_error(hass: HomeAssistant) -> None:
+    """Test an unexpected error is shown and the flow recovers."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with _unexpected_error():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: V3_URL}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_URL: V3_URL}
     )
@@ -216,6 +242,27 @@ async def test_reconfigure_errors(
 
     aioclient_mock.clear_requests()
     mock_feed(aioclient_mock, "v3")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: V3_URL}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_v3_feed", "mock_setup_entry")
+async def test_reconfigure_unexpected_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test an unexpected error while reconfiguring is shown and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    with _unexpected_error():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_URL: V3_URL}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_URL: V3_URL}
     )

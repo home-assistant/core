@@ -6,10 +6,10 @@ from typing import Any, override
 
 from aiomobilitydatabase.feeds import (
     FeedParseError,
+    GbfsStation,
+    GbfsSystemInfo,
     MobilityFeedsClient,
     SourceConnectionError,
-    Station,
-    SystemInfo,
 )
 import probatio
 from yarl import URL
@@ -59,7 +59,7 @@ class NoStations(Exception):
     """The system publishes no stations."""
 
 
-async def _async_read_system(hass: HomeAssistant, url: str) -> SystemInfo:
+async def _async_read_system(hass: HomeAssistant, url: str) -> GbfsSystemInfo:
     """Read a system's identity, requiring at least one station."""
     if not _is_http_url(url):
         raise InvalidUrl
@@ -153,10 +153,10 @@ class GbfsConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 def _station_options(
-    hass: HomeAssistant, stations: Iterable[Station]
+    hass: HomeAssistant, stations: Iterable[GbfsStation]
 ) -> list[SelectOptionDict]:
     """List stations closest to home first, labelled with their distance."""
-    located: list[tuple[float | None, Station]] = []
+    located: list[tuple[float | None, GbfsStation]] = []
     for station in stations:
         meters = (
             None

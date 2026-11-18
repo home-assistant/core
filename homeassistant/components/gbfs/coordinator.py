@@ -6,10 +6,10 @@ from typing import override
 
 from aiomobilitydatabase.feeds import (
     GbfsFeedHandle,
+    GbfsStation,
+    GbfsSystemInfo,
+    GbfsVehicleType,
     MobilityFeedsError,
-    Station,
-    SystemInfo,
-    VehicleType,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,8 +27,8 @@ type GbfsConfigEntry = ConfigEntry[GbfsCoordinator]
 class GbfsData:
     """The current stations and vehicle types of a GBFS system, keyed by ID."""
 
-    stations: dict[str, Station]
-    vehicle_types: dict[str, VehicleType]
+    stations: dict[str, GbfsStation]
+    vehicle_types: dict[str, GbfsVehicleType]
 
 
 class GbfsCoordinator(DataUpdateCoordinator[GbfsData]):
@@ -41,7 +41,7 @@ class GbfsCoordinator(DataUpdateCoordinator[GbfsData]):
         hass: HomeAssistant,
         config_entry: GbfsConfigEntry,
         feed: GbfsFeedHandle,
-        system: SystemInfo,
+        system: GbfsSystemInfo,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
