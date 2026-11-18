@@ -275,7 +275,11 @@
         'is_dynamic': False,
         'last_update_success': True,
         'peaks': dict({
+          'is_fallback': None,
           'last_update_success': False,
+          'monthly': None,
+          'peak_month': None,
+          'previous_month': None,
           'update_interval': '1:00:00',
         }),
         'slots': dict({

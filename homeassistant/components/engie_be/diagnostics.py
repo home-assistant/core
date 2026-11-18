@@ -16,7 +16,6 @@ from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
-    EngieBePeaksData,
     EngieBePricesData,
     epex_day_available,
     epex_slots_for_day,
@@ -71,23 +70,20 @@ def _monthly_peaks_diagnostics(monthly: MonthlyPeaks) -> dict[str, Any]:
 
 def _peaks_diagnostics(peaks: EngieBePeaksCoordinator) -> dict[str, Any]:
     """Return the diagnostics of the capacity tariff peaks coordinator."""
-    status = {
+    data = peaks.data
+    return {
         "last_update_success": peaks.last_update_success,
         "update_interval": str(peaks.update_interval),
-    }
-    data: EngieBePeaksData | None = peaks.data
-    if data is None:
-        return status
-    return {
-        **status,
-        "monthly": _monthly_peaks_diagnostics(data.monthly),
+        "monthly": (
+            _monthly_peaks_diagnostics(data.monthly) if data is not None else None
+        ),
         "previous_month": (
             _monthly_peaks_diagnostics(data.previous_month)
-            if data.previous_month is not None
+            if data is not None and data.previous_month is not None
             else None
         ),
-        "peak_month": data.peak_month,
-        "is_fallback": data.is_fallback,
+        "peak_month": data.peak_month if data is not None else None,
+        "is_fallback": data.is_fallback if data is not None else None,
     }
 
 
