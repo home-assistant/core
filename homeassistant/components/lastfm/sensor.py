@@ -41,7 +41,6 @@ SCROBBLE_SCHEMA: dict[Any, Any] = {
 }
 
 
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LastFMConfigEntry,
