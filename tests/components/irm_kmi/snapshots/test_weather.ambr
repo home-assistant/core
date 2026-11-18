@@ -638,20 +638,20 @@
       'sunset': '2023-12-28T16:34:06+01:00',
       'temperature': 11.0,
       'text': '''
-        Waarschuwingen
+        Waarschuwingen 
         Vanavond zijn er in het noordwesten zware windstoten mogelijk van 75-90 km/uur (code geel).
-
+        
         Vanochtend is het half bewolkt met in het noorden kans op een bui. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan de kust krachtig tot hard, windkracht 6-7, af en toe even stormachtig, windkracht 8. Aan de kust komen windstoten voor van ongeveer 80 km/uur.
         Vanmiddag is het half tot zwaar bewolkt met kans op een bui, vooral in het noorden en westen. De middagtemperatuur ligt rond 11°C. De wind komt uit het zuidwesten en is meestal vrij krachtig, aan de kust krachtig tot hard, windkracht 6-7, vooral later ook af en toe stormachtig, windkracht 8. Aan de kust zijn er windstoten tot ongeveer 80 km/uur.
         Vanavond zijn er buien, alleen in het zuidoosten is het overwegend droog. De wind komt uit het zuidwesten en is meestal vrij krachtig, aan de kust hard tot stormachtig, windkracht 7 tot 8. Vooral in het noordwesten zijn windstoten mogelijk van 75-90 km/uur.
-
+        
         Komende nacht komen er enkele buien voor. Met een minimumtemperatuur van ongeveer 8°C is het zacht. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan zee krachtig tot hard, windkracht 6-7, met zware windstoten tot ongeveer 80 km/uur.
-
+        
         Morgenochtend is het half tot zwaar bewolkt en zijn er enkele buien. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan zee krachtig hard, windkracht 6-7, met vooral in het noordwesten mogelijk zware windstoten tot ongeveer 80 km/uur.
         Morgenmiddag is er af en toe ruimte voor de zon en blijft het op de meeste plaatsen droog, alleen in het zuidoosten kan een enkele bui vallen. Met middagtemperaturen van ongeveer 10°C blijft het zacht. De wind uit het zuidwesten is matig tot vrij krachtig, aan zee krachtig tot hard, windkracht 6-7, met in het Waddengebied zware windstoten tot ongeveer 80 km/uur.
-        Morgenavond is het half tot zwaar bewolkt met een enkele bui. De wind komt uit het zuidwesten en is meest matig, aan de kust krachtig tot hard, windkracht 6-7, boven de Wadden eerst stormachtig, windkracht 8.
+        Morgenavond is het half tot zwaar bewolkt met een enkele bui. De wind komt uit het zuidwesten en is meest matig, aan de kust krachtig tot hard, windkracht 6-7, boven de Wadden eerst stormachtig, windkracht 8. 
         (Bron: KNMI, 2023-12-28T06:56:00+01:00)
-
+  
       ''',
       'wind_bearing': 225.0,
       'wind_gust_speed': 33.0,
