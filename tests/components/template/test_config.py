@@ -1,5 +1,8 @@
 """Test Template config."""
 
+from pathlib import Path
+from unittest.mock import patch
+
 import probatio
 import pytest
 from pytest_homeassistant.common import (
@@ -7,12 +10,14 @@ from pytest_homeassistant.common import (
     assert_setup_component,
 )
 
+from homeassistant import config as hass_config
 from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
+    DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
     async_validate_config_section,
 )
-from homeassistant.components.template.const import PLATFORMS
+from homeassistant.components.template.const import PLATFORMS, TemplateService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -24,12 +29,14 @@ from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import load_yaml_dict
 
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
     async_trigger,
+    get_deprecated_missing_actions_issues,
     make_mock_device_actions,
     make_test_trigger,
     setup_entity,
@@ -1437,3 +1444,135 @@ async def test_multiple_configuration_keys(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == expected
+
+
+async def async_setup_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and set up the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    config = await hass.async_add_executor_job(load_yaml_dict, yaml_path)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def async_reload_yaml_config(
+    hass: HomeAssistant, config_dir: Path, yaml_config: str
+) -> None:
+    """Write configuration.yaml and reload the template integration from it."""
+    yaml_path = config_dir / "configuration.yaml"
+    await hass.async_add_executor_job(yaml_path.write_text, yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", str(yaml_path)):
+        await hass.services.async_call(DOMAIN, TemplateService.RELOAD, blocking=True)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def yaml_config_dir(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Use a temporary configuration directory."""
+    hass.config.config_dir = str(tmp_path)
+    return tmp_path
+
+
+MISSING_ACTIONS_LIGHT_YAML = """\
+template:
+  - light:
+      - name: Test
+        turn_on: []
+        turn_off: []
+        level: "{{ 100 }}"
+        hs: "{{ (40, 50) }}"
+        set_hs: []
+"""
+
+
+async def test_deprecated_missing_actions_issue_file_and_line(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test the repair lists file and line, and is removed after a fix."""
+    await async_setup_yaml_config(hass, yaml_config_dir, MISSING_ACTIONS_LIGHT_YAML)
+
+    issues = get_deprecated_missing_actions_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders == {
+        "platform": "light",
+        "identifier": "name: Test",
+        "breaks_in_ha_version": DEPRECATED_MISSING_ACTIONS_BREAKS_IN,
+        "options": "- `configuration.yaml:6`: `level` requires `set_level`",
+    }
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        MISSING_ACTIONS_LIGHT_YAML + "        set_level: []\n",
+    )
+
+    assert get_deprecated_missing_actions_issues(issue_registry) == []
+
+
+async def test_deprecated_missing_actions_issue_per_entity(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a repair is created for each entity with options without actions."""
+    await async_setup_yaml_config(
+        hass,
+        yaml_config_dir,
+        MISSING_ACTIONS_LIGHT_YAML
+        + """\
+      - unique_id: second
+        turn_on: []
+        turn_off: []
+        xy: "{{ (0.2, 0.5) }}"
+  - cover:
+      - name: Test
+        open_cover: []
+        close_cover: []
+        tilt: "{{ 50 }}"
+""",
+    )
+
+    issues = get_deprecated_missing_actions_issues(issue_registry)
+    assert sorted(
+        (
+            issue.translation_placeholders["platform"],  # type: ignore[index]
+            issue.translation_placeholders["identifier"],  # type: ignore[index]
+        )
+        for issue in issues
+    ) == [
+        ("cover", "name: Test"),
+        ("light", "name: Test"),
+        ("light", "unique_id: second"),
+    ]
+
+
+async def test_deprecated_missing_actions_issue_dismissed(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
+) -> None:
+    """Test a dismissed repair stays dismissed until the configuration changes."""
+    await async_setup_yaml_config(hass, yaml_config_dir, MISSING_ACTIONS_LIGHT_YAML)
+    issues = get_deprecated_missing_actions_issues(issue_registry)
+    assert len(issues) == 1
+    dismissed_issue_id = issues[0].issue_id
+    issue_registry.async_ignore(DOMAIN, dismissed_issue_id, True)
+
+    # Moving the options to other lines is not a configuration change
+    await async_reload_yaml_config(
+        hass, yaml_config_dir, "\n" + MISSING_ACTIONS_LIGHT_YAML
+    )
+
+    issues = get_deprecated_missing_actions_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id == dismissed_issue_id
+    assert issues[0].dismissed_version is not None
+
+    await async_reload_yaml_config(
+        hass,
+        yaml_config_dir,
+        MISSING_ACTIONS_LIGHT_YAML.replace("{{ 100 }}", "{{ 50 }}"),
+    )
+
+    issues = get_deprecated_missing_actions_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].issue_id != dismissed_issue_id
+    assert issues[0].dismissed_version is None
