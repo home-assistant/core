@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "api_disabled": "API endpoint disabled. Please visit app.watercryst.com and navigate to your device. Under 'Smart Home API' enable the API for your device and/or your specific API endpoint.",
+      "api_disabled": "API endpoint disabled. Please visit {app_url} and navigate to your device. Under 'Smart Home API' enable the API for your device and/or your specific API endpoint.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -15,7 +15,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "BIOCAT Smart Home API Endpoint Key. Please visit app.watercryst.com and navigate to your device. Under 'Smart Home API' copy the key for your API endpoint."
+          "api_key": "BIOCAT Smart Home API Endpoint Key. Please visit {app_url} and navigate to your device. Under 'Smart Home API' copy the key for your API endpoint."
         }
       }
     }
@@ -42,15 +42,15 @@
       "ml_state": {
         "name": "Microleakage measurement state",
         "state": {
-          "cancelled": "Microleakage test cancelled",
+          "cancelled": "Cancelled",
           "failure_pressure_drop": "Pressure drop during measurement",
           "failure_start_pressure": "Start pressure error",
           "failure_unknown": "Unknown error",
           "failure_water_tap": "Water draw-off during measurement",
-          "idle": "Microleakage test idle",
-          "leakage": "Microleakage detected during the test",
-          "running": "Microleakage test running",
-          "success": "Microleakage test completed successfully"
+          "idle": "Idle",
+          "leakage": "Leakage",
+          "running": "Running",
+          "success": "Success"
         }
       },
       "mode_id": {
@@ -84,13 +84,13 @@
   },
   "exceptions": {
     "update_failed": {
-      "message": "Update failed"
+      "message": "Error communicating with the WATERCryst API"
     },
     "update_failed_api_disabled": {
-      "message": "Update failed, API disabled"
+      "message": "WATERCryst API disabled"
     },
     "update_failed_unauthorized": {
-      "message": "Update failed, unauthorized"
+      "message": "WATERCryst API authorization failed"
     }
   }
 }

@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import DOMAIN
+from .const import APP_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,5 +82,8 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user", data_schema=_STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=_STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"app_url": APP_URL},
         )
