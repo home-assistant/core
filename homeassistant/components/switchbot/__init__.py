@@ -194,7 +194,7 @@ PLATFORMS_BY_TYPE = {
         Platform.BINARY_SENSOR,
         Platform.BUTTON,
     ],
-    SupportedModels.ART_FRAME_LUMA.value: [
+    SupportedModels.ART_FRAME_2.value: [
         Platform.SENSOR,
         Platform.BINARY_SENSOR,
         Platform.BUTTON,
@@ -293,7 +293,7 @@ CLASS_BY_DEVICE = {
         switchbot.SwitchbotSmartThermostatRadiator
     ),
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
-    SupportedModels.ART_FRAME_LUMA.value: switchbot.SwitchbotArtFrameLuma,
+    SupportedModels.ART_FRAME_2.value: switchbot.SwitchbotArtFrame2,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.METER_PRO.value: switchbot.SwitchbotMeterPro,

@@ -50,7 +50,7 @@ from . import (
     ("frame_model", "frame_class", "model_bytes"),
     [
         ("art_frame", "SwitchbotArtFrame", "01113e10"),
-        ("art_frame_luma", "SwitchbotArtFrameLuma", "0111f1c0"),
+        ("art_frame_luma", "SwitchbotArtFrame2", "0111f1c0"),
     ],
 )
 @pytest.mark.parametrize(

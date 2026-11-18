@@ -2126,7 +2126,7 @@ async def test_options_flow_lock_with_night_latch(
 @pytest.mark.parametrize(
     ("sensor_type", "frame_class", "suffix"),
     [
-        ("art_frame_luma", "SwitchbotArtFrameLuma", "11f1c0"),
+        ("art_frame_luma", "SwitchbotArtFrame2", "11f1c0"),
     ],
 )
 @pytest.mark.parametrize("pairing", [0, 1])
