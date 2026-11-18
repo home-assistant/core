@@ -106,11 +106,17 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         super().__init__(coordinator, register_name)
         self._register_name = register_name
         self.entity_description = description
-        # Only a power register can be inverted. An energy register carries
-        # `TOTAL_INCREASING`, and the recorder rejects a negative sample from
-        # such a sensor, so a negated total is not a reading Home Assistant
-        # keeps -- it stops summing that entity and logs an error.
-        self._invertible = description.device_class == SensorDeviceClass.POWER
+        # A power register and the energy total derived from it are both
+        # invertible. The eGauge increments each counter by the measured value
+        # every second, so the counter of a register whose power reads negative
+        # runs negative; negating it leaves an increasing, non-negative total,
+        # which is what `TOTAL_INCREASING` requires. A register whose counter is
+        # already positive would drop below zero and the recorder rejects it,
+        # so inversion is only offered for registers that need it.
+        self._invertible = description.device_class in (
+            SensorDeviceClass.POWER,
+            SensorDeviceClass.ENERGY,
+        )
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"
         )
