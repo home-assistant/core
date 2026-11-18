@@ -48,6 +48,9 @@
       "start": {
         "default": "mdi:play"
       },
+      "start_later": {
+        "default": "mdi:timer-play-outline"
+      },
       "stop": {
         "default": "mdi:stop"
       }
@@ -86,6 +89,9 @@
       }
     },
     "number": {
+      "dishwasher_delay_start": {
+        "default": "mdi:timer-outline"
+      },
       "freezer_temperature": {
         "default": "mdi:snowflake-thermometer"
       },

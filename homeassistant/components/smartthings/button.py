@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import FullDevice, SmartThingsConfigEntry
 from .const import DOMAIN, MAIN
 from .entity import SmartThingsEntity
+from .util import dishwasher_delay_start_time_to_minutes
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -100,6 +101,14 @@ DISHWASHER_CANCEL_AND_DRAIN_BUTTON = SmartThingsButtonDescription(
     requires_remote_control_status=True,
 )
 
+DISHWASHER_START_LATER_BUTTON = SmartThingsButtonDescription(
+    key=Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+    translation_key="start_later",
+    command=Command.START_LATER,
+    requires_remote_control_status=True,
+    requires_dishwasher_machine_state="stop",
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -142,6 +151,12 @@ async def async_setup_entry(
             and Capability.CUSTOM_SUPPORTED_OPTIONS in device.status[MAIN]
         )
     )
+    entities.extend(
+        SmartThingsDishwasherStartLaterButtonEntity(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if Capability.SAMSUNG_CE_DISHWASHER_OPERATION in device.status[MAIN]
+        and Capability.CUSTOM_DISHWASHER_DELAY_START_TIME in device.status[MAIN]
+    )
     async_add_entities(entities)
 
 
@@ -157,6 +172,7 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
         entity_description: SmartThingsButtonDescription,
         capability: Capability,
         component: str = MAIN,
+        extra_capabilities: set[Capability] | None = None,
     ) -> None:
         """Initialize the instance."""
         capabilities = set()
@@ -164,6 +180,8 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
             capabilities.add(Capability.REMOTE_CONTROL_STATUS)
         if entity_description.requires_dishwasher_machine_state is not None:
             capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
+        if extra_capabilities is not None:
+            capabilities.update(extra_capabilities)
         super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
         self.button_capability = capability
@@ -211,3 +229,40 @@ class SmartThingsButtonEntity(SmartThingsEntity, ButtonEntity):
                     "machine_state": self.entity_description.requires_dishwasher_machine_state
                 },
             )
+
+
+class SmartThingsDishwasherStartLaterButtonEntity(SmartThingsButtonEntity):
+    """Define a SmartThings button to start a dishwasher cycle with a delay."""
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Initialize the instance."""
+        super().__init__(
+            client,
+            device,
+            DISHWASHER_START_LATER_BUTTON,
+            Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+            extra_capabilities={Capability.CUSTOM_DISHWASHER_DELAY_START_TIME},
+        )
+
+    @override
+    async def async_press(self) -> None:
+        """Press the button."""
+        self._validate_before_execute()
+        if not (
+            delay := dishwasher_delay_start_time_to_minutes(
+                self.get_attribute_value(
+                    Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+                    Attribute.DISHWASHER_DELAY_START_TIME,
+                )
+            )
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_delay_start_not_set",
+            )
+        # startLater expects the delay in seconds
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_DISHWASHER_OPERATION,
+            Command.START_LATER,
+            delay * 60,
+        )

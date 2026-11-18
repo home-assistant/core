@@ -5,13 +5,15 @@ from typing import override
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN, UNIT_MAP
+from .const import DOMAIN, MAIN, UNIT_MAP
 from .entity import SmartThingsEntity
+from .util import dishwasher_delay_start_time_to_minutes
 
 
 async def async_setup_entry(
@@ -47,6 +49,11 @@ async def async_setup_entry(
             Attribute.COOLING_SETPOINT_RANGE
         ].value
         is not None
+    )
+    entities.extend(
+        SmartThingsDishwasherDelayStartNumberEntity(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if Capability.CUSTOM_DISHWASHER_DELAY_START_TIME in device.status[MAIN]
     )
     async_add_entities(entities)
 
@@ -249,4 +256,77 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
             int(value),
+        )
+
+
+class SmartThingsDishwasherDelayStartNumberEntity(SmartThingsEntity, NumberEntity):
+    """Define a SmartThings dishwasher delay start number."""
+
+    _attr_translation_key = "dishwasher_delay_start"
+    _attr_device_class = NumberDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_native_min_value = 0
+    _attr_native_max_value = 1440
+    _attr_native_step = 1
+    _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Initialize the instance."""
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+                Capability.DISHWASHER_OPERATING_STATE,
+                Capability.REMOTE_CONTROL_STATUS,
+            },
+        )
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}"
+            f"_{Capability.CUSTOM_DISHWASHER_DELAY_START_TIME}"
+            f"_{Attribute.DISHWASHER_DELAY_START_TIME}"
+            f"_{Attribute.DISHWASHER_DELAY_START_TIME}"
+        )
+
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the current value."""
+        return dishwasher_delay_start_time_to_minutes(
+            self.get_attribute_value(
+                Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+                Attribute.DISHWASHER_DELAY_START_TIME,
+            )
+        )
+
+    @override
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value."""
+        if (
+            self.get_attribute_value(
+                Capability.REMOTE_CONTROL_STATUS, Attribute.REMOTE_CONTROL_ENABLED
+            )
+            == "false"
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="remote_control_status"
+            )
+        if (
+            self.get_attribute_value(
+                Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
+            )
+            != "stop"
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={"machine_state": "stop"},
+            )
+        # A duration, so 1440 minutes is sent as 24:00:00
+        hours, minutes = divmod(int(value), 60)
+        await self.execute_device_command(
+            Capability.CUSTOM_DISHWASHER_DELAY_START_TIME,
+            Command.SET_DISHWASHER_DELAY_START_TIME,
+            f"{hours:02d}:{minutes:02d}:00",
         )
