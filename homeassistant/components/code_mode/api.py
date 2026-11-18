@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+from contextlib import AsyncExitStack
 import json
 import re
 from typing import Any, override
@@ -9,9 +10,10 @@ from typing import Any, override
 import probatio
 from pydantic_monty import AsyncMonty, CollectString, MontyError, ResourceLimits
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import chat_session, config_validation as cv
 from homeassistant.helpers.llm import (
     APIInstance,
     LLMContext,
@@ -35,6 +37,8 @@ MAX_OUTPUT_BYTES = 64 * 1024
 # Function declarations are part of the prompt up to this size, in characters.
 INLINE_BUDGET = 8000
 SEARCH_LIMIT = 10
+# Sandbox processes of one chat session, for execute calls that run in parallel.
+MAX_WORKERS = 4
 
 PROMPT = (
     "The tools of this API are Python functions. "
@@ -229,6 +233,8 @@ class ExecuteTool(Tool):
     def __init__(self, functions: list[ToolFunction]) -> None:
         """Init the class."""
         self._functions = functions
+        self._pool: AsyncMonty | None = None
+        self._pool_lock = asyncio.Lock()
 
     @override
     async def async_call(
@@ -237,26 +243,67 @@ class ExecuteTool(Tool):
         tool_input: ToolInput,
         llm_context: LLMContext,
     ) -> ToolResult:
-        """Run the code."""
+        """Run the code in the sandbox of the chat session.
+
+        Without a chat session, the sandbox runs only for this call.
+        """
+        code = tool_input.tool_args["code"]
+        try:
+            if (session := chat_session.current_session.get()) is None:
+                async with AsyncMonty(max_processes=1) as pool:
+                    return await self._async_run(pool, code)
+            return await self._async_run(
+                await self._async_get_pool(hass, session), code
+            )
+        except (MontyError, OSError) as err:
+            return ToolResult(data={"error": str(err), "output": ""}, error=True)
+
+    async def _async_get_pool(
+        self, hass: HomeAssistant, session: chat_session.ChatSession
+    ) -> AsyncMonty:
+        """Return the sandbox of the chat session, which stops with the session."""
+        async with self._pool_lock:
+            if self._pool is not None:
+                return self._pool
+            stack = AsyncExitStack()
+            self._pool = await stack.enter_async_context(
+                AsyncMonty(max_processes=MAX_WORKERS)
+            )
+
+        async def _async_stop_on_close(_: Event) -> None:
+            await stack.aclose()
+
+        unsub = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, _async_stop_on_close
+        )
+
+        @callback
+        def _async_stop() -> None:
+            self._pool = None
+            unsub()
+            hass.async_create_task(stack.aclose(), "code_mode_stop_sandbox")
+
+        session.async_on_cleanup(_async_stop)
+        return self._pool
+
+    async def _async_run(self, pool: AsyncMonty, code: str) -> ToolResult:
+        """Run the code in a sandbox of the pool."""
         tasks: set[asyncio.Task[Any]] = set()
         output = CollectString(MAX_OUTPUT_BYTES)
         try:
-            # The sandbox process starts in a few milliseconds, so it runs only
-            # for the duration of the code.
             async with (
                 asyncio.timeout(TIMEOUT),
-                AsyncMonty(max_processes=1) as pool,
                 pool.checkout(limits=LIMITS) as session,
             ):
                 result = await session.feed_run(
-                    tool_input.tool_args["code"],
+                    code,
                     external_lookup={
                         function.name: function.create(tasks)
                         for function in self._functions
                     },
                     print_callback=output,
                 )
-        except (MontyError, OSError) as err:
+        except (MontyError, TimeoutError) as err:
             return ToolResult(
                 data={"error": str(err) or "Timeout", "output": output.output},
                 error=True,

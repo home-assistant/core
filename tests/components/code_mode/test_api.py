@@ -1,18 +1,22 @@
 """Tests for the Code Mode LLM API."""
 
 import asyncio
+from datetime import timedelta
 from typing import override
 from unittest.mock import patch
 
 import probatio
+import psutil
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.code_mode import api as code_mode_api
 from homeassistant.components.conversation import DATA_CODE_MODE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, llm
+from homeassistant.helpers import chat_session, config_validation as cv, llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 
 class GetStateTool(llm.Tool):
@@ -252,6 +256,50 @@ async def test_sandbox_cannot_start(api_instance: llm.APIInstance) -> None:
 
     assert result.error is True
     assert result.data == {"error": "No binary", "output": ""}
+
+
+def _sandbox_count() -> int:
+    """Return the number of running sandbox processes."""
+    return sum(
+        child.name() == "monty" for child in psutil.Process().children(recursive=True)
+    )
+
+
+async def test_sandbox_lives_with_chat_session(
+    hass: HomeAssistant, api_instance: llm.APIInstance
+) -> None:
+    """Test the sandbox stays between runs and stops with the chat session."""
+    assert _sandbox_count() == 0
+
+    with chat_session.async_get_chat_session(hass, context=None):
+        for value in (1, 2):
+            result = await _execute(api_instance, str(value))
+            assert result.data["result"] == value
+            assert _sandbox_count() == 1
+
+    # A later turn of the conversation uses the same sandbox.
+    assert _sandbox_count() == 1
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=2),
+    )
+    await hass.async_block_till_done()
+
+    assert _sandbox_count() == 0
+
+
+async def test_sandbox_stops_with_home_assistant(
+    hass: HomeAssistant, api_instance: llm.APIInstance
+) -> None:
+    """Test the sandbox stops when Home Assistant stops."""
+    with chat_session.async_get_chat_session(hass, context=None):
+        await _execute(api_instance, "1")
+    assert _sandbox_count() == 1
+
+    await hass.async_stop()
+
+    assert _sandbox_count() == 0
 
 
 async def test_result_is_json(api_instance: llm.APIInstance) -> None:
