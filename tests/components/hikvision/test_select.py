@@ -530,7 +530,7 @@ async def test_entity_name_ignores_registry_entry_of_earlier_setup(
     """Test a leftover registry entry is not taken for an entity of this setup."""
     await setup_integration(hass, mock_config_entry)
     runtime_data = mock_config_entry.runtime_data
-    coordinator = runtime_data.image_coordinator
+    coordinator = runtime_data.image_coordinators[0]
     entity_registry.async_get_or_create(
         SELECT_DOMAIN,
         "hikvision",
@@ -550,7 +550,7 @@ async def test_entity_name_uses_the_platform_of_this_setup(
     """Test a leftover entry of another platform is not taken for the entity."""
     await setup_integration(hass, mock_config_entry)
     runtime_data = mock_config_entry.runtime_data
-    coordinator = runtime_data.image_coordinator
+    coordinator = runtime_data.image_coordinators[0]
     path = next(
         path
         for path, domain in coordinator.entity_platforms.items()

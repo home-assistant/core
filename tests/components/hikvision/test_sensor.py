@@ -86,7 +86,7 @@ async def test_value_follows_the_poll(
 ) -> None:
     """Test the sensor shows the value the coordinator last read."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    [coordinator] = mock_config_entry.runtime_data.image_coordinators
 
     coordinator.async_set_updated_data(
         {**coordinator.data, "Exposure/ExposureType": "auto"}

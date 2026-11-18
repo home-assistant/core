@@ -67,27 +67,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hikvision image setting selects."""
-    coordinator = entry.runtime_data.image_coordinator
-    if coordinator is None:
-        return
-
     entities: list[HikvisionImageSelect] = []
-    for setting in coordinator.settings:
-        if setting.type is not ImageSettingType.SELECT or len(setting.options) < 2:
-            # A setting with a single choice cannot be changed.
-            continue
-        if (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower())) is None:
-            continue
-        if (options := _option_map(setting, description)) is None:
-            _LOGGER.debug(
-                "Skipping %s: its options %s cannot be told apart",
-                setting.path,
-                setting.options,
+    for coordinator in entry.runtime_data.image_coordinators:
+        for setting in coordinator.settings:
+            if setting.type is not ImageSettingType.SELECT or len(setting.options) < 2:
+                # A setting with a single choice cannot be changed.
+                continue
+            if (description := _DESCRIPTIONS_BY_PATH.get(setting.path.lower())) is None:
+                continue
+            if (options := _option_map(setting, description)) is None:
+                _LOGGER.debug(
+                    "Skipping %s: its options %s cannot be told apart",
+                    setting.path,
+                    setting.options,
+                )
+                continue
+            entities.append(
+                HikvisionImageSelect(coordinator, entry, description, setting, options)
             )
-            continue
-        entities.append(
-            HikvisionImageSelect(coordinator, entry, description, setting, options)
-        )
     async_add_entities(entities)
 
 

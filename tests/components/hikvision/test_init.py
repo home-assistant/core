@@ -382,19 +382,23 @@ async def test_setup_unreachable_device_is_retried(
     assert not hass.config_entries.flow.async_progress()
 
 
-async def test_image_settings_are_not_read_from_an_nvr(
+async def test_nvr_without_image_settings_still_loads(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
     mock_isapi_client: MagicMock,
 ) -> None:
-    """Test that no image settings client is created for an NVR."""
+    """Test that an NVR whose cameras have no image settings loads as before."""
     mock_hikcamera.return_value.get_type = "NVR"
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_isapi_client.assert_not_called()
+    mock_isapi_client.return_value.get_image_channels.assert_called_once_with(
+        proxy=True
+    )
+    mock_isapi_client.return_value.get_image_settings.assert_not_called()
+    mock_isapi_client.return_value.close.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
@@ -463,7 +467,7 @@ async def test_camera_without_readable_image_settings_still_loads(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.image_coordinator is None
+    assert not mock_config_entry.runtime_data.image_coordinators
     mock_isapi_client.return_value.close.assert_called_once()
     assert [
         record.getMessage()
@@ -486,7 +490,7 @@ async def test_unreadable_image_values_do_not_stop_the_camera_loading(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.image_coordinator is None
+    assert not mock_config_entry.runtime_data.image_coordinators
     mock_image_settings.close.assert_called_once()
     assert "Unable to read the image values" in caplog.text
     assert hass.states.async_entity_ids("binary_sensor")
@@ -505,7 +509,7 @@ async def test_image_settings_are_tried_again_after_a_failure(
     getattr(mock_image_settings, failing).side_effect = ISAPIConnectionError("timeout")
 
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.runtime_data.image_coordinator is None
+    assert mock_config_entry.runtime_data.image_coordinators == []
 
     getattr(mock_image_settings, failing).side_effect = None
     freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
@@ -513,7 +517,28 @@ async def test_image_settings_are_tried_again_after_a_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.image_coordinator is not None
+    assert mock_config_entry.runtime_data.image_coordinators
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_recorder_listing_is_tried_again_after_a_timeout(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test a recorder that reports itself as a camera is read again after a timeout."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = ISAPINotSupportedError("Not found", 404)
+    client.get_image_channels.side_effect = ISAPIConnectionError("timeout")
+    await setup_integration(hass, mock_config_entry)
+    assert client.get_image_channels.call_count == 1
+
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert client.get_image_channels.call_count == 2
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
@@ -529,7 +554,7 @@ async def test_image_settings_are_tried_again_after_a_server_error(
     mock_image_settings.get_image_settings.side_effect = ISAPIError("busy", status)
 
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.runtime_data.image_coordinator is None
+    assert mock_config_entry.runtime_data.image_coordinators == []
 
     mock_image_settings.get_image_settings.side_effect = None
     freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
@@ -537,7 +562,7 @@ async def test_image_settings_are_tried_again_after_a_server_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.image_coordinator is not None
+    assert mock_config_entry.runtime_data.image_coordinators
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
@@ -577,7 +602,7 @@ async def test_image_values_are_not_retried_when_the_camera_will_not_give_them(
     """Test a camera that refuses the values is not reloaded again and again."""
     mock_image_settings.get_image_values.side_effect = error
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.runtime_data.image_coordinator is None
+    assert not mock_config_entry.runtime_data.image_coordinators
     mock_image_settings.reset_mock()
 
     freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
@@ -668,6 +693,29 @@ async def test_image_settings_client_closed_on_unload(
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
+    client.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_image_settings_client_closed_when_the_setup_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test the client is closed if the setup ends, or is cancelled, after it."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = None
+    client.get_image_settings.return_value = []
+    client.get_image_values.return_value = {}
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        # The event platforms are forwarded first.
+        side_effect=[None, RuntimeError],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     client.close.assert_called_once()
 
 

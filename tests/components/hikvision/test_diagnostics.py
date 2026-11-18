@@ -238,7 +238,7 @@ async def test_raw_documents_are_not_read_with_a_rejected_password(
 ) -> None:
     """Test the diagnostics do not send a password the camera already rejected."""
     await setup_integration(hass, mock_config_entry)
-    mock_config_entry.runtime_data.image_coordinator.credentials_rejected = True
+    mock_config_entry.runtime_data.image_credentials_rejected = True
 
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry

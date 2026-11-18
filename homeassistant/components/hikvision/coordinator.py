@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -23,6 +24,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
+# The cameras of an NVR share one client and one lock, so they are polled one after
+# the other. A slower poll keeps a write from waiting behind dozens of reads.
+NVR_SCAN_INTERVAL = timedelta(minutes=5)
 
 # The platforms with an entity for an image setting
 
@@ -41,7 +45,12 @@ def _conflict_key(path: str) -> str:
 
 
 class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
-    """Poll the current image settings and write changes to the camera."""
+    """Poll the current image settings and write changes to the camera.
+
+    A standalone camera has one coordinator (``channel`` is None). An NVR has
+    one per attached camera, reached through the NVR's proxy endpoints, and they
+    share the client and its lock.
+    """
 
     config_entry: HikvisionConfigEntry
 
@@ -51,20 +60,33 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         config_entry: HikvisionConfigEntry,
         client: ISAPIClient,
         settings: list[ImageSetting],
+        channel: int | None = None,
+        lock: asyncio.Lock | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN} image settings",
-            update_interval=SCAN_INTERVAL,
+            name=(
+                f"{DOMAIN} image settings"
+                if channel is None
+                else f"{DOMAIN} image settings channel {channel}"
+            ),
+            update_interval=SCAN_INTERVAL if channel is None else NVR_SCAN_INTERVAL,
         )
         self.client = client
         self.settings = settings
+        self.channel = channel
+        # What to pass to the client to reach this camera: nothing for a
+        # standalone camera, the NVR's channel ID and its proxy for an attached one.
+        self._target: dict[str, Any] = (
+            {} if channel is None else {"channel": channel, "proxy": True}
+        )
         # A write reads the whole document, edits it and sends it back, so it must
-        # not overlap with another request on the same client.
-        self.lock = asyncio.Lock()
+        # not overlap with another request on the same client. The coordinators of
+        # an NVR share one client, so they share the lock too.
+        self.lock = lock if lock is not None else asyncio.Lock()
         # The settings, in lowercase, that this setup has an entity for, including
         # the disabled ones. Not what is left in the entity registry from an earlier
         # setup: a setting that is no longer accepted may still have an entry there.
@@ -72,10 +94,29 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         # The platform of the entity that this setup has added for a setting. A
         # firmware that changes a select into a sensor leaves both in the registry.
         self.entity_platforms: dict[str, str] = {}
-        # Set under the lock by the first 401, and kept for the life of this client:
-        # a request queued behind it must not send the rejected password again, as
-        # repeated attempts can lock the account. A reload makes a new client.
-        self.credentials_rejected = False
+
+    @property
+    def credentials_rejected(self) -> bool:
+        """Return whether the camera rejected the password of this setup.
+
+        Set under the lock by the first 401, and kept for the life of the client:
+        a request queued behind it must not send the rejected password again, as
+        repeated attempts can lock the account. The coordinators of an NVR share the
+        login, so they share this too. A reload makes a new client.
+        """
+        return self.config_entry.runtime_data.image_credentials_rejected
+
+    @credentials_rejected.setter
+    def credentials_rejected(self, rejected: bool) -> None:
+        self.config_entry.runtime_data.image_credentials_rejected = rejected
+
+    @property
+    def unique_id_prefix(self) -> str:
+        """Return what the unique IDs of this camera's entities start with."""
+        device_id = self.config_entry.runtime_data.device_id
+        if self.channel is None:
+            return f"{device_id}_image_"
+        return f"{device_id}_{self.channel}_image_"
 
     @override
     async def _async_update_data(self) -> dict[str, str]:
@@ -83,12 +124,14 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         try:
             async with self.lock:
                 if self.credentials_rejected:
+                    # A poll that was waiting for the lock must not send the
+                    # password again after another one found it rejected.
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     )
                 try:
                     return await self.hass.async_add_executor_job(
-                        self.client.get_image_values
+                        partial(self.client.get_image_values, **self._target)
                     )
                 except ISAPIAuthError as err:
                     if err.status_code == 401:
@@ -96,7 +139,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                     raise
         except ISAPIError as err:
             if isinstance(err, ISAPIAuthError) and err.status_code == 401:
-                await self._async_stop_stream()
+                await self._async_reject_credentials()
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN, translation_key="invalid_auth"
                 ) from err
@@ -105,14 +148,23 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 translation_key="image_settings_update_failed",
             ) from err
 
-    async def _async_stop_stream(self) -> None:
-        """Stop the event stream, which would keep using the rejected password.
+    async def _async_reject_credentials(self) -> None:
+        """Stop everything that would send the rejected password again.
 
-        Repeated attempts with a wrong password can lock the account.
+        Repeated attempts with a wrong password can lock the account. The event
+        stream keeps trying, and so do the other coordinators of an NVR, which share
+        the login. Reauthentication reloads the entry, which starts them again.
         """
-        await self.hass.async_add_executor_job(
-            self.config_entry.runtime_data.camera.disconnect
+        data = self.config_entry.runtime_data
+        data.image_credentials_rejected = True
+        await self.hass.async_add_executor_job(data.camera.disconnect)
+        error = ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
         )
+        for coordinator in data.image_coordinators:
+            if coordinator is not self:
+                await coordinator.async_shutdown()
+                coordinator.async_set_update_error(error)
 
     async def async_set_setting(
         self, path: str, value: str, context: Context | None = None
@@ -153,11 +205,14 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         try:
             async with self.lock:
                 if self.credentials_rejected:
+                    # What found it rejected already stopped everything else.
                     raise HomeAssistantError(
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     )
                 try:
-                    result = await self.hass.async_add_executor_job(method, *args)
+                    result = await self.hass.async_add_executor_job(
+                        partial(method, *args, **self._target)
+                    )
                 except ISAPIAuthError as err:
                     if err.status_code == 401:
                         self.credentials_rejected = True
@@ -200,7 +255,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         if isinstance(err, ISAPIAuthError) and err.status_code == 401:
             # Do not wait for the next poll, it would send the rejected password
             # again, and a debounced refresh may not run at all.
-            await self._async_stop_stream()
+            await self._async_reject_credentials()
             await self.async_shutdown()
             self.async_set_update_error(
                 ConfigEntryAuthFailed(
@@ -275,8 +330,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
             # Not an entity of this setup: the registry may still hold one from an
             # earlier setup, which is no longer there to link to.
             return path, None
-        device_id = self.config_entry.runtime_data.device_id
-        unique_id = f"{device_id}_image_{path.lower()}"
+        unique_id = f"{self.unique_id_prefix}{path.lower()}"
         registry = er.async_get(self.hass)
         if (entity_id := registry.async_get_entity_id(domain, DOMAIN, unique_id)) and (
             entry := registry.async_get(entity_id)

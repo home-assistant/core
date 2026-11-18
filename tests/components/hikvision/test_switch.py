@@ -375,7 +375,7 @@ async def test_requests_queued_behind_a_rejected_password_are_not_sent(
     Each attempt with a wrong password counts towards locking the account.
     """
     await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data.image_coordinator
+    coordinator = mock_config_entry.runtime_data.image_coordinators[0]
     mock_image_settings.set_image_setting.side_effect = ISAPIAuthError(
         "Invalid credentials", 401
     )

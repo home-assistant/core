@@ -13,6 +13,26 @@ from .const import DOMAIN
 from .coordinator import HikvisionImageCoordinator
 
 
+def channel_device_info(
+    hass: HomeAssistant, entry: HikvisionConfigEntry, channel: int
+) -> DeviceInfo:
+    """Return the device of one NVR channel, linked to the NVR via via_device_id."""
+    data = entry.runtime_data
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{data.device_id}_{channel}")},
+        via_device_id=dr.async_get_device_id_by_identifier(
+            hass, (DOMAIN, data.device_id), config_entry_id=entry.entry_id
+        ),
+        translation_key="nvr_channel",
+        translation_placeholders={
+            "device_name": data.device_name,
+            "channel_number": str(channel),
+        },
+        manufacturer="Hikvision",
+        model="NVR channel",
+    )
+
+
 class HikvisionEntity(Entity):
     """Base class for Hikvision entities."""
 
@@ -38,19 +58,7 @@ class HikvisionEntity(Entity):
 
         if self._data.device_type == "NVR":
             # NVR channels get their own device linked to the NVR via via_device_id
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass, (DOMAIN, self._data.device_id), config_entry_id=entry.entry_id
-                ),
-                translation_key="nvr_channel",
-                translation_placeholders={
-                    "device_name": self._data.device_name,
-                    "channel_number": str(channel),
-                },
-                manufacturer="Hikvision",
-                model="NVR channel",
-            )
+            self._attr_device_info = channel_device_info(hass, entry, channel)
         else:
             # Single camera device
             self._attr_device_info = DeviceInfo(
@@ -102,15 +110,22 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
         super().__init__(coordinator)
         data = entry.runtime_data
         self._path = path
-        # The camera's spelling of a path can change with the firmware, the unique ID must not
-        self._attr_unique_id = f"{data.device_id}_image_{path.lower()}"
+        # The camera's spelling of a path can change with the firmware, the unique ID
+        # must not
+        self._attr_unique_id = f"{coordinator.unique_id_prefix}{path.lower()}"
         coordinator.entity_paths.add(path.lower())
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, data.device_id)},
-            name=data.device_name,
-            manufacturer="Hikvision",
-            model=data.device_type,
-        )
+        if coordinator.channel is None:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, data.device_id)},
+                name=data.device_name,
+                manufacturer="Hikvision",
+                model=data.device_type,
+            )
+        else:
+            # A camera attached to an NVR is the device of its channel.
+            self._attr_device_info = channel_device_info(
+                coordinator.hass, entry, coordinator.channel
+            )
 
     @property
     def _value(self) -> str | None:
