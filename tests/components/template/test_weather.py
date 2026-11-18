@@ -1273,6 +1273,50 @@ async def test_deprecated_template_options_issue_per_entity(
     ) == ["name: Test", "unique_id: second"]
 
 
+@pytest.mark.parametrize(
+    ("yaml_config", "expected_identifier"),
+    [
+        pytest.param(
+            LEGACY_YAML.replace(
+                "- name: Test", "- name: Test\n        unique_id: kitchen"
+            ),
+            "unique_id: kitchen",
+            id="unique_id",
+        ),
+        pytest.param(
+            LEGACY_YAML.replace(
+                "  - weather:", "  - unique_id: first_floor\n    weather:"
+            ).replace("- name: Test", "- name: Test\n        unique_id: kitchen"),
+            "unique_id: first_floor-kitchen",
+            id="section_unique_id",
+        ),
+        pytest.param(
+            LEGACY_YAML.replace(
+                "- name: Test",
+                "- name: Test\n        default_entity_id: weather.kitchen",
+            ),
+            "default_entity_id: weather.kitchen",
+            id="default_entity_id",
+        ),
+        pytest.param(LEGACY_YAML, "name: Test", id="name"),
+    ],
+)
+async def test_deprecated_template_options_issue_identifier(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    yaml_config_dir: Path,
+    yaml_config: str,
+    expected_identifier: str,
+) -> None:
+    """Test the repair identifies the entity by its most stable identifier."""
+    await async_setup_yaml_config(hass, yaml_config_dir, yaml_config)
+
+    issues = get_deprecated_template_options_issues(issue_registry)
+    assert len(issues) == 1
+    assert issues[0].translation_placeholders is not None
+    assert issues[0].translation_placeholders["identifier"] == expected_identifier
+
+
 async def test_deprecated_template_options_issue_dismissed(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, yaml_config_dir: Path
 ) -> None:

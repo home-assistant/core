@@ -1,6 +1,6 @@
 """Template platform that aggregates meteorological data."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 import hashlib
 import logging
@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
     Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
@@ -313,18 +314,24 @@ def rewrite_legacy_options_to_modern_options(
 
 @callback
 def async_update_deprecated_template_options_issues(
-    hass: HomeAssistant, weather_configs: list[ConfigType]
+    hass: HomeAssistant, config_sections: Iterable[ConfigType]
 ) -> None:
     """Create an issue per weather entity using *_template options."""
     issue_ids: set[str] = set()
-    for weather_config in weather_configs:
+    for section_unique_id, weather_config in (
+        (section.get(CONF_UNIQUE_ID), weather_config)
+        for section in config_sections
+        for weather_config in section.get(WEATHER_DOMAIN, [])
+    ):
         deprecated = [
             key for key in weather_config if key in DEPRECATED_TEMPLATE_OPTIONS
         ]
         if not deprecated:
             continue
 
-        identifier = tcv.entity_config_identifier(Platform.WEATHER, weather_config)
+        identifier = tcv.entity_config_repair_identifier(
+            Platform.WEATHER, weather_config, section_unique_id
+        )
         # The id only changes with the configuration, so a dismissed issue stays
         # dismissed until the configuration changes
         fingerprint = "\n".join(

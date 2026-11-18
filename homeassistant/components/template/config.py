@@ -467,12 +467,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
         config_sections.append(template_config)
 
     weather_platform.async_update_deprecated_template_options_issues(
-        hass,
-        [
-            weather_config
-            for section in config_sections
-            for weather_config in section.get(WEATHER_DOMAIN, [])
-        ],
+        hass, config_sections
     )
 
     # Create a copy of the configuration with all config for current
