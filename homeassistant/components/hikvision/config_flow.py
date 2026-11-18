@@ -156,7 +156,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": reauth_entry.title},
