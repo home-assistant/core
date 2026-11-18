@@ -174,5 +174,4 @@ class LastFmSensor(CoordinatorEntity[LastFMDataUpdateCoordinator], SensorEntity)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="scrobble_failed",
-                translation_placeholders={"error": str(err)},
             ) from err

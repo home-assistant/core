@@ -64,7 +64,7 @@
       "message": "The timestamp must be in the past 14 days and not in the future."
     },
     "scrobble_failed": {
-      "message": "Scrobbling failed: {error}"
+      "message": "Scrobbling to Last.fm failed. Check the Home Assistant logs for details."
     }
   },
   "options": {
