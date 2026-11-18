@@ -312,7 +312,7 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
                 1,
                 CALL_TYPE_REGISTER_HOLDING,
             )
-            if result is None:
+            if result is None or not result.registers:
                 self._attr_available = False
                 return
             self._attr_current_operation = self._operation_mode_from_modbus.get(
@@ -323,7 +323,7 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
             result = await self._hub.async_pb_call(
                 self._device_address, self._onoff_coil, 1, CALL_TYPE_COIL
             )
-            if result is None:
+            if result is None or not result.bits:
                 self._attr_available = False
                 return
             is_on = bool(result.bits[0])
@@ -334,7 +334,7 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
                 1,
                 CALL_TYPE_REGISTER_HOLDING,
             )
-            if result is None:
+            if result is None or not result.registers:
                 self._attr_available = False
                 return
             is_on = int(result.registers[0]) != self._off_value

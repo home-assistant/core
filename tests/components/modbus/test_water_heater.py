@@ -487,6 +487,63 @@ async def test_unavailable_on_malformed_response(
 
 
 @pytest.mark.parametrize(
+    ("do_config", "holding", "coils"),
+    [
+        pytest.param(
+            {CONF_WATER_HEATERS: [BASE_CONFIG]},
+            {CURRENT_TEMP_ADDRESS: [], TARGET_TEMP_ADDRESS: [55]},
+            [],
+            id="temperature",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_OPERATION_MODE_REGISTER: MODE_REGISTER_CONFIG,
+                    }
+                ]
+            },
+            {CURRENT_TEMP_ADDRESS: [42], TARGET_TEMP_ADDRESS: [55], MODE_ADDRESS: []},
+            [],
+            id="operation_mode",
+        ),
+        pytest.param(
+            {CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_ONOFF_REGISTER: ONOFF_ADDRESS}]},
+            {CURRENT_TEMP_ADDRESS: [42], TARGET_TEMP_ADDRESS: [55], ONOFF_ADDRESS: []},
+            [],
+            id="onoff_register",
+        ),
+        pytest.param(
+            {CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_ONOFF_COIL: ONOFF_ADDRESS}]},
+            {CURRENT_TEMP_ADDRESS: [42], TARGET_TEMP_ADDRESS: [55]},
+            [],
+            id="onoff_coil",
+        ),
+    ],
+)
+@pytest.mark.parametrize("register_words", [[1]])
+async def test_unavailable_on_empty_response(
+    hass: HomeAssistant,
+    mock_modbus_ha: mock.AsyncMock,
+    holding: dict[int, list[int]],
+    coils: list[int],
+) -> None:
+    """Test an empty response marks the water heater unavailable, not stale."""
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+    mock_modbus_ha.read_holding_registers.side_effect = _registers(holding)
+    mock_modbus_ha.read_coils.return_value = ReadResult(coils)
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
     ("do_config", "register_words", "temperature", "write_call", "expected_call"),
     [
         pytest.param(
