@@ -290,6 +290,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 **self.data[CONF_SESSION_KEYS],
                 self._username: session_key,
             }
+            self._authorized_in_flow.add(self._username)
             return await self.async_step_scrobble_menu()
         return self.async_show_form(
             step_id="authorize",
