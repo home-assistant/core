@@ -743,12 +743,6 @@ async def test_reload_config_entry_invalid_args(
             id="category_only",
         ),
         pytest.param(
-            {"category": "energy.energy_prices"},
-            [],
-            {"energyzero", "nordpool", "tibber"},
-            id="subcategory_only",
-        ),
-        pytest.param(
             {"query": "tibber", "category": "energy"},
             [
                 {
@@ -767,7 +761,7 @@ async def test_reload_config_entry_invalid_args(
             id="query_and_category_no_match",
         ),
         pytest.param(
-            {"category": "helpers.calculate_value", "query": "meter"},
+            {"category": "helpers", "query": "meter"},
             [],
             {"utility_meter"},
             id="helper_by_category",
@@ -805,10 +799,7 @@ async def test_search_integrations(
         for item in items:
             assert isinstance(item, dict)
             assert isinstance(categories := item["categories"], list)
-            assert any(
-                cat == category or str(cat).startswith(f"{category}.")
-                for cat in categories
-            )
+            assert any(str(cat).partition(".")[0] == category for cat in categories)
 
 
 async def test_search_integrations_pagination(
@@ -842,30 +833,13 @@ async def test_search_integrations_pagination(
     assert len(set(domains)) == total
 
 
-async def test_search_integrations_unknown_category(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-) -> None:
-    """Test an unknown category returns the known categories."""
-    tool = SearchIntegrationsTool()
-    res = await tool.async_call(
-        hass,
-        llm.ToolInput(tool.name, {"category": "energy.unknown"}),
-        llm_context,
-    )
-    assert res.error is True
-    assert res.data["error"] == "Unknown category 'energy.unknown'."
-    assert isinstance(categories := res.data["categories"], dict)
-    assert categories["energy"] == "Energy"
-    assert categories["energy.energy_prices"] == "Energy prices"
-    assert "energy.unknown" not in categories
-
-
 @pytest.mark.parametrize(
     "invalid_args",
     [
         pytest.param({}, id="missing_query_and_category"),
         pytest.param({"category": ""}, id="empty_category"),
+        pytest.param({"category": "unknown"}, id="unknown_category"),
+        pytest.param({"category": "energy.energy_prices"}, id="subcategory"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
         pytest.param({"query": "hue", "offset": -1}, id="negative_offset"),

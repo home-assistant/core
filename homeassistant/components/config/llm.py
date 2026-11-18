@@ -12,8 +12,9 @@ import probatio
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
+from homeassistant.generated.integration_categories import INTEGRATION_CATEGORIES
 from homeassistant.helpers import config_validation as cv, translation
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
@@ -174,8 +175,9 @@ def _iter_searchable_matches(
         if not all(word in f"{head} {brand}" for word in words):
             continue
         categories: list[str] = meta.get("categories", [])
+        # Categories can be subcategories, like 'energy.energy_prices'
         if category is not None and not any(
-            cat == category or cat.startswith(f"{category}.") for cat in categories
+            cat.partition(".")[0] == category for cat in categories
         ):
             continue
         seen.add(domain)
@@ -322,23 +324,6 @@ class ReloadConfigEntryTool(Tool):
         return ToolResult(data={"result": result})
 
 
-async def _async_get_categories(hass: HomeAssistant, language: str) -> JsonObjectType:
-    """Return the names of the integration categories and subcategories by slug."""
-    prefix = f"component.{HOMEASSISTANT_DOMAIN}.integration_category."
-    translations = await translation.async_get_translations(
-        hass, language, "integration_category", {HOMEASSISTANT_DOMAIN}
-    )
-    categories: JsonObjectType = {}
-    for key, name in translations.items():
-        # Keys are '<category>.name' or '<category>.subcategory.<subcategory>.name'
-        match key.removeprefix(prefix).split("."):
-            case [slug, "name"]:
-                categories[slug] = name
-            case [slug, "subcategory", subcategory, "name"]:
-                categories[f"{slug}.{subcategory}"] = name
-    return dict(sorted(categories.items()))
-
-
 class SearchIntegrationsTool(Tool):
     """LLM Tool to search available integrations and helpers."""
 
@@ -367,12 +352,11 @@ class SearchIntegrationsTool(Tool):
             probatio.Optional(
                 "category",
                 description=(
-                    "Filter results by category, like 'energy', or by subcategory, "
-                    "like 'energy.energy_prices'. A category includes its "
-                    "subcategories. Use 'helpers' to find helpers. An unknown "
-                    "category returns the known categories."
+                    "Filter results by category. Use 'helpers' to find helpers, "
+                    "and 'local_services' for waste collection, power outages "
+                    "and other city or utility information."
                 ),
-            ): _DOMAIN_STRING,
+            ): probatio.In(INTEGRATION_CATEGORIES),
             probatio.Optional(
                 "offset",
                 description=(
@@ -397,17 +381,6 @@ class SearchIntegrationsTool(Tool):
         offset: int = args["offset"]
 
         lang = _resolve_language(hass, llm_context.language)
-        if category is not None:
-            known_categories = await _async_get_categories(hass, lang)
-            if category not in known_categories:
-                return ToolResult(
-                    data={
-                        "error": f"Unknown category '{category}'.",
-                        "categories": known_categories,
-                    },
-                    error=True,
-                )
-
         descriptions = await async_get_integration_descriptions(hass)
         title_trans = await translation.async_get_translations(
             hass,
