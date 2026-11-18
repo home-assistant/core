@@ -77,8 +77,13 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_calls",
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
+    # "extra_checks",         # globally disabled
+    # "no_implicit_reexport", # handled separately
+    # "strict_equality",      # globally enabled
+    # "warn_redundant_casts", # not available in per-module sections
     "warn_return_any",
-    "warn_unreachable",
+    "warn_unreachable",  # n.b. not a strict=true enablement
+    # "warn_unused_ignores",  # globally enabled
     # TODO: turn these on, address issues
     # "disallow_any_generics",
 ]
