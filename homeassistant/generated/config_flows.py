@@ -26,6 +26,7 @@ FLOWS = {
         "utility_meter",
     ],
     "integration": [
+        "ablago",
         "abode",
         "abrp",
         "acaia",
