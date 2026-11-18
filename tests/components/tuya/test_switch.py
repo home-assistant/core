@@ -19,12 +19,7 @@ from homeassistant.components.switch import (
     SwitchService,
 )
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -286,7 +281,7 @@ async def test_action_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.din_socket"},
+            {TargetKey.ENTITY_ID: "switch.din_socket"},
             blocking=True,
         )
 
@@ -341,7 +336,7 @@ async def test_hwsb_switch_with_quirk(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(

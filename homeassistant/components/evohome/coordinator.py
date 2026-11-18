@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable
 from datetime import datetime, timedelta
-from http import HTTPStatus
 import logging
 from typing import Any, Final, override
 
@@ -27,13 +26,30 @@ from evohomeasync2.typedefs import (
     EvoZonScheduleDayOfWeekT,
 )
 
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
+
+# any other reason gets "api_request_failed"
+_API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
+    ec2.ApiCallErrorReason.CONNECTION_FAILED: "api_connection_failed",
+    ec2.ApiCallErrorReason.RATE_LIMITED: "api_rate_limited",
+    ec2.ApiCallErrorReason.REQUEST_REJECTED: "api_request_rejected",
+    ec2.ApiCallErrorReason.SERVER_ERROR: "api_server_error",
+}
+
+
+def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
+    """Return the translation key of a failed API call, by its reason."""
+    return _API_CALL_ERROR_TRANSLATION_KEYS.get(err.reason, "api_request_failed")
+
 
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
 type _HighPrecisionTemps = dict[str, float | None]  # by DHW/zone id
@@ -253,10 +269,10 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             raise
 
         except ec2.ApiCallFailedError as err:
+            self.logger.debug("The request to the vendor's API failed: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_call_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key=_api_call_error_key(err),
             ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
@@ -271,14 +287,20 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
             status = await self.loc.get_status()
 
         except ec2.ApiCallFailedError as err:
-            if err.status != HTTPStatus.TOO_MANY_REQUESTS:
-                raise UpdateFailed(err) from err
-
-            raise UpdateFailed(
-                f"""
-                    The vendor's API rate limit has been exceeded.
-                    Consider increasing the {CONF_SCAN_INTERVAL}
-                """
+            self.logger.debug("The request to the vendor's API failed: %s", err)
+            error = (
+                UpdateFailedUnreachable
+                if err.reason == ec2.ApiCallErrorReason.CONNECTION_FAILED
+                else UpdateFailed
+            )
+            raise error(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=(
+                    err.retry_after
+                    if isinstance(err, ec2.ApiRateLimitExceededError)
+                    else None
+                ),
             ) from err
 
         except ec2.EvohomeError as err:

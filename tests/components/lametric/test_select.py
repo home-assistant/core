@@ -29,8 +29,8 @@ from homeassistant.components.time import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -79,7 +79,7 @@ async def test_brightness_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+            TargetKey.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
             SelectServiceArgument.OPTION: "manual",
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_select_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                TargetKey.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
                 SelectServiceArgument.OPTION: "manual",
             },
             blocking=True,
@@ -136,7 +136,7 @@ async def test_select_connection_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
+                TargetKey.ENTITY_ID: "select.frenck_s_lametric_brightness_mode",
                 SelectServiceArgument.OPTION: "manual",
             },
             blocking=True,
@@ -175,7 +175,7 @@ async def test_screensaver_mode_when_dark(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            TargetKey.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
             SelectServiceArgument.OPTION: "when_dark",
         },
         blocking=True,
@@ -215,7 +215,7 @@ async def test_screensaver_mode_then_schedule_change(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            TargetKey.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
             SelectServiceArgument.OPTION: "when_dark",
         },
         blocking=True,
@@ -229,7 +229,7 @@ async def test_screensaver_mode_then_schedule_change(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
+            TargetKey.ENTITY_ID: "time.frenck_s_lametric_screensaver_start_time",
             TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
@@ -252,7 +252,7 @@ async def test_screensaver_mode_time_based(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+            TargetKey.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
             SelectServiceArgument.OPTION: "time_based",
         },
         blocking=True,
@@ -289,7 +289,7 @@ async def test_screensaver_mode_time_based_without_times(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
+                TargetKey.ENTITY_ID: ENTITY_SCREENSAVER_MODE,
                 SelectServiceArgument.OPTION: "time_based",
             },
             blocking=True,
