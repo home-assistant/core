@@ -93,7 +93,6 @@
     },
     "event": {
       "motion": {
-        "name": "Motion",
         "state_attributes": {
           "event_type": {
             "state": {

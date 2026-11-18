@@ -54,6 +54,10 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Fire the event when the camera reports a new alarm."""
+        # Write the availability first, so that an alarm that arrives with the
+        # first refresh after an outage is a separate state change and is not
+        # dropped by triggers that ignore changes from unavailable.
+        super()._handle_coordinator_update()
         last_alarm_time = self.data.get("last_alarm_time")
         if last_alarm_time and last_alarm_time != self._last_alarm_time:
             self._last_alarm_time = last_alarm_time
@@ -64,4 +68,4 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
                     "alarm_type_name": self.data.get("last_alarm_type_name"),
                 },
             )
-        super()._handle_coordinator_update()
+            self.async_write_ha_state()

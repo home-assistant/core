@@ -4,11 +4,13 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyezvizapi.exceptions import PyEzvizError
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import setup_integration
 from .test_init import _mock_camera_data
@@ -72,3 +74,41 @@ async def test_event_on_new_alarm(
     await _refresh(hass, freezer, mock_ezviz_client, None)
     await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20")
     assert hass.states.get(ENTITY_ID).state == "2026-11-17T12:01:00.000+00:00"
+
+
+async def test_event_after_outage(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test a new alarm in the first refresh after an outage is a separate change."""
+    freezer.move_to("2026-11-17 12:00:00+00:00")
+    mock_ezviz_client.load_cameras.return_value = _camera("2026-11-17 10:00:00")
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_ezviz_client.load_cameras.side_effect = PyEzvizError("outage")
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    changes: list[tuple[str | None, str]] = []
+
+    @callback
+    def _record(event: Event[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        assert new_state is not None
+        changes.append((old_state.state if old_state else None, new_state.state))
+
+    async_track_state_change_event(hass, ENTITY_ID, _record)
+
+    mock_ezviz_client.load_cameras.side_effect = None
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:40")
+
+    assert changes == [
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, "2026-11-17T12:01:00.000+00:00"),
+    ]
