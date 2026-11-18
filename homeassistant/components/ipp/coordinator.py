@@ -4,13 +4,17 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from pyipp import IPP, IPPError, Printer as IPPPrinter
+from pyipp import IPP, IPPConnectionError, IPPError, Printer as IPPPrinter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_BASE_PATH, DOMAIN, REQUEST_TIMEOUT
 
@@ -46,34 +50,22 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._printer_unreachable_logged = False
 
     @override
     async def _async_update_data(self) -> IPPPrinter:
         """Fetch data from IPP."""
         try:
-            printer = await self.ipp.printer()
+            return await self.ipp.printer()
+        except IPPConnectionError as error:
+            # The printer could not be reached, e.g. because it is switched
+            # off or in standby. This is expected often enough on a home
+            # network that it is only logged at info level.
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from error
         except IPPError as error:
-            if self.data is None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_response",
-                ) from error
-
-            # The printer was reachable before. Many printers (especially
-            # inkjet/laser printers in a home network) are simply switched
-            # off or in standby most of the time, which is not an error
-            # condition worth surfacing as "unavailable" on every sensor.
-            # Keep serving the last known values instead.
-            if not self._printer_unreachable_logged:
-                _LOGGER.warning(
-                    "Could not reach printer, using last known values until "
-                    "it is reachable again: %s",
-                    error,
-                )
-                self._printer_unreachable_logged = True
-
-            return self.data
-
-        self._printer_unreachable_logged = False
-        return printer
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error

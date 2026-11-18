@@ -1,9 +1,16 @@
 """Tests for the IPP integration."""
 
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyipp import IPPConnectionError
+from pyipp import (
+    IPPConnectionError,
+    IPPParseError,
+    IPPResponseError,
+    IPPVersionNotSupportedError,
+)
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ipp.const import REQUEST_TIMEOUT
@@ -12,6 +19,7 @@ from homeassistant.components.ipp.coordinator import (
     IPPDataUpdateCoordinator,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 
@@ -58,43 +66,48 @@ async def test_request_timeout(
     assert coordinator.ipp.request_timeout == REQUEST_TIMEOUT
 
 
-async def test_printer_unreachable_keeps_last_known_values(
+@pytest.mark.parametrize(
+    ("exc", "level"),
+    [
+        (IPPConnectionError, logging.INFO),
+        (IPPParseError, logging.ERROR),
+        (IPPResponseError, logging.ERROR),
+        (IPPVersionNotSupportedError, logging.ERROR),
+    ],
+)
+async def test_update_failure_log_level(
     hass: HomeAssistant,
+    exc: type[Exception],
+    level: int,
     freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     mock_ipp: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the coordinator keeps the last known values when the printer goes unreachable.
+    """Test an unreachable printer is logged at info level, other errors as an error.
 
-    Printers on a home network are routinely switched off or in standby,
-    which should not make every sensor go unavailable.
+    A printer that cannot be connected to at all (e.g. switched off or in
+    standby) is common enough on a home network that it should not be
+    logged as an error on every scan interval. A response the printer did
+    send but that cannot be parsed or understood is a real error.
     """
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     state = hass.states.get("sensor.test_ha_1000_series")
     assert state
     assert state.state == "idle"
 
-    mock_ipp.printer.side_effect = IPPConnectionError
+    mock_ipp.printer.side_effect = exc
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     state = hass.states.get("sensor.test_ha_1000_series")
     assert state
-    assert state.state == "idle"
+    assert state.state == STATE_UNAVAILABLE
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is True
-
-    mock_ipp.printer.side_effect = None
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_ha_1000_series")
-    assert state
-    assert state.state == "idle"
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.ipp")
+        and record.levelno > logging.DEBUG
+    ] == [level]
