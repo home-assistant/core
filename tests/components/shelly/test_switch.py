@@ -784,8 +784,8 @@ async def test_rpc_switch_input_lock(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.switch_setconfig.assert_awaited_once_with(0, {"in_locked": True})
@@ -843,8 +843,8 @@ async def test_rpc_cover_input_lock(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.cover_setconfig.assert_awaited_once_with(0, {"in_locked": False})
