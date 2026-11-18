@@ -3,13 +3,14 @@
 from dataclasses import replace
 import logging
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.components.daikin_onecta.discovery import scalar_platform
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     SENSOR_DESCRIPTIONS,
 )
@@ -363,6 +364,33 @@ async def test_sensors_become_unavailable_when_management_point_disappears(
 
     assert hass.states.get(scalar_entity_id).state == "unavailable"
     assert hass.states.get(energy_entity_id).state == "unavailable"
+
+
+async def test_value_sensor_reuses_classification_between_state_writes(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reuse the current cloud characteristic for repeated local state writes."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("climateControl")[0]
+    entity = hass.data[SENSOR_DOMAIN].get_entity("sensor.altherma_control_mode")
+    assert isinstance(entity, DaikinValueSensor)
+
+    with (
+        patch.object(
+            point, "scalar_characteristics", wraps=point.scalar_characteristics
+        ) as scalar_characteristics,
+        patch(
+            "homeassistant.components.daikin_onecta.sensor.scalar_platform",
+            wraps=scalar_platform,
+        ) as classify,
+    ):
+        entity.update_state()
+        entity.update_state()
+
+    scalar_characteristics.assert_not_called()
+    classify.assert_not_called()
 
 
 async def test_limit_sensor_updates_through_coordinator_listener(

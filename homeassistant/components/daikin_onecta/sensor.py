@@ -370,6 +370,10 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         self._sub_type = details.sub_type
         self._value = details.value
         self._source_available = False
+        self._source_availability_sequence: int | None = None
+        self._characteristic_sequence: int | None = None
+        self._cached_point: ManagementPoint | None = None
+        self._cached_characteristic: Characteristic | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
@@ -382,30 +386,43 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        point = self._device.management_point(self._embedded_id)
-        characteristic = self._characteristic(point) if point is not None else None
+        point, characteristic = self._current_characteristic()
         self._attr_native_value = self._sensor_value(characteristic)
-        self._source_available = (
-            point is not None
-            and characteristic is not None
-            and (
-                self._sub_type is not None
-                or scalar_platform(
-                    self._value, characteristic, point.management_point_type
+        if self._source_availability_sequence != self.coordinator.cloud_update_sequence:
+            self._source_available = (
+                point is not None
+                and characteristic is not None
+                and (
+                    self._sub_type is not None
+                    or scalar_platform(
+                        self._value, characteristic, point.management_point_type
+                    )
+                    is Platform.SENSOR
                 )
-                is Platform.SENSOR
             )
-        )
+            self._source_availability_sequence = self.coordinator.cloud_update_sequence
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
             self.entity_description,
         )
 
-    def _characteristic(self, point: ManagementPoint) -> Characteristic | None:
-        """Return the current scalar or sensory characteristic."""
-        if self._sub_type == "sensoryData":
-            return point.sensory_characteristic(self._value)
-        return point.scalar_characteristics().get(self._value)
+    def _current_characteristic(
+        self,
+    ) -> tuple[ManagementPoint | None, Characteristic | None]:
+        """Return the characteristic cached for the current cloud response."""
+        if self._characteristic_sequence != self.coordinator.cloud_update_sequence:
+            point = self._device.management_point(self._embedded_id)
+            self._cached_point = point
+            if point is None:
+                self._cached_characteristic = None
+            elif self._sub_type == "sensoryData":
+                self._cached_characteristic = point.sensory_characteristic(self._value)
+            else:
+                self._cached_characteristic = point.scalar_characteristics().get(
+                    self._value
+                )
+            self._characteristic_sequence = self.coordinator.cloud_update_sequence
+        return self._cached_point, self._cached_characteristic
 
     @callback
     @override
@@ -415,10 +432,8 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
 
     def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
-        point = self._device.management_point(self._embedded_id)
-        if point is None:
-            return None
-        return self._sensor_value(self._characteristic(point))
+        _, characteristic = self._current_characteristic()
+        return self._sensor_value(characteristic)
 
     def _sensor_value(
         self, characteristic: Characteristic | None
