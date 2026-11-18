@@ -214,6 +214,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "invalid_auth"},
             )
         await self.async_set_unique_id(subject)
+        self._abort_if_unique_id_mismatch()
         token_data = {
             CONF_ACCESS_TOKEN: access_token,
             CONF_REFRESH_TOKEN: refresh_token,
@@ -224,12 +225,10 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             **token_data,
         }
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=token_data
             )
         if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(), data_updates=data, title=login.email
             )
