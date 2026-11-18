@@ -393,10 +393,7 @@ async def test_action_api_call_failed_reason(
     ("exception", "error_type", "translation_key", "retry_after"),
     [
         pytest.param(
-            evo_exc.ApiCallFailedError(
-                "API call failed",
-                reason=evo_exc.ApiCallErrorReason.CONNECTION_FAILED,
-            ),
+            evo_exc.ApiConnectionFailedError("API call failed"),
             UpdateFailedUnreachable,
             "api_connection_failed",
             None,
@@ -418,6 +415,18 @@ async def test_action_api_call_failed_reason(
             "api_server_error",
             None,
             id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                status=503,
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+                retry_after=120,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            120,
+            id="server_error_retry_after",
         ),
     ],
 )
