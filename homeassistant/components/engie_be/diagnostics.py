@@ -168,7 +168,14 @@ async def async_get_config_entry_diagnostics(
             "entry": entry.as_dict(),
             "relations": {
                 "last_update_success": relations.last_update_success,
-                "agreement_count": len(relations.data),
+                "update_interval": (
+                    str(relations.update_interval)
+                    if relations.update_interval is not None
+                    else None
+                ),
+                "agreement_count": (
+                    len(relations.data) if relations.data is not None else None
+                ),
             },
             "households": {
                 _hashed_identifier(ban): _household_diagnostics(household)
