@@ -7,12 +7,14 @@ from typing import TYPE_CHECKING, override
 
 from pyocat import (
     AsyncApiClient,
+    WTCApiCancelledError,
     WTCApiDisabledError,
     WTCApiQuotaExceededError,
     WTCApiRequestError,
     WTCApiServerError,
     WTCApiTimeoutError,
     WTCApiUnauthorizedError,
+    WTCApiValidationError,
 )
 from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
 
@@ -62,10 +64,12 @@ class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):
         try:
             return await self._async_fetch_data()
         except (
+            WTCApiCancelledError,
             WTCApiQuotaExceededError,
             WTCApiRequestError,
             WTCApiServerError,
             WTCApiTimeoutError,
+            WTCApiValidationError,
         ) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -161,7 +165,7 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
 
         @callback
         def _handle_update() -> None:
-            if not self.last_update_success or self.data is None:
+            if not self.last_update_success:
                 return
             registry = dr.async_get(hass)
             device = registry.async_get_device_by_identifier(
@@ -173,7 +177,7 @@ class WatercrystUpdateCoordinator(WatercrystBaseCoordinator[DeviceResponse]):
                     device.id,
                     sw_version=self.data.current_firmware_version,
                     hw_version=self.data.current_hardware_version,
-                    model=self.data.model,
+                    model=self.data.get_model_name(),
                     model_id=self.data.device_type_number,
                     name=self.data.name or config_entry.title,
                 )

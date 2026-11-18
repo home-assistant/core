@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from httpx2 import HTTPStatusError, Request, RequestError, Response
 from pyocat.models import (
     DeviceResponse,
     EventResponse,
@@ -230,28 +229,7 @@ async def mock_api_client() -> AsyncGenerator[AsyncMock]:
         ),
     ):
         client = mock.return_value
-        # client.get_device_info = AsyncMock(side_effect=default_info_response)
         client.get_device_info = AsyncMock(return_value=default_info_response())
         client.get_measurements = AsyncMock(return_value=default_measurement_response())
-        # client.get_state = AsyncMock(side_effect=default_state_response)
         client.get_state = AsyncMock(return_value=default_state_response())
         yield client
-
-
-def http_status_error(status_code: int) -> HTTPStatusError:
-    """Create an HTTP status error."""
-    request = Request("GET", "https://example.com/v1/state")
-    response = Response(status_code, request=request)
-    return HTTPStatusError(
-        "Unexpected HTTP status",
-        request=request,
-        response=response,
-    )
-
-
-def request_error() -> RequestError:
-    """Create a request error."""
-    return RequestError(
-        message="",
-        request=Request("GET", "https://example.com/v1/state"),
-    )

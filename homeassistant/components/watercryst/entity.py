@@ -46,7 +46,7 @@ class WatercrystEntity[CoordinatorT: DataUpdateCoordinator[Any]](
             identifiers={(DOMAIN, info.biocat_serial)},
             connections=connections,
             manufacturer="WATERCryst",
-            model=info.model,
+            model=info.get_model_name(),
             model_id=info.device_type_number,
             name=info.name or config_entry.title,
             serial_number=info.biocat_serial,

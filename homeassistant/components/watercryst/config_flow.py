@@ -7,12 +7,14 @@ import probatio
 from pyocat import (
     AsyncApiClient,
     AsyncAuth,
+    WTCApiCancelledError,
     WTCApiDisabledError,
     WTCApiQuotaExceededError,
     WTCApiRequestError,
     WTCApiServerError,
     WTCApiTimeoutError,
     WTCApiUnauthorizedError,
+    WTCApiValidationError,
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -57,10 +59,12 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
             except WTCApiUnauthorizedError:
                 errors["base"] = "invalid_auth"
             except (
+                WTCApiCancelledError,
                 WTCApiQuotaExceededError,
                 WTCApiRequestError,
                 WTCApiServerError,
                 WTCApiTimeoutError,
+                WTCApiValidationError,
             ):
                 errors["base"] = "cannot_connect"
             except Exception:

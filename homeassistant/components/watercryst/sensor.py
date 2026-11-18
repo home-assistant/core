@@ -65,7 +65,7 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         key="event.category",
         translation_key="event_category",
         device_class=SensorDeviceClass.ENUM,
-        options=list(EventCategory),
+        options=[cat.value for cat in EventCategory],
         value_fn=lambda data: data.event.category if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](

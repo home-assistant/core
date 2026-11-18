@@ -2,7 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from pyocat import WTCApiDisabledError, WTCApiTemporaryError, WTCApiUnauthorizedError
+from pyocat import (
+    WTCApiCancelledError,
+    WTCApiDisabledError,
+    WTCApiQuotaExceededError,
+    WTCApiRequestError,
+    WTCApiServerError,
+    WTCApiTimeoutError,
+    WTCApiUnauthorizedError,
+    WTCApiValidationError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -12,7 +21,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import BIOCAT_SERIAL, DEVICE_NAME, http_status_error, request_error
+from .conftest import BIOCAT_SERIAL, DEVICE_NAME
 
 
 @pytest.mark.usefixtures("mock_api_client")
@@ -34,7 +43,7 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
     await hass.async_block_till_done()
 
-    assert result["result"].unique_id is BIOCAT_SERIAL
+    assert result["result"].unique_id == BIOCAT_SERIAL
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEVICE_NAME
     assert result["data"] == {
@@ -44,14 +53,13 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
 
 @pytest.mark.usefixtures("mock_api_client")
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test duplicate entry handling."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="2026123456789123",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -74,11 +82,14 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
+        (WTCApiCancelledError(), "cannot_connect"),
         (WTCApiUnauthorizedError(), "invalid_auth"),
         (WTCApiDisabledError(), "api_disabled"),
-        (WTCApiTemporaryError(), "cannot_connect"),
-        (http_status_error(404), "cannot_connect"),
-        (request_error(), "cannot_connect"),
+        (WTCApiQuotaExceededError(), "cannot_connect"),
+        (WTCApiRequestError(), "cannot_connect"),
+        (WTCApiServerError(), "cannot_connect"),
+        (WTCApiTimeoutError(), "cannot_connect"),
+        (WTCApiValidationError(), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
@@ -127,3 +138,43 @@ async def test_form_raise_error(
 
     mock_setup_entry.assert_awaited_once()
     mock_api_client.get_state.assert_not_awaited()
+
+
+async def test_form_missing_biocat_serial(
+    hass: HomeAssistant, mock_api_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test config flow for missing biocat serial."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_api_client.get_device_info.return_value.biocat_serial = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_api_client.get_device_info.return_value.biocat_serial = BIOCAT_SERIAL
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEVICE_NAME
+    assert result["data"] == {
+        CONF_API_KEY: "<api-key>",
+    }
