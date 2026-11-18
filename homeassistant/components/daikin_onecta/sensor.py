@@ -17,17 +17,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ENERGY_AGGREGATE_PERIODS,
     SENSOR_PERIOD_DAILY,
     SENSOR_PERIOD_MONTHLY,
     SENSOR_PERIOD_UNIQUE_IDS,
     SENSOR_PERIOD_WEEKLY,
     SENSOR_PERIOD_YEARLY,
-    SENSOR_PERIODS,
     SENSORY_DATA_SENSOR_TYPES,
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .discovery import scalar_platform
+from .discovery import energy_description_key, scalar_platform
 from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 from .utils import enum_value_to_state
@@ -74,14 +74,6 @@ class ValueSensorDetails:
     value: str
 
 
-def _energy_sensor_description_key(details: EnergySensorDetails) -> str:
-    """Return the entity-description key for an energy aggregate."""
-    return (
-        f"{details.operation_mode.capitalize()}{SENSOR_PERIODS[details.period]}"
-        f"{details.sensor_type.capitalize()}{details.datatype.capitalize()}"
-    )
-
-
 def add_energy_sensors(
     coordinator: OnectaDataUpdateCoordinator,
     device: DaikinOnectaDevice,
@@ -89,16 +81,9 @@ def add_energy_sensors(
     sensors: list[SensorEntity],
 ) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
-    periods = {
-        "day": SENSOR_PERIOD_DAILY,
-        "week": SENSOR_PERIOD_WEEKLY,
-        "month": SENSOR_PERIOD_MONTHLY,
-        "year": SENSOR_PERIOD_YEARLY,
-    }
-    order = {"day": 0, "week": 1, "year": 2, "month": 3}
     supported_aggregates = []
     for aggregate in management_point.energy_aggregates:
-        if aggregate.period not in periods:
+        if aggregate.period not in ENERGY_AGGREGATE_PERIODS:
             _LOGGER.debug(
                 "Skipping unsupported Daikin energy period '%s'", aggregate.period
             )
@@ -107,21 +92,22 @@ def add_energy_sensors(
 
     for aggregate in sorted(
         supported_aggregates,
-        key=lambda aggregate: order[aggregate.period],
+        key=lambda aggregate: tuple(ENERGY_AGGREGATE_PERIODS).index(aggregate.period),
     ):
+        description_key = energy_description_key(aggregate)
+        if description_key is None:
+            _LOGGER.debug(
+                "Skipping unsupported Daikin energy aggregate '%s'",
+                aggregate,
+            )
+            continue
         details = EnergySensorDetails(
             management_point.embedded_id,
             aggregate.source,
             aggregate.operation_mode,
-            periods[aggregate.period],
+            ENERGY_AGGREGATE_PERIODS[aggregate.period],
             aggregate.data_type,
         )
-        description_key = _energy_sensor_description_key(details)
-        if description_key not in SENSOR_DESCRIPTIONS:
-            _LOGGER.debug(
-                "Skipping unsupported Daikin energy aggregate '%s'", description_key
-            )
-            continue
         sensors.append(
             DaikinEnergySensor(
                 device,

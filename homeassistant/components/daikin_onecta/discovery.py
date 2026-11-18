@@ -1,10 +1,20 @@
 """Discover entity-producing capabilities without comparing live state values."""
 
-from daikin_onecta.models import Characteristic, GatewayDevice, ManagementPoint
+from daikin_onecta.models import (
+    Characteristic,
+    EnergyAggregate,
+    GatewayDevice,
+    ManagementPoint,
+)
 
 from homeassistant.const import Platform
 
-from .const import CONTROL_MANAGEMENT_POINT_TYPES, SENSORY_DATA_SENSOR_TYPES
+from .const import (
+    CONTROL_MANAGEMENT_POINT_TYPES,
+    ENERGY_AGGREGATE_PERIODS,
+    SENSOR_PERIODS,
+    SENSORY_DATA_SENSOR_TYPES,
+)
 from .entity_descriptions import (
     BINARY_SENSOR_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
@@ -31,6 +41,17 @@ def scalar_platform(
     ):
         return Platform.SENSOR
     return None
+
+
+def energy_description_key(aggregate: EnergyAggregate) -> str | None:
+    """Return the sensor description key for a supported energy aggregate."""
+    if (period := ENERGY_AGGREGATE_PERIODS.get(aggregate.period)) is None:
+        return None
+    description = (
+        f"{aggregate.operation_mode.capitalize()}{SENSOR_PERIODS[period]}"
+        f"{aggregate.source.capitalize()}{aggregate.data_type.capitalize()}"
+    )
+    return description if description in SENSOR_DESCRIPTIONS else None
 
 
 def management_point_entity_keys(point: ManagementPoint) -> set[str]:
@@ -64,15 +85,8 @@ def management_point_entity_keys(point: ManagementPoint) -> set[str]:
         for name in SENSORY_DATA_SENSOR_TYPES
         if point.sensory_characteristic(name) is not None
     )
-    periods = {"day": "Daily", "week": "Weekly", "month": "Monthly", "year": "Yearly"}
     for aggregate in point.energy_aggregates:
-        if (period := periods.get(aggregate.period)) is None:
-            continue
-        description = (
-            f"{aggregate.operation_mode.capitalize()}{period}"
-            f"{aggregate.source.capitalize()}{aggregate.data_type.capitalize()}"
-        )
-        if description in SENSOR_DESCRIPTIONS:
+        if (description := energy_description_key(aggregate)) is not None:
             keys.add(f"energy:{description}")
     return keys
 

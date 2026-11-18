@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from copy import deepcopy
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,6 +19,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
+    energy_description_key,
     gateway_entity_keys,
     management_point_entity_keys,
     scalar_platform,
@@ -128,6 +130,20 @@ def test_discovery_skips_unknown_energy_period() -> None:
     )
 
     assert management_point_entity_keys(point) == set()
+
+
+def test_energy_description_key() -> None:
+    """Return a key only when both the period and description are supported."""
+    aggregate = next(
+        aggregate
+        for device in _load_gateway_devices("altherma")
+        for point in device.management_points
+        for aggregate in point.energy_aggregates
+    )
+
+    assert energy_description_key(aggregate) == "HeatingDailyElectricalConsumption"
+    assert energy_description_key(replace(aggregate, period="quarter")) is None
+    assert energy_description_key(replace(aggregate, source="future-source")) is None
 
 
 async def _async_fire_coordinator_update(
