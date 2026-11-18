@@ -20,7 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -152,7 +152,7 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
         DOMAIN,
         ElgatoService.IDENTIFY,
         {
-            CommonServiceArgument.ENTITY_ID: "light.frenck",
+            TargetKey.ENTITY_ID: "light.frenck",
         },
         blocking=True,
     )
@@ -169,7 +169,7 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
             DOMAIN,
             ElgatoService.IDENTIFY,
             {
-                CommonServiceArgument.ENTITY_ID: "light.frenck",
+                TargetKey.ENTITY_ID: "light.frenck",
             },
             blocking=True,
         )

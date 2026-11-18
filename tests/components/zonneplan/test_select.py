@@ -33,7 +33,7 @@ from homeassistant.components.zonneplan.coordinator import (
     BATTERY_CONTROL_UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -119,7 +119,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+            TargetKey.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
             SelectServiceArgument.OPTION: "home_optimization",
         },
         blocking=True,
@@ -144,7 +144,7 @@ async def test_select_unavailable_option(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                TargetKey.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
                 SelectServiceArgument.OPTION: "day_ahead_arbitrage",
             },
             blocking=True,
@@ -204,7 +204,7 @@ async def test_select_option_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                TargetKey.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
                 SelectServiceArgument.OPTION: "home_optimization",
             },
             blocking=True,
@@ -231,7 +231,7 @@ async def test_select_option_authentication_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
+                TargetKey.ENTITY_ID: CONTROL_MODE_ENTITY_ID,
                 SelectServiceArgument.OPTION: "home_optimization",
             },
             blocking=True,

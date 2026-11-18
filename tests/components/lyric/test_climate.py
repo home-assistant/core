@@ -33,12 +33,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.components.lyric.services import LyricService
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -312,7 +307,7 @@ async def test_set_hold_time(hass: HomeAssistant, mock_lyric: MagicMock) -> None
     await hass.services.async_call(
         DOMAIN,
         LyricService.SET_HOLD_TIME,
-        {CommonServiceArgument.ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
+        {TargetKey.ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
         blocking=True,
     )
 
