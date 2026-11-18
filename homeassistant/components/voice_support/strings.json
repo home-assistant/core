@@ -70,9 +70,9 @@
   },
   "preview_features": {
     "next_generation_voice": {
-      "description": "Enables the next generation voice stack in Home Assistant. It needs the Voice Support app. On Home Assistant OS, the app is installed for you. If you run Home Assistant in a container, you must install the app yourself. Your Home Assistant Voice Preview Edition needs the beta firmware.",
+      "description": "Enables the next generation voice stack in Home Assistant.\n\nIt needs the Voice Support app. On Home Assistant OS, the app is installed for you. If you run Home Assistant in a container, select **Learn more** to see how to install the app.\n\nYour Home Assistant Voice Preview Edition needs the beta firmware.",
       "disable_confirmation": "Next-generation voice will be turned off. If Home Assistant installed the Voice Support app, it will back up and uninstall the app and remove its integration entry.",
-      "enable_confirmation": "This feature is still in development and may change. It needs the Voice Support app and the beta firmware on your Home Assistant Voice Preview Edition. On Home Assistant OS, the app is installed when you turn on this feature. If you run Home Assistant in a container, you must install the app yourself.",
+      "enable_confirmation": "This feature is still in development and may change. On Home Assistant OS, Home Assistant installs the Voice Support app for you.",
       "name": "Next-generation voice"
     }
   }
