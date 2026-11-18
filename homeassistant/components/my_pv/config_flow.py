@@ -220,10 +220,11 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
 
-        if self.source == SOURCE_RECONFIGURE:
-            name = self._get_reconfigure_entry().title
-        else:
-            name = f"my-PV {self._device_model}"
+        name = (
+            self._get_reconfigure_entry().title
+            if self.source == SOURCE_RECONFIGURE
+            else f"my-PV {self._device_model}"
+        )
         self.context.update({"title_placeholders": {"name": name}})
 
         return self.async_show_form(
