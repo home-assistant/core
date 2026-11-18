@@ -2,7 +2,7 @@
 
 from typing import override
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -116,3 +116,18 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
     def _value(self) -> str | None:
         """Return the current raw value of the setting."""
         return self.coordinator.data.get(self._path)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Tell the coordinator which platform has the entity of the setting."""
+        await super().async_added_to_hass()
+        path = self._path.lower()
+        domain = self.platform.domain
+        self.coordinator.entity_platforms[path] = domain
+
+        @callback
+        def _forget() -> None:
+            if self.coordinator.entity_platforms.get(path) == domain:
+                del self.coordinator.entity_platforms[path]
+
+        self.async_on_remove(_forget)

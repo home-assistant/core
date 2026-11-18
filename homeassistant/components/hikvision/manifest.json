@@ -1,6 +1,7 @@
 {
   "domain": "hikvision",
   "name": "Hikvision",
+  "after_dependencies": ["logbook"],
   "categories": ["security_safety.cameras"],
   "codeowners": ["@mezz64", "@ptarjan"],
   "config_flow": true,

@@ -10,6 +10,7 @@ from pyhik.isapi import ISAPIAuthError, ISAPIConnectionError, ISAPIError
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     snapshot_platform,
 )
@@ -24,13 +25,14 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_LOGBOOK_ENTRY,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -188,6 +190,83 @@ async def test_turn_on_off(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+async def test_other_settings_changed_to_make_room_are_logged(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    image_values: dict[str, str],
+) -> None:
+    """Test the user is told when the camera had to switch another setting off."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "ok", {"HLC/enabled": "false", "WDR/mode": "CLOSE"}
+    )
+    mock_image_settings.get_image_values.return_value = {
+        **image_values,
+        "HLC/enabled": "false",
+        "Exposure/OverexposeSuppress/enabled": "true",
+    }
+
+    context = Context()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: SMART_LIGHT},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    # The entries belong to the action that asked for the change.
+    assert all(e.context.id == context.id for e in events)
+    # The switch has an entity: it is named and linked. WDR has none yet in this
+    # test, so the path stands in for its name.
+    assert [
+        (e.data["name"], e.data["message"], e.data.get("entity_id")) for e in events
+    ] == [
+        (
+            "Front Camera Highlight compensation",
+            "was turned off automatically so that Front Camera Smart supplement light could be changed",
+            HLC,
+        ),
+        (
+            "WDR/mode",
+            "was turned off automatically so that Front Camera Smart supplement light could be changed",
+            None,
+        ),
+    ]
+    # An entry that has no entity of its own is the integration's.
+    assert [e.data.get("domain") for e in events] == [None, "hikvision"]
+    assert hass.states.get(HLC).state == STATE_OFF
+    assert hass.states.get(SMART_LIGHT).state == STATE_ON
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_other_settings_are_logged_when_the_change_is_still_refused(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a blocker that was switched off is reported even if the change failed."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        False, 403, "WDROrDehazeMutexHLC", {"HLC/enabled": "false"}
+    )
+
+    # The blocker was switched off, so it is not named as the reason.
+    with pytest.raises(HomeAssistantError, match="did not accept the image setting"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: SMART_LIGHT}, blocking=True
+        )
+
+    assert [e.data["name"] for e in events] == ["Front Camera Highlight compensation"]
+    # The stored value follows the camera without waiting for the next poll.
+    assert hass.states.get(HLC).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 @pytest.mark.parametrize(
     ("result", "message"),
     [
@@ -196,13 +275,15 @@ async def test_turn_on_off(
             ImageWriteResult(False, 0, "pathNotFound"),
             r"did not accept the image setting \(pathNotFound\)",
         ),
+        # Firmware differs in the code it uses for the two directions, so the message
+        # follows the setting that was asked for: this is highlight compensation.
         (
             ImageWriteResult(False, 403, "HLCMutexWDROrDehaze"),
-            "while highlight compensation is on",
+            "Highlight compensation cannot be turned on while wide dynamic range",
         ),
         (
             ImageWriteResult(False, 403, "WDROrDehazeMutexHLC"),
-            "while wide dynamic range or defog is on",
+            "Highlight compensation cannot be turned on while wide dynamic range",
         ),
     ],
 )

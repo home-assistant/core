@@ -156,9 +156,9 @@ class HikvisionImageSwitch(HikvisionImageEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the setting on."""
-        await self.coordinator.async_set_setting(self._path, "true")
+        await self.coordinator.async_set_setting(self._path, "true", self._context)
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the setting off."""
-        await self.coordinator.async_set_setting(self._path, "false")
+        await self.coordinator.async_set_setting(self._path, "false", self._context)

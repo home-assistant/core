@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 from pyhik.image import ImageSetting, ImageSettingType, ImageWriteResult
 from pyhik.isapi import ISAPIError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -14,8 +18,13 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_LOGBOOK_ENTRY,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
@@ -276,6 +285,35 @@ async def test_linked_mode_without_an_enabled_flag(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+async def test_linked_flag_is_logged_for_its_mode_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test BLC/enabled is reported for the BLC mode, which is the entity it belongs to."""
+    await setup_integration(hass, mock_config_entry)
+    events = async_capture_events(hass, EVENT_LOGBOOK_ENTRY)
+    context = Context()
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        True, 200, "ok", {"BLC/enabled": "false"}
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.front_camera_shutter_speed", ATTR_OPTION: "1/500"},
+        blocking=True,
+        context=context,
+    )
+
+    assert [(e.data["name"], e.data.get("entity_id")) for e in events] == [
+        ("Front Camera Backlight compensation mode", BLC_MODE)
+    ]
+    # The entry belongs to the action that asked for the change.
+    assert events[0].context.id == context.id
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 async def test_linked_mode_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -458,6 +496,76 @@ async def test_write_rejected_by_camera(
         )
 
     assert hass.states.get(SHUTTER).state == "1/1000"
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+@pytest.mark.parametrize("sub_status", ["HLCMutexWDROrDehaze", "WDROrDehazeMutexHLC"])
+async def test_conflict_with_highlight_compensation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+    sub_status: str,
+) -> None:
+    """Test the message names what blocks WDR, whichever code the firmware uses."""
+    await setup_integration(hass, mock_config_entry)
+    mock_image_settings.set_image_setting.return_value = ImageWriteResult(
+        False, 403, sub_status
+    )
+
+    with pytest.raises(HomeAssistantError, match="while highlight compensation is on"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: WDR, ATTR_OPTION: "open"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_hikcamera", "mock_image_settings")
+async def test_entity_name_ignores_registry_entry_of_earlier_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a leftover registry entry is not taken for an entity of this setup."""
+    await setup_integration(hass, mock_config_entry)
+    runtime_data = mock_config_entry.runtime_data
+    coordinator = runtime_data.image_coordinator
+    entity_registry.async_get_or_create(
+        SELECT_DOMAIN,
+        "hikvision",
+        f"{runtime_data.device_id}_image_old/setting",
+        suggested_object_id="old_setting",
+    )
+
+    assert coordinator._async_entity_name("old/setting") == ("old/setting", None)
+
+
+@pytest.mark.usefixtures("mock_hikcamera", "mock_image_settings")
+async def test_entity_name_uses_the_platform_of_this_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a leftover entry of another platform is not taken for the entity."""
+    await setup_integration(hass, mock_config_entry)
+    runtime_data = mock_config_entry.runtime_data
+    coordinator = runtime_data.image_coordinator
+    path = next(
+        path
+        for path, domain in coordinator.entity_platforms.items()
+        if domain == SELECT_DOMAIN
+    )
+    unique_id = f"{runtime_data.device_id}_image_{path}"
+    entity_id = entity_registry.async_get_entity_id(
+        SELECT_DOMAIN, "hikvision", unique_id
+    )
+    # The firmware once had it as a number.
+    entity_registry.async_get_or_create(
+        "number", "hikvision", unique_id, suggested_object_id="old_number"
+    )
+
+    assert coordinator._async_entity_name(path)[1] == entity_id
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
