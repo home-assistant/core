@@ -1,11 +1,12 @@
 """Coordinator for the image settings of a Hikvision camera."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
-from pyhik.image import PRIVILEGE_SUB_STATUSES, ImageSetting
+from pyhik.image import PRIVILEGE_SUB_STATUSES, ImageSetting, ImageWriteResult
 from pyhik.isapi import ISAPIAuthError, ISAPIClient, ISAPIConnectionError, ISAPIError
 
 from homeassistant.core import HomeAssistant
@@ -97,6 +98,27 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     async def async_set_setting(self, path: str, value: str) -> None:
         """Write one setting and update the stored values."""
+        await self._async_write(
+            self.client.set_image_setting, (path, value), {path: value}
+        )
+
+    async def async_set_linked_setting(self, setting: ImageSetting, value: str) -> None:
+        """Write a mode that also controls an enabled flag, such as BLC."""
+        enabled = "false" if value == setting.off_value else "true"
+        updates = {setting.path: value}
+        if setting.linked_enabled_path:
+            updates[setting.linked_enabled_path] = enabled
+        await self._async_write(
+            self.client.set_image_linked_setting, (setting, value), updates
+        )
+
+    async def _async_write(
+        self,
+        method: Callable[..., ImageWriteResult],
+        args: tuple[Any, ...],
+        updates: dict[str, str],
+    ) -> None:
+        """Run a write in the executor and update the stored values."""
         try:
             async with self.lock:
                 if self.credentials_rejected:
@@ -104,9 +126,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     )
                 try:
-                    result = await self.hass.async_add_executor_job(
-                        self.client.set_image_setting, path, value
-                    )
+                    result = await self.hass.async_add_executor_job(method, *args)
                 except ISAPIAuthError as err:
                     if err.status_code == 401:
                         self.credentials_rejected = True
@@ -131,7 +151,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 translation_key=key,
                 translation_placeholders=placeholders,
             )
-        self.async_set_updated_data({**self.data, path: value})
+        self.async_set_updated_data({**self.data, **updates})
         await self.async_request_refresh()
 
     async def _async_write_error(self, err: ISAPIError) -> HomeAssistantError:
