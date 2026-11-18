@@ -533,3 +533,81 @@ async def test_group_entity_context_in_flight_member_report(
     assert member_1_state is not None
     assert member_1_state.state == STATE_ON
     assert member_1_state.context == turn_on_context
+
+
+async def test_group_entity_context_no_diff_and_delayed_group_event(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test group context when a command emits no diff and a group event fires later."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    [group_entry] = er.async_entries_for_device(entity_registry, group_proxy.device_id)
+    group_entity_id = group_entry.entity_id
+    zha_group_entity = group_proxy.group.group_entities[group_entry.unique_id]
+
+    ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    ieee_2 = EUI64.convert("01:2d:6f:00:0a:90:69:e2")
+    member_1_entity_id = find_entity_id(
+        Platform.SWITCH, gateway_proxy.device_proxies[ieee_1], hass
+    )
+    member_2_entity_id = find_entity_id(
+        Platform.SWITCH, gateway_proxy.device_proxies[ieee_2], hass
+    )
+    assert member_1_entity_id is not None
+    assert member_2_entity_id is not None
+
+    cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+    cluster_2 = zigpy_app_controller_with_group.devices[ieee_2].endpoints[1].on_off
+
+    # Member 1 is already on, making the group entity already on (while member 2 is off)
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    zha_group_entity.update()
+    await hass.async_block_till_done()
+    assert hass.states.get(group_entity_id).state == STATE_ON
+
+    # Calling turn_on when the group is already on emits no state diff on SwitchGroup
+    turn_on_context = Context(user_id=hass_admin_user.id, id="no_diff_turn_on_ctx")
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: group_entity_id},
+        blocking=True,
+        context=turn_on_context,
+    )
+
+    # Opposing state change (turning off) on member 1 must still be rejected
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 0}
+    )
+    member_1_off_state = hass.states.get(member_1_entity_id)
+    assert member_1_off_state is not None
+    assert member_1_off_state.state == STATE_OFF
+    assert member_1_off_state.context != turn_on_context
+
+    # After the context window expires, a delayed group state event must not revive
+    # the expired context with a fresh timestamp on member 2
+    later = time.time() + 10
+    with (
+        patch("homeassistant.helpers.entity.timer", return_value=later),
+        patch("time.time", return_value=later),
+    ):
+        zha_group_entity.update()
+        await hass.async_block_till_done()
+        await send_attributes_report(
+            hass, cluster_2, {general.OnOff.AttributeDefs.on_off.id: 1}
+        )
+
+    member_2_state = hass.states.get(member_2_entity_id)
+    assert member_2_state is not None
+    assert member_2_state.state == STATE_ON
+    assert member_2_state.context != turn_on_context
