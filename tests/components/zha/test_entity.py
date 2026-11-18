@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
@@ -11,8 +11,10 @@ from zigpy.application import ControllerApplication
 from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.types import EUI64
-from zigpy.zcl.clusters import general
+from zigpy.zcl.clusters import general, hvac
+import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha import const as zha_const
@@ -611,3 +613,84 @@ async def test_group_entity_context_no_diff_and_delayed_group_event(
     assert member_2_state is not None
     assert member_2_state.state == STATE_ON
     assert member_2_state.context != turn_on_context
+
+
+@pytest.mark.usefixtures("zigpy_app_controller_with_group")
+async def test_fan_group_entity_context_propagation(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller: ControllerApplication,
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test context propagation for a ZHA fan group where group state lags members."""
+    group = zigpy_app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
+    for ieee in ("01:2d:6f:00:0a:90:69:d1", "01:2d:6f:00:0a:90:69:d2"):
+        fan_dev = zigpy_device_mock(
+            {
+                1: {
+                    SIG_EP_INPUT: [
+                        general.Basic.cluster_id,
+                        general.Groups.cluster_id,
+                        hvac.Fan.cluster_id,
+                    ],
+                    SIG_EP_OUTPUT: [],
+                    SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                    SIG_EP_PROFILE: zha.PROFILE_ID,
+                }
+            },
+            ieee=ieee,
+        )
+        zigpy_app_controller.devices[fan_dev.ieee] = fan_dev
+        group.add_member(fan_dev.endpoints[1], suppress_event=True)
+
+    await setup_zha()
+    group.endpoint[hvac.Fan.cluster_id].write_attributes = AsyncMock(
+        return_value=[[zcl_f.WriteAttributesStatusRecord(zcl_f.Status.SUCCESS)]]
+    )
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    fan_group_entity_id = entity_registry.async_get_entity_id(
+        Platform.FAN,
+        DOMAIN,
+        f"fan_zha_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}",
+    )
+    assert fan_group_entity_id is not None
+
+    fan_1_ieee = EUI64.convert("01:2d:6f:00:0a:90:69:d1")
+    fan_1_id = find_entity_id(
+        Platform.FAN, gateway_proxy.device_proxies[fan_1_ieee], hass
+    )
+    assert fan_1_id is not None
+    fan_1_cluster = zigpy_app_controller.devices[fan_1_ieee].endpoints[1].fan
+
+    turn_on_context = Context(user_id=hass_admin_user.id, id="fan_turn_on_ctx")
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_group_entity_id},
+        blocking=True,
+        context=turn_on_context,
+    )
+
+    await send_attributes_report(
+        hass,
+        fan_1_cluster,
+        {hvac.Fan.AttributeDefs.fan_mode.id: hvac.FanMode.Medium},
+    )
+    fan_1_state = hass.states.get(fan_1_id)
+    assert fan_1_state is not None
+    assert fan_1_state.state == STATE_ON
+    assert fan_1_state.context == turn_on_context
+
+    # Opposing off report within the 5-second window must not inherit turn_on_context
+    await send_attributes_report(
+        hass,
+        fan_1_cluster,
+        {hvac.Fan.AttributeDefs.fan_mode.id: hvac.FanMode.Off},
+    )
+    fan_1_off_state = hass.states.get(fan_1_id)
+    assert fan_1_off_state is not None
+    assert fan_1_off_state.state == STATE_OFF
+    assert fan_1_off_state.context != turn_on_context
