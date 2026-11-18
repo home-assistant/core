@@ -5,5 +5,12 @@
   "documentation": "https://www.home-assistant.io/integrations/llm",
   "integration_type": "system",
   "iot_class": "calculated",
-  "quality_scale": "internal"
+  "preview_features": {
+    "code_mode": {
+      "learn_more_url": "https://www.home-assistant.io/integrations/llm",
+      "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/llm&integration_name=LLM"
+    }
+  },
+  "quality_scale": "internal",
+  "requirements": ["pydantic-monty==1.6.0"]
 }

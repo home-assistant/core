@@ -46,10 +46,10 @@ async def test_feature_disabled(hass: HomeAssistant) -> None:
 
 async def test_feature_enabled(hass: HomeAssistant) -> None:
     """Test the agent gets the execute tool in place of the tools."""
-    await async_update_preview_feature(hass, "code_mode", "code_mode", True)
+    await async_update_preview_feature(hass, "llm", "code_mode", True)
 
     assert await _tool_names(hass) == ["execute"]
 
-    await async_update_preview_feature(hass, "code_mode", "code_mode", False)
+    await async_update_preview_feature(hass, "llm", "code_mode", False)
 
     assert "llm__GetDateTime" in await _tool_names(hass)

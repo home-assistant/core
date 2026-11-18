@@ -1,4 +1,4 @@
-"""Tests for the Code Mode LLM API."""
+"""Tests for code mode."""
 
 import asyncio
 from datetime import timedelta
@@ -10,7 +10,7 @@ import psutil
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.code_mode import api as code_mode_api
+from homeassistant.components.llm import code_mode as code_mode_api
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv, llm

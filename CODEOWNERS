@@ -340,8 +340,6 @@ AGENTS.md @home-assistant/core
 /tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
-/homeassistant/components/code_mode/ @balloob
-/tests/components/code_mode/ @balloob
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/collection_image/ @karwosts

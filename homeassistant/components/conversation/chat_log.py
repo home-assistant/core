@@ -779,11 +779,11 @@ class ChatLog:
 
     async def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
         """Expose the tools as code when the code mode preview feature is on."""
-        if not async_is_preview_feature_enabled(self.hass, "code_mode", "code_mode"):
+        if not async_is_preview_feature_enabled(self.hass, "llm", "code_mode"):
             return llm_api
         # The sandbox library loads only when it is used.
         code_mode = await async_import_module(
-            self.hass, "homeassistant.components.code_mode"
+            self.hass, "homeassistant.components.llm.code_mode"
         )
         code_mode_api: llm.APIInstance = code_mode.async_create_api_instance(llm_api)
         return code_mode_api

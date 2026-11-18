@@ -1,4 +1,4 @@
-"""Expose the tools of an LLM API as functions for sandboxed code."""
+"""Code mode: expose the tools of an LLM API as functions for sandboxed code."""
 
 import asyncio
 from collections.abc import Callable, Coroutine
