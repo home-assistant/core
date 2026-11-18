@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
     SwitchService,
 )
 from homeassistant.components.tessie.switch import DESCRIPTIONS
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import StateType
@@ -59,7 +59,7 @@ async def test_switches(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: [entity_id]},
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_start_charging.assert_called_once()
@@ -72,7 +72,7 @@ async def test_switches(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: [entity_id]},
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_stop_charging.assert_called_once()
@@ -111,7 +111,7 @@ async def test_switch_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -125,7 +125,7 @@ async def test_switch_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)

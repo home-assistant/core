@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -124,7 +124,7 @@ async def test_set_tool_temp(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                TargetKey.ENTITY_ID: entity.entity_id,
                 NumberServiceArgument.VALUE: 200.4,
             },
             blocking=True,
@@ -163,7 +163,7 @@ async def test_set_bed_temp(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                TargetKey.ENTITY_ID: entity.entity_id,
                 NumberServiceArgument.VALUE: 80.6,
             },
             blocking=True,
@@ -208,7 +208,7 @@ async def test_set_tool_n_temp(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                TargetKey.ENTITY_ID: entity.entity_id,
                 NumberServiceArgument.VALUE: 41.0,
             },
             blocking=True,

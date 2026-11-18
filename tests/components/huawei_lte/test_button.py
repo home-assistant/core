@@ -15,7 +15,7 @@ from homeassistant.components.huawei_lte.services import (
     HuaweiLteService,
     HuaweiLteServiceArgument,
 )
-from homeassistant.const import CONF_URL, CommonServiceArgument
+from homeassistant.const import CONF_URL, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import magic_client
@@ -37,7 +37,7 @@ async def test_clear_traffic_statistics(hass: HomeAssistant) -> None:
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: f"button.test_router_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"
+            TargetKey.ENTITY_ID: f"button.test_router_{BUTTON_KEY_CLEAR_TRAFFIC_STATISTICS}"
         },
         blocking=True,
     )
@@ -70,7 +70,7 @@ async def test_restart(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: f"button.test_router_{BUTTON_KEY_RESTART}"},
+        {TargetKey.ENTITY_ID: f"button.test_router_{BUTTON_KEY_RESTART}"},
         blocking=True,
     )
     await hass.async_block_till_done()

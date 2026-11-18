@@ -40,8 +40,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -676,7 +676,7 @@ async def test_climate_assumed_state(
         DOMAIN,
         SensiboService.ASSUME_STATE,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.STATE: "off",
         },
         blocking=True,
@@ -743,7 +743,7 @@ async def test_climate_set_timer(
             DOMAIN,
             SensiboService.ENABLE_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
@@ -753,7 +753,7 @@ async def test_climate_set_timer(
             DOMAIN,
             SensiboService.ENABLE_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.MINUTES: 30,
             },
             blocking=True,
@@ -768,7 +768,7 @@ async def test_climate_set_timer(
         DOMAIN,
         SensiboService.ENABLE_TIMER,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.MINUTES: 30,
         },
         blocking=True,
@@ -819,7 +819,7 @@ async def test_climate_pure_boost(
             DOMAIN,
             SensiboService.ENABLE_PURE_BOOST,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.INDOOR_INTEGRATION: True,
                 SensiboServiceArgument.OUTDOOR_INTEGRATION: True,
                 SensiboServiceArgument.SENSITIVITY: "sensitive",
@@ -843,7 +843,7 @@ async def test_climate_pure_boost(
         DOMAIN,
         SensiboService.ENABLE_PURE_BOOST,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.AC_INTEGRATION: False,
             SensiboServiceArgument.GEO_INTEGRATION: False,
             SensiboServiceArgument.INDOOR_INTEGRATION: True,
@@ -908,7 +908,7 @@ async def test_climate_climate_react(
             DOMAIN,
             SensiboService.ENABLE_PURE_BOOST,
             {
-                CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+                TargetKey.ENTITY_ID: state_climate.entity_id,
                 SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 0.2,
                 SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.3,
                 SensiboServiceArgument.SMART_TYPE: "temperature",
@@ -951,7 +951,7 @@ async def test_climate_climate_react(
         DOMAIN,
         SensiboService.ENABLE_CLIMATE_REACT,
         {
-            CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+            TargetKey.ENTITY_ID: state_climate.entity_id,
             SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 5.5,
             SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.5,
             SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
@@ -1087,7 +1087,7 @@ async def test_climate_climate_react_fahrenheit(
         DOMAIN,
         SensiboService.ENABLE_CLIMATE_REACT,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 32.0,
             SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 77.0,
             SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
@@ -1196,7 +1196,7 @@ async def test_climate_full_ac_state(
             DOMAIN,
             SensiboService.FULL_STATE,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.TARGET_TEMPERATURE: 22,
             },
             blocking=True,
@@ -1208,7 +1208,7 @@ async def test_climate_full_ac_state(
         DOMAIN,
         SensiboService.FULL_STATE,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.MODE: "cool",
             SensiboServiceArgument.TARGET_TEMPERATURE: 22,
             SensiboServiceArgument.FAN_MODE: "high",
@@ -1344,7 +1344,7 @@ async def test_climate_get_device_capabilities(
         DOMAIN,
         SensiboService.GET_DEVICE_CAPABILITIES,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+            TargetKey.ENTITY_ID: "climate.hallway_hallway",
             SensiboServiceArgument.HVAC_MODE: "heat",
         },
         blocking=True,
@@ -1359,7 +1359,7 @@ async def test_climate_get_device_capabilities(
             DOMAIN,
             SensiboService.GET_DEVICE_CAPABILITIES,
             {
-                CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+                TargetKey.ENTITY_ID: "climate.hallway_hallway",
                 SensiboServiceArgument.HVAC_MODE: "heat_cool",
             },
             blocking=True,

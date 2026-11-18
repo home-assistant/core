@@ -43,6 +43,11 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the scale."
+    }
+  },
   "options": {
     "step": {
       "init": {

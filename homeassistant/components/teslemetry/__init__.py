@@ -95,6 +95,7 @@ from .const import (
     STREAM_DISCONNECT_GRACE,
     SUBENTRY_TYPE_ENERGY_SITE,
     SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_ISSUE_KEY,
     VEHICLE_ISSUE_LEARN_MORE,
 )
 from .coordinator import (
@@ -237,8 +238,9 @@ def _setup_dynamic_discovery(
     metadata_coordinator: TeslemetryMetadataCoordinator,
     known_vins: set[str],
     known_site_ids: set[str],
+    polling_vins: set[str],
 ) -> None:
-    """Set up dynamic device discovery via reload when subscriptions change."""
+    """Set up reloads for subscription changes and vehicles able to stream."""
 
     @callback
     def _handle_metadata_update() -> None:
@@ -253,18 +255,34 @@ def _setup_dynamic_discovery(
         removed_vins = known_vins - current_vins
         added_sites = current_site_ids - known_site_ids
         removed_sites = known_site_ids - current_site_ids
+        # A vehicle only registers its streaming fields during setup. None means
+        # the fleet status is unknown, which is not a change worth a reload.
+        streamable_vins = {
+            vin
+            for vin in polling_vins
+            if data["vehicles"].get(vin, {}).get("polling") is False
+        }
 
-        if added_vins or removed_vins or added_sites or removed_sites:
+        if (
+            added_vins
+            or removed_vins
+            or added_sites
+            or removed_sites
+            or streamable_vins
+        ):
             LOGGER.info(
-                "Tesla subscription changes detected "
+                "Tesla subscription or streaming changes detected "
                 "(added vehicles: %s, removed vehicles: %s, "
-                "added energy sites: %s, removed energy sites: %s), "
+                "added energy sites: %s, removed energy sites: %s, "
+                "vehicles now able to stream: %s), "
                 "reloading integration",
                 added_vins or "none",
                 removed_vins or "none",
                 added_sites or "none",
                 removed_sites or "none",
+                streamable_vins or "none",
             )
+            polling_vins.difference_update(streamable_vins)
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
@@ -788,7 +806,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 sw_version=firmware,
             )
 
-            poll = vehicle_metadata[vin].get("polling", False)
+            # A key issue marks a vehicle that streams once paired, so polling
+            # stays with the vehicles that have no key to pair.
+            poll = (
+                vehicle_metadata[vin].get("polling", False)
+                and vehicle_metadata[vin].get("issue") != VEHICLE_ISSUE_KEY
+            )
 
             entry.async_on_unload(
                 stream.async_add_listener(
@@ -992,6 +1015,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         metadata_coordinator,
         known_vins,
         known_site_ids,
+        {
+            vehicle.vin
+            for vehicle in vehicles
+            if vehicle_metadata[vehicle.vin].get("polling")
+        },
     )
 
     _setup_vehicle_repairs(
