@@ -4,6 +4,8 @@ import functools
 import logging
 from typing import Any, override
 
+from zigpy.zcl.clusters import general
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -43,6 +45,8 @@ async def async_setup_entry(
 
 class Switch(ZHAEntity, SwitchEntity):
     """ZHA switch."""
+
+    _group_target_cluster_ids = frozenset({general.OnOff.cluster_id})
 
     @property
     @override

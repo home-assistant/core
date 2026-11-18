@@ -4,6 +4,7 @@ import functools
 from typing import Any, override
 
 from zha.application.platforms.fan.const import FanEntityFeature as ZHAFanEntityFeature
+from zigpy.zcl.clusters import hvac
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +45,7 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA fan."""
 
     _attr_translation_key: str = "fan"
+    _group_target_cluster_ids = frozenset({hvac.Fan.cluster_id})
 
     @staticmethod
     @functools.cache

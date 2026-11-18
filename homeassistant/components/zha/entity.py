@@ -9,7 +9,7 @@ import logging
 from typing import Any, override
 
 from propcache.api import cached_property
-from zha.application.platforms import EntityStateChangedEvent
+from zha.application.platforms import EntityStateChangedEvent, ZclPlatformEntity
 from zha.mixins import LogMixin
 
 from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
@@ -38,6 +38,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _context_expected_state: StateType = None
+    _group_target_cluster_ids: frozenset[int] = frozenset()
     _pending_group_context: bool = False
     remove_future: asyncio.Future[Any]
 
@@ -153,14 +154,22 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Re-derive capability `_attr_*` attributes from the cached state."""
 
     def _iter_group_member_entities(self) -> Iterator[ZHAEntity]:
-        """Yield registered HA entities for all members of this group entity."""
+        """Yield registered HA entities for members controlled by this group entity."""
         group_proxy = self.entity_data.group_proxy
         assert group_proxy is not None
         gateway_proxy = group_proxy.gateway_proxy
         member_unique_ids = set(group_proxy.group.all_member_entity_unique_ids)
         for ieee in {member.device.ieee for member in group_proxy.group.members}:
             for entity_ref in gateway_proxy.ha_entity_refs.get(ieee, ()):
-                if entity_ref.entity_data.entity.unique_id in member_unique_ids:
+                zha_entity = entity_ref.entity_data.entity
+                if (
+                    zha_entity.unique_id in member_unique_ids
+                    and isinstance(zha_entity, ZclPlatformEntity)
+                    and any(
+                        zha_entity.targets_cluster(cluster_id)
+                        for cluster_id in self._group_target_cluster_ids
+                    )
+                ):
                     yield entity_ref.ha_entity
 
     @callback

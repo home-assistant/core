@@ -9,6 +9,7 @@ from zha.application.platforms.light.const import (
     ColorMode as ZhaColorMode,
     LightEntityFeature as ZhaLightEntityFeature,
 )
+from zigpy.zcl.clusters import general
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -74,6 +75,8 @@ async def async_setup_entry(
 
 class Light(LightEntity, ZHASupportedFeaturesEntity):
     """Representation of a ZHA or ZLL light."""
+
+    _group_target_cluster_ids = frozenset({general.OnOff.cluster_id})
 
     @staticmethod
     @functools.cache
