@@ -18,6 +18,7 @@ from daikin_onecta.exceptions import (
     OnectaResponseError,
 )
 from daikin_onecta.models import GatewayDevice
+from daikin_onecta.rate_limit import RateLimit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -187,9 +188,21 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 raise
 
     async def async_get_sites(self) -> list[Site]:
-        """Return account sites for explicit, non-polling diagnostics."""
+        """Return account sites unless Daikin's rate-limit backoff is active."""
         async with self._cloud_lock:
-            return await self._client.get_sites()
+            if remaining := self._polling_backoff_remaining():
+                # Keep the shared polling backoff in force for explicit Sites
+                # lookups too; manual device refresh remains a separate path.
+                raise OnectaRateLimitError(
+                    RateLimit(retry_after=ceil(remaining.total_seconds())),
+                    method="GET",
+                    path="/v1/sites",
+                )
+            try:
+                return await self._client.get_sites()
+            except OnectaRateLimitError as err:
+                self._set_polling_backoff(err.retry_after)
+                raise
 
     def _polling_backoff_remaining(self) -> timedelta | None:
         """Return the remaining polling backoff, if any."""
@@ -495,6 +508,20 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             entity_key
             for device in devices
             for entity_key in gateway_entity_keys(device)
+        }
+
+    def forget_device_topology(
+        self, gateway_id: str, embedded_id: str | None = None
+    ) -> None:
+        """Forget capabilities for a removed gateway or management point."""
+        if self._known_topology is None:
+            return
+        self._known_topology = {
+            key
+            for key in self._known_topology
+            if not (
+                key[0] == gateway_id and (embedded_id is None or key[1] == embedded_id)
+            )
         }
 
     def _determine_update_interval(self) -> timedelta:

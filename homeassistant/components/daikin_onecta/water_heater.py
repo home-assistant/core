@@ -226,7 +226,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         step_value = dht.step_value
         target_temperature = (
             round(value)
-            if step_value is None or step_value <= 0 or float(step_value).is_integer()
+            if step_value is None or step_value <= 0
             else round(value / step_value) * step_value
         )
         if target_temperature != self._attr_native_target_temperature:
@@ -293,7 +293,11 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             powerful_mode = "on"
             on_off_mode = "on" if self.current_operation == STATE_OFF else ""
         elif operation_mode == STATE_HEAT_PUMP:
-            powerful_mode = "off" if self.current_operation == STATE_PERFORMANCE else ""
+            point = self.hot_water_management_point
+            hot_water = point.domestic_hot_water if point is not None else None
+            power_mode = hot_water.powerful_mode if hot_water is not None else None
+            if power_mode is not None and power_mode.value == "on":
+                powerful_mode = "off"
             on_off_mode = "on" if self.current_operation == STATE_OFF else ""
         return on_off_mode, powerful_mode
 

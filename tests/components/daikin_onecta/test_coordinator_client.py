@@ -86,6 +86,26 @@ async def test_get_sites(hass: HomeAssistant, config_entry: MockConfigEntry) -> 
     api.client.get_sites.assert_awaited_once_with()
 
 
+async def test_get_sites_rate_limit_sets_shared_backoff(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A Sites rate limit prevents later explicit cloud requests until retry."""
+    api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
+    api.client.get_sites = AsyncMock(
+        side_effect=OnectaRateLimitError(
+            RateLimit(retry_after=60), method="GET", path="/v1/sites"
+        )
+    )
+
+    with pytest.raises(OnectaRateLimitError):
+        await api.async_get_sites()
+
+    assert api._polling_backoff_remaining() == timedelta(seconds=60)
+    with pytest.raises(OnectaRateLimitError):
+        await api.async_get_sites()
+    api.client.get_sites.assert_awaited_once_with()
+
+
 async def test_get_device_details_respects_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -9,7 +9,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .discovery import scalar_platform
+from .discovery import (
+    get_scalar_characteristic,
+    scalar_characteristics_for_platform,
+    scalar_platform,
+)
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import SWITCH_DESCRIPTIONS
 
@@ -30,25 +34,18 @@ async def async_setup_entry(
 
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
-            for (
-                value,
-                characteristic,
-            ) in management_point.scalar_characteristics().items():
-                if (
-                    scalar_platform(
-                        value, characteristic, management_point.management_point_type
+            for value, _characteristic in scalar_characteristics_for_platform(
+                management_point, Platform.SWITCH
+            ):
+                sensors.append(
+                    DaikinSwitch(
+                        device,
+                        coordinator,
+                        management_point.embedded_id,
+                        SWITCH_DESCRIPTIONS[value],
+                        value,
                     )
-                    is Platform.SWITCH
-                ):
-                    sensors.append(
-                        DaikinSwitch(
-                            device,
-                            coordinator,
-                            management_point.embedded_id,
-                            SWITCH_DESCRIPTIONS[value],
-                            value,
-                        )
-                    )
+                )
 
     async_add_entities(sensors)
 
@@ -93,7 +90,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         """Return the state of the switch."""
         point = self._device.management_point(self._embedded_id)
         characteristic = (
-            point.scalar_characteristic(self._value) if point is not None else None
+            get_scalar_characteristic(point, self._value) if point is not None else None
         )
         result = characteristic.value if characteristic is not None else None
         return result if isinstance(result, str) else None
@@ -107,7 +104,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         point = self._device.management_point(self._embedded_id)
         if point is None:
             return False
-        characteristic = point.scalar_characteristic(self._value)
+        characteristic = get_scalar_characteristic(point, self._value)
         return bool(
             characteristic is not None
             and scalar_platform(
@@ -133,7 +130,9 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             )
             point = self._device.management_point(self._embedded_id)
             characteristic = (
-                point.scalar_characteristic(self._value) if point is not None else None
+                get_scalar_characteristic(point, self._value)
+                if point is not None
+                else None
             )
             if characteristic is not None:
                 characteristic.value = "on"
@@ -157,7 +156,9 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             )
             point = self._device.management_point(self._embedded_id)
             characteristic = (
-                point.scalar_characteristic(self._value) if point is not None else None
+                get_scalar_characteristic(point, self._value)
+                if point is not None
+                else None
             )
             if characteristic is not None:
                 characteristic.value = "off"

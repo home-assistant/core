@@ -488,7 +488,7 @@ def _make_switch_read_only(point: ManagementPoint) -> None:
             "switch",
             "econoMode",
             _make_switch_read_only,
-            1,
+            0,
             id="switch_read_only",
         ),
     ],

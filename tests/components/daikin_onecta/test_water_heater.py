@@ -1,6 +1,6 @@
 """Tests for Daikin Onecta water heater entities."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -378,6 +378,7 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
         (METRIC_SYSTEM, 48.6, 1, 49),
         (US_CUSTOMARY_SYSTEM, 120, 1, 49),
         (METRIC_SYSTEM, 48.6, 0.5, 48.5),
+        (METRIC_SYSTEM, 49.2, 2, 50),
     ],
 )
 async def test_water_heater_temperature_rounds_to_native_step(
@@ -543,3 +544,42 @@ async def test_water_heater_set_performance_updates_state(
     assert (
         state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_PERFORMANCE
     )
+
+
+async def test_water_heater_selecting_heat_pump_disables_powerful_mode_when_off(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Disable a stale powerful-mode flag when turning the tank on in heat-pump mode."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = next(
+        point
+        for point in gateway.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.powerful_mode is not None
+    point.on_off_mode.value = "off"
+    point.domestic_hot_water.powerful_mode.value = "on"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            "operation_mode": STATE_HEAT_PUMP,
+        },
+        blocking=True,
+    )
+
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        call(gateway.id, point.embedded_id, "onOffMode", "on", path=None),
+        call(gateway.id, point.embedded_id, "powerfulMode", "off", path=None),
+    ]
+    assert point.on_off_mode.value == "on"
+    assert point.domestic_hot_water.powerful_mode.value == "off"

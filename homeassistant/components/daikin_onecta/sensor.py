@@ -27,7 +27,12 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .discovery import energy_description_key, scalar_platform
+from .discovery import (
+    energy_description_key,
+    get_scalar_characteristic,
+    scalar_characteristics_for_platform,
+    scalar_platform,
+)
 from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 from .utils import enum_value_to_state
@@ -125,14 +130,9 @@ def add_simple_sensors(
     sensors: list[SensorEntity],
 ) -> None:
     """Add sensors for simple characteristics of one management point."""
-    for value, characteristic in management_point.scalar_characteristics().items():
-        if (
-            scalar_platform(
-                value, characteristic, management_point.management_point_type
-            )
-            is not Platform.SENSOR
-        ):
-            continue
+    for value, _characteristic in scalar_characteristics_for_platform(
+        management_point, Platform.SENSOR
+    ):
         sensors.append(
             DaikinValueSensor(
                 device,
@@ -359,7 +359,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             characteristic = (
                 point.sensory_characteristic(self._value)
                 if self._sub_type == "sensoryData"
-                else point.scalar_characteristic(self._value)
+                else get_scalar_characteristic(point, self._value)
             )
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
@@ -380,7 +380,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         if self._sub_type == "sensoryData":
             characteristic = point.sensory_characteristic(self._value)
         else:
-            characteristic = point.scalar_characteristic(self._value)
+            characteristic = get_scalar_characteristic(point, self._value)
         result: object = characteristic.value if characteristic is not None else None
         if (
             isinstance(result, str)
@@ -411,7 +411,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else point.scalar_characteristic(self._value)
+            else get_scalar_characteristic(point, self._value)
         )
         return characteristic is not None and (
             self._sub_type is not None

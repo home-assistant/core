@@ -1626,6 +1626,9 @@ async def test_climate_platform_services_and_management_points(
         control.current_temperature = lambda _target: None
         control.sensory_data = lambda _target: None
         error_state = SimpleNamespace(value=False, settable=False, values=None)
+        control.characteristic = lambda name: (
+            error_state if name == "isInErrorState" else None
+        )
         control.scalar_characteristics = lambda: {"isInErrorState": error_state}
         control.scalar_characteristic = lambda _name: error_state
         return control
@@ -1908,6 +1911,9 @@ async def test_climate_platform_services_and_management_points(
             US_CUSTOMARY_SYSTEM, 76, 0.5, 20, 24.5, True, id="fahrenheit-conversion"
         ),
         pytest.param(METRIC_SYSTEM, 24.4, 1, 20, 24, True, id="whole-step-rounding"),
+        pytest.param(
+            METRIC_SYSTEM, 20.1, 0.1, 20, 20.1, True, id="decimal-step-rounding"
+        ),
         pytest.param(METRIC_SYSTEM, 24.4, None, 20, 24.5, True, id="default-step"),
         pytest.param(METRIC_SYSTEM, 10.4, 3, 20, 10, True, id="clamp-to-minimum"),
         pytest.param(
@@ -1950,6 +1956,12 @@ async def test_climate_temperature_rounds_to_native_step(
     await hass.async_block_till_done()
     mock_onecta_client.patch_characteristic.reset_mock()
 
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, "temperature": service_temperature},
+        blocking=True,
+    )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,

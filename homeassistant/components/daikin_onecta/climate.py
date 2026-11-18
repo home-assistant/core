@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
@@ -340,9 +341,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 self._raise_service_validation_error("climate_temperature_unavailable")
 
             step = setpoint.step_value or 0.5
+            step_decimal = format(Decimal(str(step)).normalize(), "f")
+            step_decimals = len(step_decimal.partition(".")[2])
             value = (
                 round(float(kwargs[ClimateServiceArgument.TEMPERATURE]) / step) * step
             )
+            value = round(value, step_decimals)
             value = min(
                 max(
                     value,

@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -101,14 +101,52 @@ async def async_remove_config_entry_device(
     if isinstance(device_entry, ChildDeviceEntry):
         if not coordinator.last_update_success:
             return False
-        return not any(
-            current_device.present_in_cloud
-            and any(
-                f"{current_device.id}_{management_point.embedded_id}" == gateway_id
-                for management_point in current_device.device.management_points
-            )
-            for current_device in devices.values()
+        parent_device = dr.async_get(hass).async_get(
+            device_entry.parent_device_id, include_child_devices=False
         )
+        if parent_device is None:
+            return False
+        parent_gateway_id = next(
+            (
+                identifier
+                for domain, identifier in parent_device.identifiers
+                if domain == DOMAIN
+            ),
+            None,
+        )
+        if parent_gateway_id is None:
+            return False
+        child_prefix = f"{parent_gateway_id}_"
+        if not gateway_id.startswith(child_prefix):
+            return False
+        embedded_id = gateway_id[len(child_prefix) :]
+        current_device = devices.get(parent_gateway_id)
+        if current_device is not None and current_device.present_in_cloud:
+            if current_device.management_point(embedded_id) is not None:
+                return False
+        else:
+            try:
+                sites = await coordinator.async_get_sites()
+            except (
+                OAuth2TokenRequestError,
+                OnectaError,
+                aiohttp.ClientError,
+                TimeoutError,
+            ):
+                return False
+            if gateway_site_membership(sites, parent_gateway_id) is not False:
+                return False
+            # A newer successful poll may have restored the gateway while the
+            # Sites request was in flight. Recheck its management point as well.
+            current_device = (coordinator.data or {}).get(parent_gateway_id)
+            if (
+                current_device is not None
+                and current_device.present_in_cloud
+                and current_device.management_point(embedded_id) is not None
+            ):
+                return False
+        coordinator.forget_device_topology(parent_gateway_id, embedded_id)
+        return True
 
     device = devices.get(gateway_id)
     if not coordinator.last_update_success or device is None or device.present_in_cloud:
@@ -129,4 +167,5 @@ async def async_remove_config_entry_device(
         return False
     if coordinator.data is not None:
         coordinator.data.pop(gateway_id, None)
+    coordinator.forget_device_topology(gateway_id)
     return True

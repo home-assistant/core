@@ -12,7 +12,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .discovery import scalar_platform
+from .discovery import (
+    get_scalar_characteristic,
+    scalar_characteristics_for_platform,
+    scalar_platform,
+)
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
 
@@ -32,25 +36,18 @@ async def async_setup_entry(
     sensors: list[DaikinBinarySensor] = []
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
-            for (
-                value,
-                characteristic,
-            ) in management_point.scalar_characteristics().items():
-                if (
-                    scalar_platform(
-                        value, characteristic, management_point.management_point_type
+            for value, _characteristic in scalar_characteristics_for_platform(
+                management_point, Platform.BINARY_SENSOR
+            ):
+                sensors.append(
+                    DaikinBinarySensor(
+                        device,
+                        coordinator,
+                        management_point.embedded_id,
+                        BINARY_SENSOR_DESCRIPTIONS[value],
+                        value,
                     )
-                    is Platform.BINARY_SENSOR
-                ):
-                    sensors.append(
-                        DaikinBinarySensor(
-                            device,
-                            coordinator,
-                            management_point.embedded_id,
-                            BINARY_SENSOR_DESCRIPTIONS[value],
-                            value,
-                        )
-                    )
+                )
 
     async_add_entities(sensors)
 
@@ -87,7 +84,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         """Return the binary characteristic value."""
         point = self._device.management_point(self._embedded_id)
         characteristic = (
-            point.scalar_characteristic(self._value) if point is not None else None
+            get_scalar_characteristic(point, self._value) if point is not None else None
         )
         result = characteristic.value if characteristic is not None else None
         if isinstance(result, bool):
@@ -107,7 +104,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         point = self._device.management_point(self._embedded_id)
         if point is None:
             return False
-        characteristic = point.scalar_characteristic(self._value)
+        characteristic = get_scalar_characteristic(point, self._value)
         return bool(
             characteristic is not None
             and scalar_platform(

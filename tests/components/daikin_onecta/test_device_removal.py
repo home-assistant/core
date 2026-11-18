@@ -1,6 +1,7 @@
 """Tests for explicit removal of gateways confirmed absent from ONECTA."""
 
-from unittest.mock import AsyncMock
+from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from daikin_onecta import OnectaConnectionError, Site
@@ -10,13 +11,27 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin_onecta import async_remove_config_entry_device
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.coordinator import gateway_site_membership
+from homeassistant.components.daikin_onecta.coordinator import (
+    OnectaDataUpdateCoordinator,
+    gateway_site_membership,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockOnectaClient
-from .test_climate_snapshots import _async_setup_fixture
+from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+
+
+async def _async_fire_coordinator_update(
+    hass: HomeAssistant,
+    coordinator: OnectaDataUpdateCoordinator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Advance time until the next coordinator poll."""
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -251,6 +266,115 @@ async def test_remove_missing_gateway_rechecks_presence_after_lookup(
         hass, config_entry, missing_gateway
     )
     assert device.present_in_cloud
+
+
+async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Do not remove a child until Sites confirms its missing parent is gone."""
+    coordinator = config_entry.runtime_data
+    gateway_id = next(
+        identifier
+        for domain, identifier in missing_gateway.identifiers
+        if domain == DOMAIN
+    )
+    management_point = next(
+        point
+        for point in coordinator.data[gateway_id].device.management_points
+        if point.management_point_type not in {"gateway", "climateControl"}
+    )
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{management_point.embedded_id}"),
+        config_entry.entry_id,
+    )
+    assert child is not None
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[gateway_id])]
+    )
+
+    assert not await async_remove_config_entry_device(hass, config_entry, child)
+    coordinator.async_get_sites.assert_awaited_once_with()
+
+
+async def test_removed_gateway_reappearing_schedules_entity_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Forget removed gateway capabilities so their return reloads platforms."""
+    coordinator = config_entry.runtime_data
+    gateway_id = next(
+        identifier
+        for domain, identifier in missing_gateway.identifiers
+        if domain == DOMAIN
+    )
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
+    )
+    assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
+    assert coordinator._known_topology is not None
+    assert not any(key[0] == gateway_id for key in coordinator._known_topology)
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+        "minimal_data"
+    )
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    schedule_reload.assert_called_once_with(config_entry.entry_id)
+
+
+async def test_removed_child_reappearing_schedules_entity_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Forget removed management-point capabilities so their return reloads."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    original_devices = _load_gateway_devices("minimal_data")
+    gateway_id = original_devices[0].id
+    management_point = next(
+        point
+        for point in original_devices[0].management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    embedded_id = management_point.embedded_id
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{embedded_id}"), config_entry.entry_id
+    )
+    assert child is not None
+
+    missing_point_devices = deepcopy(original_devices)
+    missing_point_devices[0].management_points = [
+        point
+        for point in missing_point_devices[0].management_points
+        if point.embedded_id != embedded_id
+    ]
+    mock_onecta_client.get_gateway_devices.return_value = missing_point_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+    assert coordinator.data[gateway_id].present_in_cloud
+    assert coordinator.data[gateway_id].management_point(embedded_id) is None
+
+    assert await async_remove_config_entry_device(hass, config_entry, child)
+    assert coordinator._known_topology is not None
+    assert not any(
+        key[0] == gateway_id and key[1] == embedded_id
+        for key in coordinator._known_topology
+    )
+
+    mock_onecta_client.get_gateway_devices.return_value = original_devices
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    schedule_reload.assert_called_once_with(config_entry.entry_id)
 
 
 async def test_remove_gateway_when_unloaded_is_rejected(

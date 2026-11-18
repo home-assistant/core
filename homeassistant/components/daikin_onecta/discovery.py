@@ -1,5 +1,7 @@
 """Discover entity-producing capabilities without comparing live state values."""
 
+from collections.abc import Iterator
+
 from daikin_onecta.models import (
     Characteristic,
     EnergyAggregate,
@@ -43,6 +45,25 @@ def scalar_platform(
     return None
 
 
+def get_scalar_characteristic(
+    point: ManagementPoint, name: str
+) -> Characteristic | None:
+    """Return one characteristic without building the full scalar list."""
+    return point.characteristic(name)
+
+
+def scalar_characteristics_for_platform(
+    point: ManagementPoint, platform: Platform
+) -> Iterator[tuple[str, Characteristic]]:
+    """Yield scalar characteristics exposed by one platform."""
+    return (
+        (name, characteristic)
+        for name, characteristic in point.scalar_characteristics().items()
+        if scalar_platform(name, characteristic, point.management_point_type)
+        is platform
+    )
+
+
 def energy_description_key(aggregate: EnergyAggregate) -> str | None:
     """Return the sensor description key for a supported energy aggregate."""
     if (period := ENERGY_AGGREGATE_PERIODS.get(aggregate.period)) is None:
@@ -74,11 +95,12 @@ def management_point_entity_keys(point: ManagementPoint) -> set[str]:
 
     for name, characteristic in point.scalar_characteristics().items():
         if (
-            platform := scalar_platform(
-                name, characteristic, point.management_point_type
-            )
-        ) is not None:
-            keys.add(f"{platform}:{name}")
+            scalar_platform(name, characteristic, point.management_point_type)
+            is not None
+        ):
+            # Platform selection can change when Daikin toggles writability. Keep
+            # the characteristic known across that change to avoid reload loops.
+            keys.add(f"scalar:{name}")
 
     keys.update(
         f"sensory:{name}"

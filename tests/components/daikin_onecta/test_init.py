@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from daikin_onecta import Site
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -122,6 +123,9 @@ async def test_remove_management_point_device_gateway_gone(
     child = _get_domestic_hot_water_tank_child(config_entry, device_registry)
     mock_onecta_client.get_gateway_devices.return_value = []
     await _async_poll(hass, config_entry, freezer)
+    config_entry.runtime_data.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
+    )
 
     response = await _async_remove_device(hass, hass_ws_client, child)
 
