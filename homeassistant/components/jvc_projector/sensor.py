@@ -6,19 +6,16 @@ from typing import override
 from jvcprojector import Command, command as cmd
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
-from .util import deprecate_entity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,24 +64,6 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    # Keep these entities available for existing installations while they are
-    # migrated to the equivalent select entities.
-    JvcProjectorSensorDescription(
-        key="hdr_processing",
-        translation_key="hdr_processing",
-        command=cmd.HdrProcessing,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    JvcProjectorSensorDescription(
-        key="picture_mode",
-        translation_key="picture_mode",
-        command=cmd.PictureMode,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
     JvcProjectorSensorDescription(
         key="resolution",
         translation_key="resolution",
@@ -119,26 +98,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
     coordinator = entry.runtime_data
-    entity_registry = er.async_get(hass)
 
     entities: list[JvcProjectorSensorEntity] = []
     for description in SENSORS:
         if not coordinator.supports(description.command):
-            continue
-        if description.key in (
-            "hdr_processing",
-            "picture_mode",
-        ) and not deprecate_entity(
-            hass,
-            entry.entry_id,
-            entity_registry,
-            SENSOR_DOMAIN,
-            f"{coordinator.unique_id}_{description.key}",
-            f"deprecated_sensor_{entry.entry_id}_{description.key}",
-            "deprecated_sensor",
-            f"{coordinator.unique_id}_{description.key}",
-            f"select.jvc_projector_{description.key}",
-        ):
             continue
         entities.append(JvcProjectorSensorEntity(coordinator, description))
 

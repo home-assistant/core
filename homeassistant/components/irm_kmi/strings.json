@@ -22,6 +22,11 @@
       }
     }
   },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the API: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

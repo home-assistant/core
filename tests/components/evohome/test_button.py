@@ -152,4 +152,4 @@ async def test_button_press_api_call_failed(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "api_call_failed"
+    assert exc_info.value.translation_key == "api_request_failed"

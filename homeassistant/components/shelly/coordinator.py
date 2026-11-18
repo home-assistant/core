@@ -116,6 +116,7 @@ type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 RPC_CONFIG_STATE_KEYS: dict[str, frozenset[str] | None] = {
     "plugs_ui": None,
     "powerstrip_ui": None,
+    "ui": None,
     "switch": frozenset({"in_locked"}),
     "cover": frozenset({"in_locked"}),
 }
@@ -618,9 +619,18 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return True
 
     @callback
-    def async_on_initialized(self, initialized_callback: CALLBACK_TYPE) -> None:
+    def async_on_initialized(
+        self, initialized_callback: CALLBACK_TYPE
+    ) -> CALLBACK_TYPE:
         """Run a callback once, the next time the device is initialized."""
+
+        def _unsubscribe() -> None:
+            if initialized_callback in self._initialized_callbacks:
+                self._initialized_callbacks.remove(initialized_callback)
+
         self._initialized_callbacks.append(initialized_callback)
+
+        return _unsubscribe
 
     @callback
     def async_subscribe_ota_events(

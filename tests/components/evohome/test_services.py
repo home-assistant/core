@@ -324,7 +324,7 @@ async def test_set_zone_override_advance_schedule_fetch_failed(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "api_call_failed"
+    assert exc_info.value.translation_key == "api_request_failed"
     mock_fcn.assert_not_awaited()
 
 
