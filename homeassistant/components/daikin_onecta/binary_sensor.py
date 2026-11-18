@@ -6,14 +6,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
+from .discovery import scalar_platform
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
-from .utils import is_read_only_on_off_value
 
 PARALLEL_UPDATES = 1
 
@@ -36,19 +37,17 @@ async def async_setup_entry(
                 characteristic,
             ) in management_point.scalar_characteristics().items():
                 if (
-                    characteristic.values is None
-                    or is_read_only_on_off_value(
-                        characteristic.settable, characteristic.values
+                    scalar_platform(
+                        value, characteristic, management_point.management_point_type
                     )
-                ) and (
-                    description := BINARY_SENSOR_DESCRIPTIONS.get(value)
-                ) is not None:
+                    is Platform.BINARY_SENSOR
+                ):
                     sensors.append(
                         DaikinBinarySensor(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            description,
+                            BINARY_SENSOR_DESCRIPTIONS[value],
                             value,
                         )
                     )
@@ -106,15 +105,13 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         if not super().available:
             return False
         point = self._device.management_point(self._embedded_id)
-        characteristic = (
-            point.scalar_characteristic(self._value) if point is not None else None
-        )
+        if point is None:
+            return False
+        characteristic = point.scalar_characteristic(self._value)
         return bool(
             characteristic is not None
-            and (
-                characteristic.values is None
-                or is_read_only_on_off_value(
-                    characteristic.settable, characteristic.values
-                )
+            and scalar_platform(
+                self._value, characteristic, point.management_point_type
             )
+            is Platform.BINARY_SENSOR
         )

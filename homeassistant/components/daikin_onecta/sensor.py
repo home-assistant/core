@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -27,8 +27,9 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
+from .discovery import scalar_platform
 from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
-from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS, SENSOR_DESCRIPTIONS
+from .entity_descriptions import SENSOR_DESCRIPTIONS
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
@@ -138,24 +139,12 @@ def add_simple_sensors(
     sensors: list[SensorEntity],
 ) -> None:
     """Add sensors for simple characteristics of one management point."""
-    supported_management_point_types = {
-        "domesticHotWaterTank",
-        "domesticHotWaterFlowThrough",
-        "climateControl",
-        "climateControlMainZone",
-    }
     for value, characteristic in management_point.scalar_characteristics().items():
-        if value not in SENSOR_DESCRIPTIONS:
-            continue
-        values = characteristic.values or []
-        if characteristic.settable and "on" in values and "off" in values:
-            continue
-        if value in BINARY_SENSOR_DESCRIPTIONS and characteristic.values is None:
-            continue
         if (
-            value == "operationMode"
-            and management_point.management_point_type
-            in supported_management_point_types
+            scalar_platform(
+                value, characteristic, management_point.management_point_type
+            )
+            is not Platform.SENSOR
         ):
             continue
         sensors.append(
@@ -438,7 +427,11 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             if self._sub_type == "sensoryData"
             else point.scalar_characteristic(self._value)
         )
-        return characteristic is not None
+        return characteristic is not None and (
+            self._sub_type is not None
+            or scalar_platform(self._value, characteristic, point.management_point_type)
+            is Platform.SENSOR
+        )
 
 
 class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):

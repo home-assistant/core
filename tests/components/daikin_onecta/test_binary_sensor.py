@@ -1,7 +1,7 @@
 """Tests for Daikin binary sensors."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from daikin_onecta.models import Characteristic
 import pytest
@@ -16,13 +16,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_climate_snapshots import _async_setup_fixture
+from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
 async def test_unknown_characteristic_is_skipped() -> None:
     """Do not create untranslated binary sensors for unknown values."""
     management_point = SimpleNamespace(
         embedded_id="point",
+        management_point_type="climateControl",
         scalar_characteristics=lambda: {
             "futureCharacteristic": Characteristic(value=True)
         },
@@ -80,3 +81,33 @@ async def test_read_only_on_off_characteristics_are_binary_sensors(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == characteristic.value
+
+
+async def test_read_only_on_off_led_is_not_duplicated_as_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Expose read-only LED state only as a binary sensor."""
+    devices = _load_gateway_devices("minimal_data")
+    device = devices[0]
+    point = device.management_points_by_type("climateControl")[0]
+    point.characteristics["ledEnabled"] = Characteristic(
+        value="off", settable=False, values=["on", "off"]
+    )
+
+    with patch(
+        "tests.components.daikin_onecta.test_climate_snapshots._load_gateway_devices",
+        return_value=devices,
+    ):
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+
+    unique_id = f"{device.id}_{point.embedded_id}_ledEnabled"
+    binary_sensor_id = entity_registry.async_get_entity_id(
+        Platform.BINARY_SENSOR, DOMAIN, unique_id
+    )
+    assert binary_sensor_id is not None
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+    state = hass.states.get(binary_sensor_id)
+    assert state is not None
+    assert state.state == "off"

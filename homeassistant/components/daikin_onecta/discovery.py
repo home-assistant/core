@@ -1,8 +1,10 @@
 """Discover entity-producing capabilities without comparing live state values."""
 
-from daikin_onecta.models import GatewayDevice, ManagementPoint
+from daikin_onecta.models import Characteristic, GatewayDevice, ManagementPoint
 
-from .const import SENSORY_DATA_SENSOR_TYPES
+from homeassistant.const import Platform
+
+from .const import CONTROL_MANAGEMENT_POINT_TYPES, SENSORY_DATA_SENSOR_TYPES
 from .entity_descriptions import (
     BINARY_SENSOR_DESCRIPTIONS,
     SENSOR_DESCRIPTIONS,
@@ -10,12 +12,25 @@ from .entity_descriptions import (
 )
 from .utils import is_read_only_on_off_value
 
-_CONTROL_MANAGEMENT_POINT_TYPES = {
-    "domesticHotWaterTank",
-    "domesticHotWaterFlowThrough",
-    "climateControl",
-    "climateControlMainZone",
-}
+
+def scalar_platform(
+    name: str, characteristic: Characteristic, management_point_type: str
+) -> Platform | None:
+    """Return the platform that exposes a scalar characteristic, if any."""
+    values = characteristic.values or []
+    if characteristic.settable and "on" in values and "off" in values:
+        return Platform.SWITCH if name in SWITCH_DESCRIPTIONS else None
+    if name in BINARY_SENSOR_DESCRIPTIONS and (
+        characteristic.values is None
+        or is_read_only_on_off_value(characteristic.settable, characteristic.values)
+    ):
+        return Platform.BINARY_SENSOR
+    if name in SENSOR_DESCRIPTIONS and not (
+        name == "operationMode"
+        and management_point_type in CONTROL_MANAGEMENT_POINT_TYPES
+    ):
+        return Platform.SENSOR
+    return None
 
 
 def management_point_entity_keys(point: ManagementPoint) -> set[str]:
@@ -37,21 +52,12 @@ def management_point_entity_keys(point: ManagementPoint) -> set[str]:
         keys.add("firmware")
 
     for name, characteristic in point.scalar_characteristics().items():
-        values = characteristic.values or []
-        if characteristic.settable and "on" in values and "off" in values:
-            if name in SWITCH_DESCRIPTIONS:
-                keys.add(f"switch:{name}")
-        elif name in BINARY_SENSOR_DESCRIPTIONS and (
-            characteristic.values is None
-            or is_read_only_on_off_value(characteristic.settable, characteristic.values)
-        ):
-            keys.add(f"binary_sensor:{name}")
-        elif name in SENSOR_DESCRIPTIONS:
-            if not (
-                name == "operationMode"
-                and point.management_point_type in _CONTROL_MANAGEMENT_POINT_TYPES
-            ):
-                keys.add(f"sensor:{name}")
+        if (
+            platform := scalar_platform(
+                name, characteristic, point.management_point_type
+            )
+        ) is not None:
+            keys.add(f"{platform}:{name}")
 
     keys.update(
         f"sensory:{name}"

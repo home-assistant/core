@@ -20,6 +20,7 @@ from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
     gateway_entity_keys,
     management_point_entity_keys,
+    scalar_platform,
 )
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     BINARY_SENSOR_DESCRIPTIONS,
@@ -27,12 +28,83 @@ from homeassistant.components.daikin_onecta.entity_descriptions import (
     SWITCH_DESCRIPTIONS,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+
+
+@pytest.mark.parametrize(
+    ("name", "characteristic", "management_point_type", "expected"),
+    [
+        pytest.param(
+            "econoMode",
+            Characteristic(value="on", settable=True, values=["on", "off"]),
+            "climateControl",
+            Platform.SWITCH,
+            id="writable-on-off-switch",
+        ),
+        pytest.param(
+            "ledEnabled",
+            Characteristic(value="on", settable=True, values=["on", "off"]),
+            "climateControl",
+            None,
+            id="writable-on-off-without-switch-description",
+        ),
+        pytest.param(
+            "ledEnabled",
+            Characteristic(value="on", values=["on", "off"]),
+            "climateControl",
+            Platform.BINARY_SENSOR,
+            id="read-only-on-off-binary-sensor",
+        ),
+        pytest.param(
+            "ledEnabled",
+            Characteristic(value="on"),
+            "climateControl",
+            Platform.BINARY_SENSOR,
+            id="binary-sensor-without-values",
+        ),
+        pytest.param(
+            "ledEnabled",
+            Characteristic(value="on", values=["on", "off", "auto"]),
+            "climateControl",
+            Platform.SENSOR,
+            id="read-only-on-off-with-additional-value",
+        ),
+        pytest.param(
+            "operationMode",
+            Characteristic(value="heating"),
+            "climateControl",
+            None,
+            id="control-operation-mode",
+        ),
+        pytest.param(
+            "operationMode",
+            Characteristic(value="heating"),
+            "outdoorUnit",
+            Platform.SENSOR,
+            id="non-control-operation-mode",
+        ),
+        pytest.param(
+            "futureCharacteristic",
+            Characteristic(value="unknown"),
+            "climateControl",
+            None,
+            id="unknown-characteristic",
+        ),
+    ],
+)
+def test_scalar_platform(
+    name: str,
+    characteristic: Characteristic,
+    management_point_type: str,
+    expected: Platform | None,
+) -> None:
+    """Classify supported scalar characteristics consistently."""
+    assert scalar_platform(name, characteristic, management_point_type) is expected
 
 
 def test_discovery_skips_unknown_energy_period() -> None:

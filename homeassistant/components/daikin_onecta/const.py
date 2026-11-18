@@ -14,6 +14,15 @@ SCHEDULE_DISABLED = "home_assistant_schedule_is_disabled"
 
 FANMODE_FIXED = "fixed"
 
+CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
+    {
+        "climateControl",
+        "climateControlMainZone",
+        "domesticHotWaterFlowThrough",
+        "domesticHotWaterTank",
+    }
+)
+
 MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
     "climateControl": "climate_zone",
     "domesticHotWaterFlowThrough": "domestic_hot_water_flow_through",

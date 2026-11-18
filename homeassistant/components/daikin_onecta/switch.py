@@ -3,11 +3,13 @@
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
+from .discovery import scalar_platform
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import SWITCH_DESCRIPTIONS
 
@@ -32,19 +34,18 @@ async def async_setup_entry(
                 value,
                 characteristic,
             ) in management_point.scalar_characteristics().items():
-                values = characteristic.values or []
                 if (
-                    characteristic.settable
-                    and "on" in values
-                    and "off" in values
-                    and (description := SWITCH_DESCRIPTIONS.get(value)) is not None
+                    scalar_platform(
+                        value, characteristic, management_point.management_point_type
+                    )
+                    is Platform.SWITCH
                 ):
                     sensors.append(
                         DaikinSwitch(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            description,
+                            SWITCH_DESCRIPTIONS[value],
                             value,
                         )
                     )
@@ -104,13 +105,15 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         if not super().available:
             return False
         point = self._device.management_point(self._embedded_id)
-        characteristic = (
-            point.scalar_characteristic(self._value) if point is not None else None
-        )
+        if point is None:
+            return False
+        characteristic = point.scalar_characteristic(self._value)
         return bool(
             characteristic is not None
-            and characteristic.settable
-            and {"on", "off"}.issubset(characteristic.values or [])
+            and scalar_platform(
+                self._value, characteristic, point.management_point_type
+            )
+            is Platform.SWITCH
         )
 
     @override
