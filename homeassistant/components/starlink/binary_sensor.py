@@ -55,6 +55,13 @@ BINARY_SENSORS = [
         value_fn=lambda data: data.alert.get("alert_install_pending"),
     ),
     StarlinkBinarySensorEntityDescription(
+        key="software_update_reboot_ready",
+        translation_key="software_update_reboot_ready",
+        device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.software_update["software_update_reboot_ready"],
+    ),
+    StarlinkBinarySensorEntityDescription(
         key="roaming",
         translation_key="roaming",
         value_fn=lambda data: data.alert.get("alert_roaming"),

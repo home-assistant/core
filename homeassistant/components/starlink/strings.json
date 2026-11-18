@@ -42,6 +42,9 @@
       },
       "unexpected_location": {
         "name": "Unexpected location"
+      },
+      "software_update_reboot_ready": {
+        "name": "Software update reboot ready"
       }
     },
     "device_tracker": {
@@ -76,6 +79,15 @@
       },
       "upload": {
         "name": "Upload"
+      },
+      "software_update_state": {
+        "name": "Software update state"
+      },
+      "software_update_progress": {
+        "name": "Software update progress"
+      },
+      "seconds_until_software_update_reboot_possible": {
+        "name": "Seconds until software update reboot possible"
       }
     },
     "switch": {

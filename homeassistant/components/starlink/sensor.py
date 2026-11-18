@@ -168,6 +168,37 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(
+        key="software_update_state",
+        translation_key="software_update_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status["software_update_state"],
+        entity_class=StarlinkSensorEntity,
+    ),
+    StarlinkSensorEntityDescription(
+        key="software_update_progress",
+        translation_key="software_update_progress",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda data: (
+            None
+            if data.software_update["software_update_progress"] is None
+            else data.software_update["software_update_progress"] * 100
+        ),
+        entity_class=StarlinkEntity,
+    ),
+    StarlinkSensorEntityDescription(
+        key="seconds_until_software_update_reboot_possible",
+        translation_key="seconds_until_software_update_reboot_possible",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.software_update[
+            "seconds_until_software_update_reboot_possible"
+        ],
+        entity_class=StarlinkEntity,
+    ),
+    StarlinkSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
