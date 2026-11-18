@@ -1309,7 +1309,9 @@ async def _check_exception_translation(
 
 _DYNAMIC_SERVICE_DOMAINS = {
     "esphome",
+    "joaoapps_join",
     "notify",
+    "python_script",
     "rest_command",
     "script",
     "shell_command",
