@@ -1387,11 +1387,10 @@ def _check_service_required_fields(
     domain: str, service: str, schema: VolSchemaType
 ) -> list[str]:
     """Check that required schema fields are required in services.yaml."""
-    if (
-        not (description := _get_integration_services(domain).get(service))
-        or (fields := _get_schema_fields(schema)) is None
-    ):
+    services = _get_integration_services(domain)
+    if service not in services or (fields := _get_schema_fields(schema)) is None:
         return []
+    description = services[service] or {}
     yaml_fields: dict[str, Any] = {}
     for name, field in (description.get("fields") or {}).items():
         # Section fields are flat in the service data
@@ -1452,6 +1451,7 @@ async def check_translations(
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
     _original_service_registry_async_register = ServiceRegistry.async_register
+    _original_service_registry_register = ServiceRegistry.register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -1564,6 +1564,29 @@ async def check_translations(
             description_placeholders=description_placeholders,
         )
 
+    def _service_registry_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
+        ],
+        schema: probatio.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        if (
+            schema is not None
+            and (current_frame := inspect.currentframe()) is not None
+            and (caller := current_frame.f_back) is not None
+            and not caller.f_code.co_filename.startswith(str(Path(__file__).parents[0]))
+        ):
+            registered_schemas[(domain, service)] = schema
+
+        _original_service_registry_register(
+            self, domain, service, service_func, schema, supports_response
+        )
+
     # Use override functions
     with (
         patch(
@@ -1581,6 +1604,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_register",
             _service_registry_async_register,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.register",
+            _service_registry_register,
         ),
     ):
         yield
