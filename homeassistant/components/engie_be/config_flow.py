@@ -17,7 +17,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    SOURCE_USER,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -51,7 +51,7 @@ _CREDENTIALS_SCHEMA = probatio.Schema(
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _PendingLogin:
     """A login that has passed the password step and waits for the MFA code."""
 
@@ -223,14 +223,15 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_MFA_METHOD: login.mfa_method.value,
             **token_data,
         }
-        if self.source == SOURCE_USER:
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=login.email, data=data)
-        self._abort_if_unique_id_mismatch()
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=token_data
             )
-        return self.async_update_reload_and_abort(
-            self._get_reconfigure_entry(), data_updates=data, title=login.email
-        )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data_updates=data, title=login.email
+            )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=login.email, data=data)
