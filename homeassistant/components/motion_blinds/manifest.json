@@ -4,6 +4,7 @@
   "categories": ["blinds_curtains"],
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dependencies": ["network"],
   "dhcp": [
     {

@@ -1,0 +1,170 @@
+# serializer version: 1
+# name: test_diagnostics[encrypted]
+  dict({
+    'config_entry': dict({
+      'discovered_event_classes': list([
+      ]),
+      'encryption_configured': True,
+      'sleepy_device': False,
+    }),
+    'device_data': dict({
+      'bindkey_verified': True,
+      'bthome_version': 1,
+      'decryption_failed': False,
+      'device_type_id': None,
+      'downgrade_detected': False,
+      'encryption_counter': 857870592.0,
+      'encryption_scheme': 'bthome_bindkey',
+      'packet_id': None,
+      'sleepy_device': False,
+      'unhandled': dict({
+      }),
+    }),
+    'devices': list([
+      dict({
+        'manufacturer': 'Xiaomi',
+        'model': 'Temperature/Humidity sensor',
+      }),
+    ]),
+    'last_advertisement': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+      }),
+      'rssi': -56,
+      'service_data': dict({
+        '0000181e-0000-1000-8000-00805f9b34fb': 'fba435e4d3c312fb0011223357d90a99',
+      }),
+      'service_uuids': list([
+        '0000181e-0000-1000-8000-00805f9b34fb',
+      ]),
+      'tx_power': -127,
+    }),
+  })
+# ---
+# name: test_diagnostics[mac_in_manufacturer_data]
+  dict({
+    'config_entry': dict({
+      'discovered_event_classes': list([
+      ]),
+      'encryption_configured': False,
+      'sleepy_device': False,
+    }),
+    'device_data': dict({
+      'bindkey_verified': False,
+      'bthome_version': 2,
+      'decryption_failed': True,
+      'device_type_id': None,
+      'downgrade_detected': False,
+      'encryption_counter': 0.0,
+      'encryption_scheme': 'none',
+      'packet_id': None,
+      'sleepy_device': False,
+      'unhandled': dict({
+      }),
+    }),
+    'devices': list([
+      dict({
+        'manufacturer': None,
+        'model': 'BTHome sensor',
+      }),
+    ]),
+    'last_advertisement': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+        '2409': '01************02',
+      }),
+      'rssi': -56,
+      'service_data': dict({
+        '0000fcd2-0000-1000-8000-00805f9b34fb': '4002ca0903bf13',
+      }),
+      'service_uuids': list([
+        '0000fcd2-0000-1000-8000-00805f9b34fb',
+      ]),
+      'tx_power': -127,
+    }),
+  })
+# ---
+# name: test_diagnostics[mac_in_payload]
+  dict({
+    'config_entry': dict({
+      'discovered_event_classes': list([
+      ]),
+      'encryption_configured': False,
+      'sleepy_device': False,
+    }),
+    'device_data': dict({
+      'bindkey_verified': False,
+      'bthome_version': 1,
+      'decryption_failed': True,
+      'device_type_id': None,
+      'downgrade_detected': False,
+      'encryption_counter': 0.0,
+      'encryption_scheme': 'none',
+      'packet_id': None,
+      'sleepy_device': False,
+      'unhandled': dict({
+      }),
+    }),
+    'devices': list([
+      dict({
+        'manufacturer': 'Xiaomi',
+        'model': 'Temperature/Humidity sensor',
+      }),
+    ]),
+    'last_advertisement': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+      }),
+      'rssi': -56,
+      'service_data': dict({
+        '0000181c-0000-1000-8000-00805f9b34fb': '30585b0502************08',
+      }),
+      'service_uuids': list([
+        '0000181c-0000-1000-8000-00805f9b34fb',
+      ]),
+      'tx_power': -127,
+    }),
+  })
+# ---
+# name: test_diagnostics[unencrypted]
+  dict({
+    'config_entry': dict({
+      'discovered_event_classes': list([
+      ]),
+      'encryption_configured': False,
+      'sleepy_device': False,
+    }),
+    'device_data': dict({
+      'bindkey_verified': False,
+      'bthome_version': 2,
+      'decryption_failed': True,
+      'device_type_id': None,
+      'downgrade_detected': False,
+      'encryption_counter': 0.0,
+      'encryption_scheme': 'none',
+      'packet_id': 12.0,
+      'sleepy_device': False,
+      'unhandled': dict({
+      }),
+    }),
+    'devices': list([
+      dict({
+        'manufacturer': None,
+        'model': 'BTHome sensor',
+      }),
+    ]),
+    'last_advertisement': dict({
+      'connectable': True,
+      'manufacturer_data': dict({
+      }),
+      'rssi': -56,
+      'service_data': dict({
+        '0000fcd2-0000-1000-8000-00805f9b34fb': '40000c02ca0903bf13f100010204',
+      }),
+      'service_uuids': list([
+        '0000fcd2-0000-1000-8000-00805f9b34fb',
+      ]),
+      'tx_power': -127,
+    }),
+  })
+# ---

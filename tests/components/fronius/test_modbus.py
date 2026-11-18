@@ -26,21 +26,15 @@ from homeassistant.components.fronius.coordinator import (
     FroniusModbusSettingsUpdateCoordinator,
 )
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, Platform, TargetKey
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MOCK_HOST, mock_responses, setup_fronius_integration
 
@@ -96,6 +90,7 @@ async def test_gen24_storage_mppt(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     float_mode: bool,
 ) -> None:
@@ -112,8 +107,8 @@ async def test_gen24_storage_mppt(
         )
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current", 8.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage", 402.1)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_current_modbus", 8.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_1_dc_voltage_modbus", 402.1)
     assert_state(hass, "sensor.gen24_storage_mppt_1_dc_power", 3300)
     assert_state(hass, "sensor.gen24_storage_mppt_1_energy", 1000000)
     assert_state(hass, "sensor.gen24_storage_mppt_2_dc_power", 1650)
@@ -128,6 +123,22 @@ async def test_gen24_storage_mppt(
     entity_entry = entity_registry.async_get("sensor.gen24_storage_mppt_1_dc_power")
     assert entity_entry
     assert entity_entry.unique_id == "12345678-modbus-mppt_1_power_dc"
+    # Modbus and SolarAPI readings of a module share its child device
+    solar_api_entry = entity_registry.async_get(
+        "sensor.gen24_storage_mppt_1_dc_current"
+    )
+    assert solar_api_entry
+    assert solar_api_entry.unique_id == "12345678-current_dc"
+    assert entity_entry.device_id == solar_api_entry.device_id
+    mppt_1 = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-1"), config_entry.entry_id
+    )
+    assert mppt_1
+    assert entity_entry.device_id == mppt_1.id
+    # storage modules of a hybrid are children as well
+    assert device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-4"), config_entry.entry_id
+    )
 
     solar_net = config_entry.runtime_data
     assert len(solar_net.modbus.inverter_coordinators) == 1
@@ -172,8 +183,8 @@ async def test_verto_plus_five_modules(
 
     assert_state(hass, "sensor.gen24_storage_mppt_3_dc_power", 800)
     assert_state(hass, "sensor.gen24_storage_mppt_4_dc_power", 0)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current", 1.2)
-    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage", 399.0)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_current_modbus", 1.2)
+    assert_state(hass, "sensor.gen24_storage_mppt_5_dc_voltage_modbus", 399.0)
     assert_state(hass, "sensor.gen24_storage_mppt_5_dc_power", 480)
     assert_state(hass, "sensor.gen24_storage_mppt_5_energy", 5000)
     assert_state(hass, "sensor.gen24_storage_pv_energy_total", 6000)
@@ -586,14 +597,14 @@ async def _turn_on_limit(
     """Set a limit and put it into effect."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number, ATTR_VALUE: limit},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: number, NumberServiceArgument.VALUE: limit},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: switch},
         blocking=True,
     )
 
@@ -783,8 +794,8 @@ async def test_heartbeat_stops_with_the_limit(
     await _turn_on_power_limit(hass, 60)
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: POWER_LIMITING},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: POWER_LIMITING},
         blocking=True,
     )
 
@@ -1052,8 +1063,8 @@ async def test_heartbeat_does_not_undo_a_write_it_overlaps(
         switched_off = hass.async_create_task(
             hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: POWER_LIMITING},
+                SwitchService.TURN_OFF,
+                {TargetKey.ENTITY_ID: POWER_LIMITING},
                 blocking=True,
             )
         )
@@ -1198,8 +1209,11 @@ async def test_battery_settings_leave_a_foreign_period_alone(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: MINIMUM_RESERVE, ATTR_VALUE: 30},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: MINIMUM_RESERVE,
+            NumberServiceArgument.VALUE: 30,
+        },
         blocking=True,
     )
     assert_state(hass, MINIMUM_RESERVE, 30.0)
@@ -1238,8 +1252,11 @@ async def test_battery_writes_do_not_hold_back_the_power_limit_beat(
         await hass.async_block_till_done(wait_background_tasks=True)
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: MINIMUM_RESERVE, ATTR_VALUE: reserve},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: MINIMUM_RESERVE,
+                NumberServiceArgument.VALUE: reserve,
+            },
             blocking=True,
         )
 

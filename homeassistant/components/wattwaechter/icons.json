@@ -13,6 +13,9 @@
       "gas_flow_rate": {
         "default": "mdi:meter-gas-outline"
       },
+      "gas_power": {
+        "default": "mdi:fire"
+      },
       "import_tariff_1": {
         "default": "mdi:meter-electric"
       },

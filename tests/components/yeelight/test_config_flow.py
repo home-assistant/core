@@ -952,3 +952,189 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
     assert mock_is_onboarded.called
+
+
+@pytest.fixture
+def reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Add a Yeelight config entry to reconfigure."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ID,
+        data={CONF_HOST: "192.168.1.100", CONF_ID: ID, CONF_MODEL: MODEL},
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring the host of a bulb."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert not result["errors"]
+
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: ID,
+        CONF_MODEL: MODEL,
+    }
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "no_device"),
+    [
+        pytest.param(None, True, id="no_id_not_discovered"),
+        pytest.param(None, False, id="no_id_discovered"),
+        pytest.param(ID, True, id="id_not_discovered"),
+    ],
+)
+async def test_reconfigure_unknown_id(
+    hass: HomeAssistant, unique_id: str | None, no_device: bool
+) -> None:
+    """Test reconfiguring when the ID of the entry or the bulb is unknown."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_ID: unique_id,
+            CONF_MODEL: MODEL_UNKNOWN,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with (
+        _patch_discovery(no_device=no_device),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    assert config_entry.unique_id == unique_id
+
+
+async def test_reconfigure_no_id_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry without ID to a bulb of another entry aborts."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100", CONF_ID: None, CONF_MODEL: MODEL_UNKNOWN},
+    )
+    config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=ID, data={CONF_HOST: "192.168.1.101", CONF_ID: ID}
+    ).add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "192.168.1.100"
+
+
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring shows an error when the bulb can't be reached and recovers."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_discovery(no_device=True),
+        _patch_discovery_timeout(),
+        _patch_discovery_interval(),
+        patch(
+            f"{MODULE_CONFIG_FLOW}.AsyncBulb",
+            return_value=_mocked_bulb(cannot_connect=True),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        _patch_discovery(),
+        _patch_discovery_timeout(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a different bulb aborts."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_discovery(capabilities={**CAPABILITIES, "id": "0x0000000000999999"}),
+        _patch_discovery_timeout(),
+        patch(f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=_mocked_bulb()),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert reconfigure_entry.data[CONF_HOST] == "192.168.1.100"
+
+
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to the host of another entry aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="0x0000000000999999",
+        data={CONF_HOST: IP_ADDRESS, CONF_ID: "0x0000000000999999"},
+    ).add_to_hass(hass)
+
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: IP_ADDRESS}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert reconfigure_entry.data[CONF_HOST] == "192.168.1.100"

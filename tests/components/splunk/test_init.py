@@ -258,9 +258,8 @@ async def test_event_listener_error_handling(
     mock_hass_splunk.queue.side_effect = error
 
     # Change the state to trigger an event - should not raise
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "456")
-        await hass.async_block_till_done()
+    hass.states.async_set("sensor.test", "456")
+    await hass.async_block_till_done()
 
     assert any(
         record.levelno == expected_log_level and expected_message in record.message
@@ -314,10 +313,9 @@ async def test_event_listener_repeated_failures_log_at_debug(
 
     mock_hass_splunk.queue.side_effect = error
 
-    with caplog.at_level(logging.DEBUG):
-        for i in range(5):
-            hass.states.async_set("sensor.test", str(i))
-            await hass.async_block_till_done()
+    for i in range(5):
+        hass.states.async_set("sensor.test", str(i))
+        await hass.async_block_till_done()
 
     matching_records = [
         record for record in caplog.records if expected_message in record.message
@@ -373,15 +371,14 @@ async def test_event_listener_different_failure_during_outage_logs_at_debug(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with caplog.at_level(logging.DEBUG):
-        mock_hass_splunk.queue.side_effect = first_error
-        hass.states.async_set("sensor.test", "outage")
-        await hass.async_block_till_done()
+    mock_hass_splunk.queue.side_effect = first_error
+    hass.states.async_set("sensor.test", "outage")
+    await hass.async_block_till_done()
 
-        mock_hass_splunk.queue.side_effect = second_error
-        for i in range(2):
-            hass.states.async_set("sensor.test", f"different-{i}")
-            await hass.async_block_till_done()
+    mock_hass_splunk.queue.side_effect = second_error
+    for i in range(2):
+        hass.states.async_set("sensor.test", f"different-{i}")
+        await hass.async_block_till_done()
 
     first_records = [
         record for record in caplog.records if first_message in record.message
@@ -410,15 +407,14 @@ async def test_event_listener_recovery_logs_once_at_info(
 
     mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
 
-    with caplog.at_level(logging.DEBUG):
-        for i in range(2):
-            hass.states.async_set("sensor.test", str(i))
-            await hass.async_block_till_done()
+    for i in range(2):
+        hass.states.async_set("sensor.test", str(i))
+        await hass.async_block_till_done()
 
-        mock_hass_splunk.queue.side_effect = None
-        for i in range(2):
-            hass.states.async_set("sensor.test", f"recovered-{i}")
-            await hass.async_block_till_done()
+    mock_hass_splunk.queue.side_effect = None
+    for i in range(2):
+        hass.states.async_set("sensor.test", f"recovered-{i}")
+        await hass.async_block_till_done()
 
     recovery_records = [
         record
@@ -443,23 +439,22 @@ async def test_event_listener_failure_after_recovery_logs_at_natural_level(
 
     mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
 
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "first-outage")
-        await hass.async_block_till_done()
+    hass.states.async_set("sensor.test", "first-outage")
+    await hass.async_block_till_done()
 
-        mock_hass_splunk.queue.side_effect = None
-        hass.states.async_set("sensor.test", "recovered")
-        await hass.async_block_till_done()
+    mock_hass_splunk.queue.side_effect = None
+    hass.states.async_set("sensor.test", "recovered")
+    await hass.async_block_till_done()
 
-        caplog.clear()
-        mock_hass_splunk.queue.side_effect = ClientResponseError(
-            request_info=MagicMock(),
-            history=(),
-            status=500,
-            message="Internal Server Error",
-        )
-        hass.states.async_set("sensor.test", "second-outage")
-        await hass.async_block_till_done()
+    caplog.clear()
+    mock_hass_splunk.queue.side_effect = ClientResponseError(
+        request_info=MagicMock(),
+        history=(),
+        status=500,
+        message="Internal Server Error",
+    )
+    hass.states.async_set("sensor.test", "second-outage")
+    await hass.async_block_till_done()
 
     assert any(
         record.levelno == logging.WARNING
@@ -492,10 +487,9 @@ async def test_event_listener_coalesced_send_is_not_a_recovery(
     )
     mock_hass_splunk.queue.side_effect = [error, False, error]
 
-    with caplog.at_level(logging.DEBUG):
-        for i in range(3):
-            hass.states.async_set("sensor.test", str(i))
-            await hass.async_block_till_done()
+    for i in range(3):
+        hass.states.async_set("sensor.test", str(i))
+        await hass.async_block_till_done()
 
     assert not any(
         "Sending events to Splunk has recovered" in record.message
@@ -525,9 +519,8 @@ async def test_event_listener_no_recovery_message_without_prior_failure(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set("sensor.test", "123")
-        await hass.async_block_till_done()
+    hass.states.async_set("sensor.test", "123")
+    await hass.async_block_till_done()
 
     assert not any(
         "Sending events to Splunk has recovered" in record.message

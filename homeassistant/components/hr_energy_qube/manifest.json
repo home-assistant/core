@@ -8,13 +8,14 @@
   ],
   "codeowners": ["@MattieGit"],
   "config_flow": true,
-  "dependencies": ["zeroconf"],
+  "connectivity": ["modbus"],
+  "dependencies": ["modbus", "zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/hr_energy_qube",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["python_qube_heatpump"],
+  "loggers": ["modbus_connection", "python_qube_heatpump", "tmodbus"],
   "quality_scale": "platinum",
-  "requirements": ["python-qube-heatpump==1.17.0"],
+  "requirements": ["python-qube-heatpump==1.18.0"],
   "zeroconf": [
     {
       "properties": { "ProjectName": "deqsihpb*", "Vendor": "000a5c" },

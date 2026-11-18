@@ -2,17 +2,11 @@
 
 from typing import Any, override
 
-from satel_integra import (
-    SatelCommandRejectedError,
-    SatelNoResponseError,
-    SatelResultCode,
-)
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -22,6 +16,7 @@ from .const import (
 )
 from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
+from .helpers import async_validate_command
 
 PARALLEL_UPDATES = 0
 
@@ -100,36 +95,14 @@ class SatelIntegraSwitch(
                 translation_key="missing_output_access_code",
             )
 
-        try:
-            await self._controller.set_output(
+        await async_validate_command(
+            self._controller.set_output(
                 self._code,
                 self._device_number,
                 state,
                 wait_for_result=True,
             )
-        except SatelCommandRejectedError as err:
-            if err.result.code is SatelResultCode.USER_CODE_NOT_FOUND:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="command_invalid_access_code",
-                ) from err
-            if err.result.code is SatelResultCode.NO_ACCESS:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="command_no_access",
-                ) from err
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_rejected",
-                translation_placeholders={
-                    "result_code": f"0x{int(err.result.code):02X}"
-                },
-            ) from err
-        except SatelNoResponseError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_outcome_unknown",
-            ) from err
+        )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

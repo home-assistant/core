@@ -1261,13 +1261,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
-        self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                CONF_MODEL: model,
-                CONF_HOST: self.host,
+                "model": model,
+                "host": self.host,
             },
             errors=errors,
         )

@@ -32,6 +32,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -98,7 +99,7 @@ async def test_minimal_meter_data(
     ("obis_code", "device_class", "state_class", "unit"),
     [
         pytest.param(
-            "21.7.0",
+            "35.7.0",
             SensorDeviceClass.POWER,
             SensorStateClass.MEASUREMENT,
             "W",
@@ -241,7 +242,7 @@ async def test_generic_obis_sensors_disabled_by_default(
     await hass.async_block_till_done()
 
     generic_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_21.7.0"
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_35.7.0"
     )
     assert generic_id is not None
     assert (
@@ -254,6 +255,60 @@ async def test_generic_obis_sensors_disabled_by_default(
     )
     assert curated_id is not None
     assert entity_registry.async_get(curated_id).disabled_by is None
+
+
+@pytest.mark.parametrize(
+    "obis_code", ["21.7.0", "41.7.0", "61.7.0", "22.7.0", "42.7.0", "62.7.0"]
+)
+@pytest.mark.usefixtures("mock_client")
+async def test_phase_power_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    obis_code: str,
+) -> None:
+    """Test per-phase power sensors are created disabled by default."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_{obis_code}"
+    )
+    assert entity_id is not None
+    assert (
+        entity_registry.async_get(entity_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_phase_power_takes_over_generic_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an enabled generic per-phase power entity keeps its entity ID."""
+    generic = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_DEVICE_ID}_21.7.0",
+        config_entry=mock_config_entry,
+        original_name="Power L1",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get(generic.entity_id)
+    assert entry.disabled_by is None
+    assert entry.translation_key == "active_power_phase"
+    assert entry.original_name == "Active power L1"
+
+    state = hass.states.get(generic.entity_id)
+    assert state.state == "500.1"
+    assert state.attributes["device_class"] == SensorDeviceClass.POWER
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
+    assert state.attributes["unit_of_measurement"] == "W"
 
 
 @pytest.mark.parametrize(
@@ -379,6 +434,9 @@ async def test_gas_water_medium_change(
     assert gas_volume_id is not None
     assert hass.states.get(gas_volume_id).state == "1234.567"
     assert _get_entity_id("7-0:43.0.0") is not None
+    gas_power_id = _get_entity_id("7-0:16.7.0")
+    assert gas_power_id is not None
+    assert hass.states.get(gas_power_id).state == "4.389"
     assert _get_entity_id("8-0:1.0.0") is None
 
     device = device_registry.async_get_device_by_identifier(
@@ -397,6 +455,7 @@ async def test_gas_water_medium_change(
 
     assert _get_entity_id("7-0:3.0.0") is None
     assert _get_entity_id("7-0:43.0.0") is None
+    assert _get_entity_id("7-0:16.7.0") is None
     assert hass.states.get(gas_volume_id) is None
 
     water_volume_id = _get_entity_id("8-0:1.0.0")
@@ -421,6 +480,7 @@ async def test_gas_water_medium_change(
 
     assert _get_entity_id("7-0:3.0.0") == gas_volume_id
     assert hass.states.get(gas_volume_id).state == "1234.567"
+    assert _get_entity_id("7-0:16.7.0") == gas_power_id
     assert _get_entity_id("8-0:1.0.0") is None
 
 

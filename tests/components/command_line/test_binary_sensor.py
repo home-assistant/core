@@ -19,7 +19,6 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
@@ -76,7 +75,9 @@ async def test_setup_integration_yaml(
         }
     ],
 )
-async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> None:
+async def test_template(
+    hass: HomeAssistant, load_yaml_integration: None, freezer: FrozenDateTimeFactory
+) -> None:
     """Test setting the state with a template."""
 
     entity_state = hass.states.get("binary_sensor.test")
@@ -84,7 +85,8 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     assert entity_state.state == STATE_ON
     assert entity_state.attributes.get("icon") == "mdi:icon2"
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("binary_sensor.test")
@@ -189,7 +191,9 @@ async def test_return_code(
 
 
 async def test_updating_to_often(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling updating when command already running."""
 
@@ -230,7 +234,8 @@ async def test_updating_to_often(
         await hass.async_block_till_done()
 
     assert called
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=15))
+    freezer.tick(timedelta(seconds=15))
+    async_fire_time_changed(hass)
     wait_till_event.set()
     await asyncio.sleep(0)
     assert (
@@ -240,9 +245,11 @@ async def test_updating_to_often(
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     wait_till_event.set()
     await asyncio.sleep(0)
 
@@ -414,6 +421,7 @@ async def test_availability_blocks_value_template(
 async def test_template_with_shell_features_uses_shell_and_creates_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Templated command with shell metacharacters keeps shell path and creates a repair issue."""
     hass.states.async_set("sensor.input_sensor", "1")
@@ -436,7 +444,8 @@ async def test_template_with_shell_features_uses_shell_and_creates_issue(
     await hass.async_block_till_done()
 
     with mock_asyncio_subprocess_run(b"1\n") as mock_shell:
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_shell.assert_called_once_with(

@@ -25,7 +25,7 @@ from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoServices,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_component import async_update_entity
@@ -293,7 +293,7 @@ async def test_completed(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )
@@ -380,7 +380,7 @@ async def test_add_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Cheese", **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     # Wait for the fire-and-forget state refresh
@@ -414,7 +414,7 @@ async def test_add_item_failure(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Cheese"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -615,7 +615,7 @@ async def test_update_item(
             ATTR_ITEM: "Cheese",
             **update_data,
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     # Wait for the fire-and-forget state refresh
@@ -633,7 +633,7 @@ async def test_update_item(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )
@@ -700,7 +700,7 @@ async def test_update_item_completed_time(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Wine", **update_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -733,7 +733,7 @@ async def test_update_item_failure(
                 ATTR_ITEM: "Cheese",
                 ATTR_STATUS: "completed",
             },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -767,7 +767,7 @@ async def test_update_item_lookup_failure(
                 ATTR_ITEM: "Cheese",
                 ATTR_STATUS: "completed",
             },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -817,7 +817,7 @@ async def test_remove_item(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: uids_to_delete},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -850,7 +850,7 @@ async def test_remove_item_lookup_failure(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: "Cheese"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -879,7 +879,7 @@ async def test_remove_item_failure(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: "Cheese"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -907,7 +907,7 @@ async def test_remove_item_not_found(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: "Cheese"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -964,7 +964,7 @@ async def test_subscribe(
             ATTR_ITEM: "Cheese",
             ATTR_RENAME: "Milk",
         },
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1176,7 +1176,11 @@ async def test_update_after_write(
         create_todo(calendar, str(idx), ics) for idx, ics in enumerate(todos_after)
     ]
     await hass.services.async_call(
-        TODO_DOMAIN, service, data, target={ATTR_ENTITY_ID: TEST_ENTITY}, blocking=True
+        TODO_DOMAIN,
+        service,
+        data,
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
+        blocking=True,
     )
     # Wait for the fire-and-forget state refresh
     await hass.async_block_till_done()
@@ -1199,7 +1203,7 @@ def add_item_from_executor(hass: HomeAssistant) -> None:
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Cheese"},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         ),
         hass.loop,
@@ -1235,7 +1239,7 @@ async def test_update_after_write_during_read(
     config_entry: MockConfigEntry,
     calendar: Mock,
 ) -> None:
-    """Test a write during a full read is read on the next update."""
+    """Test a write during a full read is read right after it."""
     calendar.get_objects_by_sync_token.side_effect = [
         sync_report("token-1"),
         sync_report("token-2"),
@@ -1245,14 +1249,13 @@ async def test_update_after_write_during_read(
 
     def write_during_search(**kwargs: Any) -> list[Todo]:
         add_item_from_executor(hass)
+        calendar.search.side_effect = None
+        calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
         return []
 
     calendar.search.side_effect = write_during_search
     await async_update_entity(hass, TEST_ENTITY)
-
-    calendar.search.side_effect = None
-    calendar.search.return_value = [create_todo(calendar, "1", TODO_NEEDS_ACTION)]
-    await async_update_entity(hass, TEST_ENTITY)
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1284,7 +1287,7 @@ async def test_update_after_partial_delete(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["Cheese", "Milk"]},
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            target={TargetKey.ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
     await async_update_entity(hass, TEST_ENTITY)
@@ -1385,7 +1388,7 @@ async def test_todo_list_order(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )
@@ -1636,7 +1639,7 @@ async def test_move_item(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {"status": ["needs_action"]},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )
@@ -1858,7 +1861,7 @@ async def test_write_waits_for_move(
                 TODO_DOMAIN,
                 service,
                 data,
-                target={ATTR_ENTITY_ID: TEST_ENTITY},
+                target={TargetKey.ENTITY_ID: TEST_ENTITY},
                 blocking=True,
             )
         )
@@ -1917,7 +1920,7 @@ async def test_update_after_move(
         TODO_DOMAIN,
         TodoServices.GET_ITEMS,
         {},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )

@@ -47,6 +47,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -273,7 +274,7 @@ async def test_media_player_services(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
+    target = {TargetKey.ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
 
     for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
         for url in urls:

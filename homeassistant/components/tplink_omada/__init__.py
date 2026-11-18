@@ -76,9 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, entry, client, site_client)
-    await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
+
+    # The first refresh sweeps stale client trackers before platforms create
+    # entities, so replaced clients do not push new trackers onto suffixed IDs.
+    await controller.initialize_first_refresh()
 
     _remove_old_devices(
         hass,

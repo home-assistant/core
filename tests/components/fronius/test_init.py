@@ -175,10 +175,17 @@ async def test_device_remove_devices(
     inverter_1 = device_registry.async_get_device_by_identifier(
         (DOMAIN, "12345678"), config_entry.entry_id
     )
+    assert device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-1"), config_entry.entry_id
+    )
     client = await hass_ws_client(hass)
     response = await client.remove_device(inverter_1.id)
     assert response["success"]
 
     assert not device_registry.async_get_device_by_identifier(
         (DOMAIN, "12345678"), config_entry.entry_id
+    )
+    # the MPPT child devices go with their inverter
+    assert not device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, "12345678-mppt-1"), config_entry.entry_id
     )

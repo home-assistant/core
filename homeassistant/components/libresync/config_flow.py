@@ -87,7 +87,6 @@ class LibreSyncConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=name, data={CONF_HOST: self._discovered.host}
             )
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders={"name": name}
         )
