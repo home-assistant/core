@@ -244,6 +244,16 @@ async def test_wall_clock_limit(api_instance: llm.APIInstance) -> None:
     assert result.data == {"error": "Timeout", "output": ""}
 
 
+async def test_sandbox_cannot_start(api_instance: llm.APIInstance) -> None:
+    """Test an error is returned when the sandbox process cannot start."""
+    with patch.object(code_mode_api, "AsyncMonty", autospec=True) as mock_pool:
+        mock_pool.return_value.__aenter__.side_effect = OSError("No binary")
+        result = await _execute(api_instance, "1")
+
+    assert result.error is True
+    assert result.data == {"error": "No binary", "output": ""}
+
+
 async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     """Test values that JSON cannot represent are converted."""
     result = await _execute(api_instance, "{'items': (1, 2), 'when': {1}}")

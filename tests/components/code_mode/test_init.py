@@ -62,13 +62,13 @@ async def test_feature_enabled(hass: HomeAssistant) -> None:
 async def test_setup_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test the agent gets the tools when the sandbox cannot start."""
+    """Test the agent gets the tools when Code Mode cannot be set up."""
     await async_update_preview_feature(hass, "code_mode", "code_mode", True)
 
     with patch(
-        "homeassistant.components.code_mode.AsyncMonty", autospec=True
-    ) as mock_pool:
-        mock_pool.return_value.__aenter__.side_effect = OSError("No binary")
+        "homeassistant.components.conversation.chat_log.async_setup_component",
+        return_value=False,
+    ):
         assert "llm__GetDateTime" in await _tool_names(hass)
 
     assert "Code mode cannot be set up" in caplog.text

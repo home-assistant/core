@@ -59,13 +59,11 @@ _JSON_TYPES = {
 
 
 @callback
-def async_create_api_instance(
-    pool: AsyncMonty, api_instance: APIInstance
-) -> APIInstance:
+def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
     """Return an API instance with an execute tool, and a search tool if needed."""
     functions = [ToolFunction(api_instance, tool) for tool in api_instance.tools]
     declarations = "\n\n".join(function.declaration for function in functions)
-    tools: list[Tool] = [ExecuteTool(pool, functions)]
+    tools: list[Tool] = [ExecuteTool(functions)]
     if len(declarations) <= INLINE_BUDGET:
         catalog = f"These are all the functions:\n```python\n{declarations}\n```"
     else:
@@ -228,9 +226,8 @@ class ExecuteTool(Tool):
     )
     integration = DOMAIN
 
-    def __init__(self, pool: AsyncMonty, functions: list[ToolFunction]) -> None:
+    def __init__(self, functions: list[ToolFunction]) -> None:
         """Init the class."""
-        self._pool = pool
         self._functions = functions
 
     @override
@@ -244,9 +241,12 @@ class ExecuteTool(Tool):
         tasks: set[asyncio.Task[Any]] = set()
         output = CollectString(MAX_OUTPUT_BYTES)
         try:
+            # The sandbox process starts in a few milliseconds, so it runs only
+            # for the duration of the code.
             async with (
                 asyncio.timeout(TIMEOUT),
-                self._pool.checkout(limits=LIMITS) as session,
+                AsyncMonty(max_processes=1) as pool,
+                pool.checkout(limits=LIMITS) as session,
             ):
                 result = await session.feed_run(
                     tool_input.tool_args["code"],
@@ -256,7 +256,7 @@ class ExecuteTool(Tool):
                     },
                     print_callback=output,
                 )
-        except (MontyError, TimeoutError) as err:
+        except (MontyError, OSError) as err:
             return ToolResult(
                 data={"error": str(err) or "Timeout", "output": output.output},
                 error=True,
