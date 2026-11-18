@@ -64,9 +64,12 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         data["client_id"] = self.client_id
 
         _LOGGER.debug("Sending token request to %s", OAUTH2_TOKEN_URL)
-        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
+        try:
+            resp = await session.post(OAUTH2_TOKEN_URL, data=data)
+            resp.raise_for_status()
+            return cast(dict, await resp.json())
+        except TimeoutError as err:
+            raise OAuth2TokenRequestConnectionError(domain=self.domain) from err
 
     @override
     async def _async_refresh_token(self, token: dict) -> dict:

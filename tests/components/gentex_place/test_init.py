@@ -428,6 +428,96 @@ async def test_setup_auth_transient_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.fixture
+def token_request_timeout(aioclient_mock: AiohttpClientMocker) -> None:
+    """Time out while requesting a token."""
+    aioclient_mock.post(OAUTH2_TOKEN_URL, exc=TimeoutError())
+
+
+@pytest.fixture
+def token_response_timeout(aioclient_mock: AiohttpClientMocker) -> None:
+    """Time out while reading a token response."""
+    response = aioclient_mock.request("post", OAUTH2_TOKEN_URL)
+    response.json = AsyncMock(side_effect=TimeoutError())
+
+
+@pytest.fixture
+def token_timeout(request: pytest.FixtureRequest) -> None:
+    """Set up the requested token timeout."""
+    request.getfixturevalue(request.param)
+
+
+@pytest.mark.parametrize(
+    "token_timeout",
+    [
+        pytest.param("token_request_timeout", id="request"),
+        pytest.param("token_response_timeout", id="response-body"),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures(
+    "token_timeout", "mock_provider", "mock_get_iot_credentials", "mock_mqtt_client"
+)
+async def test_setup_auth_timeout_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A token timeout retries setup and recovers when the service responds."""
+    original_token = mock_config_entry.data["token"]
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.data["token"] == original_token
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN_URL,
+        json={"access_token": "new", "id_token": TEST_ID_JWT, "expires_in": 3600},
+    )
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data["token"]["access_token"] == "new"
+
+
+@pytest.mark.usefixtures("aioclient_mock_fixture", "mock_provider")
+async def test_reconnect_token_refresh_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_iot_credentials: MagicMock,
+    mock_mqtt_client_cls: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A token timeout cannot cause reconnect to exchange stale credentials."""
+    await setup_integration(hass, mock_config_entry)
+    credentials_provider = mock_mqtt_client_cls.call_args.kwargs["credentials_provider"]
+    token = {**mock_config_entry.data["token"], "expires_at": 0}
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "token": token}
+    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(OAUTH2_TOKEN_URL, exc=TimeoutError())
+
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await hass.async_add_executor_job(credentials_provider)
+
+    assert mock_config_entry.data["token"] == token
+    assert mock_get_iot_credentials.call_count == 1
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(
+        OAUTH2_TOKEN_URL,
+        json={"access_token": "new", "id_token": TEST_ID_JWT, "expires_in": 3600},
+    )
+    await hass.async_add_executor_job(credentials_provider)
+    mock_get_iot_credentials.assert_called_with(TEST_ID_JWT, "new")
+
+
 @pytest.mark.usefixtures(
     "aioclient_mock_fixture",
     "mock_get_iot_credentials",
