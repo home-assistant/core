@@ -2,11 +2,14 @@
 
 from typing import override
 
+from pyhik.image import ImageSetting
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
@@ -121,3 +124,58 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
     def _value(self) -> str | None:
         """Return the current raw value of the setting."""
         return self.coordinator.data.get(self._path)
+
+
+def image_option_map(setting: ImageSetting, translate: bool) -> dict[str, str] | None:
+    """Return the entity option for each value the camera accepts.
+
+    Returns None if two camera values would end up with the same option, or only
+    differ in case.
+    """
+    # Untranslated options are checked too: a camera can list the same value
+    # twice, which pyHik keeps.
+    options = {
+        slugify(option) if translate else option: option for option in setting.options
+    }
+    if len(options) != len(setting.options):
+        return None
+    # The camera's value is read in any case: values that only differ in case
+    # could not be told apart.
+    if len({value.lower() for value in setting.options}) != len(setting.options):
+        return None
+    return options
+
+
+class HikvisionImageChoiceEntity(HikvisionImageEntity):
+    """Base class for the entities of an image setting with a list of choices."""
+
+    def __init__(
+        self,
+        coordinator: HikvisionImageCoordinator,
+        entry: HikvisionConfigEntry,
+        description: EntityDescription,
+        setting: ImageSetting,
+        options: dict[str, str],
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entry, description, setting.path)
+        self._setting = setting
+        self._value_by_option = options
+        # The camera may report a value in another case than it lists it in
+        self._option_by_value = {
+            value.lower(): option for option, value in options.items()
+        }
+
+    @property
+    def _current_option(self) -> str | None:
+        """Return the option of the current value, or None if it is not one."""
+        value = self._value
+        if (enabled_path := self._setting.linked_enabled_path) is not None:
+            # The mode is missing while the feature is off. A flag that the camera
+            # does not report says nothing, it must not hide an active mode.
+            enabled = self.coordinator.data.get(enabled_path)
+            if enabled is not None and enabled.lower() != "true":
+                value = self._setting.off_value
+        if value is None:
+            return None
+        return self._option_by_value.get(value.lower())
