@@ -17,7 +17,7 @@ from pytest_homeassistant.common import (
 from pytest_homeassistant.components.common import arm_trigger
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.sofar.const import (
     DOMAIN,
     FAULT_LOG,
@@ -75,14 +75,14 @@ def _fired(events: list[Event[EventStateChangedData]]) -> list[tuple[str, int, s
     return list(
         {
             state.state: (
-                state.attributes[ATTR_EVENT_TYPE],
+                state.attributes[EventEntityStateAttribute.EVENT_TYPE],
                 state.attributes["fault_id"],
                 state.attributes["occurred_at"],
             )
             for event in events
             if event.data["entity_id"] == ENTITY_ID
             and (state := event.data["new_state"]) is not None
-            and state.attributes.get(ATTR_EVENT_TYPE) is not None
+            and state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) is not None
         }.values()
     )
 
@@ -288,7 +288,8 @@ async def test_entries_found_by_first_good_read_do_not_fire(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        hass.states.get(ENTITY_ID).attributes[ATTR_EVENT_TYPE] == "grid_overfrequency"
+        hass.states.get(ENTITY_ID).attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == "grid_overfrequency"
     )
 
 

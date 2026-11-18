@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -593,7 +594,7 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
         automation.DOMAIN,
         AutomationService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -606,7 +607,7 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -618,7 +619,7 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert not automation.is_on(hass, entity_id)
@@ -629,13 +630,13 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TOGGLE,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TRIGGER,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(calls) == 3
@@ -643,13 +644,13 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TRIGGER,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(calls) == 4
@@ -657,7 +658,7 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert automation.is_on(hass, entity_id)
@@ -906,14 +907,17 @@ async def test_automation_stops(
         await hass.services.async_call(
             automation.DOMAIN,
             AutomationService.TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     elif service == "turn_off_no_stop":
         await hass.services.async_call(
             automation.DOMAIN,
             AutomationService.TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id, AutomationServiceArgument.STOP_ACTIONS: False},
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                AutomationServiceArgument.STOP_ACTIONS: False,
+            },
             blocking=True,
         )
     elif service == "reload":
@@ -1819,7 +1823,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers[0]'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1832,7 +1836,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation',",
+            " at 'triggers[1]'. Got {'platform': 'automation'}",
             "validation_failed_triggers",
         ),
         (
@@ -1848,7 +1852,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'conditions[0]'. Got {'condition': 'state',",
             "validation_failed_conditions",
         ),
         (
@@ -1863,7 +1867,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions[0]'. Got {'condition': 'state',",
             "validation_failed_actions",
         ),
         (
@@ -1878,7 +1882,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Invalid trigger 'not_a_platform' specified"
-            ". Got {'alias': 'bad_automation',",
+            " at 'actions[0].wait_for_trigger[1]'. Got {'platform': 'not_a_platform'}",
             "validation_failed_actions",
         ),
     ],
@@ -4704,7 +4708,7 @@ async def _turn_off_automation(
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TURN_OFF,
-        {ATTR_ENTITY_ID: "automation.second"},
+        {TargetKey.ENTITY_ID: "automation.second"},
         blocking=True,
     )
 
@@ -4810,7 +4814,7 @@ async def _turn_on_automation(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         automation.DOMAIN,
         AutomationService.TURN_ON,
-        {ATTR_ENTITY_ID: "automation.first"},
+        {TargetKey.ENTITY_ID: "automation.first"},
         blocking=True,
     )
 

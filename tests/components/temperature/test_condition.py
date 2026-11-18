@@ -22,7 +22,7 @@ from pytest_homeassistant.components.common import (
 from homeassistant.components.climate import ClimateEntityCapabilityAttribute, HVACMode
 from homeassistant.components.temperature.condition import CONDITIONS
 from homeassistant.components.water_heater import WaterHeaterCapabilityAttribute
-from homeassistant.components.weather import ATTR_WEATHER_TEMPERATURE_UNIT
+from homeassistant.components.weather import WeatherEntityCapabilityAttribute
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
@@ -32,7 +32,9 @@ _CLIMATE_UNIT_ATTRIBUTES = {
 _WATER_HEATER_UNIT_ATTRIBUTES = {
     WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
 }
-_WEATHER_UNIT_ATTRIBUTES = {ATTR_WEATHER_TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS}
+_WEATHER_UNIT_ATTRIBUTES = {
+    WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
 
 
 @pytest.fixture

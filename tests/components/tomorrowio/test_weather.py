@@ -13,20 +13,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.tomorrowio.const import ATTRIBUTION, DOMAIN
 from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRECIPITATION_UNIT,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_PRESSURE_UNIT,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_VISIBILITY_UNIT,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherEntityCapabilityAttribute,
+    WeatherEntityStateAttribute,
+    WeatherService,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
@@ -183,18 +173,35 @@ async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
-    assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
+    assert weather_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 23
+    assert weather_state.attributes[WeatherEntityStateAttribute.OZONE] == 46.53
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT]
+        == "mm"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.PRESSURE] == 30.35
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRESSURE_UNIT]
+        == "hPa"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 44.1
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == "°C"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.VISIBILITY] == 8.15
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.VISIBILITY_UNIT]
+        == "km"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 315.14
+    assert (
+        weather_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 33.59
+    )  # 9.33 m/s ->km/h
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT]
+        == "km/h"
+    )
 
 
 async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
@@ -203,23 +210,40 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
     assert weather_state.state == ATTR_CONDITION_SUNNY
     assert weather_state.attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io Daily"
-    assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
-    assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
-    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
-    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
-    assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"
+    assert weather_state.attributes[WeatherEntityStateAttribute.HUMIDITY] == 23
+    assert weather_state.attributes[WeatherEntityStateAttribute.OZONE] == 46.53
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRECIPITATION_UNIT]
+        == "mm"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.PRESSURE] == 30.35
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.PRESSURE_UNIT]
+        == "hPa"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.TEMPERATURE] == 44.1
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.TEMPERATURE_UNIT]
+        == "°C"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.VISIBILITY] == 8.15
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.VISIBILITY_UNIT]
+        == "km"
+    )
+    assert weather_state.attributes[WeatherEntityStateAttribute.WIND_BEARING] == 315.14
+    assert (
+        weather_state.attributes[WeatherEntityStateAttribute.WIND_SPEED] == 33.59
+    )  # 9.33 m/s ->km/h
+    assert (
+        weather_state.attributes[WeatherEntityCapabilityAttribute.WIND_SPEED_UNIT]
+        == "km/h"
+    )
 
 
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 @pytest.mark.freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 async def test_v4_forecast_service(
@@ -265,7 +289,7 @@ async def test_v4_bad_forecast(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": entity_id,
             "type": "hourly",
