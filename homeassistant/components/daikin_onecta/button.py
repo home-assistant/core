@@ -44,7 +44,7 @@ class DaikinRefreshButton(DaikinOnectaAccountEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Request an immediate account refresh."""
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_manual_refresh()
         if not self.coordinator.last_update_success:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

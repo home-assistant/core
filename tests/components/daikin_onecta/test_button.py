@@ -1,5 +1,6 @@
 """Tests for Daikin Onecta refresh button entities."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from daikin_onecta.exceptions import OnectaConnectionError
@@ -11,6 +12,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .platform_helpers import _async_fire_coordinator_update
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
@@ -22,7 +24,7 @@ async def test_refresh_button_requests_coordinator_refresh(
     """The refresh button requests one coordinator refresh."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
-    coordinator.async_refresh = AsyncMock()
+    coordinator.async_manual_refresh = AsyncMock()
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -31,7 +33,7 @@ async def test_refresh_button_requests_coordinator_refresh(
         blocking=True,
     )
 
-    coordinator.async_refresh.assert_awaited_once()
+    coordinator.async_manual_refresh.assert_awaited_once()
 
 
 async def test_refresh_button_reports_failed_refresh(
@@ -44,7 +46,7 @@ async def test_refresh_button_reports_failed_refresh(
     async def fail_refresh() -> None:
         coordinator.last_update_success = False
 
-    coordinator.async_refresh = AsyncMock(side_effect=fail_refresh)
+    coordinator.async_manual_refresh = AsyncMock(side_effect=fail_refresh)
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -57,7 +59,57 @@ async def test_refresh_button_reports_failed_refresh(
     assert err.value.translation_domain == "daikin_onecta"
     assert err.value.translation_key == "refresh_failed"
     assert err.value.translation_placeholders is None
-    coordinator.async_refresh.assert_awaited_once()
+    coordinator.async_manual_refresh.assert_awaited_once()
+
+
+@pytest.mark.parametrize("last_update_success", [True, False])
+async def test_refresh_button_bypasses_polling_backoff(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client,
+    last_update_success: bool,
+) -> None:
+    """Manual button refreshes reach the cloud during scheduled poll backoff."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    coordinator._polling_backoff_until = dt_util.utcnow() + timedelta(minutes=5)
+    coordinator.last_update_success = last_update_success
+    mock_onecta_client.get_gateway_devices.reset_mock()
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+        blocking=True,
+    )
+
+    mock_onecta_client.get_gateway_devices.assert_awaited_once()
+    assert coordinator.last_update_success
+
+
+async def test_refresh_button_reports_post_write_cooldown(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client,
+) -> None:
+    """Do not silently report success when refresh is deferred after a write."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    coordinator._last_patch_call = dt_util.utcnow()
+    mock_onecta_client.get_gateway_devices.reset_mock()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == "daikin_onecta"
+    assert err.value.translation_key == "manual_refresh_deferred"
+    assert err.value.translation_placeholders == {"seconds": "30"}
+    mock_onecta_client.get_gateway_devices.assert_not_awaited()
 
 
 async def test_refresh_button_recovers_after_failed_poll(

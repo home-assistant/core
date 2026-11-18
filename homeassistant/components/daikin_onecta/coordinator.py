@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    HomeAssistantError,
     OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
@@ -58,6 +59,8 @@ type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
 
 def gateway_site_membership(sites: list[Site], gateway_device_id: str) -> bool | None:
     """Return membership without assuming an incomplete site response is empty."""
+    if not sites:
+        return None
     membership = [site.has_gateway_device(gateway_device_id) for site in sites]
     if True in membership:
         return True
@@ -138,6 +141,26 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._bypass_polling_backoff = True
         await super().async_request_refresh()
 
+    async def async_manual_refresh(self) -> None:
+        """Refresh immediately, bypassing scheduled-poll backoff."""
+        if remaining := self._post_write_cooldown_remaining():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="manual_refresh_deferred",
+                translation_placeholders={
+                    "seconds": str(ceil(remaining.total_seconds()))
+                },
+            )
+        self._bypass_polling_backoff = True
+        await self.async_refresh()
+
+    def _post_write_cooldown_remaining(self) -> timedelta | None:
+        """Return the remaining post-write cooldown, if any."""
+        if self._last_patch_call is None:
+            return None
+        remaining = _POST_WRITE_COOLDOWN - (dt_util.utcnow() - self._last_patch_call)
+        return remaining if remaining > timedelta(0) else None
+
     async def _async_get_cloud_devices(
         self,
         *,
@@ -153,8 +176,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return None
             if (
                 cooldown is not None
-                and self._last_patch_call is not None
-                and dt_util.utcnow() - self._last_patch_call < cooldown
+                and self._post_write_cooldown_remaining() is not None
             ):
                 return None
             try:
@@ -332,11 +354,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 )
             return devices
 
-        if (
-            self.last_patch_call is not None
-            and (dt_util.utcnow() - self.last_patch_call).total_seconds()
-            < _POST_WRITE_COOLDOWN.total_seconds()
-        ):
+        if self._post_write_cooldown_remaining() is not None:
             self.update_interval = _POST_WRITE_COOLDOWN
             if not self.last_update_success:
                 raise UpdateFailed(

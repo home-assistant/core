@@ -115,7 +115,7 @@ async def async_remove_config_entry_device(
         return False
     try:
         sites = await coordinator.async_get_sites()
-    except OnectaError, aiohttp.ClientError, TimeoutError:
+    except OAuth2TokenRequestError, OnectaError, aiohttp.ClientError, TimeoutError:
         return False
 
     # Polling may have restored the gateway while the on-demand lookup awaited.

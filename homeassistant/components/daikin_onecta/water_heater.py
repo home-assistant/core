@@ -207,7 +207,13 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""
-        if self.current_operation is None:
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        if (
+            hot_water is not None
+            and hot_water.power is not None
+            and self.current_operation is None
+        ):
             self._raise_service_validation_error("water_heater_on_off_unavailable")
         if self.current_operation == STATE_OFF:
             self._raise_service_validation_error("water_heater_off")
@@ -217,15 +223,20 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 "water_heater_temperature_not_settable"
             )
 
-        int_value = int(value)
-        if int_value != self._attr_native_target_temperature:
+        step_value = dht.step_value
+        target_temperature = (
+            round(value)
+            if step_value is None or step_value <= 0 or float(step_value).is_integer()
+            else round(value / step_value) * step_value
+        )
+        if target_temperature != self._attr_native_target_temperature:
             await self._async_execute_hot_water_command(
-                lambda hot_water: hot_water.set_temperature(int_value),
+                lambda hot_water: hot_water.set_temperature(target_temperature),
                 "water_heater_set_temperature_failed",
             )
             dht = self.domestic_hotwater_temperature
             if dht is not None:
-                dht.value = int_value
+                dht.value = target_temperature
             self._publish_write_update()
 
     @override

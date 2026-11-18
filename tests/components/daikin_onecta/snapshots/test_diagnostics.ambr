@@ -1,0 +1,9 @@
+# serializer version: 1
+# name: test_diagnostics_reports_oauth_token_failure
+  dict({
+    'error': dict({
+      'status': 401,
+      'type': 'OAuth2TokenRequestError',
+    }),
+  })
+# ---

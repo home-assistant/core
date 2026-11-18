@@ -10,7 +10,9 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin_onecta import async_remove_config_entry_device
 from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.coordinator import gateway_site_membership
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockOnectaClient
@@ -44,7 +46,7 @@ async def missing_gateway(
 
 @pytest.mark.parametrize(
     ("linked_gateways", "expected"),
-    [(None, False), ([], True), (["other-gateway"], True)],
+    [(None, False), (["other-gateway"], True)],
 )
 async def test_remove_missing_gateway_requires_complete_sites(
     hass: HomeAssistant,
@@ -65,6 +67,42 @@ async def test_remove_missing_gateway_requires_complete_sites(
         is expected
     )
     assert (gateway_id in coordinator.data) is not expected
+    coordinator.async_get_sites.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    ("sites", "expected"),
+    [
+        ([], None),
+        ([Site(id="site", gateway_device_ids=None)], None),
+        ([Site(id="site", gateway_device_ids=["other-gateway"])], False),
+        (
+            [
+                Site(id="unknown", gateway_device_ids=None),
+                Site(id="linked", gateway_device_ids=["gateway"]),
+            ],
+            True,
+        ),
+    ],
+)
+def test_gateway_site_membership(sites: list[Site], expected: bool | None) -> None:
+    """Membership is unknown for empty or incomplete site inventories."""
+    assert gateway_site_membership(sites, "gateway") is expected
+
+
+async def test_remove_missing_gateway_rejects_empty_sites(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+) -> None:
+    """An empty Sites response is not proof that a gateway was removed."""
+    coordinator = config_entry.runtime_data
+    coordinator.async_get_sites = AsyncMock(return_value=[])
+
+    assert not await async_remove_config_entry_device(
+        hass, config_entry, missing_gateway
+    )
+    assert coordinator.data
     coordinator.async_get_sites.assert_awaited_once_with()
 
 
@@ -90,6 +128,12 @@ async def test_remove_missing_gateway_rejects_site_membership(
         OnectaConnectionError("failed", method="GET", path="/v1/sites"),
         ClientError("failed"),
         TimeoutError(),
+        OAuth2TokenRequestError(
+            domain=DOMAIN,
+            request_info=AsyncMock(),
+            status=401,
+            message="token refresh failed",
+        ),
     ],
 )
 async def test_remove_missing_gateway_rejects_failed_sites_lookup(

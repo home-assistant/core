@@ -23,6 +23,11 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .platform_helpers import _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
@@ -330,6 +335,94 @@ async def test_water_heater_temperature_updates_typed_cache(
     remove_listener()
 
 
+async def test_water_heater_temperature_writes_without_power_characteristic(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A settable temperature remains usable without on/off control."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    point.on_off_mode = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+        },
+        blocking=True,
+    )
+
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    assert point.domestic_hot_water.temperature.value == 50
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        point.embedded_id,
+        "temperatureControl",
+        50,
+        path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
+
+
+@pytest.mark.parametrize(
+    ("unit_system", "service_temperature", "step_value", "expected_temperature"),
+    [
+        (METRIC_SYSTEM, 48.4, 1, 48),
+        (METRIC_SYSTEM, 48.6, 1, 49),
+        (US_CUSTOMARY_SYSTEM, 120, 1, 49),
+        (METRIC_SYSTEM, 48.6, 0.5, 48.5),
+    ],
+)
+async def test_water_heater_temperature_rounds_to_native_step(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    unit_system: UnitSystem,
+    service_temperature: float,
+    step_value: float,
+    expected_temperature: float,
+) -> None:
+    """Round requested temperatures to the nearest supported native step."""
+    hass.config.units = unit_system
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.step_value = step_value
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: service_temperature,
+        },
+        blocking=True,
+    )
+
+    assert point.domestic_hot_water.temperature.value == expected_temperature
+    if expected_temperature == 48:
+        coordinator.client.patch_characteristic.assert_not_awaited()
+    else:
+        coordinator.client.patch_characteristic.assert_awaited_once_with(
+            gateway.id,
+            point.embedded_id,
+            "temperatureControl",
+            expected_temperature,
+            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+        )
+
+
 async def test_water_heater_publishes_successful_partial_operation_write(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -367,12 +460,13 @@ async def test_water_heater_publishes_successful_partial_operation_write(
 
 
 @pytest.mark.parametrize(
-    ("method", "args"),
+    ("method", "args", "power_value"),
     [
-        ("async_turn_on", ()),
-        ("async_turn_off", ()),
-        ("async_set_operation_mode", (STATE_HEAT_PUMP,)),
-        ("async_set_tank_temperature", (50,)),
+        ("async_turn_on", (), None),
+        ("async_turn_off", (), None),
+        ("async_set_operation_mode", (STATE_HEAT_PUMP,), None),
+        ("async_set_tank_temperature", (50,), None),
+        ("async_set_tank_temperature", (50,), "unknown"),
     ],
 )
 async def test_water_heater_rejects_unknown_power_state(
@@ -380,6 +474,7 @@ async def test_water_heater_rejects_unknown_power_state(
     config_entry: MockConfigEntry,
     method: str,
     args: tuple[object, ...],
+    power_value: str | None,
 ) -> None:
     """Reject HA write services when Daikin omits the current power value."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
@@ -392,7 +487,7 @@ async def test_water_heater_rejects_unknown_power_state(
         for point in device.device.management_points
         if point.management_point_type == "domesticHotWaterTank"
     )
-    point.on_off_mode.value = None
+    point.on_off_mode.value = power_value
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 

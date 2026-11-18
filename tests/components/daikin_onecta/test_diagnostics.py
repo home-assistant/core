@@ -8,10 +8,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestReauthError
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 
 from .test_climate_snapshots import _async_setup_fixture
 
@@ -147,3 +151,30 @@ async def test_diagnostics_reports_site_lookup_failures(
     }
     assert diagnostics["devices"]
     assert "private" not in str(diagnostics)
+
+
+async def test_diagnostics_reports_oauth_token_failure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Include OAuth token refresh failures in diagnostics instead of returning 500."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    config_entry.runtime_data.client.get_sites = AsyncMock(
+        side_effect=OAuth2TokenRequestError(
+            domain="daikin_onecta",
+            request_info=MagicMock(),
+            status=401,
+            message="private token details",
+        )
+    )
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
+
+    assert diagnostics["sites"] == snapshot
+    assert diagnostics["sites"] == {
+        "error": {"type": "OAuth2TokenRequestError", "status": 401}
+    }

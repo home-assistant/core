@@ -531,6 +531,9 @@
     "refresh_deferred": {
       "message": "Refresh delayed while waiting to retry the Daikin API"
     },
+    "manual_refresh_deferred": {
+      "message": "Refresh is available in {seconds} seconds after a Daikin command"
+    },
     "refresh_failed": {
       "message": "Failed to refresh Daikin devices"
     },
