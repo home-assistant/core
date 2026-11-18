@@ -439,6 +439,46 @@ async def test_air_purifier_percentage_turns_on_and_exits_preset(
     assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == 100
 
 
+async def test_air_purifier_percentage_powers_on_before_mode_and_speed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Power on an off purifier before changing its mode and fan speed."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.air_purifier"},
+        blocking=True,
+    )
+    coordinator.client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.air_purifier",
+            FanServiceArgument.PERCENTAGE: 50,
+        },
+        blocking=True,
+    )
+
+    device = next(iter(coordinator.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        ((device.id, point.embedded_id, "onOffMode", "on"), {"path": None}),
+        (
+            (device.id, point.embedded_id, "airPurificationMode", "manualFan"),
+            {"path": None},
+        ),
+        (
+            (device.id, point.embedded_id, "fanControl", 2),
+            {"path": "/airPurificationModes/manualFan/fanSpeed/modes/fixed"},
+        ),
+    ]
+
+
 async def test_air_purifier_rejects_manual_speed_as_preset(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

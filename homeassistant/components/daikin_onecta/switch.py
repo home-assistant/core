@@ -15,9 +15,21 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
 )
-from .entity_descriptions import SWITCH_DESCRIPTIONS
+from .entity_metadata import (
+    ENTITY_METADATA,
+    SWITCH_TRANSLATION_KEYS,
+    entity_description_kwargs,
+)
 
 PARALLEL_UPDATES = 1
+
+SWITCH_DESCRIPTIONS = {
+    metadata.key: SwitchEntityDescription(
+        key=metadata.key, **entity_description_kwargs(metadata)
+    )
+    for metadata in ENTITY_METADATA
+    if metadata.translation_key in SWITCH_TRANSLATION_KEYS
+}
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator

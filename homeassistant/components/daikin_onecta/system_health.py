@@ -18,13 +18,14 @@ def _entry_label(config_entry: DaikinOnectaConfigEntry) -> str:
 def _entry_info(config_entry: DaikinOnectaConfigEntry) -> dict[str, Any]:
     """Return locally cached health data for an account entry."""
     coordinator = config_entry.runtime_data
+    rate_limits = coordinator.rate_limits
     return {
-        "max_minute": coordinator.rate_limits["minute"],
-        "max_day": coordinator.rate_limits["day"],
-        "remaining_minute": coordinator.rate_limits["remaining_minutes"],
-        "remaining_day": coordinator.rate_limits["remaining_day"],
-        "retry_after": coordinator.rate_limits["retry_after"],
-        "ratelimit_reset": coordinator.rate_limits["ratelimit_reset"],
+        "max_minute": rate_limits["minute"],
+        "max_day": rate_limits["day"],
+        "remaining_minute": rate_limits["remaining_minutes"],
+        "remaining_day": rate_limits["remaining_day"],
+        "retry_after": rate_limits["retry_after"],
+        "ratelimit_reset": rate_limits["ratelimit_reset"],
         "oauth2_token_valid": coordinator.session.valid_token,
     }
 

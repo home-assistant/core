@@ -34,10 +34,23 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
 )
-from .entity_descriptions import SENSOR_DESCRIPTIONS
+from .entity_metadata import ENTITY_METADATA, SENSOR_KEYS, entity_description_kwargs
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
+
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    metadata.key: SensorEntityDescription(
+        key=metadata.key,
+        device_class=metadata.device_class,
+        options=list(metadata.options) if metadata.options is not None else None,
+        native_unit_of_measurement=metadata.native_unit_of_measurement,
+        state_class=metadata.state_class,
+        **entity_description_kwargs(metadata),
+    )
+    for metadata in ENTITY_METADATA
+    if metadata.key in SENSOR_KEYS
+}
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator

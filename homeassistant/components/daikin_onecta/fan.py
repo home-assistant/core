@@ -334,25 +334,29 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             self._raise_service_validation_error("air_purifier_speed_unavailable")
         if self.is_on is None:
             self._raise_service_validation_error("air_purifier_power_unavailable")
-        if purification.mode.value != "manualFan":
-            await self._async_set_mode("manualFan")
-        speeds = self._fixed_speeds()
-        if not speeds:
+        if not self._fixed_speeds("manualFan"):
             self._raise_service_validation_error("air_purifier_speed_unavailable")
-        purification = self._air_purification()
-        if purification is None or purification.mode is None:
-            self._raise_service_validation_error("air_purifier_speed_unavailable")
-        mode = purification.mode.value
+        if purification.mode.value != "manualFan" and (
+            not purification.mode.settable or "manualFan" not in purification.modes
+        ):
+            self._raise_service_validation_error("air_purifier_mode_unavailable")
         if not self.is_on:
             await self.async_turn_on()
+        if purification.mode.value != "manualFan":
+            await self._async_set_mode("manualFan")
+        speeds = self._fixed_speeds("manualFan")
+        if not speeds:
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         speed = percentage_to_ordered_list_item(speeds, percentage)
         await self._async_execute_air_purification_command(
-            lambda purifier: purifier.set_fixed_fan_speed(mode, speed),
+            lambda purifier: purifier.set_fixed_fan_speed("manualFan", speed),
             "air_purifier_set_percentage_failed",
         )
         purification = self._air_purification()
         operation = (
-            purification.fan_operation(mode) if purification is not None else None
+            purification.fan_operation("manualFan")
+            if purification is not None
+            else None
         )
         if (
             operation is not None

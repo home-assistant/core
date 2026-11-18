@@ -7,7 +7,7 @@ from daikin_onecta.exceptions import OnectaError
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2TokenRequestError
+from homeassistant.exceptions import OAuth2TokenRequestError
 
 from .coordinator import DaikinOnectaConfigEntry, gateway_site_membership
 
@@ -46,10 +46,10 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: DaikinOnectaConfigEntry,
 ) -> dict[str, Any]:
-    """Return diagnostics and make one explicit Sites API lookup."""
+    """Return diagnostics with account Sites context."""
     coordinator = entry.runtime_data
     try:
-        sites = await coordinator.async_get_sites()
+        sites = await coordinator.async_get_sites(use_cache=True)
     except (OAuth2TokenRequestError, OnectaError, ClientError, TimeoutError) as err:
         site_diagnostics: dict[str, Any] = {
             "error": {

@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -18,9 +19,25 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
 )
-from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
+from .entity_metadata import (
+    BINARY_SENSOR_TRANSLATION_KEYS,
+    ENTITY_METADATA,
+    entity_description_kwargs,
+)
 
 PARALLEL_UPDATES = 1
+
+BINARY_SENSOR_DESCRIPTIONS = {
+    metadata.key: BinarySensorEntityDescription(
+        key=metadata.key,
+        device_class=metadata.device_class
+        if isinstance(metadata.device_class, BinarySensorDeviceClass)
+        else None,
+        **entity_description_kwargs(metadata),
+    )
+    for metadata in ENTITY_METADATA
+    if metadata.translation_key in BINARY_SENSOR_TRANSLATION_KEYS
+}
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator

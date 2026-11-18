@@ -50,6 +50,7 @@ _LOW_SCAN_INTERVAL = timedelta(minutes=30)
 _HIGH_SCAN_START = time(7)
 _LOW_SCAN_START = time(22)
 _POST_WRITE_COOLDOWN = timedelta(seconds=30)
+_SITES_DIAGNOSTICS_CACHE_DURATION = timedelta(hours=6)
 _DEFAULT_DAILY_CALL_LIMIT = 200
 _POLLING_BUDGET_FRACTION = 0.55
 _MINIMUM_POLL_INTERVAL = timedelta(minutes=3)
@@ -91,6 +92,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
+        self._sites_cache: tuple[datetime, list[Site]] | None = None
 
         super().__init__(
             hass,
@@ -189,9 +191,21 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 self._set_polling_backoff(err.retry_after)
                 raise
 
-    async def async_get_sites(self) -> list[Site]:
-        """Return account sites unless Daikin's rate-limit backoff is active."""
+    async def async_get_sites(self, *, use_cache: bool = False) -> list[Site]:
+        """Return account sites unless Daikin's rate-limit backoff is active.
+
+        Diagnostics may reuse a recent result because the Sites request also
+        consumes the account's cloud quota. Device-removal checks stay fresh.
+        """
+        if use_cache and self._sites_cache is not None:
+            cached_at, sites = self._sites_cache
+            if dt_util.utcnow() - cached_at < _SITES_DIAGNOSTICS_CACHE_DURATION:
+                return sites
         async with self._cloud_lock:
+            if use_cache and self._sites_cache is not None:
+                cached_at, sites = self._sites_cache
+                if dt_util.utcnow() - cached_at < _SITES_DIAGNOSTICS_CACHE_DURATION:
+                    return sites
             if remaining := self._polling_backoff_remaining():
                 # Keep the shared polling backoff in force for explicit Sites
                 # lookups too; manual device refresh remains a separate path.
@@ -201,10 +215,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     path="/v1/sites",
                 )
             try:
-                return await self._client.get_sites()
+                sites = await self._client.get_sites()
+                self._sites_cache = (dt_util.utcnow(), sites)
             except OnectaRateLimitError as err:
                 self._set_polling_backoff(err.retry_after)
                 raise
+            else:
+                return sites
 
     def _polling_backoff_remaining(self) -> timedelta | None:
         """Return the remaining polling backoff, if any."""

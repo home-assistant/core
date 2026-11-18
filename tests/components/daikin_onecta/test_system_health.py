@@ -6,6 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.system_health import (
+    _entry_info,
     async_register,
     system_health_info,
 )
@@ -20,6 +21,36 @@ def test_system_health_register() -> None:
     async_register(MagicMock(), register)
 
     register.async_register_info.assert_called_once_with(system_health_info)
+
+
+def test_system_health_reads_rate_limits_once() -> None:
+    """Build all health fields from one cached rate-limit snapshot."""
+
+    class RuntimeData:
+        rate_limit_reads = 0
+        session = MagicMock(valid_token=True)
+
+        @property
+        def rate_limits(self) -> dict[str, int | None]:
+            self.rate_limit_reads += 1
+            return {
+                "minute": 10,
+                "day": 200,
+                "remaining_minutes": 9,
+                "remaining_day": 199,
+                "retry_after": None,
+                "ratelimit_reset": None,
+            }
+
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    runtime_data = RuntimeData()
+    config_entry.runtime_data = runtime_data
+
+    info = _entry_info(config_entry)
+
+    assert info["max_minute"] == 10
+    assert info["remaining_day"] == 199
+    assert runtime_data.rate_limit_reads == 1
 
 
 async def test_system_health_ignores_unloaded_entry(

@@ -1870,12 +1870,14 @@ async def test_climate_platform_services_and_management_points(
     setpoint.settable = False
     current_state = hass.states.get(living_room_entity_id)
     assert current_state is not None
-    await call_service(
-        SERVICE_SET_TEMPERATURE,
-        temperature=current_state.attributes[
-            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-        ],
-    )
+    with pytest.raises(ServiceValidationError) as err:
+        await call_service(
+            SERVICE_SET_TEMPERATURE,
+            temperature=current_state.attributes[
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+            ],
+        )
+    assert err.value.translation_key == "climate_temperature_unavailable"
     with pytest.raises(ServiceValidationError) as err:
         await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
     assert err.value.translation_key == "climate_temperature_unavailable"
@@ -1989,6 +1991,46 @@ async def test_climate_temperature_rounds_to_native_step(
         )
     else:
         mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+async def test_climate_temperature_rounding_is_anchored_to_minimum(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Round relative to a nonzero, non-step-aligned setpoint minimum."""
+    (
+        entity_id,
+        gateway_id,
+        point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert point.climate_control is not None
+    setpoint = point.climate_control.setpoint("roomTemperature", "heating")
+    assert setpoint is not None
+    setpoint.min_value = 17.2
+    setpoint.step_value = 0.5
+    setpoint.value = 20
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    mock_onecta_client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, "temperature": 18},
+        blocking=True,
+    )
+
+    assert setpoint.value == 18.2
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        gateway_id,
+        point.embedded_id,
+        "temperatureControl",
+        18.2,
+        path="/operationModes/heating/setpoints/roomTemperature",
+    )
 
 
 async def test_humidification_is_not_reported_as_dry(

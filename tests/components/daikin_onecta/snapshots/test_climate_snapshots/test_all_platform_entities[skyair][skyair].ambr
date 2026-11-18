@@ -1366,8 +1366,8 @@
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),
@@ -1405,8 +1405,8 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test bedroom 1 Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),
@@ -1427,8 +1427,8 @@
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),
@@ -1466,8 +1466,8 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test bedroom 2 Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),
@@ -1488,8 +1488,8 @@
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),
@@ -1527,8 +1527,8 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test living room Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
-            'undefined',
-            'undefined',
+            '1',
+            '2',
             'home_assistant_schedule_is_disabled',
           ]),
         }),

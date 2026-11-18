@@ -1,5 +1,6 @@
 """Provide Daikin schedule selection entities."""
 
+from collections import Counter
 from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import ScheduleSelection
@@ -16,7 +17,10 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
 )
-from .entity_descriptions import SELECT_DESCRIPTIONS
+
+SELECT_DESCRIPTIONS = {
+    "schedule": SelectEntityDescription(key="schedule", translation_key="schedule")
+}
 
 PARALLEL_UPDATES = 1
 
@@ -117,14 +121,15 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return None
         if not selection.enabled and selection.enabled_settable:
             return SCHEDULE_DISABLED
-        return selection.current_option or next(
+        selected_option = next(
             (
-                schedule.name
-                for schedule in selection.options
-                if schedule.id == selection.selected
+                label
+                for label, schedule_id in self._schedule_options(selection)
+                if schedule_id == selection.selected
             ),
             None,
         )
+        return selected_option or selection.current_option
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -141,9 +146,9 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         if option != SCHEDULE_DISABLED:
             schedule_id = next(
                 (
-                    schedule.id
-                    for schedule in selection.options
-                    if schedule.name == option
+                    schedule_id
+                    for label, schedule_id in self._schedule_options(selection)
+                    if label == option
                 ),
                 option,
             )
@@ -179,7 +184,27 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         selection = self.selection()
         if selection is None:
             return []
-        options = [schedule.name for schedule in selection.options]
+        options = [label for label, _ in self._schedule_options(selection)]
         if selection.enabled_settable:
             options.append(SCHEDULE_DISABLED)
         return options
+
+    @staticmethod
+    def _schedule_options(selection: ScheduleSelection) -> list[tuple[str, str]]:
+        """Return unique display labels paired with their cloud schedule IDs."""
+        names = [schedule.name for schedule in selection.options]
+        name_counts = Counter(names)
+        return [
+            (
+                schedule.id
+                if not schedule.name or schedule.name == "undefined"
+                else (
+                    f"{schedule.name} ({schedule.id})"
+                    if name_counts[schedule.name] > 1
+                    or schedule.name == SCHEDULE_DISABLED
+                    else schedule.name
+                ),
+                schedule.id,
+            )
+            for schedule in selection.options
+        ]

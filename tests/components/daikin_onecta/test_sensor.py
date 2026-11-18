@@ -11,10 +11,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.discovery import scalar_platform
-from homeassistant.components.daikin_onecta.entity_descriptions import (
-    SENSOR_DESCRIPTIONS,
-)
 from homeassistant.components.daikin_onecta.sensor import (
+    SENSOR_DESCRIPTIONS,
     DaikinEnergySensor,
     DaikinValueSensor,
     EnergySensorDetails,

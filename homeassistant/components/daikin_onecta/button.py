@@ -2,7 +2,8 @@
 
 from typing import override
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -10,9 +11,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .entity import DaikinOnectaAccountEntity
-from .entity_descriptions import BUTTON_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
+
+BUTTON_DESCRIPTIONS = {
+    "refresh": ButtonEntityDescription(
+        key="refresh",
+        translation_key="refresh",
+        entity_category=EntityCategory.CONFIG,
+    )
+}
 
 
 async def async_setup_entry(

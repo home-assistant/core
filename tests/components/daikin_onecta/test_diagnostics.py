@@ -45,6 +45,7 @@ async def test_diagnostics(
     diagnostics = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )
+    await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert diagnostics["config_entry"]["data"]["token"] == REDACTED
     assert diagnostics["devices"]

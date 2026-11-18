@@ -439,6 +439,42 @@ async def test_water_heater_temperature_rounds_to_native_step(
         )
 
 
+async def test_water_heater_temperature_rounding_is_anchored_to_minimum(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Round relative to a nonzero, non-step-aligned tank temperature minimum."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    setpoint = point.domestic_hot_water.temperature
+    assert setpoint is not None
+    setpoint.min_value = 43.3
+    setpoint.max_value = 60
+    setpoint.step_value = 0.5
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: 44,
+        },
+        blocking=True,
+    )
+
+    assert setpoint.value == 43.8
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        point.embedded_id,
+        "temperatureControl",
+        43.8,
+        path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
+
+
 async def test_water_heater_temperature_is_clamped_to_setpoint_range(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

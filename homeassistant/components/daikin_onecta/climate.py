@@ -349,8 +349,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
             target_temperature = float(kwargs[ClimateServiceArgument.TEMPERATURE])
-            if target_temperature == self._attr_native_target_temperature:
-                return
             operationmode = self._operation_mode()
             if operationmode is None:
                 self._raise_service_validation_error(
@@ -365,6 +363,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             value = round_temperature_to_step(
                 target_temperature,
                 step if step is not None and step > 0 else 0.5,
+                setpoint.min_value,
             )
             value = min(
                 max(

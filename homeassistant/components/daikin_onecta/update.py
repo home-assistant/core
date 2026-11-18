@@ -4,7 +4,12 @@ from typing import Any, override
 
 from daikin_onecta.models import ManagementPoint
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityDescription,
+    UpdateEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -16,9 +21,19 @@ from .entity import (
     add_entities_on_coordinator_update,
     management_point_unique_id,
 )
-from .entity_descriptions import UPDATE_DESCRIPTIONS
+from .entity_metadata import ENTITY_METADATA, entity_description_kwargs
 
 PARALLEL_UPDATES = 1
+
+UPDATE_DESCRIPTIONS = {
+    metadata.key: UpdateEntityDescription(
+        key=metadata.key,
+        device_class=metadata.device_class,
+        **entity_description_kwargs(metadata),
+    )
+    for metadata in ENTITY_METADATA
+    if isinstance(metadata.device_class, UpdateDeviceClass)
+}
 
 _INSTALL_CONFIRMATION_POLLS = 3
 
@@ -197,7 +212,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         management_point = self._device.management_point(self._embedded_id)
         if management_point is None:
             return False
-        return (
-            management_point.firmware is not None
-            and management_point.firmware.has_installed_version
-        )
+        # Daikin can omit the installed version while still reporting update
+        # status or an available firmware offer. Keep the update entity usable.
+        return management_point.firmware is not None

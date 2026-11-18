@@ -21,10 +21,10 @@ from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
     scalar_platform,
 )
-from homeassistant.components.daikin_onecta.entity_descriptions import (
-    BINARY_SENSOR_DESCRIPTIONS,
-    SENSOR_DESCRIPTIONS,
-    SWITCH_DESCRIPTIONS,
+from homeassistant.components.daikin_onecta.entity_metadata import (
+    BINARY_SENSOR_KEYS,
+    SENSOR_KEYS,
+    SWITCH_KEYS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -148,7 +148,7 @@ async def test_missing_values_do_not_change_entity_topology(
                 values = characteristic.values or []
                 if (
                     "switch" not in expected_entities
-                    and name in SWITCH_DESCRIPTIONS
+                    and name in SWITCH_KEYS
                     and characteristic.settable
                     and {"on", "off"}.issubset(values)
                 ):
@@ -158,7 +158,7 @@ async def test_missing_values_do_not_change_entity_topology(
                     )
                 elif (
                     "binary_sensor" not in expected_entities
-                    and name in BINARY_SENSOR_DESCRIPTIONS
+                    and name in BINARY_SENSOR_KEYS
                     and characteristic.values is None
                 ):
                     characteristic.value = None
@@ -167,9 +167,9 @@ async def test_missing_values_do_not_change_entity_topology(
                     )
                 elif (
                     "sensor" not in expected_entities
-                    and name in SENSOR_DESCRIPTIONS
-                    and name not in BINARY_SENSOR_DESCRIPTIONS
-                    and name not in SWITCH_DESCRIPTIONS
+                    and name in SENSOR_KEYS
+                    and name not in BINARY_SENSOR_KEYS
+                    and name not in SWITCH_KEYS
                     and name != "operationMode"
                 ):
                     characteristic.value = None

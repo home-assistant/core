@@ -1,21 +1,16 @@
-"""Entity descriptions for the Daikin Onecta integration."""
+"""Shared Daikin metadata used by platform-local entity descriptions."""
 
 from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
-    BinarySensorEntityDescription,
 )
-from homeassistant.components.button import ButtonEntityDescription
-from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import (
     SensorDeviceClass,
-    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.components.switch import SwitchEntityDescription
-from homeassistant.components.update import UpdateDeviceClass, UpdateEntityDescription
+from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
@@ -790,7 +785,8 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
 )
 
 
-def _entity_description_kwargs(metadata: DaikinEntityMetadata) -> dict[str, Any]:
+
+def entity_description_kwargs(metadata: DaikinEntityMetadata) -> dict[str, Any]:
     """Return the entity-description fields shared by all platforms."""
     return {
         "translation_key": metadata.translation_key,
@@ -798,21 +794,6 @@ def _entity_description_kwargs(metadata: DaikinEntityMetadata) -> dict[str, Any]
         "entity_registry_enabled_default": metadata.entity_registry_enabled_default,
     }
 
-
-SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
-    metadata.key: SensorEntityDescription(
-        key=metadata.key,
-        device_class=metadata.device_class,
-        options=list(metadata.options) if metadata.options is not None else None,
-        native_unit_of_measurement=metadata.native_unit_of_measurement,
-        state_class=metadata.state_class,
-        **_entity_description_kwargs(metadata),
-    )
-    for metadata in ENTITY_METADATA
-    if metadata.key != "dryKeepSetting"
-    and not isinstance(metadata.device_class, BinarySensorDeviceClass)
-    and not isinstance(metadata.device_class, UpdateDeviceClass)
-}
 
 BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
     {
@@ -833,47 +814,27 @@ BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
         "drykeepsetting",
     }
 )
-
-BINARY_SENSOR_DESCRIPTIONS = {
-    metadata.key: BinarySensorEntityDescription(
-        key=metadata.key,
-        device_class=metadata.device_class
-        if isinstance(metadata.device_class, BinarySensorDeviceClass)
-        else None,
-        **_entity_description_kwargs(metadata),
-    )
-    for metadata in ENTITY_METADATA
-    if metadata.translation_key in BINARY_SENSOR_TRANSLATION_KEYS
-}
-
 SWITCH_TRANSLATION_KEYS = frozenset({"economode", "streamermode"})
 
-SWITCH_DESCRIPTIONS = {
-    metadata.key: SwitchEntityDescription(
-        key=metadata.key, **_entity_description_kwargs(metadata)
-    )
+BINARY_SENSOR_KEYS = frozenset(
+    metadata.key
+    for metadata in ENTITY_METADATA
+    if metadata.translation_key in BINARY_SENSOR_TRANSLATION_KEYS
+)
+SWITCH_KEYS = frozenset(
+    metadata.key
     for metadata in ENTITY_METADATA
     if metadata.translation_key in SWITCH_TRANSLATION_KEYS
-}
-
-SELECT_DESCRIPTIONS = {
-    "schedule": SelectEntityDescription(key="schedule", translation_key="schedule")
-}
-
-UPDATE_DESCRIPTIONS = {
-    metadata.key: UpdateEntityDescription(
-        key=metadata.key,
-        device_class=metadata.device_class,
-        **_entity_description_kwargs(metadata),
-    )
+)
+SENSOR_KEYS = frozenset(
+    metadata.key
+    for metadata in ENTITY_METADATA
+    if metadata.key != "dryKeepSetting"
+    and not isinstance(metadata.device_class, BinarySensorDeviceClass)
+    and not isinstance(metadata.device_class, UpdateDeviceClass)
+)
+UPDATE_KEYS = frozenset(
+    metadata.key
     for metadata in ENTITY_METADATA
     if isinstance(metadata.device_class, UpdateDeviceClass)
-}
-
-BUTTON_DESCRIPTIONS = {
-    "refresh": ButtonEntityDescription(
-        key="refresh",
-        translation_key="refresh",
-        entity_category=EntityCategory.CONFIG,
-    )
-}
+)

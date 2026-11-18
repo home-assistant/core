@@ -9,15 +9,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
-from homeassistant.components.daikin_onecta.entity_descriptions import (
+from homeassistant.components.daikin_onecta.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
-    BUTTON_DESCRIPTIONS,
-    SELECT_DESCRIPTIONS,
-    SENSOR_DESCRIPTIONS,
-    SWITCH_DESCRIPTIONS,
-    UPDATE_DESCRIPTIONS,
 )
+from homeassistant.components.daikin_onecta.button import BUTTON_DESCRIPTIONS
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.components.daikin_onecta.select import SELECT_DESCRIPTIONS
+from homeassistant.components.daikin_onecta.sensor import SENSOR_DESCRIPTIONS
+from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
+from homeassistant.components.daikin_onecta.update import UPDATE_DESCRIPTIONS
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,

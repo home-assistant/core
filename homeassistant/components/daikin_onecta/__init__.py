@@ -124,7 +124,9 @@ async def async_remove_config_entry_device(
         if not gateway_id.startswith(child_prefix):
             return False
         embedded_id = gateway_id[len(child_prefix) :]
-        if not er.async_entries_for_device(er.async_get(hass), device_entry.id):
+        if not er.async_entries_for_device(
+            er.async_get(hass), device_entry.id, include_disabled_entities=True
+        ):
             return True
         current_device = devices.get(parent_gateway_id)
         if current_device is not None and current_device.present_in_cloud:

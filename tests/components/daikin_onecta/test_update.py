@@ -132,6 +132,27 @@ async def test_firmware_install_executes_command(
     )
 
 
+async def test_firmware_entity_available_without_installed_version(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Keep firmware status and offers available if Daikin omits its version."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    gateway = device.device.management_point(device.device.gateway_embedded_id)
+    assert gateway is not None
+    gateway.firmware_version = None
+    gateway.software_version = None
+
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.living_room_firmware_update")
+    assert state is not None
+    assert state.state != "unavailable"
+    assert state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] is None
+
+
 async def test_firmware_install_records_pending_state_before_waiting_poll(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

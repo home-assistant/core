@@ -185,3 +185,49 @@ async def test_schedule_named_off_does_not_disable_schedule(
     updated_state = hass.states.get(state.entity_id)
     assert updated_state is not None
     assert updated_state.state == "off"
+
+
+async def test_duplicate_schedule_names_have_unique_select_options(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Disambiguate schedule names and select the intended cloud schedule ID."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    device = next(iter(coordinator.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert point.schedule_state is not None
+    assert point.schedule is not None and point.schedule.value is not None
+    native_schedules = point.schedule.value.modes["any"].schedules
+    native_schedules["1"].name = Characteristic(value="Workday")
+    native_schedules["2"].name = Characteristic(value="Workday")
+    selection = point.schedule_state.active_selection
+    assert selection is not None
+    schedules = selection.options
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.master_schedule")
+    assert state is not None
+    assert set(state.attributes[SelectEntityCapabilityAttribute.OPTIONS]) >= {
+        f"Workday ({schedules[1].id})",
+        f"Workday ({schedules[2].id})",
+    }
+
+    option = f"Workday ({schedules[2].id})"
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
+        blocking=True,
+    )
+
+    coordinator.client.put_management_point.assert_awaited_once_with(
+        device.id,
+        point.embedded_id,
+        "schedule/any/current",
+        {"scheduleId": schedules[2].id, "enabled": True},
+    )

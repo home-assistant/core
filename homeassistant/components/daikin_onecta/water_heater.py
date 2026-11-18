@@ -262,6 +262,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         target_temperature = round_temperature_to_step(
             value,
             step_value if step_value is not None and step_value > 0 else 0.5,
+            dht.min_value,
         )
         target_temperature = min(
             max(

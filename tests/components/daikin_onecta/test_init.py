@@ -138,13 +138,21 @@ async def test_remove_management_point_device_management_point_gone(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Allow removing a child whose point disappeared while its gateway remains."""
+    """Remove a child whose point and all enabled entities disappeared."""
     await _async_setup_fixture(hass, config_entry, "altherma")
     child = _get_domestic_hot_water_tank_child(config_entry, device_registry)
+    child_entities = er.async_entries_for_device(entity_registry, child.id)
+    assert child_entities
+    for entity_entry in child_entities:
+        entity_registry.async_update_entity(
+            entity_entry.entity_id,
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
     updated_devices = _load_gateway_devices("altherma")
     updated_devices[0].management_points = [
         point
