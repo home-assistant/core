@@ -12,7 +12,7 @@ from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
-from homeassistant.const import EntityCategory
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import Context, State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -215,12 +215,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
-        previous_state = self.state
+        previous_state = self.state if self.available else STATE_UNAVAILABLE
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
+        current_state = self.state if self.available else STATE_UNAVAILABLE
         if self._pending_group_context:
             self._set_group_context_expected_state(self.state)
-        elif self._context_expected_state is not None and self.state not in (
+        elif self._context_expected_state is not None and current_state not in (
             previous_state,
             self._context_expected_state,
         ):
