@@ -48,6 +48,26 @@ def entity_config_identifier(platform: Platform, entity_config: ConfigType) -> s
     return f"{CONF_NAME}: {default_name}"
 
 
+def entity_config_repair_identifier(
+    platform: Platform,
+    entity_config: ConfigType,
+    section_unique_id: str | None = None,
+) -> str:
+    """Return the most stable identifier of an entity config for a repair issue.
+
+    Entities can share a name but not a unique_id, so unlike
+    entity_config_identifier the unique_id and default_entity_id win over the name.
+    """
+    if unique_id := entity_config.get(CONF_UNIQUE_ID):
+        # Matches the unique_id the entity is created with
+        if section_unique_id:
+            unique_id = f"{section_unique_id}-{unique_id}"
+        return f"{CONF_UNIQUE_ID}: {unique_id}"
+    if default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        return f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    return entity_config_identifier(platform, entity_config)
+
+
 class BlockedTemplateAttributes:
     """Blocked template attributes."""
 
