@@ -4,21 +4,12 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 
-from .application_credentials import (
-    McpClientMetadataImplementation,
-    authorization_server_context,
-)
-from .const import (
-    CIMD_AUTH_IMPLEMENTATION,
-    CONF_AUTHORIZATION_URL,
-    CONF_SLUG,
-    CONF_TOKEN_URL,
-    DOMAIN,
-)
+from .application_credentials import authorization_server_context
+from .const import CONF_AUTHORIZATION_URL, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import ModelContextProtocolCoordinator, TokenManager
 from .types import ModelContextProtocolConfigEntry
 
