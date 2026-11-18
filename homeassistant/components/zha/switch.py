@@ -6,7 +6,7 @@ from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,6 +55,7 @@ class Switch(ZHAEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_data.entity.async_turn_on()
+        self._set_group_context_expected_state(STATE_ON)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
@@ -62,4 +63,5 @@ class Switch(ZHAEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_data.entity.async_turn_off()
+        self._set_group_context_expected_state(STATE_OFF)
         self.async_write_ha_state()

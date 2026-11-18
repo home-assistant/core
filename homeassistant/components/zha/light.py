@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     LightEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -187,6 +187,9 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
             color_temp=color_temp,
             xy_color=kwargs.get(ATTR_XY_COLOR),
         )
+        self._set_group_context_expected_state(
+            STATE_OFF if kwargs.get(ATTR_BRIGHTNESS) == 0 else STATE_ON
+        )
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
@@ -196,6 +199,7 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
         await self.entity_data.entity.async_turn_off(
             transition=kwargs.get(ATTR_TRANSITION)
         )
+        self._set_group_context_expected_state(STATE_OFF)
         self.async_write_ha_state()
 
     @callback
