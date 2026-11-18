@@ -223,9 +223,18 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             previous_state,
             self._context_expected_state,
         ):
+            # Withhold group context from a mismatched transition without discarding
+            # a still-pending newer command before its matching report arrives.
+            pending_context = self._context
+            pending_context_set = self._context_set
             self._context = None
             self._context_set = None
-            self._context_expected_state = None
+            try:
+                self.async_write_ha_state()
+            finally:
+                self._context = pending_context
+                self._context_set = pending_context_set
+            return
         self.async_write_ha_state()
 
     @override
