@@ -111,8 +111,8 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         # every second, so the counter of a register whose power reads negative
         # runs negative; negating it leaves an increasing, non-negative total,
         # which is what `TOTAL_INCREASING` requires. A register whose counter is
-        # already positive would drop below zero and the recorder rejects it,
-        # so inversion is only offered for registers that need it.
+        # already positive is not the case this option serves: negating it
+        # drops the value below zero, where the recorder discards the sample.
         self._invertible = description.device_class in (
             SensorDeviceClass.POWER,
             SensorDeviceClass.ENERGY,
