@@ -937,10 +937,18 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     @callback
     def _revalidate_temperature(self) -> None:
         """Revalidate the rendered temperature after the range changed."""
-        if self._rendered_temperature is not UNDEFINED:
-            self._attr_color_temp_kelvin = self._temperature_validator(
-                self._rendered_temperature
-            )
+        if self._rendered_temperature is UNDEFINED:
+            return
+
+        self._attr_color_temp_kelvin = self._temperature_validator(
+            self._rendered_temperature
+        )
+        # Another color mode stays active, only an unset mode switches over
+        if self._attr_color_temp_kelvin is not None and self._attr_color_mode in (
+            None,
+            ColorMode.UNKNOWN,
+        ):
+            self._attr_color_mode = ColorMode.COLOR_TEMP
 
     @callback
     def _validate_temperature(self, result: Any) -> int | None:

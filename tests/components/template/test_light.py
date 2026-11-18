@@ -1972,6 +1972,52 @@ async def test_temperature_revalidated_when_range_changes(
     assert state.attributes["color_temp_kelvin"] is None
 
 
+@pytest.mark.parametrize(
+    ("hs_template", "first_mode", "expected_mode", "expected_temp"),
+    [
+        pytest.param(
+            "{{ none }}", ColorMode.UNKNOWN, ColorMode.COLOR_TEMP, 2500, id="unknown"
+        ),
+        pytest.param(
+            "{{ (360, 100) }}", ColorMode.HS, ColorMode.HS, None, id="keep_hs"
+        ),
+    ],
+)
+async def test_temperature_revalidated_color_mode(
+    hass: HomeAssistant,
+    hs_template: str,
+    first_mode: ColorMode,
+    expected_mode: ColorMode,
+    expected_temp: int | None,
+) -> None:
+    """Test the color mode when the range widens on a multi color mode light."""
+    hass.states.async_set("sensor.bound", "3000")
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        ConfigurationStyle.MODERN,
+        1,
+        {
+            "temperature_kelvin": "{{ 2500 }}",
+            "min_kelvin": "{{ states('sensor.bound') | int }}",
+            "hs": hs_template,
+            **HS_ACTION,
+        },
+        "{{ 1==1 }}",
+        ON_OFF_COLOR_TEMP_ACTIONS,
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == first_mode
+    assert state.attributes.get("color_temp_kelvin") is None
+
+    hass.states.async_set("sensor.bound", "2000")
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == expected_mode
+    assert state.attributes.get("color_temp_kelvin") == expected_temp
+
+
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
 @pytest.mark.parametrize(
     ("style", "attribute"),
