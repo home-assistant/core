@@ -136,6 +136,9 @@ async def test_entry_lifecycle(
     coordinator = first.runtime_data
     assert coordinator.update_interval == timedelta(minutes=5)
 
+    # A second listener must not count this route twice.
+    remove_listener = coordinator.async_add_listener(lambda: None)
+
     # Adding routes updates the already-running coordinator as well as new ones.
     for entry in others:
         entry.add_to_hass(hass)
@@ -145,6 +148,10 @@ async def test_entry_lifecycle(
         entry.runtime_data.update_interval == timedelta(minutes=6)
         for entry in route_entries[:4]
     )
+
+    # Removing the extra listener must leave the route participating in polling.
+    remove_listener()
+    assert coordinator.update_interval == timedelta(minutes=6)
 
     # Unloading the fourth route restores the interval for three active routes.
     last = others[-1]
