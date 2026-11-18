@@ -624,6 +624,159 @@
     }),
   ])
 # ---
+# name: test_forecast_service[twice_daily-forecast_nl.json]
+  list([
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2023-12-28',
+      'is_daytime': True,
+      'precipitation': 0.1,
+      'precipitation_probability': None,
+      'sunrise': '2023-12-28T08:47:43+01:00',
+      'sunset': '2023-12-28T16:34:06+01:00',
+      'temperature': 11.0,
+      'text': '''
+        Waarschuwingen 
+        Vanavond zijn er in het noordwesten zware windstoten mogelijk van 75-90 km/uur (code geel).
+        
+        Vanochtend is het half bewolkt met in het noorden kans op een bui. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan de kust krachtig tot hard, windkracht 6-7, af en toe even stormachtig, windkracht 8. Aan de kust komen windstoten voor van ongeveer 80 km/uur.
+        Vanmiddag is het half tot zwaar bewolkt met kans op een bui, vooral in het noorden en westen. De middagtemperatuur ligt rond 11°C. De wind komt uit het zuidwesten en is meestal vrij krachtig, aan de kust krachtig tot hard, windkracht 6-7, vooral later ook af en toe stormachtig, windkracht 8. Aan de kust zijn er windstoten tot ongeveer 80 km/uur.
+        Vanavond zijn er buien, alleen in het zuidoosten is het overwegend droog. De wind komt uit het zuidwesten en is meestal vrij krachtig, aan de kust hard tot stormachtig, windkracht 7 tot 8. Vooral in het noordwesten zijn windstoten mogelijk van 75-90 km/uur.
+        
+        Komende nacht komen er enkele buien voor. Met een minimumtemperatuur van ongeveer 8°C is het zacht. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan zee krachtig tot hard, windkracht 6-7, met zware windstoten tot ongeveer 80 km/uur.
+        
+        Morgenochtend is het half tot zwaar bewolkt en zijn er enkele buien. De wind komt uit het zuidwesten en is matig tot vrij krachtig, aan zee krachtig hard, windkracht 6-7, met vooral in het noordwesten mogelijk zware windstoten tot ongeveer 80 km/uur.
+        Morgenmiddag is er af en toe ruimte voor de zon en blijft het op de meeste plaatsen droog, alleen in het zuidoosten kan een enkele bui vallen. Met middagtemperaturen van ongeveer 10°C blijft het zacht. De wind uit het zuidwesten is matig tot vrij krachtig, aan zee krachtig tot hard, windkracht 6-7, met in het Waddengebied zware windstoten tot ongeveer 80 km/uur.
+        Morgenavond is het half tot zwaar bewolkt met een enkele bui. De wind komt uit het zuidwesten en is meest matig, aan de kust krachtig tot hard, windkracht 6-7, boven de Wadden eerst stormachtig, windkracht 8. 
+        (Bron: KNMI, 2023-12-28T06:56:00+01:00)
+  
+      ''',
+      'wind_bearing': 225.0,
+      'wind_gust_speed': 33.0,
+      'wind_speed': 32.0,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2023-12-29',
+      'is_daytime': False,
+      'precipitation': 3.0,
+      'precipitation_probability': None,
+      'sunrise': None,
+      'sunset': None,
+      'temperature': None,
+      'templow': 9.0,
+      'text': '',
+      'wind_bearing': 225.0,
+      'wind_gust_speed': 32.0,
+      'wind_speed': 31.0,
+    }),
+    dict({
+      'condition': 'partlycloudy',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2023-12-29',
+      'is_daytime': True,
+      'precipitation': 3.8,
+      'precipitation_probability': None,
+      'sunrise': '2023-12-29T08:47:48+01:00',
+      'sunset': '2023-12-29T16:35:00+01:00',
+      'temperature': 10.0,
+      'text': '',
+      'wind_bearing': 248.0,
+      'wind_gust_speed': 28.0,
+      'wind_speed': 26.0,
+    }),
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2023-12-30',
+      'is_daytime': True,
+      'precipitation': 1.7,
+      'precipitation_probability': None,
+      'sunrise': '2023-12-30T08:47:49+01:00',
+      'sunset': '2023-12-30T16:35:57+01:00',
+      'temperature': 10.0,
+      'templow': 5.0,
+      'text': '',
+      'wind_bearing': 225.0,
+      'wind_gust_speed': 25.0,
+      'wind_speed': 22.0,
+    }),
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2023-12-31',
+      'is_daytime': True,
+      'precipitation': 4.2,
+      'precipitation_probability': None,
+      'sunrise': '2023-12-31T08:47:47+01:00',
+      'sunset': '2023-12-31T16:36:56+01:00',
+      'temperature': 9.0,
+      'templow': 7.0,
+      'text': '',
+      'wind_bearing': 203.0,
+      'wind_gust_speed': 31.0,
+      'wind_speed': 30.0,
+    }),
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2024-01-01',
+      'is_daytime': True,
+      'precipitation': 2.2,
+      'precipitation_probability': None,
+      'sunrise': '2024-01-01T08:47:42+01:00',
+      'sunset': '2024-01-01T16:37:59+01:00',
+      'temperature': 7.0,
+      'templow': 5.0,
+      'text': '',
+      'wind_bearing': 225.0,
+      'wind_gust_speed': 28.0,
+      'wind_speed': 23.0,
+    }),
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2024-01-02',
+      'is_daytime': True,
+      'precipitation': 1.4,
+      'precipitation_probability': None,
+      'sunrise': '2024-01-02T08:47:32+01:00',
+      'sunset': '2024-01-02T16:39:04+01:00',
+      'temperature': 6.0,
+      'templow': 3.0,
+      'text': '',
+      'wind_bearing': 225.0,
+      'wind_gust_speed': 16.0,
+      'wind_speed': 15.0,
+    }),
+    dict({
+      'condition': 'pouring',
+      'condition_2': None,
+      'condition_evol': <ConditionEvol.STABLE: 'stable'>,
+      'datetime': '2024-01-03',
+      'is_daytime': True,
+      'precipitation': 1.0,
+      'precipitation_probability': None,
+      'sunrise': '2024-01-03T08:47:20+01:00',
+      'sunset': '2024-01-03T16:40:12+01:00',
+      'temperature': 6.0,
+      'templow': 3.0,
+      'text': '',
+      'wind_bearing': 203.0,
+      'wind_gust_speed': 14.0,
+      'wind_speed': 13.0,
+    }),
+  ])
+# ---
 # name: test_weather_nl[forecast_nl.json][weather.brussels-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

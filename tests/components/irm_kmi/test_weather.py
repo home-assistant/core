@@ -1,4 +1,4 @@
-"""Test for the weather entity of the IRM KMI integration."""
+"""Tests for the IRM KMI weather platform."""
 
 from collections.abc import Generator
 from typing import Any
@@ -63,7 +63,7 @@ async def test_weather_nl(
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
 @pytest.mark.parametrize(
     "forecast_type",
-    ["daily", "hourly"],
+    ["daily", "twice_daily", "hourly"],
 )
 @pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
 async def test_forecast_service(
