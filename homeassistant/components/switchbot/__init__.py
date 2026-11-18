@@ -128,6 +128,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K11_PLUS_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.HUB4.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
     SupportedModels.LOCK_LITE.value: [
         Platform.BINARY_SENSOR,
         Platform.LOCK,
@@ -178,6 +179,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.PLUG_MINI_IT.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
     SupportedModels.CLIMATE_PANEL.value: [
@@ -282,6 +284,7 @@ CLASS_BY_DEVICE = {
         switchbot.SwitchbotPermanentOutdoorLight
     ),
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.PLUG_MINI_IT.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: (

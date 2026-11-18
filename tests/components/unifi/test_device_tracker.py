@@ -1,5 +1,6 @@
 """The tests for the UniFi Network device tracker platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from types import MappingProxyType
 from typing import Any
@@ -16,6 +17,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -31,6 +33,7 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DOMAIN,
 )
+from homeassistant.components.unifi.coordinator import WEBSOCKET_FALLBACK_INTERVAL
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -283,8 +286,9 @@ async def test_client_state_update(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1]])
-@pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "disable_polling", "entity_registry_enabled_by_default", "config_entry_setup"
+)
 async def test_client_state_from_event_source(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -356,8 +360,77 @@ async def test_client_state_from_event_source(
     assert hass.states.get("device_tracker.ws_client_1").state == STATE_NOT_HOME
 
 
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1.copy()]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_event_after_omitted_fallback(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    client_payload: list[dict[str, Any]],
+    mock_requests: Callable[[str, str], None],
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """An omitted client can still become home from a connection event."""
+    client_payload.clear()
+    aioclient_mock.clear_requests()
+    mock_requests()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_websocket_message(
+        message=MessageKey.EVENT,
+        data={
+            "user": WIRELESS_CLIENT_1["mac"],
+            "key": EventKey.WIRELESS_CLIENT_CONNECTED,
+            "subsystem": "wlan",
+            "site_id": "name",
+            "time": 1587752927000,
+            "datetime": "2020-04-24T18:28:47Z",
+            "_id": "5ea32ff730c49e00f90dca1a",
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.ws_client_1").state == STATE_HOME
+
+
 @pytest.mark.parametrize("device_payload", [[SWITCH_1]])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_heartbeat_after_omitted_fallback(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    device_payload: list[dict[str, Any]],
+    mock_requests: Callable[[str, str], None],
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """An omitted device does not renew its heartbeat on a fallback poll."""
+    await config_entry_factory()
+    assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
+
+    device_payload.clear()
+    aioclient_mock.clear_requests()
+    mock_requests()
+    for _ in range(3):
+        freezer.tick(WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("device_tracker.switch_1").state == STATE_NOT_HOME
+    freezer.tick(WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("device_tracker.switch_1").state == STATE_NOT_HOME
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=SWITCH_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.switch_1").state == STATE_HOME
+
+
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.usefixtures("disable_polling", "entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("state", "interval", "expected"),
     [

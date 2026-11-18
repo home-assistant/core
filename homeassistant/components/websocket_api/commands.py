@@ -85,8 +85,10 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.setup import (
+    BootstrapProgress,
     async_get_loaded_integrations,
     async_get_setup_timings,
+    async_subscribe_bootstrap_progress,
     async_wait_component,
 )
 from homeassistant.util import slugify
@@ -133,6 +135,7 @@ def async_register_commands(
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_slugify)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_bootstrap_progress)
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
@@ -247,6 +250,29 @@ def handle_subscribe_bootstrap_integrations(
     )
 
     connection.send_result(msg["id"])
+
+
+@callback
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "subscribe_bootstrap_progress",
+    }
+)
+def handle_subscribe_bootstrap_progress(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe bootstrap progress command."""
+
+    @callback
+    def forward_bootstrap_progress(message: BootstrapProgress) -> None:
+        """Forward bootstrap progress to websocket."""
+        connection.send_message(messages.event_message(msg["id"], message))
+
+    # Subscribing sends the current progress, which must follow the result.
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = async_subscribe_bootstrap_progress(
+        hass, forward_bootstrap_progress
+    )
 
 
 @callback

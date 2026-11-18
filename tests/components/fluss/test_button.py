@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fluss.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -46,7 +46,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: "button.device_1"},
+        {TargetKey.ENTITY_ID: "button.device_1"},
         blocking=True,
     )
 
@@ -132,6 +132,6 @@ async def test_button_press_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.device_1"},
+            {TargetKey.ENTITY_ID: "button.device_1"},
             blocking=True,
         )

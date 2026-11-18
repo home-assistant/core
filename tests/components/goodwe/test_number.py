@@ -29,9 +29,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PORT,
-    CommonServiceArgument,
     EntityCategory,
     Platform,
+    TargetKey,
     UnitOfElectricCurrent,
 )
 from homeassistant.core import HomeAssistant
@@ -187,7 +187,7 @@ async def test_set_battery_charge_current_limit(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+            TargetKey.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
             NumberServiceArgument.VALUE: requested_value,
         },
         blocking=True,
@@ -215,7 +215,7 @@ async def test_set_battery_charge_current_limit_out_of_range(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+                TargetKey.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
                 NumberServiceArgument.VALUE: requested_value,
             },
             blocking=True,
@@ -240,7 +240,7 @@ async def test_set_battery_charge_current_limit_write_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
+                TargetKey.ENTITY_ID: BATTERY_CHARGE_CURRENT_ENTITY_ID,
                 NumberServiceArgument.VALUE: 20.3,
             },
             blocking=True,

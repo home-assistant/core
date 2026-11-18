@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CONF_URL, CommonServiceArgument
+from homeassistant.const import CONF_URL, TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import magic_client
@@ -37,7 +37,7 @@ async def test_set_net_mode(hass: HomeAssistant) -> None:
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_NETWORK_MODE,
+            TargetKey.ENTITY_ID: SELECT_NETWORK_MODE,
             SelectServiceArgument.OPTION: NetworkModeEnum.MODE_4G_3G_AUTO.value,
         },
         blocking=True,

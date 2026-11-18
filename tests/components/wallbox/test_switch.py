@@ -6,7 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SwitchService
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -29,7 +29,7 @@ async def test_wallbox_switch_class(
         "switch",
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+            TargetKey.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
         },
         blocking=True,
     )
@@ -38,7 +38,7 @@ async def test_wallbox_switch_class(
         "switch",
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+            TargetKey.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
         },
         blocking=True,
     )
@@ -60,7 +60,7 @@ async def test_wallbox_switch_class_error_handling(
             "switch",
             SwitchService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )
@@ -74,7 +74,7 @@ async def test_wallbox_switch_class_error_handling(
             "switch",
             SwitchService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
+                TargetKey.ENTITY_ID: MOCK_SWITCH_ENTITY_ID,
             },
             blocking=True,
         )

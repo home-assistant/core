@@ -22,7 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.components.schlage.services import SchlageService
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -85,7 +85,7 @@ async def test_lock_services(
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.LOCK,
-        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
+        service_data={TargetKey.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -94,7 +94,7 @@ async def test_lock_services(
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.UNLOCK,
-        service_data={CommonServiceArgument.ENTITY_ID: "lock.vault_door"},
+        service_data={TargetKey.ENTITY_ID: "lock.vault_door"},
         blocking=True,
     )
     await hass.async_block_till_done()

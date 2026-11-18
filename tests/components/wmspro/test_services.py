@@ -14,7 +14,7 @@ from homeassistant.components.wmspro.const import (
     WebControlProService,
     WebControlProServiceArgument,
 )
-from homeassistant.const import STATE_OPEN, CommonServiceArgument
+from homeassistant.const import STATE_OPEN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -88,7 +88,7 @@ async def test_set_cover_position_and_tilt_service_executes(
             DOMAIN,
             WebControlProService.SET_COVER_POSITION_AND_TILT,
             {
-                CommonServiceArgument.ENTITY_ID: entity.entity_id,
+                TargetKey.ENTITY_ID: entity.entity_id,
                 WebControlProServiceArgument.POSITION: 30,
                 WebControlProServiceArgument.TILT_POSITION: 80,
             },
@@ -137,7 +137,7 @@ async def test_set_cover_position_and_tilt_unsupported_entity_raises(
             DOMAIN,
             WebControlProService.SET_COVER_POSITION_AND_TILT,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 WebControlProServiceArgument.POSITION: 30,
                 WebControlProServiceArgument.TILT_POSITION: 80,
             },

@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.vesync.const import DOMAIN
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -69,7 +69,7 @@ async def test_reset_filter(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_RESET_FILTER},
+            {TargetKey.ENTITY_ID: ENTITY_RESET_FILTER},
             blocking=True,
         )
 
@@ -113,7 +113,7 @@ async def test_reset_filter_raises_error(
             await hass.services.async_call(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
-                {CommonServiceArgument.ENTITY_ID: ENTITY_RESET_FILTER},
+                {TargetKey.ENTITY_ID: ENTITY_RESET_FILTER},
                 blocking=True,
             )
 
@@ -177,7 +177,7 @@ async def test_fryer_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -208,11 +208,7 @@ async def test_fryer_button_press_fails(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {
-                CommonServiceArgument.ENTITY_ID: (
-                    "button.cs158_af_air_fryer_cooking_stop_cooking"
-                )
-            },
+            {TargetKey.ENTITY_ID: ("button.cs158_af_air_fryer_cooking_stop_cooking")},
             blocking=True,
         )
 
@@ -322,7 +318,7 @@ async def test_dual_fryer_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
