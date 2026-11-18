@@ -32,7 +32,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
 )
-from .entity import add_entities_from_builder
+from .entity import add_entities_from_builder, format_device_identifier
 
 DALI_LINE_STATUS_SENSOR_MAPPING: dict[str, str] = {
     LineStatus.LOW_POWER: "low_power",
@@ -314,7 +314,7 @@ class LunatoneDALILineStatusSensor(
             identifiers={
                 (
                     DOMAIN,
-                    self.construct_device_unique_id(config_entry_unique_id, line_id),
+                    format_device_identifier(config_entry_unique_id, line_id),
                 )
             },
             translation_key="dali_line",
@@ -323,18 +323,11 @@ class LunatoneDALILineStatusSensor(
         self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line_id)
 
     @staticmethod
-    def construct_device_unique_id(
-        config_entry_unique_id: str, line_id: int | None = None
-    ) -> str:
-        """Returns the unique_id of the parent device."""
-        return f"{config_entry_unique_id}-line{line_id}"
-
-    @staticmethod
     def construct_unique_id(
         config_entry_unique_id: str, line_id: int | None = None
     ) -> str:
         """Returns the unique_id for a device ID."""
-        return f"{config_entry_unique_id}-line{line_id}-status"
+        return f"{format_device_identifier(config_entry_unique_id, line_id)}-status"
 
     @property
     @override

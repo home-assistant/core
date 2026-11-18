@@ -23,7 +23,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
 )
-from .entity import add_entities_from_builder
+from .entity import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -178,9 +178,7 @@ class DALIScanButtonEntity(
             identifiers={
                 (
                     DOMAIN,
-                    DALIScanButtonEntity.construct_device_unique_id(
-                        config_entry_unique_id, line_id
-                    ),
+                    format_device_identifier(config_entry_unique_id, line_id),
                 )
             }
         )
@@ -189,23 +187,11 @@ class DALIScanButtonEntity(
         )
 
     @staticmethod
-    def construct_device_unique_id(
-        config_entry_unique_id: str, line_id: int | None = None
-    ) -> str:
-        """Returns the unique_id of the linked device."""
-        suffix = f"-line{line_id}" if line_id is not None else ""
-        return f"{config_entry_unique_id}{suffix}"
-
-    @staticmethod
     def construct_unique_id(
         config_entry_unique_id: str, suffix: str, line_id: int | None = None
     ) -> str:
         """Returns the unique_id for a device ID."""
-        return f"{
-            DALIScanButtonEntity.construct_device_unique_id(
-                config_entry_unique_id, line_id
-            )
-        }-{suffix}"
+        return f"{format_device_identifier(config_entry_unique_id, line_id)}-{suffix}"
 
     @override
     async def async_added_to_hass(self) -> None:
