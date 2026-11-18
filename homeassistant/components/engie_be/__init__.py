@@ -18,6 +18,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
+    EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
     mask_identifier,
@@ -31,6 +32,7 @@ class EngieBeHouseholdCoordinators:
     """Per-household coordinators and tariff state."""
 
     prices: EngieBePricesCoordinator
+    peaks: EngieBePeaksCoordinator
     is_dynamic: bool | None
 
 
@@ -106,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
             prices=EngieBePricesCoordinator(
                 hass, entry, client, ban, relations.data[ban]
             ),
+            peaks=EngieBePeaksCoordinator(hass, entry, client, ban),
             is_dynamic=is_dynamic,
         )
         device_registry.async_get_or_create_from_info(
@@ -126,7 +129,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> N
         epex = EngieBeEpexCoordinator(hass, entry, client)
 
     await asyncio.gather(
-        *(household.prices.async_refresh() for household in households.values())
+        *(
+            refresh
+            for household in households.values()
+            for refresh in (
+                household.prices.async_refresh(),
+                household.peaks.async_refresh(),
+            )
+        )
     )
     if epex is not None:
         try:

@@ -53,11 +53,7 @@ rules:
   devices: done
   diagnostics: done
   discovery: done
-  discovery-update-info:
-    status: todo
-    comment: |
-      The SSDP step uses the UPnP UDN as unique ID while entries use the CID or MAC,
-      so the host is never updated when the IP address changes.
+  discovery-update-info: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -78,7 +74,7 @@ rules:
   icon-translations:
     status: exempt
     comment: The integration does not provide any custom icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: The integration does not have anything to repair.

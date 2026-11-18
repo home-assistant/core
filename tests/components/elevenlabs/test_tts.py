@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Self
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from elevenlabs.core import ApiError
 from elevenlabs.types import VoiceSettings
@@ -20,10 +20,12 @@ from homeassistant.components.elevenlabs.const import (
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
+    CONF_VOICE,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
     DEFAULT_USE_SPEAKER_BOOST,
+    DOMAIN,
 )
 from homeassistant.components.elevenlabs.tts import ElevenLabsTextToSpeechOption
 from homeassistant.components.media_player import (
@@ -681,3 +683,62 @@ async def test_stream_tts_without_previous_info(
 
     # We expect two stream() invocations (one per sentence batch)
     assert len(calls) == len(message)
+
+
+@pytest.mark.parametrize(
+    "config_options_update",
+    [
+        {CONF_SIMILARITY: DEFAULT_SIMILARITY / 2},
+        {CONF_VOICE: "voice2"},
+    ],
+)
+@pytest.mark.parametrize("setup", ["mock_config_entry_setup"], indirect=True)
+async def test_tts_cache_invalidated_on_options_change(
+    setup: AsyncMock,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    capture_stream_calls,
+    calls: list[ServiceCall],
+    config_options_update: dict[str, Any],
+) -> None:
+    """Test changing the integration options does not serve stale cached audio."""
+    stream_calls, _, patch_stream = capture_stream_calls
+    entity_id = "tts.elevenlabs_text_to_speech"
+    service_data = {
+        ATTR_ENTITY_ID: entity_id,
+        tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+        tts.ATTR_MESSAGE: "There is a person at the front door.",
+    }
+
+    async def speak() -> None:
+        patch_stream(hass.data[tts.DOMAIN].get_entity(entity_id))
+        await hass.services.async_call(tts.DOMAIN, "speak", service_data, blocking=True)
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[-1].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.OK
+        )
+
+    await speak()
+    await speak()
+    # Same message and options: the second call is served from the cache
+    assert len(stream_calls) == 1
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    client_mock = config_entry.runtime_data.client
+    with patch(
+        "homeassistant.components.elevenlabs.AsyncElevenLabs",
+        return_value=client_mock,
+    ):
+        hass.config_entries.async_update_entry(
+            config_entry, options=config_entry.options | config_options_update
+        )
+        await hass.async_block_till_done()
+
+    await speak()
+    # The changed options must produce new audio instead of the cached one
+    assert len(stream_calls) == 2
+    tts_entity = hass.data[tts.DOMAIN].get_entity(entity_id)
+    assert stream_calls[1]["voice_id"] == tts_entity._default_voice_id
+    assert stream_calls[1]["voice_settings"] == tts_entity._voice_settings

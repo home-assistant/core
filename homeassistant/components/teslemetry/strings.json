@@ -1363,9 +1363,6 @@
     "no_energy_site_data_for_device": {
       "message": "No energy site data for device ID: {device_id}"
     },
-    "no_local_powerwall": {
-      "message": "{name} is not connected to its Powerwall for local control, add it as a local energy site or restore its local connection"
-    },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
     },
@@ -1437,7 +1434,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "description": "Home Assistant cannot receive data from or send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, the vehicle's data will not update and commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
             "title": "[%key:component::teslemetry::issues::key::title%]"
           }
         }
@@ -1562,7 +1559,7 @@
       "name": "Add precondition schedule"
     },
     "dispatch_battery_power": {
-      "description": "Charges or discharges the Powerwall at a set power for a set time over the local gateway connection.",
+      "description": "Charges or discharges the Powerwall at a set power for a set time.",
       "fields": {
         "device_id": {
           "description": "Energy site paired with its local Powerwall gateway.",

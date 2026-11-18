@@ -2,7 +2,7 @@
   "domain": "powersensor_au",
   "name": "Powersensor",
   "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
-  "codeowners": ["@bookman-dius", "@jmattsson"],
+  "codeowners": ["@jasaw", "@alex-romanenko"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/powersensor_au",

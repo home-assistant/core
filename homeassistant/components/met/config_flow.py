@@ -6,7 +6,6 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -35,6 +34,7 @@ from .const import (
     DOMAIN,
     HOME_LOCATION_NAME,
 )
+from .coordinator import MetWeatherConfigEntry
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -68,7 +68,7 @@ def _fixed_location_title(data: Mapping[str, Any]) -> str:
     return f"{DEFAULT_NAME} ({data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]})"
 
 
-def _has_generated_title(config_entry: ConfigEntry) -> bool:
+def _has_generated_title(config_entry: MetWeatherConfigEntry) -> bool:
     """Return if the entry title still matches an integration-generated title."""
     if config_entry.data.get(CONF_TRACK_HOME, False):
         return config_entry.title == HOME_LOCATION_NAME
@@ -136,7 +136,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MetWeatherConfigEntry,
     ) -> MetOptionsFlowHandler:
         """Get the options flow for Met."""
         return MetOptionsFlowHandler()

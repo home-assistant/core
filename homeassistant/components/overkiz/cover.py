@@ -37,7 +37,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.start import async_at_started
 
 from . import OverkizDataConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, OverkizServiceArgument
 from .coordinator import OverkizDataUpdateCoordinator, OverkizDeviceCommand
 from .entity import OverkizDescriptiveEntity
 
@@ -677,6 +677,7 @@ def _async_check_deprecated_low_speed_cover(
         DOMAIN,
         issue_id,
         breaks_in_ha_version="2027.5.0",
+        config_entry_id=entity_entry.config_entry_id,
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=(
@@ -938,8 +939,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 translation_key="unsupported_set_position_and_tilt",
             )
 
-        position = kwargs[ATTR_POSITION]
-        tilt_position = kwargs[ATTR_TILT_POSITION]
+        position = kwargs[OverkizServiceArgument.POSITION]
+        tilt_position = kwargs[OverkizServiceArgument.TILT_POSITION]
 
         if self.entity_description.invert_position:
             position = 100 - position

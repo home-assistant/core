@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
-from . import TeslemetryConfigEntry
 from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
@@ -31,7 +30,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import async_remove_stale_vehicle_entities
-from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryConfigEntry, TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 

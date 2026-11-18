@@ -920,7 +920,6 @@ async def test_refresh_ratelimited_logs_once(
 ) -> None:
     """Test a rate limit logs once until a refresh succeeds, then logs recovery."""
 
-    caplog.set_level(logging.DEBUG)
     await setup_platform(hass, normal_config_entry)
 
     mock_site_info.side_effect = RateLimited({})
@@ -962,7 +961,6 @@ async def test_refresh_ratelimited_invalid_response_no_recovery(
 ) -> None:
     """Test an invalid response after a rate limit does not log recovery."""
 
-    caplog.set_level(logging.DEBUG)
     await setup_platform(hass, normal_config_entry)
 
     mock_live_status.side_effect = RateLimited({})
