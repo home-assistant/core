@@ -11,7 +11,7 @@ from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +57,7 @@ async def test_switch_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
+        {TargetKey.ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
 
@@ -75,7 +75,7 @@ async def test_switch_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.kitchen_switch"},
+        {TargetKey.ENTITY_ID: "switch.kitchen_switch"},
         blocking=True,
     )
 
@@ -93,7 +93,7 @@ async def test_switch_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
+        {TargetKey.ENTITY_ID: "switch.living_room_switch"},
         blocking=True,
     )
 
@@ -129,7 +129,7 @@ async def test_exception_handling(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
+            {TargetKey.ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )
 
@@ -151,7 +151,7 @@ async def test_switch_auth_error_with_retry(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.living_room_switch"},
+            {TargetKey.ENTITY_ID: "switch.living_room_switch"},
             blocking=True,
         )
 

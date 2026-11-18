@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -50,7 +50,7 @@ async def test_press(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_RESTART},
+        {TargetKey.ENTITY_ID: ENTITY_RESTART},
         blocking=True,
     )
 

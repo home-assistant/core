@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from itertools import product
 from typing import TYPE_CHECKING, Any, override
 
 from aioengiebelgium import EpexGranularity, EpexSlot, Peak, bare_ean
@@ -14,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,6 +41,7 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _UNIT = "EUR/kWh"
+_UNIT_PER_CUBIC_METER = f"EUR/{UnitOfVolume.CUBIC_METERS}"
 _SLOT_CODE_SUFFIXES = {
     "TOTAL_HOURS": "",
     "PEAK": "_peak",
@@ -89,7 +91,15 @@ async def async_setup_entry(
             for ean, direction, slot_code in prices_data.slots:
                 type_key = _energy_type_key(ean, household.prices.ean_energy_types)
                 ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
-                for excl_vat in (False, True):
+                per_cubic_meter_options = [False]
+                if (
+                    type_key == "gas"
+                    and bare_ean(ean) in prices_data.gas_conversion_coefficients
+                ):
+                    per_cubic_meter_options.append(True)
+                for per_cubic_meter, excl_vat in product(
+                    per_cubic_meter_options, (False, True)
+                ):
                     entity = EngieBePriceSensor(
                         household.prices,
                         business_agreement_number=ban,
@@ -97,6 +107,7 @@ async def async_setup_entry(
                         direction=direction,
                         slot_code=slot_code,
                         excl_vat=excl_vat,
+                        per_cubic_meter=per_cubic_meter,
                         type_key=type_key,
                         ean_suffix=ean_suffix,
                     )
@@ -173,6 +184,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         direction: str,
         slot_code: str,
         excl_vat: bool,
+        per_cubic_meter: bool,
         type_key: str,
         ean_suffix: str,
     ) -> None:
@@ -183,13 +195,19 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._direction = direction
         self._slot_code = slot_code
         self._excl_vat = excl_vat
+        self._per_cubic_meter = per_cubic_meter
 
         unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
+        if per_cubic_meter:
+            unique_id = f"{unique_id}_per_m3"
+            self._attr_native_unit_of_measurement = _UNIT_PER_CUBIC_METER
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
         normalized_slot_code = normalize_slot_code(slot_code)
         suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
         translation_key = f"{type_key}_price_{direction}{suffix}"
+        if per_cubic_meter:
+            translation_key = f"{translation_key}_per_m3"
         if excl_vat:
             translation_key = f"{translation_key}_excl_vat"
         if ean_suffix:
@@ -208,18 +226,26 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
     @override
     def available(self) -> bool:
         """Return True only when this entity's slot is present in the current data."""
+        data = self.coordinator.data
         return (
             super().available
-            and (self._ean, self._direction, self._slot_code)
-            in self.coordinator.data.slots
+            and (self._ean, self._direction, self._slot_code) in data.slots
+            and (
+                not self._per_cubic_meter
+                or bare_ean(self._ean) in data.gas_conversion_coefficients
+            )
         )
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the current price."""
-        slot = self.coordinator.data.slots[self._ean, self._direction, self._slot_code]
-        return slot.price_value_excl_vat if self._excl_vat else slot.price_value
+        data = self.coordinator.data
+        slot = data.slots[self._ean, self._direction, self._slot_code]
+        price = slot.price_value_excl_vat if self._excl_vat else slot.price_value
+        if self._per_cubic_meter:
+            return price * data.gas_conversion_coefficients[bare_ean(self._ean)]
+        return price
 
 
 _EPEX_PRECISION = 4

@@ -4,7 +4,7 @@ from pytest_homeassistant.common import async_fire_mqtt_message
 from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 
 _PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
@@ -34,7 +34,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _SWITCH_ENTITY_ID},
         blocking=True,
     )
 
@@ -57,7 +57,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: _SWITCH_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _SWITCH_ENTITY_ID},
         blocking=True,
     )
 
