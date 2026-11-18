@@ -798,7 +798,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.air_purifier_sprout_volatile_organic_compounds',
+      'entity_id': 'sensor.air_purifier_sprout',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -806,12 +806,12 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'Volatile organic compounds',
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Volatile organic compounds',
+      'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -856,6 +856,20 @@
       'unit_of_measurement': None,
     }),
   ])
+# ---
+# name: test_sensor_state[Air Purifier Sprout][sensor.air_purifier_sprout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_sprout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
 # ---
 # name: test_sensor_state[Air Purifier Sprout][sensor.air_purifier_sprout_air_quality]
   StateSnapshot({
@@ -932,20 +946,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
-  })
-# ---
-# name: test_sensor_state[Air Purifier Sprout][sensor.air_purifier_sprout_volatile_organic_compounds]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier Sprout Volatile organic compounds',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_sprout_volatile_organic_compounds',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '120',
   })
 # ---
 # name: test_sensor_state[Air Purifier Vital 200S][devices]
@@ -2847,7 +2847,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'sensor.humidifier_sprout_hepa_filter_lifetime',
+      'entity_id': 'sensor.humidifier_sprout',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -2855,12 +2855,12 @@
       'labels': set({
       }),
       'name': None,
-      'object_id_base': 'HEPA filter lifetime',
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'HEPA filter lifetime',
+      'original_name': None,
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
@@ -2985,6 +2985,21 @@
     }),
   ])
 # ---
+# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_sprout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '85',
+  })
+# ---
 # name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_filter_lifetime]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2998,21 +3013,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
-  })
-# ---
-# name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_hepa_filter_lifetime]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier Sprout HEPA filter lifetime',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.humidifier_sprout_hepa_filter_lifetime',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '85',
   })
 # ---
 # name: test_sensor_state[Humidifier Sprout][sensor.humidifier_sprout_humidity]
