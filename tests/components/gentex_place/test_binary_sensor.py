@@ -153,12 +153,7 @@ async def test_binary_sensor_skip_absent_alarms(
         mock_provider_instance.enable = AsyncMock()
         mock_provider_instance.discover = AsyncMock(return_value=[garage_device])
 
-        with patch(
-            "homeassistant.components.gentex_place.MqttClient", autospec=True
-        ) as mock_mqtt_cls:
-            mock_mqtt_instance = mock_mqtt_cls.return_value
-            mock_mqtt_instance._client = MagicMock()
-
+        with patch("homeassistant.components.gentex_place.MqttClient", autospec=True):
             await setup_integration(hass, mock_config_entry)
 
     # Smoke alarm should not be created for garage unit
@@ -199,12 +194,7 @@ async def test_binary_sensor_skip_unknown_alarms(
         mock_provider_instance.enable = AsyncMock()
         mock_provider_instance.discover = AsyncMock(return_value=[unknown_device])
 
-        with patch(
-            "homeassistant.components.gentex_place.MqttClient", autospec=True
-        ) as mock_mqtt_cls:
-            mock_mqtt_instance = mock_mqtt_cls.return_value
-            mock_mqtt_instance._client = MagicMock()
-
+        with patch("homeassistant.components.gentex_place.MqttClient", autospec=True):
             await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.hallway_smoke") is None
@@ -248,7 +238,6 @@ async def test_binary_sensor_late_shadow_adds_entity(
             "homeassistant.components.gentex_place.MqttClient", autospec=True
         ) as mock_mqtt_cls:
             mock_mqtt_instance = mock_mqtt_cls.return_value
-            mock_mqtt_instance._client = MagicMock()
 
             await setup_integration(hass, mock_config_entry)
 
