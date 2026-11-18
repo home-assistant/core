@@ -171,7 +171,7 @@ async def test_get_preferences_not_configured(api: llm.APIInstance) -> None:
     """Test getting the preferences before energy is configured."""
     result = await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))
 
-    assert result == llm.ToolResult(data={"result": EMPTY_PREFERENCES})
+    assert result == llm.ToolResult(data=EMPTY_PREFERENCES)
 
 
 async def test_get_preferences(hass: HomeAssistant, api: llm.APIInstance) -> None:
@@ -191,12 +191,10 @@ async def test_get_preferences(hass: HomeAssistant, api: llm.APIInstance) -> Non
 
     assert result == llm.ToolResult(
         data={
-            "result": {
-                **EMPTY_PREFERENCES,
-                "grid_sources": [GRID_SOURCE],
-                "solar_sources": [SOLAR_SOURCE],
-                "device_consumption": [{"stat_consumption": "sensor.fridge"}],
-            }
+            **EMPTY_PREFERENCES,
+            "grid_sources": [GRID_SOURCE],
+            "solar_sources": [SOLAR_SOURCE],
+            "device_consumption": [{"stat_consumption": "sensor.fridge"}],
         }
     )
 
@@ -224,7 +222,7 @@ async def test_update_preferences(hass: HomeAssistant, api: llm.APIInstance) -> 
     )
 
     assert not result.error
-    assert result.data["result"] == {
+    assert result.data["preferences"] == {
         **EMPTY_PREFERENCES,
         "grid_sources": [GRID_SOURCE],
         "solar_sources": [{"stat_energy_from": "sensor.solar"}],
@@ -295,9 +293,7 @@ async def test_update_preferences_round_trip(
     stored = manager.data
 
     preferences = (await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))).data
-    result = await api.async_call_tool(
-        llm.ToolInput(UPDATE_TOOL, preferences["result"])
-    )
+    result = await api.async_call_tool(llm.ToolInput(UPDATE_TOOL, preferences))
 
     assert not result.error
     assert manager.data == stored

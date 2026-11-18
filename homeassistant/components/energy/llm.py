@@ -229,7 +229,7 @@ class GetPreferencesTool(Tool):
         """Return the energy preferences."""
         manager = await async_get_manager(hass)
         preferences = manager.data or EnergyManager.default_preferences()
-        return ToolResult(data={"result": _format_preferences(preferences)})
+        return ToolResult(data=_format_preferences(preferences))
 
 
 class UpdatePreferencesTool(Tool):
@@ -284,7 +284,7 @@ class UpdatePreferencesTool(Tool):
         energy_validation = cast(list[Any], validation.pop("energy_sources"))
         return ToolResult(
             data={
-                "result": _format_preferences(preferences),
+                "preferences": _format_preferences(preferences),
                 "validation": {
                     **_split_by_type(preferences, energy_validation),
                     **validation,
