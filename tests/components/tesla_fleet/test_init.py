@@ -820,6 +820,19 @@ async def test_setup_skips_not_allowed_vehicle(
     assert "Skipping Tesla vehicle LRWXF7EK4KC700000" in caplog.text
 
 
+async def test_setup_retries_on_vehicle_first_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_state: AsyncMock,
+) -> None:
+    """Test setup retries when the first vehicle refresh fails with another error."""
+    mock_vehicle_state.side_effect = TeslaFleetError()
+
+    await setup_platform(hass, normal_config_entry)
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_energy_refresh_token_expired_recovery(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
