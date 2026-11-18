@@ -136,7 +136,8 @@ async def test_invalid_object_id(
                     "state": "blah",
                 }
             },
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " at 'sequence[0]'",
         ),
         (
             {

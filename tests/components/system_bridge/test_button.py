@@ -111,13 +111,18 @@ async def test_power_button(
             "A connection error occurred",
             id="connection_closed",
         ),
+        pytest.param(
+            ConnectionResetError,
+            "A connection error occurred",
+            id="connection_reset",
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_power_button_failure(
     hass: HomeAssistant,
     mock_websocket_client: MagicMock,
-    side_effect: list[Response] | Exception,
+    side_effect: list[Response] | Exception | type[Exception],
     match: str,
 ) -> None:
     """Test a failed power command raises."""
