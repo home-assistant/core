@@ -45,13 +45,6 @@ PARALLEL_UPDATES = 0
 SHUTDOWN_TIME_VARIANCE = timedelta(seconds=10)
 
 
-def _duration_seconds(value: str) -> int | None:
-    """Convert a Switcher HH:MM:SS duration string to seconds."""
-    if (duration := dt_util.parse_duration(value)) is None:
-        return None
-    return int(duration.total_seconds())
-
-
 def _shutdown_time(data: SwitcherBase) -> datetime | None:
     """Calculate the shutdown time from the remaining time."""
     if not (
@@ -102,8 +95,15 @@ TIME_SENSORS: list[SwitcherSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: _duration_seconds(
-            cast(SwitcherTimedBase, data).auto_shutdown
+        value_fn=lambda data: (
+            int(duration.total_seconds())
+            if (
+                duration := dt_util.parse_duration(
+                    cast(SwitcherTimedBase, data).auto_shutdown
+                )
+            )
+            is not None
+            else None
         ),
     ),
 ]
