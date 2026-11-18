@@ -1,5 +1,7 @@
 """Test Hikvision diagnostics."""
 
+import asyncio
+import threading
 from unittest.mock import MagicMock
 
 import pyhik
@@ -13,6 +15,10 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.hikvision.const import DOMAIN
+from homeassistant.components.hikvision.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -230,35 +236,14 @@ async def test_unreadable_raw_documents(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
-async def test_raw_documents_are_not_read_with_a_rejected_password(
+async def test_diagnostics_stop_at_the_first_rejection(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     mock_image_settings: MagicMock,
 ) -> None:
-    """Test the diagnostics do not send a password the camera already rejected."""
-    await setup_integration(hass, mock_config_entry)
-    mock_config_entry.runtime_data.image_credentials_rejected = True
-
-    result = await get_diagnostics_for_config_entry(
-        hass, hass_client, mock_config_entry
-    )
-
-    mock_image_settings.request_raw.assert_not_called()
-    assert result["image_settings"]["raw_documents"] == {
-        "capabilities": "error: credentials rejected",
-        "values": "error: credentials rejected",
-    }
-
-
-@pytest.mark.usefixtures("mock_hikcamera")
-async def test_a_rejected_password_stops_reading_raw_documents(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_config_entry: MockConfigEntry,
-    mock_image_settings: MagicMock,
-) -> None:
-    """Test the second document is not asked for with a password just rejected."""
+    """Test a refused request is not followed by another, and asks for a password."""
+    # The client returns the status of a refused request instead of raising it.
     mock_image_settings.request_raw.side_effect = [RawResponse(401, b"")]
     await setup_integration(hass, mock_config_entry)
 
@@ -268,6 +253,74 @@ async def test_a_rejected_password_stops_reading_raw_documents(
 
     assert mock_image_settings.request_raw.call_count == 1
     assert result["image_settings"]["raw_documents"] == {
-        "capabilities": "error: HTTP 401",
-        "values": "error: HTTP 401",
+        "capabilities": "error: credentials rejected",
+        "values": "error: credentials rejected",
+    }
+    assert mock_config_entry.runtime_data.image_credentials_rejected
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_stopped_download_keeps_the_client_until_the_request_ends(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a request is not left running on a client that another one can use."""
+    started = threading.Event()
+    release = threading.Event()
+
+    def request_raw(method: str, endpoint: str) -> RawResponse:
+        started.set()
+        assert release.wait(5)
+        return RawResponse(200, b"<document/>")
+
+    # A plain function, so that it runs in a thread and blocks only itself.
+    mock_image_settings.request_raw = request_raw
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.image_coordinators[0]
+
+    download = hass.async_create_task(
+        async_get_config_entry_diagnostics(hass, mock_config_entry)
+    )
+    async with asyncio.timeout(5):
+        while not started.is_set():
+            await asyncio.sleep(0)
+    download.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await download
+
+    assert coordinator.lock.locked()
+    release.set()
+    await hass.async_block_till_done()
+    assert not coordinator.lock.locked()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_the_second_document_is_not_read_after_the_credentials_are_rejected(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a rejection found while the first document is read stops the download."""
+    await setup_integration(hass, mock_config_entry)
+    data = mock_config_entry.runtime_data
+
+    def request_raw(method: str, endpoint: str) -> RawResponse:
+        # The event stream is refused the password while this is being read.
+        data.image_credentials_rejected = True
+        return RawResponse(200, b"<capabilities/>")
+
+    mock_image_settings.request_raw = MagicMock(side_effect=request_raw)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert mock_image_settings.request_raw.call_count == 1
+    assert result["image_settings"]["raw_documents"] == {
+        "capabilities": "<capabilities/>",
+        "values": "error: credentials rejected",
     }

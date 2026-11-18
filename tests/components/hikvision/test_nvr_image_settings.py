@@ -632,6 +632,31 @@ async def test_diagnostics_do_not_send_a_rejected_password_again(
 
 
 @pytest.mark.usefixtures("mock_hik_nvr")
+async def test_diagnostics_stop_asking_the_cameras_at_the_first_rejection(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_nvr_image_settings: MagicMock,
+) -> None:
+    """Test the other cameras are not asked once the login was refused."""
+    mock_nvr_image_settings.request_raw.side_effect = [RawResponse(401, b"")]
+    await setup_integration(hass, mock_config_entry)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    )
+
+    assert mock_nvr_image_settings.request_raw.call_count == 1
+    for channel in ("1", "2"):
+        assert result["channel_image_settings"][channel]["raw_documents"] == {
+            "capabilities": "error: credentials rejected",
+            "values": "error: credentials rejected",
+        }
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.usefixtures("mock_hik_nvr")
 async def test_the_client_is_shared_and_closed_once_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

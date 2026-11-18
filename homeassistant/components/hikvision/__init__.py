@@ -35,7 +35,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .coordinator import HikvisionImageCoordinator
+from .coordinator import (
+    HikvisionImageCoordinator,
+    async_reject_credentials,
+    async_run_alone,
+    entry_is_current,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +84,6 @@ class HikvisionData:
     image_coordinators: list[HikvisionImageCoordinator] = field(default_factory=list)
     # Set when the device rejected the password, so that no coordinator sends it again
     image_credentials_rejected: bool = False
-    # Set by what stops everything after that, so that it is only done once
-    image_rejection_handled: bool = False
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -271,32 +274,16 @@ def _async_watch_stream_credentials(
     data = entry.runtime_data
     camera = data.camera
 
-    async def _async_credentials_rejected() -> None:
-        if data.image_rejection_handled:
-            # pyHik calls the callbacks at every change of the stream, and a request
-            # may have found the password rejected too: it is being dealt with.
-            return
-        # The image settings use the same login. Marked before the first await, so
-        # that nothing sends the password while the stream is being stopped.
-        data.image_rejection_handled = True
-        data.image_credentials_rejected = True
-        await hass.async_add_executor_job(camera.disconnect)
-        error = ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="invalid_auth"
-        )
-        if data.image_coordinators:
-            # A request that is running must end first: its result would make a
-            # coordinator available again.
-            async with data.image_coordinators[0].lock:
-                for coordinator in data.image_coordinators:
-                    await coordinator.async_shutdown()
-                    coordinator.async_set_update_error(error)
-        entry.async_start_reauth(hass)
-
     @callback
     def _async_handle() -> None:
+        # This was queued by the thread of the stream: the entry may have been
+        # unloaded, or reloaded, since, and must not be acted on by an old stream.
+        if not entry_is_current(entry, data):
+            return
+        # pyHik calls the callbacks at every change of the stream: this does nothing
+        # if the rejection is already being dealt with.
         entry.async_create_task(
-            hass, _async_credentials_rejected(), "hikvision stream credentials"
+            hass, async_reject_credentials(hass, entry), "hikvision stream credentials"
         )
 
     def _stream_changed(_msg: str) -> None:
@@ -369,7 +356,7 @@ async def _async_setup_camera_image_settings(
     """Discover the image settings of a standalone camera."""
     host = entry.data[CONF_HOST]
     try:
-        settings = await hass.async_add_executor_job(client.get_image_settings)
+        settings = await async_run_alone(hass, entry, lock, client.get_image_settings)
     except ISAPIAuthError as err:
         if err.status_code == 401:
             raise await _async_credentials_rejected(hass, entry) from err
@@ -426,8 +413,8 @@ async def _async_setup_nvr_image_settings(
     """
     host = entry.data[CONF_HOST]
     try:
-        image_channels = await hass.async_add_executor_job(
-            partial(client.get_image_channels, proxy=True)
+        image_channels = await async_run_alone(
+            hass, entry, lock, partial(client.get_image_channels, proxy=True)
         )
     except ISAPIError as err:
         if isinstance(err, ISAPIAuthError) and err.status_code == 401:
@@ -452,8 +439,11 @@ async def _async_setup_nvr_image_settings(
             continue
         channel = image_channel.id
         try:
-            settings = await hass.async_add_executor_job(
-                partial(client.get_image_settings, channel, proxy=True)
+            settings = await async_run_alone(
+                hass,
+                entry,
+                lock,
+                partial(client.get_image_settings, channel, proxy=True),
             )
         except ISAPINotSupportedError:
             # The NVR may list a camera that it cannot proxy.
@@ -557,10 +547,27 @@ def _async_retry_image_settings_later(
 
 async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    # Stop the event stream
-    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
     data = entry.runtime_data
     for coordinator in data.image_coordinators:
+        # Before anything is awaited: what is waiting for the client must not use it
+        # while the platforms unload, and a request that ends in the meantime must
+        # not be taken for one of a setup that is still wanted.
+        coordinator.closed = True
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    except BaseException:
+        # The entry stays loaded.
+        for coordinator in data.image_coordinators:
+            coordinator.closed = False
+        raise
+    # Stop the event stream
+    await hass.async_add_executor_job(data.camera.disconnect)
+    for coordinator in data.image_coordinators:
         await coordinator.async_shutdown()
+    if data.image_coordinators:
+        # Home Assistant waits only a few seconds for the tasks of an entry, and
+        # deletes the runtime data after that: a request that is running has to
+        # end here, and nothing queued starts after it.
+        async with data.image_coordinators[0].lock:
+            pass
     # The client is closed after this, once the request that is running has ended.

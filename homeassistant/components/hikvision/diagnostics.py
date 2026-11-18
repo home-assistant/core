@@ -1,5 +1,6 @@
 """Diagnostics support for Hikvision."""
 
+from functools import partial
 from typing import Any
 
 import pyhik
@@ -7,6 +8,7 @@ from pyhik.image import ImageSetting
 from pyhik.isapi import (
     ENDPOINT_IMAGE_CHANNEL,
     ENDPOINT_IMAGE_PROXY_CHANNEL,
+    ISAPIAuthError,
     ISAPIClient,
     ISAPIError,
 )
@@ -21,36 +23,54 @@ from .coordinator import HikvisionImageCoordinator
 TO_REDACT = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME, "title", "unique_id"}
 
 
-def _read_raw_documents(client: ISAPIClient, channel: int | None) -> dict[str, str]:
-    """Read the image documents as the device sends them, without parsing.
+def _read_raw_document(client: ISAPIClient, path: str) -> str:
+    """Read an image document as the device sends it, without parsing."""
+    response = client.request_raw("GET", path)
+    if response.status_code == 401:
+        # The client returns an error status instead of raising it.
+        raise ISAPIAuthError("The credentials were rejected", 401)
+    return response.text if response.ok else f"error: HTTP {response.status_code}"
+
+
+async def _async_read_raw_documents(
+    coordinator: HikvisionImageCoordinator,
+) -> dict[str, str]:
+    """Read the image documents of a camera, one request after the other.
 
     They hold image settings only, and are what is needed to report a camera model
-    or add it to pyhik's tests.
+    or add it to pyhik's tests. Each one is a request of its own, so that the password
+    is not sent again if the first one shows that it is rejected, or if the entry is
+    unloaded in between.
     """
-    if channel is None:
+    if coordinator.channel is None:
         endpoint = ENDPOINT_IMAGE_CHANNEL.format(channel=1)
     else:
-        endpoint = ENDPOINT_IMAGE_PROXY_CHANNEL.format(channel=channel)
+        endpoint = ENDPOINT_IMAGE_PROXY_CHANNEL.format(channel=coordinator.channel)
     documents: dict[str, str] = {}
     for name, path in (
         ("capabilities", f"{endpoint}/capabilities"),
         ("values", endpoint),
     ):
         try:
-            response = client.request_raw("GET", path)
+            documents[name] = await coordinator.async_request(
+                partial(_read_raw_document, coordinator.client, path)
+            )
+        except ISAPIAuthError as err:
+            if err.status_code == 401:
+                # Rejected by now, or by this very request. Asking again would send
+                # the password to the device once more.
+                documents.update(
+                    dict.fromkeys(
+                        ("capabilities", "values"), "error: credentials rejected"
+                    )
+                    | documents
+                )
+                break
+            documents[name] = f"error: {type(err).__name__}"
         except ISAPIError as err:
             # The text of the error can hold the address of the camera, which is not
             # redacted here, so only the kind of error is reported.
             documents[name] = f"error: {type(err).__name__}"
-            continue
-        documents[name] = (
-            response.text if response.ok else f"error: HTTP {response.status_code}"
-        )
-        if response.status_code == 401:
-            # Do not send the rejected password again for the next document.
-            for other in ("capabilities", "values"):
-                documents.setdefault(other, documents[name])
-            break
     return documents
 
 
@@ -106,16 +126,7 @@ async def _async_describe(
     """Describe the image settings of one camera."""
     values = coordinator.data or {}
     discovered = {setting.path for setting in coordinator.settings}
-    async with coordinator.lock:
-        if entry.runtime_data.image_credentials_rejected:
-            # Asking again would send the rejected password to the device once more.
-            raw_documents = dict.fromkeys(
-                ("capabilities", "values"), "error: credentials rejected"
-            )
-        else:
-            raw_documents = await hass.async_add_executor_job(
-                _read_raw_documents, coordinator.client, coordinator.channel
-            )
+    raw_documents = await _async_read_raw_documents(coordinator)
     return {
         "settings": {
             setting.path: _setting_to_dict(setting, values, coordinator.entity_paths)

@@ -1,5 +1,7 @@
 """Test Hikvision integration setup and unload."""
 
+import asyncio
+import dataclasses
 from datetime import timedelta
 import logging
 import threading
@@ -24,13 +26,20 @@ from homeassistant.components.hikvision import (
     STREAM_CREDENTIALS_ID,
 )
 from homeassistant.components.hikvision.const import DOMAIN
-from homeassistant.components.hikvision.coordinator import SCAN_INTERVAL
+from homeassistant.components.hikvision.coordinator import (
+    REAUTH_RETRY_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -706,10 +715,10 @@ async def test_image_settings_client_closed_on_unload(
     client.close.assert_called_once()
 
 
-@pytest.mark.usefixtures("mock_hikcamera")
 async def test_image_settings_client_closed_when_the_setup_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
     mock_isapi_client: MagicMock,
 ) -> None:
     """Test the client is closed if the setup ends, or is cancelled, after it."""
@@ -727,6 +736,8 @@ async def test_image_settings_client_closed_when_the_setup_fails(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     client.close.assert_called_once()
+    # No unload runs for a setup that failed: the stream has to be stopped here.
+    mock_hikcamera.return_value.disconnect.assert_called_once()
 
 
 def _credentials_callback(camera: MagicMock):
@@ -901,6 +912,127 @@ async def test_credentials_watch_is_removed_on_unload(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     camera.remove_update_callback.assert_any_call(callback, STREAM_CREDENTIALS_ID)
+
+
+async def test_reauth_is_asked_again_when_a_reconfigure_form_is_closed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entry does not stay stopped, without a prompt, behind a form."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] == "form"
+
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(
+        _credentials_callback(camera), STREAM_CREDENTIALS_ID
+    )
+    await hass.async_block_till_done()
+
+    # Home Assistant does not start a reauthentication next to the form.
+    assert mock_config_entry.runtime_data.image_credentials_rejected
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_RECONFIGURE]
+
+    # Still open: nothing changes.
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_RECONFIGURE]
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    freezer.tick(REAUTH_RETRY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == [SOURCE_REAUTH]
+
+
+async def test_a_stream_callback_queued_before_the_unload_does_nothing_after_it(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test an old stream does not start a reauthentication on an unloaded entry."""
+    await setup_integration(hass, mock_config_entry)
+    camera = mock_hikcamera.return_value
+    callback = _credentials_callback(camera)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    camera.disconnect.reset_mock()
+
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(callback, STREAM_CREDENTIALS_ID)
+    await hass.async_block_till_done()
+
+    camera.disconnect.assert_not_called()
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_poll_of_an_earlier_setup_does_not_ask_for_new_credentials(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a poll that is refused after a reload does not start a reauthentication."""
+    await setup_integration(hass, mock_config_entry)
+    started = threading.Event()
+    release = threading.Event()
+
+    def get_image_values() -> dict[str, str]:
+        started.set()
+        assert release.wait(5)
+        raise ISAPIAuthError("Invalid credentials", 401)
+
+    mock_image_settings.get_image_values = get_image_values
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(5):
+        while not started.is_set():
+            await asyncio.sleep(0)
+
+    new = dataclasses.replace(mock_config_entry.runtime_data)
+    mock_config_entry.runtime_data = new
+    release.set()
+    await hass.async_block_till_done()
+
+    assert not new.image_credentials_rejected
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("mock_hikcamera", "mock_image_settings")
+async def test_requests_are_refused_before_the_platforms_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test nothing new starts while the platforms unload, or after a failed unload."""
+    await setup_integration(hass, mock_config_entry)
+    coordinators = mock_config_entry.runtime_data.image_coordinators
+    closed_during_unload: list[bool] = []
+
+    async def unload_platforms(*args: object) -> None:
+        closed_during_unload.extend(coordinator.closed for coordinator in coordinators)
+        raise HomeAssistantError("The platforms do not unload")
+
+    with patch.object(
+        hass.config_entries,
+        "async_unload_platforms_or_raise",
+        side_effect=unload_platforms,
+    ):
+        await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert closed_during_unload == [True]
+    # The entry is still there, and works.
+    assert not any(coordinator.closed for coordinator in coordinators)
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
