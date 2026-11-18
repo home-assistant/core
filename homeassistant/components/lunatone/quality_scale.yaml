@@ -26,10 +26,7 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -65,7 +62,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo

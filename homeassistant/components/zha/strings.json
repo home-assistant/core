@@ -2700,16 +2700,6 @@
       },
       "name": "Permit"
     },
-    "reconfigure_device": {
-      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this action.",
-      "fields": {
-        "ieee": {
-          "description": "IEEE address of the device to reconfigure.",
-          "name": "[%key:component::zha::services::permit::fields::ieee::name%]"
-        }
-      },
-      "name": "Reconfigure device"
-    },
     "remove": {
       "description": "Removes a node from the Zigbee network.",
       "fields": {

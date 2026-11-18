@@ -15,12 +15,12 @@ from homeassistant.components.pi_hole.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
     CONF_SSL,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -366,7 +366,7 @@ async def test_disable_service_call(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             pi_hole.DOMAIN,
             PiHoleService.DISABLE,
-            {ATTR_ENTITY_ID: "all", PiHoleServiceArgument.DURATION: "00:00:01"},
+            {TargetKey.ENTITY_ID: "all", PiHoleServiceArgument.DURATION: "00:00:01"},
             blocking=True,
         )
 

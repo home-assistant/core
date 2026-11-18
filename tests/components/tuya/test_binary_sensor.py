@@ -156,3 +156,32 @@ async def test_drop_state_update(
     )
 
     assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize("mock_device_code", ["sp_8zrzjldq07tlxnlv"])
+@pytest.mark.parametrize(
+    ("dpcode", "entity_id"),
+    [
+        ("feed_block_status", "binary_sensor.8zrzjldq07tlxnlv_feed_blocked"),
+        ("feed_stuck_status", "binary_sensor.8zrzjldq07tlxnlv_food_stuck"),
+    ],
+)
+async def test_camera_pet_feeder(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    dpcode: str,
+    entity_id: str,
+) -> None:
+    """Test pet feeder problem sensors on a camera (sp) device."""
+    # The feeder datapoints are only provided by a quirk
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    assert dpcode in mock_device.status_range
+
+    assert hass.states.get(entity_id).state == "off"
+
+    await notification_helper.async_send_device_update(mock_device, {dpcode: True})
+
+    assert hass.states.get(entity_id).state == "on"

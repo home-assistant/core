@@ -23,7 +23,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -214,7 +214,7 @@ async def test_set_ambient_number(
             NumberServiceArgument.VALUE: value,
         },
         target={
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -378,7 +378,7 @@ async def test_set_number(
             NumberServiceArgument.VALUE: value,
         },
         target={
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -431,7 +431,7 @@ async def test_set_number_write_error(
                 NumberServiceArgument.VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",
+                TargetKey.ENTITY_ID: "number.pro_05_probe_1_target_temperature",
             },
             blocking=True,
         )
@@ -465,7 +465,7 @@ async def test_set_number_disconnected(
                 NumberServiceArgument.VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_probe_1_target_temperature",
+                TargetKey.ENTITY_ID: "number.pro_05_probe_1_target_temperature",
             },
             blocking=True,
         )

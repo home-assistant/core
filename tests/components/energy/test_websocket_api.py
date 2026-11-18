@@ -118,7 +118,6 @@ async def test_save_preferences(
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
                 "stat_rate": "sensor.grid_power",
-                "cost_adjustment_day": 1.2,
                 "name": "Main Grid",
             },
             # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
@@ -132,7 +131,6 @@ async def test_save_preferences(
                 "number_energy_price": 0.20,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.20,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -147,6 +145,7 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
                 "stat_rate": "my_battery_power",
                 "stat_soc": "sensor.my_battery_state_of_charge",
+                "entity_capacity": "sensor.my_battery_capacity",
                 "name": "Battery",
             },
             {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
@@ -220,7 +219,6 @@ async def test_save_preferences(
                 "number_energy_price": None,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": None,
-                "cost_adjustment_day": 1.2,
             },
             {
                 "type": "solar",
@@ -239,6 +237,45 @@ async def test_save_preferences(
     assert msg["result"] == {**new_prefs, **new_prefs_2}
 
 
+async def test_save_preferences_drops_cost_adjustment_day(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cost_adjustment_day is still accepted but not stored."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "grid",
+                    "stat_energy_from": "sensor.heat_pump_meter",
+                    "cost_adjustment_day": 0,
+                }
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == [
+        {
+            "type": "grid",
+            "stat_energy_from": "sensor.heat_pump_meter",
+            "stat_energy_to": None,
+            "stat_cost": None,
+            "stat_compensation": None,
+            "entity_energy_price": None,
+            "number_energy_price": None,
+            "entity_energy_price_export": None,
+            "number_energy_price_export": None,
+        }
+    ]
+
+
 async def test_handle_duplicate_from_stat(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -254,12 +291,10 @@ async def test_handle_duplicate_from_stat(
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
                 {
                     "type": "grid",
                     "stat_energy_from": "sensor.heat_pump_meter",
-                    "cost_adjustment_day": 0,
                 },
             ],
         }
@@ -1450,5 +1485,82 @@ async def test_save_home_source_invalid(
     msg = await client.receive_json()
 
     assert msg["id"] == 5
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_save_battery_directions(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery measured per direction next to one measured in total."""
+    client = await hass_ws_client(hass)
+    total_battery = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+    }
+    directions_battery = {
+        "type": "battery",
+        "stat_energy_from_grid": "sensor.battery_from_grid",
+        "stat_energy_from_solar": "sensor.battery_from_solar",
+        "stat_energy_to_home": "sensor.battery_to_home",
+        "power_config": {
+            "stat_rate_from_solar": "sensor.battery_from_solar_power",
+            "stat_rate_to_home": "sensor.battery_to_home_power",
+        },
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [total_battery, directions_battery],
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    saved = [
+        total_battery,
+        {
+            **directions_battery,
+            "stat_rate": "sensor.energy_battery_battery_from_solar_power"
+            "_battery_to_home_power_net_power",
+        },
+    ]
+    assert msg["result"]["energy_sources"] == saved
+
+    # Saving the stored preferences again keeps them
+    await client.send_json(
+        {"id": 6, "type": "energy/save_prefs", "energy_sources": saved}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == saved
+
+
+async def test_save_battery_directions_invalid(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a battery mixing total and direction energy is rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+        }
+    )
+    msg = await client.receive_json()
+
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
