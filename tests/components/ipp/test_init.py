@@ -2,11 +2,15 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyipp import IPPConnectionError
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ipp.const import REQUEST_TIMEOUT
-from homeassistant.components.ipp.coordinator import IPPDataUpdateCoordinator
+from homeassistant.components.ipp.coordinator import (
+    SCAN_INTERVAL,
+    IPPDataUpdateCoordinator,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -52,3 +56,45 @@ async def test_request_timeout(
     coordinator = IPPDataUpdateCoordinator(hass, mock_config_entry)
 
     assert coordinator.ipp.request_timeout == REQUEST_TIMEOUT
+
+
+async def test_printer_unreachable_keeps_last_known_values(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: MagicMock,
+) -> None:
+    """Test the coordinator keeps the last known values when the printer goes unreachable.
+
+    Printers on a home network are routinely switched off or in standby,
+    which should not make every sensor go unavailable.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_ha_1000_series")
+    assert state
+    assert state.state == "idle"
+
+    mock_ipp.printer.side_effect = IPPConnectionError
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get("sensor.test_ha_1000_series")
+    assert state
+    assert state.state == "idle"
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.last_update_success is True
+
+    mock_ipp.printer.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_ha_1000_series")
+    assert state
+    assert state.state == "idle"

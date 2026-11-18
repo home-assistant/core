@@ -46,14 +46,34 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self._printer_unreachable_logged = False
 
     @override
     async def _async_update_data(self) -> IPPPrinter:
         """Fetch data from IPP."""
         try:
-            return await self.ipp.printer()
+            printer = await self.ipp.printer()
         except IPPError as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_response",
-            ) from error
+            if self.data is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_response",
+                ) from error
+
+            # The printer was reachable before. Many printers (especially
+            # inkjet/laser printers in a home network) are simply switched
+            # off or in standby most of the time, which is not an error
+            # condition worth surfacing as "unavailable" on every sensor.
+            # Keep serving the last known values instead.
+            if not self._printer_unreachable_logged:
+                _LOGGER.warning(
+                    "Could not reach printer, using last known values until "
+                    "it is reachable again: %s",
+                    error,
+                )
+                self._printer_unreachable_logged = True
+
+            return self.data
+
+        self._printer_unreachable_logged = False
+        return printer
