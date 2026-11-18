@@ -96,13 +96,13 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> HubInfo:
     return HubInfo(controller_id, name, sites)
 
 
-class OmadaOptionsFlow(OptionsFlowWithReload):
-    """Configure client tracking for the Omada site."""
+class OmadaAdoptedDevicesOptionsFlow(OptionsFlowWithReload):
+    """Configure adopted Omada device visibility for the site."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure whether Wi-Fi clients appear as devices."""
+        """Configure whether only adopted Omada devices are shown."""
         if user_input is not None:
             return self.async_create_entry(
                 title="", data={**self.config_entry.options, **user_input}
@@ -130,9 +130,11 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OmadaOptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OmadaAdoptedDevicesOptionsFlow:
         """Get the options flow for the site."""
-        return OmadaOptionsFlow()
+        return OmadaAdoptedDevicesOptionsFlow()
 
     def __init__(self) -> None:
         """Create the config flow for a new integration."""

@@ -64,30 +64,45 @@ async def test_form_single_site(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.parametrize("saved_value", [None, False, True])
+@pytest.mark.parametrize(
+    ("saved_options", "expected_default"),
+    [
+        pytest.param({}, False, id="existing-site-without-option"),
+        pytest.param({CONF_SHOW_ONLY_ADOPTED_DEVICES: False}, False, id="all-devices"),
+        pytest.param(
+            {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}, True, id="adopted-devices-only"
+        ),
+    ],
+)
+@pytest.mark.parametrize("show_only_adopted_devices", [False, True])
 async def test_adopted_devices_option(
-    hass: HomeAssistant, saved_value: bool | None
+    hass: HomeAssistant,
+    saved_options: dict[str, bool],
+    expected_default: bool,
+    show_only_adopted_devices: bool,
 ) -> None:
-    """Allow an existing site to opt out of Wi-Fi client tracking."""
-    options: dict[str, str | bool] = {"unrelated": "preserved"}
-    if saved_value is not None:
-        options[CONF_SHOW_ONLY_ADOPTED_DEVICES] = saved_value
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA, options=options)
+    """Allow existing sites to enable or disable adopted-device-only visibility."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_ENTRY_DATA,
+        options={"unrelated": "preserved", **saved_options},
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"]({}) == {
-        CONF_SHOW_ONLY_ADOPTED_DEVICES: bool(saved_value)
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: expected_default
     }
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_SHOW_ONLY_ADOPTED_DEVICES: True}
+        result["flow_id"],
+        {CONF_SHOW_ONLY_ADOPTED_DEVICES: show_only_adopted_devices},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         "unrelated": "preserved",
-        CONF_SHOW_ONLY_ADOPTED_DEVICES: True,
+        CONF_SHOW_ONLY_ADOPTED_DEVICES: show_only_adopted_devices,
     }
 
 
