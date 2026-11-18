@@ -13,10 +13,10 @@ from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import (
     CLEANUP_TIMEOUT,
     CONF_DEVICE_IP,
-    CONF_IPS_TO_REMOVE,
-    CONF_MANUAL_DEVICES,
     DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,10 +28,8 @@ from .conftest import (
 )
 
 
-def _get_devices(
-    mock_govee_api: AsyncMock, is_manual: bool = False
-) -> list[GoveeDevice]:
-    devices: list[GoveeDevice] = [
+def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
+    return [
         GoveeDevice(
             controller=mock_govee_api,
             ip="192.168.1.100",
@@ -40,9 +38,6 @@ def _get_devices(
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
-    for device in devices:
-        device.is_manual = is_manual
-    return devices
 
 
 async def test_abort_on_multiple_flows(hass: HomeAssistant) -> None:
@@ -200,196 +195,6 @@ async def test_creating_entry_errno(
     mock_setup_entry.assert_not_awaited()
 
 
-async def test_options_flow_init_menu(hass: HomeAssistant) -> None:
-    """Test options flow menu."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "init"
-    assert result["menu_options"] == [
-        "add_device",
-        "remove_device",
-    ]
-
-
-async def test_options_flow_add_device(hass: HomeAssistant) -> None:
-    """Test adding a manual device through options flow."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "add_device"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "add_device"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_DEVICE_IP: "192.168.1.100"},
-    )
-
-    expected_options = {
-        CONF_MANUAL_DEVICES: ["192.168.1.100"],
-    }
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == expected_options
-    assert config_entry.options == expected_options
-
-
-async def test_options_flow_add_device_wrong_ip(hass: HomeAssistant) -> None:
-    """Test adding a manual device through options flow with wrong IP format."""
-
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "add_device"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "add_device"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_DEVICE_IP: "foo"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "add_device"
-    assert result["errors"] == {"base": "invalid_ip"}
-    assert result["description_placeholders"] == {"ip": "foo"}
-
-    # The flow stays open, so a corrected address still completes.
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_DEVICE_IP: "192.168.1.100"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_MANUAL_DEVICES: ["192.168.1.100"],
-    }
-
-
-async def test_options_flow_remove_device_with_devices(
-    hass: HomeAssistant, mock_govee_api: AsyncMock, mock_coordinator: AsyncMock
-) -> None:
-    """Test removing a manual device through options flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: ["192.168.1.100", "192.168.1.101"],
-        },
-    )
-
-    devices = _get_devices(mock_govee_api, True)
-    set_mocked_devices(mock_govee_api, devices)
-    mock_coordinator.devices = devices
-    mock_coordinator.discovery_queue = set()
-    config_entry.runtime_data = mock_coordinator
-
-    config_entry.add_to_hass(hass)
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "remove_device"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "remove_device"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_IPS_TO_REMOVE: ["192.168.1.100"]},
-    )
-
-    # Removal is expressed by the IP leaving the desired set.
-    expected_options = {
-        CONF_MANUAL_DEVICES: ["192.168.1.101"],
-    }
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == expected_options
-    assert config_entry.options == expected_options
-
-
-async def test_options_flow_remove_device_no_devices(
-    hass: HomeAssistant, mock_coordinator: AsyncMock
-) -> None:
-    """Test removing devices when none are available."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    mock_coordinator.devices = []
-    mock_coordinator.discovery_queue = set()
-    config_entry.runtime_data = mock_coordinator
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "remove_device"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices"
-
-
-async def test_options_flow_add_device_preserves_existing_devices(
-    hass: HomeAssistant, mock_govee_api: AsyncMock
-) -> None:
-    """Test that adding a new manual device preserves existing devices."""
-    # Create a config entry with an existing manual device
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: ["192.168.1.101"],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    # Set up the first device
-    existing_device = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.101",
-        fingerprint="device1-fingerprint",
-        sku="H615A",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    existing_device.is_manual = True
-
-    set_mocked_devices(mock_govee_api, [existing_device])
-
-    # Add a new device through options flow
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "add_device"},
-    )
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_DEVICE_IP: "192.168.1.102"},
-    )
-
-    expected_options = {
-        CONF_MANUAL_DEVICES: ["192.168.1.101", "192.168.1.102"],
-    }
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == expected_options
-    assert config_entry.options == expected_options
-
-
 async def test_discovery_without_listening_addresses(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
@@ -406,24 +211,6 @@ async def test_discovery_without_listening_addresses(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     mock_govee_api.start.assert_not_awaited()
-
-
-async def test_options_flow_remove_device_entry_not_loaded(
-    hass: HomeAssistant,
-) -> None:
-    """Test removing a device is refused while the entry is not loaded."""
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-    config_entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_RETRY)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": "remove_device"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_loaded"
 
 
 @pytest.mark.usefixtures("mock_network_adapters")
@@ -455,3 +242,93 @@ async def test_creating_entry_with_partial_bind(
 
     mock_govee_api.start.assert_awaited_once_with(require_all=False)
     mock_setup_entry.assert_awaited_once()
+
+
+async def test_add_device_subentry(hass: HomeAssistant) -> None:
+    """Test adding a manual device through the device subentry flow."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.100"
+    assert result["unique_id"] == "192.168.1.100"
+    assert result["data"] == {CONF_DEVICE_IP: "192.168.1.100"}
+
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.subentry_type == SUBENTRY_TYPE_DEVICE
+    assert subentry.data == {CONF_DEVICE_IP: "192.168.1.100"}
+    assert subentry.unique_id == "192.168.1.100"
+
+
+async def test_add_device_subentry_invalid_ip(hass: HomeAssistant) -> None:
+    """Test the device subentry flow rejects a malformed IP address."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "foo"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_ip"}
+    assert result["description_placeholders"] == {"ip": "foo"}
+
+    # The flow stays open, so a corrected address still completes.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_DEVICE_IP: "192.168.1.100"}
+
+
+async def test_add_device_subentry_duplicate(hass: HomeAssistant) -> None:
+    """Test the device subentry flow rejects an already configured IP."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: "192.168.1.100"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="192.168.1.100",
+                unique_id="192.168.1.100",
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}
+    assert len(config_entry.subentries) == 1
+
+    # The flow stays open, so a different address still completes.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.101"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(config_entry.subentries) == 2

@@ -13,9 +13,11 @@ from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import (
     CLEANUP_TIMEOUT,
     CLEANUP_WAIT_TIMEOUT,
-    CONF_MANUAL_DEVICES,
+    CONF_DEVICE_IP,
     DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -28,7 +30,20 @@ from .conftest import (
 )
 
 
-async def test_setup_entry_with_options(
+def _device_subentries(*ips: str) -> list[ConfigSubentryData]:
+    """Build subentry data for manually configured device IPs."""
+    return [
+        ConfigSubentryData(
+            data={CONF_DEVICE_IP: ip},
+            subentry_type=SUBENTRY_TYPE_DEVICE,
+            title=ip,
+            unique_id=ip,
+        )
+        for ip in ips
+    ]
+
+
+async def test_setup_entry_with_manual_devices(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
     """Test configured manual devices are queued for discovery at setup."""
@@ -45,9 +60,7 @@ async def test_setup_entry_with_options(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: ["192.168.1.100"],
-        },
+        subentries_data=_device_subentries("192.168.1.100"),
     )
 
     config_entry.add_to_hass(hass)
@@ -59,12 +72,12 @@ async def test_setup_entry_with_options(
     )
 
 
-async def test_update_options_remove_device_discovered(
+async def test_remove_subentry_removes_discovered_device(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a discovered manual device is removed when dropped from options."""
+    """Test a discovered manual device is removed with its subentry."""
 
     manual_device1 = GoveeDevice(
         controller=mock_govee_api,
@@ -86,9 +99,7 @@ async def test_update_options_remove_device_discovered(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: [manual_device1.ip, manual_device2.ip],
-        },
+        subentries_data=_device_subentries(manual_device1.ip, manual_device2.ip),
     )
     config_entry.add_to_hass(hass)
 
@@ -99,33 +110,32 @@ async def test_update_options_remove_device_discovered(
     assert entity_registry.async_get("light.h615a") is not None
     assert entity_registry.async_get("light.h615b") is not None
 
-    # Dropping the IP from the desired set is the whole removal instruction.
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_MANUAL_DEVICES: [manual_device2.ip],
-        },
+    # Deleting the subentry is the whole removal instruction.
+    subentry = next(
+        sub
+        for sub in config_entry.subentries.values()
+        if sub.unique_id == manual_device1.ip
     )
-    set_mocked_devices(mock_govee_api, [manual_device2])
+    hass.config_entries.async_remove_subentry(config_entry, subentry.subentry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    mock_govee_api.remove_device_from_discovery_queue.assert_called_once_with(
-        manual_device1.ip
-    )
+    mock_govee_api.remove_device.assert_called_once_with(manual_device1)
+    assert {sub.unique_id for sub in config_entry.subentries.values()} == {
+        manual_device2.ip
+    }
     assert entity_registry.async_get("light.h615b") is not None
     assert entity_registry.async_get("light.h615a") is None
 
 
-async def test_update_options_remove_multiple_devices(
+async def test_remove_multiple_subentries(
     hass: HomeAssistant,
     mock_govee_api: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test removing several devices in a single options update.
+    """Test removing several devices in quick succession.
 
-    The remove form allows multiple selections, so the listener has to cope
-    with more than one device disappearing at once.
+    The listener has to cope with more than one device disappearing at once.
     """
 
     devices = []
@@ -145,9 +155,7 @@ async def test_update_options_remove_multiple_devices(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: [device.ip for device in devices],
-        },
+        subentries_data=_device_subentries(*(device.ip for device in devices)),
     )
     config_entry.add_to_hass(hass)
 
@@ -157,24 +165,18 @@ async def test_update_options_remove_multiple_devices(
     assert entity_registry.async_get("light.h615a") is not None
     assert entity_registry.async_get("light.h615b") is not None
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_MANUAL_DEVICES: []},
-    )
-    set_mocked_devices(mock_govee_api, [])
+    for subentry_id in list(config_entry.subentries):
+        hass.config_entries.async_remove_subentry(config_entry, subentry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
-    assert mock_govee_api.remove_device_from_discovery_queue.call_count == 2
-    # The options are the source of truth; the listener must not rewrite them.
-    assert config_entry.options == {
-        CONF_MANUAL_DEVICES: [],
-    }
+    assert mock_govee_api.remove_device.call_count == 2
+    assert config_entry.subentries == {}
     assert entity_registry.async_get("light.h615a") is None
     assert entity_registry.async_get("light.h615b") is None
 
 
-async def test_update_options_remove_device_in_queue(
+async def test_remove_subentry_device_in_queue(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
     """Test removing a manual device that was never discovered."""
@@ -191,9 +193,7 @@ async def test_update_options_remove_device_in_queue(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: [manual_device1.ip],
-        },
+        subentries_data=_device_subentries(manual_device1.ip),
     )
     config_entry.add_to_hass(hass)
 
@@ -201,21 +201,22 @@ async def test_update_options_remove_device_in_queue(
     await hass.async_block_till_done()
 
     # Queue an IP that never answers, then drop it again.
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_MANUAL_DEVICES: [manual_device1.ip, "192.168.1.101"],
-        },
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.101"}
     )
     await hass.async_block_till_done()
     assert "192.168.1.101" in mock_govee_api.discovery_queue
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_MANUAL_DEVICES: [manual_device1.ip],
-        },
+    subentry = next(
+        sub
+        for sub in config_entry.subentries.values()
+        if sub.unique_id == "192.168.1.101"
     )
+    hass.config_entries.async_remove_subentry(config_entry, subentry.subentry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
@@ -224,28 +225,10 @@ async def test_update_options_remove_device_in_queue(
     assert len(hass.states.async_all()) == 1
 
 
-async def test_update_options_add_devices(
+async def test_add_subentry_queues_device(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test adding multiple devices via options."""
-
-    device1 = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.100",
-        fingerprint="device1-fingerprint",
-        sku="H615A",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    device1.is_manual = True
-
-    device2 = GoveeDevice(
-        controller=mock_govee_api,
-        ip="192.168.1.101",
-        fingerprint="device2-fingerprint",
-        sku="H6199",
-        capabilities=DEFAULT_CAPABILITIES,
-    )
-    device2.is_manual = True
+    """Test adding a device subentry queues its IP for discovery."""
 
     # Setup waits for discovery to find a device, so seed one that answered.
     discovered = GoveeDevice(
@@ -264,19 +247,18 @@ async def test_update_options_add_devices(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    set_mocked_devices(mock_govee_api, [device1])
-    mock_govee_api.get_device_by_ip.side_effect = [None, device1]
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_MANUAL_DEVICES: [device1.ip],
-        },
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
     )
-
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
     await hass.async_block_till_done()
 
-    mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(device1.ip)
+    mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(
+        "192.168.1.100"
+    )
 
 
 async def test_setup_without_listening_addresses(
@@ -384,7 +366,7 @@ async def test_unload_warns_when_port_not_released(
             ["192.168.1.101"],
             False,
             ["192.168.1.101"],
-            id="discovered_device_leaves_options_alone",
+            id="discovered_device_leaves_subentries_alone",
         ),
     ],
 )
@@ -402,9 +384,9 @@ async def test_remove_device_from_device_page(
     Deletion always succeeds and always makes the controller forget the device,
     otherwise its next scan reply is reported as an already known device and no
     entity is ever recreated. The listener keys off whether the IP is
-    configured, so a configured device is also unconfigured (otherwise the
+    configured, so a configured device also loses its subentry (otherwise the
     reconcile would re-add it), while a purely discovered one leaves the
-    options untouched.
+    subentries untouched.
     """
     assert await async_setup_component(hass, "config", {})
 
@@ -429,9 +411,7 @@ async def test_remove_device_from_device_page(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: initial_manual_devices,
-        },
+        subentries_data=_device_subentries(*initial_manual_devices),
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -457,7 +437,9 @@ async def test_remove_device_from_device_page(
         is None
     )
     mock_govee_api.remove_device.assert_called_once_with(device)
-    assert config_entry.options[CONF_MANUAL_DEVICES] == expected_manual_devices
+    assert {subentry.unique_id for subentry in config_entry.subentries.values()} == set(
+        expected_manual_devices
+    )
     # The other device is left alone either way.
     assert (
         device_registry.async_get_device_by_identifier(
@@ -550,7 +532,7 @@ async def test_remove_device_of_other_entry_is_ignored(
     mock_govee_api: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a removal belonging to another entry leaves our options alone."""
+    """Test a removal belonging to another entry leaves our subentries alone."""
     device = GoveeDevice(
         controller=mock_govee_api,
         ip="192.168.1.100",
@@ -563,9 +545,7 @@ async def test_remove_device_of_other_entry_is_ignored(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        options={
-            CONF_MANUAL_DEVICES: ["192.168.1.100"],
-        },
+        subentries_data=_device_subentries("192.168.1.100"),
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -581,4 +561,6 @@ async def test_remove_device_of_other_entry_is_ignored(
     device_registry.async_remove_device(other_device.id)
     await hass.async_block_till_done()
 
-    assert config_entry.options[CONF_MANUAL_DEVICES] == ["192.168.1.100"]
+    assert {sub.unique_id for sub in config_entry.subentries.values()} == {
+        "192.168.1.100"
+    }

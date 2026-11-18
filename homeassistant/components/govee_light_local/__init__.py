@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_MANUAL_DEVICES, DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
+from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL, SUBENTRY_TYPE_DEVICE
 from .coordinator import (
     GoveeLocalApiConfig,
     GoveeLocalApiCoordinator,
@@ -86,17 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
         for device in removed:
             coordinator.remove_device(device)
 
-        config = GoveeLocalApiConfig.from_config_entry(entry)
-        if (remaining := config.manual_devices - removed_ips) == config.manual_devices:
-            return
-
-        hass.config_entries.async_update_entry(
-            entry,
-            options={**entry.options, CONF_MANUAL_DEVICES: sorted(remaining)},
-        )
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
+            # The subentry is already gone when this removal is the cascade of
+            # a subentry deletion; removing it again would raise.
+            if (
+                subentry.unique_id in removed_ips
+                and subentry.subentry_id in entry.subentries
+            ):
+                hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
     entry.async_on_unload(coordinator.async_cleanup)
-    entry.async_on_unload(entry.add_update_listener(update_options_listener))
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.async_on_unload(
         hass.bus.async_listen(
             dr.EVENT_DEVICE_REGISTRY_UPDATED,
@@ -155,14 +155,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def update_options_listener(
+async def update_listener(
     hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
 ) -> None:
-    """Reconcile the controller with the configured options.
+    """Reconcile the controller with the configured subentries.
 
-    Options describe the desired set of manual devices, so the listener diffs
-    them against what the controller currently tracks. This is idempotent and
-    never writes back to the entry.
+    The device subentries describe the desired set of manual devices, so the
+    listener diffs them against what the controller currently tracks. This is
+    idempotent and never writes back to the entry.
     """
     coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
     config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)

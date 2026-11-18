@@ -12,10 +12,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.govee_light_local.const import DOMAIN
-from homeassistant.components.govee_light_local.coordinator import (
-    GoveeController,
-    GoveeLocalApiCoordinator,
-)
+from homeassistant.components.govee_light_local.coordinator import GoveeController
 from homeassistant.components.network import Adapter
 from homeassistant.core import HomeAssistant
 
@@ -112,12 +109,6 @@ def set_mocked_devices(mock_govee_api: AsyncMock, devices: list[GoveeDevice]) ->
             devices_list.remove(removed)
 
     mock_govee_api.remove_device = MagicMock(side_effect=_remove_device)
-
-
-@pytest.fixture(name="mock_coordinator")
-def fixture_mock_coordinator() -> AsyncMock:
-    """Set up Govee Local API coordinator fixture."""
-    return AsyncMock(spec=GoveeLocalApiCoordinator)
 
 
 @pytest.fixture(name="mock_govee_api")

@@ -16,10 +16,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
+    CONF_DEVICE_IP,
     DEVICE_TIMEOUT,
     DOMAIN,
     REBIND_INTERVAL,
     SCAN_INTERVAL,
+    SUBENTRY_TYPE_DEVICE,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -34,7 +36,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -42,6 +44,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -1077,3 +1080,56 @@ async def test_reload_when_all_endpoints_lost(
     assert mock_govee_api.start.await_count == 2
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data.last_update_success
+
+
+async def test_manual_device_linked_to_subentry(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a manual device is tied to its subentry and a discovered one is not."""
+    manual = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual.is_manual = True
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="discovered-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [manual, discovered])
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: manual.ip},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title=manual.ip,
+                unique_id=manual.ip,
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(entry.subentries))
+
+    manual_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, manual.fingerprint), entry.entry_id
+    )
+    assert manual_device is not None
+    assert manual_device.config_subentry_id == subentry_id
+
+    discovered_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, discovered.fingerprint), entry.entry_id
+    )
+    assert discovered_device is not None
+    assert discovered_device.config_subentry_id is None

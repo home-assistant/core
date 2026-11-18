@@ -17,13 +17,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CLEANUP_TIMEOUT,
     CLEANUP_WAIT_TIMEOUT,
+    CONF_DEVICE_IP,
     CONF_DISCOVERY_INTERVAL_DEFAULT,
     CONF_LISTENING_PORT_DEFAULT,
-    CONF_MANUAL_DEVICES,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     DOMAIN,
     SCAN_INTERVAL,
+    SUBENTRY_TYPE_DEVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,9 +42,14 @@ class GoveeLocalApiConfig:
     def from_config_entry(cls, config_entry: GoveeLocalConfigEntry) -> Self:
         """Return Govee light local configuration from config entry."""
 
-        options = config_entry.options
-
-        return cls(set(options.get(CONF_MANUAL_DEVICES, [])))
+        return cls(
+            {
+                subentry.data[CONF_DEVICE_IP]
+                for subentry in config_entry.get_subentries_of_type(
+                    SUBENTRY_TYPE_DEVICE
+                )
+            }
+        )
 
 
 def log_bound_addresses(controller: GoveeController) -> None:
