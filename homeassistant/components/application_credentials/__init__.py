@@ -120,7 +120,7 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
         domain = current[CONF_DOMAIN]
         auth_domain = current.get(CONF_AUTH_DOMAIN, item_id)
         # async_client_credentials only uses the last credential for an auth domain
-        if self._active_item_id(domain, auth_domain) == item_id:
+        if self.async_active_item_id(domain, auth_domain) == item_id:
             for entry in self.hass.config_entries.async_entries(domain):
                 if entry.data.get("auth_implementation") == auth_domain:
                     raise HomeAssistantError(
@@ -129,7 +129,8 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
         await super().async_delete_item(item_id)
 
-    def _active_item_id(self, domain: str, auth_domain: str) -> str | None:
+    @callback
+    def async_active_item_id(self, domain: str, auth_domain: str) -> str | None:
         """Return the id of the credential used for an auth domain."""
         active_item_id = None
         for item in self.async_items():
@@ -270,14 +271,9 @@ async def _async_config_entry_app_credentials(
     ):
         return None
 
-    for item in hass.data[DATA_COMPONENT].async_items():
-        item_id = item[CONF_ID]
-        if (
-            item[CONF_DOMAIN] == config_entry.domain
-            and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
-        ):
-            return item_id
-    return None
+    return hass.data[DATA_COMPONENT].async_active_item_id(
+        config_entry.domain, auth_domain
+    )
 
 
 class ApplicationCredentialsProtocol(Protocol):

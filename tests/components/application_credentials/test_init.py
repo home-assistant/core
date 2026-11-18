@@ -423,12 +423,17 @@ async def test_websocket_delete_shadowed_auth_domain_credential(
         ClientCredential("other-client-id", CLIENT_SECRET),
         auth_domain="fake_integration_app",
     )
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=TEST_DOMAIN, data={"auth_implementation": "fake_integration_app"}
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
     client = await ws_client()
 
     # The last imported credential is the one in use
+    result = await client.cmd_result(
+        "config_entry", {"config_entry_id": entry.entry_id}
+    )
+    assert result["application_credentials_id"] == "fake_integration_other_client_id"
     resp = await client.cmd(
         "delete", {"application_credentials_id": "fake_integration_other_client_id"}
     )
