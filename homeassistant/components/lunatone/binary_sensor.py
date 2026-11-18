@@ -20,7 +20,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
 )
-from .entity import add_entities_from_builder
+from .entity import add_entities_from_builder, format_device_identifier
 
 PARALLEL_UPDATES = 0
 
@@ -90,35 +90,21 @@ class LunatoneDALIScanStatus(
 
         self._line = line
 
-        device_unique_id = config_entry_unique_id
-        if line is not None:
-            device_unique_id += f"-line{line}"
-
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.construct_device_unique_id(config_entry_unique_id, line))
+                (DOMAIN, format_device_identifier(config_entry_unique_id, line))
             },
         )
         self._attr_unique_id = self.construct_unique_id(config_entry_unique_id, line)
-
-    @staticmethod
-    def construct_device_unique_id(
-        config_entry_unique_id: str, line_id: int | None = None
-    ) -> str:
-        """Returns the unique_id of the parent device."""
-        suffix = f"-line{line_id}" if line_id is not None else ""
-        return f"{config_entry_unique_id}{suffix}"
 
     @staticmethod
     def construct_unique_id(
         config_entry_unique_id: str, line_id: int | None = None
     ) -> str:
         """Returns the unique_id for a device ID."""
-        return f"{
-            LunatoneDALIScanStatus.construct_device_unique_id(
-                config_entry_unique_id, line_id
-            )
-        }-scan-progress"
+        return (
+            f"{format_device_identifier(config_entry_unique_id, line_id)}-scan-progress"
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

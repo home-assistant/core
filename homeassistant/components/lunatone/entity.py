@@ -9,6 +9,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 _EntityT = TypeVar("_EntityT", bound=Entity)
 
 
+def format_device_identifier(
+    config_entry_unique_id: str, line_id: int | None = None
+) -> str:
+    """Return the unique ID of a device."""
+    suffix = f"-line{line_id}" if line_id is not None else ""
+    return f"{config_entry_unique_id}{suffix}"
+
+
 def add_entities_from_builder(
     entity_builder: dict[str, Callable[[], _EntityT]],
     known_entities: set[str],
