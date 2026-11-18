@@ -223,6 +223,13 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @callback
+    def async_set_api_instance(self, api_instance: APIInstance) -> None:
+        """Receive the API instance that exposes this tool.
+
+        A merged API calls this again, so the last call has the complete tool list.
+        """
+
     @override
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
@@ -240,8 +247,9 @@ class APIInstance:
     custom_serializer: Callable[[Any], Any] | None = None
 
     def __post_init__(self) -> None:
-        """Report a tool that does not record the integration providing it."""
+        """Give each tool this instance and report tools without an integration."""
         for tool in self.tools:
+            tool.async_set_api_instance(self)
             if tool.integration is not None:
                 continue
             # A tool class outside an integration, such as a shared helper tool,

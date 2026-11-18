@@ -1,0 +1,13 @@
+{
+  "domain": "code_mode",
+  "name": "Code Mode",
+  "categories": ["ai_voice.ai_models"],
+  "codeowners": ["@balloob"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/code_mode",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": ["pydantic-monty==1.6.0"],
+  "single_config_entry": true
+}

@@ -1,0 +1,9 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Let AI agents run sandboxed Python code that calls several of their tools in one step."
+      }
+    }
+  }
+}
