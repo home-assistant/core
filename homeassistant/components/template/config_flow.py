@@ -139,6 +139,7 @@ from .light import (
     CONF_LEVEL_ACTION,
     CONF_TEMPERATURE,
     CONF_TEMPERATURE_ACTION,
+    CONF_TEMPERATURE_KELVIN,
     async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
@@ -211,7 +212,9 @@ _CONFIG_DEVICE_CLASS_DOMAINS = (
 )
 
 
-def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
+def generate_schema(
+    domain: str, flow_type: str, options: Mapping[str, Any] | None = None
+) -> probatio.Schema:
     """Generate schema."""
     schema: dict[probatio.Marker, Any] = {}
     additional_options: dict[probatio.Marker, Any] = {}
@@ -358,7 +361,16 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_HS): selector.TemplateSelector(),
             probatio.Optional(CONF_HS_ACTION): selector.ActionSelector(),
-            probatio.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TEMPERATURE_KELVIN): selector.TemplateSelector(),
+        }
+        # The deprecated temperature option is only shown to existing helpers
+        if options and CONF_TEMPERATURE in options:
+            schema |= {
+                probatio.Optional(CONF_TEMPERATURE): selector.TemplateSelector(
+                    selector.TemplateSelectorConfig(read_only=True)
+                ),
+            }
+        schema |= {
             probatio.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
         }
 
@@ -584,6 +596,11 @@ options_schema = partial(generate_schema, flow_type="options")
 config_schema = partial(generate_schema, flow_type="config")
 
 
+async def _light_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
+    """Return the light options schema for the options of the config entry."""
+    return options_schema(Platform.LIGHT, options=handler.options)
+
+
 async def _get_forecast_description_place_holders(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, str]:
@@ -663,7 +680,7 @@ def validate_user_input(
     """
 
     async def _validate_user_input(
-        _: SchemaCommonFlowHandler,
+        handler: SchemaCommonFlowHandler,
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
@@ -674,6 +691,10 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
+        if template_type == Platform.LIGHT and CONF_TEMPERATURE_KELVIN in user_input:
+            # temperature_kelvin replaces the deprecated, read only, temperature
+            handler.options.pop(CONF_TEMPERATURE, None)
+            user_input.pop(CONF_TEMPERATURE, None)
         if template_type == Platform.MEDIA_PLAYER:
             for option, required_option, error in _MEDIA_PLAYER_REQUIRED_OPTIONS:
                 if option in user_input and required_option not in user_input:
@@ -871,7 +892,7 @@ OPTIONS_FLOW = {
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
-        options_schema(Platform.LIGHT),
+        _light_options_schema,
         preview="template",
         validate_user_input=validate_user_input(Platform.LIGHT),
     ),
@@ -1037,7 +1058,7 @@ def ws_start_preview(
             raise HomeAssistantError
         template_type = config_entry.options["template_type"]
         name = config_entry.options["name"]
-        schema = cast(probatio.Schema, OPTIONS_FLOW[template_type].schema)
+        schema = options_schema(template_type, options=config_entry.options)
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, flow_status["handler"]

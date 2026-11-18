@@ -443,6 +443,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             configs.append(probatio.EnsureList()(config[key]))
 
     if not configs:
+        light_platform.async_update_deprecated_mireds_options_issues(hass, [])
         return config
 
     config_sections = []
@@ -464,6 +465,15 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             continue
 
         config_sections.append(template_config)
+
+    light_platform.async_update_deprecated_mireds_options_issues(
+        hass,
+        [
+            light_config
+            for section in config_sections
+            for light_config in section.get(LIGHT_DOMAIN, [])
+        ],
+    )
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.

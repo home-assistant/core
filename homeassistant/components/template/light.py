@@ -3,7 +3,10 @@
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
+from functools import partial
+import hashlib
 import logging
+import os
 from typing import TYPE_CHECKING, Any, Self, override
 
 import probatio
@@ -40,7 +43,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -81,14 +84,27 @@ CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST = "effect_list"
 CONF_LEVEL = "level"
 CONF_LEVEL_ACTION = "set_level"
+CONF_MAX_KELVIN = "max_kelvin"
 CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_KELVIN = "min_kelvin"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_OFF_ACTION = "turn_off"
 CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition"
 CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
+CONF_TEMPERATURE_KELVIN = "temperature_kelvin"
 CONF_XY_ACTION = "set_xy"
+
+# Deprecated options in mireds, mapped to the option in kelvin that replaces them
+DEPRECATED_MIREDS_OPTIONS = {
+    CONF_TEMPERATURE: CONF_TEMPERATURE_KELVIN,
+    CONF_MAX_MIREDS: CONF_MIN_KELVIN,
+    CONF_MIN_MIREDS: CONF_MAX_KELVIN,
+}
+DEPRECATED_MIREDS_OPTIONS_ISSUE_ID = "deprecated_light_mireds_options"
+DEPRECATED_TEMPERATURE_ISSUE_ID = "deprecated_light_temperature"
+DEPRECATED_MIREDS_BREAKS_IN = "2027.6.0"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
@@ -117,7 +133,9 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_HS): cv.template,
         probatio.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_LEVEL): cv.template,
+        probatio.Optional(CONF_MAX_KELVIN): cv.template,
         probatio.Optional(CONF_MAX_MIREDS): cv.template,
+        probatio.Optional(CONF_MIN_KELVIN): cv.template,
         probatio.Optional(CONF_MIN_MIREDS): cv.template,
         probatio.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -131,13 +149,28 @@ LIGHT_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
         probatio.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(CONF_TEMPERATURE): cv.template,
+        probatio.Optional(CONF_TEMPERATURE_KELVIN): cv.template,
         probatio.Optional(CONF_XY): cv.template,
         probatio.Optional(CONF_XY_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
+
+def _validate_color_temp_range(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that the color temperature range is not set in mireds and kelvin."""
+    if any(option in config for option in (CONF_MIN_MIREDS, CONF_MAX_MIREDS)) and any(
+        option in config for option in (CONF_MIN_KELVIN, CONF_MAX_KELVIN)
+    ):
+        raise probatio.Invalid(
+            f"'{CONF_MIN_KELVIN}' and '{CONF_MAX_KELVIN}' cannot be used together with"
+            f" '{CONF_MIN_MIREDS}' or '{CONF_MAX_MIREDS}'"
+        )
+    return config
+
+
 _LIGHT_VALIDATION = (
     tcv.inclusive_group("effect", CONF_EFFECT, CONF_EFFECT_LIST, CONF_EFFECT_ACTION),
+    _validate_color_temp_range,
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
@@ -184,6 +217,25 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
+    issue_id = f"{DEPRECATED_TEMPERATURE_ISSUE_ID}_{config_entry.entry_id}"
+    if CONF_TEMPERATURE in config_entry.options:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=DEPRECATED_MIREDS_BREAKS_IN,
+            config_entry_id=config_entry.entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_TEMPERATURE_ISSUE_ID,
+            translation_placeholders={
+                "name": config_entry.title,
+                "breaks_in_ha_version": DEPRECATED_MIREDS_BREAKS_IN,
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+
     await async_setup_template_entry(
         hass,
         config_entry,
@@ -208,6 +260,69 @@ def async_create_preview_light(
         LIGHT_CONFIG_ENTRY_SCHEMA,
         True,
     )
+
+
+@callback
+def async_update_deprecated_mireds_options_issues(
+    hass: HomeAssistant, light_configs: list[ConfigType]
+) -> None:
+    """Create an issue per light entity using options in mireds."""
+    issue_ids: set[str] = set()
+    for light_config in light_configs:
+        deprecated = [key for key in light_config if key in DEPRECATED_MIREDS_OPTIONS]
+        if not deprecated:
+            continue
+
+        identifier = tcv.entity_config_identifier(Platform.LIGHT, light_config)
+        # The id only changes with the configuration, so a dismissed issue stays
+        # dismissed until the configuration changes
+        fingerprint = "\n".join(
+            [
+                identifier,
+                *(
+                    f"{key}={getattr(light_config[key], 'template', light_config[key])}"
+                    for key in sorted(deprecated)
+                ),
+            ]
+        )
+        issue_id = (
+            f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_"
+            f"{hashlib.sha256(fingerprint.encode()).hexdigest()[:16]}"
+        )
+        issue_ids.add(issue_id)
+
+        changes: list[str] = []
+        for key in deprecated:
+            change = f"`{key}` → `{DEPRECATED_MIREDS_OPTIONS[key]}`"
+            # Keys loaded from YAML carry the file and line they were defined on
+            if (config_file := getattr(key, "__config_file__", None)) is not None:
+                path = os.path.relpath(config_file, hass.config.config_dir)
+                change = f"`{path}:{getattr(key, '__line__', '?')}`: {change}"
+            changes.append(f"- {change}")
+
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            breaks_in_ha_version=DEPRECATED_MIREDS_BREAKS_IN,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=DEPRECATED_MIREDS_OPTIONS_ISSUE_ID,
+            translation_placeholders={
+                "identifier": identifier,
+                "breaks_in_ha_version": DEPRECATED_MIREDS_BREAKS_IN,
+                "options": "\n".join(changes),
+            },
+            learn_more_url="https://www.home-assistant.io/integrations/template/#light",
+        )
+
+    for domain, issue_id in list(ir.async_get(hass).issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(f"{DEPRECATED_MIREDS_OPTIONS_ISSUE_ID}_")
+            and issue_id not in issue_ids
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
 def _string_to_list(result: str) -> list[float]:
@@ -408,15 +523,55 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         )
         self.add_assumed_attribute("_attr_brightness", CONF_LEVEL, CONF_LEVEL_ACTION)
 
-        # Setup Color temperature
+        # Min/Max temperature templates, set up first to validate the temperature
         self.setup_template(
-            CONF_TEMPERATURE,
+            CONF_MAX_MIREDS,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_MIREDS),
+            partial(
+                self._update_min_kelvin,
+                convert=color_util.color_temperature_mired_to_kelvin,
+            ),
+        )
+        self.setup_template(
+            CONF_MIN_MIREDS,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_MIREDS),
+            partial(
+                self._update_max_kelvin,
+                convert=color_util.color_temperature_mired_to_kelvin,
+            ),
+        )
+        self.setup_template(
+            CONF_MIN_KELVIN,
+            "_attr_min_color_temp_kelvin",
+            tcv.number(self, CONF_MIN_KELVIN, 1, None, int),
+            self._update_min_kelvin,
+        )
+        self.setup_template(
+            CONF_MAX_KELVIN,
+            "_attr_max_color_temp_kelvin",
+            tcv.number(self, CONF_MAX_KELVIN, 1, None, int),
+            self._update_max_kelvin,
+        )
+
+        # Setup Color temperature, temperature_kelvin takes precedence over the
+        # deprecated temperature option
+        self._temperature_option = CONF_TEMPERATURE_KELVIN
+        temperature_validator = self._validate_temperature_kelvin
+        if CONF_TEMPERATURE in config and CONF_TEMPERATURE_KELVIN not in config:
+            self._temperature_option = CONF_TEMPERATURE
+            temperature_validator = self._validate_temperature
+        self.setup_template(
+            self._temperature_option,
             "_attr_color_temp_kelvin",
-            self._validate_temperature,
+            temperature_validator,
             self._update_color("_attr_color_temp_kelvin", ColorMode.COLOR_TEMP),
         )
         self.add_assumed_attribute(
-            "_attr_color_temp_kelvin", CONF_TEMPERATURE, CONF_TEMPERATURE_ACTION
+            "_attr_color_temp_kelvin",
+            self._temperature_option,
+            CONF_TEMPERATURE_ACTION,
         )
 
         # Setup Hue Saturation
@@ -473,20 +628,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             ),
         )
         self.add_assumed_attribute("_attr_effect", CONF_EFFECT, CONF_EFFECT_ACTION)
-
-        # Min/Max temperature templates
-        self.setup_template(
-            CONF_MAX_MIREDS,
-            "_attr_max_color_temp_kelvin",
-            tcv.number(self, CONF_MAX_MIREDS),
-            self._update_max_mireds,
-        )
-        self.setup_template(
-            CONF_MIN_MIREDS,
-            "_attr_min_color_temp_kelvin",
-            tcv.number(self, CONF_MIN_MIREDS),
-            self._update_min_mireds,
-        )
 
         # Transition
         self.setup_template(
@@ -575,9 +716,14 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             optimistic_set = True
 
         for option, attr, color_mode, validator in (
-            (CONF_TEMPERATURE, ATTR_COLOR_TEMP_KELVIN, ColorMode.COLOR_TEMP, None),
             (
-                CONF_TEMPERATURE,
+                self._temperature_option,
+                ATTR_COLOR_TEMP_KELVIN,
+                ColorMode.COLOR_TEMP,
+                None,
+            ),
+            (
+                self._temperature_option,
                 ATTR_COLOR_TEMP,
                 ColorMode.COLOR_TEMP,
                 color_util.color_temperature_mired_to_kelvin,
@@ -617,7 +763,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._attr_color_mode = color_mode
 
             for _option in (
-                CONF_TEMPERATURE,
+                self._temperature_option,
                 CONF_HS,
                 CONF_RGB,
                 CONF_RGBW,
@@ -799,16 +945,42 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
         return None
 
     @callback
-    def _update_max_mireds(self, render):
-        """Update the max mireds from the template."""
+    def _validate_temperature_kelvin(self, result: Any) -> int | None:
+        """Validate the temperature in kelvin from the template."""
+        if tcv.check_result_for_none(result):
+            return None
+
+        if (min_kelvin := self._attr_min_color_temp_kelvin) is None:
+            min_kelvin = DEFAULT_MIN_KELVIN
+        if (max_kelvin := self._attr_max_color_temp_kelvin) is None:
+            max_kelvin = DEFAULT_MAX_KELVIN
+        if (
+            isinstance(result, (int, float))
+            and not isinstance(result, bool)
+            and min_kelvin <= result <= max_kelvin
+        ):
+            return int(result)
+
+        tcv.log_validation_result_error(
+            self,
+            CONF_TEMPERATURE_KELVIN,
+            result,
+            f"expected a number between {min_kelvin} and {max_kelvin}",
+        )
+        return None
+
+    @callback
+    def _update_min_kelvin(
+        self, render: Any, convert: Callable[[int], int] | None = None
+    ) -> None:
+        """Update the min kelvin from the template."""
         if render is None:
             self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
             return
 
         try:
-            self._attr_min_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(int(render))
-            )
+            value = int(render)
+            self._attr_min_color_temp_kelvin = convert(value) if convert else value
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
@@ -817,16 +989,17 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
             self._attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     @callback
-    def _update_min_mireds(self, render):
-        """Update the min mireds from the template."""
+    def _update_max_kelvin(
+        self, render: Any, convert: Callable[[int], int] | None = None
+    ) -> None:
+        """Update the max kelvin from the template."""
         if render is None:
             self._attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
             return
 
         try:
-            self._attr_max_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(int(render))
-            )
+            value = int(render)
+            self._attr_max_color_temp_kelvin = convert(value) if convert else value
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
