@@ -128,10 +128,11 @@ async def async_detect_config(hass: HomeAssistant) -> dict[str, Any]:
     else:
         info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY  # noqa: SLF001
 
-    if location_info.latitude:
+    # 0 is a valid latitude and longitude
+    if location_info.latitude is not None:
         info["latitude"] = location_info.latitude
 
-    if location_info.longitude:
+    if location_info.longitude is not None:
         info["longitude"] = location_info.longitude
 
     if location_info.time_zone:

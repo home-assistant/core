@@ -1656,6 +1656,23 @@ async def test_update_core_config_auto_location(
     assert result["time_zone"] == "US/Pacific"
 
 
+async def test_update_core_config_auto_location_zero(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that location 'auto' sets a detected latitude and longitude of 0."""
+    tool = UpdateCoreConfigTool()
+    with patch(
+        "homeassistant.util.location.async_detect_location_info",
+        return_value=LOCATION_INFO._replace(latitude=0.0, longitude=0.0),
+    ):
+        res = await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"location": "auto"}), llm_context
+        )
+    assert res.error is False
+    assert res.data["result"]["latitude"] == 0.0
+    assert res.data["result"]["longitude"] == 0.0
+
+
 async def test_update_core_config_auto_location_fails(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
