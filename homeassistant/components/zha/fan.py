@@ -108,11 +108,11 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the entity on."""
-        await self.entity_data.entity.async_turn_on(
-            percentage=percentage, preset_mode=preset_mode
-        )
         self._set_group_context_expected_state(
             STATE_OFF if percentage == 0 and preset_mode is None else STATE_ON
+        )
+        await self.entity_data.entity.async_turn_on(
+            percentage=percentage, preset_mode=preset_mode
         )
         self.async_write_ha_state()
 
@@ -120,26 +120,26 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_off()
         self._set_group_context_expected_state(STATE_OFF)
+        await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        await self.entity_data.entity.async_set_percentage(percentage=percentage)
         self._set_group_context_expected_state(
             STATE_OFF if percentage == 0 else STATE_ON
         )
+        await self.entity_data.entity.async_set_percentage(percentage=percentage)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
-        await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self._set_group_context_expected_state(STATE_ON)
+        await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
     @property

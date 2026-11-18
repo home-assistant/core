@@ -58,14 +58,14 @@ class Switch(ZHAEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_data.entity.async_turn_on()
         self._set_group_context_expected_state(STATE_ON)
+        await self.entity_data.entity.async_turn_on()
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_data.entity.async_turn_off()
         self._set_group_context_expected_state(STATE_OFF)
+        await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()

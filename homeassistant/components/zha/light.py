@@ -182,6 +182,9 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
             if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN))
             else None
         )
+        self._set_group_context_expected_state(
+            STATE_OFF if kwargs.get(ATTR_BRIGHTNESS) == 0 else STATE_ON
+        )
         await self.entity_data.entity.async_turn_on(
             transition=kwargs.get(ATTR_TRANSITION),
             brightness=kwargs.get(ATTR_BRIGHTNESS),
@@ -190,19 +193,16 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
             color_temp=color_temp,
             xy_color=kwargs.get(ATTR_XY_COLOR),
         )
-        self._set_group_context_expected_state(
-            STATE_OFF if kwargs.get(ATTR_BRIGHTNESS) == 0 else STATE_ON
-        )
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        self._set_group_context_expected_state(STATE_OFF)
         await self.entity_data.entity.async_turn_off(
             transition=kwargs.get(ATTR_TRANSITION)
         )
-        self._set_group_context_expected_state(STATE_OFF)
         self.async_write_ha_state()
 
     @callback
