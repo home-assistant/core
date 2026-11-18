@@ -252,6 +252,8 @@ OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
 RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
 IR_RAW_RECEIVE_DISABLED_ISSUE_ID = "ir_raw_receive_disabled_{unique}"
 IR_RAW_RECEIVE_MIN_FIRMWARE = 20260903
+# Older firmware reports the brightness level as the 0-255 backlight value
+WALL_DISPLAY_UI_MIN_FIRMWARE = "2.6.2"
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
