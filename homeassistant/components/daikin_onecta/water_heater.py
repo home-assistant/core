@@ -17,7 +17,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterServiceArgument,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -97,6 +97,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         )
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh all state attributes from the device."""
         self._attr_supported_features = self.get_supported_features()
@@ -161,12 +162,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Publish a successful write to all entities sharing the device data."""
         self.update_state()
         self.coordinator.async_update_listeners()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
 
     @property
     def hot_water_management_point(self) -> ManagementPoint | None:
@@ -262,13 +257,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         target_temperature = round_temperature_to_step(
             value,
             step_value if step_value is not None and step_value > 0 else 0.5,
-            dht.min_value,
-        )
-        target_temperature = min(
-            max(
-                target_temperature,
-                dht.min_value if dht.min_value is not None else self.min_temp,
-            ),
+            dht.min_value if dht.min_value is not None else self.min_temp,
             dht.max_value if dht.max_value is not None else self.max_temp,
         )
         if target_temperature != self._attr_native_target_temperature:

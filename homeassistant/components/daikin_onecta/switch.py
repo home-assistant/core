@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
@@ -100,15 +100,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         )
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         self._switch_state = self.sensor_value()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
 
     @property
     @override

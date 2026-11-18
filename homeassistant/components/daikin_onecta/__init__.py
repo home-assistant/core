@@ -80,6 +80,18 @@ async def async_unload_entry(
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
+def _daikin_device_identifier(device_entry: AnyDeviceEntry) -> str | None:
+    """Return the first Daikin identifier from a registry device."""
+    return next(
+        (
+            identifier
+            for domain, identifier in device_entry.identifiers
+            if domain == DOMAIN
+        ),
+        None,
+    )
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: DaikinOnectaConfigEntry,
@@ -88,14 +100,7 @@ async def async_remove_config_entry_device(
     """Allow removal only for gateways or points confirmed absent from the account."""
     if config_entry.state is not ConfigEntryState.LOADED:
         return False
-    gateway_id = next(
-        (
-            identifier
-            for domain, identifier in device_entry.identifiers
-            if domain == DOMAIN
-        ),
-        None,
-    )
+    gateway_id = _daikin_device_identifier(device_entry)
     account_id = config_entry.unique_id or config_entry.entry_id
     if gateway_id is None or gateway_id == f"account_{account_id}":
         return False
@@ -110,14 +115,7 @@ async def async_remove_config_entry_device(
         )
         if parent_device is None:
             return False
-        parent_gateway_id = next(
-            (
-                identifier
-                for domain, identifier in parent_device.identifiers
-                if domain == DOMAIN
-            ),
-            None,
-        )
+        parent_gateway_id = _daikin_device_identifier(parent_device)
         if parent_gateway_id is None:
             return False
         child_prefix = f"{parent_gateway_id}_"
@@ -162,7 +160,12 @@ async def async_remove_config_entry_device(
         return False
     try:
         sites = await coordinator.async_get_sites()
-    except OAuth2TokenRequestError, OnectaError, aiohttp.ClientError, TimeoutError:
+    except (
+        OAuth2TokenRequestError,
+        OnectaError,
+        aiohttp.ClientError,
+        TimeoutError,
+    ):
         return False
 
     # Polling may have restored the gateway while the on-demand lookup awaited.

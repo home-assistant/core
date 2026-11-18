@@ -5,7 +5,7 @@ from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
 
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import (
     ChildDeviceInfo,
@@ -19,6 +19,33 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
+
+
+class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
+    """Share coordinator state updates and successful-add lifecycle handling."""
+
+    _remove_unique_id_callback: CALLBACK_TYPE | None = None
+
+    def set_unique_id_cleanup_callback(self, cleanup_callback: CALLBACK_TYPE) -> None:
+        """Set cleanup to run after this entity has actually been added."""
+        self._remove_unique_id_callback = cleanup_callback
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Release unique IDs only after this entity was actually added."""
+        await super().async_added_to_hass()
+        if (cleanup_callback := self._remove_unique_id_callback) is not None:
+            self.async_on_remove(cleanup_callback)
+            self._remove_unique_id_callback = None
+
+    def update_state(self) -> None:
+        """Refresh entity state from the coordinator model."""
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        self.update_state()
+        self.async_write_ha_state()
 
 
 def add_entities_on_coordinator_update(
@@ -48,7 +75,8 @@ def add_entities_on_coordinator_update(
                 def remove_unique_id(unique_id: str = unique_id) -> None:
                     added_unique_ids.discard(unique_id)
 
-                entity.async_on_remove(remove_unique_id)
+                if isinstance(entity, _DaikinOnectaCoordinatorEntity):
+                    entity.set_unique_id_cleanup_callback(remove_unique_id)
             async_add_entities(entities)
 
     add_new_entities()
@@ -102,7 +130,7 @@ def management_point_device_info(
     )
 
 
-class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
+class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
     """Base entity for a Daikin gateway device."""
 
     def __init__(
@@ -137,7 +165,7 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         return _gateway_device_info(self._device)
 
 
-class DaikinOnectaAccountEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
+class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
     """Base entity backed by a Daikin Onecta account."""
 
     _attr_has_entity_name = True

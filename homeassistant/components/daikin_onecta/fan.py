@@ -7,7 +7,7 @@ from daikin_onecta.air_purification import AirPurificationClient
 from daikin_onecta.models import AirPurification
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -84,7 +84,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         self._attr_unique_id = management_point_unique_id(
             device.id, embedded_id, "air_purifier"
         )
-        self._update_state()
+        self.update_state()
 
     def _air_purification(self) -> AirPurification | None:
         """Return the typed air-purification state view."""
@@ -170,7 +170,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         """Return whether the purifier still exposes writable power control."""
         return super().available and self._power_control_is_available()
 
-    def _update_state(self) -> None:
+    @override
+    def update_state(self) -> None:
         """Refresh entity state from typed purifier data."""
         purification = self._air_purification()
         if purification is None:
@@ -255,7 +256,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             purification = self._air_purification()
             if purification is not None and purification.power is not None:
                 purification.power.value = "on"
-            self._update_state()
+            self.update_state()
             self.coordinator.async_update_listeners()
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
@@ -278,7 +279,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         purification = self._air_purification()
         if purification is not None and purification.power is not None:
             purification.power.value = "off"
-        self._update_state()
+        self.update_state()
         self.coordinator.async_update_listeners()
 
     @override
@@ -320,7 +321,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         purification = self._air_purification()
         if purification is not None and purification.mode is not None:
             purification.mode.value = mode
-        self._update_state()
+        self.update_state()
         self.coordinator.async_update_listeners()
 
     @override
@@ -365,12 +366,5 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             and (fixed := operation.fan_speed.modes.get(FANMODE_FIXED)) is not None
         ):
             fixed.value = speed
-        self._update_state()
+        self.update_state()
         self.coordinator.async_update_listeners()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated coordinator data."""
-        self._update_state()
-        self.async_write_ha_state()

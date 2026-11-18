@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -193,14 +193,12 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             else:
                 self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
-    @callback
     @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def update_state(self) -> None:
+        """Refresh firmware update state from the current management point."""
         mp = self._device.management_point(self._embedded_id)
         if mp is not None:
             self._update_from_management_point(mp)
-        self.async_write_ha_state()
 
     @property
     @override

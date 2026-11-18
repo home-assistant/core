@@ -15,9 +15,12 @@ def is_read_only_on_off_value(settable: bool, values: list[str] | None) -> bool:
 
 
 def round_temperature_to_step(
-    value: float, step: float, minimum: float | None = None
+    value: float,
+    step: float,
+    minimum: float | None = None,
+    maximum: float | None = None,
 ) -> float:
-    """Round a temperature to its nearest minimum-relative step without float noise.
+    """Round and clamp a temperature to its nearest minimum-relative step.
 
     Halfway values round away from zero, matching the conventional behavior
     expected for user supplied temperature targets.
@@ -28,4 +31,9 @@ def round_temperature_to_step(
     steps = ((value_decimal - minimum_decimal) / step_decimal).to_integral_value(
         rounding=ROUND_HALF_UP
     )
-    return float(minimum_decimal + steps * step_decimal)
+    rounded = minimum_decimal + steps * step_decimal
+    if minimum is not None:
+        rounded = max(rounded, minimum_decimal)
+    if maximum is not None:
+        rounded = min(rounded, Decimal(str(maximum)))
+    return float(rounded)

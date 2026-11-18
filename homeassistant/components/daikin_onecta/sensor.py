@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -297,6 +297,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._attr_unique_id = _energy_sensor_unique_id(self._device.id, details)
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         self._attr_native_value = self.sensor_value()
@@ -339,12 +340,6 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         """Return whether the matching energy aggregate is still available."""
         return super().available and self._energy_aggregate() is not None
 
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
-
     def sensor_value(self) -> float | None:
         """Return energy aggregated for the current day, week, month, or year.
 
@@ -382,11 +377,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
-        self._source_available = False
-        self._source_availability_sequence: int | None = None
-        self._characteristic_sequence: int | None = None
-        self._cached_point: ManagementPoint | None = None
-        self._cached_characteristic: Characteristic | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
@@ -397,23 +387,11 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         )
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        point, characteristic = self._current_characteristic()
+        _, characteristic = self._current_characteristic()
         self._attr_native_value = self._sensor_value(characteristic)
-        if self._source_availability_sequence != self.coordinator.cloud_update_sequence:
-            self._source_available = (
-                point is not None
-                and characteristic is not None
-                and (
-                    self._sub_type is not None
-                    or scalar_platform(
-                        self._value, characteristic, point.management_point_type
-                    )
-                    is Platform.SENSOR
-                )
-            )
-            self._source_availability_sequence = self.coordinator.cloud_update_sequence
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
             self.entity_description,
@@ -422,26 +400,16 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     def _current_characteristic(
         self,
     ) -> tuple[ManagementPoint | None, Characteristic | None]:
-        """Return the characteristic cached for the current cloud response."""
-        if self._characteristic_sequence != self.coordinator.cloud_update_sequence:
-            point = self._device.management_point(self._embedded_id)
-            self._cached_point = point
-            if point is None:
-                self._cached_characteristic = None
-            elif self._sub_type == "sensoryData":
-                self._cached_characteristic = point.sensory_characteristic(self._value)
-            else:
-                self._cached_characteristic = point.scalar_characteristics().get(
-                    self._value
-                )
-            self._characteristic_sequence = self.coordinator.cloud_update_sequence
-        return self._cached_point, self._cached_characteristic
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
+        """Return the current characteristic from its management point."""
+        point = self._device.management_point(self._embedded_id)
+        if point is None:
+            return None, None
+        characteristic = (
+            point.sensory_characteristic(self._value)
+            if self._sub_type == "sensoryData"
+            else point.scalar_characteristics().get(self._value)
+        )
+        return point, characteristic
 
     def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
@@ -474,7 +442,20 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the source characteristic is still available."""
-        return super().available and self._source_available
+        if not super().available:
+            return False
+        point, characteristic = self._current_characteristic()
+        return (
+            point is not None
+            and characteristic is not None
+            and (
+                self._sub_type is not None
+                or scalar_platform(
+                    self._value, characteristic, point.management_point_type
+                )
+                is Platform.SENSOR
+            )
+        )
 
 
 class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
@@ -495,15 +476,10 @@ class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
         self.entity_description = description
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the rate-limit value."""
         self._attr_native_value = self.sensor_value()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
 
     def sensor_value(self) -> int | None:
         """Return the current API rate-limit value."""

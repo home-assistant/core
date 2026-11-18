@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
@@ -107,15 +107,10 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         self.entity_description = description
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         self._attr_is_on = self.sensor_value()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""

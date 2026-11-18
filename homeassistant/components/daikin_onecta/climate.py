@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -168,9 +168,10 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             self._device.id, self._embedded_id, self._setpoint
         )
         self.entity_description = description
-        self._update_state()
+        self.update_state()
 
-    def _update_state(self) -> None:
+    @override
+    def update_state(self) -> None:
         """Refresh all state attributes from the device."""
         # Successful writes update the typed model optimistically so Home
         # Assistant reflects the new state without waiting for the next poll.
@@ -201,12 +202,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 client.climate_control(self._device.id, self._embedded_id)
             )
         )
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self._update_state()
-        self.async_write_ha_state()
 
     @property
     @override
@@ -363,15 +358,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             value = round_temperature_to_step(
                 target_temperature,
                 step if step is not None and step > 0 else 0.5,
-                setpoint.min_value,
-            )
-            value = min(
-                max(
-                    value,
-                    setpoint.min_value
-                    if setpoint.min_value is not None
-                    else self.min_temp,
-                ),
+                setpoint.min_value if setpoint.min_value is not None else self.min_temp,
                 setpoint.max_value if setpoint.max_value is not None else self.max_temp,
             )
 
@@ -481,7 +468,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 cc.on_off_mode.value = on_off_mode
                 # Publish the confirmed power change before a subsequent
                 # operation-mode write, which may be rejected by the cloud.
-                self._update_state()
+                self.update_state()
                 self.coordinator.async_update_listeners()
 
         # Only set the advertised operationMode when it has changed.
@@ -500,7 +487,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 cc.operation_mode.value = operation_mode
             # When switching HVAC mode it could be that we can set min/max/target/etc
             # which we couldn't set with a previous HVAC mode.
-            self._update_state()
+            self.update_state()
             self.coordinator.async_update_listeners()
 
     def _get_fan_mode(self) -> str | None:
@@ -830,13 +817,13 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if (current_preset := self.preset_mode) not in (None, PRESET_NONE):
             if not await self._async_disable_preset_mode(current_preset):
                 self._raise_command_failed("set_preset_mode_failed")
-            self._update_state()
+            self.update_state()
             self.coordinator.async_update_listeners()
 
         if preset_mode != PRESET_NONE:
             if not await self._async_enable_preset_mode(preset_mode):
                 self._raise_command_failed("set_preset_mode_failed")
-            self._update_state()
+            self.update_state()
             self.coordinator.async_update_listeners()
 
     def _get_preset_modes(self) -> list[str]:

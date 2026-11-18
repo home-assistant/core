@@ -5,18 +5,22 @@ import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.coordinator import (
+    OnectaDataUpdateCoordinator,
+)
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
-from homeassistant.components.daikin_onecta.discovery import scalar_platform
 from homeassistant.components.daikin_onecta.sensor import (
     SENSOR_DESCRIPTIONS,
     DaikinEnergySensor,
     DaikinValueSensor,
     EnergySensorDetails,
     ValueSensorDetails,
+    _create_device_sensors,
     _native_unit,
     add_energy_sensors,
 )
@@ -25,6 +29,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .platform_helpers import _async_fire_coordinator_update
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
@@ -364,10 +369,10 @@ async def test_sensors_become_unavailable_when_management_point_disappears(
     assert hass.states.get(energy_entity_id).state == "unavailable"
 
 
-async def test_value_sensor_reuses_classification_between_state_writes(
+async def test_value_sensor_availability_uses_current_model_data(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Reuse the current cloud characteristic for repeated local state writes."""
+    """Reflect an in-memory characteristic removal before the next cloud poll."""
     await _async_setup_fixture(hass, config_entry, "altherma")
     coordinator = config_entry.runtime_data
     gateway = next(iter(coordinator.data.values()))
@@ -375,20 +380,41 @@ async def test_value_sensor_reuses_classification_between_state_writes(
     entity = hass.data[SENSOR_DOMAIN].get_entity("sensor.altherma_control_mode")
     assert isinstance(entity, DaikinValueSensor)
 
-    with (
-        patch.object(
-            point, "scalar_characteristics", wraps=point.scalar_characteristics
-        ) as scalar_characteristics,
-        patch(
-            "homeassistant.components.daikin_onecta.sensor.scalar_platform",
-            wraps=scalar_platform,
-        ) as classify,
-    ):
-        entity.update_state()
-        entity.update_state()
+    assert entity.available
+    point.characteristics.pop("controlMode")
 
-    scalar_characteristics.assert_not_called()
-    classify.assert_not_called()
+    assert not entity.available
+
+
+async def test_disabled_value_sensor_is_not_rebuilt_on_poll(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep disabled-by-default entity IDs reserved after Home Assistant aborts add."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    entity_entry = entity_registry.async_get("sensor.altherma_ip_address")
+    assert entity_entry is not None and entity_entry.disabled_by is not None
+
+    created_unique_ids: list[str] = []
+
+    def track_created_entities(
+        coordinator: OnectaDataUpdateCoordinator, added_unique_ids: set[str]
+    ) -> list[DaikinValueSensor]:
+        entities = _create_device_sensors(coordinator, added_unique_ids)
+        created_unique_ids.extend(
+            entity.unique_id for entity in entities if entity.unique_id is not None
+        )
+        return entities
+
+    with patch(
+        "homeassistant.components.daikin_onecta.sensor._create_device_sensors",
+        side_effect=track_created_entities,
+    ):
+        await _async_fire_coordinator_update(hass, config_entry.runtime_data, freezer)
+
+    assert entity_entry.unique_id not in created_unique_ids
 
 
 async def test_limit_sensor_updates_through_coordinator_listener(

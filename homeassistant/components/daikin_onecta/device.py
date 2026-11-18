@@ -28,11 +28,6 @@ class DaikinOnectaDevice:
         """Return a management point by embedded id."""
         return self.device.management_point(embedded_id)
 
-    @property
-    def gateway_embedded_id(self) -> str | None:
-        """Return the embedded ID of the gateway management point."""
-        return self.device.gateway_embedded_id
-
     def set_device_data(self, device: GatewayDevice) -> bool:
         """Overwrite cloud data and return whether device metadata changed."""
         previous_metadata = self._metadata()

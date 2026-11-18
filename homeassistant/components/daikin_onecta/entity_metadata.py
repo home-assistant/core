@@ -3,13 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-)
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
@@ -785,7 +780,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
 )
 
 
-
 def entity_description_kwargs(metadata: DaikinEntityMetadata) -> dict[str, Any]:
     """Return the entity-description fields shared by all platforms."""
     return {
@@ -832,9 +826,4 @@ SENSOR_KEYS = frozenset(
     if metadata.key != "dryKeepSetting"
     and not isinstance(metadata.device_class, BinarySensorDeviceClass)
     and not isinstance(metadata.device_class, UpdateDeviceClass)
-)
-UPDATE_KEYS = frozenset(
-    metadata.key
-    for metadata in ENTITY_METADATA
-    if isinstance(metadata.device_class, UpdateDeviceClass)
 )

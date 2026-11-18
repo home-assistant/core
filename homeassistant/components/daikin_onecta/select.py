@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, override
 from daikin_onecta.models import ScheduleSelection
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SCHEDULE_DISABLED
@@ -89,16 +89,11 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         self.entity_description = description
         self.update_state()
 
+    @override
     def update_state(self) -> None:
         """Refresh the available and selected schedule options."""
         self._attr_options = self.get_options()
         self._attr_current_option = self.get_current_option()
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        self.update_state()
-        self.async_write_ha_state()
 
     def selection(self) -> ScheduleSelection | None:
         """Return the schedule selection for the current schedule mode."""

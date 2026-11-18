@@ -13,7 +13,6 @@ from homeassistant.components.daikin_onecta.binary_sensor import (
     BINARY_SENSOR_DESCRIPTIONS,
 )
 from homeassistant.components.daikin_onecta.button import BUTTON_DESCRIPTIONS
-from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.select import SELECT_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.components.daikin_onecta.switch import SWITCH_DESCRIPTIONS
@@ -37,15 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .platform_helpers import _execute_typed_command
-from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
-
-
-def test_device_exposes_gateway_embedded_id() -> None:
-    """Expose the gateway management point ID from the device wrapper."""
-    gateway = _load_gateway_devices("altherma")[0]
-    device = DaikinOnectaDevice(gateway)
-
-    assert device.gateway_embedded_id == gateway.gateway_embedded_id
+from .test_climate_snapshots import _async_setup_fixture
 
 
 async def test_platform_entities_become_unavailable_after_failed_update(
