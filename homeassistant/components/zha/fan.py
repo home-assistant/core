@@ -7,7 +7,7 @@ from zha.application.platforms.fan.const import FanEntityFeature as ZHAFanEntity
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -106,6 +106,9 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the entity on."""
+        self._set_group_context_expected_state(
+            STATE_OFF if percentage == 0 and preset_mode is None else STATE_ON
+        )
         await self.entity_data.entity.async_turn_on(
             percentage=percentage, preset_mode=preset_mode
         )
@@ -115,6 +118,7 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        self._set_group_context_expected_state(STATE_OFF)
         await self.entity_data.entity.async_turn_off()
         self.async_write_ha_state()
 
@@ -122,6 +126,9 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        self._set_group_context_expected_state(
+            STATE_OFF if percentage == 0 else STATE_ON
+        )
         await self.entity_data.entity.async_set_percentage(percentage=percentage)
         self.async_write_ha_state()
 
@@ -129,6 +136,7 @@ class ZhaFan(FanEntity, ZHASupportedFeaturesEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
+        self._set_group_context_expected_state(STATE_ON)
         await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
