@@ -146,12 +146,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
             device = MyPVLocalDevice(host, session=async_get_clientsession(self.hass))
             try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
+                connected = await device.connect()
             except MyPVAuthenticationError:
                 password_needed = True
             except MyPVDeviceNotSupportedError:
                 return self.async_abort(reason="unsupported_device")
+            else:
+                if not connected:
+                    errors[CONF_BASE] = "cannot_connect"
             finally:
                 await device.disconnect()
 
@@ -192,10 +194,12 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 host, password, session=async_get_clientsession(self.hass)
             )
             try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
+                connected = await device.connect()
             except MyPVAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_password"
+            else:
+                if not connected:
+                    errors[CONF_BASE] = "cannot_connect"
             finally:
                 await device.disconnect()
 
@@ -256,10 +260,12 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 host, password, session=async_get_clientsession(self.hass)
             )
             try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
+                connected = await device.connect()
             except MyPVAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_password"
+            else:
+                if not connected:
+                    errors[CONF_BASE] = "cannot_connect"
             finally:
                 await device.disconnect()
 
@@ -299,12 +305,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
             )
             try:
-                if not await device.connect():
-                    errors[CONF_BASE] = "cannot_connect"
+                connected = await device.connect()
             except MyPVAuthenticationError:
                 password_needed = True
             except MyPVDeviceNotSupportedError:
                 return self.async_abort(reason="unsupported_device")
+            else:
+                if not connected:
+                    errors[CONF_BASE] = "cannot_connect"
             finally:
                 await device.disconnect()
 
