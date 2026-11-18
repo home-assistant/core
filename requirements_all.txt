@@ -1432,7 +1432,7 @@ imgw_pib==2.5.3
 incomfort-client==0.7.1
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.8
+indevolt-api==1.9.0
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
