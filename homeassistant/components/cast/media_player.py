@@ -331,17 +331,17 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         self._cast_view_remove_handler: CALLBACK_TYPE | None = None
         self._attr_unique_id = str(cast_info.uuid)
+        connections: set[tuple[str, str]] = set()
+        if not cast_info.is_audio_group:
+            # A cast device's UUID is its UPnP UDN, groups don't have one
+            connections.add((CONNECTION_UPNP, f"uuid:{cast_info.uuid}"))
         self._attr_device_info = DeviceInfo(
+            connections=connections,
             identifiers={(DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
         )
-        if not cast_info.is_audio_group:
-            # A cast device's UUID is its UPnP UDN, groups don't have one
-            self._attr_device_info["connections"] = {
-                (CONNECTION_UPNP, f"uuid:{cast_info.uuid}")
-            }
 
         if cast_info.cast_info.cast_type in [
             pychromecast.const.CAST_TYPE_AUDIO,
