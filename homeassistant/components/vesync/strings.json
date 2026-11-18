@@ -133,7 +133,13 @@
     },
     "sensor": {
       "air_quality": {
-        "name": "Air quality"
+        "name": "Air quality",
+        "state": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "poor": "Poor"
+        }
       },
       "co2": {
         "name": "Carbon dioxide"

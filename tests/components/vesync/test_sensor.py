@@ -193,6 +193,35 @@ async def test_cook_end_time_across_updates(
     assert state.state == "2026-11-16T12:13:08+00:00"
 
 
+@pytest.mark.parametrize(
+    ("aq_level", "expected_state"),
+    [
+        pytest.param(4, "poor", id="poor"),
+        pytest.param(-1, STATE_UNKNOWN, id="unknown"),
+    ],
+)
+async def test_air_quality(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    aq_level: int,
+    expected_state: str,
+) -> None:
+    """Test air quality levels, with an unknown level reported as unknown."""
+    mock_devices_response(
+        aioclient_mock,
+        "Air Purifier Vital 200S",
+        details_override={"AQLevel": aq_level},
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.air_purifier_vital_200s_air_quality")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_humidity(
     hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
 ) -> None:
