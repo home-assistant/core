@@ -968,6 +968,8 @@ AGENTS.md @home-assistant/core
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/intent_script/ @arturpragacz
 /tests/components/intent_script/ @arturpragacz
+/homeassistant/components/intesis_modbus/ @TimoPtr
+/tests/components/intesis_modbus/ @TimoPtr
 /homeassistant/components/intesishome/ @jnimmo
 /tests/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
@@ -1297,6 +1299,8 @@ AGENTS.md @home-assistant/core
 /tests/components/mystrom/ @fabaff
 /homeassistant/components/myuplink/ @pajzo @astrandb
 /tests/components/myuplink/ @pajzo @astrandb
+/homeassistant/components/nad_infrared/ @rrooggiieerr
+/tests/components/nad_infrared/ @rrooggiieerr
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/namecheapdns/ @tr4nt0r

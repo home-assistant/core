@@ -343,11 +343,6 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
                         or format_mac(reconfigure_entry.data[CONF_MAC]) != formatted_mac
                     ):
                         return self.async_abort(reason="unique_id_mismatch")
-                    # A loaded entry is reloaded by its update listener
-                    if reconfigure_entry.update_listeners:
-                        return self.async_update_and_abort(
-                            reconfigure_entry, data_updates={CONF_HOST: host}
-                        )
                     return self.async_update_reload_and_abort(
                         reconfigure_entry, data_updates={CONF_HOST: host}
                     )
