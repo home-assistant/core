@@ -25,7 +25,6 @@ from .const import (
     CONF_USERS,
     DOMAIN,
     ERROR_CODE_LOGIN_REQUIRED,
-    ERROR_CODE_TOKEN_NOT_AUTHORIZED,
 )
 from .coordinator import LastFMConfigEntry
 
@@ -115,6 +114,18 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     _username: str
     _auth_url: str
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._authorized_in_flow: set[str] = set()
+
+    def _pending_users(self) -> list[str]:
+        """Return users that have not been authorized in this flow."""
+        return [
+            user
+            for user in self.data[CONF_USERS]
+            if user not in self._authorized_in_flow
+        ]
+
     @staticmethod
     @callback
     @override
@@ -198,9 +209,18 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let the user authorize users for scrobbling, or finish."""
+        menu_options = ["finish"]
+        if self._pending_users():
+            menu_options.insert(0, "scrobble_user")
         return self.async_show_menu(
             step_id="scrobble_menu",
-            menu_options=["scrobble_user", "finish"],
+            menu_options=menu_options,
+            description_placeholders={
+                "authorized_users": ", ".join(
+                    f"**{user}**" for user in self.data[CONF_SESSION_KEYS]
+                )
+                or "–"
+            },
         )
 
     async def async_step_scrobble_user(

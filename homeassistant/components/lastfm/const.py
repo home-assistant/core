@@ -15,8 +15,6 @@ CONF_SESSION_KEYS = "session_keys"
 CONF_MAIN_USER = "main_user"
 CONF_USERS = "users"
 
-# Last.fm API error returned when a user fails to login via token
-ERROR_CODE_TOKEN_NOT_AUTHORIZED = "14"
 # Last.fm API error returned when a user hides their recent listening information
 ERROR_CODE_LOGIN_REQUIRED = "17"
 
