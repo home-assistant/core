@@ -110,6 +110,7 @@ def test_water_heater_handles_missing_temperature_values() -> None:
         ("°F", None, UnitOfTemperature.FAHRENHEIT),
         (None, "°F", UnitOfTemperature.FAHRENHEIT),
         (None, None, UnitOfTemperature.CELSIUS),
+        ("C", None, UnitOfTemperature.CELSIUS),
     ],
 )
 def test_water_heater_uses_daikin_temperature_unit(
@@ -379,6 +380,8 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
         (US_CUSTOMARY_SYSTEM, 120, 1, 49),
         (METRIC_SYSTEM, 48.6, 0.5, 48.5),
         (METRIC_SYSTEM, 49.2, 2, 50),
+        (METRIC_SYSTEM, 45.3, 0.1, 45.3),
+        (METRIC_SYSTEM, 44.5, None, 45),
     ],
 )
 async def test_water_heater_temperature_rounds_to_native_step(
@@ -386,7 +389,7 @@ async def test_water_heater_temperature_rounds_to_native_step(
     config_entry: MockConfigEntry,
     unit_system: UnitSystem,
     service_temperature: float,
-    step_value: float,
+    step_value: float | None,
     expected_temperature: float,
 ) -> None:
     """Round requested temperatures to the nearest supported native step."""

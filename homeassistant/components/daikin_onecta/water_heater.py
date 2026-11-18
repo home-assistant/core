@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
+from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
 
@@ -100,9 +101,12 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 else None
             )
             unit = tank_temperature.unit if tank_temperature is not None else None
-        return (
-            UnitOfTemperature(unit) if unit is not None else UnitOfTemperature.CELSIUS
-        )
+        if unit is None:
+            return UnitOfTemperature.CELSIUS
+        try:
+            return UnitOfTemperature(unit)
+        except ValueError:
+            return UnitOfTemperature.CELSIUS
 
     @property
     @override
@@ -224,10 +228,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             )
 
         step_value = dht.step_value
-        target_temperature = (
-            round(value)
-            if step_value is None or step_value <= 0
-            else round(value / step_value) * step_value
+        target_temperature = round_temperature_to_step(
+            value,
+            step_value if step_value is not None and step_value > 0 else 1,
         )
         if target_temperature != self._attr_native_target_temperature:
             await self._async_execute_hot_water_command(

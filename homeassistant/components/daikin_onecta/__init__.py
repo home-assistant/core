@@ -149,7 +149,9 @@ async def async_remove_config_entry_device(
         return True
 
     device = devices.get(gateway_id)
-    if not coordinator.last_update_success or device is None or device.present_in_cloud:
+    if not coordinator.last_update_success or (
+        device is not None and device.present_in_cloud
+    ):
         return False
     try:
         sites = await coordinator.async_get_sites()
@@ -161,8 +163,7 @@ async def async_remove_config_entry_device(
     if (
         gateway_site_membership(sites, gateway_id) is not False
         or not coordinator.last_update_success
-        or device is None
-        or device.present_in_cloud
+        or (device is not None and device.present_in_cloud)
     ):
         return False
     if coordinator.data is not None:

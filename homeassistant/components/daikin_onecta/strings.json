@@ -14,6 +14,7 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "Failed due to an unexpected error.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
@@ -459,14 +460,14 @@
     }
   },
   "exceptions": {
-    "air_purifier_preset_and_percentage": {
-      "message": "Choose either a preset or a fan speed for {device}"
-    },
     "air_purifier_mode_unavailable": {
       "message": "Air purifier mode control is unavailable for {device}"
     },
     "air_purifier_power_unavailable": {
       "message": "Air purifier power control is unavailable for {device}"
+    },
+    "air_purifier_preset_and_percentage": {
+      "message": "Choose either a preset or a fan speed for {device}"
     },
     "air_purifier_set_mode_failed": {
       "message": "Failed to set the air-purification mode for {device}"
@@ -519,6 +520,9 @@
     "invalid_response": {
       "message": "Daikin API returned an invalid response"
     },
+    "manual_refresh_deferred": {
+      "message": "Refresh is available in {seconds} seconds after a Daikin command"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
@@ -533,9 +537,6 @@
     },
     "refresh_deferred": {
       "message": "Refresh delayed while waiting to retry the Daikin API"
-    },
-    "manual_refresh_deferred": {
-      "message": "Refresh is available in {seconds} seconds after a Daikin command"
     },
     "refresh_failed": {
       "message": "Failed to refresh Daikin devices"

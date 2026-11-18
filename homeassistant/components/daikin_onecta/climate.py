@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from decimal import Decimal
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
@@ -36,6 +35,7 @@ from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
+from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
 
@@ -340,13 +340,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             if setpoint is None or not setpoint.settable:
                 self._raise_service_validation_error("climate_temperature_unavailable")
 
-            step = setpoint.step_value or 0.5
-            step_decimal = format(Decimal(str(step)).normalize(), "f")
-            step_decimals = len(step_decimal.partition(".")[2])
-            value = (
-                round(float(kwargs[ClimateServiceArgument.TEMPERATURE]) / step) * step
+            step = setpoint.step_value
+            value = round_temperature_to_step(
+                float(kwargs[ClimateServiceArgument.TEMPERATURE]),
+                step if step is not None and step > 0 else 0.5,
             )
-            value = round(value, step_decimals)
             value = min(
                 max(
                     value,

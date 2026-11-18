@@ -143,8 +143,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._bypass_polling_backoff = True
         await super().async_request_refresh()
 
-    async def async_manual_refresh(self) -> None:
-        """Refresh immediately, bypassing scheduled-poll backoff."""
+    async def async_manual_refresh(self) -> bool:
+        """Refresh immediately, bypassing scheduled-poll backoff.
+
+        Return whether a fresh cloud response was received.
+        """
         if remaining := self._post_write_cooldown_remaining():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -154,7 +157,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 },
             )
         self._bypass_polling_backoff = True
+        previous_sequence = self._cloud_update_sequence
         await self.async_refresh()
+        return self._cloud_update_sequence > previous_sequence
 
     def _post_write_cooldown_remaining(self) -> timedelta | None:
         """Return the remaining post-write cooldown, if any."""

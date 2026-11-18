@@ -121,6 +121,27 @@ async def test_remove_missing_gateway_rejects_empty_sites(
     coordinator.async_get_sites.assert_awaited_once_with()
 
 
+async def test_remove_gateway_absent_from_cached_devices(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+) -> None:
+    """Sites can confirm removal when the gateway is absent from cached data."""
+    coordinator = config_entry.runtime_data
+    gateway_id = next(
+        identifier
+        for domain, identifier in missing_gateway.identifiers
+        if domain == DOMAIN
+    )
+    coordinator.data.pop(gateway_id)
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[])]
+    )
+
+    assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
+    coordinator.async_get_sites.assert_awaited_once_with()
+
+
 async def test_remove_missing_gateway_rejects_site_membership(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

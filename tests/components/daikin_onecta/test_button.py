@@ -3,7 +3,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from daikin_onecta.exceptions import OnectaConnectionError
+from daikin_onecta.exceptions import OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -25,6 +26,7 @@ async def test_refresh_button_requests_coordinator_refresh(
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
     coordinator.async_manual_refresh = AsyncMock()
+    coordinator.async_manual_refresh.return_value = True
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -85,6 +87,33 @@ async def test_refresh_button_bypasses_polling_backoff(
 
     mock_onecta_client.get_gateway_devices.assert_awaited_once()
     assert coordinator.last_update_success
+
+
+async def test_refresh_button_reports_rate_limited_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_onecta_client,
+) -> None:
+    """A 429 during manual refresh is reported even when cached data is good."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == "daikin_onecta"
+    assert err.value.translation_key == "refresh_failed"
+    assert coordinator.last_update_success
+    mock_onecta_client.get_gateway_devices.assert_awaited_once()
 
 
 async def test_refresh_button_reports_post_write_cooldown(
