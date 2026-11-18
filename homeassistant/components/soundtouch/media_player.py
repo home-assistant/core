@@ -21,6 +21,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import SoundTouchConfigEntry
 from .const import DOMAIN
@@ -94,6 +95,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._status = None
         self._volume = None
         self._zone = None
+        self._position_play_status: str | None = None
 
     @property
     def device(self):
@@ -102,9 +104,23 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def update(self) -> None:
         """Retrieve the latest data."""
-        self._status = self._device.status()
+        status = self._device.status()
+        self._status = status
         self._volume = self._device.volume()
         self._zone = self.get_zone_info()
+
+        position = status.position
+        play_status = status.play_status
+        # Check play status too: a resume can be polled before the position moves
+        if (
+            position != self._attr_media_position
+            or play_status != self._position_play_status
+        ):
+            self._attr_media_position = position
+            self._attr_media_position_updated_at = (
+                dt_util.utcnow() if position is not None else None
+            )
+            self._position_play_status = play_status
 
     @property
     @override
