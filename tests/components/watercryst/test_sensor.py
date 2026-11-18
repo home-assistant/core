@@ -3,7 +3,16 @@
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyocat import WTCApiTimeoutError
+from pyocat import (
+    WTCApiCancelledError,
+    WTCApiDisabledError,
+    WTCApiQuotaExceededError,
+    WTCApiRequestError,
+    WTCApiServerError,
+    WTCApiTimeoutError,
+    WTCApiUnauthorizedError,
+    WTCApiValidationError,
+)
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -58,11 +67,25 @@ async def test_available_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        WTCApiDisabledError(),
+        WTCApiCancelledError(),
+        WTCApiQuotaExceededError(),
+        WTCApiRequestError(),
+        WTCApiServerError(),
+        WTCApiTimeoutError(),
+        WTCApiValidationError(),
+        WTCApiUnauthorizedError(),
+    ],
+)
 async def test_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
     """Test state sensor entities availability."""
     mock_config_entry.add_to_hass(hass)
@@ -75,7 +98,7 @@ async def test_availability(
     assert state is not None
     assert state.state == "3.68"
 
-    mock_api_client.get_measurements.side_effect = WTCApiTimeoutError()
+    mock_api_client.get_measurements.side_effect = exception
 
     freezer.tick(MEASUREMENTS_POLLING_INTERVAL)
     async_fire_time_changed(hass)
