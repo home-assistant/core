@@ -1,12 +1,14 @@
 """Tests for energy LLM tools."""
 
 import json
+from typing import Any
 
+import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.energy import DOMAIN
-from homeassistant.components.energy.data import EnergyManager, async_get_manager
+from homeassistant.components.energy.data import async_get_manager
 from homeassistant.components.energy.llm import async_get_tools
 from homeassistant.components.recorder import Recorder
 from homeassistant.core import Context, HomeAssistant
@@ -17,7 +19,6 @@ GET_TOOL = "energy__get_preferences"
 UPDATE_TOOL = "energy__update_preferences"
 
 GRID_SOURCE = {
-    "type": "grid",
     "stat_energy_from": "sensor.grid_import",
     "stat_energy_to": None,
     "stat_cost": None,
@@ -26,6 +27,26 @@ GRID_SOURCE = {
     "stat_compensation": None,
     "entity_energy_price_export": None,
     "number_energy_price_export": None,
+}
+SOLAR_SOURCE = {
+    "stat_energy_from": "sensor.solar",
+    "config_entry_solar_forecast": None,
+}
+BATTERY_SOURCE = {
+    "stat_energy_from": "sensor.battery_out",
+    "stat_energy_to": "sensor.battery_in",
+    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+}
+EMPTY_PREFERENCES = {
+    "grid_sources": [],
+    "solar_sources": [],
+    "battery_sources": [],
+    "gas_sources": [],
+    "water_sources": [],
+    "home_sources": [],
+    "device_consumption": [],
+    "device_consumption_water": [],
+    "device_consumption_gas": [],
 }
 
 
@@ -69,27 +90,67 @@ async def test_async_get_tools(
     assert all(tool.integration == DOMAIN for tool in tools.tools)
 
 
+def _objects_without_properties(schema: Any, path: str = "") -> list[str]:
+    """Return the paths of objects in an OpenAPI schema that list no properties."""
+    if isinstance(schema, list):
+        return [
+            missing
+            for index, item in enumerate(schema)
+            for missing in _objects_without_properties(item, f"{path}[{index}]")
+        ]
+    if not isinstance(schema, dict):
+        return []
+    missing = (
+        [path]
+        if schema.get("type") == "object" and not schema.get("properties")
+        else []
+    )
+    for key, value in schema.items():
+        missing.extend(_objects_without_properties(value, f"{path}.{key}"))
+    return missing
+
+
+async def test_update_parameters_list_all_properties(api: llm.APIInstance) -> None:
+    """Test every object in the update parameters lists its properties.
+
+    Some LLM providers, like Gemini, cannot fill in an object without properties.
+    """
+    tool = next(tool for tool in api.tools if tool.name == UPDATE_TOOL)
+    schema = probatio.to_openapi(
+        tool.parameters, custom_serializer=api.custom_serializer
+    )
+    assert _objects_without_properties(schema) == []
+
+
 async def test_get_preferences_not_configured(api: llm.APIInstance) -> None:
     """Test getting the preferences before energy is configured."""
     result = await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))
 
-    assert result == llm.ToolResult(
-        data={"result": EnergyManager.default_preferences()}
-    )
+    assert result == llm.ToolResult(data={"result": EMPTY_PREFERENCES})
 
 
 async def test_get_preferences(hass: HomeAssistant, api: llm.APIInstance) -> None:
-    """Test getting the configured preferences."""
+    """Test getting the energy sources per type."""
     manager = await async_get_manager(hass)
-    await manager.async_update({"energy_sources": [GRID_SOURCE]})
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {"type": "solar", **SOLAR_SOURCE},
+                {"type": "grid", **GRID_SOURCE},
+            ],
+            "device_consumption": [{"stat_consumption": "sensor.fridge"}],
+        }
+    )
 
     result = await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))
 
     assert result == llm.ToolResult(
         data={
             "result": {
-                **EnergyManager.default_preferences(),
-                "energy_sources": [GRID_SOURCE],
+                **EMPTY_PREFERENCES,
+                "grid_sources": [GRID_SOURCE],
+                "solar_sources": [SOLAR_SOURCE],
+                "device_consumption": [{"stat_consumption": "sensor.fridge"}],
             }
         }
     )
@@ -98,80 +159,136 @@ async def test_get_preferences(hass: HomeAssistant, api: llm.APIInstance) -> Non
 async def test_update_preferences(hass: HomeAssistant, api: llm.APIInstance) -> None:
     """Test that an update replaces only the given lists."""
     manager = await async_get_manager(hass)
-    await manager.async_update({"energy_sources": [GRID_SOURCE]})
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {"type": "grid", **GRID_SOURCE},
+                {"type": "battery", **BATTERY_SOURCE},
+            ]
+        }
+    )
 
     result = await api.async_call_tool(
         llm.ToolInput(
             UPDATE_TOOL,
-            {"device_consumption_water": [{"stat_consumption": "sensor.shower"}]},
+            {
+                "solar_sources": [{"stat_energy_from": "sensor.solar"}],
+                "device_consumption_water": [{"stat_consumption": "sensor.shower"}],
+            },
         )
     )
 
-    expected = {
-        **EnergyManager.default_preferences(),
-        "energy_sources": [GRID_SOURCE],
+    assert not result.error
+    assert result.data["result"] == {
+        **EMPTY_PREFERENCES,
+        "grid_sources": [GRID_SOURCE],
+        "solar_sources": [{"stat_energy_from": "sensor.solar"}],
+        # A power_config generates the stat_rate
+        "battery_sources": [
+            {**BATTERY_SOURCE, "stat_rate": "sensor.battery_power_inverted"}
+        ],
         "device_consumption_water": [{"stat_consumption": "sensor.shower"}],
     }
-    assert not result.error
-    assert result.data["result"] == expected
-    assert manager.data == expected
+    assert [source["type"] for source in manager.data["energy_sources"]] == [
+        "grid",
+        "solar",
+        "battery",
+    ]
     # The sensors do not exist, so validation reports issues for each item
-    assert result.data["validation"] == {
-        "energy_sources": [
-            [
-                {
-                    "type": "statistics_not_defined",
-                    "affected_entities": [["sensor.grid_import", None]],
-                    "translation_placeholders": None,
-                },
-                {
-                    "type": "entity_not_defined",
-                    "affected_entities": [["sensor.grid_import", None]],
-                    "translation_placeholders": None,
-                },
-            ]
-        ],
-        "device_consumption": [],
-        "device_consumption_water": [
-            [
-                {
-                    "type": "statistics_not_defined",
-                    "affected_entities": [["sensor.shower", None]],
-                    "translation_placeholders": None,
-                },
-                {
-                    "type": "entity_not_defined",
-                    "affected_entities": [["sensor.shower", None]],
-                    "translation_placeholders": None,
-                },
-            ]
-        ],
-        "device_consumption_gas": [],
-    }
+    validation = result.data["validation"]
+    assert set(validation) == set(EMPTY_PREFERENCES)
+    assert len(validation["grid_sources"]) == 1
+    assert len(validation["solar_sources"]) == 1
+    assert len(validation["battery_sources"]) == 1
+    assert validation["solar_sources"][0] == [
+        {
+            "type": "statistics_not_defined",
+            "affected_entities": [["sensor.solar", None]],
+            "translation_placeholders": None,
+        },
+        {
+            "type": "entity_not_defined",
+            "affected_entities": [["sensor.solar", None]],
+            "translation_placeholders": None,
+        },
+    ]
+    assert validation["device_consumption_water"] == [
+        [
+            {
+                "type": "statistics_not_defined",
+                "affected_entities": [["sensor.shower", None]],
+                "translation_placeholders": None,
+            },
+            {
+                "type": "entity_not_defined",
+                "affected_entities": [["sensor.shower", None]],
+                "translation_placeholders": None,
+            },
+        ]
+    ]
     # The MCP server encodes the result with the standard JSON encoder
     json.dumps(result.data)
+
+
+async def test_update_preferences_round_trip(
+    hass: HomeAssistant, api: llm.APIInstance
+) -> None:
+    """Test that the preferences from the get tool can be sent back unchanged."""
+    manager = await async_get_manager(hass)
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {"type": "grid", **GRID_SOURCE},
+                {"type": "solar", **SOLAR_SOURCE},
+                {"type": "battery", **BATTERY_SOURCE},
+            ]
+        }
+    )
+    stored = manager.data
+
+    preferences = (await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))).data
+    result = await api.async_call_tool(
+        llm.ToolInput(UPDATE_TOOL, preferences["result"])
+    )
+
+    assert not result.error
+    assert manager.data == stored
+
+
+async def test_update_preferences_invalid(
+    hass: HomeAssistant, api: llm.APIInstance
+) -> None:
+    """Test that invalid preferences return an error and change nothing."""
+    manager = await async_get_manager(hass)
+    await manager.async_update({"energy_sources": [{"type": "grid", **GRID_SOURCE}]})
+    stored = manager.data
+
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            UPDATE_TOOL,
+            {"home_sources": [{"stat_energy_to": "a"}, {"stat_energy_to": "b"}]},
+        )
+    )
+
+    assert result == llm.ToolResult(
+        data={"error": "Only one home source is allowed at 'energy_sources'"},
+        error=True,
+    )
+    assert manager.data == stored
 
 
 @pytest.mark.parametrize(
     "tool_args",
     [
-        {"energy_sources": [{"type": "wind", "stat_energy_from": "sensor.wind"}]},
+        {"wind_sources": [{"stat_energy_from": "sensor.wind"}]},
         {"device_consumption": [{"name": "Fridge"}]},
         {"device_consumption_gas": "sensor.gas"},
+        {"solar_sources": [{"stat_energy_from": "sensor.solar", "type": "grid"}]},
     ],
 )
-async def test_update_preferences_invalid(
-    hass: HomeAssistant, api: llm.APIInstance, tool_args: dict
+async def test_update_preferences_invalid_args(
+    api: llm.APIInstance, tool_args: dict[str, Any]
 ) -> None:
-    """Test that invalid preferences return an error and change nothing."""
-    manager = await async_get_manager(hass)
-    await manager.async_update({"energy_sources": [GRID_SOURCE]})
-
-    result = await api.async_call_tool(llm.ToolInput(UPDATE_TOOL, tool_args))
-
-    assert result.error
-    assert "error" in result.data
-    assert manager.data == {
-        **EnergyManager.default_preferences(),
-        "energy_sources": [GRID_SOURCE],
-    }
+    """Test that invalid arguments are rejected."""
+    with pytest.raises(probatio.Invalid):
+        await api.async_call_tool(llm.ToolInput(UPDATE_TOOL, tool_args))
