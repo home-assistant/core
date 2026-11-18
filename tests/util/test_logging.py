@@ -5,6 +5,7 @@ from functools import partial
 import inspect
 import logging
 import queue
+import time
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -24,6 +25,31 @@ async def empty_log_queue() -> None:
     log_queue: queue.SimpleQueue = logging.root.handlers[0].queue
     while not log_queue.empty():
         await asyncio.sleep(0)
+
+
+@pytest.mark.parametrize(
+    ("timezone", "expected"),
+    [
+        pytest.param("UTC", "2025-02-10 12:00:00.123+00:00", id="utc"),
+        pytest.param("Europe/Zurich", "2025-02-10 13:00:00.123+01:00", id="cet"),
+        pytest.param("America/Los_Angeles", "2025-02-10 04:00:00.123-08:00", id="pst"),
+    ],
+)
+def test_log_formatter_timestamp(
+    monkeypatch: pytest.MonkeyPatch, timezone: str, expected: str
+) -> None:
+    """Test the log formatter includes milliseconds and the UTC offset."""
+    monkeypatch.setenv("TZ", timezone)
+    time.tzset()
+    try:
+        record = logging.LogRecord("test", logging.INFO, "", 0, "msg", None, None)
+        record.created = 1739188800.123
+        record.msecs = 123
+        formatter = logging_util.HomeAssistantLogFormatter(logging_util.LOG_FORMAT)
+        assert formatter.format(record) == f"{expected} INFO (MainThread) [test] msg"
+    finally:
+        monkeypatch.undo()
+        time.tzset()
 
 
 async def test_logging_with_queue_handler() -> None:

@@ -8,9 +8,10 @@ from python_snoo.snoo import Snoo
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .coordinator import SnooConfigEntry, SnooCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> None:
     """Set up Happiest Baby Snoo from a config entry."""
 
     snoo = Snoo(
@@ -36,7 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
 
     try:
         await snoo.authorize()
-    except (SnooAuthException, InvalidSnooAuth) as ex:
+    except InvalidSnooAuth as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from ex
+    except SnooAuthException as ex:
         raise ConfigEntryNotReady from ex
     try:
         devices = await snoo.get_devices()
@@ -51,10 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> None:
     """Unload a config entry."""
     disconnects = await asyncio.gather(
         *(coordinator.snoo.disconnect() for coordinator in entry.runtime_data.values()),
@@ -65,4 +68,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> boo
             _LOGGER.warning(
                 "Failed to disconnect a logger with exception: %s", disconnect
             )
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

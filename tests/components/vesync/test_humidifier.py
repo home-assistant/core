@@ -5,16 +5,17 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN as HUMIDIFIER_DOMAIN,
     MODE_AUTO,
     MODE_SLEEP,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_MODE,
+    HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from homeassistant.components.vesync.const import (
     VS_HUMIDIFIER_MODE_AUTO,
@@ -22,12 +23,7 @@ from homeassistant.components.vesync.const import (
     VS_HUMIDIFIER_MODE_SLEEP,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -39,9 +35,6 @@ from .common import (
     ENTITY_HUMIDIFIER_MIST_LEVEL,
     mock_devices_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 
@@ -102,9 +95,9 @@ async def test_humidifier_state_assert(
 
     state = hass.states.get(ENTITY_HUMIDIFIER)
 
-    # ATTR_HUMIDITY represents the target_humidity which comes from
+    # The humidity attribute represents the target_humidity which comes from
     # configuration.auto_target_humidity node
-    assert state.attributes.get(ATTR_HUMIDITY) == 40
+    assert state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY) == 40
 
 
 async def test_set_target_humidity_invalid(
@@ -123,8 +116,11 @@ async def test_set_target_humidity_invalid(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_HUMIDITY: 20},
+            HumidifierService.SET_HUMIDITY,
+            {
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
+                HumidifierServiceArgument.HUMIDITY: 20,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -154,8 +150,11 @@ async def test_set_target_humidity(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_HUMIDITY: 54},
+            HumidifierService.SET_HUMIDITY,
+            {
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
+                HumidifierServiceArgument.HUMIDITY: 54,
+            },
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -188,8 +187,8 @@ async def test_turn_on(
         ) as update_mock:
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
+                HumidifierService.TURN_ON,
+                {TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER},
                 blocking=True,
             )
 
@@ -224,8 +223,8 @@ async def test_turn_off(
         ) as update_mock:
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
+                HumidifierService.TURN_OFF,
+                {TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER},
                 blocking=True,
             )
 
@@ -246,8 +245,11 @@ async def test_set_mode_invalid(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
-                SERVICE_SET_MODE,
-                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: "something_invalid"},
+                HumidifierService.SET_MODE,
+                {
+                    TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
+                    HumidifierServiceArgument.MODE: "something_invalid",
+                },
                 blocking=True,
             )
         await hass.async_block_till_done()
@@ -277,8 +279,11 @@ async def test_set_mode(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: MODE_AUTO},
+            HumidifierService.SET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
+                HumidifierServiceArgument.MODE: MODE_AUTO,
+            },
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -362,8 +367,11 @@ async def test_set_mode_sleep_turns_display_off(
     ):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
-            SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: MODE_SLEEP},
+            HumidifierService.SET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
+                HumidifierServiceArgument.MODE: MODE_SLEEP,
+            },
             blocking=True,
         )
         display_mock.assert_called_once_with(False)

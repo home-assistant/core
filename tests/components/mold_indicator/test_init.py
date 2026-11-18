@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import mold_indicator
 from homeassistant.components.mold_indicator.config_flow import (
@@ -21,8 +22,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from datetime import timedelta
 from kasa import Device, Feature, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -33,8 +34,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.thermostat"
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from discovery30303 import AIODiscovery30303
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import steamist
 from homeassistant.components.steamist.const import DOMAIN
@@ -26,8 +27,6 @@ from . import (
     _async_setup_entry_with_status,
     _patch_status,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

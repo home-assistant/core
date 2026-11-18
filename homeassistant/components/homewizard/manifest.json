@@ -1,8 +1,14 @@
 {
   "domain": "homewizard",
   "name": "HomeWizard",
+  "categories": [
+    "energy.meters_monitoring",
+    "water.meters_leak_detection",
+    "plugs_switches"
+  ],
   "codeowners": ["@DCSBL", "@lexpostma"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

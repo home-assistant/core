@@ -1,76 +1,39 @@
 """AdGuard Home base entity."""
 
-from typing import override
-
-from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
-
 from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AdGuardConfigEntry, AdGuardData
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+from .coordinator import AdGuardHomeCoordinator
 
 
-class AdGuardHomeEntity(Entity):
+class AdGuardHomeEntity[_CoordinatorT: AdGuardHomeCoordinator](
+    CoordinatorEntity[_CoordinatorT]
+):
     """Defines a base AdGuard Home entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
-    def __init__(
-        self,
-        data: AdGuardData,
-        entry: AdGuardConfigEntry,
-    ) -> None:
+    def __init__(self, coordinator: _CoordinatorT) -> None:
         """Initialize the AdGuard Home entity."""
-        self._entry = entry
-        self.data = data
-        self.adguard = data.client
+        super().__init__(coordinator)
+        entry = coordinator.config_entry
 
-    async def async_update(self) -> None:
-        """Update AdGuard Home entity."""
-        if not self.enabled:
-            return
-
-        try:
-            await self._adguard_update()
-            self._attr_available = True
-        except AdGuardHomeAuthenticationError:
-            # The credentials stopped working, like after a password change in
-            # AdGuard Home. Ask for new ones; Home Assistant only starts one flow.
-            self._attr_available = False
-            self._entry.async_start_reauth(self.hass)
-        except AdGuardHomeError:
-            if self._attr_available:
-                LOGGER.debug(
-                    "An error occurred while updating AdGuard Home sensor",
-                    exc_info=True,
-                )
-            self._attr_available = False
-
-    async def _adguard_update(self) -> None:
-        """Update AdGuard Home entity."""
-        raise NotImplementedError
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this AdGuard Home instance."""
-        host, port = self._entry.data[CONF_HOST], self._entry.data[CONF_PORT]
-        if self._entry.source == SOURCE_HASSIO:
+        host, port = entry.data[CONF_HOST], entry.data[CONF_PORT]
+        if entry.source == SOURCE_HASSIO:
             config_url = "homeassistant://app/a0d7b954_adguard"
-        elif self._entry.data[CONF_SSL]:
+        elif entry.data[CONF_SSL]:
             config_url = f"https://{host}:{port}"
         else:
             config_url = f"http://{host}:{port}"
 
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._entry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="AdGuard Team",
             name="AdGuard Home",
-            sw_version=self.data.version,
+            sw_version=str(entry.runtime_data.state.data.status.version),
             configuration_url=config_url,
         )

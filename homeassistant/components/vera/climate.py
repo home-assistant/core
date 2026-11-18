@@ -5,7 +5,6 @@ from typing import Any, override
 import pyvera as veraApi
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     FAN_AUTO,
     FAN_ON,
     ClimateEntity,
@@ -58,7 +57,6 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     @override
@@ -96,7 +94,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement."""
         vera_temp_units = self.vera_device.vera_controller.temperature_units
 
@@ -107,7 +105,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.vera_device.get_current_temperature()
 
@@ -118,7 +116,7 @@ class VeraThermostat(VeraEntity[veraApi.VeraThermostat], ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.vera_device.get_current_goal_temperature()
 

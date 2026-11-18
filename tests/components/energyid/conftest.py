@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
@@ -13,8 +14,6 @@ from homeassistant.components.energyid.const import (
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -43,9 +42,17 @@ def mock_webhook_client() -> Generator[MagicMock]:
     ) as mock_client_class:
         client = mock_client_class.return_value
         client.authenticate = AsyncMock(return_value=True)
+        client.provisioning_key = "test-key"
+        client.provisioning_secret = "test-secret"
+        client.is_claimed = True
         client.webhook_policy = {"uploadInterval": 60}
         client.device_name = "Test Device"
+        client.recordNumber = "EA-TEST"
+        client.recordName = "Test EnergyID Site"
+        client.api_access_token = None
         client.synchronize_sensors = AsyncMock()
+        client.get_directives = AsyncMock(return_value=[])
+        client.get_directive_data = AsyncMock()
 
         # Create a mock sensor that will be returned by get_or_create_sensor
         mock_sensor = MagicMock()

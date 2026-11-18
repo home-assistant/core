@@ -6,6 +6,7 @@ import os
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader, setup
 from homeassistant.core import HomeAssistant
@@ -19,8 +20,6 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
     async_process_requirements,
 )
-
-from .common import MockModule, mock_integration
 
 
 def env_without_wheel_links():
@@ -602,8 +601,8 @@ async def test_discovery_requirements_mqtt(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 2
-    # one for mqtt and one for hassio
+    assert len(mock_process.mock_calls) == 3
+    # one for mqtt, one for hassio and one for network (hassio dependency)
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 

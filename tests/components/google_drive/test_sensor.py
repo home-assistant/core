@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import AgentBackup
@@ -12,8 +17,6 @@ from homeassistant.components.google_drive.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = [
     pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),

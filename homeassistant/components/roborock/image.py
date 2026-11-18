@@ -8,7 +8,6 @@ from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -17,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
@@ -116,7 +116,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: RoborockConfigEntry,
         coordinator: RoborockDataUpdateCoordinator,
         home_trait: HomeTrait,
         map_flag: int,
@@ -171,7 +171,10 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:
-            raise HomeAssistantError("Map flag not found in coordinator maps")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_not_found",
+            )
         return map_content.image_content
 
 

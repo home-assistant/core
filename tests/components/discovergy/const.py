@@ -1,6 +1,6 @@
 """Constants for Discovergy integration tests."""
 
-import datetime
+import datetime as dt
 
 from pydiscovergy.models import Location, Meter, Reading
 
@@ -60,7 +60,7 @@ GET_METERS = [
 ]
 
 LAST_READING = Reading(
-    time=datetime.datetime(2023, 3, 10, 7, 32, 6, 702000),
+    time=dt.datetime(2023, 3, 10, 7, 32, 6, 702000),
     values={
         "energy": 119348699715000.0,
         "energy1": 2254180000.0,
@@ -79,6 +79,6 @@ LAST_READING = Reading(
 )
 
 LAST_READING_GAS = Reading(
-    time=datetime.datetime(2023, 3, 10, 7, 32, 6, 702000),
+    time=dt.datetime(2023, 3, 10, 7, 32, 6, 702000),
     values={"actualityDuration": 52000.0, "storageNumber": 0.0, "volume": 21064800.0},
 )

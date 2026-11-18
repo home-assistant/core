@@ -32,7 +32,7 @@ type VeluxConfigEntry = ConfigEntry[VeluxData]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> None:
     """Set up the velux component."""
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
@@ -85,13 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         pyvlx=pyvlx, limitation_coordinators=limitation_coordinators
     )
 
-    connections = None
-    if (mac := entry.data.get(CONF_MAC)) is not None:
-        connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
-
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+    device_info = dr.DeviceInfo(
         identifiers={(DOMAIN, f"gateway_{entry.entry_id}")},
         name="KLF 200 Gateway",
         manufacturer="Velux",
@@ -102,7 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         sw_version=(
             str(pyvlx.klf200.version.softwareversion) if pyvlx.klf200.version else None
         ),
-        connections=connections,
+    )
+    if (mac := entry.data.get(CONF_MAC)) is not None:
+        device_info.connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
 
     async def on_hass_stop(_: Event) -> None:
@@ -116,15 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Disconnect from gateway only after platforms are successfully unloaded.
-        # Disconnecting will reboot the gateway in the pyvlx
-        # library, which is needed to allow new
-        # connections to be made later.
-        await entry.runtime_data.pyvlx.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Disconnect from gateway only after platforms are successfully unloaded.
+    # Disconnecting will reboot the gateway in the pyvlx
+    # library, which is needed to allow new
+    # connections to be made later.
+    await entry.runtime_data.pyvlx.disconnect()

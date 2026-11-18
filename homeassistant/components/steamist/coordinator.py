@@ -13,16 +13,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type SteamistConfigEntry = ConfigEntry[SteamistDataUpdateCoordinator]
+
 
 class SteamistDataUpdateCoordinator(DataUpdateCoordinator[SteamistStatus]):
     """DataUpdateCoordinator to gather data from a steamist steam shower."""
 
-    config_entry: ConfigEntry
+    config_entry: SteamistConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SteamistConfigEntry,
         client: Steamist,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific steamist."""

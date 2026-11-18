@@ -1,0 +1,16 @@
+{
+  "type": "repo",
+  "id": "6490a72d-4c26-4020-ad00-1b72fb2c88c9",
+  "owner": "self",
+  "name": "Documents",
+  "mtime": 1792048066,
+  "size": 300000,
+  "encrypted": false,
+  "root": "e8b695e8a6e3fb0d73ed3467782c41f72edf6a13",
+  "permission": "rw",
+  "modifier_email": "admin@example.com",
+  "modifier_contact_email": "admin@example.com",
+  "modifier_name": "admin",
+  "file_count": 1,
+  "head_commit_id": "983edae73d8c12866073579196551cee8cccee09"
+}

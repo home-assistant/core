@@ -1,9 +1,9 @@
 """Test VoIP switch devices."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_allow_call(

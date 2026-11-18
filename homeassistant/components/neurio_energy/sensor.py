@@ -75,21 +75,17 @@ def setup_platform(
     update_daily()
     update_active()
 
-    # Active power sensor
-    add_entities([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
-    # Daily power sensor
-    add_entities([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
-    # Active generation sensor
     add_entities(
         [
+            NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active),
+            NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily),
             NeurioEnergy(
                 data, ACTIVE_GENERATION_NAME, ACTIVE_GENERATION_TYPE, update_active
-            )
+            ),
+            NeurioEnergy(
+                data, DAILY_GENERATION_NAME, DAILY_GENERATION_TYPE, update_daily
+            ),
         ]
-    )
-    # Daily generation sensor
-    add_entities(
-        [NeurioEnergy(data, DAILY_GENERATION_NAME, DAILY_GENERATION_TYPE, update_daily)]
     )
 
 

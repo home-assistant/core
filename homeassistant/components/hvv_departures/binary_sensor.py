@@ -132,7 +132,9 @@ async def async_setup_entry(
     )
 
 
-class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class HvvDepartureBinarySensor(
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]], BinarySensorEntity
+):
     """HVVDepartureBinarySensor class."""
 
     _attr_attribution = ATTRIBUTION

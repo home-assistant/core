@@ -50,5 +50,10 @@
         "name": "Water temperature"
       }
     }
+  },
+  "exceptions": {
+    "migration_unknown_version": {
+      "message": "Cannot migrate configuration entry from unknown version {version}"
+    }
   }
 }

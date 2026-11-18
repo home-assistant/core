@@ -1,6 +1,7 @@
 {
   "domain": "prometheus",
   "name": "Prometheus",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@knyar"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/prometheus",

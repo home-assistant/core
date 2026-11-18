@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "cloud_cover": {
+        "default": "mdi:weather-partly-cloudy"
+      },
+      "frost_probability": {
+        "default": "mdi:snowflake"
+      },
+      "rain_probability": {
+        "default": "mdi:weather-rainy"
+      },
+      "snow_probability": {
+        "default": "mdi:weather-snowy"
+      },
+      "uv_index": {
+        "default": "mdi:sunglasses"
+      },
+      "weather_alert": {
+        "default": "mdi:weather-cloudy-alert"
+      },
+      "wind_gust": {
+        "default": "mdi:weather-windy-variant"
+      }
+    }
+  }
+}

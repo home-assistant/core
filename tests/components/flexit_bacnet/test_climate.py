@@ -11,6 +11,7 @@ from flexit_bacnet import (
     VENTILATION_MODE_STOP,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -30,14 +31,17 @@ from homeassistant.components.flexit_bacnet.const import (
     PRESET_HIGH,
     PRESET_TO_VENTILATION_MODE_MAP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component, entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.device_name"
 
@@ -252,3 +256,23 @@ async def test_transient_operation_modes(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_PRESET_MODE] == expected_preset
+
+
+async def test_missing_climate_properties(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test missing climate properties are reported as unknown."""
+    mock_flexit_bacnet.operation_mode = None
+    mock_flexit_bacnet.electric_heater = None
+    mock_flexit_bacnet.room_temperature = None
+    mock_flexit_bacnet.air_temp_setpoint_home = None
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes.get(ATTR_HVAC_ACTION) is None

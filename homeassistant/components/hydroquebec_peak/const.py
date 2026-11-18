@@ -16,7 +16,7 @@ CONF_OFFER: Final = "offer"
 SCAN_INTERVAL: Final = timedelta(minutes=15)
 BOUNDARY_REFRESH_DELAY: Final = timedelta(seconds=1)
 
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 EVENTS_TABLE_URL: Final = (
     "https://donnees.hydroquebec.com/explore/dataset/evenements-pointe/table/"

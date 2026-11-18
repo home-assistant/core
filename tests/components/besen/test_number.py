@@ -5,21 +5,17 @@ from unittest.mock import AsyncMock, Mock
 from besen.const import FALLBACK_MAX_CHARGE_AMPS
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
 from homeassistant.components.number import (
     ATTR_MAX,
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -27,8 +23,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.garage_charging_current"
 
@@ -167,8 +161,8 @@ async def test_number_set_value(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 20},
+        NumberService.SET_VALUE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 20},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -195,8 +189,11 @@ async def test_number_command_failure(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_VALUE: 20},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                NumberServiceArgument.VALUE: 20,
+            },
             blocking=True,
         )
 

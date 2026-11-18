@@ -5,20 +5,19 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from pyweatherflowudp.aioudp import LocalEndpoint
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
 
 from homeassistant.components.weatherflow.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.weatherflow.async_setup_entry", return_value=True
+        "homeassistant.components.weatherflow.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

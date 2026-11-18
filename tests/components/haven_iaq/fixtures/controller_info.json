@@ -1,0 +1,11 @@
+{
+  "api_version": 1,
+  "serial_number": "TEST-CAC-0001",
+  "device_id": "TEST-DEVICE-CAC",
+  "manufacturer": "HAVEN IAQ",
+  "model": "HAVEN Controller",
+  "product_type": "cac",
+  "fw_ver": "test-firmware",
+  "hw_version": "test-hardware",
+  "capabilities": ["relay_state"]
+}

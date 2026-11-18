@@ -12,12 +12,13 @@ from smart_meter_texas.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import get_default_context
 
-from .const import DEBOUNCE_COOLDOWN, SCAN_INTERVAL
+from .const import DEBOUNCE_COOLDOWN, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +50,12 @@ class SmartMeterTexasData:
         for meter in self.meters:
             try:
                 await meter.read_meter(self.client)
-            except (
-                SmartMeterTexasAPIError,
-                SmartMeterTexasAuthError,
-                SmartMeterTexasTimeoutError,
-            ) as error:
+            except SmartMeterTexasAuthError as error:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_auth",
+                ) from error
+            except (SmartMeterTexasAPIError, SmartMeterTexasTimeoutError) as error:
                 raise UpdateFailed(error) from error
         return self.meters
 

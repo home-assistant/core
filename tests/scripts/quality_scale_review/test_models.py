@@ -17,6 +17,8 @@ def _pull_request(**overrides: object) -> PullRequest:
         "deletions": 12,
         "changed_files": 3,
         "file_statuses": {"homeassistant/components/peblar/sensor.py": "modified"},
+        "snapshot_lines": 0,
+        "snapshot_files": 0,
     }
     return PullRequest(**(fields | overrides))
 
@@ -24,6 +26,29 @@ def _pull_request(**overrides: object) -> PullRequest:
 def test_changed_lines_sums_additions_and_deletions() -> None:
     """Additions and deletions add up to the changed line count."""
     assert _pull_request(additions=30, deletions=12).changed_lines == 42
+
+
+def test_reviewed_counts_exclude_snapshots() -> None:
+    """Test snapshot lines and files are subtracted from the totals."""
+    pr = _pull_request(
+        additions=30,
+        deletions=12,
+        changed_files=3,
+        snapshot_lines=20,
+        snapshot_files=1,
+    )
+    assert (pr.reviewed_lines, pr.reviewed_files) == (22, 2)
+
+
+def test_reviewed_filenames_exclude_snapshots() -> None:
+    """Test snapshot files are left out of the reviewed file names."""
+    pr = _pull_request(
+        file_statuses={
+            "homeassistant/components/peblar/sensor.py": "modified",
+            "tests/components/peblar/snapshots/test_sensor.ambr": "modified",
+        }
+    )
+    assert pr.reviewed_filenames == ["homeassistant/components/peblar/sensor.py"]
 
 
 def test_to_meta_dict_omits_the_changed_filenames() -> None:
@@ -67,8 +92,6 @@ def test_results_to_dict() -> None:
         skip=True,
         too_long=True,
         skip_reason="changes too much",
-        changed_lines=9000,
-        changed_files=400,
         domains=["peblar"],
     )
     assert results.to_dict() == {
@@ -77,7 +100,5 @@ def test_results_to_dict() -> None:
         "skip": True,
         "too_long": True,
         "skip_reason": "changes too much",
-        "changed_lines": 9000,
-        "changed_files": 400,
         "domains": ["peblar"],
     }

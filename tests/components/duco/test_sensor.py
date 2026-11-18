@@ -18,6 +18,7 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import BOX_NODE_ID, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
 VENTILATION_TEMPERATURE_ENTITY_IDS = (
@@ -258,6 +257,10 @@ async def test_info_overview_failures_keep_node_entities_available(
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
     assert state.state == "-60"
+
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
 
 
 @pytest.mark.parametrize(

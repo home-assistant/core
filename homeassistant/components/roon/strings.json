@@ -37,6 +37,11 @@
       }
     }
   },
+  "exceptions": {
+    "setup_failed": {
+      "message": "Failed to set up the Roon server {name}"
+    }
+  },
   "services": {
     "transfer": {
       "description": "Transfers playback from one player to another.",

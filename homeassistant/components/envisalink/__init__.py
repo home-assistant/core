@@ -14,15 +14,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ATTR_CUSTOM_FUNCTION,
-    ATTR_PARTITION,
     CONF_EVL_KEEPALIVE,
     CONF_EVL_PORT,
     CONF_EVL_VERSION,
@@ -47,11 +45,11 @@ from .const import (
     DOMAIN,
     PANEL_TYPE_DSC,
     PANEL_TYPE_HONEYWELL,
-    SERVICE_CUSTOM_FUNCTION,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
     SIGNAL_ZONE_UPDATE,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,13 +95,6 @@ CONFIG_SCHEMA = probatio.Schema(
         )
     },
     extra=probatio.ALLOW_EXTRA,
-)
-
-SERVICE_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_CUSTOM_FUNCTION): cv.string,
-        probatio.Required(ATTR_PARTITION): cv.string,
-    }
 )
 
 
@@ -196,12 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
-    async def handle_custom_function(call: ServiceCall) -> None:
-        """Handle custom/PGM service."""
-        custom_function = call.data.get(ATTR_CUSTOM_FUNCTION)
-        partition = call.data.get(ATTR_PARTITION)
-        controller.command_output(code, partition, custom_function)
-
     controller.callback_zone_timer_dump = async_zones_updated_callback
     controller.callback_zone_state_change = async_zones_updated_callback
     controller.callback_partition_state_change = async_partition_updated_callback
@@ -248,8 +233,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # re-added in the future after some further refactoring
         # of the integration.
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
-    )
+    async_setup_services(hass)
 
     return True

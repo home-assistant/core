@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import MagicMock, create_autospec
 
 from asyncsleepiq import (
@@ -18,7 +19,14 @@ from asyncsleepiq import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    async_fire_time_changed,
+    mock_registry,
+)
 
+from homeassistant.components.sleepiq import _deduplicate_sleepers
 from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from homeassistant.components.sleepiq.coordinator import (
     LONGER_UPDATE_INTERVAL,
@@ -26,7 +34,7 @@ from homeassistant.components.sleepiq.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_USERNAME, PRESSURE
+from homeassistant.const import CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -41,13 +49,6 @@ from .conftest import (
     SLEEPER_R_NAME,
     SLEEPIQ_CONFIG,
     setup_platform,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    RegistryEntryWithDefaults,
-    async_fire_time_changed,
-    mock_registry,
 )
 
 ENTITY_IS_IN_BED = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{IS_IN_BED}"
@@ -120,29 +121,35 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("get_fetch_mock", "platform", "interval"),
-    [
-        pytest.param(
-            lambda client, bed: client.fetch_bed_statuses,
-            "sensor",
-            UPDATE_INTERVAL,
-            id="bed_status",
-        ),
-        pytest.param(
-            lambda client, bed: bed.fetch_pause_mode,
-            "switch",
-            LONGER_UPDATE_INTERVAL,
-            id="pause_mode",
-        ),
-        pytest.param(
-            lambda client, bed: bed.sleepers[0].fetch_sleep_data,
-            "sensor",
-            SLEEP_DATA_UPDATE_INTERVAL,
-            id="sleep_data",
-        ),
-    ],
-)
+FETCH_PARAMS = [
+    pytest.param(
+        lambda client, bed: client.fetch_bed_statuses,
+        "sensor",
+        UPDATE_INTERVAL,
+        id="bed_status",
+    ),
+    pytest.param(
+        lambda client, bed: bed.fetch_pause_mode,
+        "switch",
+        LONGER_UPDATE_INTERVAL,
+        id="pause_mode",
+    ),
+    pytest.param(
+        lambda client, bed: bed.sleepers[0].fetch_favsleepnumber,
+        "number",
+        LONGER_UPDATE_INTERVAL,
+        id="favorite_firmness",
+    ),
+    pytest.param(
+        lambda client, bed: bed.sleepers[0].fetch_sleep_data,
+        "sensor",
+        SLEEP_DATA_UPDATE_INTERVAL,
+        id="sleep_data",
+    ),
+]
+
+
+@pytest.mark.parametrize(("get_fetch_mock", "platform", "interval"), FETCH_PARAMS)
 async def test_update_auth_error_starts_reauth_flow(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -185,6 +192,46 @@ async def test_update_api_error_does_not_start_reauth_flow(
 
     assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 2
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.parametrize(("get_fetch_mock", "platform", "interval"), FETCH_PARAMS)
+@pytest.mark.parametrize(
+    ("exception", "level"),
+    [
+        pytest.param(SleepIQTimeoutException, logging.INFO, id="unreachable"),
+        pytest.param(
+            SleepIQAPIException(HTTPStatus.INTERNAL_SERVER_ERROR, "server error"),
+            logging.ERROR,
+            id="api_error",
+        ),
+    ],
+)
+async def test_update_failure_log_level(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    mock_asyncsleepiq: MagicMock,
+    mock_bed: MagicMock,
+    get_fetch_mock: Callable[[MagicMock, MagicMock], MagicMock],
+    platform: str,
+    interval: timedelta,
+    exception: Exception | type[Exception],
+    level: int,
+) -> None:
+    """Test an unreachable service is logged at info level."""
+    await setup_platform(hass, platform)
+
+    get_fetch_mock(mock_asyncsleepiq, mock_bed).side_effect = exception
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.sleepiq.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
 
 
 async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> None:
@@ -469,3 +516,102 @@ async def test_identical_sleepers_both_with_features_preserved(
     assert entry.state is ConfigEntryState.LOADED
     assert BED_ID in mock_asyncsleepiq.beds
     assert "bed_003" in mock_asyncsleepiq.beds
+
+
+def test_deduplicate_sleepers_removes_duplicates() -> None:
+    """Test that duplicate sleepers with the same sleeper_id are removed."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Test Bed"
+    bed.id = "bed_1"
+
+    sleeper_a = create_autospec(SleepIQSleeper)
+    sleeper_a.sleeper_id = "0"
+    sleeper_a.side = Side.LEFT
+
+    sleeper_b = create_autospec(SleepIQSleeper)
+    sleeper_b.sleeper_id = "0"
+    sleeper_b.side = Side.RIGHT
+
+    bed.sleepers = [sleeper_a, sleeper_b]
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert len(bed.sleepers) == 1
+    assert bed.sleepers[0] is sleeper_a
+
+
+def test_deduplicate_sleepers_keeps_distinct() -> None:
+    """Test that distinct sleeper IDs are preserved and falsy IDs are deduplicated."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Test Bed"
+    bed.id = "bed_1"
+
+    sleeper_a = create_autospec(SleepIQSleeper)
+    sleeper_a.sleeper_id = SLEEPER_L_ID
+
+    sleeper_b = create_autospec(SleepIQSleeper)
+    sleeper_b.sleeper_id = SLEEPER_R_ID
+
+    sleeper_c = create_autospec(SleepIQSleeper)
+    sleeper_c.sleeper_id = None
+
+    sleeper_d = create_autospec(SleepIQSleeper)
+    sleeper_d.sleeper_id = None
+
+    sleeper_e = create_autospec(SleepIQSleeper)
+    sleeper_e.sleeper_id = ""
+
+    sleeper_f = create_autospec(SleepIQSleeper)
+    sleeper_f.sleeper_id = ""
+
+    bed.sleepers = [sleeper_a, sleeper_b, sleeper_c, sleeper_d, sleeper_e, sleeper_f]
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert len(bed.sleepers) == 4
+    assert bed.sleepers[0] is sleeper_a
+    assert bed.sleepers[1] is sleeper_b
+    assert bed.sleepers[2] is sleeper_c
+    assert bed.sleepers[3] is sleeper_e
+
+
+def test_deduplicate_sleepers_empty() -> None:
+    """Test that an empty sleeper list causes no error."""
+    gateway = MagicMock()
+    bed = create_autospec(SleepIQBed)
+    bed.name = "Empty Bed"
+    bed.id = "bed_1"
+    bed.sleepers = []
+    gateway.beds = {"bed_1": bed}
+
+    _deduplicate_sleepers(gateway)
+
+    assert bed.sleepers == []
+
+
+async def test_duplicate_sleepers_no_unique_id_errors(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+    mock_bed: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that duplicate sleepers do not produce unique ID errors."""
+    dup_sleeper = create_autospec(SleepIQSleeper)
+    dup_sleeper.side = Side.RIGHT
+    dup_sleeper.name = "Duplicate"
+    dup_sleeper.sleeper_id = SLEEPER_L_ID
+    dup_sleeper.in_bed = False
+    dup_sleeper.sleep_number = 50
+    dup_sleeper.pressure = 1200
+    dup_sleeper.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+    mock_bed.sleepers.append(dup_sleeper)
+
+    entry = await setup_platform(hass, Platform.BINARY_SENSOR)
+    assert entry.state is ConfigEntryState.LOADED
+    assert "does not generate unique IDs" not in caplog.text

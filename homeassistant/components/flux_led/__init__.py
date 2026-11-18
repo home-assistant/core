@@ -155,7 +155,7 @@ async def _async_update_listener(
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> None:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
     discovery_cached = True
@@ -239,15 +239,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> b
             _async_handle_discovered_device,
         )
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FluxLedConfigEntry) -> None:
     """Unload a config entry."""
     device = entry.runtime_data.device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        # Make sure we probe the device again in case something has changed externally
-        async_clear_discovery_cache(hass, entry.data[CONF_HOST])
-        await device.async_stop()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)
+    # Make sure we probe the device again in case something has changed externally
+    async_clear_discovery_cache(hass, entry.data[CONF_HOST])
+    await device.async_stop()

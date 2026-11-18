@@ -6,6 +6,13 @@ from unittest.mock import ANY, AsyncMock, call, patch
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -26,14 +33,6 @@ from homeassistant.helpers.service_info.ssdp import (
 from homeassistant.util import dt as dt_util
 
 from . import _ssdp_headers, init_ssdp_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_time_changed,
-    mock_integration,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @patch(

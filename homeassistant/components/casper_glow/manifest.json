@@ -7,8 +7,10 @@
       "local_name": "Jar*"
     }
   ],
+  "categories": ["lighting.bulbs_lamps", "health_wellbeing"],
   "codeowners": ["@mikeodr"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/casper_glow",
   "integration_type": "device",

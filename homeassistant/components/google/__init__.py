@@ -19,7 +19,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import generate_entity_id
@@ -84,15 +88,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Set up Google from a config entry."""
     # Validate google_calendars.yaml (if present) as soon as possible to return
     # helpful error messages.
     try:
         await hass.async_add_executor_job(load_config, hass.config.path(YAML_DEVICES))
     except probatio.Invalid as err:
-        _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_calendar_config",
+            translation_placeholders={"file": YAML_DEVICES},
+        ) from err
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -133,8 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
     """Verify that the config entry desired scope is present in the oauth token."""
@@ -143,14 +148,18 @@ def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
     return access.scope in token_scopes
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.store.async_flush()
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
     """Handle removal of a local storage."""
-    store = LocalCalendarStore(hass, entry.entry_id)
+    if hasattr(entry, "runtime_data"):
+        store = entry.runtime_data.store
+    else:
+        store = LocalCalendarStore(hass, entry.entry_id)
     await store.async_remove()
 
 

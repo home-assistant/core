@@ -72,7 +72,7 @@
     },
     "button": {
       "reboot": {
-        "name": "Reboot"
+        "name": "[%key:common::action::reboot%]"
       }
     },
     "climate": {
@@ -97,14 +97,44 @@
       }
     },
     "number": {
+      "asleep_preset_cooling_temperature": {
+        "name": "Night preset cooling temperature"
+      },
+      "asleep_preset_temperature": {
+        "name": "Night preset temperature"
+      },
+      "away_preset_cooling_temperature": {
+        "name": "Away preset cooling temperature"
+      },
+      "away_preset_temperature": {
+        "name": "Away preset temperature"
+      },
+      "home_preset_cooling_temperature": {
+        "name": "Home preset cooling temperature"
+      },
+      "home_preset_temperature": {
+        "name": "Home preset temperature"
+      },
       "max_dhw_temperature": {
         "name": "Domestic hot water setpoint"
       },
       "maximum_boiler_temperature": {
         "name": "Maximum boiler temperature setpoint"
       },
+      "no_frost_preset_cooling_temperature": {
+        "name": "Anti-frost preset cooling temperature"
+      },
+      "no_frost_preset_temperature": {
+        "name": "Anti-frost preset temperature"
+      },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "vacation_preset_cooling_temperature": {
+        "name": "Vacation preset cooling temperature"
+      },
+      "vacation_preset_temperature": {
+        "name": "Vacation preset temperature"
       }
     },
     "select": {
@@ -152,8 +182,29 @@
       }
     },
     "sensor": {
+      "burner_operation_time": {
+        "name": "Burner operation time"
+      },
+      "burner_starts": {
+        "name": "Burner starts"
+      },
       "cooling_setpoint": {
         "name": "Cooling setpoint"
+      },
+      "dhw_burner_operation_time": {
+        "name": "DHW burner operation time"
+      },
+      "dhw_burner_starts": {
+        "name": "DHW burner starts"
+      },
+      "dhw_flow": {
+        "name": "DHW flow rate"
+      },
+      "dhw_pump_operation_time": {
+        "name": "DHW pump operation time"
+      },
+      "dhw_pump_starts": {
+        "name": "DHW pump starts"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
@@ -233,11 +284,26 @@
       "electricity_produced_point": {
         "name": "Electricity produced point"
       },
+      "failed_burner_flame_ignitions": {
+        "name": "Failed burner flame ignitions"
+      },
+      "failed_burner_starts": {
+        "name": "Failed burner starts"
+      },
+      "fault_flags": {
+        "name": "Application-specific fault code"
+      },
       "gas_consumed_cumulative": {
         "name": "Gas consumed cumulative"
       },
       "gas_consumed_interval": {
         "name": "Gas consumed interval"
+      },
+      "heating_pump_operation_time": {
+        "name": "Heating pump operation time"
+      },
+      "heating_pump_starts": {
+        "name": "Heating pump starts"
       },
       "heating_setpoint": {
         "name": "Heating setpoint"
@@ -248,6 +314,9 @@
       "maximum_boiler_temperature": {
         "name": "Maximum boiler temperature"
       },
+      "maximum_modulation_level": {
+        "name": "Maximum modulation level"
+      },
       "modulation_level": {
         "name": "Modulation level"
       },
@@ -256,6 +325,12 @@
       },
       "net_electricity_point": {
         "name": "Net electricity point"
+      },
+      "oem_diagnostic_code": {
+        "name": "OEM diagnostic code"
+      },
+      "oem_fault_code": {
+        "name": "OEM fault code"
       },
       "outdoor_air_temperature": {
         "name": "Outdoor air temperature"
@@ -338,6 +413,24 @@
     },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
+    }
+  },
+  "issues": {
+    "deprecated_dhw_cm_switch": {
+      "description": "The `{entity_id}` ({entity_name}) switch is deprecated and will be removed in Home Assistant 2027.5.0. It has been replaced by the **DHW mode** select, which provides the available modes for your heater.\n\nUpdate dashboards, templates, automations, and scripts to use the DHW mode select and choose the required mode. Then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "The Plugwise DHW comfort switch is deprecated"
+    },
+    "deprecated_dhw_cm_switch_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) switch is deprecated and will be removed in Home Assistant 2027.5.0. It has been replaced by the **DHW mode** select, which provides the available modes for your heater.\n\nIt is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the DHW mode select and choose the required mode, then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "[%key:component::plugwise::issues::deprecated_dhw_cm_switch::title%]"
+    },
+    "deprecated_dhw_temperature": {
+      "description": "The `{entity_id}` ({entity_name}) number is deprecated and will be removed in Home Assistant 2027.5.0. Its setpoint is now provided by the **Domestic hot water** water heater entity.\n\nUpdate dashboards, templates, automations, and scripts to use the water heater entity and its set-temperature control. Then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "The Plugwise DHW temperature number is deprecated"
+    },
+    "deprecated_dhw_temperature_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) number is deprecated and will be removed in Home Assistant 2027.5.0. Its setpoint is now provided by the **Domestic hot water** water heater entity.\n\nIt is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the water heater entity and its set-temperature control, then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "[%key:component::plugwise::issues::deprecated_dhw_temperature::title%]"
     }
   }
 }

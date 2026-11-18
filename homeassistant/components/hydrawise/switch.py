@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_WATERING_TIME
 from .coordinator import HydrawiseConfigEntry
-from .entity import HydrawiseEntity
+from .entity import HydrawiseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -90,6 +90,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     zone: Zone
 
     @override
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
@@ -97,6 +98,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @override
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)

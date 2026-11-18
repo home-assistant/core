@@ -11,11 +11,21 @@ from pathlib import Path
 import socket
 import ssl
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_mock_service,
+)
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http, onboarding
@@ -36,6 +46,11 @@ from homeassistant.components.http.const import (
     ENV_SETUP_PORT,
     ENV_SUPERVISOR,
 )
+from homeassistant.components.http.repairs import (
+    SSLProfileOutdatedFlow,
+    async_create_fix_flow,
+)
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN, ConfirmRepairFlow
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME, SERVER_PORT
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,14 +59,7 @@ from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import server_context_intermediate, server_context_modern
-
-from tests.common import (
-    async_call_logger_set_level,
-    async_fire_time_changed,
-    async_mock_service,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from homeassistant.util.ssl import SSLProfile, server_context
 
 
 @pytest.fixture(autouse=True)
@@ -349,8 +357,8 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ) as mock_context,
     ):
         assert (
@@ -364,7 +372,8 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert len(mock_context.mock_calls) == 1
+    # The YAML default predates the versioned profiles and names the v4 one.
+    assert mock_context.mock_calls == [call(SSLProfile.MODERN_V4)]
 
 
 async def test_ssl_profile_change_intermediate(
@@ -379,8 +388,8 @@ async def test_ssl_profile_change_intermediate(
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_intermediate",
-            side_effect=server_context_intermediate,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ) as mock_context,
     ):
         assert (
@@ -400,7 +409,7 @@ async def test_ssl_profile_change_intermediate(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert len(mock_context.mock_calls) == 1
+    assert mock_context.mock_calls == [call(SSLProfile.INTERMEDIATE_V4)]
 
 
 async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) -> None:
@@ -413,8 +422,8 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ) as mock_context,
     ):
         assert (
@@ -434,7 +443,7 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert len(mock_context.mock_calls) == 1
+    assert mock_context.mock_calls == [call(SSLProfile.MODERN_V4)]
 
 
 async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
@@ -447,8 +456,8 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
         patch("ssl.SSLContext.load_cert_chain"),
         patch("ssl.SSLContext.load_verify_locations") as mock_load_verify_locations,
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ) as mock_context,
     ):
         assert (
@@ -550,6 +559,39 @@ async def test_emergency_ssl_certificate_when_invalid(
         " certificate was not usable" in caplog.text
     )
 
+    assert hass.http._server is not None
+
+
+async def test_emergency_ssl_certificate_uses_configured_profile(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    hass_storage: dict[str, Any],
+) -> None:
+    """The emergency certificate keeps the configured SSL profile."""
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "intermediate_v4",
+        }
+    )
+    hass.config.recovery_mode = True
+
+    with patch(
+        "homeassistant.util.ssl.server_context", side_effect=server_context
+    ) as mock_context:
+        assert await async_setup_component(hass, DOMAIN, {}) is True
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Once for the unusable configured certificate, once for the emergency one.
+    assert mock_context.mock_calls == [
+        call(SSLProfile.INTERMEDIATE_V4),
+        call(SSLProfile.INTERMEDIATE_V4),
+    ]
     assert hass.http._server is not None
 
 
@@ -723,7 +765,7 @@ async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
         ssl_peer_certificate=None,
         ssl_key=None,
         trusted_proxies=[],
-        ssl_profile=http.SSL_MODERN,
+        ssl_profile=SSLProfile.MODERN_V6,
     )
 
     with patch.object(
@@ -797,8 +839,8 @@ async def test_ssl_issue_if_no_urls_configured(
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ),
     ):
         assert await async_setup_component(
@@ -829,8 +871,8 @@ async def test_ssl_issue_if_using_cloud(
         patch("ssl.SSLContext.load_cert_chain"),
         patch.object(cloud, "async_remote_ui_url", return_value="https://example.com"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ),
     ):
         assert await async_setup_component(
@@ -863,8 +905,8 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ),
         patch(
             "homeassistant.components.cloud.async_remote_ui_url",
@@ -909,8 +951,8 @@ async def test_ssl_issue_urls_configured(
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.util.ssl.server_context_modern",
-            side_effect=server_context_modern,
+            "homeassistant.util.ssl.server_context",
+            side_effect=server_context,
         ),
     ):
         assert await async_setup_component(
@@ -1213,7 +1255,8 @@ async def test_yaml_migration_matches_stable_no_pending(
 
     stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
-    assert stored["stable"] == stored_stable
+    # Without a certificate the unversioned profile moves to the current one.
+    assert stored["stable"] == {**stored_stable, "ssl_profile": "intermediate_v6"}
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
@@ -1238,7 +1281,7 @@ async def test_yaml_migration_matches_stable_no_pending(
                 "trusted_proxies": ["127.0.0.0/8", "10.11.12.0/24"],
                 "ip_ban_enabled": False,
                 "login_attempts_threshold": -1,
-                "ssl_profile": "modern",
+                "ssl_profile": "intermediate_v6",
                 "use_x_frame_options": True,
             },
             id="other-change-creates-pending",
@@ -1332,13 +1375,14 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
     await hass.async_block_till_done()
 
     stored = hass_storage[DOMAIN]["data"]
-    assert stored["stable"] == stored_stable
+    # Without a certificate the unversioned profile moves to the current one.
+    assert stored["stable"] == {**stored_stable, "ssl_profile": "intermediate_v6"}
     assert stored["pending"] == {
         "server_port": 8765,
         "cors_allowed_origins": ["https://cast.home-assistant.io"],
         "login_attempts_threshold": -1,
         "ip_ban_enabled": False,
-        "ssl_profile": "modern",
+        "ssl_profile": "intermediate_v6",
         "use_x_frame_options": True,
         "created_at": dt_util.utcnow().isoformat(),
         "error": None,
@@ -1559,8 +1603,8 @@ async def test_setup_migrates_v1_storage_to_v2(
     # from the v1 store stays the source of truth and no pending trial is
     # staged.
     assert hass.config.api.port == 9876
-    assert hass_storage[DOMAIN]["version"] == 2
-    assert hass_storage[DOMAIN]["minor_version"] == 2
+    assert hass_storage[DOMAIN]["version"] == 3
+    assert hass_storage[DOMAIN]["minor_version"] == 1
     data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
     # so the v2 stable slot is well-formed (all keys present) on disk.
@@ -1658,7 +1702,7 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         "error_message": None,
     }
     # The migrated payload is written back to disk right away.
-    assert hass_storage[DOMAIN]["minor_version"] == 2
+    assert hass_storage[DOMAIN]["minor_version"] == 1
     assert hass_storage[DOMAIN]["data"] == {
         "stable": _stored_config(
             {"server_port": 9876}, created_at=dt_util.utcnow().isoformat()
@@ -1668,6 +1712,376 @@ async def test_setup_migrates_v2_1_storage_to_v2_2(
         ),
         "yaml_migration_done": True,
     }
+
+
+async def test_setup_migrates_v2_2_storage_to_v3(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """Version 3 of the store versions the SSL profiles.
+
+    A slot with a certificate keeps the v4 profile its unversioned name stood
+    for, so the upgrade changes nothing for connecting clients. A slot without
+    a certificate does not use the profile and moves to the current one.
+    """
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {**ssl_conf, "ssl_profile": "modern_v4"},
+        pending={"server_port": 9999, "ssl_profile": "intermediate_v6"},
+    )
+    hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] = "modern"
+    hass_storage[DOMAIN]["data"]["pending"]["ssl_profile"] = "intermediate"
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["minor_version"] == 1
+    assert hass_storage[DOMAIN]["data"] == {
+        "stable": _stored_config(
+            {**ssl_conf, "ssl_profile": "modern_v4"}, created_at=STABLE_CREATED_AT
+        ),
+        "pending": _stored_config(
+            {"server_port": 9999, "ssl_profile": "intermediate_v6"}
+        ),
+        "yaml_migration_done": True,
+    }
+
+
+async def test_setup_migrates_v1_storage_ssl_profile(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A v1 store using SSL keeps the v4 profile its unversioned name stood for."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "key": DOMAIN,
+        "data": {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "intermediate",
+        },
+    }
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["data"]["stable"]["ssl_profile"] == "intermediate_v4"
+
+
+@pytest.mark.parametrize(
+    ("ssl_profile", "profile_name"),
+    [("modern_v4", "modern_v4"), ("intermediate_v4", "intermediate_v4")],
+)
+async def test_ssl_profile_outdated_issue(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+    ssl_profile: str,
+    profile_name: str,
+) -> None:
+    """A server using SSL with a superseded profile gets a repair offering the upgrade."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": ssl_profile,
+        }
+    )
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated")
+    assert issue is not None
+    assert issue.is_fixable
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_key == "ssl_profile_outdated"
+    assert issue.translation_placeholders == {"profile": profile_name}
+
+
+def _create_stale_ssl_profile_issue(hass: HomeAssistant) -> None:
+    """Create the SSL profile issue as left behind by a previous start."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "ssl_profile_outdated",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="ssl_profile_outdated",
+        translation_placeholders={"profile": "intermediate_v4"},
+    )
+
+
+async def test_ssl_profile_outdated_issue_cleared_with_current_profile(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """A stale issue is cleared when the server runs a current profile."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "modern_v6",
+        }
+    )
+    _create_stale_ssl_profile_issue(hass)
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
+
+
+async def test_ssl_profile_outdated_issue_cleared_without_ssl(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A stale issue is cleared when the server does not use SSL, whatever the profile."""
+    hass_storage[DOMAIN] = _stable_http_storage({"ssl_profile": "modern_v4"})
+    _create_stale_ssl_profile_issue(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated") is None
+
+
+@pytest.mark.usefixtures("freezer")
+@pytest.mark.parametrize(
+    ("ssl_profile", "profile_name", "upgrade"),
+    [
+        ("modern_v4", "modern_v4", "modern_v6"),
+        ("modern_v4", "modern_v4", "intermediate_v6"),
+        ("intermediate_v4", "intermediate_v4", "modern_v6"),
+        ("intermediate_v4", "intermediate_v4", "intermediate_v6"),
+    ],
+)
+async def test_ssl_profile_outdated_fix_flow(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+    ssl_profile: str,
+    profile_name: str,
+    upgrade: str,
+) -> None:
+    """The repair offers both current profiles and stages the chosen one."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {
+        "ssl_certificate": str(cert_path),
+        "ssl_key": str(key_path),
+        "ssl_profile": ssl_profile,
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    assert data["type"] == "menu"
+    assert data["step_id"] == "init"
+    assert data["menu_options"] == [
+        "confirm_intermediate_v6",
+        "confirm_modern_v6",
+        "ignore",
+    ]
+    assert data["description_placeholders"] == {"profile": profile_name}
+
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": f"confirm_{upgrade}"}
+    )
+    assert data["type"] == "form"
+    assert data["step_id"] == f"confirm_{upgrade}"
+    assert data["description_placeholders"] == {"profile": profile_name}
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    # The upgrade is a regular pending trial: stable keeps the v4 profile so
+    # the auto-revert restores it if the new profile locks the user out.
+    assert hass_storage[DOMAIN]["data"]["stable"] == _stored_config(
+        ssl_conf, created_at=STABLE_CREATED_AT
+    )
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        {**ssl_conf, "ssl_profile": upgrade},
+        created_at=dt_util.utcnow().isoformat(),
+    )
+    assert len(restart_calls) == 1
+
+
+async def test_ssl_profile_outdated_fix_flow_ignore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+    tmp_path: Path,
+) -> None:
+    """The repair can be ignored, keeping the current profile."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_profile": "intermediate_v4",
+        }
+    )
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": "ignore"}
+    )
+    assert data["type"] == "form"
+    assert data["step_id"] == "ignore"
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    assert data["type"] == "abort"
+    assert data["reason"] == "issue_ignored"
+
+    issue = issue_registry.async_get_issue(DOMAIN, "ssl_profile_outdated")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_ssl_profile_outdated_fix_flow_pending_config(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """The repair does not replace a pending config that is under trial."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {
+        "ssl_certificate": str(cert_path),
+        "ssl_key": str(key_path),
+        "ssl_profile": "modern_v4",
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(
+        ssl_conf, pending={**ssl_conf, "server_port": 9999}
+    )
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    assert data["type"] == "abort"
+    assert data["reason"] == "pending_config"
+
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        {**ssl_conf, "server_port": 9999}
+    )
+    assert len(restart_calls) == 0
+
+
+@pytest.mark.usefixtures("freezer")
+async def test_ssl_profile_outdated_fix_flow_pending_config_staged_meanwhile(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A pending config staged while the repair is open is not overwritten."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    ssl_conf = {
+        "ssl_certificate": str(cert_path),
+        "ssl_key": str(key_path),
+        "ssl_profile": "modern_v4",
+    }
+    hass_storage[DOMAIN] = _stable_http_storage(ssl_conf)
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+        assert await async_setup_component(hass, REPAIRS_DOMAIN, {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "ssl_profile_outdated")
+    data = await process_repair_fix_flow(
+        client, data["flow_id"], json={"next_step_id": "confirm_modern_v6"}
+    )
+    assert data["type"] == "form"
+
+    # Another HTTP change is staged from the network panel meanwhile.
+    staged = HTTP_STORAGE_SCHEMA({**ssl_conf, "server_port": 9999})
+    store = await async_get_and_load_store(hass)
+    await store.async_set_pending(staged)
+
+    data = await process_repair_fix_flow(client, data["flow_id"])
+    assert data["type"] == "abort"
+    assert data["reason"] == "pending_config"
+
+    assert hass_storage[DOMAIN]["data"]["pending"] == _stored_config(
+        {**ssl_conf, "server_port": 9999},
+        created_at=dt_util.utcnow().isoformat(),
+    )
+    assert len(restart_calls) == 0
+
+
+async def test_create_fix_flow(hass: HomeAssistant) -> None:
+    """Each issue gets its own fix flow; unknown issues get a plain confirm flow."""
+    assert isinstance(
+        await async_create_fix_flow(hass, "ssl_profile_outdated", None),
+        SSLProfileOutdatedFlow,
+    )
+    assert isinstance(
+        await async_create_fix_flow(hass, "unknown", None), ConfirmRepairFlow
+    )
 
 
 @pytest.mark.parametrize(
@@ -1738,16 +2152,30 @@ async def test_default_config_under_supervisor_starts_redirect(
     assert hass.http._legacy_redirect_server is not None
 
 
+@pytest.mark.parametrize(
+    "stored_config",
+    [
+        pytest.param({"server_port": 80}, id="default-profile"),
+        # 2026.11.0b0 persisted modern_v6 as the default profile.
+        pytest.param(
+            {"server_port": 80, "ssl_profile": "modern_v6"},
+            id="earlier-default-profile",
+        ),
+    ],
+)
 async def test_persisted_default_config_starts_redirect(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    stored_config: dict[str, Any],
 ) -> None:
     """Test the redirect still starts for a default config loaded from disk.
 
     A persisted default config carries created_at/error metadata, so the
     transition gate must compare without it (not by identity or raw equality).
+    Without a certificate the SSL profile is unused, so a config persisted
+    with an earlier default profile is still the default config.
     """
-    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass_storage[DOMAIN] = _stable_http_storage(stored_config)
 
     with _supervisor_default_config():
         await _setup_http_with_onboarding(hass)
@@ -2037,7 +2465,7 @@ async def test_websocket_http_config(
         "trusted_proxies": ["127.0.0.0/8"],
         "ip_ban_enabled": False,
         "login_attempts_threshold": 5,
-        "ssl_profile": "modern",
+        "ssl_profile": "modern_v6",
         "use_x_frame_options": True,
     }
     await ws_client.send_json_auto_id(
@@ -2352,6 +2780,194 @@ async def test_websocket_configure_rejected_while_not_running(
 
     await hass.async_block_till_done()
     assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "server_port",
+    [
+        pytest.param(default_server_port(), id="same_port"),
+        pytest.param(9123, id="new_port"),
+    ],
+)
+async def test_websocket_configure_rejects_overlapping_hosts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    server_port: int,
+) -> None:
+    """Listen addresses that overlap on the same port are rejected.
+
+    A wildcard and a specific address of the same family both bind with
+    SO_REUSEADDR but only one can listen, so the server would fail once it
+    starts serving. The check does not need the configured port, so it also
+    covers a host-only change while the running server holds that port.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": server_port,
+                "server_host": ["0.0.0.0", "127.0.0.1", "::1"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "bind_failed"
+    assert response["error"]["message"] == (
+        "Listen addresses '0.0.0.0' and '127.0.0.1' overlap: both cannot listen"
+        " on the same port"
+    )
+
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert len(restart_calls) == 0
+
+
+async def test_websocket_configure_same_port_host_change_is_accepted(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    mock_create_server: Mock,
+) -> None:
+    """A host-only change on the current port is checked without binding it."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_setup_component(hass, "websocket_api", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    # The running server holds the port: a real bind would fail against
+    # ourselves, so success proves only the listen addresses were checked.
+    mock_create_server.side_effect = OSError(errno.EADDRINUSE, "Address already in use")
+
+    current_port = default_server_port()
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "http/config/configure",
+            "config": {
+                "server_port": current_port,
+                "server_host": ["0.0.0.0", "::1"],
+            },
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": True}
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_host"] == [
+        "0.0.0.0",
+        "::1",
+    ]
+
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "hosts",
+    [
+        pytest.param(["0.0.0.0", "::"], id="dual_stack_wildcards"),
+        pytest.param(["0.0.0.0", "::1"], id="ipv4_wildcard_ipv6_loopback"),
+        pytest.param(["127.0.0.1", "::1"], id="loopback_only"),
+        pytest.param(["127.0.0.1"], id="single"),
+        # create_server() binds each resolved endpoint only once.
+        pytest.param(["::1", "::1"], id="duplicate"),
+        pytest.param(["0.0.0.0", "0.0.0.0"], id="duplicate_wildcard"),
+        # The same link-local address on two interfaces is two endpoints.
+        pytest.param(["fe80::1%1", "fe80::1%2"], id="scoped_link_local"),
+    ],
+)
+async def test_verify_hosts_distinct_accepts(
+    hass: HomeAssistant, hosts: list[str]
+) -> None:
+    """Hosts that can all listen on one port pass the check."""
+    await http.server.async_verify_hosts_distinct(hass, hosts)
+
+
+@pytest.mark.parametrize(
+    ("hosts", "first", "second"),
+    [
+        pytest.param(["0.0.0.0", "127.0.0.1"], "0.0.0.0", "127.0.0.1", id="v4"),
+        pytest.param(
+            ["127.0.0.1", "0.0.0.0"], "127.0.0.1", "0.0.0.0", id="v4_reversed"
+        ),
+        pytest.param(["::", "::1"], "::", "::1", id="v6"),
+        pytest.param(["0.0.0.0", "::1", "::"], "::1", "::", id="v6_after_v4"),
+        pytest.param(["::", "fe80::1%1"], "::", "fe80::1%1", id="v6_scoped"),
+    ],
+)
+async def test_verify_hosts_distinct_rejects(
+    hass: HomeAssistant, hosts: list[str], first: str, second: str
+) -> None:
+    """Hosts of one family overlap on a wildcard or a repeated address."""
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Listen addresses {first!r} and {second!r} overlap",
+    ):
+        await http.server.async_verify_hosts_distinct(hass, hosts)
+
+
+async def test_verify_hosts_distinct_resolves_host_names(
+    hass: HomeAssistant,
+) -> None:
+    """A host name counts with every address it resolves to."""
+    localhost_infos = [
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
+        (socket.AF_INET6, socket.SOCK_STREAM, 6, "", ("::1", 0, 0, 0)),
+    ]
+    real_getaddrinfo = socket.getaddrinfo
+
+    def _getaddrinfo(host: str, *args: Any, **kwargs: Any) -> list[Any]:
+        if host == "localhost":
+            return localhost_infos
+        return real_getaddrinfo(host, *args, **kwargs)
+
+    with patch("homeassistant.components.http.server.socket.getaddrinfo", _getaddrinfo):
+        await http.server.async_verify_hosts_distinct(hass, ["localhost", "192.0.2.1"])
+        # localhost and 127.0.0.1 resolve to the same endpoint, bound once.
+        await http.server.async_verify_hosts_distinct(hass, ["localhost", "127.0.0.1"])
+        with pytest.raises(
+            HomeAssistantError,
+            match="Listen addresses 'localhost' and '::' overlap",
+        ):
+            await http.server.async_verify_hosts_distinct(hass, ["localhost", "::"])
+
+
+@pytest.mark.parametrize(
+    ("error", "match"),
+    [
+        pytest.param(
+            socket.gaierror(-2, "Name or service not known"),
+            "Cannot resolve listen address 'nope.invalid': .*Name or service",
+            id="unresolvable",
+        ),
+        pytest.param(
+            UnicodeError("encoding with 'idna' codec failed"),
+            "Cannot resolve listen address 'nope.invalid': .*idna",
+            id="unencodable",
+        ),
+    ],
+)
+async def test_verify_hosts_distinct_rejects_unresolvable_host(
+    hass: HomeAssistant, error: Exception, match: str
+) -> None:
+    """A host that cannot be resolved is reported."""
+    with (
+        patch(
+            "homeassistant.components.http.server.socket.getaddrinfo",
+            side_effect=error,
+        ),
+        pytest.raises(HomeAssistantError, match=match),
+    ):
+        await http.server.async_verify_hosts_distinct(hass, ["nope.invalid"])
 
 
 async def test_pending_config_auto_reverts_to_stable(
@@ -2813,7 +3429,7 @@ async def test_create_server_normalizes_unencodable_host(
         ssl_peer_certificate=None,
         ssl_key=None,
         trusted_proxies=[],
-        ssl_profile=http.SSL_MODERN,
+        ssl_profile=SSLProfile.MODERN_V6,
     )
     with (
         patch.object(

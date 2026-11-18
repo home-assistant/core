@@ -1,12 +1,12 @@
 """Tests for SFTP Storage."""
 
-import logging
 from pathlib import Path
 from unittest.mock import patch
 
 from asyncssh.misc import ChannelOpenError, ConnectionLost, PermissionDenied
 from asyncssh.sftp import SFTPConnectionLost, SFTPPermissionDenied
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
@@ -23,8 +23,6 @@ from .conftest import (
     ComponentSetup,
     create_private_key_file,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -149,7 +147,6 @@ async def test_async_remove_entry(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_remove_entry."""
-    caplog.set_level(logging.DEBUG)
     # Setup default config entry
     await setup_integration()
 

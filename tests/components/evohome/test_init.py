@@ -2,18 +2,20 @@
 
 from http import HTTPStatus
 import logging
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
-from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import DOMAIN, EVOHOME_DATA
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_post_request
+from .conftest import mock_make_request, mock_post_request, setup_evohome
+from .const import USERNAME
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -41,7 +43,7 @@ LOG_FAIL_CREDENTIALS = (
     "homeassistant.components.evohome",
     logging.ERROR,
     "Failed to fetch initial data: "
-    "Authenticator response is invalid: {'error': 'invalid_grant'}",
+    'Authenticator response is invalid: 400 Bad Request, response={"error": "invalid_grant"}',
 )
 LOG_FAIL_GATEWAY = (
     "homeassistant.components.evohome",
@@ -88,9 +90,28 @@ LOG_SETUP_FAILED = (
 EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
     "Connection error",
 )
-EXC_BAD_CREDENTIALS = evo_exc.AuthenticationFailedError(
-    "Authenticator response is invalid: {'error': 'invalid_grant'}",
-    status=HTTPStatus.BAD_REQUEST,
+
+
+def _mock_response(status: HTTPStatus, body: dict | list) -> Mock:
+    """Return a mock of a response from the vendor's server (JSON, a HTTP error)."""
+    rsp = Mock(spec=aiohttp.ClientResponse, status=status, headers={})
+    rsp.content_type = "application/json"
+    rsp.json = AsyncMock(return_value=body)
+    rsp.raise_for_status.side_effect = aiohttp.ClientResponseError(
+        Mock(), (), status=status, message=status.phrase
+    )
+    return rsp
+
+
+# the vendor's response to a bad username/password is not an exception (v2, then v1)
+RSP_BAD_CREDENTIALS = Mock(
+    return_value=_mock_response(HTTPStatus.BAD_REQUEST, {"error": "invalid_grant"})
+)
+RSP_BAD_CREDENTIALS_V1 = Mock(
+    return_value=_mock_response(
+        HTTPStatus.UNAUTHORIZED,
+        [{"code": "EmailOrPasswordIncorrect", "message": "..."}],
+    )
 )
 EXC_TOO_MANY_REQUESTS = aiohttp.ClientResponseError(
     Mock(),
@@ -102,9 +123,9 @@ EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
     Mock(), (), status=HTTPStatus.BAD_GATEWAY, message=HTTPStatus.BAD_GATEWAY.phrase
 )
 
-AUTHENTICATION_TESTS: dict[Exception, list] = {
+AUTHENTICATION_TESTS: dict[Exception | Mock, list] = {
     EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
-    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_AUTH, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
+    RSP_BAD_CREDENTIALS: [LOG_HINT_USR_AUTH, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
     EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
     EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_AUTH, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
 }
@@ -120,7 +141,7 @@ CLIENT_REQUEST_TESTS: dict[Exception, list] = {
 async def test_authentication_failure_v2(
     hass: HomeAssistant,
     config: dict[str, str],
-    exception: Exception,
+    exception: Exception | Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failure to setup an evohome-compatible system.
@@ -140,6 +161,31 @@ async def test_authentication_failure_v2(
     assert result is False
 
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
+
+
+async def test_bad_credentials_v1(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test high-precision temps are disabled if the v1 API refuses the credentials."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.AbstractTokenManager._post_access_token_request",
+            mock_post_request("default"),
+        ),
+        patch(
+            "_evohome.credentials.CredentialsManagerBase._request",
+            side_effect=RSP_BAD_CREDENTIALS_V1,
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()
+
+    assert hass.data[EVOHOME_DATA].account.client_v1 is None
+    assert "The feature will be disabled until next restart" in caplog.text
 
 
 @pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
@@ -178,3 +224,75 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("install", "config"),
+    [
+        pytest.param(
+            install,
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "password", "location_idx": i},
+            id=f"{install}-location_idx_{i}",
+        )
+        for install, i in (("sys_004", 1), ("sys_004", 2), ("sys_006", 1))
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_setup_non_default_location(
+    hass: HomeAssistant,
+    ctl_id: str,
+    zone_id: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test setup of a location other than the first of a multi-location account."""
+
+    assert hass.states.get(ctl_id) is not None
+    assert hass.states.get(zone_id) is not None
+
+    assert sorted(hass.states.async_entity_ids()) == snapshot
+
+
+_STALE_ISSUES = {  # issue_id: translation_key
+    "deprecated_clear_zone_override_service": "deprecated_clear_zone_override_service",
+    "deprecated_preset_reset": "deprecated_preset_reset",
+    "deprecated_reset_system_service": "deprecated_reset_system_service",
+    "deprecated_set_system_mode_service": "deprecated_controller_service",
+}
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            f"component.evohome.issues.{translation_key}.{key}"
+            for translation_key in _STALE_ISSUES.values()
+            for key in ("title", "description")
+        ]
+    ],
+)
+async def test_stale_deprecation_issues_removed(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test persistent repair issues of completed deprecations are removed."""
+
+    for issue_id, translation_key in _STALE_ISSUES.items():
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+        )
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    for issue_id in _STALE_ISSUES:
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
