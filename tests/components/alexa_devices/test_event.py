@@ -61,6 +61,25 @@ async def test_history_event_is_fired(
     assert state.attributes == snapshot
 
 
+async def test_initial_vocal_record_not_fired(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the vocal record loaded at setup does not fire on the next update."""
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.EVENT]):
+        await setup_integration(hass, mock_config_entry)
+
+    # An unrelated push update must not replay the record loaded at setup
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.history_state_event_handler({})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("event_type") is None
+
+
 async def test_no_vocal_record_skips_event_trigger(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,

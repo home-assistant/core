@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -69,7 +69,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: NIGHT_MODE_ENTITY,
+            TargetKey.ENTITY_ID: NIGHT_MODE_ENTITY,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -104,7 +104,7 @@ async def test_select_option_failure_raises(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: NIGHT_MODE_ENTITY,
+                TargetKey.ENTITY_ID: NIGHT_MODE_ENTITY,
                 SelectServiceArgument.OPTION: "off",
             },
             blocking=True,

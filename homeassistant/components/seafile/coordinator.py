@@ -9,6 +9,7 @@ from aioseafile import (
     Library,
     Seafile,
     SeafileAuthenticationError,
+    SeafileConnectionError,
     SeafileError,
     SeafilePermissionError,
     SeafileTimeoutError,
@@ -19,7 +20,11 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import CONF_LIBRARY_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIBRARY
 from .utils import handle_seafile_errors
@@ -103,8 +108,12 @@ class SeafileDataUpdateCoordinator(DataUpdateCoordinator[SeafileData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except SeafileTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN, translation_key="timeout_connect"
+            ) from err
+        except SeafileConnectionError as err:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         except SeafileError as err:
             raise UpdateFailed(

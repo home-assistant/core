@@ -64,7 +64,16 @@ LISTEN_READY_TIMEOUT = 30
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
-type PlayerAddCallback = Callable[[str], None]
+type PlayerCallback = Callable[[str], None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PlatformHandlers:
+    """Callbacks a platform registers for player events."""
+
+    add_player: PlayerCallback
+    remove_player: PlayerCallback | None = None
+    update_player_options: PlayerCallback | None = None
 
 
 @dataclass
@@ -74,7 +83,7 @@ class MusicAssistantEntryData:
     mass: MusicAssistantClient
     listen_task: asyncio.Task
     discovered_players: set[str] = field(default_factory=set)
-    platform_handlers: dict[Platform, PlayerAddCallback] = field(default_factory=dict)
+    platform_handlers: dict[Platform, PlatformHandlers] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -204,13 +213,16 @@ async def async_setup_entry(  # noqa: C901
         """Handle adding Player from MA as HA device + entities."""
         entry.runtime_data.discovered_players.add(player.player_id)
         # run callback for each platform
-        for callback in entry.runtime_data.platform_handlers.values():
-            callback(player.player_id)
+        for handlers in entry.runtime_data.platform_handlers.values():
+            handlers.add_player(player.player_id)
 
     def remove_player(player_id: str) -> None:
         """Handle removing Player from MA as HA device + entities."""
         if player_id in entry.runtime_data.discovered_players:
             entry.runtime_data.discovered_players.remove(player_id)
+        for handlers in entry.runtime_data.platform_handlers.values():
+            if handlers.remove_player is not None:
+                handlers.remove_player(player_id)
         dev_reg = dr.async_get(hass)
         if hass_device := dev_reg.async_get_device_by_identifier(
             (DOMAIN, player_id), entry.entry_id
@@ -273,6 +285,19 @@ async def async_setup_entry(  # noqa: C901
 
     entry.async_on_unload(
         mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
+    )
+
+    # register listener for player options
+    def handle_player_options_updated(event: MassEvent) -> None:
+        """Handle Mass Player Options Updated event."""
+        if event.object_id not in entry.runtime_data.discovered_players:
+            return
+        for handlers in entry.runtime_data.platform_handlers.values():
+            if handlers.update_player_options is not None:
+                handlers.update_player_options(event.object_id)
+
+    entry.async_on_unload(
+        mass.subscribe(handle_player_options_updated, EventType.PLAYER_OPTIONS_UPDATED)
     )
 
     # The listen task skips its reload when it fails with an exception while

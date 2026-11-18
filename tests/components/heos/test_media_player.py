@@ -71,7 +71,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -712,7 +712,7 @@ async def test_group_volume_set(
         DOMAIN,
         HeosService.GROUP_VOLUME_SET,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             HeosServiceArgument.VOLUME_LEVEL: 1,
         },
         blocking=True,
@@ -735,7 +735,7 @@ async def test_group_volume_set_error(
             DOMAIN,
             HeosService.GROUP_VOLUME_SET,
             {
-                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                TargetKey.ENTITY_ID: "media_player.test_player",
                 HeosServiceArgument.VOLUME_LEVEL: 1,
             },
             blocking=True,
@@ -759,7 +759,7 @@ async def test_group_volume_set_not_grouped_error(
             DOMAIN,
             HeosService.GROUP_VOLUME_SET,
             {
-                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                TargetKey.ENTITY_ID: "media_player.test_player",
                 HeosServiceArgument.VOLUME_LEVEL: 1,
             },
             blocking=True,
@@ -776,7 +776,7 @@ async def test_group_volume_down(
     await hass.services.async_call(
         DOMAIN,
         HeosService.GROUP_VOLUME_DOWN,
-        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_down.assert_called_with(999)
@@ -791,7 +791,7 @@ async def test_group_volume_up(
     await hass.services.async_call(
         DOMAIN,
         HeosService.GROUP_VOLUME_UP,
-        {CommonServiceArgument.ENTITY_ID: "media_player.test_player"},
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     controller.group_volume_up.assert_called_with(999)
@@ -1794,7 +1794,7 @@ async def test_get_queue(
         DOMAIN,
         HeosService.GET_QUEUE,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
         },
         blocking=True,
         return_response=True,
@@ -1813,7 +1813,7 @@ async def test_remove_from_queue(
         DOMAIN,
         HeosService.REMOVE_FROM_QUEUE,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             HeosServiceArgument.QUEUE_IDS: [1, "2"],
         },
         blocking=True,
@@ -1831,7 +1831,7 @@ async def test_move_queue_item_queue(
         DOMAIN,
         HeosService.MOVE_QUEUE_ITEM,
         {
-            CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             HeosServiceArgument.QUEUE_IDS: [1, "2"],
             HeosServiceArgument.DESTINATION_POSITION: 10,
         },
@@ -1855,7 +1855,7 @@ async def test_move_queue_item_queue_error_raises(
             DOMAIN,
             HeosService.MOVE_QUEUE_ITEM,
             {
-                CommonServiceArgument.ENTITY_ID: "media_player.test_player",
+                TargetKey.ENTITY_ID: "media_player.test_player",
                 HeosServiceArgument.QUEUE_IDS: [1, "2"],
                 HeosServiceArgument.DESTINATION_POSITION: 10,
             },

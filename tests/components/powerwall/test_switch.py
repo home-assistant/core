@@ -8,12 +8,7 @@ from tesla_powerwall import GridStatus, PowerwallError
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    STATE_OFF,
-    STATE_ON,
-    CommonServiceArgument,
-)
+from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -66,7 +61,7 @@ async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -82,7 +77,7 @@ async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -100,7 +95,7 @@ async def test_exception_on_powerwall_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

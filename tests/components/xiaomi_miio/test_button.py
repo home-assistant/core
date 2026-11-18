@@ -17,8 +17,8 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -69,7 +69,7 @@ async def test_vacuum_button_press(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id + "_reset_side_brush"},
+        {TargetKey.ENTITY_ID: entity_id + "_reset_side_brush"},
         blocking=True,
     )
 
