@@ -536,10 +536,8 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
     @callback
     def _async_device_initialized(self) -> None:
         """Clear OTA progress, the device can reboot before sending the final event."""
-        if self._ota_in_progress:
-            self._ota_in_progress = False
-            self._ota_progress_percentage = None
-            self.async_write_ha_state()
+        self._ota_in_progress = False
+        self._ota_progress_percentage = None
 
     @callback
     def _ota_progress_callback(self, event: dict[str, Any]) -> None:
