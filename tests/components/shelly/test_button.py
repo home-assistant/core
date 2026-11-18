@@ -13,15 +13,10 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -77,8 +72,8 @@ async def test_block_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_reboot.call_count == 1
@@ -104,8 +99,8 @@ async def test_rpc_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_rpc_device.trigger_reboot.call_count == 1
@@ -140,8 +135,8 @@ async def test_rpc_button_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.test_name_restart"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.test_name_restart"},
             blocking=True,
         )
 
@@ -156,8 +151,8 @@ async def test_rpc_button_reauth_error(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.test_name_restart"},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.test_name_restart"},
         blocking=True,
     )
 
@@ -201,8 +196,8 @@ async def test_rpc_blu_trv_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_blu_trv.trigger_blu_trv_calibration.assert_called_once_with(200)
@@ -242,8 +237,8 @@ async def test_rpc_blu_trv_button_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.trv_name_calibrate"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.trv_name_calibrate"},
             blocking=True,
         )
 
@@ -264,8 +259,8 @@ async def test_rpc_blu_trv_button_auth_error(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.trv_name_calibrate"},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: "button.trv_name_calibrate"},
         blocking=True,
     )
 
@@ -313,8 +308,8 @@ async def test_rpc_device_virtual_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
@@ -375,8 +370,8 @@ async def test_wall_display_virtual_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
@@ -418,8 +413,8 @@ async def test_rpc_smoke_mute_alarm_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -453,8 +448,8 @@ async def test_wall_display_screen_buttons(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_rpc_device.wall_display_set_screen.assert_called_once_with(value=value)
@@ -514,8 +509,8 @@ async def test_rpc_ircode_buttons(
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

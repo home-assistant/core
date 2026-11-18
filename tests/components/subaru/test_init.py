@@ -9,7 +9,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.subaru.const import DOMAIN, SERVICE_UNLOCK_SPECIFIC_DOOR
+from homeassistant.components.subaru.const import DOMAIN
+from homeassistant.components.subaru.services import SubaruService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -37,7 +38,7 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test the action is registered at integration setup, before any entry loads."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    assert hass.services.has_service(DOMAIN, SERVICE_UNLOCK_SPECIFIC_DOOR)
+    assert hass.services.has_service(DOMAIN, SubaruService.UNLOCK_SPECIFIC_DOOR)
 
 
 async def test_setup_ev(hass: HomeAssistant, ev_entry) -> None:

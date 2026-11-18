@@ -1,5 +1,6 @@
 """Services for the Plex integration."""
 
+from enum import StrEnum
 import json
 import logging
 
@@ -11,14 +12,31 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.template import result_as_boolean
 
-from .const import DOMAIN, PLEX_URI_SCHEME, SERVICE_REFRESH_LIBRARY
+from .const import DOMAIN, PLEX_URI_SCHEME
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
+
+class PlexService(StrEnum):
+    """Store keys for Plex services."""
+
+    REFRESH_LIBRARY = "refresh_library"
+
+
+class PlexServiceArgument(StrEnum):
+    """Store keys for Plex service arguments."""
+
+    SERVER_NAME = "server_name"
+    LIBRARY_NAME = "library_name"
+
+
 REFRESH_LIBRARY_SCHEMA = probatio.Schema(
-    {probatio.Optional("server_name"): str, probatio.Required("library_name"): str}
+    {
+        probatio.Optional(PlexServiceArgument.SERVER_NAME): str,
+        probatio.Required(PlexServiceArgument.LIBRARY_NAME): str,
+    }
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -33,7 +51,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
+        PlexService.REFRESH_LIBRARY,
         async_refresh_library_service,
         schema=REFRESH_LIBRARY_SCHEMA,
     )
@@ -41,8 +59,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
-    plex_server_name = service_call.data.get("server_name")
-    library_name = service_call.data["library_name"]
+    plex_server_name = service_call.data.get(PlexServiceArgument.SERVER_NAME)
+    library_name = service_call.data[PlexServiceArgument.LIBRARY_NAME]
 
     plex_server = get_plex_server(hass, plex_server_name)
 

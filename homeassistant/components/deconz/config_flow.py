@@ -19,7 +19,6 @@ from pydeconz.utils import (
 
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -30,6 +29,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
+from . import DeconzConfigEntry
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
@@ -65,7 +65,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DeconzConfigEntry,
     ) -> DeconzOptionsFlowHandler:
         """Get the options flow for this handler."""
         return DeconzOptionsFlowHandler()

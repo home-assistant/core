@@ -254,6 +254,9 @@
     "communication_error": {
       "message": "Error communicating with the Qube heat pump: {error}"
     },
+    "link_settings_in_use": {
+      "message": "The Qube heat pump cannot be set up with these link settings: {error}"
+    },
     "no_data": {
       "message": "No data received from the Qube heat pump."
     },

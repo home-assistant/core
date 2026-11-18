@@ -7,7 +7,6 @@ from httpx2 import RequestError
 from wolf_comm.models import Device
 from wolf_comm.wolf_client import FetchFailed, WolfClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -74,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) ->
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_migrate_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Migrate old entry.
 
     v1.1 → v1.2: convert unique_id from int to string.
@@ -103,7 +102,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _migrate_v1_to_v2(hass, entry)
 
 
-def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _migrate_v1_to_v2(hass: HomeAssistant, entry: WolflinkConfigEntry) -> None:
     """Migrate a v1 device-oriented entry to v2.2 hub.
 
     Multiple v1 entries for the same account are merged into a single hub
@@ -151,8 +150,8 @@ def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 def _reattach_device_to_hub(
     hass: HomeAssistant,
-    hub_entry: ConfigEntry,
-    source_entry: ConfigEntry,
+    hub_entry: WolflinkConfigEntry,
+    source_entry: WolflinkConfigEntry,
     device_id: int,
 ) -> None:
     """Move device and entity registry rows from source_entry to hub_entry.

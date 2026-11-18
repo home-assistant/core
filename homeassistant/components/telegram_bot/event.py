@@ -8,13 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bot import TelegramBotConfigEntry
-from .const import (
-    EVENT_TELEGRAM_ATTACHMENT,
-    EVENT_TELEGRAM_CALLBACK,
-    EVENT_TELEGRAM_COMMAND,
-    EVENT_TELEGRAM_SENT,
-    EVENT_TELEGRAM_TEXT,
-)
+from .const import TelegramBotEvent
 from .entity import TelegramBotEntity
 from .helpers import signal
 
@@ -32,11 +26,11 @@ class TelegramBotEventEntity(TelegramBotEntity, EventEntity):
     """An event entity."""
 
     _attr_event_types = [
-        EVENT_TELEGRAM_ATTACHMENT,
-        EVENT_TELEGRAM_CALLBACK,
-        EVENT_TELEGRAM_COMMAND,
-        EVENT_TELEGRAM_TEXT,
-        EVENT_TELEGRAM_SENT,
+        TelegramBotEvent.ATTACHMENT,
+        TelegramBotEvent.CALLBACK,
+        TelegramBotEvent.COMMAND,
+        TelegramBotEvent.TEXT,
+        TelegramBotEvent.SENT,
     ]
 
     def __init__(

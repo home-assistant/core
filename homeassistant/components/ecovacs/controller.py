@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 class EcovacsController:
     """Ecovacs controller."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EcovacsConfigEntry) -> None:
         """Initialize controller."""
         self._hass = hass
         self._entry = entry
@@ -207,11 +207,16 @@ class EcovacsController:
             unsubscribe()
         for device in self._devices:
             await device.teardown()
-        for legacy_device in self._legacy_devices:
-            await self._hass.async_add_executor_job(legacy_device.disconnect)
+        if self._legacy_devices:
+            await self._hass.async_add_executor_job(self._disconnect_legacy_devices)
         if self._mqtt_client is not None:
             await self._mqtt_client.disconnect()
         await self._authenticator.teardown()
+
+    def _disconnect_legacy_devices(self) -> None:
+        """Disconnect the legacy devices."""
+        for legacy_device in self._legacy_devices:
+            legacy_device.disconnect()
 
     def add_legacy_entity(self, device: VacBot, component: str) -> None:
         """Add legacy entity."""
@@ -240,3 +245,6 @@ class EcovacsController:
     def legacy_devices(self) -> list[VacBot]:
         """Return legacy devices."""
         return self._legacy_devices
+
+
+type EcovacsConfigEntry = ConfigEntry[EcovacsController]

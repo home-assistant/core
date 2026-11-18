@@ -339,6 +339,7 @@ def async_manage_ir_raw_receive_disabled_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 

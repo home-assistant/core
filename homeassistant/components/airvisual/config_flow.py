@@ -14,12 +14,7 @@ from pyairvisual.cloud_api import (
 )
 from pyairvisual.errors import AirVisualError
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COUNTRY,
@@ -44,6 +39,7 @@ from .const import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     LOGGER,
 )
+from .coordinator import AirVisualConfigEntry
 
 API_KEY_DATA_SCHEMA = probatio.Schema(
     {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
@@ -173,7 +169,9 @@ class AirVisualFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: AirVisualConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
         """Define the config flow to handle options."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
