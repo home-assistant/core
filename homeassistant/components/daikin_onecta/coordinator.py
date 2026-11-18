@@ -2,18 +2,21 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta, tzinfo
 import logging
 from math import ceil
 import random
 from typing import cast, override
 
+from aiohttp import ClientError
 from daikin_onecta import Site
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import (
     OnectaApiError,
     OnectaAuthenticationError,
     OnectaConnectionError,
+    OnectaError,
     OnectaRateLimitError,
     OnectaResponseError,
 )
@@ -66,6 +69,20 @@ def gateway_site_membership(sites: list[Site], gateway_device_id: str) -> bool |
     if True in membership:
         return True
     return None if None in membership else False
+
+
+@dataclass(frozen=True)
+class SiteLookupResult:
+    """Contain an account Sites response and its gateway membership lookup."""
+
+    sites: list[Site]
+    error: Exception | None = None
+
+    def gateway_membership(self, gateway_device_id: str) -> bool | None:
+        """Return unknown when the Sites request failed."""
+        if self.error is not None:
+            return None
+        return gateway_site_membership(self.sites, gateway_device_id)
 
 
 class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDevice]]):
@@ -222,6 +239,25 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 raise
             else:
                 return sites
+
+    async def async_get_site_lookup(
+        self, *, use_cache: bool = False
+    ) -> SiteLookupResult:
+        """Get Sites and normalize expected lookup failures for callers."""
+        try:
+            sites = (
+                await self.async_get_sites(use_cache=True)
+                if use_cache
+                else await self.async_get_sites()
+            )
+        except (
+            OAuth2TokenRequestError,
+            OnectaError,
+            ClientError,
+            TimeoutError,
+        ) as err:
+            return SiteLookupResult([], err)
+        return SiteLookupResult(sites)
 
     def _polling_backoff_remaining(self) -> timedelta | None:
         """Return the remaining polling backoff, if any."""

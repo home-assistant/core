@@ -185,7 +185,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
                 self._pending_install
             )
             if self.coordinator.cloud_update_sequence > requested_sequence and (
-                firmware.has_update_status
+                firmware.in_progress
                 or self._attr_installed_version != installed_version
                 or self.coordinator.cloud_update_sequence >= expiry_sequence
             ):

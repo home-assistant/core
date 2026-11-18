@@ -407,7 +407,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else point.scalar_characteristics().get(self._value)
+            else point.scalar_characteristic(self._value)
         )
         return point, characteristic
 

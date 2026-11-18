@@ -1,7 +1,6 @@
 """Platform for the Daikin AC."""
 
 import aiohttp
-from daikin_onecta.exceptions import OnectaError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -18,11 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEntry
 
 from .const import DOMAIN
-from .coordinator import (
-    DaikinOnectaConfigEntry,
-    OnectaDataUpdateCoordinator,
-    gateway_site_membership,
-)
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -131,16 +126,8 @@ async def async_remove_config_entry_device(
             if current_device.management_point(embedded_id) is not None:
                 return False
         else:
-            try:
-                sites = await coordinator.async_get_sites()
-            except (
-                OAuth2TokenRequestError,
-                OnectaError,
-                aiohttp.ClientError,
-                TimeoutError,
-            ):
-                return False
-            if gateway_site_membership(sites, parent_gateway_id) is not False:
+            site_lookup = await coordinator.async_get_site_lookup()
+            if site_lookup.gateway_membership(parent_gateway_id) is not False:
                 return False
             # A newer successful poll may have restored the gateway while the
             # Sites request was in flight. Recheck its management point as well.
@@ -151,6 +138,10 @@ async def async_remove_config_entry_device(
                 and current_device.management_point(embedded_id) is not None
             ):
                 return False
+            if coordinator.data is not None and (
+                current_device is None or not current_device.present_in_cloud
+            ):
+                coordinator.data.pop(parent_gateway_id, None)
         return True
 
     device = devices.get(gateway_id)
@@ -158,20 +149,12 @@ async def async_remove_config_entry_device(
         device is not None and device.present_in_cloud
     ):
         return False
-    try:
-        sites = await coordinator.async_get_sites()
-    except (
-        OAuth2TokenRequestError,
-        OnectaError,
-        aiohttp.ClientError,
-        TimeoutError,
-    ):
-        return False
+    site_lookup = await coordinator.async_get_site_lookup()
 
     # Polling may have restored the gateway while the on-demand lookup awaited.
     device = (coordinator.data or {}).get(gateway_id)
     if (
-        gateway_site_membership(sites, gateway_id) is not False
+        site_lookup.gateway_membership(gateway_id) is not False
         or not coordinator.last_update_success
         or (device is not None and device.present_in_cloud)
     ):

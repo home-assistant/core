@@ -256,9 +256,11 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         step_value = dht.step_value
         target_temperature = round_temperature_to_step(
             value,
-            step_value if step_value is not None and step_value > 0 else 0.5,
-            dht.min_value if dht.min_value is not None else self.min_temp,
-            dht.max_value if dht.max_value is not None else self.max_temp,
+            step_value,
+            dht.min_value,
+            dht.max_value,
+            fallback_minimum=self.min_temp,
+            fallback_maximum=self.max_temp,
         )
         if target_temperature != self._attr_native_target_temperature:
             await self._async_execute_hot_water_command(

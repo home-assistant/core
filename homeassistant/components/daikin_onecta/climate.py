@@ -357,9 +357,11 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             step = setpoint.step_value
             value = round_temperature_to_step(
                 target_temperature,
-                step if step is not None and step > 0 else 0.5,
-                setpoint.min_value if setpoint.min_value is not None else self.min_temp,
-                setpoint.max_value if setpoint.max_value is not None else self.max_temp,
+                step,
+                setpoint.min_value,
+                setpoint.max_value,
+                fallback_minimum=self.min_temp,
+                fallback_maximum=self.max_temp,
             )
 
             if self._attr_native_target_temperature != value:

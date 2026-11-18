@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
+from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
@@ -529,6 +530,25 @@ async def test_air_purifier_does_not_expose_read_only_preset_modes(
             blocking=True,
         )
     execute.assert_not_awaited()
+
+
+async def test_air_purifier_clears_state_when_purification_disappears(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Clear stale controls when a poll omits air-purification data."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    entity = hass.data[FAN_DOMAIN].get_entity("fan.air_purifier")
+    assert isinstance(entity, DaikinAirPurifier)
+    device = next(iter(config_entry.runtime_data.data.values())).device
+    management_point = device.management_points_by_type("climateControl")[0]
+    management_point.characteristics.pop("airPurificationMode")
+
+    entity.update_state()
+
+    assert entity.preset_mode is None
+    assert entity.preset_modes == []
+    assert entity.percentage is None
+    assert entity.supported_features == FanEntityFeature(0)
 
 
 async def test_air_purifier_hides_invalid_fixed_speed_control(

@@ -348,6 +348,37 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
     coordinator.async_get_sites.assert_awaited_once_with()
 
 
+async def test_remove_child_of_missing_gateway_drops_gateway_from_coordinator(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Drop a gateway from cached data when Sites confirms its removal."""
+    coordinator = config_entry.runtime_data
+    gateway_id = next(
+        identifier
+        for domain, identifier in missing_gateway.identifiers
+        if domain == DOMAIN
+    )
+    management_point = next(
+        point
+        for point in coordinator.data[gateway_id].device.management_points
+        if point.management_point_type not in {"gateway", "climateControl"}
+    )
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{management_point.embedded_id}"),
+        config_entry.entry_id,
+    )
+    assert child is not None
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[])]
+    )
+
+    assert await async_remove_config_entry_device(hass, config_entry, child)
+    assert gateway_id not in coordinator.data
+
+
 async def test_removed_gateway_reappearing_does_not_reload_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

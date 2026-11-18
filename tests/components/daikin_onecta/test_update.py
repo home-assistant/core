@@ -169,9 +169,7 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     gateways = _load_gateway_devices("dx4_firmwareavailable")
     point = gateways[0].management_point(gateways[0].gateway_embedded_id)
     assert point is not None
-    point.firmware_version = Characteristic(value="new-version")
-    point.software_version = Characteristic(value="new-version")
-    point.firmware_update_status = None
+    point.firmware_update_status = Characteristic(value="idle")
     install_started = asyncio.Event()
     finish_install = asyncio.Event()
     pending_during_install: list[tuple[int, str | None, int] | None] = []
@@ -223,13 +221,31 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         (requested_sequence, installed_version, requested_sequence + 3)
     ]
     assert coordinator.cloud_update_sequence == requested_sequence + 1
-    assert entity._pending_install is None
+    assert entity._pending_install == (
+        requested_sequence,
+        installed_version,
+        requested_sequence + 3,
+    )
     state = hass.states.get(entity_id)
     assert state is not None
     assert (
-        state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION] == "new-version"
+        state.attributes[UpdateEntityStateAttribute.INSTALLED_VERSION]
+        == installed_version
     )
-    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+
+    point.firmware_update_status = Characteristic(value="in-progress")
+    with patch.object(
+        coordinator.client, "get_gateway_devices", side_effect=read_gateways
+    ):
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert entity._pending_install is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
 
 
 async def test_failed_firmware_install_clears_pending_state(

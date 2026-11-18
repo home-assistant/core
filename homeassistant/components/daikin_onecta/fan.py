@@ -175,6 +175,11 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         """Refresh entity state from typed purifier data."""
         purification = self._air_purification()
         if purification is None:
+            self._attr_preset_mode = None
+            self._attr_preset_modes = []
+            self._attr_percentage = None
+            self._attr_speed_count = 100
+            self._attr_supported_features = FanEntityFeature(0)
             return
         power = purification.power
         is_on = (

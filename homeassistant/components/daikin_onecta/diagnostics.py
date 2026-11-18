@@ -2,14 +2,10 @@
 
 from typing import Any
 
-from aiohttp import ClientError
-from daikin_onecta.exceptions import OnectaError
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestError
 
-from .coordinator import DaikinOnectaConfigEntry, gateway_site_membership
+from .coordinator import DaikinOnectaConfigEntry
 
 TO_REDACT = {
     "access_token",
@@ -48,9 +44,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics with account Sites context."""
     coordinator = entry.runtime_data
-    try:
-        sites = await coordinator.async_get_sites(use_cache=True)
-    except (OAuth2TokenRequestError, OnectaError, ClientError, TimeoutError) as err:
+    site_lookup = await coordinator.async_get_site_lookup(use_cache=True)
+    if (err := site_lookup.error) is not None:
         site_diagnostics: dict[str, Any] = {
             "error": {
                 "type": type(err).__name__,
@@ -59,11 +54,11 @@ async def async_get_config_entry_diagnostics(
         }
     else:
         site_diagnostics = {
-            "data": [site.to_dict() for site in sites],
+            "data": [site.to_dict() for site in site_lookup.sites],
             "gateway_membership": [
                 {
                     "gateway_device_id": device.id,
-                    "linked_to_site": gateway_site_membership(sites, device.id),
+                    "linked_to_site": site_lookup.gateway_membership(device.id),
                 }
                 for device in (coordinator.data or {}).values()
             ],
