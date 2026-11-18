@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .util import SYSTEM_COMMAND_MOCK, USERS_VERIFICATION_MOCK, async_init_integration
@@ -31,7 +31,7 @@ async def test_qnap_buttons(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.qsw_m408_4c_restart"},
+            {TargetKey.ENTITY_ID: "button.qsw_m408_4c_restart"},
             blocking=True,
         )
         await hass.async_block_till_done()

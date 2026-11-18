@@ -19,7 +19,7 @@ from homeassistant.components.evohome.const import (
 )
 from homeassistant.components.evohome.water_heater import EvoDHW
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, TargetKey
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
@@ -176,7 +176,7 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_ENTITY_ID: ctl_id,
+                TargetKey.ENTITY_ID: ctl_id,
                 EvoServiceArgument.MODE: "Away",
                 EvoServiceArgument.PERIOD: {"days": 7},
             },
@@ -384,7 +384,7 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
                 EvoServiceArgument.SETPOINT: 19.5,
             },
             blocking=True,
@@ -398,7 +398,7 @@ async def test_set_zone_override_legacy(
             DOMAIN,
             EvoService.SET_ZONE_OVERRIDE,
             {
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
                 EvoServiceArgument.SETPOINT: 19.5,
                 EvoServiceArgument.DURATION: {"minutes": 135},
             },
@@ -445,7 +445,7 @@ async def test_controller_services_with_zone_id(
             EvoService.SET_SYSTEM_MODE,
             {
                 EvoServiceArgument.MODE: "Auto",
-                ATTR_ENTITY_ID: zone_id,
+                TargetKey.ENTITY_ID: zone_id,
             },
             blocking=True,
         )

@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -53,7 +54,7 @@ async def test_get_profile(
     profile = await hass.services.async_call(
         DOMAIN,
         OSOEnergyService.GET_PROFILE,
-        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        {TargetKey.ENTITY_ID: "water_heater.test_device"},
         blocking=True,
         return_response=True,
     )
@@ -110,7 +111,7 @@ async def test_set_profile(
     await hass.services.async_call(
         DOMAIN,
         OSOEnergyService.SET_PROFILE,
-        {ATTR_ENTITY_ID: "water_heater.test_device", "hour_01": 45},
+        {TargetKey.ENTITY_ID: "water_heater.test_device", "hour_01": 45},
         blocking=True,
     )
 
@@ -165,7 +166,7 @@ async def test_set_v40_min(
         DOMAIN,
         OSOEnergyService.SET_V40_MIN,
         {
-            ATTR_ENTITY_ID: "water_heater.test_device",
+            TargetKey.ENTITY_ID: "water_heater.test_device",
             OSOEnergyServiceArgument.V40_MIN: 300,
         },
         blocking=True,
@@ -264,7 +265,7 @@ async def test_oso_turn_on(
         DOMAIN,
         OSOEnergyService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "water_heater.test_device",
+            TargetKey.ENTITY_ID: "water_heater.test_device",
             OSOEnergyServiceArgument.UNTIL_TEMP_LIMIT: False,
         },
         blocking=True,
@@ -284,7 +285,7 @@ async def test_oso_turn_off(
         DOMAIN,
         OSOEnergyService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "water_heater.test_device",
+            TargetKey.ENTITY_ID: "water_heater.test_device",
             OSOEnergyServiceArgument.UNTIL_TEMP_LIMIT: False,
         },
         blocking=True,
@@ -338,7 +339,7 @@ async def test_oso_set_away_mode_on(
         DOMAIN,
         OSOEnergyService.TURN_AWAY_MODE_ON,
         {
-            ATTR_ENTITY_ID: "water_heater.test_device",
+            TargetKey.ENTITY_ID: "water_heater.test_device",
             OSOEnergyServiceArgument.DURATION_DAYS: 10,
         },
         blocking=True,

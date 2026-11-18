@@ -94,7 +94,7 @@ async def test_setup_connection_error_is_retried(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to establish SSH connection to" in caplog.text
+    assert "Cannot connect to the SSH server 127.0.0.1" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -116,7 +116,7 @@ async def test_setup_sftp_session_error_is_retried(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to open SFTP session on" in caplog.text
+    assert "Cannot open an SFTP session on 127.0.0.1" in caplog.text
 
 
 async def test_setup_invalid_credentials(
@@ -135,9 +135,8 @@ async def test_setup_invalid_credentials(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
     assert (
-        "Failure while attempting to establish SSH connection."
-        " Please check SSH credentials and if changed,"
-        " re-install the integration" in caplog.text
+        "Authentication failed for username@127.0.0.1."
+        " Check the password or private key" in caplog.text
     )
 
 

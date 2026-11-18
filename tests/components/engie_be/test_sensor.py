@@ -51,12 +51,14 @@ from .conftest import (
     BAN,
     BAN_2,
     BRUSSELS_TIME_ZONE,
+    GAS_CONVERSION_COEFFICIENT,
     OFFTAKE_INJECTION_EAN,
     OFFTAKE_ONLY_EAN,
     build_epex_payload,
     build_epex_payload_with_gap,
     build_prices,
     build_relations,
+    build_service_point,
     setup_dynamic_entry,
     without_capacity_tariff,
 )
@@ -1007,6 +1009,181 @@ async def test_service_point_success_without_ean_is_cached_once(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_engie_client.return_value.async_get_service_point.call_count == 1
+
+
+GAS_PER_M3_UNIQUE_ID = f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS_per_m3"
+
+
+async def _advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
+) -> None:
+    """Move the clock forward and let the scheduled refreshes finish."""
+    freezer.tick(delta)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+def _gas_service_point_side_effect(
+    coefficient: float | None,
+) -> Callable[[str], ServicePoint]:
+    """Return an async_get_service_point side_effect with the given gas coefficient."""
+    return lambda ean: build_service_point(ean, gas_conversion_coefficient=coefficient)
+
+
+async def _setup_single_gas_ean(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    coefficient: float | None,
+) -> None:
+    """Set up an entry with one gas EAN and the given conversion coefficient."""
+    client = mock_engie_client.return_value
+    client.async_get_prices.return_value = _single_ban_prices_response(
+        OFFTAKE_ONLY_EAN, 0.123456
+    )
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(
+        coefficient
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+def _gas_per_m3_state(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> str:
+    """Return the state of the gas price per m³ sensor."""
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, GAS_PER_M3_UNIQUE_ID
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    return state.state
+
+
+@pytest.mark.parametrize(
+    ("coefficient", "expected_state"),
+    [
+        pytest.param(12.0, str(0.123456 * 12.0), id="coefficient-changed"),
+        pytest.param(None, STATE_UNAVAILABLE, id="coefficient-removed"),
+        pytest.param(0.0, STATE_UNAVAILABLE, id="coefficient-zero"),
+    ],
+)
+async def test_gas_conversion_coefficient_refreshes_daily(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    coefficient: float | None,
+    expected_state: str,
+) -> None:
+    """Test the per m³ gas price follows the coefficient fetched once a day."""
+    await _setup_single_gas_ean(
+        hass, mock_config_entry, mock_engie_client, GAS_CONVERSION_COEFFICIENT
+    )
+    client = mock_engie_client.return_value
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
+
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(
+        coefficient
+    )
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    assert client.async_get_service_point.call_count == 1
+
+    await _advance_time(hass, freezer, timedelta(days=1))
+
+    assert client.async_get_service_point.call_count == 2
+    assert _gas_per_m3_state(hass, entity_registry) == expected_state
+
+
+async def test_failed_daily_coefficient_refresh_is_retried(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed daily refresh keeps the last coefficient and retries on the next poll."""
+    await _setup_single_gas_ean(
+        hass, mock_config_entry, mock_engie_client, GAS_CONVERSION_COEFFICIENT
+    )
+    client = mock_engie_client.return_value
+
+    client.async_get_service_point.side_effect = EngieBeCommunicationError("boom")
+    await _advance_time(hass, freezer, timedelta(days=1))
+
+    assert client.async_get_service_point.call_count == 2
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
+
+    client.async_get_service_point.side_effect = _gas_service_point_side_effect(12.0)
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    assert client.async_get_service_point.call_count == 3
+    assert _gas_per_m3_state(hass, entity_registry) == str(0.123456 * 12.0)
+
+
+def _service_points_failing_for(failing_ean: str) -> Callable[[str], ServicePoint]:
+    """Return an async_get_service_point side_effect that fails for one EAN."""
+
+    def _side_effect(ean: str) -> ServicePoint:
+        """Raise for the failing EAN and build a service point otherwise."""
+        if ean == failing_ean:
+            raise EngieBeCommunicationError("boom")
+        return build_service_point(ean)
+
+    return _side_effect
+
+
+async def test_failing_service_point_does_not_refetch_healthy_ones(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test only the failing service point is retried on the next poll."""
+    client = mock_engie_client.return_value
+    client.async_get_service_point.side_effect = _service_points_failing_for(
+        OFFTAKE_INJECTION_EAN
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _advance_time(hass, freezer, PRICES_SCAN_INTERVAL + timedelta(seconds=30))
+
+    fetched = [call.args[0] for call in client.async_get_service_point.call_args_list]
+    assert fetched.count(OFFTAKE_ONLY_EAN) == 1
+    assert fetched.count(OFFTAKE_INJECTION_EAN) == 2
+
+
+async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a gas EAN gets its per m³ sensors once ENGIE returns a coefficient."""
+    await _setup_single_gas_ean(hass, mock_config_entry, mock_engie_client, None)
+
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, GAS_PER_M3_UNIQUE_ID)
+        is None
+    )
+
+    mock_engie_client.return_value.async_get_service_point.side_effect = (
+        _gas_service_point_side_effect(GAS_CONVERSION_COEFFICIENT)
+    )
+    await _advance_time(hass, freezer, timedelta(days=1))
+
+    assert _gas_per_m3_state(hass, entity_registry) == str(
+        0.123456 * GAS_CONVERSION_COEFFICIENT
+    )
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
