@@ -933,3 +933,67 @@ async def test_group_entity_context_overlapping_commands(
     assert member_1_state is not None
     assert member_1_state.state == STATE_OFF
     assert member_1_state.context == turn_off_context
+
+
+async def test_group_entity_context_preserves_pending_context_on_mismatched_report(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a delayed report from an earlier command does not clear a newer pending group context."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    [group_entry] = er.async_entries_for_device(entity_registry, group_proxy.device_id)
+    group_entity_id = group_entry.entity_id
+
+    ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    dev_proxy_1 = gateway_proxy.device_proxies[ieee_1]
+    member_1_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_1, hass)
+    assert member_1_entity_id is not None
+
+    cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+    assert hass.states.get(member_1_entity_id).state == STATE_OFF
+
+    turn_on_context = Context(user_id=hass_admin_user.id, id="seq_turn_on_ctx")
+    turn_off_context = Context(user_id=hass_admin_user.id, id="seq_turn_off_ctx")
+
+    # Command A: turn_on, followed immediately by Command B: turn_off before A's report arrives
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: group_entity_id},
+        blocking=True,
+        context=turn_on_context,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: group_entity_id},
+        blocking=True,
+        context=turn_off_context,
+    )
+
+    # Delayed report from A (on) arrives while B (expected off) is pending:
+    # it must not inherit B's context, nor clear B's pending context
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    member_1_on_state = hass.states.get(member_1_entity_id)
+    assert member_1_on_state is not None
+    assert member_1_on_state.state == STATE_ON
+    assert member_1_on_state.context != turn_off_context
+
+    # Matching report for B (off) then arrives and must still inherit B's context
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 0}
+    )
+    member_1_off_state = hass.states.get(member_1_entity_id)
+    assert member_1_off_state is not None
+    assert member_1_off_state.state == STATE_OFF
+    assert member_1_off_state.context == turn_off_context
