@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    InvalidInputError,
 )
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -42,7 +43,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
@@ -600,14 +601,22 @@ async def test_service_play_media(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "volume_calls"),
+    ("side_effect", "expected_error", "translation_key", "volume_calls"),
     [
         pytest.param(
-            ValueError("music is not available as a music provider"),
+            InvalidInputError("music is not available as a music provider"),
+            ServiceValidationError,
+            "invalid_user_input",
             1,
-            id="rejected_input",
+            id="invalid_input",
         ),
-        pytest.param(CannotConnect, 0, id="cannot_connect"),
+        pytest.param(
+            CannotConnect,
+            HomeAssistantError,
+            "cannot_connect_with_error",
+            0,
+            id="cannot_connect",
+        ),
     ],
 )
 async def test_service_play_media_failure_availability(
@@ -615,14 +624,16 @@ async def test_service_play_media_failure_availability(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception | type[Exception],
+    expected_error: type[HomeAssistantError],
+    translation_key: str,
     volume_calls: int,
 ) -> None:
-    """Only a connection failure stops later actions from reaching the API."""
+    """Invalid input is a validation error and does not block later actions."""
     await _setup_media_player_platform(hass, mock_config_entry)
 
     mock_amazon_devices_client.call_alexa_music.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(expected_error) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -633,6 +644,8 @@ async def test_service_play_media_failure_availability(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == translation_key
 
     await hass.services.async_call(
         MP_DOMAIN,

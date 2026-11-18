@@ -7,6 +7,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    InvalidInputError,
 )
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -50,6 +51,12 @@ ENTITY_ID = "switch.echo_test_do_not_disturb"
             "cannot_retrieve_data_with_error",
             "ValueError()",
             id="value_error",
+        ),
+        pytest.param(
+            InvalidInputError,
+            "invalid_user_input",
+            "InvalidInputError()",
+            id="invalid_input",
         ),
     ],
 )

@@ -151,6 +151,9 @@
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     },
+    "invalid_user_input": {
+      "message": "Invalid input: {error}"
+    },
     "select_option_not_found": {
       "message": "Selected option not found: {option}"
     },
