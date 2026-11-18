@@ -1,0 +1,606 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'channels': list([
+    ]),
+    'device_type': 'Camera',
+    'entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'password': '**REDACTED**',
+        'port': 80,
+        'random_id': False,
+        'ssl': False,
+        'username': '**REDACTED**',
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'hikvision',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'image_settings': dict({
+      'other_values': dict({
+        'PTZ/enabled': 'false',
+        'enabled': 'true',
+        'id': '1',
+        'videoInputID': '1',
+      }),
+      'raw_documents': dict({
+        'capabilities': '''
+          <?xml version="1.0" encoding="UTF-8"?>
+          <ImageChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <id>1</id>
+          <enabled>true</enabled>
+          <videoInputID>1</videoInputID>
+          <ImageFlip>
+          <enabled opt="true,false">false</enabled>
+          <ImageFlipStyle opt="LEFTRIGHT,UPDOWN,CENTER"></ImageFlipStyle>
+          </ImageFlip>
+          <WDR>
+          <mode opt="close,open,auto">close</mode>
+          <WDRLevel min="0" max="100">41</WDRLevel>
+          </WDR>
+          <BLC>
+          <enabled opt="true,false">true</enabled>
+          <BLCMode opt="CLOSE,UP,DOWN,LEFT,RIGHT,CENTER,Region,AUTO">AUTO</BLCMode>
+          <BLCRegionList>
+          <BLCRegion>
+          <id>1</id>
+          <RegionCoordinatesList>
+          <RegionCoordinates>
+          <positionX>0</positionX>
+          <positionY>0</positionY>
+          </RegionCoordinates>
+          </RegionCoordinatesList>
+          </BLCRegion>
+          </BLCRegionList>
+          </BLC>
+          <IrcutFilter>
+          <IrcutFilterType opt="day,night,auto,schedule">night</IrcutFilterType>
+          <nightToDayFilterLevel opt="0,1,2,3,4,5,6,7">4</nightToDayFilterLevel>
+          <nightToDayFilterTime min="5" max="120">5</nightToDayFilterTime>
+          <Schedule>
+          <scheduleType>day</scheduleType>
+          <TimeRange>
+          <beginTime>00:00:00</beginTime>
+          <endTime>00:00:00</endTime>
+          </TimeRange>
+          </Schedule>
+          </IrcutFilter>
+          <WhiteBalance>
+          <WhiteBalanceStyle opt="manual,auto1,locked,daylightLamp,incandescentlight,warmlight,naturallight">auto1</WhiteBalanceStyle>
+          <WhiteBalanceRed min="0" max="100">43</WhiteBalanceRed>
+          <WhiteBalanceBlue min="0" max="100">47</WhiteBalanceBlue>
+          </WhiteBalance>
+          <Exposure>
+          <ExposureType opt="manual">manual</ExposureType>
+          <OverexposeSuppress>
+          <enabled opt="true,false">false</enabled>
+          <Type opt="AUTO,MANUAL">MANUAL</Type>
+          <DistanceLevel min="1" max="100">100</DistanceLevel>
+          </OverexposeSuppress>
+          </Exposure>
+          <Sharpness>
+          <SharpnessLevel min="0" max="100">70</SharpnessLevel>
+          </Sharpness>
+          <Shutter>
+          <ShutterLevel opt="1/3,1/6,1/12,1/30,1/60,1/120,1/150,1/200,1/250,1/500,1/750,1/1000,1/2000,1/4000,1/10000,1/100000">1/1000</ShutterLevel>
+          </Shutter>
+          <powerLineFrequency>
+          <powerLineFrequencyMode opt="50hz,60hz">60hz</powerLineFrequencyMode>
+          </powerLineFrequency>
+          <Gain>
+          <GainLevel min="0" max="100">45</GainLevel>
+          </Gain>
+          <Color>
+          <brightnessLevel min="0" max="100">80</brightnessLevel>
+          <contrastLevel min="0" max="100">45</contrastLevel>
+          <saturationLevel min="0" max="100">72</saturationLevel>
+          </Color>
+          <NoiseReduce>
+          <mode opt="close,general,advanced">general</mode>
+          <GeneralMode>
+          <generalLevel min="0" max="100">40</generalLevel>
+          </GeneralMode>
+          <AdvancedMode>
+          <FrameNoiseReduceLevel min="0" max="100">19</FrameNoiseReduceLevel>
+          <InterFrameNoiseReduceLevel min="0" max="100">50</InterFrameNoiseReduceLevel>
+          </AdvancedMode>
+          </NoiseReduce>
+          <Scene>
+          <mode opt="outdoor,indoor">outdoor</mode>
+          </Scene>
+          <HLC>
+          <enabled opt="true,false">true</enabled>
+          <HLCLevel min="0" max="100">50</HLCLevel>
+          </HLC>
+          <corridor>
+          <enabled opt="true,false">false</enabled>
+          </corridor>
+          <isSupportLaserSpotManual>false</isSupportLaserSpotManual>
+          </ImageChannel>
+  
+        ''',
+        'values': '''
+          <?xml version="1.0" encoding="UTF-8"?>
+          <ImageChannel version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <id>1</id>
+          <enabled>true</enabled>
+          <videoInputID>1</videoInputID>
+          <ImageFlip version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <enabled>false</enabled>
+          </ImageFlip>
+          <IrcutFilter version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <IrcutFilterType>night</IrcutFilterType>
+          <nightToDayFilterLevel>4</nightToDayFilterLevel>
+          <nightToDayFilterTime>5</nightToDayFilterTime>
+          </IrcutFilter>
+          <Exposure version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <ExposureType>manual</ExposureType>
+          <OverexposeSuppress>
+          <enabled>false</enabled>
+          <Type>MANUAL</Type>
+          <DistanceLevel>100</DistanceLevel>
+          </OverexposeSuppress>
+          </Exposure>
+          <powerLineFrequency version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <powerLineFrequencyMode>60hz</powerLineFrequencyMode>
+          </powerLineFrequency>
+          <Scene version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <mode>outdoor</mode>
+          </Scene>
+          <PTZ version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <enabled>false</enabled>
+          </PTZ>
+          <corridor version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <enabled>false</enabled>
+          </corridor>
+          <LaserLight version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          </LaserLight>
+          <WDR version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <mode>close</mode>
+          <WDRLevel>41</WDRLevel>
+          </WDR>
+          <BLC version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <enabled>true</enabled>
+          <BLCMode>AUTO</BLCMode>
+          </BLC>
+          <NoiseReduce version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <mode>general</mode>
+          <GeneralMode>
+          <generalLevel>40</generalLevel>
+          </GeneralMode>
+          </NoiseReduce>
+          <WhiteBalance version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <WhiteBalanceStyle>auto1</WhiteBalanceStyle>
+          <WhiteBalanceRed>43</WhiteBalanceRed>
+          <WhiteBalanceBlue>47</WhiteBalanceBlue>
+          </WhiteBalance>
+          <Sharpness version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <SharpnessLevel>70</SharpnessLevel>
+          </Sharpness>
+          <Gain version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <GainLevel>45</GainLevel>
+          </Gain>
+          <Shutter version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <ShutterLevel>1/1000</ShutterLevel>
+          </Shutter>
+          <Color version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <brightnessLevel>80</brightnessLevel>
+          <contrastLevel>45</contrastLevel>
+          <saturationLevel>72</saturationLevel>
+          </Color>
+          <HLC version="2.0" xmlns="http://www.hikvision.com/ver20/XMLSchema">
+          <enabled>true</enabled>
+          <HLCLevel>50</HLCLevel>
+          </HLC>
+          </ImageChannel>
+  
+        ''',
+      }),
+      'settings': dict({
+        'BLC/BLCMode': dict({
+          'known': True,
+          'linked_enabled_path': 'BLC/enabled',
+          'max': None,
+          'min': None,
+          'off_value': 'CLOSE',
+          'options': list([
+            'CLOSE',
+            'UP',
+            'DOWN',
+            'LEFT',
+            'RIGHT',
+            'CENTER',
+            'Region',
+            'AUTO',
+          ]),
+          'type': 'select',
+          'value': 'AUTO',
+        }),
+        'Color/brightnessLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '80',
+        }),
+        'Color/contrastLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '45',
+        }),
+        'Color/saturationLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '72',
+        }),
+        'Exposure/ExposureType': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'manual',
+          ]),
+          'type': 'select',
+          'value': 'manual',
+        }),
+        'Exposure/OverexposeSuppress/DistanceLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 1.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '100',
+        }),
+        'Exposure/OverexposeSuppress/Type': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'AUTO',
+            'MANUAL',
+          ]),
+          'type': 'select',
+          'value': 'MANUAL',
+        }),
+        'Exposure/OverexposeSuppress/enabled': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'switch',
+          'value': 'false',
+        }),
+        'Gain/GainLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '45',
+        }),
+        'HLC/HLCLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '50',
+        }),
+        'HLC/enabled': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'switch',
+          'value': 'true',
+        }),
+        'ImageFlip/ImageFlipStyle': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'LEFTRIGHT',
+            'UPDOWN',
+            'CENTER',
+          ]),
+          'type': 'select',
+          'value': None,
+        }),
+        'ImageFlip/enabled': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'switch',
+          'value': 'false',
+        }),
+        'IrcutFilter/IrcutFilterType': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'day',
+            'night',
+            'auto',
+            'schedule',
+          ]),
+          'type': 'select',
+          'value': 'night',
+        }),
+        'IrcutFilter/nightToDayFilterLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+          ]),
+          'type': 'select',
+          'value': '4',
+        }),
+        'IrcutFilter/nightToDayFilterTime': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 120.0,
+          'min': 5.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '5',
+        }),
+        'NoiseReduce/AdvancedMode/FrameNoiseReduceLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': None,
+        }),
+        'NoiseReduce/AdvancedMode/InterFrameNoiseReduceLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': None,
+        }),
+        'NoiseReduce/GeneralMode/generalLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '40',
+        }),
+        'NoiseReduce/mode': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'close',
+            'general',
+            'advanced',
+          ]),
+          'type': 'select',
+          'value': 'general',
+        }),
+        'Scene/mode': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'outdoor',
+            'indoor',
+          ]),
+          'type': 'select',
+          'value': 'outdoor',
+        }),
+        'Sharpness/SharpnessLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '70',
+        }),
+        'Shutter/ShutterLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            '1/3',
+            '1/6',
+            '1/12',
+            '1/30',
+            '1/60',
+            '1/120',
+            '1/150',
+            '1/200',
+            '1/250',
+            '1/500',
+            '1/750',
+            '1/1000',
+            '1/2000',
+            '1/4000',
+            '1/10000',
+            '1/100000',
+          ]),
+          'type': 'select',
+          'value': '1/1000',
+        }),
+        'WDR/WDRLevel': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '41',
+        }),
+        'WDR/mode': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'close',
+            'open',
+            'auto',
+          ]),
+          'type': 'select',
+          'value': 'close',
+        }),
+        'WhiteBalance/WhiteBalanceBlue': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '47',
+        }),
+        'WhiteBalance/WhiteBalanceRed': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': 100.0,
+          'min': 0.0,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'number',
+          'value': '43',
+        }),
+        'WhiteBalance/WhiteBalanceStyle': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            'manual',
+            'auto1',
+            'locked',
+            'daylightLamp',
+            'incandescentlight',
+            'warmlight',
+            'naturallight',
+          ]),
+          'type': 'select',
+          'value': 'auto1',
+        }),
+        'corridor/enabled': dict({
+          'known': False,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+          ]),
+          'type': 'switch',
+          'value': 'false',
+        }),
+        'powerLineFrequency/powerLineFrequencyMode': dict({
+          'known': True,
+          'linked_enabled_path': None,
+          'max': None,
+          'min': None,
+          'off_value': None,
+          'options': list([
+            '50hz',
+            '60hz',
+          ]),
+          'type': 'select',
+          'value': '60hz',
+        }),
+      }),
+    }),
+  })
+# ---

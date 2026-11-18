@@ -298,6 +298,10 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         # A write reads the whole document, edits it and sends it back, so it must
         # not overlap with another request on the same client.
         self.lock = asyncio.Lock()
+        # The settings, in lowercase, that this setup has an entity for, including
+        # the disabled ones. Not what is left in the entity registry from an earlier
+        # setup: a setting that is no longer accepted may still have an entry there.
+        self.entity_paths: set[str] = set()
         # Set under the lock by the first 401, and kept for the life of this client:
         # a request queued behind it must not send the rejected password again, as
         # repeated attempts can lock the account. A reload makes a new client.
@@ -542,6 +546,31 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
             _LOGGER.exception(
                 "Error stopping the event stream after rejected credentials"
             )
+
+    async def async_diagnostics_request[_T](
+        self, job: Callable[..., _T], *args: Any
+    ) -> _T:
+        """Send a request for the diagnostics, as a poll or a write is sent.
+
+        One request at a time on the client, waited for to its end even if the
+        download is cancelled, and not sent once this client is closing, or its
+        credentials were rejected or replaced. Raises HomeAssistantError then.
+
+        A 401 the job raises as an ISAPIAuthError is dealt with as for a write:
+        the stream is stopped and new credentials are asked for.
+        """
+        try:
+            async with self.lock:
+                if self.closed or self.credentials_rejected or self._stopping:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="image_settings_closed",
+                    )
+                return await self._async_send(job, *args)
+        except ISAPIAuthError as err:
+            if err.status_code == 401:
+                await async_complete(self._async_reject_credentials())
+            raise
 
     async def async_set_setting(self, path: str, value: str) -> None:
         """Write one setting and update the stored values."""
