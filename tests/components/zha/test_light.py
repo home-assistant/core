@@ -26,7 +26,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     async_shift_time,
@@ -600,6 +600,46 @@ async def test_light_restore_unknown_color_mode(
     # The entity can still be removed afterwards
     entity_registry.async_remove(entity_id)
     await hass.async_block_till_done()
+
+
+async def test_light_restore_failure_leaves_no_stale_references(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+) -> None:
+    """A restore failure must not leave signals or entity references behind.
+
+    If restore ran after registration, the registered remove_future would
+    never resolve and device removal would hang waiting on it.
+    """
+    entity_id = "light.fakemanufacturer_fakemodel"
+    mock_restore_cache(hass, [State(entity_id, STATE_ON)])
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(LIGHT_COLOR)
+    gateway.get_or_create_device(zigpy_device)
+    with patch(
+        "homeassistant.components.zha.light.Light.restore_external_state_attributes",
+        side_effect=KeyError("boom"),
+    ):
+        await gateway.async_device_initialized(zigpy_device)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The entity never finished adding
+    assert hass.states.get(entity_id) is None
+
+    # Device removal still completes; nothing was registered for the
+    # failed entity, so no remove_future is left pending
+    zha_device_proxy: ZHADeviceProxy = get_zha_gateway_proxy(hass).get_device_proxy(
+        zigpy_device.ieee
+    )
+    gateway.device_removed(zha_device_proxy.device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(zha_device_proxy.device_id) is None
 
 
 @patch(
