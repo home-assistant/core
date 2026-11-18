@@ -105,21 +105,14 @@ async def websocket_detect_config(
     msg: dict[str, Any],
 ) -> None:
     """Detect core config."""
-    connection.send_result(msg["id"], await async_detect_config(hass))
-
-
-async def async_detect_config(hass: HomeAssistant) -> dict[str, Any]:
-    """Detect the core config from the public IP address.
-
-    Return an empty dictionary if detection fails.
-    """
     session = async_get_clientsession(hass)
     location_info = await location_util.async_detect_location_info(session)
 
     info: dict[str, Any] = {}
 
     if location_info is None:
-        return info
+        connection.send_result(msg["id"], info)
+        return
 
     # We don't want any integrations to use the name of the unit system
     # so we are using the private attribute here
@@ -128,11 +121,10 @@ async def async_detect_config(hass: HomeAssistant) -> dict[str, Any]:
     else:
         info["unit_system"] = unit_system._CONF_UNIT_SYSTEM_US_CUSTOMARY  # noqa: SLF001
 
-    # 0 is a valid latitude and longitude
-    if location_info.latitude is not None:
+    if location_info.latitude:
         info["latitude"] = location_info.latitude
 
-    if location_info.longitude is not None:
+    if location_info.longitude:
         info["longitude"] = location_info.longitude
 
     if location_info.time_zone:
@@ -144,4 +136,4 @@ async def async_detect_config(hass: HomeAssistant) -> dict[str, Any]:
     if location_info.country_code:
         info["country"] = location_info.country_code
 
-    return info
+    connection.send_result(msg["id"], info)

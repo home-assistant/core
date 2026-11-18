@@ -27,7 +27,7 @@ from homeassistant.loader import async_get_integration_descriptions
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
-from .core import UPDATE_CONFIG_SCHEMA, async_detect_config, async_update_config
+from .core import UPDATE_CONFIG_SCHEMA, async_update_config
 
 _SEARCH_LIMIT = 15
 _INTEGRATION_FILTER_TYPES = ["integration", "helper"]
@@ -837,25 +837,14 @@ class UpdateCoreConfigTool(Tool):
     name = "config__update_core_config"
     title = "Update core config"
     description = (
-        "Update the core config of Home Assistant. Only the given fields change. "
-        "Set 'location' to 'auto' to detect the location of the home from its "
-        "public IP address. The result then also contains the detected country, "
-        "currency, time zone and unit system, which are not applied: confirm them "
-        "with the user before you set them."
+        "Update the core config of Home Assistant. Only the given fields change."
     )
     annotations = ToolAnnotations(
-        read_only=False, destructive=False, idempotent=False, open_world=True
+        read_only=False, destructive=False, idempotent=False, open_world=False
     )
     integration = DOMAIN
     parameters = probatio.Schema(
         {
-            probatio.Optional(
-                "location",
-                description=(
-                    "Set to 'auto' to detect the latitude and longitude. "
-                    "Cannot be combined with latitude or longitude."
-                ),
-            ): probatio.In(["auto"]),
             probatio.Optional(
                 "location_name", description="The name of the home."
             ): str,
@@ -904,17 +893,6 @@ class UpdateCoreConfigTool(Tool):
     ) -> ToolResult:
         """Update the core config."""
         args = self.parameters(tool_input.tool_args)
-        detected: dict[str, Any] | None = None
-        if args.pop("location", None) == "auto":
-            if "latitude" in args or "longitude" in args:
-                return _error_result(
-                    "Do not give latitude or longitude when location is 'auto'."
-                )
-            detected = await async_detect_config(hass)
-            if "latitude" not in detected or "longitude" not in detected:
-                return _error_result("Could not detect the location.")
-            args["latitude"] = detected.pop("latitude")
-            args["longitude"] = detected.pop("longitude")
         try:
             data = _UPDATE_CORE_CONFIG_SCHEMA(args)
         except probatio.Invalid as err:
@@ -923,10 +901,7 @@ class UpdateCoreConfigTool(Tool):
             await async_update_config(hass, data)
         except ValueError as err:
             return _error_result(str(err))
-        result: JsonObjectType = {"result": _format_core_config(hass)}
-        if detected is not None:
-            result["detected"] = detected
-        return ToolResult(data=result)
+        return ToolResult(data={"result": _format_core_config(hass)})
 
 
 @callback

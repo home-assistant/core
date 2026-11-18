@@ -156,13 +156,6 @@
         'latitude': dict({
           'type': 'number',
         }),
-        'location': dict({
-          'description': "Set to 'auto' to detect the latitude and longitude. Cannot be combined with latitude or longitude.",
-          'enum': list([
-            'auto',
-          ]),
-          'type': 'string',
-        }),
         'location_name': dict({
           'description': 'The name of the home.',
           'type': 'string',
