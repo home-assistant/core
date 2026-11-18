@@ -857,3 +857,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         await self.coordinator.device.blu_trv_set_target_temperature(
             self._id, kwargs[ATTR_TEMPERATURE]
         )
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Accept heat, the only HVAC mode supported by BLU TRV."""
