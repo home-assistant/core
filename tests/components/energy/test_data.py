@@ -83,6 +83,38 @@ async def test_energy_preferences_load_resolves_renamed_power_sensor(
     assert manager.data["energy_sources"][0]["stat_rate"] == "sensor.renamed_power"
 
 
+async def test_energy_preferences_update_returns_registered_power_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the update returns the entity_id a listener registered the sensor with."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    async def register_power_sensor() -> None:
+        entity_registry.async_get_or_create(
+            "sensor",
+            "energy",
+            "energy_power_battery_inverted_sensor_battery_power",
+            suggested_object_id="other_power",
+        )
+
+    manager.async_listen_updates(register_power_sensor)
+    preferences = await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                }
+            ]
+        }
+    )
+
+    assert preferences["energy_sources"][0]["stat_rate"] == "sensor.other_power"
+
+
 async def test_energy_preferences_default(hass: HomeAssistant) -> None:
     """Test default preferences include device_consumption_water."""
     defaults = EnergyManager.default_preferences()

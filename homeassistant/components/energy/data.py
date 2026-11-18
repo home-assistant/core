@@ -1032,6 +1032,11 @@ class EnergyManager:
 
         if self._update_listeners:
             await asyncio.gather(*(listener() for listener in self._update_listeners))
+            # A listener can register a power sensor with another entity_id
+            data = data.copy()
+            data["energy_sources"] = self._process_energy_sources(
+                data["energy_sources"]
+            )
         return data
 
     def _power_sensor_entity_id(self, source_type: str, config: PowerConfig) -> str:
