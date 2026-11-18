@@ -353,53 +353,17 @@
       "gas_price_offtake_excl_vat_with_ean": {
         "name": "Gas offtake price excl. VAT ({ean_suffix})"
       },
-      "gas_price_offtake_offpeak": {
-        "name": "Gas off-peak offtake price"
+      "gas_price_offtake_per_m3": {
+        "name": "Gas offtake price per m³"
       },
-      "gas_price_offtake_offpeak_excl_vat": {
-        "name": "Gas off-peak offtake price excl. VAT"
+      "gas_price_offtake_per_m3_excl_vat": {
+        "name": "Gas offtake price per m³ excl. VAT"
       },
-      "gas_price_offtake_offpeak_excl_vat_with_ean": {
-        "name": "Gas off-peak offtake price excl. VAT ({ean_suffix})"
+      "gas_price_offtake_per_m3_excl_vat_with_ean": {
+        "name": "Gas offtake price per m³ excl. VAT ({ean_suffix})"
       },
-      "gas_price_offtake_offpeak_with_ean": {
-        "name": "Gas off-peak offtake price ({ean_suffix})"
-      },
-      "gas_price_offtake_peak": {
-        "name": "Gas peak offtake price"
-      },
-      "gas_price_offtake_peak_excl_vat": {
-        "name": "Gas peak offtake price excl. VAT"
-      },
-      "gas_price_offtake_peak_excl_vat_with_ean": {
-        "name": "Gas peak offtake price excl. VAT ({ean_suffix})"
-      },
-      "gas_price_offtake_peak_with_ean": {
-        "name": "Gas peak offtake price ({ean_suffix})"
-      },
-      "gas_price_offtake_slot": {
-        "name": "Gas offtake price ({slot_code})"
-      },
-      "gas_price_offtake_slot_excl_vat": {
-        "name": "Gas offtake price excl. VAT ({slot_code})"
-      },
-      "gas_price_offtake_slot_excl_vat_with_ean": {
-        "name": "Gas offtake price excl. VAT ({slot_code}) ({ean_suffix})"
-      },
-      "gas_price_offtake_slot_with_ean": {
-        "name": "Gas offtake price ({slot_code}) ({ean_suffix})"
-      },
-      "gas_price_offtake_superoffpeak": {
-        "name": "Gas super off-peak offtake price"
-      },
-      "gas_price_offtake_superoffpeak_excl_vat": {
-        "name": "Gas super off-peak offtake price excl. VAT"
-      },
-      "gas_price_offtake_superoffpeak_excl_vat_with_ean": {
-        "name": "Gas super off-peak offtake price excl. VAT ({ean_suffix})"
-      },
-      "gas_price_offtake_superoffpeak_with_ean": {
-        "name": "Gas super off-peak offtake price ({ean_suffix})"
+      "gas_price_offtake_per_m3_with_ean": {
+        "name": "Gas offtake price per m³ ({ean_suffix})"
       },
       "gas_price_offtake_with_ean": {
         "name": "Gas offtake price ({ean_suffix})"

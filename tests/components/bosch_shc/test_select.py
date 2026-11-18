@@ -22,7 +22,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -94,7 +94,7 @@ async def test_outdoor_siren_sound_level_select_option(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
+        {TargetKey.ENTITY_ID: SOUND_LEVEL_ENTITY_ID, "option": "high"},
         blocking=True,
     )
     device.siren.set_configuration.assert_called_once_with(
@@ -165,7 +165,7 @@ async def test_motion_sensitivity_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: MOTION_SENSITIVITY_ENTITY_ID,
+            TargetKey.ENTITY_ID: MOTION_SENSITIVITY_ENTITY_ID,
             "option": "high",
         },
         blocking=True,
@@ -237,7 +237,7 @@ async def test_vibration_sensitivity_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: VIBRATION_SENSITIVITY_ENTITY_ID,
+            TargetKey.ENTITY_ID: VIBRATION_SENSITIVITY_ENTITY_ID,
             "option": "very_high",
         },
         blocking=True,
@@ -314,7 +314,7 @@ async def test_smoke_sensitivity_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SMOKE_SENSITIVITY_ENTITY_ID,
+            TargetKey.ENTITY_ID: SMOKE_SENSITIVITY_ENTITY_ID,
             "option": "high",
         },
         blocking=True,
@@ -398,7 +398,7 @@ async def test_thermostat_display_select_options(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: DISPLAY_DIRECTION_ENTITY_ID,
+            TargetKey.ENTITY_ID: DISPLAY_DIRECTION_ENTITY_ID,
             "option": "reversed",
         },
         blocking=True,
@@ -409,7 +409,7 @@ async def test_thermostat_display_select_options(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: DISPLAYED_TEMPERATURE_ENTITY_ID,
+            TargetKey.ENTITY_ID: DISPLAYED_TEMPERATURE_ENTITY_ID,
             "option": "setpoint",
         },
         blocking=True,
@@ -496,7 +496,7 @@ async def test_room_thermostat_2_display_selects(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: entity_id, "option": "reversed"},
+        {TargetKey.ENTITY_ID: entity_id, "option": "reversed"},
         blocking=True,
     )
     assert device.display_direction == DisplayDirection.Direction.REVERSED
@@ -567,7 +567,7 @@ async def test_state_after_power_outage_select_option(
         await hass.services.async_call(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
-            {CommonServiceArgument.ENTITY_ID: entity_id, "option": "on"},
+            {TargetKey.ENTITY_ID: entity_id, "option": "on"},
             blocking=True,
         )
         assert (
@@ -623,7 +623,7 @@ async def test_thermostat_valve_and_heater_type(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: VALVE_TYPE_ENTITY_ID,
+            TargetKey.ENTITY_ID: VALVE_TYPE_ENTITY_ID,
             "option": "normally_close",
         },
         blocking=True,
@@ -634,7 +634,7 @@ async def test_thermostat_valve_and_heater_type(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: HEATER_TYPE_ENTITY_ID,
+            TargetKey.ENTITY_ID: HEATER_TYPE_ENTITY_ID,
             "option": "floor_heating",
         },
         blocking=True,
@@ -691,7 +691,7 @@ async def test_relay_switch_type(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: SWITCH_TYPE_ENTITY_ID, "option": "switch"},
+        {TargetKey.ENTITY_ID: SWITCH_TYPE_ENTITY_ID, "option": "switch"},
         blocking=True,
     )
     assert device.switch_type == SwitchConfiguration.SwitchType.SWITCH
@@ -743,7 +743,7 @@ async def test_room_thermostat_terminal_type(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: TERMINAL_TYPE_ENTITY_ID,
+            TargetKey.ENTITY_ID: TERMINAL_TYPE_ENTITY_ID,
             "option": "outdoor_sensor_connected",
         },
         blocking=True,
@@ -800,7 +800,7 @@ async def test_relay_actuator_type(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ACTUATOR_TYPE_ENTITY_ID,
+            TargetKey.ENTITY_ID: ACTUATOR_TYPE_ENTITY_ID,
             "option": "normally_open",
         },
         blocking=True,
@@ -856,7 +856,7 @@ async def test_relay_output_mode(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: OUTPUT_MODE_ENTITY_ID, "option": "detached"},
+        {TargetKey.ENTITY_ID: OUTPUT_MODE_ENTITY_ID, "option": "detached"},
         blocking=True,
     )
     assert device.output_mode == SwitchConfiguration.OutputMode.DETACHED
@@ -913,7 +913,7 @@ async def test_smart_sensitivity_levels(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: COMFORT_LEVEL_ENTITY_ID, "option": "middle"},
+        {TargetKey.ENTITY_ID: COMFORT_LEVEL_ENTITY_ID, "option": "middle"},
         blocking=True,
     )
     device.set_smart_sensitivity_manual_level.assert_called_once_with(
@@ -985,7 +985,7 @@ async def test_dimmer_phase_control(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: PHASE_CONTROL_ENTITY_ID, "option": "leading"},
+        {TargetKey.ENTITY_ID: PHASE_CONTROL_ENTITY_ID, "option": "leading"},
         blocking=True,
     )
     assert (
@@ -1054,7 +1054,7 @@ async def test_orientation_light_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ORIENTATION_LIGHT_ENTITY_ID,
+            TargetKey.ENTITY_ID: ORIENTATION_LIGHT_ENTITY_ID,
             "option": "short",
         },
         blocking=True,

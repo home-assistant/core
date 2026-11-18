@@ -5,7 +5,7 @@ from datetime import time
 from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components.time import DOMAIN, TimeService, TimeServiceArgument
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_PLATFORM, CommonServiceArgument
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_PLATFORM, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,7 @@ async def test_date(hass: HomeAssistant) -> None:
         TimeService.SET_VALUE,
         {
             TimeServiceArgument.TIME: time(2, 3, 4),
-            CommonServiceArgument.ENTITY_ID: "time.test",
+            TargetKey.ENTITY_ID: "time.test",
         },
         blocking=True,
     )
