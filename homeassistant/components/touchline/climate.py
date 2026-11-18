@@ -45,7 +45,6 @@ TOUCHLINE_HA_PRESETS = {
 }
 
 SCAN_INTERVAL = timedelta(minutes=1)
-PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -89,9 +88,9 @@ class Touchline(ClimateEntity):
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Update thermostat attributes."""
-        await self.unit.update_async()
+        self.unit.update()
         self._attr_native_current_temperature = self.unit.get_current_temperature()
         self._attr_native_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
@@ -99,13 +98,13 @@ class Touchline(ClimateEntity):
         )
 
     @override
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
         try:
             if not (
-                await self.unit.set_operation_mode_async(preset.mode)
-                and await self.unit.set_week_program_async(preset.program)
+                self.unit.set_operation_mode(preset.mode)
+                and self.unit.set_week_program(preset.program)
             ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_preset"
@@ -121,11 +120,11 @@ class Touchline(ClimateEntity):
         self._current_operation_mode = HVACMode.HEAT
 
     @override
-    async def async_set_temperature(self, **kwargs: Any) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         try:
             self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            if not await self.unit.set_target_temperature_async(
+            if not self.unit.set_target_temperature(
                 self._attr_native_target_temperature
             ):
                 raise HomeAssistantError(

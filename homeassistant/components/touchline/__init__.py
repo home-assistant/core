@@ -14,14 +14,12 @@ PLATFORMS = [Platform.CLIMATE]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_fetch_devices(
-    py_touchline: PyTouchline, host: str
-) -> list[PyTouchline]:
+def _fetch_devices(py_touchline: PyTouchline, host: str) -> list[PyTouchline]:
     """Fetch the initial state of every device on the controller."""
     devices = []
-    for device_id in range(await py_touchline.get_number_of_devices_async()):
+    for device_id in range(int(py_touchline.get_number_of_devices())):
         device = PyTouchline(id=device_id, url=host)
-        await device.update_async()
+        device.update()
         if device.get_controller_id() is None or device.get_device_id() is None:
             raise ConfigEntryNotReady(
                 f"Touchline controller at {host} returned no ID for device {device_id}"
@@ -38,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineConfigEntry) ->
     )
     py_touchline = PyTouchline(url=host)
     try:
-        devices = await _async_fetch_devices(py_touchline, host)
+        devices = await hass.async_add_executor_job(_fetch_devices, py_touchline, host)
     except TouchlineError as err:
         raise ConfigEntryNotReady(
             f"Error while connecting to Touchline controller at {host}"

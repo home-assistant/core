@@ -59,7 +59,9 @@ async def test_form_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    mock_pytouchline.get_number_of_devices_async.side_effect = side_effect
+    # The config flow runs validation in a thread executor.
+    # If `get_number_of_devices` fails, validation fails too.
+    mock_pytouchline.get_number_of_devices.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -70,7 +72,7 @@ async def test_form_errors(
     assert result["errors"] == {"base": error_key}
 
     # "Fix" the problem, and try again.
-    mock_pytouchline.get_number_of_devices_async.side_effect = None
+    mock_pytouchline.get_number_of_devices.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

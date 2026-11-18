@@ -26,8 +26,8 @@ async def test_load_unload_entry(
 @pytest.mark.parametrize(
     "method",
     [
-        pytest.param("get_number_of_devices_async", id="number-of-devices"),
-        pytest.param("update_async", id="device-update"),
+        pytest.param("get_number_of_devices", id="number-of-devices"),
+        pytest.param("update", id="device-update"),
     ],
 )
 async def test_setup_retry_on_connection_error(

@@ -24,11 +24,11 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def _async_fetch_unique_id(host: str) -> str:
+def fetch_unique_id(host: str) -> str:
     """Fetch the unique id for the Touchline controller."""
     client = PyTouchline(url=host)
-    await client.get_number_of_devices_async()
-    await client.update_async()
+    client.get_number_of_devices()
+    client.update()
     if (controller_id := client.get_controller_id()) is None:
         raise CannotConnect
     return str(controller_id)
@@ -39,7 +39,7 @@ async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> st
     host = data[CONF_HOST]
 
     try:
-        return await _async_fetch_unique_id(host)
+        return await hass.async_add_executor_job(fetch_unique_id, host)
     except TouchlineError as err:
         _LOGGER.debug(
             "Error while connecting to Touchline controller at %s", host, exc_info=True
