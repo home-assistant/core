@@ -7,11 +7,12 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTRIBUTION
+from .const import ATTRIBUTION, NEW_HOUSEHOLDS_SIGNAL, REMOVED_HOUSEHOLDS_SIGNAL
 from .coordinator import BRUSSELS_TIME_ZONE, EngieBeEpexCoordinator, epex_day_available
 
 if TYPE_CHECKING:
@@ -53,6 +54,31 @@ async def async_setup_entry(
 
     runtime_data.epex_ready_callbacks.append(_async_add_tomorrow_available_sensors)
     _async_add_tomorrow_available_sensors()
+
+    @callback
+    def _async_add_household_entities(_new_bans: set[str]) -> None:
+        """Add the tomorrow sensors of the households that appeared after setup."""
+        _async_add_tomorrow_available_sensors()
+
+    @callback
+    def _async_remove_household_entities(removed_bans: set[str]) -> None:
+        """Forget the households that left so they are treated as new when they return."""
+        known_bans.difference_update(removed_bans)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NEW_HOUSEHOLDS_SIGNAL.format(entry.entry_id),
+            _async_add_household_entities,
+        )
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            REMOVED_HOUSEHOLDS_SIGNAL.format(entry.entry_id),
+            _async_remove_household_entities,
+        )
+    )
 
 
 class EngieBeEpexTomorrowAvailableSensor(

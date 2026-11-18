@@ -18,17 +18,20 @@ from aioengiebelgium import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.engie_be.const import (
     CONTRACTS_RETRY_INTERVAL,
     DOMAIN,
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
+    RELATIONS_SCAN_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BAN,
@@ -1197,3 +1200,668 @@ async def test_no_epex_without_dynamic_household(
         )
         is None
     )
+
+
+async def _sync_households(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance past the relations scan interval so the household sync runs."""
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_household_added_after_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a household added to the account after setup appears without a reload."""
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert BAN_2 not in mock_config_entry.runtime_data.households
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    await _sync_households(hass, freezer)
+
+    assert BAN_2 in mock_config_entry.runtime_data.households
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN_2), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert float(price_state.state) == pytest.approx(0.123456)
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_capacity_tariff_monthly_power_peak"
+        )
+        is not None
+    )
+
+
+async def test_household_removed_after_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a household removed from the account disappears without a reload."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert BAN_2 in mock_config_entry.runtime_data.households
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN)
+    await _sync_households(hass, freezer)
+
+    assert BAN_2 not in mock_config_entry.runtime_data.households
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN_2), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_capacity_tariff_monthly_power_peak"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_household_removed_then_returns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a returning household gets its price and EPEX entities back."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_energy_contracts.side_effect = lambda queried_ban: build_contracts(
+        dynamic=queried_ban == BAN_2
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is not None
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN)
+    await _sync_households(hass, freezer)
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+        )
+        is None
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    await _sync_households(hass, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is not None
+    )
+    assert _current_hour_price(hass, entity_registry, BAN_2) == pytest.approx(0.17)
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_capacity_tariff_monthly_power_peak"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_dynamic_household_joins_running_epex(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dynamic household joining while EPEX runs gets its EPEX entities."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    epex_coordinator = mock_config_entry.runtime_data.epex
+    assert epex_coordinator is not None
+
+    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
+        build_relations(BAN, BAN_2)
+    )
+    await _sync_households(hass, freezer)
+
+    assert mock_config_entry.runtime_data.epex is epex_coordinator
+    assert _current_hour_price(hass, entity_registry, BAN_2) == pytest.approx(0.16)
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_new_dynamic_household_creates_epex(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a dynamic household added to a fixed-only account starts the EPEX fetches."""
+    client = mock_engie_client.return_value
+    client.async_get_energy_contracts.side_effect = lambda queried_ban: build_contracts(
+        dynamic=queried_ban == BAN_2
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data.epex is None
+    client.async_get_epex_prices.assert_not_called()
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    await _sync_households(hass, freezer)
+
+    assert mock_config_entry.runtime_data.epex is not None
+    assert client.async_get_epex_prices.call_count == 4
+    assert _current_hour_price(hass, entity_registry, BAN_2) == pytest.approx(0.16)
+    binary_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+    )
+    assert binary_entity_id is not None
+    assert hass.states.get(binary_entity_id) is not None
+    assert hass.states.get(binary_entity_id).state == STATE_ON
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_epex_current_hour"
+        )
+        is None
+    )
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_removing_last_dynamic_household_stops_epex(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing the last dynamic household stops the EPEX fetches."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_energy_contracts.side_effect = lambda queried_ban: build_contracts(
+        dynamic=queried_ban == BAN
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.runtime_data.epex is not None
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN_2)
+    await _sync_households(hass, freezer)
+    assert mock_config_entry.runtime_data.epex is None
+
+    call_count = client.async_get_epex_prices.call_count
+    for _ in range(2):
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert client.async_get_epex_prices.call_count == call_count
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_new_household_with_failed_tariff_joins_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a household whose tariff lookup fails while joining is retried later."""
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_energy_contracts.side_effect = EngieBeCommunicationError("boom")
+    await _sync_households(hass, freezer)
+
+    assert mock_config_entry.runtime_data.households[BAN_2].is_dynamic is None
+    assert mock_config_entry.runtime_data.epex is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN_2}_epex_current_hour"
+        )
+        is None
+    )
+
+    client.async_get_energy_contracts.side_effect = lambda queried_ban: build_contracts(
+        dynamic=queried_ban == BAN_2
+    )
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _current_hour_price(hass, entity_registry, BAN_2) == pytest.approx(0.16)
+    assert (
+        entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, f"{BAN_2}_epex_tomorrow_available"
+        )
+        is not None
+    )
+
+
+async def test_new_household_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an auth error while classifying a new household starts reauth."""
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress()
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    client.async_get_energy_contracts.side_effect = EngieBeAuthenticationError("boom")
+    await _sync_households(hass, freezer)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+    assert BAN_2 not in mock_config_entry.runtime_data.households
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_stale_device_removed_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a household removed while Home Assistant was stopped loses its device."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN_2)}
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN_2), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+async def test_empty_relations_keep_households(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an empty agreement list does not remove the known households."""
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client.async_get_customer_account_relations.return_value = CustomerAccountRelations(
+        accounts=()
+    )
+    await _sync_households(hass, freezer)
+
+    assert not mock_config_entry.runtime_data.relations.data
+    assert BAN in mock_config_entry.runtime_data.households
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test only the devices of unlisted business agreements can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    active_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert active_device is not None
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id, identifiers={(DOMAIN, BAN_2)}
+    )
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(active_device.id)
+    assert not response["success"]
+    assert device_registry.async_get(active_device.id) is not None
+
+    response = await ws_client.remove_device(stale_device.id)
+    assert response["success"]
+    assert device_registry.async_get(stale_device.id) is None
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_contracts_retry_ignores_replaced_household(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a retry result for a household that left and returned is discarded."""
+    client = mock_engie_client.return_value
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+
+    def _setup_contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == BAN:
+            raise EngieBeCommunicationError("boom")
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _setup_contracts
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    runtime_data = mock_config_entry.runtime_data
+    assert runtime_data.households[BAN].is_dynamic is None
+
+    retry_started = asyncio.Event()
+    release_retry = asyncio.Event()
+
+    async def _contracts(_queried_ban: str) -> EnergyContractsResponse:
+        if not retry_started.is_set():
+            retry_started.set()
+            await release_retry.wait()
+            return build_contracts()
+        return build_contracts(dynamic=True)
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    freezer.tick(CONTRACTS_RETRY_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(10):
+        await retry_started.wait()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+    removed = asyncio.Event()
+    added = asyncio.Event()
+
+    @callback
+    def _device_updated(event: Event[dr.EventDeviceRegistryUpdatedData]) -> None:
+        if event.data["action"] == "remove" and event.data["device_id"] == device.id:
+            removed.set()
+
+    @callback
+    def _entity_updated(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        if (
+            event.data["action"] == "create"
+            and (entry := entity_registry.async_get(event.data["entity_id"]))
+            is not None
+            and entry.unique_id == f"{BAN}_epex_current_hour"
+        ):
+            added.set()
+
+    unsub_device = hass.bus.async_listen(
+        dr.EVENT_DEVICE_REGISTRY_UPDATED, _device_updated
+    )
+    unsub_entity = hass.bus.async_listen(
+        er.EVENT_ENTITY_REGISTRY_UPDATED, _entity_updated
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN_2)
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(10):
+        await removed.wait()
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(10):
+        await added.wait()
+    unsub_device()
+    unsub_entity()
+    await hass.async_block_till_done()
+    assert runtime_data.households[BAN].is_dynamic is True
+
+    release_retry.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert runtime_data.households[BAN].is_dynamic is True
+    assert runtime_data.epex is not None
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert _current_hour_price(hass, entity_registry, BAN) == pytest.approx(0.18)
+
+
+@pytest.mark.usefixtures("mock_engie_client")
+async def test_remove_device_while_unloaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a device can be removed while the entry is not loaded."""
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert device_registry.async_get(device.id) is None
+
+
+async def test_remove_retained_household_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing a household kept through an empty agreement list lets it return."""
+    client = mock_engie_client.return_value
+    assert await async_setup_component(hass, "config", {})
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+    client.async_get_customer_account_relations.return_value = CustomerAccountRelations(
+        accounts=()
+    )
+    await _sync_households(hass, freezer)
+    assert BAN in mock_config_entry.runtime_data.households
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, BAN), mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    response = await ws_client.remove_device(device.id)
+
+    assert response["success"]
+    assert BAN not in mock_config_entry.runtime_data.households
+    assert device_registry.async_get(device.id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+        )
+        is None
+    )
+
+    client.async_get_customer_account_relations.return_value = build_relations(BAN)
+    await _sync_households(hass, freezer)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert float(price_state.state) == pytest.approx(0.123456)
+
+
+async def test_household_leaving_during_add_is_skipped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test an agreement that leaves during its tariff lookup gets no household."""
+    leaving_ban = "000000000003"
+    client = mock_engie_client.return_value
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    lookup_started = asyncio.Event()
+    release_lookup = asyncio.Event()
+
+    async def _contracts(queried_ban: str) -> EnergyContractsResponse:
+        if queried_ban == leaving_ban:
+            lookup_started.set()
+            await release_lookup.wait()
+        return build_contracts()
+
+    client.async_get_energy_contracts.side_effect = _contracts
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2, leaving_ban
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(10):
+        await lookup_started.wait()
+
+    client.async_get_customer_account_relations.return_value = build_relations(
+        BAN, BAN_2
+    )
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    release_lookup.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "KeyError" not in caplog.text
+    assert leaving_ban not in mock_config_entry.runtime_data.households
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, leaving_ban), mock_config_entry.entry_id
+        )
+        is None
+    )
+    price_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
+    )
+    assert price_entity_id is not None
+    price_state = hass.states.get(price_entity_id)
+    assert price_state is not None
+    assert float(price_state.state) == pytest.approx(0.123456)

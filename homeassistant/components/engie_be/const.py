@@ -3,6 +3,8 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.util.signal_type import SignalTypeFormat
+
 DOMAIN = "engie_be"
 ATTRIBUTION = "Data provided by ENGIE Belgium"
 
@@ -17,6 +19,14 @@ USER_MANAGEMENT_URL = (
 
 CONTRACTS_RETRY_INTERVAL = timedelta(minutes=5)
 
+RELATIONS_SCAN_INTERVAL = timedelta(hours=1)
 PRICES_SCAN_INTERVAL = timedelta(hours=1)
 EPEX_SCAN_INTERVAL = timedelta(hours=1)
 PEAKS_SCAN_INTERVAL = timedelta(hours=1)
+
+NEW_HOUSEHOLDS_SIGNAL: SignalTypeFormat[set[str]] = SignalTypeFormat(
+    f"{DOMAIN}_new_households_{{}}"
+)
+REMOVED_HOUSEHOLDS_SIGNAL: SignalTypeFormat[set[str]] = SignalTypeFormat(
+    f"{DOMAIN}_removed_households_{{}}"
+)
