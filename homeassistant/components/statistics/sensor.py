@@ -666,6 +666,19 @@ async def async_setup_entry(
     )
 
 
+_RATIO_ATTRIBUTES = (
+    StatisticsEntityStateAttribute.AGE_COVERAGE_RATIO,
+    StatisticsEntityStateAttribute.BUFFER_USAGE_RATIO,
+)
+
+
+def _without_ratios(attributes: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the attributes without the buffer and age ratios."""
+    return {
+        key: value for key, value in attributes.items() if key not in _RATIO_ATTRIBUTES
+    }
+
+
 class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
@@ -751,7 +764,25 @@ class StatisticsSensor(SensorEntity):
             self._preview_callback(calculated_state.state, calculated_state.attributes)
         # only write state to the state machine if we are not in preview mode
         if not self._preview_callback:
-            self.async_write_ha_state()
+            self._async_write_state_unless_only_ratios_changed()
+
+    @callback
+    def _async_write_state_unless_only_ratios_changed(self) -> None:
+        """Write the state, unless only the buffer and age ratios changed.
+
+        The ratios move on almost every source update and every purge, so
+        writing them alone would add a recorder row each time while the
+        state itself stays the same. They are written with the next change
+        of the state or of any other attribute.
+        """
+        if (
+            (current := self.hass.states.get(self.entity_id)) is not None
+            and (calculated := self._async_calculate_state()).state == current.state
+            and _without_ratios(calculated.attributes)
+            == _without_ratios(current.attributes)
+        ):
+            return
+        self.async_write_ha_state()
 
     @callback
     def _async_stats_sensor_state_change_listener(
@@ -1057,7 +1088,7 @@ class StatisticsSensor(SensorEntity):
         self._async_purge_update_and_schedule()
         # only write state to the state machine if we are not in preview mode
         if not self._preview_callback:
-            self.async_write_ha_state()
+            self._async_write_state_unless_only_ratios_changed()
 
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
