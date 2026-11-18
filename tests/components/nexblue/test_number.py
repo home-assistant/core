@@ -2,10 +2,17 @@
 
 from collections.abc import Generator
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nexblue_api import NexBlueError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
@@ -15,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import CHARGER_STATUS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -70,12 +75,15 @@ async def test_set_dynamic_current_limit_requires_active_session(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the dynamic limit requires an active charging session."""
     mock_client.async_get_charger_status.return_value = replace(
         CHARGER_STATUS, charging_state=0
     )
-    await init_integration.runtime_data.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         NUMBER_DOMAIN, "nexblue", "NB123456_dynamic_current_limit"
