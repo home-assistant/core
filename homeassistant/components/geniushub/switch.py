@@ -9,6 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
 from .const import GH_ON_OFF_ZONE, GH_TYPE, GeniusHubServiceArgument
+from .coordinator import GeniusCoordinator
 from .entity import GeniusZone
 
 
@@ -19,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub switch entities."""
 
-    coordinator = entry.runtime_data
+    coordinator: GeniusCoordinator = entry.runtime_data
 
     async_add_entities(
         GeniusSwitch(coordinator, z)

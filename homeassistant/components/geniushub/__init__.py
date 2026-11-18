@@ -1,9 +1,6 @@
 """Support for a Genius Hub system."""
 
-import logging
-
 from geniushubclient import GeniusHub
-from geniushubclient.zone import GeniusZone
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,8 +23,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import ATTR_MANUFACTURER, DOMAIN, IDENTIFIER_ZONE, SERIAL_NO
 from .coordinator import GeniusCoordinator
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = (
     Platform.BINARY_SENSOR,
@@ -99,7 +94,7 @@ def _create_hub_devices(
     entry: GeniusHubConfigEntry,
     hub_uid: str,
     api: str,
-    zones: {GeniusZone},
+    zones: {any},
 ):
     device_registry = dr.async_get(hass)
     hub_identifiers = (DOMAIN, hub_uid)

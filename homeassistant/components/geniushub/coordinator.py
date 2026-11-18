@@ -2,6 +2,7 @@
 
 import logging
 import traceback
+from typing import override
 
 import aiohttp
 from geniushubclient import GeniusHub
@@ -43,6 +44,7 @@ class GeniusCoordinator(DataUpdateCoordinator):
         self._timeout_error = False
         self._type_error = False
 
+    @override
     async def _async_update_data(self) -> GeniusHub | None:
         """Update the geniushub client's data."""
         try:

@@ -22,6 +22,7 @@ from .const import (
     HA_HVAC_TO_GH,
     HA_PRESET_TO_GH,
 )
+from .coordinator import GeniusCoordinator
 from .entity import GeniusHeatingZone
 
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub climate entities."""
 
-    coordinator = entry.runtime_data
+    coordinator: GeniusCoordinator = entry.runtime_data
 
     async_add_entities(
         GeniusClimateZone(coordinator, z)
@@ -51,7 +52,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, coordinator, zone) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, zone) -> None:
         """Initialize the climate device."""
         super().__init__(coordinator, zone)
 

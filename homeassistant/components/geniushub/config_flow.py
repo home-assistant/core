@@ -37,7 +37,6 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
             menu_options=["local_api", "cloud_api"],
         )
 
-    @override
     async def async_step_reconfigure(
         self,
         user_input: dict[str, Any] | None = None,

@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
 from .const import GH_HEATERS, GH_STATE_TO_HA, GH_TYPE, HA_OPMODE_TO_GH
+from .coordinator import GeniusCoordinator
 from .entity import GeniusHeatingZone
 
 
@@ -21,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub water heater entities."""
 
-    coordinator = entry.runtime_data
+    coordinator: GeniusCoordinator = entry.runtime_data
 
     async_add_entities(
         GeniusWaterHeater(coordinator, z)
@@ -38,7 +39,7 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
 
-    def __init__(self, coordinator, zone) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, zone) -> None:
         """Initialize the water_heater device."""
         super().__init__(coordinator, zone)
 

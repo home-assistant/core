@@ -21,6 +21,7 @@ from .const import (
     GH_TYPE,
     IDENTIFIER_ZONE,
 )
+from .coordinator import GeniusCoordinator
 from .entity import GeniusDevice, GeniusEntity
 
 
@@ -30,10 +31,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Genius Hub sensor entities."""
+    coordinator: GeniusCoordinator = entry.runtime_data
 
-    coordinator = entry.runtime_data
-
-    entities: list[GeniusBattery | GeniusIssue] = [
+    entities: list[GeniusBattery | GeniusIssue | GeniusTemp] = [
         GeniusBattery(coordinator, d, GH_BATTERY_LEVEL_ATTR)
         for d in coordinator.client.device_objs
         if GH_BATTERY_LEVEL_ATTR in d.data["state"]
@@ -56,7 +56,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
 
-    def __init__(self, coordinator, device, state_attr) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, device, state_attr) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, device)
 
@@ -101,7 +101,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
 class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, coordinator, level) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, level) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
@@ -124,6 +124,7 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 
+    @override
     async def async_update(self) -> None:
         """Process the sensor's state data."""
         self._update_issues()
@@ -146,7 +147,7 @@ class GeniusTemp(GeniusEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator, zone) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, zone) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
@@ -163,6 +164,7 @@ class GeniusTemp(GeniusEntity, SensorEntity):
         """Return the temperature of the sensor."""
         return self._temperature
 
+    @override
     async def async_update(self) -> None:
         """Process the sensor's state data."""
         for z in self.coordinator.client.zone_objs:

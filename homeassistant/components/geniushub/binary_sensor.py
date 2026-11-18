@@ -14,6 +14,7 @@ from .const import (
     GH_RECEIVER_TYPE,
     GH_TYPE,
 )
+from .coordinator import GeniusCoordinator
 from .entity import GeniusDevice
 
 
@@ -24,7 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub binary sensor entities."""
 
-    coordinator = entry.runtime_data
+    coordinator: GeniusCoordinator = entry.runtime_data
 
     async_add_entities(
         GeniusBinarySensor(coordinator, d, GH_BINARY_SENSOR_STATE_ATTR)
@@ -40,7 +41,7 @@ async def async_setup_entry(
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, coordinator, device, state_attr) -> None:
+    def __init__(self, coordinator: GeniusCoordinator, device, state_attr) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, device)
 
