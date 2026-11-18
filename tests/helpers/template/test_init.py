@@ -370,6 +370,30 @@ CYCLIC.append(CYCLIC)
             "21.5",
             id="value_json_argument",
         ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '{"battery": 87}', "parse_result": True},
+            87,
+            id="guarded",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '{"linkquality": 120}'},
+            "",
+            id="guarded_missing_key",
+        ),
+        pytest.param(
+            "{%- if 'temp' in value_json -%}{{ value_json.temp }}{%- endif -%}",
+            {"value": '{"temp": 21.5}'},
+            "21.5",
+            id="guarded_single_quotes_whitespace_control",
+        ),
+        pytest.param(
+            '{% if "ENERGY" in value_json %}{{ value_json.ENERGY.Power }}{% endif %}',
+            {"value": '{"ENERGY": {"Power": 12}}'},
+            "12",
+            id="guarded_nested_key",
+        ),
     ],
 )
 def test_render_with_possible_json_value_json_path(
@@ -462,6 +486,36 @@ def test_render_with_possible_json_value_json_path_legacy_templates(
             {"value": "raw", "value_json": {"a": CYCLIC}, "error_value": "fallback"},
             "fallback",
             id="cyclic_value",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '"battery low"'},
+            "",
+            id="guarded_string_payload",
+        ),
+        pytest.param(
+            '{% if "battery" in value_json %}{{ value_json["battery"] }}{% endif %}',
+            {"value": '["battery"]'},
+            "",
+            id="guarded_list_payload",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}{{ value_json["b"] }}{% endif %}',
+            {"value": '{"b": 1}'},
+            "",
+            id="guarded_other_key",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}{{ value_json.a.b }}{% endif %}',
+            {"value": '{"a": {}}'},
+            "",
+            id="guarded_nested_missing_key",
+        ),
+        pytest.param(
+            '{% if "a" in value_json %}x{{ value_json.a }}{% endif %}',
+            {"value": '{"a": 1}'},
+            "x1",
+            id="guarded_with_text",
         ),
     ],
 )
