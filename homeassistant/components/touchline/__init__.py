@@ -22,6 +22,10 @@ async def _async_fetch_devices(
     for device_id in range(await py_touchline.get_number_of_devices_async()):
         device = PyTouchline(id=device_id, url=host)
         await device.update_async()
+        if device.get_controller_id() is None or device.get_device_id() is None:
+            raise ConfigEntryNotReady(
+                f"Touchline controller at {host} returned no ID for device {device_id}"
+            )
         devices.append(device)
     return devices
 

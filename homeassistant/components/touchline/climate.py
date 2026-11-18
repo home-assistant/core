@@ -45,6 +45,7 @@ TOUCHLINE_HA_PRESETS = {
 }
 
 SCAN_INTERVAL = timedelta(minutes=1)
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

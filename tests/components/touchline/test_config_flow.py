@@ -82,6 +82,33 @@ async def test_form_errors(
     assert result["result"].unique_id == TEST_UNIQUE_ID
 
 
+async def test_form_missing_controller_id(
+    hass: HomeAssistant, mock_pytouchline: MagicMock
+) -> None:
+    """Test a missing controller ID is reported as a connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_pytouchline.get_controller_id.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_DATA,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_pytouchline.get_controller_id.return_value = TEST_UNIQUE_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_DATA,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UNIQUE_ID
+
+
 async def test_already_configured_by_host(
     hass: HomeAssistant, mock_pytouchline: MagicMock
 ) -> None:

@@ -29,7 +29,9 @@ async def _async_fetch_unique_id(host: str) -> str:
     client = PyTouchline(url=host)
     await client.get_number_of_devices_async()
     await client.update_async()
-    return str(client.get_controller_id())
+    if (controller_id := client.get_controller_id()) is None:
+        raise CannotConnect
+    return str(controller_id)
 
 
 async def _async_validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
