@@ -12,7 +12,7 @@ class ProcessedCoordinatorData:
     """Data exposed to entities consuming IrmKmiCoordinator data."""
 
     current_weather: CurrentWeatherData
-    country: str
+    country: str | None
     animation: RadarAnimationData | None
     hourly_forecast: list[Forecast] = field(default_factory=list)
     daily_forecast: list[ExtendedForecast] = field(default_factory=list)

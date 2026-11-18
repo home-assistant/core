@@ -34,12 +34,10 @@ from homeassistant.helpers.trigger import (
     TriggerNotTriggeredReporter,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, HOLD_TIMEOUT
 
 ATTR_REPEAT_COUNT: Final = "repeat_count"
 CONF_INTERVAL: Final = "interval"
-
-HOLD_TIMEOUT: Final = timedelta(seconds=30)
 
 # Ordered by preference: only the first type an entity declares fires the
 # trigger, so a press reported as several of these types fires it once.
