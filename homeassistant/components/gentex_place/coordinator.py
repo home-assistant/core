@@ -58,6 +58,11 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         self.messages = PlaceMessages(mqtt_client)
         self.devices: list[DiscoverDevice] = []
 
+    @override
+    async def _async_update_data(self) -> dict[str, PlaceDeviceShadow]:
+        """Return the latest data received through MQTT."""
+        return self.data
+
     async def async_setup(self) -> None:
         """Discover devices, seed shadow state, and start MQTT."""
         try:

@@ -1,6 +1,7 @@
 """Tests for the Place binary sensor platform."""
 
 import json
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from place.models.device_shadow import AlarmStatus
@@ -8,8 +9,13 @@ from place.models.discover_device import DiscoverDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration, trigger_mqtt_connect, trigger_shadow_callback
 
@@ -30,6 +36,43 @@ async def test_binary_sensor_entities_created(
     assert hass.states.get("binary_sensor.master_bedroom_smoke") is not None
     assert hass.states.get("binary_sensor.master_bedroom_carbon_monoxide") is not None
     assert hass.states.get("binary_sensor.master_bedroom_heat_alarm") is not None
+
+
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+)
+async def test_manual_update_preserves_pushed_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a manual update succeeds and retains the latest pushed state."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "binary_sensor.master_bedroom_smoke"
+    trigger_shadow_callback(
+        mock_mqtt_client,
+        "$aws/things/thing-001/shadow/update/accepted",
+        json.dumps({"state": {"reported": {"smokeAlarmStatus": 3}}}).encode(),
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    caplog.clear()
+    with caplog.at_level(logging.ERROR):
+        await hass.services.async_call(
+            HOMEASSISTANT_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert not caplog.records
+    assert hass.states.get(entity_id).state == STATE_ON
 
 
 @pytest.mark.usefixtures(
