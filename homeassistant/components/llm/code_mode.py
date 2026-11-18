@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
+import keyword
 import re
 from typing import Any, override
 
@@ -37,6 +38,9 @@ MAX_OUTPUT_BYTES = 64 * 1024
 MAX_RESULT_SIZE = 64 * 1024
 # The JSON encoder of Home Assistant fails on deeper values.
 MAX_RESULT_DEPTH = 100
+# The JSON encoder of Home Assistant fails on integers outside this range.
+MIN_JSON_INT = -(2**63)
+MAX_JSON_INT = 2**64 - 1
 # Function declarations are part of the prompt up to this size, in characters.
 INLINE_BUDGET = 8000
 SEARCH_LIMIT = 10
@@ -71,8 +75,11 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
     functions: list[ToolFunction] = []
     names: set[str] = set()
     for tool in api_instance.tools:
+        base = re.sub(r"\W", "_", tool.name)
+        if not base.isidentifier() or keyword.iskeyword(base):
+            base = f"tool_{base}"
         # Different tool names can give the same Python name.
-        name = base = re.sub(r"\W", "_", tool.name)
+        name = base
         suffix = 1
         while name in names:
             suffix += 1
@@ -96,6 +103,7 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
         api_prompt=f"{api_instance.api_prompt}\n{PROMPT}\n{catalog}",
         llm_context=api_instance.llm_context,
         tools=tools,
+        custom_serializer=api_instance.custom_serializer,
     )
 
 
@@ -202,7 +210,7 @@ class SearchTool(Tool):
         llm_context: LLMContext,
     ) -> ToolResult:
         """Return the functions that match the query best."""
-        words = set(_words(tool_input.tool_args["query"]))
+        words = set(_words(self.parameters(tool_input.tool_args)["query"]))
         scored = []
         for function in self._functions:
             name_words = set(_words(function.name))
@@ -263,7 +271,7 @@ class ExecuteTool(Tool):
 
         Without a chat session, the sandbox runs only for this call.
         """
-        code = tool_input.tool_args["code"]
+        code = self.parameters(tool_input.tool_args)["code"]
         # The chat log keeps this tool between turns, so the tools must get
         # the context of the current turn.
         self._api_instance.llm_context = llm_context
@@ -357,6 +365,8 @@ def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
     budget[0] -= 1 + (len(value) if isinstance(value, str) else 0)
     if budget[0] < 0 or depth < 0:
         raise ValueError("Result too large")
+    if isinstance(value, int) and not MIN_JSON_INT <= value <= MAX_JSON_INT:
+        return _json_key(value, budget)
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, dict):
@@ -370,7 +380,9 @@ def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
 
 
 def _json_key(value: Any, budget: list[int]) -> str:
-    """Return a value as a string, for a dict key or an unknown type."""
+    """Return a value as a string, for a dict key or a value without a JSON type."""
     text = str(value)
     budget[0] -= len(text)
+    if budget[0] < 0:
+        raise ValueError("Result too large")
     return text

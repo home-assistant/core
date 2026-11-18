@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from typing import override
+from typing import Any, override
 from unittest.mock import patch
 
 import probatio
@@ -14,6 +14,7 @@ from homeassistant.components.llm import code_mode as code_mode_api
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv, llm
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -306,7 +307,9 @@ async def test_sandbox_stops_with_home_assistant(
 async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     """Test values that JSON cannot represent are converted."""
     result = await _execute(
-        api_instance, "{'items': (1, 2), 'ids': {1}, (1, 2): None, 'kind': type(1)}"
+        api_instance,
+        "{'items': (1, 2), 'ids': {1}, (1, 2): None, 'kind': type(1), "
+        "'big': 2**100, 'max': 2**64 - 1, 'min': -(2**63)}",
     )
 
     assert result.data["result"] == {
@@ -314,7 +317,12 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
         "ids": [1],
         "(1, 2)": None,
         "kind": "<class 'int'>",
+        "big": "1267650600228229401496703205376",
+        "max": 2**64 - 1,
+        "min": -(2**63),
     }
+    # The JSON encoder of Home Assistant accepts the result.
+    json_dumps(result.data)
 
 
 @pytest.mark.parametrize(
@@ -325,6 +333,8 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
         "x = [1]\nfor _ in range(900):\n    x = [x]\nprint('deep')\nx",
         "'a' * 100000",
         "{'a' * 100000: 1}",
+        "b'a' * 100000",
+        "[1, b'a' * 100000]",
     ],
 )
 async def test_result_too_large(api_instance: llm.APIInstance, code: str) -> None:
@@ -366,20 +376,50 @@ async def test_python_names_are_unique(
             api=TestAPI(hass, NameTool("unused")),
             api_prompt="",
             llm_context=llm_context,
-            tools=[NameTool("foo-bar"), NameTool("foo_bar"), NameTool("foo.bar")],
+            tools=[
+                NameTool("foo-bar"),
+                NameTool("foo_bar"),
+                NameTool("foo.bar"),
+                NameTool("class"),
+                NameTool("123status"),
+            ],
         )
     )
 
-    for name in ("foo_bar", "foo_bar_2", "foo_bar_3"):
+    names = ("foo_bar", "foo_bar_2", "foo_bar_3", "tool_class", "tool_123status")
+    for name in names:
         assert f"async def {name}() -> dict:" in api_instance.api_prompt
     result = await _execute(
-        api_instance, "[await foo_bar(), await foo_bar_2(), await foo_bar_3()]"
+        api_instance, f"[{', '.join(f'await {name}()' for name in names)}]"
     )
     assert result.data["result"] == [
         {"name": "foo-bar"},
         {"name": "foo_bar"},
         {"name": "foo.bar"},
+        {"name": "class"},
+        {"name": "123status"},
     ]
+
+
+@pytest.mark.parametrize("tool_args", [{}, {"code": None}, {"code": "1", "extra": 1}])
+async def test_invalid_arguments(
+    api_instance: llm.APIInstance, tool_args: dict[str, Any]
+) -> None:
+    """Test invalid arguments raise the error that the chat log handles."""
+    with pytest.raises(probatio.Invalid):
+        await api_instance.async_call_tool(llm.ToolInput("execute", tool_args))
+
+
+async def test_custom_serializer_is_kept(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the API instance keeps the serializer for schemas of the provider."""
+    assist = await llm.async_get_api(hass, llm.LLM_API_ASSIST, llm_context)
+    assert assist.custom_serializer is not None
+
+    api_instance = code_mode_api.async_create_api_instance(assist)
+
+    assert api_instance.custom_serializer is assist.custom_serializer
 
 
 async def test_tools_get_current_context(
