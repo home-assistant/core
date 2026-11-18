@@ -117,7 +117,8 @@ async def test_hue_activate_scene_transition(
 
     assert len(mock_api_v1.mock_requests) == 3
     assert mock_api_v1.mock_requests[2]["json"]["scene"] == "scene_1"
-    assert mock_api_v1.mock_requests[2]["json"]["transitiontime"] == 30
+    # 30 seconds, sent in tenths of a second
+    assert mock_api_v1.mock_requests[2]["json"]["transitiontime"] == 300
     assert mock_api_v1.mock_requests[2]["path"] == "groups/group_1/action"
 
 
