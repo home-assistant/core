@@ -70,6 +70,7 @@ async def test_user_flow_rejects_duplicate_device(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "hardware-1"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

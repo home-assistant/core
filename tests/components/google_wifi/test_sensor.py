@@ -28,7 +28,9 @@ async def fire_polling_update(hass: HomeAssistant, seconds: int) -> None:
 
 @pytest.mark.usefixtures("mock_success")
 async def test_sensors_expose_router_data(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a config entry creates the router sensors."""
     await setup_integration(hass, mock_config_entry)
@@ -43,7 +45,7 @@ async def test_sensors_expose_router_data(
     assert hass.states.get("sensor.test_wifi_status").state == "Online"
     assert hass.states.get("sensor.test_wifi_last_restart") is not None
 
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, HARDWARE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, HARDWARE_ID)})
     assert device is not None
     assert device.name == "Test Wifi"
 
@@ -92,7 +94,9 @@ async def test_sensor_updates_after_failure_and_recovery(
 
 
 async def test_multiple_devices(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test each router address is its own device."""
     devices = (
@@ -115,7 +119,7 @@ async def test_multiple_devices(
     assert hass.states.get("sensor.office_status").state == "Online"
     assert hass.states.get("sensor.basement_status").state == "Online"
     assert (
-        dr.async_get(hass).async_get_device(identifiers={(DOMAIN, "hardware-2")})
+        device_registry.async_get_device(identifiers={(DOMAIN, "hardware-2")})
         is not None
     )
 
