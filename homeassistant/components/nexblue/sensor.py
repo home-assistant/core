@@ -4,6 +4,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal, override
 
+from nexblue_api.models import ChargerStatus
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,7 +25,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from nexblue_api.models import ChargerStatus
 
 from .const import DOMAIN
 from .coordinator import (
