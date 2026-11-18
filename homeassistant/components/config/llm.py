@@ -27,6 +27,7 @@ from homeassistant.loader import async_get_integration_descriptions
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
+from .core import UPDATE_CONFIG_SCHEMA, async_detect_config, async_update_config
 
 _SEARCH_LIMIT = 15
 _INTEGRATION_FILTER_TYPES = ["integration", "helper"]
@@ -49,6 +50,7 @@ _NON_EMPTY_STRING = probatio.All(str, probatio.Strip, probatio.NonEmpty())
 _DOMAIN_STRING = probatio.All(str, probatio.Strip, probatio.Lower, probatio.NonEmpty())
 _MIN_SHORT_ID_LEN = 4
 _OAUTH_RUNTIME_ERRORS = ("No current request in context", "No header in request")
+_UPDATE_CORE_CONFIG_SCHEMA = probatio.Schema(UPDATE_CONFIG_SCHEMA)
 
 
 def _resolve_language(hass: HomeAssistant, language: str | None) -> str:
@@ -786,6 +788,147 @@ class ConfigureFlowTool(Tool):
         )
 
 
+def _format_core_config(hass: HomeAssistant) -> JsonObjectType:
+    """Return the core config fields that the update tool manages."""
+    config = hass.config
+    return {
+        "location_name": config.location_name,
+        "latitude": config.latitude,
+        "longitude": config.longitude,
+        "elevation": config.elevation,
+        "radius": config.radius,
+        "time_zone": config.time_zone,
+        "country": config.country,
+        "currency": config.currency,
+        "language": config.language,
+        # Integrations must not use the name of the unit system, so it is private
+        "unit_system": config.units._name,  # noqa: SLF001
+        "internal_url": config.internal_url,
+        "external_url": config.external_url,
+    }
+
+
+class GetCoreConfigTool(Tool):
+    """LLM Tool to get the core config."""
+
+    name = "config__get_core_config"
+    title = "Get core config"
+    description = (
+        "Get the core config of Home Assistant: the name and location of the home, "
+        "the radius of the home zone in meters, the time zone, country, currency, "
+        "language, unit system, and the internal and external URLs."
+    )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Return the core config."""
+        return ToolResult(data={"result": _format_core_config(hass)})
+
+
+class UpdateCoreConfigTool(Tool):
+    """LLM Tool to update the core config."""
+
+    name = "config__update_core_config"
+    title = "Update core config"
+    description = (
+        "Update the core config of Home Assistant. Only the given fields change. "
+        "Set 'location' to 'auto' to detect the location of the home from its "
+        "public IP address. The result then also contains the detected country, "
+        "currency, time zone and unit system, which are not applied: confirm them "
+        "with the user before you set them."
+    )
+    annotations = ToolAnnotations(
+        read_only=False, destructive=False, idempotent=False, open_world=True
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
+        {
+            probatio.Optional(
+                "location",
+                description=(
+                    "Set to 'auto' to detect the latitude and longitude. "
+                    "Cannot be combined with latitude or longitude."
+                ),
+            ): probatio.In(["auto"]),
+            probatio.Optional(
+                "location_name", description="The name of the home."
+            ): str,
+            probatio.Optional("latitude"): probatio.Coerce(float),
+            probatio.Optional("longitude"): probatio.Coerce(float),
+            probatio.Optional(
+                "elevation", description="Elevation in meters above sea level."
+            ): probatio.Coerce(int),
+            probatio.Optional(
+                "radius", description="Radius of the home zone in meters."
+            ): probatio.Coerce(int),
+            probatio.Optional(
+                "time_zone", description="IANA time zone, e.g. 'Europe/Amsterdam'."
+            ): str,
+            probatio.Optional(
+                "country", description="ISO 3166-1 alpha-2 country code, e.g. 'NL'."
+            ): str,
+            probatio.Optional(
+                "currency", description="ISO 4217 currency code, e.g. 'EUR'."
+            ): str,
+            probatio.Optional(
+                "language", description="Language code, e.g. 'en' or 'pt-BR'."
+            ): str,
+            probatio.Optional("unit_system"): probatio.In(["metric", "us_customary"]),
+            probatio.Optional(
+                "update_units",
+                description=(
+                    "With unit_system, also change the units of entities that use "
+                    "the units of the unit system."
+                ),
+            ): bool,
+            probatio.Optional(
+                "internal_url",
+                description="URL of Home Assistant on the local network, or null.",
+            ): probatio.Any(str, None),
+            probatio.Optional(
+                "external_url",
+                description="URL of Home Assistant on the internet, or null.",
+            ): probatio.Any(str, None),
+        }
+    )
+
+    @override
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> ToolResult:
+        """Update the core config."""
+        args = self.parameters(tool_input.tool_args)
+        detected: dict[str, Any] | None = None
+        if args.pop("location", None) == "auto":
+            if "latitude" in args or "longitude" in args:
+                return _error_result(
+                    "Do not give latitude or longitude when location is 'auto'."
+                )
+            detected = await async_detect_config(hass)
+            if "latitude" not in detected or "longitude" not in detected:
+                return _error_result("Could not detect the location.")
+            args["latitude"] = detected.pop("latitude")
+            args["longitude"] = detected.pop("longitude")
+        try:
+            data = _UPDATE_CORE_CONFIG_SCHEMA(args)
+        except probatio.Invalid as err:
+            return _error_result(f"Invalid input: {err}")
+        try:
+            await async_update_config(hass, data)
+        except ValueError as err:
+            return _error_result(str(err))
+        result: JsonObjectType = {"result": _format_core_config(hass)}
+        if detected is not None:
+            result["detected"] = detected
+        return ToolResult(data=result)
+
+
 @callback
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
@@ -801,5 +944,7 @@ def async_get_tools(
             SearchIntegrationsTool(),
             StartFlowTool(),
             ConfigureFlowTool(),
+            GetCoreConfigTool(),
+            UpdateCoreConfigTool(),
         ]
     )
