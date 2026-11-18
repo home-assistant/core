@@ -4656,17 +4656,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "fonte_flamme": {
-      "name": "Fonte Flamme",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
-    },
     "foobot": {
       "name": "Foobot",
       "integration_type": "hub",
@@ -5355,17 +5344,6 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "godin": {
-      "name": "Godin",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
     },
     "gogogate2": {
       "name": "Gogogate2 and ismartgate",
@@ -7110,17 +7088,6 @@
       ],
       "supported_by": "midea"
     },
-    "invicta": {
-      "name": "Invicta",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
-    },
     "iometer": {
       "name": "IOmeter",
       "integration_type": "device",
@@ -7426,17 +7393,6 @@
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
-    },
-    "jotul": {
-      "name": "J\u00f8tul",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
     },
     "justnimbus": {
       "name": "JustNimbus",
@@ -12861,17 +12817,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "royal1915": {
-      "name": "Royal 1915",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
-    },
     "rss_feed_template": {
       "name": "RSS feed template",
       "integration_type": "hub",
@@ -15771,17 +15716,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "turbofonte": {
-      "name": "TurboFonte",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
-    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -16982,17 +16916,6 @@
       ],
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "wpalacontrol": {
-      "name": "WPalaControl",
-      "integration_type": "virtual",
-      "categories": [
-        "climate.thermostats_heating"
-      ],
-      "connectivity": [
-        "network"
-      ],
-      "supported_by": "palazzetti"
     },
     "ws66i": {
       "name": "Soundavo WS66i 6-Zone Amplifier",
