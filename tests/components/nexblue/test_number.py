@@ -70,6 +70,42 @@ async def test_set_dynamic_current_limit(
     )
 
 
+async def test_dynamic_current_limit_refreshes_after_command(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delayed update is reflected after setting the current limit."""
+    entity_id = entity_registry.async_get_entity_id(
+        NUMBER_DOMAIN, "nexblue", "NB123456_dynamic_current_limit"
+    )
+    assert entity_id
+    previous_state = hass.states.get(entity_id).state
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        "set_value",
+        {"entity_id": entity_id, "value": 20.5},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == previous_state
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == previous_state
+
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS, dynamic_current_limit_a=20.5
+    )
+    freezer.tick(timedelta(seconds=17))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "20.5"
+
+
 async def test_set_dynamic_current_limit_requires_active_session(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
