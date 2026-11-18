@@ -22,7 +22,7 @@
       },
       "scrobble_menu": {
         "title": "Scrobbling (optional)",
-        "description": "You can enable manual scrobbling for each user, one at the time. Each user has to authorize this integration on Last.fm. You can also do this later by reconfiguring the integration.",
+        "description": "You can enable manual scrobbling for each user, one at the time. Each user has to authorize this integration on Last.fm. You can also do this later by reconfiguring the integration.\n\nAuthorized for scrobbling: {authorized_users}",
         "menu_options": {
           "scrobble_user": "Authorize a user for scrobbling",
           "finish": "Finish"
