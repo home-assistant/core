@@ -286,21 +286,19 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
         try:
             status = await self.loc.get_status()
 
-        except ec2.ApiCallFailedError as err:
+        except ec2.ApiConnectionFailedError as err:
             self.logger.debug("The request to the vendor's API failed: %s", err)
-            error = (
-                UpdateFailedUnreachable
-                if err.reason == ec2.ApiCallErrorReason.CONNECTION_FAILED
-                else UpdateFailed
-            )
-            raise error(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key=_api_call_error_key(err),
-                retry_after=(
-                    err.retry_after
-                    if isinstance(err, ec2.ApiRateLimitExceededError)
-                    else None
-                ),
+            ) from err
+
+        except ec2.ApiCallFailedError as err:
+            self.logger.debug("The request to the vendor's API failed: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
             ) from err
 
         except ec2.EvohomeError as err:
