@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.smartthings import MAIN
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -52,7 +52,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.theater_washer_rinse_cycles",
+            TargetKey.ENTITY_ID: "number.theater_washer_rinse_cycles",
             NumberServiceArgument.VALUE: 3,
         },
         blocking=True,

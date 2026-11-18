@@ -23,8 +23,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -63,7 +63,7 @@ async def test_switch_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+        {TargetKey.ENTITY_ID: "switch.fake_profile_block_page"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -90,7 +90,7 @@ async def test_switch_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_web3"},
+        {TargetKey.ENTITY_ID: "switch.fake_profile_web3"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -174,7 +174,7 @@ async def test_switch_failure(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+            {TargetKey.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 
@@ -196,7 +196,7 @@ async def test_switch_auth_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+            {TargetKey.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 
@@ -236,7 +236,7 @@ async def test_switch_set_setting_failure(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.fake_profile_block_page"},
+            {TargetKey.ENTITY_ID: "switch.fake_profile_block_page"},
             blocking=True,
         )
 

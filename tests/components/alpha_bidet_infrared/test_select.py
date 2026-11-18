@@ -20,12 +20,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import async_get as async_get_restore_state
@@ -77,7 +72,7 @@ async def test_select_option_sends_absolute_level(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -137,7 +132,7 @@ async def test_option_stored_while_unavailable(hass: HomeAssistant) -> None:
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: WATER_TEMPERATURE_ENTITY_ID,
+            TargetKey.ENTITY_ID: WATER_TEMPERATURE_ENTITY_ID,
             SelectServiceArgument.OPTION: "medium",
         },
         blocking=True,
