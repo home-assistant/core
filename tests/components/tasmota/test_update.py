@@ -843,6 +843,10 @@ async def test_install_intermediate_image(
     fake.restart(f"{RELEASE_VERSION}(release-{image})")
     await task
     assert UpdateEntityFeature.INSTALL in _features(hass, entity_id)
+    # The device registry shows the new version before discovery confirms it
+    assert hass.states.get(entity_id).attributes[ATTR_INSTALLED_VERSION] == (
+        RELEASE_VERSION
+    )
 
 
 @pytest.mark.parametrize(
@@ -1345,3 +1349,160 @@ async def test_removed_while_resubscribing(
 
     # Once when the entity was removed, once more after the subscription
     assert unsubscribed == ["kitchen_plug/cmnd/", "kitchen_plug/cmnd/"]
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_older_version_after_restart(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_github_latest_release: str,
+) -> None:
+    """Test an error when the device boots with an older version."""
+    aioclient_mock.head(ESP8266_OTA_URL, status=200)
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+
+    fake.on_upgrade = lambda: fake.restart("15.1.0(release-tasmota)")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "unexpected_version"
+    assert exc_info.value.translation_placeholders == {
+        "version": "15.1.0",
+        "previous": INSTALLED_VERSION,
+    }
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_already_running(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_github_latest_release: str,
+) -> None:
+    """Test a second install is refused while the first one runs."""
+    aioclient_mock.head(ESP8266_OTA_URL, status=200)
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+
+    task = _start_install(hass, entity_id)
+    await _settle(hass)
+    assert fake.commands[-1] == ("Upgrade", "1")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "install_in_progress"
+    assert fake.commands.count(("Upgrade", "1")) == 1
+
+    fake.restart(f"{RELEASE_VERSION}(release-tasmota)")
+    await task
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_withdrawn_when_deep_sleep_enabled(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    mock_github_latest_release: str,
+) -> None:
+    """Test install is withdrawn when discovery reports deep sleep."""
+    entity_id, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+    assert UpdateEntityFeature.INSTALL in _features(hass, entity_id)
+
+    config["dslp"] = 1
+    _discover(hass, config)
+    await hass.async_block_till_done()
+    assert UpdateEntityFeature.INSTALL not in _features(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_topic_changed(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    mock_github_latest_release: str,
+) -> None:
+    """Test no commands are sent when discovery rejected a new topic."""
+    entity_id, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+    other = copy.deepcopy(config)
+    other["mac"] = "00000049A3BD"
+    other["t"] = "kitchen_plug"
+    _discover(hass, other)
+    await hass.async_block_till_done()
+
+    # The device moves to the topic of the other device, discovery rejects it
+    config["t"] = "kitchen_plug"
+    _discover(hass, config)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "topic_changed"
+    assert not [p for p in fake.published if "/cmnd/OtaUrl" in p[0]]
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_group_topic(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    mock_github_latest_release: str,
+) -> None:
+    """Test no commands are sent to a topic which is Tasmota's group topic."""
+    entity_id, fake, _ = await _setup_device(
+        hass, mqtt_mock, entity_registry, config_update={"t": "tasmotas"}
+    )
+    await _online(hass, fake)
+    assert UpdateEntityFeature.INSTALL in _features(hass, entity_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "topic_group"
+    assert exc_info.value.translation_placeholders == {"topic": "tasmotas/cmnd/"}
+    assert fake.commands == []
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_topic_shared_during_download_check(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_github_latest_release: str,
+) -> None:
+    """Test no upgrade when another device takes the topic during the checks."""
+    entity_id, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+    other = copy.deepcopy(config)
+    other["mac"] = "00000049A3BD"
+
+    async def other_device_during_head(
+        method: str, url: Any, data: Any
+    ) -> AiohttpClientMockResponse:
+        _discover(hass, other)
+        await hass.async_block_till_done()
+        return AiohttpClientMockResponse(method, url, status=200)
+
+    aioclient_mock.head(ESP8266_OTA_URL, side_effect=other_device_during_head)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "topic_duplicated"
+    # Neither Upgrade nor the OtaUrl restore go to the shared topic
+    assert fake.commands == [("OtaUrl", ""), ("OtaUrl", "1")]
