@@ -3,13 +3,14 @@
 import time
 from typing import Any, override
 
+from nexblue_api import NexBlueError
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from nexblue_api import NexBlueError
 
 from .const import ACTIVE_CHARGING_STATES, DOMAIN
 from .coordinator import (

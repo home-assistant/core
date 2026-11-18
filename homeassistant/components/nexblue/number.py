@@ -2,6 +2,8 @@
 
 from typing import override
 
+from nexblue_api import NexBlueError
+
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
@@ -14,7 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from nexblue_api import NexBlueError
 
 from .const import ACTIVE_CHARGING_STATES, DOMAIN
 from .coordinator import NexBlueConfigEntry, NexBlueDataUpdateCoordinator
