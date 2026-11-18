@@ -1,7 +1,9 @@
 """Tests init for the Govee Local API integration."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from govee_local_api import GoveeDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -10,6 +12,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import (
     CLEANUP_TIMEOUT,
+    CLEANUP_WAIT_TIMEOUT,
     CONF_MANUAL_DEVICES,
     DOMAIN,
 )
@@ -314,18 +317,55 @@ async def test_unload_releases_port(
 
 
 @pytest.mark.usefixtures("mock_network_adapters", "mock_stuck_cleanup")
+async def test_unload_waits_for_delayed_cleanup(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading keeps waiting for a cleanup that completes late."""
+
+    entry, _ = await setup_light(hass, mock_govee_api)
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    assert not unload_task.done()
+
+    # Two seconds in: inside the cleanup wait window, so unload is still pending.
+    freezer.tick(2)
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert not unload_task.done()
+
+    mock_govee_api.cleanup.return_value.set()
+    assert await unload_task
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert "Timed out waiting for port" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_network_adapters", "mock_stuck_cleanup")
 async def test_unload_warns_when_port_not_released(
-    hass: HomeAssistant, mock_govee_api: AsyncMock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a controller that never closes its sockets does not wedge the unload."""
 
     entry, _ = await setup_light(hass, mock_govee_api)
 
-    with patch(
-        "homeassistant.components.govee_light_local.coordinator.CLEANUP_WAIT_TIMEOUT", 0
-    ):
-        assert await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(entry.entry_id)
+    )
+    await asyncio.sleep(0)
+
+    freezer.tick(CLEANUP_WAIT_TIMEOUT + 1)
+    await asyncio.sleep(0)
+    assert await unload_task
+    await hass.async_block_till_done()
 
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert "Timed out waiting for port 4002 to be released" in caplog.text
