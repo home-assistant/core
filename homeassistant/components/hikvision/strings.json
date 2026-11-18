@@ -158,6 +158,113 @@
         }
       }
     },
+    "number": {
+      "auto_iris_level": {
+        "name": "Auto iris level"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "defog_level": {
+        "name": "Defog level"
+      },
+      "event_intelligence_ir_light_brightness": {
+        "name": "Event intelligence IR light brightness"
+      },
+      "event_intelligence_white_light_brightness": {
+        "name": "Event intelligence white light brightness"
+      },
+      "gain": {
+        "name": "Gain"
+      },
+      "gain_limit": {
+        "name": "Gain limit"
+      },
+      "highlight_compensation_level": {
+        "name": "Highlight compensation level"
+      },
+      "ir_brightness_limit": {
+        "name": "IR brightness limit"
+      },
+      "ir_high_brightness": {
+        "name": "IR high brightness"
+      },
+      "ir_light_brightness": {
+        "name": "IR light brightness"
+      },
+      "ir_light_brightness_limit": {
+        "name": "IR light brightness limit"
+      },
+      "ir_low_brightness": {
+        "name": "IR low brightness"
+      },
+      "lens_distortion_correction_level": {
+        "name": "Lens distortion correction level"
+      },
+      "light_brightness": {
+        "name": "Light brightness"
+      },
+      "max_iris_level": {
+        "name": "Maximum iris level"
+      },
+      "min_iris_level": {
+        "name": "Minimum iris level"
+      },
+      "night_to_day_delay": {
+        "name": "Night-to-day delay"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction_level": {
+        "name": "Noise reduction level"
+      },
+      "p_iris_level": {
+        "name": "P-Iris level"
+      },
+      "saturation": {
+        "name": "Saturation"
+      },
+      "sharpness": {
+        "name": "Sharpness"
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_noise_reduction_level": {
+        "name": "Smart noise reduction level"
+      },
+      "smart_supplement_light_distance": {
+        "name": "Smart supplement light distance"
+      },
+      "smart_supplement_light_high_light_distance": {
+        "name": "Smart supplement light high-light distance"
+      },
+      "smart_supplement_light_low_light_distance": {
+        "name": "Smart supplement light low-light distance"
+      },
+      "spatial_noise_reduction_level": {
+        "name": "Spatial noise reduction level"
+      },
+      "temporal_noise_reduction_level": {
+        "name": "Temporal noise reduction level"
+      },
+      "wdr_level": {
+        "name": "WDR level"
+      },
+      "white_balance_blue": {
+        "name": "White balance blue"
+      },
+      "white_balance_red": {
+        "name": "White balance red"
+      },
+      "white_light_brightness_limit": {
+        "name": "White light brightness limit"
+      }
+    },
     "switch": {
       "backlight_compensation": {
         "name": "Backlight compensation"
@@ -209,6 +316,9 @@
     },
     "image_setting_not_allowed": {
       "message": "This user is not allowed to change the image settings of the device."
+    },
+    "image_setting_not_whole": {
+      "message": "This setting only takes whole numbers."
     },
     "image_setting_refused": {
       "message": "The device did not accept the image setting ({code})."
