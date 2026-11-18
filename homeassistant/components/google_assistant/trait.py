@@ -1195,13 +1195,13 @@ class TemperatureControlTrait(_Trait):
     @override
     def sync_attributes(self) -> dict[str, Any]:
         """Return temperature attributes for a sync request."""
-        response = {}
+        response: dict[str, Any] = {}
         domain = self.state.domain
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
-        response["temperatureUnitForUX"] = _google_temp_unit(unit)
 
         if domain == WATER_HEATER_DOMAIN:
+            unit = attrs[WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT]
+            response["temperatureUnitForUX"] = _google_temp_unit(unit)
             min_temp = round(
                 TemperatureConverter.convert(
                     float(attrs[WaterHeaterCapabilityAttribute.MIN_TEMP]),
@@ -1223,6 +1223,9 @@ class TemperatureControlTrait(_Trait):
                 "maxThresholdCelsius": max_temp,
             }
         else:
+            response["temperatureUnitForUX"] = _google_temp_unit(
+                self.hass.config.units.temperature_unit
+            )
             response["queryOnlyTemperatureControl"] = True
             response["temperatureRange"] = {
                 "minThresholdCelsius": -100,
@@ -1236,8 +1239,10 @@ class TemperatureControlTrait(_Trait):
         """Return temperature states."""
         response = {}
         domain = self.state.domain
-        unit = self.hass.config.units.temperature_unit
         if domain == WATER_HEATER_DOMAIN:
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             target_temp = self.state.attributes[WaterHeaterStateAttribute.TEMPERATURE]
             current_temp = self.state.attributes[
                 WaterHeaterStateAttribute.CURRENT_TEMPERATURE
@@ -1267,7 +1272,9 @@ class TemperatureControlTrait(_Trait):
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             temp = round(
                 TemperatureConverter.convert(
-                    float(current_temp), unit, UnitOfTemperature.CELSIUS
+                    float(current_temp),
+                    self.hass.config.units.temperature_unit,
+                    UnitOfTemperature.CELSIUS,
                 ),
                 1,
             )
@@ -1281,9 +1288,11 @@ class TemperatureControlTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         domain = self.state.domain
-        unit = self.hass.config.units.temperature_unit
 
         if domain == WATER_HEATER_DOMAIN and command == COMMAND_SET_TEMPERATURE:
+            unit = self.state.attributes[
+                WaterHeaterCapabilityAttribute.TEMPERATURE_UNIT
+            ]
             min_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MIN_TEMP]
             max_temp = self.state.attributes[WaterHeaterCapabilityAttribute.MAX_TEMP]
             temp = TemperatureConverter.convert(
@@ -1381,7 +1390,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes attributes for a sync request."""
         response = {}
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         response["thermostatTemperatureUnit"] = _google_temp_unit(unit)
 
         min_temp = round(
@@ -1439,7 +1448,7 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes query attributes."""
         response: dict[str, Any] = {}
         attrs = self.state.attributes
-        unit = self.hass.config.units.temperature_unit
+        unit = attrs[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
 
         operation = self.state.state
         preset = attrs.get(ClimateEntityStateAttribute.PRESET_MODE)
@@ -1515,7 +1524,7 @@ class TemperatureSettingTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
-        unit = self.hass.config.units.temperature_unit
+        unit = self.state.attributes[ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT]
         min_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MIN_TEMP]
         max_temp = self.state.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
 

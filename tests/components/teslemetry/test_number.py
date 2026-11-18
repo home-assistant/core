@@ -12,11 +12,11 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.teslemetry.const import (
     DOMAIN,
     LABS_CHARGE_ON_SOLAR_FEATURE,
@@ -24,7 +24,7 @@ from homeassistant.components.teslemetry.const import (
 from homeassistant.components.teslemetry.number import (
     TeslemetryChargeOnSolarLowerLimitNumberEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -81,8 +81,11 @@ async def test_number_services(
     ) as call:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 16},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 16,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -96,8 +99,11 @@ async def test_number_services(
     ) as call:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 60,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -111,10 +117,10 @@ async def test_number_services(
     ) as call:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: 80,
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 80,
             },
             blocking=True,
         )
@@ -129,8 +135,11 @@ async def test_number_services(
     ) as call:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 88},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 88,
+            },
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -156,8 +165,11 @@ async def test_number_command_errors(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_current", ATTR_VALUE: 16},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_current",
+                NumberServiceArgument.VALUE: 16,
+            },
             blocking=True,
         )
 
@@ -176,8 +188,11 @@ async def test_number_command_exception(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.energy_site_backup_reserve", ATTR_VALUE: 80},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
+                NumberServiceArgument.VALUE: 80,
+            },
             blocking=True,
         )
 
@@ -256,8 +271,11 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 60},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 60,
+        },
         blocking=True,
     )
 
@@ -287,8 +305,11 @@ async def test_charge_on_solar_lower_limit_capped_by_charge_limit_polling(
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 70},
+        NumberService.SET_VALUE,
+        {
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            NumberServiceArgument.VALUE: 70,
+        },
         blocking=True,
     )
 
@@ -324,8 +345,11 @@ async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_li
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 90},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 90,
+            },
             blocking=True,
         )
 
@@ -339,8 +363,11 @@ async def test_charge_on_solar_lower_limit_old_firmware_follows_polled_charge_li
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 90},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 90,
+            },
             blocking=True,
         )
 
@@ -389,8 +416,11 @@ async def test_charge_on_solar_lower_limit_set_value_while_disabled(
     ) as command:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 35,
+            },
             blocking=True,
         )
         command.assert_not_called()
@@ -422,8 +452,8 @@ async def test_charge_on_solar_lower_limit_set_value_while_enabled(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
 
@@ -433,8 +463,11 @@ async def test_charge_on_solar_lower_limit_set_value_while_enabled(
     ) as command:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 35,
+            },
             blocking=True,
         )
         command.assert_called_once_with(
@@ -467,8 +500,8 @@ async def test_charge_on_solar_lower_limit_reaches_vehicle_when_switch_disabled(
         ):
             await hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                SwitchService.TURN_ON,
+                {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
                 blocking=True,
             )
 
@@ -488,8 +521,11 @@ async def test_charge_on_solar_lower_limit_reaches_vehicle_when_switch_disabled(
     ) as command:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 45},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 45,
+            },
             blocking=True,
         )
         command.assert_called_once_with(
@@ -538,8 +574,11 @@ async def test_charge_on_solar_lower_limit_uses_stored_state_when_switch_disable
     ) as command:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 45},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 45,
+            },
             blocking=True,
         )
         command.assert_called_once_with(
@@ -571,8 +610,8 @@ async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
 
@@ -583,8 +622,11 @@ async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 95},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_limit",
+                NumberServiceArgument.VALUE: 95,
+            },
             blocking=True,
         )
 
@@ -594,8 +636,11 @@ async def test_charge_on_solar_lower_limit_uses_live_charge_limit(
     ) as command:
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 35,
+            },
             blocking=True,
         )
         command.assert_called_once_with(
@@ -619,16 +664,22 @@ async def test_charge_on_solar_lower_limit_rejects_stale_max_while_disabled(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 50},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_limit",
+                NumberServiceArgument.VALUE: 50,
+            },
             blocking=True,
         )
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 60},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 60,
+            },
             blocking=True,
         )
 
@@ -688,8 +739,8 @@ async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
         turn_on = hass.async_create_task(
             hass.services.async_call(
                 SWITCH_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+                SwitchService.TURN_ON,
+                {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
                 blocking=True,
             ),
             "test turn on charge-on-solar",
@@ -699,10 +750,10 @@ async def test_charge_on_solar_switch_and_lower_limit_are_serialized(
         set_lower_limit = hass.async_create_task(
             hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
+                NumberService.SET_VALUE,
                 {
-                    ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit",
-                    ATTR_VALUE: 35,
+                    TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                    NumberServiceArgument.VALUE: 35,
                 },
                 blocking=True,
             ),
@@ -750,8 +801,8 @@ async def test_charge_on_solar_lower_limit_set_value_command_failure(
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
 
@@ -764,8 +815,11 @@ async def test_charge_on_solar_lower_limit_set_value_command_failure(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_on_solar_lower_limit", ATTR_VALUE: 35},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+                NumberServiceArgument.VALUE: 35,
+            },
             blocking=True,
         )
 
@@ -845,8 +899,11 @@ async def test_charge_on_solar_locally_set_charge_limit_survives_reload(
         ):
             await hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
-                {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 90},
+                NumberService.SET_VALUE,
+                {
+                    TargetKey.ENTITY_ID: "number.test_charge_limit",
+                    NumberServiceArgument.VALUE: 90,
+                },
                 blocking=True,
             )
 
@@ -868,8 +925,8 @@ async def test_charge_on_solar_locally_set_charge_limit_survives_reload(
     ) as command:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -902,8 +959,11 @@ async def test_charge_on_solar_switch_uses_locally_set_charge_limit(
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.test_charge_limit", ATTR_VALUE: 95},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: "number.test_charge_limit",
+                NumberServiceArgument.VALUE: 95,
+            },
             blocking=True,
         )
 
@@ -913,8 +973,8 @@ async def test_charge_on_solar_switch_uses_locally_set_charge_limit(
     ) as command:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(
@@ -946,8 +1006,8 @@ async def test_charge_on_solar_unknown_polled_charge_limit(
     ) as command:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_charge_on_solar"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_charge_on_solar"},
             blocking=True,
         )
         command.assert_called_once_with(

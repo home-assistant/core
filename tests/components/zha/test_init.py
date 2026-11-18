@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 import typing
 from unittest.mock import AsyncMock, patch
 import zoneinfo
@@ -564,7 +563,6 @@ async def test_device_path_not_changed_when_already_unique(
             "homeassistant.components.zha.usb_device_from_path",
             return_value=mock_usb_device,
         ),
-        caplog.at_level(logging.DEBUG),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

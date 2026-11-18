@@ -36,7 +36,13 @@ async def async_get_config_entry_diagnostics(
                     TO_REDACT_DEVICE,
                 ),
                 "last_update_success": coordinator.last_update_success,
-                "state": asdict(coordinator.data) if coordinator.data else None,
+                # Setup refreshes each coordinator without raising, so a
+                # panel may not have reported any state yet.
+                "state": (
+                    asdict(data)
+                    if (data := coordinator.data_or_none) is not None
+                    else None
+                ),
             }
             for coordinator in entry.runtime_data
         ],

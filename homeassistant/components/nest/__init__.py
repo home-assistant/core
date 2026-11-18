@@ -185,10 +185,8 @@ class SignalUpdateCallback:
             self._hass.bus.async_fire(NEST_EVENT, message)
 
     def _supported_traits(self, device_id: str) -> list[str]:
-        if (
-            not self._config_entry.runtime_data
-            or not (device_manager := self._config_entry.runtime_data.device_manager)
-            or not (device := device_manager.devices.get(device_id))
+        if self._device_manager is None or not (
+            device := self._device_manager.devices.get(device_id)
         ):
             return []
         return list(device.traits)
@@ -264,11 +262,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None
     await auth.async_get_access_token()
 
     subscriber = await api.new_subscriber(hass, entry, auth)
-    if not subscriber:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="subscriber_create_failed",
-        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
