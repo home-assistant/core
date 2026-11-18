@@ -189,6 +189,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
+        previous_state = self.state
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
         if self._pending_group_context:
@@ -197,9 +198,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 expected_state = self.state
                 for member_entity in self._iter_group_member_entities():
                     member_entity.async_set_group_context(self._context, expected_state)
-        elif (
-            self._context_expected_state is not None
-            and self.state != self._context_expected_state
+        elif self._context_expected_state is not None and self.state not in (
+            previous_state,
+            self._context_expected_state,
         ):
             self._context = None
             self._context_set = None
