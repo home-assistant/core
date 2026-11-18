@@ -63,18 +63,16 @@ async def async_setup_entry(
 
     await coordinator.async_config_entry_first_refresh()
 
-    # shortcut: the resolved scheme is private, use the public URL API when available.
-    web_ui_url = await hass.async_add_executor_job(
-        client._url.build_base_url,  # noqa: SLF001
-        {},
-        {},
-    )
+    web_ui_url = URL(config_entry.data[CONF_URL])
+    configuration_url = None
+    # shortcut: entries without a scheme have no link until the client exposes its resolved URL.
+    if web_ui_url.scheme in ("http", "https") and web_ui_url.host:
+        configuration_url = (
+            web_ui_url.with_user(None).with_query(None).with_fragment(None)
+        )
     dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        configuration_url=URL(web_ui_url)
-        .with_user(None)
-        .with_query(None)
-        .with_fragment(None),
+        configuration_url=configuration_url,
         entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, config_entry.entry_id)},
         manufacturer="QBittorrent",
