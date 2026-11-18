@@ -9,7 +9,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, CommonServiceArgument
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -75,7 +75,7 @@ async def test_split_foundation_preset(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_foundation_preset_left"
             ),
@@ -119,7 +119,7 @@ async def test_single_foundation_preset(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_foundation_preset"
             ),
@@ -165,7 +165,7 @@ async def test_foot_warmer(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_foot_warmer"
@@ -200,7 +200,7 @@ async def test_foot_warmer(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_R_NAME_LOWER}_foot_warmer"
@@ -247,7 +247,7 @@ async def test_core_climate(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_core_climate"
@@ -282,7 +282,7 @@ async def test_core_climate(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"select.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_R_NAME_LOWER}_core_climate"

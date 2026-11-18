@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -583,7 +584,7 @@ async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             BondService.START_INCREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -605,7 +606,7 @@ async def test_light_start_increasing_brightness_missing_service(
         await hass.services.async_call(
             DOMAIN,
             BondService.START_INCREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 
@@ -623,7 +624,7 @@ async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             BondService.START_DECREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -648,7 +649,7 @@ async def test_light_start_decreasing_brightness_missing_service(
         await hass.services.async_call(
             DOMAIN,
             BondService.START_DECREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 
@@ -666,7 +667,7 @@ async def test_light_stop(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             BondService.STOP,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -689,7 +690,7 @@ async def test_light_stop_missing_service(
         await hass.services.async_call(
             DOMAIN,
             BondService.STOP,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 

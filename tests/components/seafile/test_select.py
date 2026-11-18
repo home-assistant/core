@@ -19,7 +19,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -91,7 +91,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: HISTORY,
+            TargetKey.ENTITY_ID: HISTORY,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -117,7 +117,7 @@ async def test_select_limited_keeps_days(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: HISTORY,
+            TargetKey.ENTITY_ID: HISTORY,
             SelectServiceArgument.OPTION: "limited",
         },
         blocking=True,
@@ -142,7 +142,7 @@ async def test_select_option_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: HISTORY,
+                TargetKey.ENTITY_ID: HISTORY,
                 SelectServiceArgument.OPTION: "keep_none",
             },
             blocking=True,
