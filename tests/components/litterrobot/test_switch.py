@@ -17,9 +17,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
-    CommonServiceArgument,
     EntityCategory,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -113,7 +113,7 @@ async def test_switch_command_exception(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
+            {TargetKey.ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
             blocking=True,
         )
 
@@ -197,6 +197,6 @@ async def test_litter_robot_5_sleep_mode_switch_failed(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_friday_sleep_mode"},
+            {TargetKey.ENTITY_ID: "switch.test_friday_sleep_mode"},
             blocking=True,
         )

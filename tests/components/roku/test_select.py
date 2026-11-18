@@ -20,7 +20,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -70,7 +70,7 @@ async def test_application_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+            TargetKey.ENTITY_ID: "select.my_roku_3_application",
             SelectServiceArgument.OPTION: "Netflix",
         },
         blocking=True,
@@ -92,7 +92,7 @@ async def test_application_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+            TargetKey.ENTITY_ID: "select.my_roku_3_application",
             SelectServiceArgument.OPTION: "Home",
         },
         blocking=True,
@@ -147,7 +147,7 @@ async def test_application_select_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.my_roku_3_application",
+                TargetKey.ENTITY_ID: "select.my_roku_3_application",
                 SelectServiceArgument.OPTION: "Netflix",
             },
             blocking=True,
@@ -188,7 +188,7 @@ async def test_channel_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+            TargetKey.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
             SelectServiceArgument.OPTION: "WhatsOn (1.1)",
         },
         blocking=True,
@@ -210,7 +210,7 @@ async def test_channel_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+            TargetKey.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
             SelectServiceArgument.OPTION: "99.1",
         },
         blocking=True,
@@ -242,7 +242,7 @@ async def test_channel_select_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
+                TargetKey.ENTITY_ID: "select.living_room_58_onn_roku_tv_channel",
                 SelectServiceArgument.OPTION: "99.1",
             },
             blocking=True,
