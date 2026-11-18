@@ -58,8 +58,6 @@ UPDATE_CONFIG_SCHEMA: VolDictType = {
     probatio.Optional("location_name"): str,
     probatio.Optional("longitude"): cv.longitude,
     probatio.Optional("radius"): cv.positive_int,
-    # Validated by async_set_time_zone in the executor to avoid
-    # blocking I/O loading zoneinfo data on the event loop.
     probatio.Optional("time_zone"): str,
     probatio.Optional("update_units"): bool,
     probatio.Optional("unit_system"): unit_system.validate_unit_system,
