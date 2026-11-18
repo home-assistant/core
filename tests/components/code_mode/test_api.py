@@ -11,7 +11,6 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.code_mode import api as code_mode_api
-from homeassistant.components.conversation import DATA_CODE_MODE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv, llm
@@ -100,7 +99,7 @@ def state_tool() -> GetStateTool:
 async def setup_integration(hass: HomeAssistant, state_tool: GetStateTool) -> None:
     """Set up Code Mode and the test API."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "code_mode", {})
+    assert await async_setup_component(hass, "llm", {})
     llm.async_register_api(hass, TestAPI(hass, state_tool))
 
 
@@ -108,7 +107,7 @@ async def _api_instance(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> llm.APIInstance:
     """Return the Assist API and the test API with their tools as code."""
-    return hass.data[DATA_CODE_MODE](
+    return code_mode_api.async_create_api_instance(
         await llm.async_get_api(hass, [llm.LLM_API_ASSIST, "test"], llm_context)
     )
 

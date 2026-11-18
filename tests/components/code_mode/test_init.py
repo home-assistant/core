@@ -1,7 +1,5 @@
 """Tests for the Code Mode preview feature in conversations."""
 
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.conversation import ConversationInput, async_get_chat_log
@@ -42,9 +40,8 @@ async def _tool_names(hass: HomeAssistant) -> list[str]:
 
 
 async def test_feature_disabled(hass: HomeAssistant) -> None:
-    """Test the agent gets the tools and Code Mode stays unloaded."""
+    """Test the agent gets the tools."""
     assert "llm__GetDateTime" in await _tool_names(hass)
-    assert "code_mode" not in hass.config.components
 
 
 async def test_feature_enabled(hass: HomeAssistant) -> None:
@@ -52,23 +49,7 @@ async def test_feature_enabled(hass: HomeAssistant) -> None:
     await async_update_preview_feature(hass, "code_mode", "code_mode", True)
 
     assert await _tool_names(hass) == ["execute"]
-    assert "code_mode" in hass.config.components
 
     await async_update_preview_feature(hass, "code_mode", "code_mode", False)
 
     assert "llm__GetDateTime" in await _tool_names(hass)
-
-
-async def test_setup_fails(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test the agent gets the tools when Code Mode cannot be set up."""
-    await async_update_preview_feature(hass, "code_mode", "code_mode", True)
-
-    with patch(
-        "homeassistant.components.conversation.chat_log.async_setup_component",
-        return_value=False,
-    ):
-        assert "llm__GetDateTime" in await _tool_names(hass)
-
-    assert "Code mode cannot be set up" in caplog.text

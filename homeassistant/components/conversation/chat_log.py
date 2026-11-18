@@ -16,13 +16,12 @@ from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
-from .const import DATA_CODE_MODE, DOMAIN, ChatLogEventType
+from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
@@ -777,18 +776,15 @@ class ChatLog:
             user_extra_system_prompt=user_input.extra_system_prompt,
         )
 
-    async def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
+    @callback
+    def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
         """Expose the tools as code when the code mode preview feature is on."""
         if not async_is_preview_feature_enabled(self.hass, "code_mode", "code_mode"):
             return llm_api
-        # Code mode has a large requirement, so it is set up at first use and
-        # is not a dependency.
-        if DATA_CODE_MODE not in self.hass.data and not await async_setup_component(
-            self.hass, "code_mode", {}
-        ):
-            LOGGER.error("Code mode cannot be set up, tools are called directly")
-            return llm_api
-        return self.hass.data[DATA_CODE_MODE](llm_api)
+        # Import here so that the sandbox library loads only when it is used.
+        from homeassistant.components.code_mode import async_create_api_instance  # noqa: PLC0415
+
+        return async_create_api_instance(llm_api)
 
     async def async_provide_llm_data(
         self,
@@ -863,7 +859,7 @@ class ChatLog:
                 ) from err
 
         if llm_api is not None:
-            llm_api = await self._async_apply_code_mode(llm_api)
+            llm_api = self._async_apply_code_mode(llm_api)
 
         user_name: str | None = None
 

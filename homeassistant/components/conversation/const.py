@@ -6,9 +6,6 @@ from typing import TYPE_CHECKING, Final
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from homeassistant.helpers import llm
     from homeassistant.helpers.entity_component import EntityComponent
 
     from .entity import ConversationEntity
@@ -24,11 +21,6 @@ ATTR_CONVERSATION_ID = "conversation_id"
 SERVICE_PROCESS = "process"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
-# Set by the code_mode integration. It returns an API instance that exposes the
-# tools of the given instance as code.
-DATA_CODE_MODE: HassKey[Callable[[llm.APIInstance], llm.APIInstance]] = HassKey(
-    f"{DOMAIN}_code_mode"
-)
 
 
 class ConversationEntityFeature(IntFlag):

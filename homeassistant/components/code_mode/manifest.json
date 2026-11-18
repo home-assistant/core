@@ -2,7 +2,6 @@
   "domain": "code_mode",
   "name": "Code Mode",
   "codeowners": ["@balloob"],
-  "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/code_mode",
   "integration_type": "system",
   "iot_class": "calculated",
