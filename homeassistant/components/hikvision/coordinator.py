@@ -223,6 +223,13 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                         self.credentials_rejected = True
                     raise
         except ISAPIError as err:
+            # The camera may already have switched other settings off before the
+            # request that failed.
+            if err.also_changed:
+                others = self._async_report_also_changed(
+                    path, err.also_changed, context
+                )
+                self.async_set_updated_data({**self.data, **others})
             raise await self._async_write_error(err) from err
         # The camera may have had to switch other settings off first.
         others = (
