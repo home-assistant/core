@@ -218,16 +218,8 @@ class Light(LightEntity, ZHASupportedFeaturesEntity):
             brightness=state.attributes.get(LightEntityStateAttribute.BRIGHTNESS),
             color_temp=color_temp,
             xy_color=state.attributes.get(LightEntityStateAttribute.XY_COLOR),
-            color_mode=(
-                HA_TO_ZHA_COLOR_MODE.get(ColorMode(restored_color_mode))
-                if (
-                    restored_color_mode := state.attributes.get(
-                        LightEntityStateAttribute.COLOR_MODE
-                    )
-                )
-                is not None
-                and restored_color_mode in ColorMode
-                else None
+            color_mode=HA_TO_ZHA_COLOR_MODE.get(
+                state.attributes.get(LightEntityStateAttribute.COLOR_MODE)
             ),
             effect=state.attributes.get(LightEntityStateAttribute.EFFECT),
         )

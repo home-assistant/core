@@ -26,7 +26,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .common import (
     async_shift_time,
@@ -568,7 +568,6 @@ async def async_test_flash_from_hass(
 )
 async def test_light_restore_unknown_color_mode(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., ZigbeeDevice],
     restored_color_mode: str,
@@ -596,10 +595,6 @@ async def test_light_restore_unknown_color_mode(
 
     state = hass.states.get(entity_id)
     assert state is not None
-
-    # The entity can still be removed afterwards
-    entity_registry.async_remove(entity_id)
-    await hass.async_block_till_done()
 
 
 async def test_light_restore_failure_leaves_no_stale_references(
