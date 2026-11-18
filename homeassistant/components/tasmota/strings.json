@@ -30,6 +30,9 @@
     "download_check_failed": {
       "message": "Could not check the firmware image {url}: {error}"
     },
+    "firmware_changed": {
+      "message": "The firmware of the device changed while the update was being prepared."
+    },
     "firmware_not_available": {
       "message": "The firmware image {url} is not available (HTTP status {status})."
     },
@@ -59,6 +62,9 @@
     },
     "topic_group": {
       "message": "The MQTT topic {topic} of the device is also the default group topic of Tasmota. A firmware update would be sent to all devices of the group."
+    },
+    "topic_overlap": {
+      "message": "The MQTT topic {topic} of the device starts with the topic {other} of another device, which would receive the firmware update as well."
     },
     "unexpected_ota_url": {
       "message": "The device reported {url} as its default OTA URL, which is not the official Tasmota release image for this device."

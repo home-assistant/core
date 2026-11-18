@@ -17,6 +17,7 @@ from aiogithubapi import (
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from hatasmota.update import TasmotaUpdate
+from hatasmota.utils import get_topic_command, get_topic_stat, get_topic_tele
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -414,18 +415,21 @@ def _status2(version: str, hardware: str) -> str:
 
 
 class FakeTasmota:
-    """Answer the commands of the update entity like a Tasmota device does."""
+    """Answer the commands of the update entity like a Tasmota device does.
+
+    The topics follow the device's discovery config, which tests may change.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
         mqtt_mock: MqttMockHAClient,
+        config: dict[str, Any],
         *,
         version: str = f"{INSTALLED_VERSION}(release-tasmota)",
         hardware: str = "ESP8266EX",
         ota_url: str = CUSTOM_OTA_URL,
         default_ota_url: str = ESP8266_OTA_URL,
-        topic: str = DEVICE_TOPIC,
         mqtt_response: bool = False,
     ) -> None:
         """Initialize.
@@ -434,37 +438,45 @@ class FakeTasmota:
         SetOption4 instead of stat/RESULT.
         """
         self.hass = hass
+        self.config = config
         self.version = version
         self.hardware = hardware
         self.ota_url = ota_url
         self.default_ota_url = default_ota_url
-        self.topic = topic
         self.mqtt_response = mqtt_response
         # OtaUrl payloads the device does not answer
         self.ignore_ota_url: set[str] = set()
         self.upgrade_url: str | None = None
+        # Commands whose publishing fails, e.g. MQTT disconnected
+        self.fail_publish: set[tuple[str, str]] = set()
         self.on_upgrade: Callable[[], None] | None = None
         self.published: list[tuple[str, str]] = []
         mqtt_mock.async_publish.side_effect = self._async_publish
 
     @property
+    def cmnd(self) -> str:
+        """Return the command topic."""
+        return get_topic_command(self.config)
+
+    @property
     def commands(self) -> list[tuple[str, str]]:
         """Return the commands sent to the device, except STATUS polls."""
         return [
-            (topic.removeprefix(f"{self.topic}/cmnd/"), payload)
+            (topic.removeprefix(self.cmnd), payload)
             for topic, payload in self.published
-            if topic.startswith(f"{self.topic}/cmnd/")
-            and topic != f"{self.topic}/cmnd/STATUS"
+            if topic.startswith(self.cmnd) and topic != f"{self.cmnd}STATUS"
         ]
 
     async def _async_publish(
         self, topic: str, payload: str, qos: int, retain: bool, **kwargs: Any
     ) -> None:
         """Record a published message and answer it."""
+        if (topic.removeprefix(self.cmnd), payload) in self.fail_publish:
+            raise HomeAssistantError("Cannot publish to MQTT")
         self.published.append((topic, payload))
-        if topic == f"{self.topic}/cmnd/STATUS" and payload == "2":
+        if topic == f"{self.cmnd}STATUS" and payload == "2":
             self.fire("stat/STATUS2", _status2(self.version, self.hardware))
-        elif topic == f"{self.topic}/cmnd/OtaUrl":
+        elif topic == f"{self.cmnd}OtaUrl":
             if payload in self.ignore_ota_url:
                 return
             if payload == "1":
@@ -472,7 +484,7 @@ class FakeTasmota:
             elif payload:
                 self.ota_url = payload
             self.respond("OtaUrl", self.ota_url)
-        elif topic == f"{self.topic}/cmnd/Upgrade" and payload == "1":
+        elif topic == f"{self.cmnd}Upgrade" and payload == "1":
             url = self.upgrade_url or self.ota_url
             self.respond("Upgrade", f"Version {self.version.split('(')[0]} from {url}")
             if self.on_upgrade:
@@ -484,10 +496,14 @@ class FakeTasmota:
         self.fire(subtopic, json.dumps({command: value}))
 
     def fire(self, subtopic: str, payload: str, retain: bool = False) -> None:
-        """Publish a message from the device."""
-        async_fire_mqtt_message(
-            self.hass, f"{self.topic}/{subtopic}", payload, retain=retain
+        """Publish a message from the device, e.g. on "stat/RESULT"."""
+        prefix, name = subtopic.split("/")
+        base = (
+            get_topic_stat(self.config)
+            if prefix == "stat"
+            else get_topic_tele(self.config)
         )
+        async_fire_mqtt_message(self.hass, f"{base}{name}", payload, retain=retain)
 
     def info1(self, retain: bool = False) -> None:
         """Publish INFO1, which Tasmota sends once after it has booted."""
@@ -521,7 +537,7 @@ async def _setup_device(
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["sw"] = INSTALLED_VERSION
     config.update(config_update or {})
-    fake = FakeTasmota(hass, mqtt_mock, topic=config["t"], **fake_kwargs)
+    fake = FakeTasmota(hass, mqtt_mock, config, **fake_kwargs)
     _discover(hass, config)
     await hass.async_block_till_done()
     entity_id = entity_registry.async_get_entity_id(
@@ -622,7 +638,8 @@ async def test_install_supported(
         install_supported
     )
     assert UpdateEntityFeature.RELEASE_NOTES in _features(hass, entity_id)
-    assert UpdateEntityFeature.PROGRESS not in _features(hass, entity_id)
+    # The entity reports in_progress itself
+    assert UpdateEntityFeature.PROGRESS in _features(hass, entity_id)
     assert fake.commands == []
 
 
@@ -1292,7 +1309,6 @@ async def test_install_follows_topic_change(
     await hass.async_block_till_done()
 
     config["t"] = "kitchen_plug"
-    fake.topic = "kitchen_plug"
     _discover(hass, config)
     await hass.async_block_till_done()
     await _online(hass, fake)
@@ -1314,7 +1330,7 @@ async def test_removed_while_resubscribing(
     mock_github_latest_release: str,
 ) -> None:
     """Test no subscription is left when the entity is removed while resubscribing."""
-    _, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
+    _, _, config = await _setup_device(hass, mqtt_mock, entity_registry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     subscribe = TasmotaUpdate.subscribe_topics
     unsubscribe = TasmotaUpdate.unsubscribe_topics
@@ -1343,7 +1359,6 @@ async def test_removed_while_resubscribing(
         ),
     ):
         config["t"] = "kitchen_plug"
-        fake.topic = "kitchen_plug"
         _discover(hass, config)
         await hass.async_block_till_done()
 
@@ -1395,13 +1410,22 @@ async def test_install_already_running(
     await _settle(hass)
     assert fake.commands[-1] == ("Upgrade", "1")
 
+    # The update service sees in_progress and refuses
     with pytest.raises(HomeAssistantError) as exc_info:
         await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "update_in_progress"
+    # A direct call is refused as well
+    update_entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await update_entity.async_install(None, False)
     assert exc_info.value.translation_key == "install_in_progress"
     assert fake.commands.count(("Upgrade", "1")) == 1
+    # The running install is still shown
+    assert _in_progress(hass, entity_id) is True
 
     fake.restart(f"{RELEASE_VERSION}(release-tasmota)")
     await task
+    assert _in_progress(hass, entity_id) is False
 
 
 @pytest.mark.parametrize(
@@ -1496,7 +1520,7 @@ async def test_install_topic_shared_during_download_check(
         method: str, url: Any, data: Any
     ) -> AiohttpClientMockResponse:
         _discover(hass, other)
-        await hass.async_block_till_done()
+        await _settle(hass)
         return AiohttpClientMockResponse(method, url, status=200)
 
     aioclient_mock.head(ESP8266_OTA_URL, side_effect=other_device_during_head)
@@ -1506,3 +1530,158 @@ async def test_install_topic_shared_during_download_check(
     assert exc_info.value.translation_key == "topic_duplicated"
     # Neither Upgrade nor the OtaUrl restore go to the shared topic
     assert fake.commands == [("OtaUrl", ""), ("OtaUrl", "1")]
+
+
+@pytest.mark.parametrize(
+    ("restart_version", "log"),
+    [
+        (f"{RELEASE_VERSION}(release-tasmota)", None),
+        (
+            f"{INSTALLED_VERSION}(release-tasmota)",
+            "firmware install failed: The device restarted, but still runs",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_continues_when_caller_cancelled(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    mock_github_latest_release: str,
+    restart_version: str,
+    log: str | None,
+) -> None:
+    """Test the install is followed when the calling action is cancelled."""
+    aioclient_mock.head(ESP8266_OTA_URL, status=200)
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+
+    task = _start_install(hass, entity_id)
+    await _settle(hass)
+    assert fake.commands[-1] == ("Upgrade", "1")
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    await _settle(hass)
+    # The device is flashing, the install is still followed
+    assert _in_progress(hass, entity_id) is True
+
+    with caplog.at_level(logging.WARNING):
+        fake.restart(restart_version)
+        await _settle(hass)
+        await hass.async_block_till_done()
+    assert _in_progress(hass, entity_id) is False
+    if log:
+        assert log in caplog.text
+    else:
+        assert "firmware install failed" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_topic_overlap(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    mock_github_latest_release: str,
+) -> None:
+    """Test no commands are sent when another device subscribes to them too."""
+    layout = {"ft": "%prefix%/%topic%/"}
+    entity_id, fake, config = await _setup_device(
+        hass,
+        mqtt_mock,
+        entity_registry,
+        config_update={**layout, "t": "plug/kitchen"},
+    )
+    other = copy.deepcopy(config)
+    other.update({"mac": "00000049A3BD", "t": "plug"})
+    _discover(hass, other)
+    await hass.async_block_till_done()
+    await _online(hass, fake)
+    assert UpdateEntityFeature.INSTALL in _features(hass, entity_id)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "topic_overlap"
+    assert exc_info.value.translation_placeholders == {
+        "topic": "cmnd/plug/kitchen/",
+        "other": "cmnd/plug/",
+    }
+    assert not [p for p in fake.published if "OtaUrl" in p[0] or "Upgrade" in p[0]]
+
+
+@pytest.mark.parametrize(
+    ("event", "translation_key"),
+    [
+        (
+            ("stat/STATUS2", _status2("15.2.0(tasmota)", "ESP8266EX")),
+            "install_not_supported",
+        ),
+        (
+            ("stat/STATUS2", _status2("15.3.0(release-tasmota)", "ESP8266EX")),
+            "firmware_changed",
+        ),
+        (("tele/LWT", "Offline"), "device_offline"),
+    ],
+)
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_device_changed_during_download_check(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_github_latest_release: str,
+    event: tuple[str, str],
+    translation_key: str,
+) -> None:
+    """Test no upgrade when the device changes while its URL is checked."""
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+
+    async def device_changes_during_head(
+        method: str, url: Any, data: Any
+    ) -> AiohttpClientMockResponse:
+        fake.fire(*event)
+        await _settle(hass)
+        return AiohttpClientMockResponse(method, url, status=200)
+
+    aioclient_mock.head(ESP8266_OTA_URL, side_effect=device_changes_during_head)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == translation_key
+    assert ("Upgrade", "1") not in fake.commands
+    assert fake.commands[-1] == ("OtaUrl", CUSTOM_OTA_URL)
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_restore_publish_fails(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    mock_github_latest_release: str,
+) -> None:
+    """Test the install error is kept when the OtaUrl restore can't be published."""
+    aioclient_mock.head(ESP8266_OTA_URL, status=404)
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+    fake.fail_publish = {("OtaUrl", CUSTOM_OTA_URL)}
+
+    with (
+        caplog.at_level(logging.WARNING),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "firmware_not_available"
+    assert f"could not restore OtaUrl {CUSTOM_OTA_URL}" in caplog.text
