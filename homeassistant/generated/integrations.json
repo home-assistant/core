@@ -15717,6 +15717,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "turbofonte": {
+      "name": "TurboFonte",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
