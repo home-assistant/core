@@ -156,10 +156,10 @@ async def test_client_metadata_is_not_used_unless_explicitly_supported(
 
 
 @respx.mock
-async def test_existing_credential_is_preferred(
+async def test_credentials_choice_offers_client_metadata(
     hass: HomeAssistant, mock_mcp_client: Mock, credential: None
 ) -> None:
-    """A stored application credential is used before the metadata client."""
+    """A credential stored for another server does not hide the metadata client."""
     result = await _start(
         hass,
         mock_mcp_client,
@@ -167,6 +167,31 @@ async def test_existing_credential_is_preferred(
     )
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "credentials_choice"
+    assert result["menu_options"] == [
+        "client_metadata",
+        "pick_implementation",
+        "new_credentials",
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "client_metadata"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    query = URL(result["url"]).query
+    assert query["client_id"] == CIMD_CLIENT_ID
+    assert query["redirect_uri"] == MY_AUTH_CALLBACK_PATH
+    assert query["resource"] == MCP_SERVER_URL
+
+
+@respx.mock
+async def test_credentials_choice_without_client_metadata(
+    hass: HomeAssistant, mock_mcp_client: Mock, credential: None
+) -> None:
+    """The metadata client is only offered when the server supports it."""
+    result = await _start(hass, mock_mcp_client, _metadata())
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "credentials_choice"
+    assert result["menu_options"] == ["pick_implementation", "new_credentials"]
 
 
 async def test_client_metadata_entry_reuses_the_published_client(

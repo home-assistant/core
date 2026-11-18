@@ -19,12 +19,14 @@
     "flow_title": "{name}",
     "step": {
       "credentials_choice": {
-        "description": "You can either use existing credentials from another integration or set up new credentials.",
+        "description": "You can use existing credentials from another integration or set up new credentials. If the MCP server supports it, you can also sign in without credentials.",
         "menu_option_descriptions": {
+          "client_metadata": "Home Assistant identifies itself to the MCP server, so no OAuth Client ID or secret is needed.",
           "new_credentials": "You will be guided through setting up a new OAuth Client ID and secret.",
           "pick_implementation": "You may use previously entered OAuth credentials."
         },
         "menu_options": {
+          "client_metadata": "Sign in without credentials",
           "new_credentials": "Set up new credentials",
           "pick_implementation": "Use existing credentials"
         },

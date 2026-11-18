@@ -348,17 +348,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     ),
                 }
             )
-            if oauth_config.client_id_metadata_document_supported:
-                with authorization_server_context(self.authorization_server()):
-                    implementations = await async_get_implementations(self.hass, DOMAIN)
-                if not implementations:
-                    self.flow_impl = McpClientMetadataImplementation(
-                        self.hass,
-                        oauth_config.authorization_server.authorize_url,
-                        oauth_config.authorization_server.token_url,
-                        self.data[CONF_URL],
-                    )
-                    return await self.async_step_auth()
             return await self.async_step_credentials_choice()
 
     def authorization_server(self) -> AuthorizationServer:
@@ -391,12 +380,35 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         should be used given they may be for another existing server.
         """
         with authorization_server_context(self.authorization_server()):
-            if not await async_get_implementations(self.hass, self.DOMAIN):
-                return await self.async_step_new_credentials()
-            return self.async_show_menu(
-                step_id="credentials_choice",
-                menu_options=["pick_implementation", "new_credentials"],
-            )
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        client_metadata_supported = (
+            self.oauth_config is not None
+            and self.oauth_config.client_id_metadata_document_supported
+        )
+        if not implementations:
+            if client_metadata_supported:
+                return await self.async_step_client_metadata()
+            return await self.async_step_new_credentials()
+        menu_options = ["pick_implementation", "new_credentials"]
+        if client_metadata_supported:
+            # Credentials stored for another server must not hide this option
+            menu_options.insert(0, "client_metadata")
+        return self.async_show_menu(
+            step_id="credentials_choice",
+            menu_options=menu_options,
+        )
+
+    async def async_step_client_metadata(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Sign in with the Home Assistant client ID metadata document."""
+        self.flow_impl = McpClientMetadataImplementation(
+            self.hass,
+            self.data[CONF_AUTHORIZATION_URL],
+            self.data[CONF_TOKEN_URL],
+            self.data[CONF_URL],
+        )
+        return await self.async_step_auth()
 
     async def async_step_new_credentials(
         self, user_input: dict[str, Any] | None = None
