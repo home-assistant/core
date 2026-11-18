@@ -87,42 +87,72 @@ async def test_playing_media(
 
 
 @pytest.mark.parametrize(
-    ("now_playing_fixture", "expected_position", "expected_updated_after"),
+    (
+        "initial_fixture",
+        "next_fixture",
+        "expected_position",
+        "expected_updated_after",
+    ),
     [
         pytest.param(
-            "device1_now_playing_upnp.xml", 7, timedelta(0), id="position_unchanged"
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp_advanced.xml",
+            7,
+            timedelta(0),
+            id="playing_as_expected",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp.xml",
+            7,
+            SCAN_INTERVAL,
+            id="playing_same_position_after_jump",
         ),
         pytest.param(
             "device1_now_playing_upnp_paused.xml",
+            "device1_now_playing_upnp_paused.xml",
             7,
-            SCAN_INTERVAL,
-            id="play_status_changed",
+            timedelta(0),
+            id="paused_unchanged",
         ),
         pytest.param(
-            "device1_now_playing_upnp_advanced.xml",
-            17,
+            "device1_now_playing_upnp.xml",
+            "device1_now_playing_upnp_paused.xml",
+            7,
             SCAN_INTERVAL,
-            id="position_advanced",
+            id="paused",
+        ),
+        pytest.param(
+            "device1_now_playing_upnp_paused.xml",
+            "device1_now_playing_upnp.xml",
+            7,
+            SCAN_INTERVAL,
+            id="resumed",
         ),
     ],
 )
-@pytest.mark.usefixtures("device1_requests_mock_upnp")
+@pytest.mark.usefixtures("device1_requests_mock")
 async def test_media_position_updated_at(
     hass: HomeAssistant,
     device1_config: MockConfigEntry,
     requests_mock: Mocker,
     freezer: FrozenDateTimeFactory,
-    now_playing_fixture: str,
+    initial_fixture: str,
+    next_fixture: str,
     expected_position: int,
     expected_updated_after: timedelta,
 ) -> None:
-    """Test the position timestamp only moves when the position or play status changes."""
+    """Test the position only refreshes when it differs from the expected position."""
+    requests_mock.get(
+        f"{DEVICE_1_URL}/now_playing",
+        text=await async_load_fixture(hass, initial_fixture, DOMAIN),
+    )
     setup_time = dt_util.utcnow()
     await setup_soundtouch(hass, device1_config)
 
     requests_mock.get(
         f"{DEVICE_1_URL}/now_playing",
-        text=await async_load_fixture(hass, now_playing_fixture, DOMAIN),
+        text=await async_load_fixture(hass, next_fixture, DOMAIN),
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
