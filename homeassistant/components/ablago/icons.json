@@ -1,13 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "has_new_mail": {
-        "default": "mdi:email-outline",
-        "state": {
-          "on": "mdi:email-alert"
-        }
-      }
-    },
     "sensor": {
       "last_change": {
         "default": "mdi:clock-outline"

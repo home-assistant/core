@@ -6,18 +6,16 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import AblagoCounterCoordinator, AblagoHealthCoordinator
+from .coordinator import AblagoCounterCoordinator
 
 
-class AblagoEntity[CoordinatorT: AblagoCounterCoordinator | AblagoHealthCoordinator](
-    CoordinatorEntity[CoordinatorT]
-):
+class AblagoEntity(CoordinatorEntity[AblagoCounterCoordinator]):
     """One device per config entry, that is per person and Ablago."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: CoordinatorT, description: EntityDescription
+        self, coordinator: AblagoCounterCoordinator, description: EntityDescription
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

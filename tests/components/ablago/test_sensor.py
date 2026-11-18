@@ -1,7 +1,7 @@
 """Tests for the Ablago sensor platform."""
 
 from dataclasses import replace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from ablago import AblagoAuthError, AblagoConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -13,9 +13,9 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 
-from homeassistant.components.ablago.const import UPDATE_INTERVAL_COUNTERS
+from homeassistant.components.ablago.const import UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,8 +32,7 @@ async def test_sensor_platform(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sensors."""
-    with patch("homeassistant.components.ablago.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -48,7 +47,7 @@ async def test_update(
     assert hass.states.get(NEW_MAIL).state == "3"
     counters = mock_ablago_client.zaehler.return_value
     mock_ablago_client.zaehler.return_value = replace(counters, neue_post=0, stand=43)
-    freezer.tick(UPDATE_INTERVAL_COUNTERS)
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == "0"
@@ -62,13 +61,13 @@ async def test_unreachable(
 ) -> None:
     """Test the counters become unavailable while Ablago is unreachable."""
     mock_ablago_client.zaehler.side_effect = AblagoConnectionError("gone")
-    freezer.tick(UPDATE_INTERVAL_COUNTERS)
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == STATE_UNAVAILABLE
 
     mock_ablago_client.zaehler.side_effect = None
-    freezer.tick(UPDATE_INTERVAL_COUNTERS)
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == "3"
@@ -82,7 +81,7 @@ async def test_key_revoked(
 ) -> None:
     """Test a key revoked while running starts the reauth flow."""
     mock_ablago_client.zaehler.side_effect = AblagoAuthError("401", status=401)
-    freezer.tick(UPDATE_INTERVAL_COUNTERS)
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(NEW_MAIL).state == STATE_UNAVAILABLE

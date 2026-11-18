@@ -53,11 +53,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "has_new_mail": {
-        "name": "New mail waiting"
-      }
-    },
     "sensor": {
       "last_change": {
         "name": "Last change"

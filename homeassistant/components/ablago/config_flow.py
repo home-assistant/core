@@ -114,7 +114,12 @@ class AblagoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]}
-            errors = await self._validate_input(data)
+            self._async_abort_entries_match(
+                {CONF_URL: data[CONF_URL], CONF_API_KEY: data[CONF_API_KEY]}
+            )
+            # The form only has the key, so address problems are shown for the form.
+            if found := await self._validate_input(data):
+                errors = {"base": next(iter(found.values()))}
             if not errors:
                 return self.async_update_reload_and_abort(entry, data=data)
 

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ablago import Gesundheit, Zaehlerstand
+from ablago import Zaehlerstand
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
@@ -22,22 +22,13 @@ def counters_data() -> dict[str, Any]:
 
 
 @pytest.fixture
-def health_data() -> dict[str, Any]:
-    """Return the health state as Ablago sends it."""
-    return load_json_object_fixture("gesundheit.json", DOMAIN)
-
-
-@pytest.fixture
-def mock_ablago_client(
-    counters_data: dict[str, Any], health_data: dict[str, Any]
-) -> Generator[MagicMock]:
+def mock_ablago_client(counters_data: dict[str, Any]) -> Generator[MagicMock]:
     """Mock the Ablago client wherever the integration creates one."""
     with patch(
         "homeassistant.components.ablago.coordinator.AblagoClient", autospec=True
     ) as client_class:
         client = client_class.return_value
         client.zaehler = AsyncMock(return_value=Zaehlerstand.from_api(counters_data))
-        client.gesundheit = AsyncMock(return_value=Gesundheit.from_api(health_data))
         yield client
 
 

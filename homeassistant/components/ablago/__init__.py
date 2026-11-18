@@ -3,28 +3,18 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import (
-    AblagoConfigEntry,
-    AblagoCounterCoordinator,
-    AblagoData,
-    AblagoHealthCoordinator,
-    create_client,
-)
+from .coordinator import AblagoConfigEntry, AblagoCounterCoordinator, create_client
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AblagoConfigEntry) -> None:
     """Set up Ablago from a config entry."""
-    client = create_client(hass, dict(entry.data))
-
-    counters = AblagoCounterCoordinator(hass, entry, client)
-    health = AblagoHealthCoordinator(hass, entry, client)
-
-    await counters.async_config_entry_first_refresh()
-    await health.async_config_entry_first_refresh()
-
-    entry.runtime_data = AblagoData(counters=counters, health=health)
+    coordinator = AblagoCounterCoordinator(
+        hass, entry, create_client(hass, dict(entry.data))
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

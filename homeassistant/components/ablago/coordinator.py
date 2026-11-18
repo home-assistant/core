@@ -1,6 +1,5 @@
-"""Data update coordinators for the Ablago integration."""
+"""Data update coordinator for the Ablago integration."""
 
-from dataclasses import dataclass
 from typing import override
 
 from ablago import (
@@ -9,7 +8,6 @@ from ablago import (
     AblagoConnectionError,
     AblagoError,
     AblagoSSLError,
-    Gesundheit,
     Zaehlerstand,
 )
 
@@ -20,17 +18,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL_COUNTERS, UPDATE_INTERVAL_HEALTH
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
-type AblagoConfigEntry = ConfigEntry[AblagoData]
-
-
-@dataclass
-class AblagoData:
-    """Runtime data of one config entry (one person in one Ablago)."""
-
-    counters: AblagoCounterCoordinator
-    health: AblagoHealthCoordinator
+type AblagoConfigEntry = ConfigEntry[AblagoCounterCoordinator]
 
 
 def create_client(hass: HomeAssistant, data: dict[str, object]) -> AblagoClient:
@@ -58,7 +48,7 @@ class AblagoCounterCoordinator(DataUpdateCoordinator[Zaehlerstand]):
             LOGGER,
             config_entry=entry,
             name="Ablago counters",
-            update_interval=UPDATE_INTERVAL_COUNTERS,
+            update_interval=UPDATE_INTERVAL,
         )
         # Keeps the ETag, so unchanged counters cost a 304 without a body.
         self.client = client
@@ -84,35 +74,3 @@ class AblagoCounterCoordinator(DataUpdateCoordinator[Zaehlerstand]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="unexpected_response"
             ) from err
-
-
-class AblagoHealthCoordinator(DataUpdateCoordinator[Gesundheit | None]):
-    """Check whether Ablago is running.
-
-    Never fails: an unreachable Ablago is the information here, so it becomes ``None`` (shown as disconnected)
-    instead of an unavailable entity.
-    """
-
-    config_entry: AblagoConfigEntry
-
-    def __init__(
-        self, hass: HomeAssistant, entry: AblagoConfigEntry, client: AblagoClient
-    ) -> None:
-        """Initialize the health coordinator."""
-        super().__init__(
-            hass,
-            LOGGER,
-            config_entry=entry,
-            name="Ablago health",
-            update_interval=UPDATE_INTERVAL_HEALTH,
-        )
-        self.client = client
-
-    @override
-    async def _async_update_data(self) -> Gesundheit | None:
-        """Fetch the health state."""
-        try:
-            return await self.client.gesundheit()
-        except AblagoError as err:
-            LOGGER.debug("Ablago is not reachable: %s", err)
-            return None

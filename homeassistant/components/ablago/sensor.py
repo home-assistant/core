@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AblagoConfigEntry, AblagoCounterCoordinator
+from .coordinator import AblagoConfigEntry
 from .entity import AblagoEntity
 
 PARALLEL_UPDATES = 0
@@ -63,13 +63,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    coordinator = entry.runtime_data.counters
+    coordinator = entry.runtime_data
     async_add_entities(
         AblagoSensor(coordinator, description) for description in SENSORS
     )
 
 
-class AblagoSensor(AblagoEntity[AblagoCounterCoordinator], SensorEntity):
+class AblagoSensor(AblagoEntity, SensorEntity):
     """A counter of one person."""
 
     entity_description: AblagoSensorEntityDescription

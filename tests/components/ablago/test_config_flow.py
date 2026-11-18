@@ -34,6 +34,26 @@ ERRORS = [
 ]
 
 
+# The reauth form only asks for the key, so every error is shown for the form.
+REAUTH_ERRORS = [
+    pytest.param(
+        AblagoAuthError("401", status=401), {"base": "invalid_auth"}, id="auth"
+    ),
+    pytest.param(AblagoSSLError("certificate"), {"base": "ssl_error"}, id="ssl"),
+    pytest.param(
+        AblagoConnectionError("gone"), {"base": "cannot_connect"}, id="connection"
+    ),
+    pytest.param(
+        AblagoError("redirect", status=301), {"base": "redirect"}, id="redirect"
+    ),
+    pytest.param(
+        AblagoError("HTTP 404", status=404), {"base": "not_ablago"}, id="not_found"
+    ),
+    pytest.param(AblagoError("broken"), {"base": "not_ablago"}, id="no_status"),
+    pytest.param(RuntimeError("boom"), {"base": "unknown"}, id="unknown"),
+]
+
+
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Do not set up the entry after the flow."""
@@ -147,7 +167,7 @@ async def test_reauth_flow(
     assert mock_config_entry.data == {**USER_INPUT, CONF_API_KEY: "dms_new"}
 
 
-@pytest.mark.parametrize(("side_effect", "errors"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "errors"), REAUTH_ERRORS)
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_ablago_client: MagicMock,
@@ -172,6 +192,25 @@ async def test_reauth_flow_errors(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("mock_ablago_client")
+async def test_reauth_to_existing_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a reauth cannot turn an entry into a copy of another one."""
+    mock_config_entry.add_to_hass(hass)
+    other = MockConfigEntry(
+        domain=DOMAIN, data={**USER_INPUT, CONF_API_KEY: "dms_counters_jonas"}
+    )
+    other.add_to_hass(hass)
+    result = await other.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert other.data[CONF_API_KEY] == "dms_counters_jonas"
 
 
 @pytest.mark.usefixtures("mock_ablago_client")
