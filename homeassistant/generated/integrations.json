@@ -14219,6 +14219,18 @@
             "cloud"
           ],
           "name": "PlayStation Network"
+        },
+        "sony_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "Sony Infrared"
         }
       }
     },
