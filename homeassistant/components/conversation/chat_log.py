@@ -16,6 +16,7 @@ from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
+from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
@@ -776,15 +777,16 @@ class ChatLog:
             user_extra_system_prompt=user_input.extra_system_prompt,
         )
 
-    @callback
-    def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
+    async def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
         """Expose the tools as code when the code mode preview feature is on."""
         if not async_is_preview_feature_enabled(self.hass, "code_mode", "code_mode"):
             return llm_api
-        # Import here so that the sandbox library loads only when it is used.
-        from homeassistant.components.code_mode import async_create_api_instance  # noqa: PLC0415
-
-        return async_create_api_instance(llm_api)
+        # The sandbox library loads only when it is used.
+        code_mode = await async_import_module(
+            self.hass, "homeassistant.components.code_mode"
+        )
+        code_mode_api: llm.APIInstance = code_mode.async_create_api_instance(llm_api)
+        return code_mode_api
 
     async def async_provide_llm_data(
         self,
@@ -859,7 +861,7 @@ class ChatLog:
                 ) from err
 
         if llm_api is not None:
-            llm_api = self._async_apply_code_mode(llm_api)
+            llm_api = await self._async_apply_code_mode(llm_api)
 
         user_name: str | None = None
 
