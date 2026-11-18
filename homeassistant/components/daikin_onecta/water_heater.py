@@ -7,6 +7,8 @@ from daikin_onecta.client import DomesticHotWaterClient
 from daikin_onecta.models import ManagementPoint, Setpoint
 
 from homeassistant.components.water_heater import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     STATE_HEAT_PUMP,
     STATE_OFF,
     STATE_PERFORMANCE,
@@ -17,10 +19,15 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
+from .entity import (
+    DaikinManagementPointEntity,
+    add_entities_on_coordinator_update,
+    management_point_unique_id,
+)
 from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
@@ -66,7 +73,7 @@ def _create_water_tanks(
                     management_point_type
                 )
                 if management_point.domestic_hot_water is not None
-                and f"{device.id}_{management_point.embedded_id}"
+                and management_point_unique_id(device.id, management_point.embedded_id)
                 not in added_unique_ids
             )
     return entities
@@ -85,7 +92,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     ) -> None:
         """Initialize the Water device."""
         super().__init__(device, coordinator, embedded_id)
-        self._attr_unique_id = f"{self._device.id}_{self._embedded_id}"
+        self._attr_unique_id = management_point_unique_id(
+            self._device.id, self._embedded_id
+        )
         self.update_state()
 
     def update_state(self) -> None:
@@ -211,19 +220,25 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     def get_min_temp(self) -> float:
         """Return the supported minimum value target temperature."""
-        ret = super().min_temp
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.min_value is not None:
-            ret = float(dht.min_value)
-        return ret
+            return float(dht.min_value)
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self.native_temperature_unit,
+        )
 
     def get_max_temp(self) -> float:
         """Return the supported maximum value of target temperature."""
-        ret = super().max_temp
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.max_value is not None:
-            ret = float(dht.max_value)
-        return ret
+            return float(dht.max_value)
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self.native_temperature_unit,
+        )
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""

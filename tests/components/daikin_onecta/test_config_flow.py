@@ -246,6 +246,7 @@ async def test_reauth_oauth_create_entry(
             "expires_in": 60,
         },
     )
+    aioclient_mock.get(GATEWAY_DEVICES_URL, json=[])
 
     with patch.object(hass.config_entries, "async_reload") as reload_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -255,6 +256,64 @@ async def test_reauth_oauth_create_entry(
     assert config_entry.data["token"]["access_token"] == FAKE_ACCESS_TOKEN
     assert config_entry.data["token"]["refresh_token"] == "new-refresh-token"
     reload_entry.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("api_error", "reason"),
+    [
+        pytest.param(
+            OnectaAuthenticationError(401, method="GET", path="/v1/gateway-devices"),
+            "invalid_auth",
+            id="authentication",
+        ),
+        pytest.param(
+            OnectaConnectionError(
+                "network unavailable", method="GET", path="/v1/gateway-devices"
+            ),
+            "cannot_connect",
+            id="connection",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_requires_gateway_api_access(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials,
+    api_error: OnectaAuthenticationError | OnectaConnectionError,
+    reason: str,
+) -> None:
+    """Keep the existing entry unchanged when the renewed token cannot access the API."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET)
+    )
+    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    config_entry.add_to_hass(hass)
+    original_data = config_entry.data.copy()
+    result = await async_reauth_external_step(hass, config_entry, hass_client_no_auth)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": FAKE_ACCESS_TOKEN,
+            "refresh_token": "new-refresh-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.daikin_onecta.config_flow.OnectaClient.get_gateway_devices",
+        side_effect=api_error,
+    ) as get_gateway_devices:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "abort"
+    assert result["reason"] == reason
+    assert config_entry.data == original_data
+    get_gateway_devices.assert_awaited_once_with()
 
 
 @pytest.mark.usefixtures("current_request_with_host")

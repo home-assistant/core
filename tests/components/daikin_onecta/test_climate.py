@@ -103,6 +103,7 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
         ),
     )
     device = MagicMock()
+    device.id = "gateway"
     device.device.management_points_by_type.return_value = [management_point]
     coordinator = MagicMock()
 
@@ -1867,6 +1868,14 @@ async def test_climate_platform_services_and_management_points(
     setpoint = climate_controls["living_room"].setpoint("roomTemperature")
     assert setpoint is not None
     setpoint.settable = False
+    current_state = hass.states.get(living_room_entity_id)
+    assert current_state is not None
+    await call_service(
+        SERVICE_SET_TEMPERATURE,
+        temperature=current_state.attributes[
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        ],
+    )
     with pytest.raises(ServiceValidationError) as err:
         await call_service(SERVICE_SET_TEMPERATURE, temperature=22)
     assert err.value.translation_key == "climate_temperature_unavailable"

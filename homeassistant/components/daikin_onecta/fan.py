@@ -17,15 +17,14 @@ from homeassistant.util.percentage import (
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
+from .entity import (
+    DaikinManagementPointEntity,
+    add_entities_on_coordinator_update,
+    management_point_unique_id,
+)
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
-
-
-def _preset_mode_state(mode: str) -> str:
-    """Return a translated Home Assistant state key for a Daikin mode."""
-    return enum_value_to_state(mode)
 
 
 async def async_setup_entry(
@@ -60,7 +59,9 @@ def _create_air_purifiers(
                 and (power := management_point.air_purification.power) is not None
                 and power.settable
             )
-            and f"{device.id}_{management_point.embedded_id}_air_purifier"
+            and management_point_unique_id(
+                device.id, management_point.embedded_id, "air_purifier"
+            )
             not in added_unique_ids
         )
     return entities
@@ -80,7 +81,9 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     ) -> None:
         """Initialize the air purifier."""
         super().__init__(device, coordinator, embedded_id)
-        self._attr_unique_id = f"{device.id}_{embedded_id}_air_purifier"
+        self._attr_unique_id = management_point_unique_id(
+            device.id, embedded_id, "air_purifier"
+        )
         self._update_state()
 
     def _air_purification(self) -> AirPurification | None:
@@ -173,20 +176,20 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         if purification is None:
             return
         power = purification.power
-        self._attr_is_on = (
+        is_on = (
             power.value == "on"
             if power is not None and power.value is not None
             else None
         )
         mode = purification.mode
         self._attr_preset_mode = (
-            _preset_mode_state(mode.value)
+            enum_value_to_state(mode.value)
             if mode is not None and mode.value not in (None, "manualFan")
             else None
         )
         self._attr_preset_modes = (
             [
-                _preset_mode_state(preset)
+                enum_value_to_state(preset)
                 for preset in purification.modes
                 if preset != "manualFan"
             ]
@@ -203,20 +206,22 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         ):
             features |= FanEntityFeature.SET_SPEED
         self._attr_speed_count = self._fixed_speed_count("manualFan") or 100
-        self._attr_percentage = 0 if self._attr_is_on is False else None
+        self._attr_percentage = 0 if is_on is False else None
         if (
-            self._attr_is_on
+            is_on
             and mode is not None
             and mode.value == "manualFan"
             and (speeds := self._fixed_speeds())
         ):
             operation = purification.fan_operation()
-            assert (
-                operation is not None
+            fixed = (
+                operation.fan_speed.modes.get(FANMODE_FIXED)
+                if operation is not None
                 and operation.fan_speed is not None
                 and operation.fan_speed.modes is not None
+                else None
             )
-            fixed_speed = operation.fan_speed.modes[FANMODE_FIXED].value
+            fixed_speed = fixed.value if fixed is not None else None
             if fixed_speed is not None:
                 try:
                     speed = int(fixed_speed)
@@ -285,7 +290,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
                 (
                     mode
                     for mode in purification.modes
-                    if mode != "manualFan" and _preset_mode_state(mode) == preset_mode
+                    if mode != "manualFan" and enum_value_to_state(mode) == preset_mode
                 ),
                 None,
             )

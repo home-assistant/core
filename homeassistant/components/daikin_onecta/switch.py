@@ -10,7 +10,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform, scalar_platform
-from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
+from .entity import (
+    DaikinManagementPointEntity,
+    add_entities_on_coordinator_update,
+    management_point_unique_id,
+)
 from .entity_descriptions import SWITCH_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -46,7 +50,9 @@ def _create_switches(
             for value, _characteristic in scalar_characteristics_for_platform(
                 management_point, Platform.SWITCH
             ):
-                unique_id = f"{device.id}_{management_point.embedded_id}_{value}"
+                unique_id = management_point_unique_id(
+                    device.id, management_point.embedded_id, value
+                )
                 if unique_id in added_unique_ids:
                     continue
                 sensors.append(
@@ -77,7 +83,9 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self.entity_description = description
-        self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
+        self._attr_unique_id = management_point_unique_id(
+            self._device.id, self._embedded_id, self._value
+        )
         self.update_state()
 
     def update_state(self) -> None:

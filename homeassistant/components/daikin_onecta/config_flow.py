@@ -64,16 +64,25 @@ class FlowHandler(
             return self.async_abort(reason="invalid_token")
 
         await self.async_set_unique_id(unique_id)
+        access_token = cast("str", data["token"]["access_token"])
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="wrong_account")
+            if reason := await self._async_test_api_access(access_token):
+                return self.async_abort(reason=reason)
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
 
         self._abort_if_unique_id_configured()
 
-        access_token = cast("str", data["token"]["access_token"])
+        if reason := await self._async_test_api_access(access_token):
+            return self.async_abort(reason=reason)
+
+        return await super().async_oauth_create_entry(data)
+
+    async def _async_test_api_access(self, access_token: str) -> str | None:
+        """Test the gateway API with the newly authorized token."""
 
         async def async_get_access_token() -> str:
             return access_token
@@ -84,11 +93,10 @@ class FlowHandler(
         try:
             await client.get_gateway_devices()
         except OnectaAuthenticationError:
-            return self.async_abort(reason="invalid_auth")
+            return "invalid_auth"
         except OnectaRequestError:
-            return self.async_abort(reason="cannot_connect")
-
-        return await super().async_oauth_create_entry(data)
+            return "cannot_connect"
+        return None
 
     @property
     @override

@@ -40,8 +40,15 @@ def add_entities_on_coordinator_update(
         entities = list(create_entities(added_unique_ids))
         if entities:
             for entity in entities:
-                assert entity.unique_id is not None
-                added_unique_ids.add(entity.unique_id)
+                unique_id = entity.unique_id
+                if unique_id is None:
+                    continue
+                added_unique_ids.add(unique_id)
+
+                def remove_unique_id(unique_id: str = unique_id) -> None:
+                    added_unique_ids.discard(unique_id)
+
+                entity.async_on_remove(remove_unique_id)
             async_add_entities(entities)
 
     add_new_entities()
@@ -51,6 +58,11 @@ def add_entities_on_coordinator_update(
 def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
     """Return the Home Assistant device info for a gateway."""
     return DeviceInfo(identifiers={(DOMAIN, device.id)})
+
+
+def management_point_unique_id(gateway_id: str, embedded_id: str, *suffix: str) -> str:
+    """Return a stable unique ID for a management-point entity."""
+    return "_".join((gateway_id, embedded_id, *suffix))
 
 
 def management_point_device_info(
@@ -80,9 +92,10 @@ def management_point_device_info(
         )
         name = None
 
-    assert device.ha_device_id is not None
+    if device.ha_device_id is None:
+        return _gateway_device_info(device)
     return ChildDeviceInfo(
-        identifiers={(DOMAIN, f"{device.id}_{embedded_id}")},
+        identifiers={(DOMAIN, management_point_unique_id(device.id, embedded_id))},
         parent_device_id=device.ha_device_id,
         translation_key=translation_key,
         name=name,

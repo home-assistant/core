@@ -7,7 +7,11 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -120,6 +124,8 @@ async def async_remove_config_entry_device(
         if not gateway_id.startswith(child_prefix):
             return False
         embedded_id = gateway_id[len(child_prefix) :]
+        if not er.async_entries_for_device(er.async_get(hass), device_entry.id):
+            return True
         current_device = devices.get(parent_gateway_id)
         if current_device is not None and current_device.present_in_cloud:
             if current_device.management_point(embedded_id) is not None:

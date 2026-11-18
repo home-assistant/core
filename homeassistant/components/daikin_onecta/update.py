@@ -11,7 +11,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
+from .entity import (
+    DaikinManagementPointEntity,
+    add_entities_on_coordinator_update,
+    management_point_unique_id,
+)
 from .entity_descriptions import UPDATE_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -48,7 +52,9 @@ def _create_firmware_entities(
         for device in (coordinator.data or {}).values()
         for management_point in device.device.management_points
         if management_point.firmware is not None
-        and f"{device.id}_{management_point.embedded_id}_firmware"
+        and management_point_unique_id(
+            device.id, management_point.embedded_id, "firmware"
+        )
         not in added_unique_ids
     ]
 
@@ -68,7 +74,9 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._pending_install: tuple[int, str | None, int] | None = None
 
-        self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
+        self._attr_unique_id = management_point_unique_id(
+            device.id, self._embedded_id, "firmware"
+        )
 
         # Populate initial state
         self._update_from_management_point(gateway_mp)
@@ -187,7 +195,8 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             return False
 
         management_point = self._device.management_point(self._embedded_id)
-        assert management_point is not None
+        if management_point is None:
+            return False
         return (
             management_point.firmware is not None
             and management_point.firmware.has_installed_version

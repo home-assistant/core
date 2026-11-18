@@ -8,6 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.water_heater import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_OPERATION_MODE as WATER_HEATER_SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE as WATER_HEATER_SERVICE_SET_TEMPERATURE,
@@ -23,6 +25,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_ENTITY_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -88,20 +91,29 @@ def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
 
 
 def test_water_heater_handles_missing_temperature_values() -> None:
-    """Use HA defaults when Daikin omits temperature bounds and target."""
+    """Restore HA defaults when Daikin stops reporting temperature bounds."""
     device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
     point = device.device.management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.min_value = 45
+    point.domestic_hot_water.temperature.max_value = 60
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    assert entity.min_temp == 45
+    assert entity.max_temp == 60
+
     point.domestic_hot_water.temperature.value = None
     point.domestic_hot_water.temperature.min_value = None
     point.domestic_hot_water.temperature.max_value = None
-
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity.update_state()
 
     assert entity.target_temperature is None
-    assert entity.min_temp == super(DaikinWaterTank, entity).min_temp
-    assert entity.max_temp == super(DaikinWaterTank, entity).max_temp
+    assert entity.min_temp == TemperatureConverter.convert(
+        DEFAULT_MIN_TEMP, UnitOfTemperature.FAHRENHEIT, entity.native_temperature_unit
+    )
+    assert entity.max_temp == TemperatureConverter.convert(
+        DEFAULT_MAX_TEMP, UnitOfTemperature.FAHRENHEIT, entity.native_temperature_unit
+    )
 
 
 @pytest.mark.parametrize(

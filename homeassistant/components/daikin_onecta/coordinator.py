@@ -603,7 +603,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     @staticmethod
     def _is_nonexistent_local_time(value: datetime) -> bool:
         """Return whether an aware datetime falls within a clock-forward gap."""
-        assert value.tzinfo is not None
+        if value.tzinfo is None:
+            raise ValueError("Local time must be timezone-aware")
         return dt_util.as_utc(value).astimezone(value.tzinfo).replace(
             tzinfo=None
         ) != value.replace(tzinfo=None)
@@ -613,9 +614,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         start: datetime, end: datetime, timezone: tzinfo | None
     ) -> datetime:
         """Return the first UTC offset transition between two UTC datetimes."""
-        assert timezone is not None
+        if timezone is None:
+            raise ValueError("Timezone is required to find a clock transition")
         offset = start.astimezone(timezone).utcoffset()
-        assert end.astimezone(timezone).utcoffset() != offset
+        if end.astimezone(timezone).utcoffset() == offset:
+            raise ValueError("Datetimes do not span a clock transition")
 
         while end - start > timedelta(seconds=1):
             midpoint = start + (end - start) / 2

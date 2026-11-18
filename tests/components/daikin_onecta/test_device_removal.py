@@ -17,7 +17,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
@@ -250,6 +250,34 @@ async def test_remove_management_point_device_is_rejected(
 
     assert not await async_remove_config_entry_device(hass, config_entry, device_entry)
     coordinator.async_get_sites.assert_not_awaited()
+
+
+async def test_remove_empty_child_with_live_management_point(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Allow removing an empty child after its entities move to the gateway."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    gateway_id, device = next(iter(config_entry.runtime_data.data.items()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.management_point_type == "climateControl"
+    )
+    gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_id), config_entry.entry_id
+    )
+    assert gateway is not None
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{gateway_id}_{point.embedded_id}")},
+        parent_device_id=gateway.id,
+    )
+    assert not er.async_entries_for_device(entity_registry, child.id)
+
+    assert await async_remove_config_entry_device(hass, config_entry, child)
 
 
 async def test_remove_missing_gateway_rejects_failed_poll(

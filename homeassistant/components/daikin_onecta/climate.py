@@ -34,7 +34,11 @@ from homeassistant.util import dt as dt_util
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
+from .entity import (
+    DaikinManagementPointEntity,
+    add_entities_on_coordinator_update,
+    management_point_unique_id,
+)
 from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
@@ -123,7 +127,9 @@ def _create_climate_entities(
             description = CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type)
             if description is None:
                 continue
-            unique_id = f"{device.id}_{management_point.embedded_id}_{setpoint_type}"
+            unique_id = management_point_unique_id(
+                device.id, management_point.embedded_id, setpoint_type
+            )
             if unique_id in added_unique_ids:
                 continue
             entities.append(
@@ -158,7 +164,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(device, coordinator, embedded_id)
         self._setpoint = setpoint
-        self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
+        self._attr_unique_id = management_point_unique_id(
+            self._device.id, self._embedded_id, self._setpoint
+        )
         self.entity_description = description
         self._update_state()
 
@@ -340,6 +348,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
+            target_temperature = float(kwargs[ClimateServiceArgument.TEMPERATURE])
+            if target_temperature == self._attr_native_target_temperature:
+                return
             operationmode = self._operation_mode()
             if operationmode is None:
                 self._raise_service_validation_error(
@@ -352,7 +363,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
             step = setpoint.step_value
             value = round_temperature_to_step(
-                float(kwargs[ClimateServiceArgument.TEMPERATURE]),
+                target_temperature,
                 step if step is not None and step > 0 else 0.5,
             )
             value = min(

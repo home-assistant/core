@@ -1,5 +1,6 @@
 """Test Daikin Onecta setup."""
 
+from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
@@ -157,6 +158,61 @@ async def test_remove_management_point_device_management_point_gone(
 
     assert response["success"]
     assert device_registry.async_get(child.id) is None
+
+
+async def test_removed_management_point_entities_are_added_again(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Re-add entities after a removed management point returns to the cloud."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    gateway_id, device = next(iter(coordinator.data.items()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    embedded_id = point.embedded_id
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{embedded_id}"), config_entry.entry_id
+    )
+    assert child is not None
+    entity_unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_device(entity_registry, child.id)
+    }
+    assert entity_unique_ids
+
+    original_devices = _load_gateway_devices("altherma")
+    missing_devices = deepcopy(original_devices)
+    missing_devices[0].management_points = [
+        management_point
+        for management_point in missing_devices[0].management_points
+        if management_point.embedded_id != embedded_id
+    ]
+    mock_onecta_client.get_gateway_devices.return_value = missing_devices
+    await _async_poll(hass, config_entry, freezer)
+
+    response = await _async_remove_device(hass, hass_ws_client, child)
+    assert response["success"]
+    assert not er.async_entries_for_device(entity_registry, child.id)
+
+    mock_onecta_client.get_gateway_devices.return_value = original_devices
+    await _async_poll(hass, config_entry, freezer)
+
+    new_unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+    }
+    assert entity_unique_ids <= new_unique_ids
 
 
 async def test_remove_management_point_device_after_failed_poll(

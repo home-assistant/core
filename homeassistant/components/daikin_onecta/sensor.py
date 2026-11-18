@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, override
 
-from daikin_onecta.models import EnergyAggregate, ManagementPoint
+from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,6 +32,7 @@ from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
     add_entities_on_coordinator_update,
+    management_point_unique_id,
 )
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 from .utils import enum_value_to_state
@@ -202,10 +203,13 @@ def add_management_point_sensors(
 
 def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> str:
     """Return the stable unique ID for an energy aggregate."""
-    return (
-        f"{device_id}_{details.embedded_id}_{details.sensor_type}_{details.operation_mode}_"
-        f"{SENSOR_PERIOD_UNIQUE_IDS[ENERGY_AGGREGATE_PERIODS[details.period]]}_"
-        f"{details.datatype}"
+    return management_point_unique_id(
+        device_id,
+        details.embedded_id,
+        details.sensor_type,
+        details.operation_mode,
+        SENSOR_PERIOD_UNIQUE_IDS[ENERGY_AGGREGATE_PERIODS[details.period]],
+        details.datatype,
     )
 
 
@@ -214,8 +218,8 @@ def _value_sensor_unique_id(
 ) -> str:
     """Return a stable unique ID for a scalar or sensory-data value."""
     if sub_type == "sensoryData":
-        return f"{device_id}_{embedded_id}_sensory_data_{value}"
-    return f"{device_id}_{embedded_id}_{value}"
+        return management_point_unique_id(device_id, embedded_id, "sensory_data", value)
+    return management_point_unique_id(device_id, embedded_id, value)
 
 
 def _rate_limit_sensor_unique_id(account_id: str, limit_key: str) -> str:
@@ -365,6 +369,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
+        self._source_available = False
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
@@ -377,19 +382,30 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        self._attr_native_value = self.sensor_value()
         point = self._device.management_point(self._embedded_id)
-        characteristic = None
-        if point is not None:
-            characteristic = (
-                point.sensory_characteristic(self._value)
-                if self._sub_type == "sensoryData"
-                else point.characteristic(self._value)
+        characteristic = self._characteristic(point) if point is not None else None
+        self._attr_native_value = self._sensor_value(characteristic)
+        self._source_available = (
+            point is not None
+            and characteristic is not None
+            and (
+                self._sub_type is not None
+                or scalar_platform(
+                    self._value, characteristic, point.management_point_type
+                )
+                is Platform.SENSOR
             )
+        )
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
             self.entity_description,
         )
+
+    def _characteristic(self, point: ManagementPoint) -> Characteristic | None:
+        """Return the current scalar or sensory characteristic."""
+        if self._sub_type == "sensoryData":
+            return point.sensory_characteristic(self._value)
+        return point.scalar_characteristics().get(self._value)
 
     @callback
     @override
@@ -402,10 +418,12 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         point = self._device.management_point(self._embedded_id)
         if point is None:
             return None
-        if self._sub_type == "sensoryData":
-            characteristic = point.sensory_characteristic(self._value)
-        else:
-            characteristic = point.characteristic(self._value)
+        return self._sensor_value(self._characteristic(point))
+
+    def _sensor_value(
+        self, characteristic: Characteristic | None
+    ) -> str | int | float | None:
+        """Convert a characteristic value for Home Assistant."""
         result: object = characteristic.value if characteristic is not None else None
         if (
             isinstance(result, str)
@@ -428,21 +446,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the source characteristic is still available."""
-        if not super().available:
-            return False
-        point = self._device.management_point(self._embedded_id)
-        if point is None:
-            return False
-        characteristic = (
-            point.sensory_characteristic(self._value)
-            if self._sub_type == "sensoryData"
-            else point.characteristic(self._value)
-        )
-        return characteristic is not None and (
-            self._sub_type is not None
-            or scalar_platform(self._value, characteristic, point.management_point_type)
-            is Platform.SENSOR
-        )
+        return super().available and self._source_available
 
 
 class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
