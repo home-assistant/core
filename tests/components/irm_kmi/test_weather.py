@@ -1,7 +1,8 @@
-"""Test for the weather entity of the IRM KMI integration."""
+"""Tests for the IRM KMI weather platform."""
 
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from irm_kmi_api import ExtendedForecast
 import pytest
@@ -10,13 +11,20 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
-from homeassistant.const import TargetKey
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Load only the weather platform."""
+    with patch("homeassistant.components.irm_kmi.PLATFORMS", [Platform.WEATHER]):
+        yield
 
 
 async def _get_forecast(
@@ -55,7 +63,7 @@ async def test_weather_nl(
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
 @pytest.mark.parametrize(
     "forecast_type",
-    ["daily", "hourly"],
+    ["daily", "twice_daily", "hourly"],
 )
 @pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
 async def test_forecast_service(
