@@ -95,6 +95,12 @@
           ]),
           'description': "Filter results by category, like 'energy', or by subcategory, like 'energy.energy_prices'. A category includes its subcategories. Use 'helpers' to find helpers. An unknown category returns the known categories.",
         }),
+        'offset': dict({
+          'default': 0,
+          'description': 'Number of results to skip. Use the next_offset of the previous result.',
+          'minimum': 0,
+          'type': 'integer',
+        }),
         'query': dict({
           'description': "Search text to match against integration name, domain, or brand (case-insensitive). Required if 'category' is not given.",
           'format': 'strip',

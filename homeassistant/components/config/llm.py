@@ -347,8 +347,9 @@ class SearchIntegrationsTool(Tool):
     description = (
         "Search the catalog of available Home Assistant integrations and helpers "
         "that can be set up via a config flow (including uninstalled ones) by name, "
-        "domain, brand, or category. Use config__get_config_entries instead to list "
-        "integrations that are already installed."
+        "domain, brand, or category. Returns at most "
+        f"{_SEARCH_LIMIT} results per call. Use config__get_config_entries instead "
+        "to list integrations that are already installed."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -372,6 +373,14 @@ class SearchIntegrationsTool(Tool):
                     "category returns the known categories."
                 ),
             ): _DOMAIN_STRING,
+            probatio.Optional(
+                "offset",
+                description=(
+                    "Number of results to skip. Use the next_offset of the "
+                    "previous result."
+                ),
+                default=0,
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=0)),
         }
     )
 
@@ -385,6 +394,7 @@ class SearchIntegrationsTool(Tool):
             raise probatio.Invalid("Either 'query' or 'category' is required.")
         query = args.get("query", "").casefold()
         category: str | None = args.get("category")
+        offset: int = args["offset"]
 
         lang = _resolve_language(hass, llm_context.language)
         if category is not None:
@@ -406,22 +416,24 @@ class SearchIntegrationsTool(Tool):
             set(descriptions["core"].get("translated_name", ())),
         )
 
-        best = heapq.nsmallest(
-            _SEARCH_LIMIT,
-            _iter_searchable_matches(query, descriptions, title_trans, category),
+        matches = list(
+            _iter_searchable_matches(query, descriptions, title_trans, category)
         )
-        return ToolResult(
-            data={
-                "result": list[JsonValueType](
-                    {
-                        "domain": domain,
-                        "name": name,
-                        "categories": list[JsonValueType](categories),
-                    }
-                    for _, _, domain, name, categories in best
-                )
-            }
-        )
+        best = heapq.nsmallest(offset + _SEARCH_LIMIT, matches)[offset:]
+        result: JsonObjectType = {
+            "result": list[JsonValueType](
+                {
+                    "domain": domain,
+                    "name": name,
+                    "categories": list[JsonValueType](categories),
+                }
+                for _, _, domain, name, categories in best
+            ),
+            "total": len(matches),
+        }
+        if (next_offset := offset + _SEARCH_LIMIT) < len(matches):
+            result["next_offset"] = next_offset
+        return ToolResult(data=result)
 
 
 _PLACEHOLDER_RE = re.compile(r"\{([^}]+)\}")

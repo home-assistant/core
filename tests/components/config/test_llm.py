@@ -811,6 +811,37 @@ async def test_search_integrations(
             )
 
 
+async def test_search_integrations_pagination(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test paging through the results with offset and next_offset."""
+    tool = SearchIntegrationsTool()
+    domains: list[str] = []
+    offset = 0
+    pages = 0
+    while True:
+        res = await tool.async_call(
+            hass,
+            llm.ToolInput(tool.name, {"category": "energy", "offset": offset}),
+            llm_context,
+        )
+        assert res.error is False
+        assert isinstance(items := res.data["result"], list)
+        assert isinstance(total := res.data["total"], int)
+        domains.extend(item["domain"] for item in items if isinstance(item, dict))
+        pages += 1
+        if "next_offset" not in res.data:
+            break
+        assert len(items) == 15
+        assert isinstance(next_offset := res.data["next_offset"], int)
+        offset = next_offset
+
+    assert pages > 1
+    assert len(domains) == total
+    assert len(set(domains)) == total
+
+
 async def test_search_integrations_unknown_category(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
@@ -837,6 +868,7 @@ async def test_search_integrations_unknown_category(
         pytest.param({"category": ""}, id="empty_category"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
+        pytest.param({"query": "hue", "offset": -1}, id="negative_offset"),
     ],
 )
 async def test_search_integrations_invalid_args(
