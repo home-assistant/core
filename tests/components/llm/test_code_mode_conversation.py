@@ -2,11 +2,16 @@
 
 import pytest
 
-from homeassistant.components.conversation import ConversationInput, async_get_chat_log
+from homeassistant.components.conversation import (
+    AssistantContent,
+    ConversationInput,
+    async_get_chat_log,
+)
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session, llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util.ulid import ulid_now
 
 
 @pytest.fixture(autouse=True)
@@ -17,25 +22,32 @@ async def setup_integrations(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
 
-async def _tool_names(hass: HomeAssistant) -> list[str]:
+async def _tool_names(
+    hass: HomeAssistant, conversation_id: str | None = None
+) -> list[str]:
     """Return the names of the tools that a conversation agent gets."""
     user_input = ConversationInput(
         text="Hello",
         context=Context(),
-        conversation_id=None,
+        conversation_id=conversation_id,
         agent_id="mock-agent-id",
         device_id=None,
         satellite_id=None,
         language="en",
     )
     with (
-        chat_session.async_get_chat_session(hass, context=None) as session,
+        chat_session.async_get_chat_session(
+            hass, conversation_id, context=None
+        ) as session,
         async_get_chat_log(hass, session, user_input) as chat_log,
     ):
         await chat_log.async_provide_llm_data(
             user_input.as_llm_context("test"), llm.LLM_API_ASSIST
         )
         assert chat_log.llm_api is not None
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Hi")
+        )
         return [tool.name for tool in chat_log.llm_api.tools]
 
 
@@ -53,3 +65,17 @@ async def test_feature_enabled(hass: HomeAssistant) -> None:
     await async_update_preview_feature(hass, "llm", "code_mode", False)
 
     assert "llm__GetDateTime" in await _tool_names(hass)
+
+
+async def test_toggle_in_conversation(hass: HomeAssistant) -> None:
+    """Test a change of the feature applies to a conversation that continues."""
+    conversation_id = ulid_now()
+    assert "llm__GetDateTime" in await _tool_names(hass, conversation_id)
+
+    await async_update_preview_feature(hass, "llm", "code_mode", True)
+
+    assert await _tool_names(hass, conversation_id) == ["execute"]
+
+    await async_update_preview_feature(hass, "llm", "code_mode", False)
+
+    assert "llm__GetDateTime" in await _tool_names(hass, conversation_id)

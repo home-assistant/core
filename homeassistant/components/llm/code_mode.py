@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
-import json
 import re
 from typing import Any, override
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
 
@@ -34,6 +33,10 @@ LIMITS = ResourceLimits(
     max_suspensions=200,
 )
 MAX_OUTPUT_BYTES = 64 * 1024
+# Limit for the result of the code, in values plus characters.
+MAX_RESULT_SIZE = 64 * 1024
+# The JSON encoder of Home Assistant fails on deeper values.
+MAX_RESULT_DEPTH = 100
 # Function declarations are part of the prompt up to this size, in characters.
 INLINE_BUDGET = 8000
 SEARCH_LIMIT = 10
@@ -65,17 +68,27 @@ _JSON_TYPES = {
 @callback
 def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
     """Return an API instance with an execute tool, and a search tool if needed."""
-    functions = [ToolFunction(api_instance, tool) for tool in api_instance.tools]
+    functions: list[ToolFunction] = []
+    names: set[str] = set()
+    for tool in api_instance.tools:
+        # Different tool names can give the same Python name.
+        name = base = re.sub(r"\W", "_", tool.name)
+        suffix = 1
+        while name in names:
+            suffix += 1
+            name = f"{base}_{suffix}"
+        names.add(name)
+        functions.append(ToolFunction(api_instance, tool, name))
     declarations = "\n\n".join(function.declaration for function in functions)
-    tools: list[Tool] = [ExecuteTool(functions)]
+    tools: list[Tool] = [ExecuteTool(api_instance, functions)]
     if len(declarations) <= INLINE_BUDGET:
         catalog = f"These are all the functions:\n```python\n{declarations}\n```"
     else:
         tools.insert(0, SearchTool(functions))
-        names = ", ".join(function.name for function in functions)
         catalog = (
             "Get the declaration of a function with the `search` tool before "
-            f"you call the function. These are the functions: {names}"
+            "you call the function. These are the functions: "
+            f"{', '.join(function.name for function in functions)}"
         )
 
     return APIInstance(
@@ -89,11 +102,11 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
 class ToolFunction:
     """A tool as a function that code can call."""
 
-    def __init__(self, api_instance: APIInstance, tool: Tool) -> None:
+    def __init__(self, api_instance: APIInstance, tool: Tool, name: str) -> None:
         """Init the class."""
         self._api_instance = api_instance
         self._tool_name = tool.name
-        self.name = re.sub(r"\W", "_", tool.name)
+        self.name = name
         self.description = tool.description or ""
         schema = probatio.to_openapi(
             tool.parameters,
@@ -104,16 +117,16 @@ class ToolFunction:
         required = set(schema.get("required", []))
         self.parameters = list(properties)
         lines = [f"async def {self.name}("]
-        for name, prop in sorted(
+        for param, prop in sorted(
             properties.items(), key=lambda item: item[0] not in required
         ):
-            default = "" if name in required else " = None"
+            default = "" if param in required else " = None"
             comment = (
                 f"  # {' '.join(description.split())}"
                 if (description := prop.get("description"))
                 else ""
             )
-            lines.append(f"    {name}: {_python_type(prop)}{default},{comment}")
+            lines.append(f"    {param}: {_python_type(prop)}{default},{comment}")
         signature = (
             "\n".join([lines[0], "    *,", *lines[1:], ") -> dict:"])
             if properties
@@ -230,8 +243,11 @@ class ExecuteTool(Tool):
     )
     integration = DOMAIN
 
-    def __init__(self, functions: list[ToolFunction]) -> None:
+    def __init__(
+        self, api_instance: APIInstance, functions: list[ToolFunction]
+    ) -> None:
         """Init the class."""
+        self._api_instance = api_instance
         self._functions = functions
         self._pool: AsyncMonty | None = None
         self._pool_lock = asyncio.Lock()
@@ -248,6 +264,9 @@ class ExecuteTool(Tool):
         Without a chat session, the sandbox runs only for this call.
         """
         code = tool_input.tool_args["code"]
+        # The chat log keeps this tool between turns, so the tools must get
+        # the context of the current turn.
+        self._api_instance.llm_context = llm_context
         try:
             if (session := chat_session.current_session.get()) is None:
                 async with AsyncMonty(max_processes=1) as pool:
@@ -314,10 +333,44 @@ class ExecuteTool(Tool):
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        return ToolResult(
-            data={
-                # The sandbox can return values that JSON cannot represent, such as sets.
-                "result": json.loads(json.dumps(result, default=str)),
-                "output": output.output,
-            }
-        )
+        try:
+            json_result = _json_value(result, [MAX_RESULT_SIZE], MAX_RESULT_DEPTH)
+        except ValueError:
+            return ToolResult(
+                data={
+                    "error": "The result is too large or nested too deep. "
+                    "Return less data.",
+                    "output": output.output,
+                },
+                error=True,
+            )
+        return ToolResult(data={"result": json_result, "output": output.output})
+
+
+def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
+    """Return the sandbox result as a JSON value.
+
+    The sandbox can return values that JSON cannot represent, such as sets
+    and dicts with tuple keys. A small result can also contain the same list
+    many times, so the budget limits the size of the converted value.
+    """
+    budget[0] -= 1 + (len(value) if isinstance(value, str) else 0)
+    if budget[0] < 0 or depth < 0:
+        raise ValueError("Result too large")
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, dict):
+        return {
+            _json_key(key, budget): _json_value(item, budget, depth - 1)
+            for key, item in value.items()
+        }
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_json_value(item, budget, depth - 1) for item in value]
+    return _json_key(value, budget)
+
+
+def _json_key(value: Any, budget: list[int]) -> str:
+    """Return a value as a string, for a dict key or an unknown type."""
+    text = str(value)
+    budget[0] -= len(text)
+    return text

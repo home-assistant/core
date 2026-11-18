@@ -808,6 +808,7 @@ class ChatLog:
             llm_context.context.user_id if llm_context.context else None,
             llm_context.device_id,
             api_ids,
+            async_is_preview_feature_enabled(self.hass, "llm", "code_mode"),
         )
 
         if (

@@ -35,6 +35,7 @@ class GetStateTool(llm.Tool):
     def __init__(self) -> None:
         """Init the class."""
         self.calls: list[str] = []
+        self.llm_contexts: list[llm.LLMContext] = []
 
     @override
     async def async_call(
@@ -50,6 +51,7 @@ class GetStateTool(llm.Tool):
         if entity_id == "light.slow":
             await asyncio.sleep(10)
         self.calls.append(entity_id)
+        self.llm_contexts.append(llm_context)
         state = "on" if entity_id.endswith(("0", "5")) else "off"
         return llm.ToolResult(data={"entity_id": entity_id, "state": state})
 
@@ -303,6 +305,96 @@ async def test_sandbox_stops_with_home_assistant(
 
 async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     """Test values that JSON cannot represent are converted."""
-    result = await _execute(api_instance, "{'items': (1, 2), 'when': {1}}")
+    result = await _execute(
+        api_instance, "{'items': (1, 2), 'ids': {1}, (1, 2): None, 'kind': type(1)}"
+    )
 
-    assert result.data["result"] == {"items": [1, 2], "when": "{1}"}
+    assert result.data["result"] == {
+        "items": [1, 2],
+        "ids": [1],
+        "(1, 2)": None,
+        "kind": "<class 'int'>",
+    }
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        # A small value that contains the same list many times.
+        "x = [1]\nfor _ in range(60):\n    x = [x, x]\nx",
+        "x = [1]\nfor _ in range(900):\n    x = [x]\nprint('deep')\nx",
+        "'a' * 100000",
+        "{'a' * 100000: 1}",
+    ],
+)
+async def test_result_too_large(api_instance: llm.APIInstance, code: str) -> None:
+    """Test a result that is too large to return gives an error."""
+    result = await _execute(api_instance, code)
+
+    assert result.error is True
+    assert result.data["error"] == (
+        "The result is too large or nested too deep. Return less data."
+    )
+
+
+async def test_python_names_are_unique(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test tools whose names give the same Python name stay separate."""
+
+    class NameTool(llm.Tool):
+        """Tool that returns its name."""
+
+        integration = "test"
+
+        def __init__(self, name: str) -> None:
+            """Init the class."""
+            self.name = name
+
+        @override
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> llm.ToolResult:
+            """Return the name of the tool."""
+            return llm.ToolResult(data={"name": self.name})
+
+    api_instance = code_mode_api.async_create_api_instance(
+        llm.APIInstance(
+            api=TestAPI(hass, NameTool("unused")),
+            api_prompt="",
+            llm_context=llm_context,
+            tools=[NameTool("foo-bar"), NameTool("foo_bar"), NameTool("foo.bar")],
+        )
+    )
+
+    for name in ("foo_bar", "foo_bar_2", "foo_bar_3"):
+        assert f"async def {name}() -> dict:" in api_instance.api_prompt
+    result = await _execute(
+        api_instance, "[await foo_bar(), await foo_bar_2(), await foo_bar_3()]"
+    )
+    assert result.data["result"] == [
+        {"name": "foo-bar"},
+        {"name": "foo_bar"},
+        {"name": "foo.bar"},
+    ]
+
+
+async def test_tools_get_current_context(
+    api_instance: llm.APIInstance, state_tool: GetStateTool
+) -> None:
+    """Test tools get the context of the turn that runs the code."""
+    # The chat log replaces the context of a kept API instance for each turn.
+    api_instance.llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="nl",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    await _execute(api_instance, 'await test__get_state(entity_id="light.room_1")')
+
+    assert state_tool.llm_contexts == [api_instance.llm_context]
