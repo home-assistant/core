@@ -10,6 +10,9 @@
       "hostname": "energiemonitor-*"
     },
     {
+      "hostname": "p1dongle-*"
+    },
+    {
       "registered_devices": true
     }
   ],
