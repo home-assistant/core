@@ -32,6 +32,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
 )
+from .entity import add_entities_from_builder
 
 DALI_LINE_STATUS_SENSOR_MAPPING: dict[str, str] = {
     LineStatus.LOW_POWER: "low_power",
@@ -109,23 +110,6 @@ async def async_setup_entry(
     config_entry_unique_id = config_entry.unique_id
     assert config_entry_unique_id is not None
 
-    def _add_entities(
-        entity_builder: dict[str, Callable[[], SensorEntity]], known_entities: set[str]
-    ) -> None:
-        current_entities = entity_builder.keys()
-        new_entities = current_entities - known_entities
-        stale_entities = known_entities - current_entities
-
-        if new_entities:
-            async_add_entities(
-                [
-                    entity_builder[entity_unique_id]()
-                    for entity_unique_id in new_entities
-                ]
-            )
-            known_entities.update(new_entities)
-        known_entities.difference_update(stale_entities)
-
     known_line_status_entities: set[str] = set()
 
     @callback
@@ -141,7 +125,9 @@ async def async_setup_entry(
                 line_id,
                 config_entry_unique_id,
             )
-        _add_entities(entity_builder, known_line_status_entities)
+        add_entities_from_builder(
+            entity_builder, known_line_status_entities, async_add_entities
+        )
 
     _check_line_status_entities()
     config_entry.async_on_unload(
@@ -170,7 +156,9 @@ async def async_setup_entry(
                         sensor_id,
                         config_entry_unique_id,
                     )
-            _add_entities(entity_builder, known_sensor_entities)
+            add_entities_from_builder(
+                entity_builder, known_sensor_entities, async_add_entities
+            )
 
         _check_sensor_entities()
         config_entry.async_on_unload(

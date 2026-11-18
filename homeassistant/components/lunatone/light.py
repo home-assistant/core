@@ -30,6 +30,7 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
+from .entity import add_entities_from_builder
 
 PARALLEL_UPDATES = 0
 
@@ -45,23 +46,6 @@ async def async_setup_entry(
 
     config_entry_unique_id = config_entry.unique_id
     assert config_entry_unique_id is not None
-
-    def _add_entities(
-        entity_builder: dict[str, Callable[[], LightEntity]], known_entities: set[str]
-    ) -> None:
-        current_entities = entity_builder.keys()
-        new_entities = current_entities - known_entities
-        stale_entities = known_entities - current_entities
-
-        if new_entities:
-            async_add_entities(
-                [
-                    entity_builder[entity_unique_id]()
-                    for entity_unique_id in new_entities
-                ]
-            )
-            known_entities.update(new_entities)
-        known_entities.difference_update(stale_entities)
 
     known_broadcast_entities: set[str] = set()
 
@@ -80,7 +64,9 @@ async def async_setup_entry(
                 config_entry_unique_id,
             )
 
-        _add_entities(entity_builder, known_broadcast_entities)
+        add_entities_from_builder(
+            entity_builder, known_broadcast_entities, async_add_entities
+        )
 
     _check_broadcast_entities()
     config_entry.async_on_unload(
@@ -106,7 +92,9 @@ async def async_setup_entry(
                     config_entry_unique_id,
                 )
 
-        _add_entities(entity_builder, known_light_entities)
+        add_entities_from_builder(
+            entity_builder, known_light_entities, async_add_entities
+        )
 
     _check_light_entities()
     config_entry.async_on_unload(

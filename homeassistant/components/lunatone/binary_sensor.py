@@ -20,6 +20,7 @@ from .coordinator import (
     LunatoneInfoDataUpdateCoordinator,
     LunatoneScanDataUpdateCoordinator,
 )
+from .entity import add_entities_from_builder
 
 PARALLEL_UPDATES = 0
 
@@ -44,24 +45,6 @@ async def async_setup_entry(
         ]
     )
 
-    def _add_entities(
-        entity_builder: dict[str, Callable[[], BinarySensorEntity]],
-        known_entities: set[str],
-    ) -> None:
-        current_entities = entity_builder.keys()
-        new_entities = current_entities - known_entities
-        stale_entities = known_entities - current_entities
-
-        if new_entities:
-            async_add_entities(
-                [
-                    entity_builder[entity_unique_id]()
-                    for entity_unique_id in new_entities
-                ]
-            )
-            known_entities.update(new_entities)
-        known_entities.difference_update(stale_entities)
-
     known_entities: set[str] = set()
 
     @callback
@@ -78,7 +61,7 @@ async def async_setup_entry(
                 config_entry_unique_id,
                 line_id,
             )
-        _add_entities(entity_builder, known_entities)
+        add_entities_from_builder(entity_builder, known_entities, async_add_entities)
 
     _check_entities()
     config_entry.async_on_unload(coordinator_info.async_add_listener(_check_entities))
