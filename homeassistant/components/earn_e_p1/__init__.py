@@ -75,14 +75,7 @@ async def _async_update_registries(
     identifier = entry.unique_id
 
     device_registry = dr.async_get(hass)
-    if (
-        device := device_registry.async_get_device_by_identifier(
-            (DOMAIN, identifier), entry.entry_id
-        )
-        or device_registry.async_get_device_by_identifier(
-            (DOMAIN, serial), entry.entry_id
-        )
-    ) is not None:
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         device_registry.async_update_device(
             device.id,
             new_identifiers={(DOMAIN, identifier)},
@@ -94,16 +87,13 @@ async def _async_update_registries(
             | {(dr.CONNECTION_NETWORK_MAC, dr.format_mac(serial))},
         )
 
-    if identifier == serial:
-        return
-
-    old_prefix = f"{serial}_"
-
     @callback
     def _migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-        if not entity_entry.unique_id.startswith(old_prefix):
+        # The serial in the entry may already belong to a newer dongle, so
+        # replace whatever identifier the unique ID starts with.
+        prefix, _, key = entity_entry.unique_id.partition("_")
+        if prefix == identifier:
             return None
-        key = entity_entry.unique_id.removeprefix(old_prefix)
         return {"new_unique_id": f"{identifier}_{key}"}
 
     await er.async_migrate_entries(hass, entry.entry_id, _migrate_unique_id)

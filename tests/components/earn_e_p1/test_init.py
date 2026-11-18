@@ -297,16 +297,21 @@ async def test_legacy_entry_moves_to_meter(
     assert device.identifiers == {(DOMAIN, MOCK_EQUIPMENT_ID)}
 
 
+@pytest.mark.parametrize(
+    "equipment_id",
+    [pytest.param(None, id="missing"), pytest.param("", id="empty")],
+)
 async def test_legacy_entry_without_equipment_id_stays(
     hass: HomeAssistant,
     mock_legacy_config_entry: MockConfigEntry,
     mock_listener: MagicMock,
+    equipment_id: str | None,
 ) -> None:
     """Test an entry stays keyed on the dongle when the meter sends no ID."""
     await hass.config_entries.async_setup(mock_legacy_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trigger_callback(mock_listener, equipment_id=None)
+    trigger_callback(mock_listener, equipment_id=equipment_id)
     await hass.async_block_till_done()
 
     assert mock_legacy_config_entry.unique_id == MOCK_SERIAL
@@ -363,3 +368,48 @@ async def test_swapped_dongle_replaces_mac(
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_NEW_SERIAL))
     }
+
+
+async def test_registries_move_when_serial_changed_before_setup(
+    hass: HomeAssistant,
+    mock_listener: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the registries move to the meter even if the serial changed first."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST})",
+        data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_NEW_SERIAL},
+        unique_id=MOCK_EQUIPMENT_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_SERIAL))},
+    )
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{MOCK_SERIAL}_power_delivered",
+        config_entry=entry,
+        suggested_object_id="renamed_power",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(devices) == 1
+    assert devices[0].identifiers == {(DOMAIN, MOCK_EQUIPMENT_ID)}
+    assert devices[0].connections == {
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_NEW_SERIAL))
+    }
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{MOCK_EQUIPMENT_ID}_power_delivered"
+        )
+        == "sensor.renamed_power"
+    )

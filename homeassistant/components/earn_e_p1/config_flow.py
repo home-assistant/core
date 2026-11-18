@@ -72,9 +72,10 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, device: EarnEP1Device
     ) -> ConfigFlowResult | None:
         """Point the entry for this meter at the device, if one exists."""
-        await self.async_set_unique_id(_unique_id(device))
+        # Entries not yet moved onto the meter are still keyed on the dongle.
+        unique_ids = {_unique_id(device), device.serial}
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id == self.unique_id:
+            if entry.unique_id in unique_ids:
                 return self.async_update_reload_and_abort(
                     entry,
                     title=f"EARN-E P1 ({device.host})",
@@ -82,6 +83,10 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     reason="already_configured",
                     reload_even_if_entry_is_unchanged=False,
                 )
+        # Entries ignored before then are keyed on the dongle too.
+        await self.async_set_unique_id(device.serial)
+        self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(_unique_id(device))
         self._abort_if_unique_id_configured()
         return None
 

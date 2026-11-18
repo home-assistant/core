@@ -303,6 +303,27 @@ async def test_manual_entry_already_configured(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_manual_entry_legacy_entry(
+    hass: HomeAssistant, mock_legacy_config_entry: MockConfigEntry
+) -> None:
+    """Test manual entry updates an entry still keyed on the dongle."""
+    with patch(DISCOVER_PATH, return_value=[]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    with patch(VALIDATE_PATH, return_value=_mock_device(host=MOCK_NEW_HOST)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_NEW_HOST}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_legacy_config_entry.data[CONF_HOST] == MOCK_NEW_HOST
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_confirm_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -534,12 +555,21 @@ async def test_dhcp_discovery_updates_ip_by_mac(
     mock_validate.assert_not_called()
 
 
-async def test_dhcp_discovery_aborts_for_ignored_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "unique_id",
+    [
+        pytest.param(MOCK_EQUIPMENT_ID, id="meter"),
+        pytest.param(MOCK_SERIAL, id="legacy_dongle"),
+    ],
+)
+async def test_dhcp_discovery_aborts_for_ignored_entry(
+    hass: HomeAssistant, unique_id: str
+) -> None:
     """Test DHCP discovery does not re-offer a device the user ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=config_entries.SOURCE_IGNORE,
-        unique_id=MOCK_EQUIPMENT_ID,
+        unique_id=unique_id,
         data={},
     )
     entry.add_to_hass(hass)

@@ -87,7 +87,7 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                     sw_version=self.sw_version,
                 )
         if (
-            device.equipment_id is not None
+            device.equipment_id
             and self.identifier == self.serial
             and not self._migration_started
         ):
