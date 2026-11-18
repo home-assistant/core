@@ -102,7 +102,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = management_point_unique_id(
-            self._device.id, self._embedded_id, self._value
+            self._device_id, self._embedded_id, self._value
         )
         self.entity_description = description
         self.update_state()
@@ -114,7 +114,10 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         characteristic = (
             point.characteristic(self._value) if point is not None else None
         )
@@ -133,7 +136,10 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         if point is None:
             return False
         characteristic = point.characteristic(self._value)

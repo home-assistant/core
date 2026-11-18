@@ -138,10 +138,6 @@ async def async_remove_config_entry_device(
                 and current_device.management_point(embedded_id) is not None
             ):
                 return False
-            if coordinator.data is not None and (
-                current_device is None or not current_device.present_in_cloud
-            ):
-                coordinator.data.pop(parent_gateway_id, None)
         return True
 
     device = devices.get(gateway_id)

@@ -84,7 +84,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = management_point_unique_id(
-            self._device.id, self._embedded_id, self._value
+            self._device_id, self._embedded_id, self._value
         )
         self.entity_description = description
         self.update_state()
@@ -97,7 +97,10 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
 
     def selection(self) -> ScheduleSelection | None:
         """Return the schedule selection for the current schedule mode."""
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         schedule = point.schedule_state if point is not None else None
         if schedule is None:
             return None
@@ -155,7 +158,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         )
         await self._async_execute_command(
             lambda client: client.schedule(
-                self._device.id, self._embedded_id
+                self._device_id, self._embedded_id
             ).set_current(
                 selection.mode,
                 schedule_id,
@@ -163,7 +166,10 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             ),
             "schedule_select_failed",
         )
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         schedule_state = point.schedule_state if point is not None else None
         if schedule_state is not None:
             schedule_state.apply_selection(

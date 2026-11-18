@@ -88,7 +88,10 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
 
     def _air_purification(self) -> AirPurification | None:
         """Return the typed air-purification state view."""
-        management_point = self._device.management_point(self._embedded_id)
+        device = self._device
+        management_point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         return (
             management_point.air_purification if management_point is not None else None
         )
@@ -116,7 +119,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         """Execute a typed air-purification command."""
         await self._async_execute_command(
             lambda client: command(
-                client.air_purification(self._device.id, self._embedded_id)
+                client.air_purification(self._device_id, self._embedded_id)
             ),
             translation_key,
         )
@@ -253,6 +256,14 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             self._raise_service_validation_error("air_purifier_power_unavailable")
         if self.is_on is None:
             self._raise_service_validation_error("air_purifier_power_unavailable")
+        native_preset = (
+            self._native_preset_mode(preset_mode) if preset_mode is not None else None
+        )
+        if percentage is not None:
+            self._validate_percentage(percentage)
+            if percentage == 0:
+                await self.async_set_percentage(percentage)
+                return
         if not self.is_on:
             await self._async_execute_air_purification_command(
                 lambda purifier: purifier.set_power(True),
@@ -263,8 +274,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
                 purification.power.value = "on"
             self.update_state()
             self.coordinator.async_update_listeners()
-        if preset_mode is not None:
-            await self.async_set_preset_mode(preset_mode)
+        if native_preset is not None:
+            await self._async_set_mode(native_preset)
         if percentage is not None:
             await self.async_set_percentage(percentage)
 
@@ -290,6 +301,10 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Select an automatic air-purification preset, not a manual speed."""
+        await self._async_set_mode(self._native_preset_mode(preset_mode))
+
+    def _native_preset_mode(self, preset_mode: str) -> str:
+        """Validate and return the Daikin mode represented by a HA preset."""
         purification = self._air_purification()
         native_mode = (
             next(
@@ -305,10 +320,11 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         )
         if native_mode is None:
             self._raise_service_validation_error("air_purifier_mode_unavailable")
-        await self._async_set_mode(native_mode)
+        self._validate_mode(native_mode)
+        return native_mode
 
-    async def _async_set_mode(self, mode: str) -> None:
-        """Select a native mode, including manual mode for percentage commands."""
+    def _validate_mode(self, mode: str) -> None:
+        """Validate that Daikin currently allows the requested mode."""
         purification = self._air_purification()
         if (
             purification is None
@@ -316,6 +332,29 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             or not purification.mode.settable
             or mode not in purification.modes
         ):
+            self._raise_service_validation_error("air_purifier_mode_unavailable")
+
+    def _validate_percentage(self, percentage: int) -> None:
+        """Validate that a manual speed is currently available."""
+        if percentage == 0:
+            return
+        purification = self._air_purification()
+        if purification is None or purification.mode is None:
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
+        if self.is_on is None:
+            self._raise_service_validation_error("air_purifier_power_unavailable")
+        if not self._fixed_speeds("manualFan"):
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
+        if purification.mode.value != "manualFan" and (
+            not purification.mode.settable or "manualFan" not in purification.modes
+        ):
+            self._raise_service_validation_error("air_purifier_mode_unavailable")
+
+    async def _async_set_mode(self, mode: str) -> None:
+        """Select a native mode, including manual mode for percentage commands."""
+        purification = self._air_purification()
+        self._validate_mode(mode)
+        if purification is None or purification.mode is None:
             self._raise_service_validation_error("air_purifier_mode_unavailable")
         if mode == purification.mode.value:
             return
@@ -332,20 +371,13 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the current mode's fixed fan speed."""
+        self._validate_percentage(percentage)
         if percentage == 0:
             await self.async_turn_off()
             return
         purification = self._air_purification()
         if purification is None or purification.mode is None:
             self._raise_service_validation_error("air_purifier_speed_unavailable")
-        if self.is_on is None:
-            self._raise_service_validation_error("air_purifier_power_unavailable")
-        if not self._fixed_speeds("manualFan"):
-            self._raise_service_validation_error("air_purifier_speed_unavailable")
-        if purification.mode.value != "manualFan" and (
-            not purification.mode.settable or "manualFan" not in purification.modes
-        ):
-            self._raise_service_validation_error("air_purifier_mode_unavailable")
         if not self.is_on:
             await self.async_turn_on()
         if purification.mode.value != "manualFan":

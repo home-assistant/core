@@ -611,9 +611,19 @@ async def test_water_heater_set_performance_updates_state(
 ) -> None:
     """A successful boost command updates the entity through HA's service API."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
+    point = next(
+        point
+        for device in config_entry.runtime_data.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
     )
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.powerful_mode is not None
+    point.domestic_hot_water.powerful_mode.value = "off"
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -630,6 +640,20 @@ async def test_water_heater_set_performance_updates_state(
     assert (
         state.attributes[WaterHeaterStateAttribute.OPERATION_MODE] == STATE_PERFORMANCE
     )
+    execute.assert_awaited_once()
+
+    execute.reset_mock()
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            "operation_mode": STATE_PERFORMANCE,
+        },
+        blocking=True,
+    )
+
+    execute.assert_not_awaited()
 
 
 async def test_water_heater_selecting_heat_pump_disables_powerful_mode_when_off(

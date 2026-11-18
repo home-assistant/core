@@ -7,8 +7,6 @@ from daikin_onecta.client import DomesticHotWaterClient
 from daikin_onecta.models import ManagementPoint, Setpoint
 
 from homeassistant.components.water_heater import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
     STATE_HEAT_PUMP,
     STATE_OFF,
     STATE_PERFORMANCE,
@@ -19,7 +17,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
@@ -93,7 +90,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Initialize the Water device."""
         super().__init__(device, coordinator, embedded_id)
         self._attr_unique_id = management_point_unique_id(
-            self._device.id, self._embedded_id
+            self._device_id, self._embedded_id
         )
         self.update_state()
 
@@ -104,9 +101,15 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_native_temperature_unit = self._get_native_temperature_unit()
         self._attr_native_current_temperature = self.get_current_temperature()
         self._attr_native_target_temperature = self.get_target_temperature()
-        self._attr_min_temp = self.get_min_temp()
-        self._attr_max_temp = self.get_max_temp()
         dht = self.domestic_hotwater_temperature
+        if dht is not None and dht.min_value is not None:
+            self._attr_min_temp = float(dht.min_value)
+        elif hasattr(self, "_attr_min_temp"):
+            del self._attr_min_temp
+        if dht is not None and dht.max_value is not None:
+            self._attr_max_temp = float(dht.max_value)
+        elif hasattr(self, "_attr_max_temp"):
+            del self._attr_max_temp
         self._attr_target_temperature_step = (
             float(dht.step_value)
             if dht is not None and dht.step_value is not None
@@ -153,7 +156,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Execute a typed hot-water command through the cloud adapter."""
         await self._async_execute_command(
             lambda client: command(
-                client.domestic_hot_water(self._device.id, self._embedded_id)
+                client.domestic_hot_water(self._device_id, self._embedded_id)
             ),
             translation_key,
         )
@@ -166,7 +169,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @property
     def hot_water_management_point(self) -> ManagementPoint | None:
         """Return the typed hot-water management point."""
-        return self._device.management_point(self._embedded_id)
+        device = self._device
+        return (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
 
     @property
     def domestic_hotwater_temperature(self) -> Setpoint | None:
@@ -212,28 +218,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if dht is not None and dht.value is not None:
             ret = float(dht.value)
         return ret
-
-    def get_min_temp(self) -> float:
-        """Return the supported minimum value target temperature."""
-        dht = self.domestic_hotwater_temperature
-        if dht is not None and dht.min_value is not None:
-            return float(dht.min_value)
-        return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP,
-            UnitOfTemperature.FAHRENHEIT,
-            self.native_temperature_unit,
-        )
-
-    def get_max_temp(self) -> float:
-        """Return the supported maximum value of target temperature."""
-        dht = self.domestic_hotwater_temperature
-        if dht is not None and dht.max_value is not None:
-            return float(dht.max_value)
-        return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP,
-            UnitOfTemperature.FAHRENHEIT,
-            self.native_temperature_unit,
-        )
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""
@@ -323,7 +307,11 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if operation_mode == STATE_OFF:
             on_off_mode = "off" if self.current_operation != STATE_OFF else ""
         elif operation_mode == STATE_PERFORMANCE:
-            powerful_mode = "on"
+            point = self.hot_water_management_point
+            hot_water = point.domestic_hot_water if point is not None else None
+            power_mode = hot_water.powerful_mode if hot_water is not None else None
+            if power_mode is not None and power_mode.value != "on":
+                powerful_mode = "on"
             on_off_mode = "on" if self.current_operation == STATE_OFF else ""
         elif operation_mode == STATE_HEAT_PUMP:
             point = self.hot_water_management_point

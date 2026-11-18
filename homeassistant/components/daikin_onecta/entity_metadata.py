@@ -820,10 +820,11 @@ SWITCH_KEYS = frozenset(
     for metadata in ENTITY_METADATA
     if metadata.translation_key in SWITCH_TRANSLATION_KEYS
 )
-SENSOR_KEYS = frozenset(
+UPDATE_KEYS = frozenset(
     metadata.key
     for metadata in ENTITY_METADATA
-    if metadata.key != "dryKeepSetting"
-    and not isinstance(metadata.device_class, BinarySensorDeviceClass)
-    and not isinstance(metadata.device_class, UpdateDeviceClass)
+    if isinstance(metadata.device_class, UpdateDeviceClass)
+)
+SENSOR_KEYS = frozenset(metadata.key for metadata in ENTITY_METADATA) - (
+    BINARY_SENSOR_KEYS | SWITCH_KEYS | UPDATE_KEYS
 )

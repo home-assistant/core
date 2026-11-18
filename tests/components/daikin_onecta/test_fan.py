@@ -382,6 +382,35 @@ async def test_air_purifier_turn_off_then_on_updates_cached_state(
     assert state.state == "on"
 
 
+async def test_air_purifier_turn_on_rejects_invalid_preset_before_power_write(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Validate a requested preset before turning on the purifier."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.power is not None
+    purification.power.value = "off"
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FAN_SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier",
+                FanServiceArgument.PRESET_MODE: "not_a_preset",
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "not_valid_preset_mode"
+    execute.assert_not_awaited()
+    assert purification.power.value == "off"
+
+
 async def test_air_purifier_ignores_unchanged_preset(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

@@ -382,6 +382,8 @@ async def test_value_sensor_availability_uses_current_model_data(
 
     assert entity.available
     point.characteristics.pop("controlMode")
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
     assert not entity.available
 

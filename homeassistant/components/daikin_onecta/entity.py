@@ -64,7 +64,12 @@ def add_entities_on_coordinator_update(
         if last_cloud_update_sequence == coordinator.cloud_update_sequence:
             return
         last_cloud_update_sequence = coordinator.cloud_update_sequence
-        entities = list(create_entities(added_unique_ids))
+        entities = [
+            entity
+            for entity in create_entities(added_unique_ids)
+            if not isinstance(entity, DaikinOnectaEntity)
+            or entity.device_present_in_cloud
+        ]
         if entities:
             for entity in entities:
                 unique_id = entity.unique_id
@@ -133,6 +138,8 @@ def management_point_device_info(
 class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
     """Base entity for a Daikin gateway device."""
 
+    _cached_device_info: DeviceInfo | ChildDeviceInfo
+
     def __init__(
         self,
         coordinator: OnectaDataUpdateCoordinator,
@@ -140,29 +147,54 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
     ) -> None:
         """Initialize the entity with its coordinator and gateway device."""
         super().__init__(coordinator)
-        self._device = device
+        self._device_id = device.id
+        self._device_name = device.name
+        self._initial_device = device
+        self._cached_device_info = _gateway_device_info(device)
+
+    @property
+    def _device(self) -> DaikinOnectaDevice | None:
+        """Return the current gateway wrapper, which may be replaced on polling."""
+        data = self.coordinator.data
+        if isinstance(data, dict) and (device := data.get(self._device_id)) is not None:
+            return device
+        return self._initial_device
+
+    @property
+    def device_present_in_cloud(self) -> bool:
+        """Return whether the entity's gateway is present in the latest response."""
+        device = self._device
+        return device is not None and device.present_in_cloud
 
     def _raise_service_validation_error(self, translation_key: str) -> Never:
         """Raise a translated error for an unavailable device control."""
+        device_name = (
+            self._device.name if self._device is not None else self._device_name
+        )
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
+            translation_placeholders={"device": device_name},
         )
 
     def _raise_command_failed(self, translation_key: str) -> Never:
         """Raise a translated error when Daikin rejects a command."""
+        device_name = (
+            self._device.name if self._device is not None else self._device_name
+        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
+            translation_placeholders={"device": device_name},
         )
 
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return the gateway device registry information."""
-        return _gateway_device_info(self._device)
+        if device := self._device:
+            return _gateway_device_info(device)
+        return self._cached_device_info
 
 
 class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
@@ -203,10 +235,11 @@ class DaikinEntity(DaikinOnectaEntity):
     @override
     def available(self) -> bool:
         """Return whether the coordinator, device, and point are available."""
-        if not super().available or not self._device.available:
+        device = self._device
+        if not super().available or device is None or not device.available:
             return False
         return self._embedded_id is None or (
-            self._device.management_point(self._embedded_id) is not None
+            device.management_point(self._embedded_id) is not None
         )
 
     async def _async_execute_command(
@@ -232,9 +265,12 @@ class DaikinManagementPointEntity(DaikinEntity):
     ) -> None:
         """Initialize a management-point entity."""
         super().__init__(device, coordinator, embedded_id)
+        self._cached_device_info = management_point_device_info(device, embedded_id)
 
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return consistent device info for the source management point."""
-        return management_point_device_info(self._device, self._embedded_id)
+        if device := self._device:
+            return management_point_device_info(device, self._embedded_id)
+        return self._cached_device_info

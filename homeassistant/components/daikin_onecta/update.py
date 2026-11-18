@@ -116,13 +116,18 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         try:
             await self._async_execute_command(
                 lambda client: client.firmware(
-                    self._device.id, self._embedded_id
+                    self._device_id, self._embedded_id
                 ).install(firmware_id),
                 "firmware_install_failed",
             )
         except HomeAssistantError:
             self._pending_install = None
-            management_point = self._device.management_point(self._embedded_id)
+            device = self._device
+            management_point = (
+                device.management_point(self._embedded_id)
+                if device is not None
+                else None
+            )
             if management_point is not None:
                 self._update_from_management_point(management_point)
             else:
@@ -196,7 +201,8 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def update_state(self) -> None:
         """Refresh firmware update state from the current management point."""
-        mp = self._device.management_point(self._embedded_id)
+        device = self._device
+        mp = device.management_point(self._embedded_id) if device is not None else None
         if mp is not None:
             self._update_from_management_point(mp)
 
@@ -207,7 +213,10 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         if not super().available:
             return False
 
-        management_point = self._device.management_point(self._embedded_id)
+        device = self._device
+        management_point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         if management_point is None:
             return False
         # Daikin can omit the installed version while still reporting update

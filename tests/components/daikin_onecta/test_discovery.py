@@ -25,6 +25,7 @@ from homeassistant.components.daikin_onecta.entity_metadata import (
     BINARY_SENSOR_KEYS,
     SENSOR_KEYS,
     SWITCH_KEYS,
+    UPDATE_KEYS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -33,6 +34,11 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
+
+
+def test_sensor_keys_exclude_other_platform_keys() -> None:
+    """Never create value sensors for binary, switch, or update keys."""
+    assert SENSOR_KEYS.isdisjoint(BINARY_SENSOR_KEYS | SWITCH_KEYS | UPDATE_KEYS)
 
 
 @pytest.mark.parametrize(
@@ -70,7 +76,7 @@ from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
             "ledEnabled",
             Characteristic(value="on", values=["on", "off", "auto"]),
             "climateControl",
-            Platform.SENSOR,
+            None,
             id="read-only-on-off-with-additional-value",
         ),
         pytest.param(
@@ -373,14 +379,14 @@ async def test_multiple_new_capabilities_are_added_without_reload(
     schedule_reload.assert_not_called()
 
 
-async def test_scalar_platform_change_adds_entity_without_reload(
+async def test_binary_key_with_additional_values_is_not_a_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Add the new sensor entity when a binary value gains an enum option."""
+    """Do not create a text sensor when a binary key gains an enum option."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("minimal_data")
@@ -402,7 +408,7 @@ async def test_scalar_platform_change_adds_entity_without_reload(
         mock_onecta_client.get_gateway_devices.return_value = enum_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id) is None
     assert coordinator is config_entry.runtime_data
     schedule_reload.assert_not_called()
 

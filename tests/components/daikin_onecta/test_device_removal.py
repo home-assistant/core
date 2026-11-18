@@ -348,13 +348,13 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
     coordinator.async_get_sites.assert_awaited_once_with()
 
 
-async def test_remove_child_of_missing_gateway_drops_gateway_from_coordinator(
+async def test_remove_child_of_missing_gateway_keeps_gateway_in_coordinator(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     missing_gateway: dr.DeviceEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Drop a gateway from cached data when Sites confirms its removal."""
+    """Keep the unavailable gateway wrapper so its entities can recover."""
     coordinator = config_entry.runtime_data
     gateway_id = next(
         identifier
@@ -376,7 +376,56 @@ async def test_remove_child_of_missing_gateway_drops_gateway_from_coordinator(
     )
 
     assert await async_remove_config_entry_device(hass, config_entry, child)
-    assert gateway_id not in coordinator.data
+    assert coordinator.data[gateway_id] is not None
+    assert not coordinator.data[gateway_id].present_in_cloud
+
+
+async def test_entities_recover_when_removed_gateway_returns_after_child_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Existing entities follow a replacement gateway wrapper after it returns."""
+    coordinator = config_entry.runtime_data
+    gateway_id = next(
+        identifier
+        for domain, identifier in missing_gateway.identifiers
+        if domain == DOMAIN
+    )
+    gateway_device = coordinator.data[gateway_id]
+    point = next(
+        point
+        for point in gateway_device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    child = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, f"{gateway_id}_{point.embedded_id}"), config_entry.entry_id
+    )
+    assert child is not None
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[])]
+    )
+
+    assert await async_remove_config_entry_device(hass, config_entry, child)
+    assert coordinator.data[gateway_id] is gateway_device
+    climate_state = hass.states.get("climate.altherma_room_temperature")
+    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    assert climate_state is not None and climate_state.state == "unavailable"
+    assert sensor_state is not None and sensor_state.state == "unavailable"
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+        "minimal_data"
+    )
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert coordinator.data[gateway_id] is gateway_device
+    climate_state = hass.states.get("climate.altherma_room_temperature")
+    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    assert climate_state is not None and climate_state.state != "unavailable"
+    assert sensor_state is not None and sensor_state.state != "unavailable"
 
 
 async def test_removed_gateway_reappearing_does_not_reload_entry(
@@ -393,10 +442,12 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
         for domain, identifier in missing_gateway.identifiers
         if domain == DOMAIN
     )
+    original_device = coordinator.data[gateway_id]
     coordinator.async_get_sites = AsyncMock(
         return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
     )
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
+    assert gateway_id not in coordinator.data
 
     mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
         "minimal_data"
@@ -405,7 +456,12 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert coordinator.data[gateway_id].present_in_cloud
+    assert coordinator.data[gateway_id] is not original_device
     assert config_entry.runtime_data is coordinator
+    climate_state = hass.states.get("climate.altherma_room_temperature")
+    sensor_state = hass.states.get("sensor.altherma_control_mode")
+    assert climate_state is not None and climate_state.state != "unavailable"
+    assert sensor_state is not None and sensor_state.state != "unavailable"
     schedule_reload.assert_not_called()
 
 

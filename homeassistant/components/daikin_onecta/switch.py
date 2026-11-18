@@ -1,6 +1,6 @@
 """Support for Daikin Onecta switches."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
@@ -96,7 +96,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         self._value = value
         self.entity_description = description
         self._attr_unique_id = management_point_unique_id(
-            self._device.id, self._embedded_id, self._value
+            self._device_id, self._embedded_id, self._value
         )
         self.update_state()
 
@@ -115,7 +115,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     def sensor_value(self) -> str | None:
         """Return the state of the switch."""
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         characteristic = (
             point.characteristic(self._value) if point is not None else None
         )
@@ -128,7 +131,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         """Return whether the characteristic still exposes writable on/off values."""
         if not super().available:
             return False
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         if point is None:
             return False
         characteristic = point.characteristic(self._value)
@@ -143,47 +149,36 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
-        if self.is_on is None:
-            self._raise_service_validation_error("switch_state_unavailable")
-        if not self.is_on:
-            await self._async_execute_command(
-                lambda client: client.management_point(
-                    self._device.id, self._embedded_id
-                ).set_characteristic(
-                    self._value,
-                    "on",
-                ),
-                "switch_turn_on_failed",
-            )
-            point = self._device.management_point(self._embedded_id)
-            characteristic = (
-                point.characteristic(self._value) if point is not None else None
-            )
-            if characteristic is not None:
-                characteristic.value = "on"
-            self.update_state()
-            self.coordinator.async_update_listeners()
+        await self._async_set_state("on", "switch_turn_on_failed")
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
+        await self._async_set_state("off", "switch_turn_off_failed")
+
+    async def _async_set_state(
+        self, state: Literal["on", "off"], translation_key: str
+    ) -> None:
+        """Set a switch characteristic and publish its successful state."""
         if self.is_on is None:
             self._raise_service_validation_error("switch_state_unavailable")
-        if self.is_on:
-            await self._async_execute_command(
-                lambda client: client.management_point(
-                    self._device.id, self._embedded_id
-                ).set_characteristic(
-                    self._value,
-                    "off",
-                ),
-                "switch_turn_off_failed",
-            )
-            point = self._device.management_point(self._embedded_id)
-            characteristic = (
-                point.characteristic(self._value) if point is not None else None
-            )
-            if characteristic is not None:
-                characteristic.value = "off"
-            self.update_state()
-            self.coordinator.async_update_listeners()
+        requested_state = state == "on"
+        if self.is_on == requested_state:
+            return
+        await self._async_execute_command(
+            lambda client: client.management_point(
+                self._device_id, self._embedded_id
+            ).set_characteristic(self._value, state),
+            translation_key,
+        )
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
+        characteristic = (
+            point.characteristic(self._value) if point is not None else None
+        )
+        if characteristic is not None:
+            characteristic.value = state
+        self.update_state()
+        self.coordinator.async_update_listeners()

@@ -294,14 +294,17 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._datatype = details.datatype
         self.entity_description = description
         self._sensor_type = details.sensor_type
-        self._attr_unique_id = _energy_sensor_unique_id(self._device.id, details)
+        self._attr_unique_id = _energy_sensor_unique_id(self._device_id, details)
         self.update_state()
 
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         self._attr_native_value = self.sensor_value()
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         energy_data = None
         if point is not None:
             energy_data = (
@@ -318,7 +321,10 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
 
     def _energy_aggregate(self) -> EnergyAggregate | None:
         """Return the matching energy aggregate from the current model."""
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         if point is None:
             return None
         period = self._period
@@ -377,10 +383,12 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
+        self._characteristic: Characteristic | None = None
+        self._management_point_type: str | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
-            self._device.id,
+            self._device_id,
             details.embedded_id,
             self._sub_type,
             self._value,
@@ -390,18 +398,25 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        _, characteristic = self._current_characteristic()
+        point, characteristic = self._get_current_characteristic()
+        self._characteristic = characteristic
+        self._management_point_type = (
+            point.management_point_type if point is not None else None
+        )
         self._attr_native_value = self._sensor_value(characteristic)
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
             self.entity_description,
         )
 
-    def _current_characteristic(
+    def _get_current_characteristic(
         self,
     ) -> tuple[ManagementPoint | None, Characteristic | None]:
         """Return the current characteristic from its management point."""
-        point = self._device.management_point(self._embedded_id)
+        device = self._device
+        point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         if point is None:
             return None, None
         characteristic = (
@@ -413,8 +428,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
 
     def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
-        _, characteristic = self._current_characteristic()
-        return self._sensor_value(characteristic)
+        return self._sensor_value(self._characteristic)
 
     def _sensor_value(
         self, characteristic: Characteristic | None
@@ -444,17 +458,15 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
-        point, characteristic = self._current_characteristic()
-        return (
-            point is not None
-            and characteristic is not None
-            and (
-                self._sub_type is not None
-                or scalar_platform(
-                    self._value, characteristic, point.management_point_type
-                )
-                is Platform.SENSOR
+        characteristic = self._characteristic
+        return characteristic is not None and (
+            self._sub_type is not None
+            or scalar_platform(
+                self._value,
+                characteristic,
+                self._management_point_type or "",
             )
+            is Platform.SENSOR
         )
 
 

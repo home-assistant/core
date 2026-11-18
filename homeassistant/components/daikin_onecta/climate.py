@@ -165,7 +165,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         super().__init__(device, coordinator, embedded_id)
         self._setpoint = setpoint
         self._attr_unique_id = management_point_unique_id(
-            self._device.id, self._embedded_id, self._setpoint
+            self._device_id, self._embedded_id, self._setpoint
         )
         self.entity_description = description
         self.update_state()
@@ -199,7 +199,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Execute a bound climate command through the serialized gateway."""
         return await self.coordinator.async_execute_command(
             lambda client: command(
-                client.climate_control(self._device.id, self._embedded_id)
+                client.climate_control(self._device_id, self._embedded_id)
             )
         )
 
@@ -207,16 +207,21 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     def available(self) -> bool:
         """Return whether the source device is available."""
+        device = self._device
         return (
             super().available
-            and self._device.available
+            and device is not None
+            and device.available
             and (climate_control := self._climate_control()) is not None
             and self._setpoint in climate_control.setpoint_types
         )
 
     def _climate_control(self) -> ClimateControl | None:
         """Return typed native climate-control state from the library."""
-        management_point = self._device.management_point(self._embedded_id)
+        device = self._device
+        management_point = (
+            device.management_point(self._embedded_id) if device is not None else None
+        )
         return (
             management_point.climate_control if management_point is not None else None
         )
