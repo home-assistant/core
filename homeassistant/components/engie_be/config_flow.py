@@ -1,6 +1,7 @@
 """Config flow for the ENGIE Belgium integration."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
 from aioengiebelgium import (
@@ -16,7 +17,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
+    SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -50,6 +51,16 @@ _CREDENTIALS_SCHEMA = probatio.Schema(
 )
 
 
+@dataclass(frozen=True)
+class _PendingLogin:
+    """A login that has passed the password step and waits for the MFA code."""
+
+    client: EngieBeClient
+    auth_flow: AuthFlow
+    email: str
+    mfa_method: MfaMethod
+
+
 class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ENGIE Belgium."""
 
@@ -57,26 +68,22 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._email: str | None = None
-        self._mfa_method: MfaMethod = MfaMethod.SMS
-        self._auth_flow: AuthFlow | None = None
-        self._client: EngieBeClient | None = None
+        self._login: _PendingLogin | None = None
 
     async def _async_start_authentication(
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         """Start authentication with ENGIE Belgium and return any form errors."""
-        self._email = user_input[CONF_EMAIL]
-        self._mfa_method = MfaMethod(user_input[CONF_MFA_METHOD])
+        email = user_input[CONF_EMAIL]
+        mfa_method = MfaMethod(user_input[CONF_MFA_METHOD])
 
         session = async_create_clientsession(self.hass)
         client = EngieBeClient(session=session)
-        self._client = client
         try:
-            self._auth_flow = await client.async_start_authentication(
-                self._email,
+            auth_flow = await client.async_start_authentication(
+                email,
                 user_input[CONF_PASSWORD],
-                self._mfa_method,
+                mfa_method,
                 auth_session=session,
             )
         except EngieBeAuthenticationError:
@@ -86,6 +93,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         except EngieBeError:
             LOGGER.exception("Unexpected error during authentication")
             return {"base": "unknown"}
+        self._login = _PendingLogin(client, auth_flow, email, mfa_method)
         return {}
 
     @override
@@ -173,9 +181,10 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if TYPE_CHECKING:
-                assert self._auth_flow is not None
+                assert self._login is not None
+            login = self._login
             try:
-                tokens = await self._auth_flow.async_submit_mfa(user_input["code"])
+                tokens = await login.auth_flow.async_submit_mfa(user_input["code"])
             except EngieBeMfaError:
                 errors["base"] = "invalid_mfa_code"
             except EngieBeAuthenticationError:
@@ -186,41 +195,37 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected error during MFA submission")
                 errors["base"] = "unknown"
             else:
-                return await self._async_finish_login(*tokens)
+                return await self._async_finish_login(login, *tokens)
 
         return self.async_show_form(
             step_id="mfa", data_schema=_CODE_SCHEMA, errors=errors
         )
 
     async def _async_finish_login(
-        self, access_token: str, refresh_token: str
+        self, login: _PendingLogin, access_token: str, refresh_token: str
     ) -> ConfigFlowResult:
         """Create the entry, or update and reload it, after a successful login."""
-        if TYPE_CHECKING:
-            assert self._client is not None
-            assert self._email is not None
-        if (subject := self._client.subject) is None:
+        if (subject := login.client.subject) is None:
             return self.async_show_form(
                 step_id="mfa",
                 data_schema=_CODE_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
         await self.async_set_unique_id(subject)
+        tokens = {CONF_ACCESS_TOKEN: access_token, CONF_REFRESH_TOKEN: refresh_token}
         data = {
-            CONF_EMAIL: self._email,
-            CONF_MFA_METHOD: self._mfa_method.value,
-            CONF_ACCESS_TOKEN: access_token,
-            CONF_REFRESH_TOKEN: refresh_token,
+            CONF_EMAIL: login.email,
+            CONF_MFA_METHOD: login.mfa_method.value,
+            **tokens,
         }
+        if self.source == SOURCE_USER:
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title=login.email, data=data)
+        self._abort_if_unique_id_mismatch()
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data
+                self._get_reauth_entry(), data_updates=tokens
             )
-        if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data_updates=data, title=self._email
-            )
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=self._email, data=data)
+        return self.async_update_reload_and_abort(
+            self._get_reconfigure_entry(), data_updates=data, title=login.email
+        )
