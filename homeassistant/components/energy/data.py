@@ -1005,8 +1005,8 @@ class EnergyManager:
             "device_consumption_gas": [],
         }
 
-    async def async_update(self, update: EnergyPreferencesUpdate) -> None:
-        """Update the preferences."""
+    async def async_update(self, update: EnergyPreferencesUpdate) -> EnergyPreferences:
+        """Update the preferences and return them."""
         if self.data is None:
             data = EnergyManager.default_preferences()
         else:
@@ -1030,10 +1030,9 @@ class EnergyManager:
         self.data = data
         self._store.async_delay_save(lambda: data, 60)
 
-        if not self._update_listeners:
-            return
-
-        await asyncio.gather(*(listener() for listener in self._update_listeners))
+        if self._update_listeners:
+            await asyncio.gather(*(listener() for listener in self._update_listeners))
+        return data
 
     def _power_sensor_entity_id(self, source_type: str, config: PowerConfig) -> str:
         """Return the entity_id of a power transform sensor.

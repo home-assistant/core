@@ -16,7 +16,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.helpers.typing import VolDictType
-from homeassistant.util.json import JsonObjectType, json_loads
+from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BATTERY_DIRECTIONS, DOMAIN
 from .data import (
@@ -29,7 +29,6 @@ from .data import (
 )
 from .validate import async_validate
 
-# The tool lists the energy sources per type, keyed by these names
 _SOURCE_KEYS = {
     "grid": "grid_sources",
     "solar": "solar_sources",
@@ -42,13 +41,6 @@ _DEVICE_KEYS = (
     "device_consumption",
     "device_consumption_water",
     "device_consumption_gas",
-)
-
-_UPDATE_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional("energy_sources"): ENERGY_SOURCE_SCHEMA,
-        **{probatio.Optional(key): [DEVICE_CONSUMPTION_SCHEMA] for key in _DEVICE_KEYS},
-    }
 )
 
 # The tool parameters only declare the fields, so every LLM can fill them in.
@@ -121,12 +113,6 @@ _HOME_SOURCE: VolDictType = {
     probatio.Optional("stat_rate"): str,
     probatio.Optional("name"): str,
 }
-_DEVICE: VolDictType = {
-    probatio.Required("stat_consumption"): str,
-    probatio.Optional("stat_rate"): str,
-    probatio.Optional("name"): str,
-    probatio.Optional("included_in_stat"): str,
-}
 _DEVICE_DESCRIPTION = (
     "devices. stat_consumption is the meter of the device, included_in_stat the "
     "stat_consumption of a device whose meter also measures this device."
@@ -185,40 +171,37 @@ _PARAMETERS = probatio.Schema(
         ): [_HOME_SOURCE],
         probatio.Optional(
             "device_consumption", description=f"Electricity {_DEVICE_DESCRIPTION}"
-        ): [_DEVICE],
+        ): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional(
             "device_consumption_water", description=f"Water {_DEVICE_DESCRIPTION}"
-        ): [_DEVICE],
+        ): [DEVICE_CONSUMPTION_SCHEMA],
         probatio.Optional(
             "device_consumption_gas", description=f"Gas {_DEVICE_DESCRIPTION}"
-        ): [_DEVICE],
+        ): [DEVICE_CONSUMPTION_SCHEMA],
     }
 )
 
 
 def _split_by_type(
-    preferences: EnergyPreferences, values: list[Any] | None = None
+    preferences: EnergyPreferences, values: list[Any]
 ) -> dict[str, list[Any]]:
-    """Return the energy sources, or values in the same order, per source type.
-
-    The type of each source is left out, the key of its list holds it.
-    """
+    """Return the values of the energy sources, in the same order, per source type."""
     split: dict[str, list[Any]] = {key: [] for key in _SOURCE_KEYS.values()}
-    for index, source in enumerate(preferences["energy_sources"]):
-        if values is None:
-            value: Any = {key: val for key, val in source.items() if key != "type"}
-        else:
-            value = values[index]
+    for source, value in zip(preferences["energy_sources"], values, strict=True):
         split[_SOURCE_KEYS[source["type"]]].append(value)
     return split
 
 
 def _format_preferences(preferences: EnergyPreferences) -> JsonObjectType:
-    """Return the preferences with the energy sources per type."""
+    """Return the preferences with the energy sources per type, without the type."""
+    sources = [
+        {key: value for key, value in source.items() if key != "type"}
+        for source in preferences["energy_sources"]
+    ]
     return cast(
         JsonObjectType,
         {
-            **_split_by_type(preferences),
+            **_split_by_type(preferences, sources),
             **{key: preferences.get(key, []) for key in _DEVICE_KEYS},
         },
     )
@@ -279,35 +262,24 @@ class UpdatePreferencesTool(Tool):
 
         update: dict[str, Any] = {key: args[key] for key in _DEVICE_KEYS if key in args}
         if any(key in args for key in _SOURCE_KEYS.values()):
-            update["energy_sources"] = [
-                source
+            lists = {**_format_preferences(current), **args}
+            sources = [
+                {"type": source_type, **item}
                 for source_type, key in _SOURCE_KEYS.items()
-                for source in (
-                    [{"type": source_type, **item} for item in args[key]]
-                    if key in args
-                    else [
-                        item
-                        for item in current["energy_sources"]
-                        if item["type"] == source_type
-                    ]
-                )
+                for item in lists[key]
             ]
-        try:
-            update = _UPDATE_SCHEMA(update)
-        except probatio.Invalid as err:
-            return ToolResult(data={"error": str(err)}, error=True)
+            try:
+                update["energy_sources"] = ENERGY_SOURCE_SCHEMA(sources)
+            except probatio.Invalid as err:
+                return ToolResult(data={"error": str(err)}, error=True)
 
-        await manager.async_update(cast(EnergyPreferencesUpdate, update))
-        # The validation awaits the recorder, and another save can change
-        # manager.data meanwhile, so both use the same preferences
-        preferences = manager.data
-        assert preferences is not None
+        # manager.data can change while the validation awaits the recorder
+        preferences = await manager.async_update(cast(EnergyPreferencesUpdate, update))
         # The issues hold sets of tuples, which plain JSON encoders reject
-        validation = cast(
-            dict[str, Any],
-            json_loads(json_dumps((await async_validate(hass, preferences)).as_dict())),
+        validation = json_loads_object(
+            json_dumps((await async_validate(hass, preferences)).as_dict())
         )
-        energy_validation = validation.pop("energy_sources")
+        energy_validation = cast(list[Any], validation.pop("energy_sources"))
         return ToolResult(
             data={
                 "result": _format_preferences(preferences),

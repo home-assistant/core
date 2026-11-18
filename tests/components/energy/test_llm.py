@@ -8,7 +8,7 @@ import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
-from homeassistant.components.energy import DOMAIN
+from homeassistant.components.energy import DOMAIN, data
 from homeassistant.components.energy.data import EnergyPreferences, async_get_manager
 from homeassistant.components.energy.llm import async_get_tools
 from homeassistant.components.energy.validate import (
@@ -127,6 +127,51 @@ async def test_update_parameters_list_all_properties(api: llm.APIInstance) -> No
     assert _objects_without_properties(schema) == []
 
 
+def _fields(schema: Any) -> set[str]:
+    """Return the field names of a schema, without the type and removed fields."""
+    if isinstance(schema, probatio.All):
+        schema = schema.validators[0]
+    if isinstance(schema, probatio.Schema):
+        schema = schema.schema
+    return {
+        str(key)
+        for key in schema
+        if str(key) != "type" and not isinstance(key, probatio.Remove)
+    }
+
+
+@pytest.mark.parametrize(
+    ("key", "schema", "power_config_schema"),
+    [
+        ("grid_sources", data.GRID_SOURCE_SCHEMA, data.POWER_CONFIG_SCHEMA),
+        ("solar_sources", data.SOLAR_SOURCE_SCHEMA, None),
+        (
+            "battery_sources",
+            data.BATTERY_SOURCE_SCHEMA,
+            data.BATTERY_POWER_CONFIG_SCHEMA,
+        ),
+        ("gas_sources", data.GAS_SOURCE_SCHEMA, None),
+        ("water_sources", data.WATER_SOURCE_SCHEMA, None),
+        ("home_sources", data.HOME_SOURCE_SCHEMA, None),
+    ],
+)
+async def test_update_parameters_declare_all_fields(
+    api: llm.APIInstance,
+    key: str,
+    schema: probatio.All | probatio.Schema,
+    power_config_schema: probatio.All | None,
+) -> None:
+    """Test the update parameters declare every field of the energy schemas.
+
+    An update replaces a whole list, so a field missing here is lost.
+    """
+    tool = next(tool for tool in api.tools if tool.name == UPDATE_TOOL)
+    item = tool.parameters.schema[key][0]
+    assert _fields(item) == _fields(schema)
+    if power_config_schema is not None:
+        assert _fields(item["power_config"]) == _fields(power_config_schema)
+
+
 async def test_get_preferences_not_configured(api: llm.APIInstance) -> None:
     """Test getting the preferences before energy is configured."""
     result = await api.async_call_tool(llm.ToolInput(GET_TOOL, {}))
@@ -201,10 +246,13 @@ async def test_update_preferences(hass: HomeAssistant, api: llm.APIInstance) -> 
     ]
     # The sensors do not exist, so validation reports issues for each item
     validation = result.data["validation"]
-    assert set(validation) == set(EMPTY_PREFERENCES)
-    assert len(validation["grid_sources"]) == 1
-    assert len(validation["solar_sources"]) == 1
-    assert len(validation["battery_sources"]) == 1
+    assert {key: len(value) for key, value in validation.items()} == {
+        **dict.fromkeys(EMPTY_PREFERENCES, 0),
+        "grid_sources": 1,
+        "solar_sources": 1,
+        "battery_sources": 1,
+        "device_consumption_water": 1,
+    }
     assert validation["solar_sources"][0] == [
         {
             "type": "statistics_not_defined",
@@ -305,7 +353,7 @@ async def test_update_preferences_invalid(
     )
 
     assert result == llm.ToolResult(
-        data={"error": "Only one home source is allowed at 'energy_sources'"},
+        data={"error": "Only one home source is allowed"},
         error=True,
     )
     assert manager.data == stored
