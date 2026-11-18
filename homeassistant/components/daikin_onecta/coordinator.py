@@ -90,6 +90,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._bypass_polling_backoff = False
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
+        self._known_topology: set[tuple[str, str | None, str]] | None = None
         self._reload_pending = False
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
 
@@ -442,12 +443,14 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     )
             else:
                 self._cloud_update_sequence += 1
-                has_new_topology = previous_devices is not None and bool(
-                    self._topology(cloud_devices)
-                    - self._topology(
-                        device.device for device in previous_devices.values()
-                    )
-                )
+                current_topology = self._topology(cloud_devices)
+                if self._known_topology is None:
+                    # The initial fetch defines the capabilities platforms set up.
+                    self._known_topology = current_topology
+                    has_new_topology = False
+                else:
+                    has_new_topology = bool(current_topology - self._known_topology)
+                    self._known_topology |= current_topology
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
                     if device_id not in cloud_device_ids:

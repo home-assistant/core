@@ -206,14 +206,36 @@ async def test_management_point_hardware_is_registered_as_subdevice(
     assert point_entry.parent_device_id == gateway_entry.id
 
 
-def test_device_update_detects_management_point_metadata_changes() -> None:
-    """Refresh registry metadata when physical management-point data changes."""
+def test_device_update_ignores_management_point_metadata_changes() -> None:
+    """Only metadata written to the gateway registry triggers an update."""
     device = DaikinOnectaDevice(_load_gateway_devices("altherma_firmwareupdate")[0])
     replacement = deepcopy(device.device)
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
     point.software_version = Characteristic(value="new-firmware")
 
-    assert device.set_device_data(replacement)
+    assert not device.set_device_data(replacement)
+
+
+async def test_polling_child_firmware_change_does_not_update_gateway_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """A child firmware change does not rewrite gateway-only registry metadata."""
+    await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    replacement = deepcopy(device.device)
+    point = replacement.management_points_by_type("indoorUnitHydro")[0]
+    point.software_version = Characteristic(value="new-firmware")
+    coordinator._async_get_cloud_devices = AsyncMock(return_value=[replacement])
+    registry = dr.async_get(hass)
+
+    with patch.object(
+        registry, "async_get_or_create", wraps=registry.async_get_or_create
+    ) as async_get_or_create:
+        await coordinator._async_update_data_from_cloud()
+
+    async_get_or_create.assert_not_called()
 
 
 async def test_poll_refreshes_changed_metadata_once(
@@ -1060,6 +1082,7 @@ class TestOnectaDataUpdateCoordinator:
             management_points=[],
         )
         coordinator.data = {"existing": existing_device}
+        coordinator._known_topology = coordinator._topology([existing_device.device])
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(
             return_value=[existing_device.device, new_device]
@@ -1098,6 +1121,7 @@ class TestOnectaDataUpdateCoordinator:
             ],
         )
         coordinator.data = {"gateway": existing_device}
+        coordinator._known_topology = coordinator._topology([existing_device.device])
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[updated_device])
 

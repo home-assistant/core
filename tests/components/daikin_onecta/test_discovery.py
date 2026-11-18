@@ -532,4 +532,6 @@ async def test_removed_controls_become_unavailable_and_recover(
     assert hass.states.get(entity_id).state == initial_state.state
     assert entity_registry.async_get(entity_id).id == registry_entry.id
     assert entity_registry.async_get(entity_id).unique_id == registry_entry.unique_id
-    schedule_reload.assert_called_once_with(config_entry.entry_id)
+    assert schedule_reload.call_count == removal_reload_count
+    if removal_reload_count:
+        schedule_reload.assert_called_once_with(config_entry.entry_id)

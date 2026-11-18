@@ -2,8 +2,6 @@
 
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
-from .const import MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
-
 
 class DaikinOnectaDevice:
     """Class to represent and control one Daikin Onecta Device."""
@@ -57,20 +55,6 @@ class DaikinOnectaDevice:
             serial_number,
             sw_version,
             self.device.mac_address,
-            tuple(
-                sorted(
-                    (
-                        point.embedded_id,
-                        point.management_point_type,
-                        point.model,
-                        point.serial,
-                        point.version,
-                    )
-                    for point in getattr(self.device, "management_points", [])
-                    if point.management_point_type
-                    in MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
-                )
-            ),
         )
 
     @property
