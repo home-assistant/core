@@ -69,9 +69,7 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: The integration does not have anything to reconfigure.
-  repair-issues:
-    status: exempt
-    comment: The integration does not have any issues to repair.
+  repair-issues: done
   stale-devices: done
 
   # Platinum
