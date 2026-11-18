@@ -17,11 +17,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.watercryst.const import DOMAIN
-from homeassistant.components.watercryst.coordinator import (
-    WatercrystMeasurementsCoordinator,
-    WatercrystStateCoordinator,
-    WatercrystUpdateCoordinator,
-)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
@@ -202,21 +197,13 @@ def mock_config_entry(
     hass: HomeAssistant, mock_api_client: AsyncMock
 ) -> MockConfigEntry:
     """Default config entry mock."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         title=BIOCAT_SERIAL,
         unique_id=BIOCAT_SERIAL,
         entry_id=CONFIG_ENTRY_ID,
         data={CONF_API_KEY: "<api-key>"},
     )
-    entry.runtime_data = WatercrystUpdateCoordinator(
-        hass=hass,
-        config_entry=entry,
-        client=mock_api_client,
-        state=WatercrystStateCoordinator(hass, entry, mock_api_client),
-        measurements=WatercrystMeasurementsCoordinator(hass, entry, mock_api_client),
-    )
-    return entry
 
 
 @pytest.fixture
