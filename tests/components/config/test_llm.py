@@ -36,7 +36,6 @@ from homeassistant.config_entries import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, DependencyError
 from homeassistant.helpers import config_entry_oauth2_flow, llm, selector
-from homeassistant.loader import async_get_integration_descriptions
 from homeassistant.setup import async_setup_component
 
 TEST_DOMAIN = "test_llm_config"
@@ -841,32 +840,6 @@ async def test_search_integrations_pagination(
     assert pages > 1
     assert len(domains) == total
     assert len(set(domains)) == total
-
-
-async def test_search_integrations_custom_helper_without_categories(
-    hass: HomeAssistant,
-    llm_context: llm.LLMContext,
-) -> None:
-    """Test a custom helper without categories is in the helpers category."""
-    descriptions = await async_get_integration_descriptions(hass)
-    descriptions["custom"]["helper"]["my_helper"] = {
-        "config_flow": True,
-        "integration_type": "helper",
-        "name": "My helper",
-    }
-    tool = SearchIntegrationsTool()
-    with patch(
-        "homeassistant.components.config.llm.async_get_integration_descriptions",
-        return_value=descriptions,
-    ):
-        res = await tool.async_call(
-            hass,
-            llm.ToolInput(tool.name, {"query": "my helper", "category": "helpers"}),
-            llm_context,
-        )
-    assert res.data["result"] == [
-        {"domain": "my_helper", "name": "My helper", "categories": ["helpers"]}
-    ]
 
 
 async def test_search_integrations_unknown_category(

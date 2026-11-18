@@ -173,10 +173,7 @@ def _iter_searchable_matches(
         head = f"{domain} {name_f}".replace("_", " ")
         if not all(word in f"{head} {brand}" for word in words):
             continue
-        # Categories are optional for custom integrations
-        categories: list[str] = meta.get("categories") or (
-            ["helpers"] if meta.get("integration_type") == "helper" else []
-        )
+        categories: list[str] = meta.get("categories", [])
         if category is not None and not any(
             cat == category or cat.startswith(f"{category}.") for cat in categories
         ):
