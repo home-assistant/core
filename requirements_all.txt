@@ -933,7 +933,7 @@ e3dc-ess-modbus==0.2.0
 eagle100==0.1.1
 
 # homeassistant.components.earn_e_p1
-earn-e-p1==0.3.0
+earn-e-p1==0.4.0
 
 # homeassistant.components.easyenergy
 easyenergy==3.0.1
