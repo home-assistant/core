@@ -21,12 +21,9 @@ from homeassistant.components.watercryst.coordinator import (
     DEVICE_INFO_POLLING_INTERVAL,
     MEASUREMENTS_POLLING_INTERVAL,
     STATE_POLLING_INTERVAL,
-    WatercrystStateCoordinator,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import (
     ALT_DEVICE_NAME,
@@ -250,19 +247,21 @@ async def test_state_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
     """Test failed state update because of an exception."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     mock_api_client.get_state.side_effect = exception
 
-    coordinator = WatercrystStateCoordinator(
-        hass=hass,
-        config_entry=mock_config_entry,
-        client=mock_api_client,
-    )
+    freezer.tick(STATE_POLLING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
+    assert not mock_config_entry.runtime_data.state.last_update_success
 
 
 @pytest.mark.parametrize(
@@ -276,16 +275,18 @@ async def test_state_api_disabled_or_unauthorized(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
     """Test failed state update because of an exception."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     mock_api_client.get_state.side_effect = exception
 
-    coordinator = WatercrystStateCoordinator(
-        hass=hass,
-        config_entry=mock_config_entry,
-        client=mock_api_client,
-    )
+    freezer.tick(STATE_POLLING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    with pytest.raises(ConfigEntryError):
-        await coordinator._async_update_data()
+    assert not mock_config_entry.runtime_data.state.last_update_success
