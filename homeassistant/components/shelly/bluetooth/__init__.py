@@ -11,7 +11,12 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from ..const import BLEScannerMode
+from ..const import (
+    CONF_BLE_ALLOWED_ADDRESSES,
+    CONF_BLE_MIN_INTERVAL,
+    CONF_BLE_MIN_RSSI,
+    BLEScannerMode,
+)
 
 if TYPE_CHECKING:
     from ..coordinator import ShellyRpcCoordinator
@@ -63,11 +68,22 @@ async def async_connect_scanner(
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]
+    # Optional on-device advertisement filter, applied by the BLE script
+    # so filtered advertisements never leave the Shelly.
+    allowed_addresses: list[str] | None = (
+        entry.options.get(CONF_BLE_ALLOWED_ADDRESSES) or None
+    )
+    min_rssi: float | None = entry.options.get(CONF_BLE_MIN_RSSI)
     await async_start_scanner(
         device=device,
         active=firmware_active,
         event_type=BLE_SCAN_RESULT_EVENT,
         data_version=BLE_SCAN_RESULT_VERSION,
+        allowed_addresses=allowed_addresses,
+        min_rssi=None if min_rssi is None else int(min_rssi),
+        min_interval=(
+            entry.options.get(CONF_BLE_MIN_INTERVAL, 0) if allowed_addresses else 0
+        ),
     )
 
     @hass_callback

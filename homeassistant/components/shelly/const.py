@@ -223,6 +223,9 @@ SHELLY_GAS_MODELS = [MODEL_GAS]
 SHELLY_WALL_DISPLAY_MODEL_PREFIX = "SAWD"
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+CONF_BLE_ALLOWED_ADDRESSES = "ble_allowed_addresses"
+CONF_BLE_MIN_RSSI = "ble_min_rssi"
+CONF_BLE_MIN_INTERVAL = "ble_min_interval"
 
 
 class BLEScannerMode(StrEnum):
