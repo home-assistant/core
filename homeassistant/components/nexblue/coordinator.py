@@ -5,13 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 from nexblue_api import (
     NexBlueAuthError,
     NexBlueClient,
@@ -22,6 +15,14 @@ from nexblue_api import (
     NexBlueStatisticsNotSupportedError,
 )
 from nexblue_api.models import ChargerStatus, LoadBalancer
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CHARGER_UPDATE_INTERVAL,

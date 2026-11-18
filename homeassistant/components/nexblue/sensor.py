@@ -4,6 +4,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Literal, override
 
+from nexblue_api.models import ChargerStatus
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
