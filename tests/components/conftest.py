@@ -68,7 +68,7 @@ from homeassistant.config_entries import (
     FlowResult,
     OptionsFlowManager,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import (
     Context,
     EntityServiceResponse,
@@ -1356,6 +1356,65 @@ async def _check_service_registration_translation(
             )
 
 
+@lru_cache
+def _get_integration_services(integration: str) -> dict[str, Any]:
+    """Get the services.yaml content of a core integration."""
+    try:
+        return yaml_util.load_yaml_dict(
+            f"homeassistant/components/{integration}/services.yaml"
+        )
+    except FileNotFoundError:
+        return {}
+
+
+def _get_schema_fields(schema: Any) -> dict[Any, Any] | None:
+    """Return the field dict of a service schema, if it can be found."""
+    if isinstance(schema, dict):
+        return schema
+    if isinstance(schema, probatio.Schema):
+        return _get_schema_fields(schema.schema)
+    if isinstance(schema, probatio.All):
+        for validator in schema.validators:
+            if (fields := _get_schema_fields(validator)) is not None:
+                return fields
+    return None
+
+
+def _check_service_required_fields(
+    domain: str, service: str, schema: VolSchemaType
+) -> list[str]:
+    """Check that required schema fields are required in services.yaml."""
+    if (
+        not (description := _get_integration_services(domain).get(service))
+        or (fields := _get_schema_fields(schema)) is None
+    ):
+        return []
+    yaml_fields: dict[str, Any] = {}
+    for name, field in (description.get("fields") or {}).items():
+        # Section fields are flat in the service data
+        yaml_fields.update(field.get("fields", {name: field}))
+    errors = []
+    for key in fields:
+        if (
+            not isinstance(key, probatio.Required)
+            or key.default is not probatio.UNDEFINED
+            or not isinstance(key.schema, str)
+            or ("target" in description and key.schema in TargetKey)
+        ):
+            continue
+        if key.schema not in yaml_fields:
+            errors.append(
+                f"Action {domain}.{service} requires field {key.schema},"
+                " which is missing from services.yaml"
+            )
+        elif not yaml_fields[key.schema].get("required", False):
+            errors.append(
+                f"Action {domain}.{service} requires field {key.schema},"
+                " which is not marked as required in services.yaml"
+            )
+    return errors
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -1383,6 +1442,7 @@ async def check_translations(
     translation_errors = dict.fromkeys(ignore_missing_translations, "unused")
 
     translation_coros = set()
+    registered_schemas: dict[tuple[str, str], VolSchemaType] = {}
 
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
@@ -1487,6 +1547,8 @@ async def check_translations(
                     ignored_domains,
                 )
             )
+            if schema is not None:
+                registered_schemas[(domain, service)] = schema
 
         _original_service_registry_async_register(
             self,
@@ -1533,3 +1595,10 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+    if service_errors := [
+        error
+        for (domain, service), schema in registered_schemas.items()
+        for error in _check_service_required_fields(domain, service, schema)
+    ]:
+        pytest.fail("\n".join(service_errors))
