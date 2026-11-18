@@ -1,6 +1,6 @@
 """LLM tools for the energy integration."""
 
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import probatio
 
@@ -273,12 +273,14 @@ class UpdatePreferencesTool(Tool):
             except probatio.Invalid as err:
                 return ToolResult(data={"error": str(err)}, error=True)
 
-        # manager.data can change while the validation awaits the recorder
-        preferences = await manager.async_update(cast(EnergyPreferencesUpdate, update))
+        await manager.async_update(cast(EnergyPreferencesUpdate, update))
         # The issues hold sets of tuples, which plain JSON encoders reject
         validation = json_loads_object(
-            json_dumps((await async_validate(hass, preferences)).as_dict())
+            json_dumps((await async_validate(hass)).as_dict())
         )
+        preferences = manager.data
+        if TYPE_CHECKING:
+            assert preferences is not None
         energy_validation = cast(list[Any], validation.pop("energy_sources"))
         return ToolResult(
             data={
