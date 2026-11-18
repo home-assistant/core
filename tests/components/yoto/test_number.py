@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -119,7 +119,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,
@@ -147,7 +147,7 @@ async def test_set_value_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.nursery_yoto_day_mode_maximum_volume",
+                TargetKey.ENTITY_ID: "number.nursery_yoto_day_mode_maximum_volume",
                 NumberServiceArgument.VALUE: 10,
             },
             blocking=True,

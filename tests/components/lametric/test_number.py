@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -72,7 +72,7 @@ async def test_brightness(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_brightness",
+            TargetKey.ENTITY_ID: "number.frenck_s_lametric_brightness",
             NumberServiceArgument.VALUE: 21,
         },
         blocking=True,
@@ -123,7 +123,7 @@ async def test_volume(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+            TargetKey.ENTITY_ID: "number.frenck_s_lametric_volume",
             NumberServiceArgument.VALUE: 42,
         },
         blocking=True,
@@ -152,7 +152,7 @@ async def test_number_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+                TargetKey.ENTITY_ID: "number.frenck_s_lametric_volume",
                 NumberServiceArgument.VALUE: 42,
             },
             blocking=True,
@@ -181,7 +181,7 @@ async def test_number_connection_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.frenck_s_lametric_volume",
+                TargetKey.ENTITY_ID: "number.frenck_s_lametric_volume",
                 NumberServiceArgument.VALUE: 42,
             },
             blocking=True,

@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import YaleSmartAlarmData
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -34,7 +34,7 @@ async def test_switch(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.device1_autolock",
+            TargetKey.ENTITY_ID: "switch.device1_autolock",
         },
         blocking=True,
     )
@@ -46,7 +46,7 @@ async def test_switch(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.device1_autolock",
+            TargetKey.ENTITY_ID: "switch.device1_autolock",
         },
         blocking=True,
     )

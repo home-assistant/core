@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.components.victron_gx.const import DOMAIN
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -120,7 +120,7 @@ async def test_victron_select_actions(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: "manual",
             },
             blocking=True,

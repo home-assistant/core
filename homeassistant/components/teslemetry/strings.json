@@ -1434,7 +1434,7 @@
         },
         "step": {
           "confirm": {
-            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "description": "Home Assistant cannot receive data from or send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, the vehicle's data will not update and commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
             "title": "[%key:component::teslemetry::issues::key::title%]"
           }
         }

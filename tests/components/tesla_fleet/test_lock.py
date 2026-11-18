@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockService, LockState
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +59,7 @@ async def test_lock_services(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -73,7 +73,7 @@ async def test_lock_services(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -86,7 +86,7 @@ async def test_lock_services(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.LOCK,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -97,7 +97,7 @@ async def test_lock_services(
         await hass.services.async_call(
             LOCK_DOMAIN,
             LockService.UNLOCK,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)

@@ -24,7 +24,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -85,7 +85,7 @@ async def test_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: HISTORY_DAYS,
+            TargetKey.ENTITY_ID: HISTORY_DAYS,
             NumberServiceArgument.VALUE: 90,
         },
         blocking=True,
@@ -113,7 +113,7 @@ async def test_set_value_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: HISTORY_DAYS,
+                TargetKey.ENTITY_ID: HISTORY_DAYS,
                 NumberServiceArgument.VALUE: 90,
             },
             blocking=True,
@@ -146,7 +146,7 @@ async def test_follows_history_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: HISTORY,
+            TargetKey.ENTITY_ID: HISTORY,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
