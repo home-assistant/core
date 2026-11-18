@@ -6,7 +6,11 @@ import logging
 from aiohttp import ClientError
 from place.auth import get_iot_credentials
 from place.config import IOT_ENDPOINT
-from place.errors import PlaceFulfillmentError
+from place.errors import (
+    PlaceCredentialExchangeAuthError,
+    PlaceCredentialExchangeConnectionError,
+    PlaceFulfillmentError,
+)
 from place.models import Credentials
 from place.mqtt_client import MqttClient
 from place.provider import Provider
@@ -69,9 +73,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlaceConfigEntry) -> Non
 
     # Exchange the stored Cognito ID token for AWS IoT credentials
     token = entry.data["token"]
-    credentials = await hass.async_add_executor_job(
-        get_iot_credentials, token["id_token"], token["access_token"]
-    )
+    try:
+        credentials = await hass.async_add_executor_job(
+            get_iot_credentials, token["id_token"], token["access_token"]
+        )
+    except PlaceCredentialExchangeAuthError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except PlaceCredentialExchangeConnectionError as err:
+        raise ConfigEntryNotReady(err) from err
 
     async def async_get_tokens() -> tuple[str, str]:
         """Get current OAuth tokens on the event loop."""

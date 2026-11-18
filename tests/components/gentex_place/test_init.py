@@ -11,11 +11,17 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import jwt
 from place.config import OAUTH2_TOKEN_URL
-from place.errors import PlaceFulfillmentError, PlaceMqttConnectionError
+from place.errors import (
+    PlaceCredentialExchangeAuthError,
+    PlaceCredentialExchangeConnectionError,
+    PlaceFulfillmentError,
+    PlaceMqttConnectionError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.gentex_place.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -106,6 +112,51 @@ async def test_setup_auth_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("aioclient_mock_fixture", "mock_provider", "mock_mqtt_client")
+async def test_setup_credential_exchange_auth_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_iot_credentials: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An authorization failure during credential exchange fails setup."""
+    mock_get_iot_credentials.side_effect = PlaceCredentialExchangeAuthError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert "could not authenticate" in caplog.text
+
+
+@pytest.mark.usefixtures("aioclient_mock_fixture", "mock_provider")
+async def test_setup_credential_exchange_connection_failure_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_iot_credentials: MagicMock,
+    mock_mqtt_client_cls: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A transient credential exchange failure retries and recovers."""
+    mock_get_iot_credentials.side_effect = [
+        PlaceCredentialExchangeConnectionError(),
+        mock_get_iot_credentials.return_value,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    mock_mqtt_client_cls.assert_not_called()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_get_iot_credentials.call_count == 2
+    mock_mqtt_client_cls.assert_called_once()
 
 
 @pytest.mark.usefixtures(
