@@ -2,14 +2,19 @@
 
 import json
 from typing import Any
+from unittest.mock import patch
 
 import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.energy import DOMAIN
-from homeassistant.components.energy.data import async_get_manager
+from homeassistant.components.energy.data import EnergyPreferences, async_get_manager
 from homeassistant.components.energy.llm import async_get_tools
+from homeassistant.components.energy.validate import (
+    EnergyPreferencesValidation,
+    async_validate,
+)
 from homeassistant.components.recorder import Recorder
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
@@ -228,6 +233,35 @@ async def test_update_preferences(hass: HomeAssistant, api: llm.APIInstance) -> 
     ]
     # The MCP server encodes the result with the standard JSON encoder
     json.dumps(result.data)
+
+
+async def test_update_preferences_save_during_validation(
+    hass: HomeAssistant, api: llm.APIInstance
+) -> None:
+    """Test the result matches the update when another save happens meanwhile."""
+    manager = await async_get_manager(hass)
+
+    async def validate_after_other_save(
+        hass: HomeAssistant, preferences: EnergyPreferences | None = None
+    ) -> EnergyPreferencesValidation:
+        await manager.async_update({"energy_sources": []})
+        return await async_validate(hass, preferences)
+
+    with patch(
+        "homeassistant.components.energy.llm.async_validate",
+        validate_after_other_save,
+    ):
+        result = await api.async_call_tool(
+            llm.ToolInput(
+                UPDATE_TOOL, {"solar_sources": [{"stat_energy_from": "sensor.solar"}]}
+            )
+        )
+
+    assert not result.error
+    assert result.data["result"]["solar_sources"] == [
+        {"stat_energy_from": "sensor.solar"}
+    ]
+    assert len(result.data["validation"]["solar_sources"]) == 1
 
 
 async def test_update_preferences_round_trip(

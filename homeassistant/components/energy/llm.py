@@ -298,18 +298,21 @@ class UpdatePreferencesTool(Tool):
             return ToolResult(data={"error": str(err)}, error=True)
 
         await manager.async_update(cast(EnergyPreferencesUpdate, update))
-        assert manager.data is not None
+        # The validation awaits the recorder, and another save can change
+        # manager.data meanwhile, so both use the same preferences
+        preferences = manager.data
+        assert preferences is not None
         # The issues hold sets of tuples, which plain JSON encoders reject
         validation = cast(
             dict[str, Any],
-            json_loads(json_dumps((await async_validate(hass)).as_dict())),
+            json_loads(json_dumps((await async_validate(hass, preferences)).as_dict())),
         )
         energy_validation = validation.pop("energy_sources")
         return ToolResult(
             data={
-                "result": _format_preferences(manager.data),
+                "result": _format_preferences(preferences),
                 "validation": {
-                    **_split_by_type(manager.data, energy_validation),
+                    **_split_by_type(preferences, energy_validation),
                     **validation,
                 },
             }

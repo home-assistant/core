@@ -819,20 +819,24 @@ def _validate_battery_source(
             source_result.add_issue(hass, issue_type, stat)
 
 
-async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
-    """Validate the energy configuration."""
-    manager: data.EnergyManager = await data.async_get_manager(hass)
+async def async_validate(
+    hass: HomeAssistant, preferences: data.EnergyPreferences | None = None
+) -> EnergyPreferencesValidation:
+    """Validate the energy configuration, or the given preferences."""
+    if preferences is None:
+        manager: data.EnergyManager = await data.async_get_manager(hass)
+        preferences = manager.data
     statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]] = {}
     validate_calls: list[functools.partial[None]] = []
     wanted_statistics_metadata: set[str] = set()
 
     result = EnergyPreferencesValidation()
 
-    if manager.data is None:
+    if preferences is None:
         return result
 
     # Create a list of validation checks
-    for source in manager.data["energy_sources"]:
+    for source in preferences["energy_sources"]:
         source_result = ValidationIssues()
         result.energy_sources.append(source_result)
 
@@ -914,14 +918,14 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             _validate_battery_source(
                 hass,
                 source,
-                manager.data["energy_sources"],
+                preferences["energy_sources"],
                 statistics_metadata,
                 wanted_statistics_metadata,
                 source_result,
                 validate_calls,
             )
 
-    for device in manager.data["device_consumption"]:
+    for device in preferences["device_consumption"]:
         device_result = ValidationIssues()
         result.device_consumption.append(device_result)
         wanted_statistics_metadata.add(device["stat_consumption"])
@@ -938,7 +942,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             )
         )
 
-    for device in manager.data.get("device_consumption_water", []):
+    for device in preferences.get("device_consumption_water", []):
         device_result = ValidationIssues()
         result.device_consumption_water.append(device_result)
         wanted_statistics_metadata.add(device["stat_consumption"])
@@ -955,7 +959,7 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             )
         )
 
-    for device in manager.data.get("device_consumption_gas", []):
+    for device in preferences.get("device_consumption_gas", []):
         device_result = ValidationIssues()
         result.device_consumption_gas.append(device_result)
         wanted_statistics_metadata.add(device["stat_consumption"])
