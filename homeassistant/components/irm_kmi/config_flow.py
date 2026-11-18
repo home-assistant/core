@@ -1,7 +1,7 @@
 """Config flow to set up IRM KMI integration via the UI."""
 
 import logging
-from typing import override
+from typing import Any, override
 
 from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import probatio
@@ -106,15 +106,13 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class IrmKmiOptionFlow(OptionsFlowWithReload):
-    """Option flow for the IRM KMI integration.
+    """Option flow for the IRM KMI integration."""
 
-    Helps change options once the integration was configured.
-    """
-
-    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            _LOGGER.debug("Provided config user is: %s", user_input)
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
