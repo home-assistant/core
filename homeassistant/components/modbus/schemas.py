@@ -503,9 +503,10 @@ WATER_HEATER_SCHEMA = probatio.All(
             probatio.Optional(
                 CONF_TARGET_TEMP_WRITE_REGISTERS, default=False
             ): cv.boolean,
-            probatio.Optional(CONF_MAX_TEMP, default=60): probatio.Coerce(int),
-            probatio.Optional(CONF_MIN_TEMP, default=40): probatio.Coerce(int),
-            probatio.Optional(CONF_STEP, default=0.5): probatio.Coerce(float),
+            # the defaults depend on the temperature unit, see water_heater.py
+            probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(int),
+            probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(int),
+            probatio.Optional(CONF_STEP, default=1): probatio.Coerce(float),
             probatio.Optional(
                 CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT
             ): cv.string,

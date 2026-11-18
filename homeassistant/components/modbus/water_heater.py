@@ -68,6 +68,11 @@ from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 
+DEFAULT_MIN_TEMP_CELSIUS = 40
+DEFAULT_MAX_TEMP_CELSIUS = 60
+DEFAULT_MIN_TEMP_FAHRENHEIT = 104
+DEFAULT_MAX_TEMP_FAHRENHEIT = 140
+
 OPERATION_MODES = (
     (CONF_OPERATION_MODE_OFF, STATE_OFF),
     (CONF_OPERATION_MODE_ECO, STATE_ECO),
@@ -111,16 +116,21 @@ class ModbusWaterHeater(ModbusStructEntity, WaterHeaterEntity):
         self._target_temperature_write_registers: bool = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
+        fahrenheit = config[CONF_TEMPERATURE_UNIT] == "F"
         self._attr_native_temperature_unit = (
-            UnitOfTemperature.FAHRENHEIT
-            if config[CONF_TEMPERATURE_UNIT] == "F"
-            else UnitOfTemperature.CELSIUS
+            UnitOfTemperature.FAHRENHEIT if fahrenheit else UnitOfTemperature.CELSIUS
         )
         self._attr_precision = (
             PRECISION_TENTHS if self._precision >= 1 else PRECISION_WHOLE
         )
-        self._attr_min_temp = config[CONF_MIN_TEMP]
-        self._attr_max_temp = config[CONF_MAX_TEMP]
+        self._attr_min_temp = config.get(
+            CONF_MIN_TEMP,
+            DEFAULT_MIN_TEMP_FAHRENHEIT if fahrenheit else DEFAULT_MIN_TEMP_CELSIUS,
+        )
+        self._attr_max_temp = config.get(
+            CONF_MAX_TEMP,
+            DEFAULT_MAX_TEMP_FAHRENHEIT if fahrenheit else DEFAULT_MAX_TEMP_CELSIUS,
+        )
         self._attr_target_temperature_step = config[CONF_STEP]
         self._current_temp_scale: float = config[CONF_CURRENT_TEMP_SCALE]
         self._current_temp_offset: float = config[CONF_CURRENT_TEMP_OFFSET]

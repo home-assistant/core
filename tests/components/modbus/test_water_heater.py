@@ -11,6 +11,8 @@ from homeassistant.components.modbus.const import (
     CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
     CONF_OFF_VALUE,
     CONF_ON_VALUE,
     CONF_ONOFF_COIL,
@@ -34,6 +36,8 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_OPERATION_LIST,
     ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -58,6 +62,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -667,6 +672,62 @@ async def test_set_temperature_out_of_range(
         )
     mock_modbus_ha.write_register.assert_not_called()
     mock_modbus_ha.write_registers.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("do_config", "min_temp", "max_temp"),
+    [
+        pytest.param({CONF_WATER_HEATERS: [BASE_CONFIG]}, 40, 60, id="default_celsius"),
+        pytest.param(
+            {CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_TEMPERATURE_UNIT: "F"}]},
+            40,
+            60,
+            id="default_fahrenheit",
+        ),
+        pytest.param(
+            {
+                CONF_WATER_HEATERS: [
+                    {
+                        **BASE_CONFIG,
+                        CONF_TEMPERATURE_UNIT: "F",
+                        CONF_MIN_TEMP: 95,
+                        CONF_MAX_TEMP: 150,
+                    }
+                ]
+            },
+            35,
+            66,
+            id="explicit_fahrenheit",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_modbus")
+async def test_temperature_limits(
+    hass: HomeAssistant, min_temp: int, max_temp: int
+) -> None:
+    """Test the default limits follow the temperature unit, shown in Celsius."""
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MIN_TEMP] == min_temp
+    assert state.attributes[ATTR_MAX_TEMP] == max_temp
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [{CONF_WATER_HEATERS: [{**BASE_CONFIG, CONF_TEMPERATURE_UNIT: "F"}]}],
+)
+async def test_set_temperature_fahrenheit(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test a usual target (50 °C = 122 °F) is accepted with the default limits."""
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 50},
+        blocking=True,
+    )
+    assert mock_modbus_ha.write_register.call_args_list == [
+        mock.call(TARGET_TEMP_ADDRESS, device_id=10, value=122)
+    ]
 
 
 @pytest.mark.parametrize(
