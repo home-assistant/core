@@ -1,5 +1,6 @@
 """Test ZHA entities."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import time
 from typing import Any
@@ -503,11 +504,22 @@ async def test_group_entity_context_in_flight_member_report(
     group_entity_id = group_entry.entity_id
 
     ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    ieee_2 = EUI64.convert("01:2d:6f:00:0a:90:69:e2")
     dev_proxy_1 = gateway_proxy.device_proxies[ieee_1]
+    dev_proxy_2 = gateway_proxy.device_proxies[ieee_2]
     member_1_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_1, hass)
+    member_2_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_2, hass)
     assert member_1_entity_id is not None
+    assert member_2_entity_id is not None
 
     cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+    cluster_2 = zigpy_app_controller_with_group.devices[ieee_2].endpoints[1].on_off
+    # Member 2 starts on so it can report an opposing off transition while turn_on is in flight
+    await send_attributes_report(
+        hass, cluster_2, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    assert hass.states.get(member_2_entity_id).state == STATE_ON
+
     group_on_off_cluster = group_proxy.group.zigpy_group.endpoint[
         general.OnOff.cluster_id
     ]
@@ -517,6 +529,9 @@ async def test_group_entity_context_in_flight_member_report(
         result = await orig_on(*args, **kwargs)
         await send_attributes_report(
             hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+        )
+        await send_attributes_report(
+            hass, cluster_2, {general.OnOff.AttributeDefs.on_off.id: 0}
         )
         return result
 
@@ -536,6 +551,11 @@ async def test_group_entity_context_in_flight_member_report(
     assert member_1_state is not None
     assert member_1_state.state == STATE_ON
     assert member_1_state.context == turn_on_context
+
+    member_2_state = hass.states.get(member_2_entity_id)
+    assert member_2_state is not None
+    assert member_2_state.state == STATE_OFF
+    assert member_2_state.context != turn_on_context
 
 
 async def test_group_entity_context_no_diff_and_delayed_group_event(
@@ -818,3 +838,98 @@ async def test_group_entity_context_when_group_command_returns_non_success(
     assert member_1_state is not None
     assert member_1_state.state == STATE_ON
     assert member_1_state.context == turn_on_context
+
+
+async def test_group_entity_context_overlapping_commands(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an overlapping group command is not overwritten when an earlier call finishes."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    [group_entry] = er.async_entries_for_device(entity_registry, group_proxy.device_id)
+    group_entity_id = group_entry.entity_id
+
+    ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    dev_proxy_1 = gateway_proxy.device_proxies[ieee_1]
+    member_1_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_1, hass)
+    assert member_1_entity_id is not None
+
+    cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    assert hass.states.get(member_1_entity_id).state == STATE_ON
+
+    group_on_off_cluster = group_proxy.group.zigpy_group.endpoint[
+        general.OnOff.cluster_id
+    ]
+    orig_on = group_on_off_cluster.on
+    orig_off = group_on_off_cluster.off
+
+    on_entered = asyncio.Event()
+    release_on = asyncio.Event()
+    off_entered = asyncio.Event()
+    release_off = asyncio.Event()
+
+    async def _delayed_on(*args: Any, **kwargs: Any) -> Any:
+        on_entered.set()
+        await release_on.wait()
+        return await orig_on(*args, **kwargs)
+
+    async def _delayed_off(*args: Any, **kwargs: Any) -> Any:
+        off_entered.set()
+        await release_off.wait()
+        return await orig_off(*args, **kwargs)
+
+    turn_on_context = Context(user_id=hass_admin_user.id, id="overlap_turn_on_ctx")
+    turn_off_context = Context(user_id=hass_admin_user.id, id="overlap_turn_off_ctx")
+
+    with (
+        patch.object(group_on_off_cluster, "on", side_effect=_delayed_on),
+        patch.object(group_on_off_cluster, "off", side_effect=_delayed_off),
+    ):
+        on_task = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: group_entity_id},
+                blocking=True,
+                context=turn_on_context,
+            )
+        )
+        await on_entered.wait()
+
+        # Issue turn_off (Context B) while turn_on (Context A) is still in flight
+        off_task = hass.async_create_task(
+            hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: group_entity_id},
+                blocking=True,
+                context=turn_off_context,
+            )
+        )
+        await off_entered.wait()
+
+        # Let the superseded turn_on (Context A) finish while turn_off (Context B) is still awaiting
+        release_on.set()
+        await on_task
+
+        # Member reports off for Context B while turn_off is still awaiting
+        cluster_1.update_attribute(general.OnOff.AttributeDefs.on_off.id, 0)
+
+        release_off.set()
+        await off_task
+
+    member_1_state = hass.states.get(member_1_entity_id)
+    assert member_1_state is not None
+    assert member_1_state.state == STATE_OFF
+    assert member_1_state.context == turn_off_context
