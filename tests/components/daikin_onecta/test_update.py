@@ -232,6 +232,36 @@ async def test_failed_firmware_install_clears_pending_state(
     assert state.attributes["supported_features"] == UpdateEntityFeature.INSTALL
 
 
+async def test_failed_firmware_install_preserves_reported_progress(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Keep firmware-reported progress support after an install command fails."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_point(gateway.device.gateway_embedded_id)
+    assert point is not None
+    point.firmware_update_status = Characteristic(value="in-progress")
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    coordinator.async_execute_command = AsyncMock(return_value=False)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
+            blocking=True,
+        )
+
+    state = hass.states.get("update.living_room_firmware_update")
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+    assert state.attributes["supported_features"] == (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+
+
 @pytest.mark.parametrize("update_supported", [False, True])
 async def test_firmware_install_rejects_unavailable_firmware(
     hass: HomeAssistant,

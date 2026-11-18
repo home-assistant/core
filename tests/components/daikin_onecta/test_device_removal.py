@@ -320,14 +320,14 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
     coordinator.async_get_sites.assert_awaited_once_with()
 
 
-async def test_removed_gateway_reappearing_schedules_entity_reload(
+async def test_removed_gateway_reappearing_does_not_reload_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     missing_gateway: dr.DeviceEntry,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Forget removed gateway capabilities so their return reloads platforms."""
+    """Existing dynamic entities recover when a removed gateway returns."""
     coordinator = config_entry.runtime_data
     gateway_id = next(
         identifier
@@ -338,8 +338,6 @@ async def test_removed_gateway_reappearing_schedules_entity_reload(
         return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
     )
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
-    assert coordinator._known_topology is not None
-    assert not any(key[0] == gateway_id for key in coordinator._known_topology)
 
     mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
         "minimal_data"
@@ -347,17 +345,19 @@ async def test_removed_gateway_reappearing_schedules_entity_reload(
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    schedule_reload.assert_called_once_with(config_entry.entry_id)
+    assert coordinator.data[gateway_id].present_in_cloud
+    assert config_entry.runtime_data is coordinator
+    schedule_reload.assert_not_called()
 
 
-async def test_removed_child_reappearing_schedules_entity_reload(
+async def test_removed_child_reappearing_does_not_reload_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Forget removed management-point capabilities so their return reloads."""
+    """Existing child entities recover when a removed point returns."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     original_devices = _load_gateway_devices("minimal_data")
@@ -385,17 +385,14 @@ async def test_removed_child_reappearing_schedules_entity_reload(
     assert coordinator.data[gateway_id].management_point(embedded_id) is None
 
     assert await async_remove_config_entry_device(hass, config_entry, child)
-    assert coordinator._known_topology is not None
-    assert not any(
-        key[0] == gateway_id and key[1] == embedded_id
-        for key in coordinator._known_topology
-    )
 
     mock_onecta_client.get_gateway_devices.return_value = original_devices
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    schedule_reload.assert_called_once_with(config_entry.entry_id)
+    assert coordinator.data[gateway_id].management_point(embedded_id) is not None
+    assert config_entry.runtime_data is coordinator
+    schedule_reload.assert_not_called()
 
 
 async def test_remove_gateway_when_unloaded_is_rejected(

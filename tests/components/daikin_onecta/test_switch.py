@@ -140,11 +140,16 @@ async def test_unknown_characteristic_is_skipped() -> None:
     device = SimpleNamespace(
         device=SimpleNamespace(management_points=[management_point])
     )
+    coordinator = SimpleNamespace(
+        data={"gateway": device},
+        cloud_update_sequence=1,
+        async_add_listener=MagicMock(return_value=MagicMock()),
+    )
     config_entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(data={"gateway": device})
+        runtime_data=coordinator, async_on_unload=MagicMock()
     )
     async_add_entities = MagicMock()
 
     await async_setup_switches(MagicMock(), config_entry, async_add_entities)
 
-    async_add_entities.assert_called_once_with([])
+    async_add_entities.assert_not_called()

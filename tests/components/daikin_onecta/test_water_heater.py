@@ -381,7 +381,7 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
         (METRIC_SYSTEM, 48.6, 0.5, 48.5),
         (METRIC_SYSTEM, 49.2, 2, 50),
         (METRIC_SYSTEM, 45.3, 0.1, 45.3),
-        (METRIC_SYSTEM, 44.5, None, 45),
+        (METRIC_SYSTEM, 44.25, None, 44.5),
     ],
 )
 async def test_water_heater_temperature_rounds_to_native_step(
@@ -425,6 +425,41 @@ async def test_water_heater_temperature_rounds_to_native_step(
             expected_temperature,
             path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
         )
+
+
+async def test_water_heater_temperature_is_clamped_to_setpoint_range(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Clamp service values to Daikin's setpoint bounds before writing."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    setpoint = point.domestic_hot_water.temperature
+    assert setpoint is not None
+    assert setpoint.max_value is not None
+    setpoint.step_value = 0.5
+    expected = float(setpoint.max_value)
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: expected + 10,
+        },
+        blocking=True,
+    )
+
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        point.embedded_id,
+        "temperatureControl",
+        expected,
+        path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
 
 
 async def test_water_heater_publishes_successful_partial_operation_write(

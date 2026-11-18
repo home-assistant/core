@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.components.daikin_onecta.entity import _add_management_point_metadata
+from homeassistant.components.daikin_onecta.entity import _gateway_device_info
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -62,13 +62,10 @@ async def test_gateway_device_registry_uses_cloud_metadata(
     assert outdoor_unit.name == "Outdoor unit"
 
 
-def test_add_management_point_metadata_handles_missing_point() -> None:
-    """Leave gateway metadata unchanged when the point disappeared."""
-    info = DeviceInfo(identifiers={(DOMAIN, "gateway-id")})
-    device = MagicMock()
-    device.management_point.return_value = None
+def test_gateway_device_info_only_returns_its_identifier() -> None:
+    """Let coordinator registration own gateway metadata updates."""
+    device = MagicMock(id="gateway-id")
 
-    _add_management_point_metadata(info, device, "point")
-
-    assert info == DeviceInfo(identifiers={(DOMAIN, "gateway-id")})
-    device.management_point.assert_called_once_with("point")
+    assert _gateway_device_info(device) == DeviceInfo(
+        identifiers={(DOMAIN, "gateway-id")}
+    )

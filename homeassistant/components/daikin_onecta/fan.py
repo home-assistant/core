@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
@@ -35,6 +35,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin air-purifier fan entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: _create_air_purifiers(coordinator, added),
+    )
+
+
+def _create_air_purifiers(
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
+) -> list[DaikinAirPurifier]:
+    """Create supported air purifiers from the current cloud model."""
     entities: list[DaikinAirPurifier] = []
     for device in (coordinator.data or {}).values():
         entities.extend(
@@ -47,8 +60,10 @@ async def async_setup_entry(
                 and (power := management_point.air_purification.power) is not None
                 and power.settable
             )
+            and f"{device.id}_{management_point.embedded_id}_air_purifier"
+            not in added_unique_ids
         )
-    async_add_entities(entities)
+    return entities
 
 
 class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
@@ -203,9 +218,14 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             )
             fixed_speed = operation.fan_speed.modes[FANMODE_FIXED].value
             if fixed_speed is not None:
-                self._attr_percentage = ordered_list_item_to_percentage(
-                    speeds, int(fixed_speed)
-                )
+                try:
+                    speed = int(fixed_speed)
+                except TypeError, ValueError:
+                    speed = None
+                if speed in speeds:
+                    self._attr_percentage = ordered_list_item_to_percentage(
+                        speeds, speed
+                    )
         self._attr_supported_features = features
 
     @override

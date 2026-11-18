@@ -34,7 +34,7 @@ from homeassistant.util import dt as dt_util
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
 from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
@@ -89,16 +89,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     coordinator = config_entry.runtime_data
-    entities = [
-        entity
-        for device in (coordinator.data or {}).values()
-        for entity in _create_climate_entities(device, coordinator)
-    ]
-    async_add_entities(entities)
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: [
+            entity
+            for device in (coordinator.data or {}).values()
+            for entity in _create_climate_entities(device, coordinator, added)
+        ],
+    )
 
 
 def _create_climate_entities(
-    device: DaikinOnectaDevice, coordinator: OnectaDataUpdateCoordinator
+    device: DaikinOnectaDevice,
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
 ) -> list[DaikinClimate]:
     """Create climate entities for each Daikin temperature target.
 
@@ -113,18 +119,22 @@ def _create_climate_entities(
         climate_control = management_point.climate_control
         if climate_control is None:
             continue
-        entities.extend(
-            DaikinClimate(
-                device,
-                setpoint_type,
-                coordinator,
-                management_point.embedded_id,
-                description,
+        for setpoint_type in climate_control.setpoint_types:
+            description = CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type)
+            if description is None:
+                continue
+            unique_id = f"{device.id}_{management_point.embedded_id}_{setpoint_type}"
+            if unique_id in added_unique_ids:
+                continue
+            entities.append(
+                DaikinClimate(
+                    device,
+                    setpoint_type,
+                    coordinator,
+                    management_point.embedded_id,
+                    description,
+                )
             )
-            for setpoint_type in climate_control.setpoint_types
-            if (description := CLIMATE_ENTITY_DESCRIPTIONS.get(setpoint_type))
-            is not None
-        )
     return entities
 
 

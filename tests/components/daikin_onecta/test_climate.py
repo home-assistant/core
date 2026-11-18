@@ -109,7 +109,7 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
     with patch(
         "homeassistant.components.daikin_onecta.climate.DaikinClimate"
     ) as climate:
-        _create_climate_entities(device, coordinator)
+        _create_climate_entities(device, coordinator, set())
 
     assert climate.call_args_list == [
         (
@@ -156,7 +156,7 @@ def test_create_climate_entities_skips_management_points_without_climate_control
     device = MagicMock()
     device.device.management_points_by_type.return_value = [management_point]
 
-    assert _create_climate_entities(device, MagicMock()) == []
+    assert _create_climate_entities(device, MagicMock(), set()) == []
 
 
 @pytest.mark.parametrize(

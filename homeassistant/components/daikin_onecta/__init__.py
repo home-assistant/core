@@ -145,7 +145,6 @@ async def async_remove_config_entry_device(
                 and current_device.management_point(embedded_id) is not None
             ):
                 return False
-        coordinator.forget_device_topology(parent_gateway_id, embedded_id)
         return True
 
     device = devices.get(gateway_id)
@@ -168,5 +167,4 @@ async def async_remove_config_entry_device(
         return False
     if coordinator.data is not None:
         coordinator.data.pop(gateway_id, None)
-    coordinator.forget_device_topology(gateway_id)
     return True

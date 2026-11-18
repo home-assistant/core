@@ -18,22 +18,21 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ENERGY_AGGREGATE_PERIODS,
-    SENSOR_PERIOD_DAILY,
-    SENSOR_PERIOD_MONTHLY,
     SENSOR_PERIOD_UNIQUE_IDS,
-    SENSOR_PERIOD_WEEKLY,
-    SENSOR_PERIOD_YEARLY,
     SENSORY_DATA_SENSOR_TYPES,
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .discovery import (
     energy_description_key,
-    get_scalar_characteristic,
     scalar_characteristics_for_platform,
     scalar_platform,
 )
-from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
+from .entity import (
+    DaikinManagementPointEntity,
+    DaikinOnectaAccountEntity,
+    add_entities_on_coordinator_update,
+)
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 from .utils import enum_value_to_state
 
@@ -84,6 +83,7 @@ def add_energy_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
+    added_unique_ids: set[str],
 ) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
     supported_aggregates = []
@@ -110,9 +110,12 @@ def add_energy_sensors(
             management_point.embedded_id,
             aggregate.source,
             aggregate.operation_mode,
-            ENERGY_AGGREGATE_PERIODS[aggregate.period],
+            aggregate.period,
             aggregate.data_type,
         )
+        unique_id = _energy_sensor_unique_id(device.id, details)
+        if unique_id in added_unique_ids:
+            continue
         sensors.append(
             DaikinEnergySensor(
                 device,
@@ -128,11 +131,17 @@ def add_simple_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
+    added_unique_ids: set[str],
 ) -> None:
     """Add sensors for simple characteristics of one management point."""
     for value, _characteristic in scalar_characteristics_for_platform(
         management_point, Platform.SENSOR
     ):
+        unique_id = _value_sensor_unique_id(
+            device.id, management_point.embedded_id, None, value
+        )
+        if unique_id in added_unique_ids:
+            continue
         sensors.append(
             DaikinValueSensor(
                 device,
@@ -152,6 +161,7 @@ def add_sensory_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
+    added_unique_ids: set[str],
 ) -> None:
     """Add sensors for sensory data exposed by one management point."""
     sensors.extend(
@@ -168,6 +178,10 @@ def add_sensory_sensors(
         for sensor in SENSORY_DATA_SENSOR_TYPES
         if sensor in SENSOR_DESCRIPTIONS
         and management_point.sensory_characteristic(sensor) is not None
+        and _value_sensor_unique_id(
+            device.id, management_point.embedded_id, "sensoryData", sensor
+        )
+        not in added_unique_ids
     )
 
 
@@ -176,18 +190,22 @@ def add_management_point_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
+    added_unique_ids: set[str],
 ) -> None:
     """Add all sensors exposed by a management point."""
-    add_simple_sensors(coordinator, device, management_point, sensors)
-    add_sensory_sensors(coordinator, device, management_point, sensors)
-    add_energy_sensors(coordinator, device, management_point, sensors)
+    add_simple_sensors(coordinator, device, management_point, sensors, added_unique_ids)
+    add_sensory_sensors(
+        coordinator, device, management_point, sensors, added_unique_ids
+    )
+    add_energy_sensors(coordinator, device, management_point, sensors, added_unique_ids)
 
 
 def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> str:
     """Return the stable unique ID for an energy aggregate."""
     return (
         f"{device_id}_{details.embedded_id}_{details.sensor_type}_{details.operation_mode}_"
-        f"{SENSOR_PERIOD_UNIQUE_IDS[details.period]}_{details.datatype}"
+        f"{SENSOR_PERIOD_UNIQUE_IDS[ENERGY_AGGREGATE_PERIODS[details.period]]}_"
+        f"{details.datatype}"
     )
 
 
@@ -219,11 +237,27 @@ async def async_setup_entry(
             "remaining_day",
         )
     ]
+    async_add_entities(sensors)
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: _create_device_sensors(coordinator, added),
+    )
+
+
+def _create_device_sensors(
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
+) -> list[SensorEntity]:
+    """Create supported device sensors from the current cloud model."""
+    sensors: list[SensorEntity] = []
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
-            add_management_point_sensors(coordinator, device, management_point, sensors)
-
-    async_add_entities(sensors)
+            add_management_point_sensors(
+                coordinator, device, management_point, sensors, added_unique_ids
+            )
+    return sensors
 
 
 class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
@@ -264,21 +298,12 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
             source.unit if source is not None else None, self.entity_description
         )
 
-    def _api_period(self) -> str:
-        """Return the Daikin API period for this entity."""
-        return {
-            SENSOR_PERIOD_DAILY: "day",
-            SENSOR_PERIOD_WEEKLY: "week",
-            SENSOR_PERIOD_YEARLY: "year",
-            SENSOR_PERIOD_MONTHLY: "month",
-        }[self._period]
-
     def _energy_aggregate(self) -> EnergyAggregate | None:
         """Return the matching energy aggregate from the current model."""
         point = self._device.management_point(self._embedded_id)
         if point is None:
             return None
-        period = self._api_period()
+        period = self._period
         return next(
             (
                 aggregate
@@ -317,7 +342,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         that a time slot is not available yet and contributes no consumption
         until a later update supplies its value.
         """
-        period = self._api_period()
+        period = self._period
         aggregate = self._energy_aggregate()
         if aggregate is None:
             return None
@@ -359,7 +384,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             characteristic = (
                 point.sensory_characteristic(self._value)
                 if self._sub_type == "sensoryData"
-                else get_scalar_characteristic(point, self._value)
+                else point.characteristic(self._value)
             )
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
@@ -380,7 +405,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         if self._sub_type == "sensoryData":
             characteristic = point.sensory_characteristic(self._value)
         else:
-            characteristic = get_scalar_characteristic(point, self._value)
+            characteristic = point.characteristic(self._value)
         result: object = characteristic.value if characteristic is not None else None
         if (
             isinstance(result, str)
@@ -411,7 +436,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else get_scalar_characteristic(point, self._value)
+            else point.characteristic(self._value)
         )
         return characteristic is not None and (
             self._sub_type is not None

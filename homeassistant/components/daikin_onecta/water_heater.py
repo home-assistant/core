@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
 from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
@@ -36,6 +36,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin water tank entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: _create_water_tanks(coordinator, added),
+    )
+
+
+def _create_water_tanks(
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
+) -> list[DaikinWaterTank]:
+    """Create water heaters for management points with typed tank data."""
     entities: list[DaikinWaterTank] = []
     for device in (coordinator.data or {}).values():
         supported_management_point_types = (
@@ -52,8 +65,11 @@ async def async_setup_entry(
                 for management_point in device.device.management_points_by_type(
                     management_point_type
                 )
+                if management_point.domestic_hot_water is not None
+                and f"{device.id}_{management_point.embedded_id}"
+                not in added_unique_ids
             )
-    async_add_entities(entities)
+    return entities
 
 
 class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
@@ -230,7 +246,14 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         step_value = dht.step_value
         target_temperature = round_temperature_to_step(
             value,
-            step_value if step_value is not None and step_value > 0 else 1,
+            step_value if step_value is not None and step_value > 0 else 0.5,
+        )
+        target_temperature = min(
+            max(
+                target_temperature,
+                dht.min_value if dht.min_value is not None else self.min_temp,
+            ),
+            dht.max_value if dht.max_value is not None else self.max_temp,
         )
         if target_temperature != self._attr_native_target_temperature:
             await self._async_execute_hot_water_command(

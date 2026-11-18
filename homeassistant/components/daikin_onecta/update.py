@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
 from .entity_descriptions import UPDATE_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -26,8 +26,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin update entities from a config entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: _create_firmware_entities(coordinator, added),
+    )
 
-    entities = [
+
+def _create_firmware_entities(
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
+) -> list[DaikinFirmwareUpdateEntity]:
+    """Create firmware update entities from the current cloud model."""
+    return [
         DaikinFirmwareUpdateEntity(
             coordinator,
             device,
@@ -36,9 +48,9 @@ async def async_setup_entry(
         for device in (coordinator.data or {}).values()
         for management_point in device.device.management_points
         if management_point.firmware is not None
+        and f"{device.id}_{management_point.embedded_id}_firmware"
+        not in added_unique_ids
     ]
-
-    async_add_entities(entities)
 
 
 class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
@@ -87,7 +99,11 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             )
         except HomeAssistantError:
             self._pending_install = None
-            self._attr_supported_features &= ~UpdateEntityFeature.PROGRESS
+            management_point = self._device.management_point(self._embedded_id)
+            if management_point is not None:
+                self._update_from_management_point(management_point)
+            else:
+                self._attr_supported_features &= ~UpdateEntityFeature.PROGRESS
             self.async_write_ha_state()
             raise
 

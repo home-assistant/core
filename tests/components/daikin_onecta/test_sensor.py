@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.const import DOMAIN, SENSOR_PERIOD_DAILY
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity_descriptions import (
     SENSOR_DESCRIPTIONS,
@@ -229,6 +229,7 @@ def test_unsupported_energy_aggregate_is_skipped() -> None:
             ],
         ),
         sensors,
+        set(),
     )
 
     assert sensors == []
@@ -254,6 +255,7 @@ def test_unsupported_energy_period_is_skipped() -> None:
             ],
         ),
         sensors,
+        set(),
     )
 
     assert sensors == []
@@ -316,7 +318,7 @@ def test_energy_sensor_uses_daikin_unit(
             point.embedded_id,
             aggregate.source,
             aggregate.operation_mode,
-            SENSOR_PERIOD_DAILY,
+            aggregate.period,
             aggregate.data_type,
         ),
     )

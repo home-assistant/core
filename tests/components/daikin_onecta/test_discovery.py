@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import replace
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta.models import (
@@ -20,8 +19,6 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
-    gateway_entity_keys,
-    management_point_entity_keys,
     scalar_platform,
 )
 from homeassistant.components.daikin_onecta.entity_descriptions import (
@@ -109,29 +106,6 @@ def test_scalar_platform(
     assert scalar_platform(name, characteristic, management_point_type) is expected
 
 
-def test_discovery_skips_unknown_energy_period() -> None:
-    """Ignore energy windows the integration does not expose yet."""
-    point = SimpleNamespace(
-        climate_control=None,
-        domestic_hot_water=None,
-        air_purification=None,
-        schedule_state=None,
-        firmware=None,
-        scalar_characteristics=dict,
-        sensory_characteristic=lambda _name: None,
-        energy_aggregates=[
-            SimpleNamespace(
-                period="quarter",
-                operation_mode="heating",
-                source="electrical",
-                data_type="consumption",
-            )
-        ],
-    )
-
-    assert management_point_entity_keys(point) == set()
-
-
 def test_energy_description_key() -> None:
     """Return a key only when both the period and description are supported."""
     aggregate = next(
@@ -215,10 +189,6 @@ async def test_missing_values_do_not_change_entity_topology(
         "switch",
         "update",
     }
-    assert {
-        key for device in initial_devices for key in gateway_entity_keys(device)
-    } == {key for device in cloud_devices for key in gateway_entity_keys(device)}
-
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow."
@@ -341,7 +311,7 @@ def _add_firmware(devices: list[GatewayDevice]) -> tuple[str, str]:
         (_add_firmware, False),
     ],
 )
-async def test_poll_discovers_new_entities_through_reload(
+async def test_poll_discovers_new_entities_without_reload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -350,7 +320,7 @@ async def test_poll_discovers_new_entities_through_reload(
     disabled_by_default: bool,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Poll, reload, and actually create a newly exposed platform entity."""
+    """Create a newly exposed entity on its platform after the next poll."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("minimal_data")
@@ -358,50 +328,83 @@ async def test_poll_discovers_new_entities_through_reload(
     assert entity_registry.async_get_entity_id(domain, DOMAIN, unique_id) is None
 
     mock_onecta_client.get_gateway_devices.return_value = devices
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator.async_get_access_token",
-            return_value=FAKE_ACCESS_TOKEN,
-        ),
-    ):
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.runtime_data is not coordinator
+    assert config_entry.runtime_data is coordinator
     entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     assert entity_id is not None
     assert (hass.states.get(entity_id) is None) == disabled_by_default
     assert (
         entity_registry.async_get(entity_id).disabled_by is not None
     ) == disabled_by_default
-    assert mock_onecta_client.get_gateway_devices.await_count == 2
+    assert mock_onecta_client.get_gateway_devices.await_count == 1
+    schedule_reload.assert_not_called()
 
 
-async def test_pending_discovery_reload_is_not_scheduled_twice(
+async def test_multiple_new_capabilities_are_added_without_reload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Only schedule one reload when another capability appears while it is pending."""
+    """Add capabilities from successive polls without reloading the entry."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
     coordinator = config_entry.runtime_data
     devices = _load_gateway_devices("minimal_data")
-    _add_boolean(devices)
+    boolean_domain, boolean_unique_id = _add_boolean(devices)
     mock_onecta_client.get_gateway_devices.return_value = devices
 
     with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
         await _async_fire_coordinator_update(hass, coordinator, freezer)
         updated_devices = deepcopy(devices)
-        _add_setpoint(updated_devices)
+        climate_domain, climate_unique_id = _add_setpoint(updated_devices)
         mock_onecta_client.get_gateway_devices.return_value = updated_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    schedule_reload.assert_called_once_with(config_entry.entry_id)
+    assert entity_registry.async_get_entity_id(
+        boolean_domain, DOMAIN, boolean_unique_id
+    )
+    assert entity_registry.async_get_entity_id(
+        climate_domain, DOMAIN, climate_unique_id
+    )
+    schedule_reload.assert_not_called()
+
+
+async def test_scalar_platform_change_adds_entity_without_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Add the new sensor entity when a binary value gains an enum option."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    devices = _load_gateway_devices("minimal_data")
+    gateway = devices[0]
+    point = gateway.management_points_by_type("climateControl")[0]
+    point.characteristics["ledEnabled"] = Characteristic(
+        value="on", settable=False, values=["on", "off"]
+    )
+    unique_id = f"{gateway.id}_{point.embedded_id}_ledEnabled"
+    mock_onecta_client.get_gateway_devices.return_value = devices
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+        assert entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+        enum_devices = deepcopy(devices)
+        enum_devices[0].management_points_by_type("climateControl")[0].characteristics[
+            "ledEnabled"
+        ].values = ["on", "off", "auto"]
+        mock_onecta_client.get_gateway_devices.return_value = enum_devices
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert coordinator is config_entry.runtime_data
+    schedule_reload.assert_not_called()
 
 
 async def test_state_changes_do_not_reload_platforms(
@@ -458,17 +461,14 @@ def _make_switch_read_only(point: ManagementPoint) -> None:
 
 
 @pytest.mark.parametrize(
-    ("fixture", "domain", "suffix", "remove_capability", "removal_reload_count"),
+    ("fixture", "domain", "suffix", "remove_capability"),
     [
-        pytest.param(
-            "mc80z", "fan", "air_purifier", _remove_purifier, 0, id="purifier"
-        ),
+        pytest.param("mc80z", "fan", "air_purifier", _remove_purifier, id="purifier"),
         pytest.param(
             "mc80z",
             "fan",
             "air_purifier",
             _remove_purifier_power,
-            0,
             id="purifier_power",
         ),
         pytest.param(
@@ -476,19 +476,15 @@ def _make_switch_read_only(point: ManagementPoint) -> None:
             "fan",
             "air_purifier",
             _make_purifier_read_only,
-            1,
             id="purifier_read_only",
         ),
-        pytest.param(
-            "schedule", "select", "schedule", _remove_schedule, 0, id="schedule"
-        ),
-        pytest.param("altherma", "switch", "econoMode", _remove_switch, 0, id="switch"),
+        pytest.param("schedule", "select", "schedule", _remove_schedule, id="schedule"),
+        pytest.param("altherma", "switch", "econoMode", _remove_switch, id="switch"),
         pytest.param(
             "altherma",
             "switch",
             "econoMode",
             _make_switch_read_only,
-            0,
             id="switch_read_only",
         ),
     ],
@@ -502,7 +498,6 @@ async def test_removed_controls_become_unavailable_and_recover(
     domain: str,
     suffix: str,
     remove_capability: Callable[[ManagementPoint], None],
-    removal_reload_count: int,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Retain an entity's identity when its control disappears and returns."""
@@ -540,7 +535,7 @@ async def test_removed_controls_become_unavailable_and_recover(
         assert (
             entity_registry.async_get(entity_id).unique_id == registry_entry.unique_id
         )
-        assert schedule_reload.call_count == removal_reload_count
+        schedule_reload.assert_not_called()
 
         mock_onecta_client.get_gateway_devices.return_value = restored_devices
         await _async_fire_coordinator_update(hass, coordinator, freezer)
@@ -548,6 +543,4 @@ async def test_removed_controls_become_unavailable_and_recover(
     assert hass.states.get(entity_id).state == initial_state.state
     assert entity_registry.async_get(entity_id).id == registry_entry.id
     assert entity_registry.async_get(entity_id).unique_id == registry_entry.unique_id
-    assert schedule_reload.call_count == removal_reload_count
-    if removal_reload_count:
-        schedule_reload.assert_called_once_with(config_entry.entry_id)
+    schedule_reload.assert_not_called()

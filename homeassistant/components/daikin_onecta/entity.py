@@ -1,55 +1,56 @@
 """Base entities for the Daikin Onecta integration."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
     ChildDeviceInfo,
     DeviceEntryType,
     DeviceInfo,
 )
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
-from .coordinator import OnectaDataUpdateCoordinator
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 
 
-def _add_management_point_metadata(
-    info: DeviceInfo, device: DaikinOnectaDevice, embedded_id: str
+def add_entities_on_coordinator_update(
+    config_entry: DaikinOnectaConfigEntry,
+    coordinator: OnectaDataUpdateCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    create_entities: Callable[[set[str]], Iterable[Entity]],
 ) -> None:
-    """Add management-point metadata to a device-info object."""
-    if (management_point := device.management_point(embedded_id)) is None:
-        return
-    if management_point.model is not None:
-        info.model = management_point.model
-    if management_point.serial is not None:
-        info.serial_number = management_point.serial
-    if management_point.version is not None:
-        info.sw_version = management_point.version
+    """Add newly available entities whenever the cloud model changes."""
+    added_unique_ids: set[str] = set()
+    last_cloud_update_sequence: int | None = None
+
+    @callback
+    def add_new_entities() -> None:
+        nonlocal last_cloud_update_sequence
+        if last_cloud_update_sequence == coordinator.cloud_update_sequence:
+            return
+        last_cloud_update_sequence = coordinator.cloud_update_sequence
+        entities = list(create_entities(added_unique_ids))
+        if entities:
+            for entity in entities:
+                assert entity.unique_id is not None
+                added_unique_ids.add(entity.unique_id)
+            async_add_entities(entities)
+
+    add_new_entities()
+    config_entry.async_on_unload(coordinator.async_add_listener(add_new_entities))
 
 
 def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
     """Return the Home Assistant device info for a gateway."""
-    gateway = device.device
-    connections = set()
-    if gateway.mac_address:
-        connections.add((CONNECTION_NETWORK_MAC, gateway.mac_address))
-
-    info = DeviceInfo(
-        identifiers={(DOMAIN, device.id)},
-        connections=connections,
-        manufacturer="Daikin",
-        model_id=gateway.device_model,
-        name=device.name,
-    )
-    if (embedded_id := gateway.gateway_embedded_id) is not None:
-        _add_management_point_metadata(info, device, embedded_id)
-    return info
+    return DeviceInfo(identifiers={(DOMAIN, device.id)})
 
 
 def management_point_device_info(

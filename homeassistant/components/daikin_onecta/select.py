@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import SCHEDULE_DISABLED
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, add_entities_on_coordinator_update
 from .entity_descriptions import SELECT_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -27,6 +27,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin select entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
+    add_entities_on_coordinator_update(
+        config_entry,
+        coordinator,
+        async_add_entities,
+        lambda added: _create_schedule_selects(coordinator, added),
+    )
+
+
+def _create_schedule_selects(
+    coordinator: OnectaDataUpdateCoordinator,
+    added_unique_ids: set[str],
+) -> list[DaikinScheduleSelect]:
+    """Create schedule selects from the current cloud model."""
     sensors: list[DaikinScheduleSelect] = []
     for device in (coordinator.data or {}).values():
         sensors.extend(
@@ -39,9 +52,11 @@ async def async_setup_entry(
             )
             for management_point in device.device.management_points
             if management_point.schedule_state is not None
+            and f"{device.id}_{management_point.embedded_id}_schedule"
+            not in added_unique_ids
         )
 
-    async_add_entities(sensors)
+    return sensors
 
 
 class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):

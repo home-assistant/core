@@ -219,6 +219,7 @@ def test_device_update_ignores_management_point_metadata_changes() -> None:
 async def test_polling_child_firmware_change_does_not_update_gateway_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A child firmware change does not rewrite gateway-only registry metadata."""
     await _async_setup_fixture(hass, config_entry, "altherma_firmwareupdate")
@@ -228,7 +229,7 @@ async def test_polling_child_firmware_change_does_not_update_gateway_registry(
     point = replacement.management_points_by_type("indoorUnitHydro")[0]
     point.software_version = Characteristic(value="new-firmware")
     coordinator._async_get_cloud_devices = AsyncMock(return_value=[replacement])
-    registry = dr.async_get(hass)
+    registry = device_registry
 
     with patch.object(
         registry, "async_get_or_create", wraps=registry.async_get_or_create
@@ -448,16 +449,18 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator.last_patch_call is None
 
     async def test_command_token_connection_error_returns_failure(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self, coordinator: OnectaDataUpdateCoordinator, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Map OAuth transport failures to the platform's translated command error."""
         error = OAuth2TokenRequestConnectionError(domain=DOMAIN)
         coordinator.config_entry.async_start_reauth = MagicMock()
+        caplog.set_level(logging.DEBUG, logger=coordinator_module._LOGGER.name)
 
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
 
         coordinator.config_entry.async_start_reauth.assert_not_called()
         assert coordinator.last_patch_call is None
+        assert "OAuth2TokenRequestConnectionError" in caplog.text
 
     @pytest.mark.parametrize("status", [401, 403])
     async def test_command_authentication_error_handles_status(
@@ -1067,8 +1070,8 @@ class TestOnectaDataUpdateCoordinator:
         missing_device.mark_unavailable.assert_called_once_with()
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_new_cloud_gateway_schedules_reload(self, coordinator):
-        """Reload platforms when ONECTA reports a newly added gateway."""
+    async def test_new_cloud_gateway_does_not_reload_entry(self, coordinator):
+        """Platform listeners handle newly reported gateways without a reload."""
         existing_device = MagicMock()
         existing_device.device = MagicMock(id="existing", management_points=[])
         existing_device.set_device_data.return_value = False
@@ -1082,7 +1085,6 @@ class TestOnectaDataUpdateCoordinator:
             management_points=[],
         )
         coordinator.data = {"existing": existing_device}
-        coordinator._known_topology = coordinator._topology([existing_device.device])
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(
             return_value=[existing_device.device, new_device]
@@ -1090,12 +1092,10 @@ class TestOnectaDataUpdateCoordinator:
 
         await coordinator._async_update_data_from_cloud()
 
-        coordinator.hass.config_entries.async_schedule_reload.assert_called_once_with(
-            coordinator.config_entry.entry_id
-        )
+        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_new_management_point_schedules_reload(self, coordinator):
-        """Reload platforms when ONECTA adds a management point."""
+    async def test_new_management_point_does_not_reload_entry(self, coordinator):
+        """Platform listeners handle new points without a config-entry reload."""
         existing_device = MagicMock()
         existing_device.device = MagicMock(
             id="gateway",
@@ -1121,17 +1121,14 @@ class TestOnectaDataUpdateCoordinator:
             ],
         )
         coordinator.data = {"gateway": existing_device}
-        coordinator._known_topology = coordinator._topology([existing_device.device])
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=[updated_device])
 
         await coordinator._async_update_data_from_cloud()
 
-        coordinator.hass.config_entries.async_schedule_reload.assert_called_once_with(
-            coordinator.config_entry.entry_id
-        )
+        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_unchanged_cloud_topology_does_not_schedule_reload(self, coordinator):
+    async def test_cloud_state_update_does_not_reload_entry(self, coordinator):
         """Do not reload platforms for ordinary state updates."""
         existing_device = MagicMock()
         cloud_device = MagicMock(id="gateway", management_points=[])

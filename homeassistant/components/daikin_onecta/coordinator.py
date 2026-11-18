@@ -1,7 +1,7 @@
 """Coordinator for Daikin Onecta integration."""
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, time, timedelta, tzinfo
 import logging
 from math import ceil
@@ -42,7 +42,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .device import DaikinOnectaDevice
-from .discovery import gateway_entity_keys
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,8 +90,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._bypass_polling_backoff = False
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
-        self._known_topology: set[tuple[str, str | None, str]] | None = None
-        self._reload_pending = False
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
 
         super().__init__(
@@ -229,9 +226,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OAuth2TokenRequestReauthError:
                 self.config_entry.async_start_reauth(self.hass)
                 return False
-            except OAuth2TokenRequestConnectionError:
-                return False
-            except OAuth2TokenRequestError:
+            except (OAuth2TokenRequestConnectionError, OAuth2TokenRequestError) as err:
+                _LOGGER.debug(
+                    "Daikin OAuth token request failed with %s",
+                    type(err).__name__,
+                )
                 return False
             except OnectaAuthenticationError as err:
                 if err.status == 401:
@@ -461,14 +460,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     )
             else:
                 self._cloud_update_sequence += 1
-                current_topology = self._topology(cloud_devices)
-                if self._known_topology is None:
-                    # The initial fetch defines the capabilities platforms set up.
-                    self._known_topology = current_topology
-                    has_new_topology = False
-                else:
-                    has_new_topology = bool(current_topology - self._known_topology)
-                    self._known_topology |= current_topology
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
                     if device_id not in cloud_device_ids:
@@ -485,16 +476,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     if registry_metadata_changed and previous_devices is not None:
                         self._async_register_device(device)
 
-                if has_new_topology and not self._reload_pending:
-                    # Platform setup is capability-driven. Reload only when the
-                    # cloud reports newly supported entities, including new
-                    # capabilities of existing management points.
-                    # Missing controls remain registered but unavailable.
-                    self._reload_pending = True
-                    self.hass.config_entries.async_schedule_reload(
-                        self.config_entry.entry_id
-                    )
-
                 self.update_interval = self._determine_update_interval()
 
         return devices
@@ -503,31 +484,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch data for the Home Assistant coordinator interface."""
         return await self._async_update_data_from_cloud()
-
-    @staticmethod
-    def _topology(
-        devices: Iterable[GatewayDevice],
-    ) -> set[tuple[str, str | None, str]]:
-        """Return supported entity identities, independent of their current values."""
-        return {
-            entity_key
-            for device in devices
-            for entity_key in gateway_entity_keys(device)
-        }
-
-    def forget_device_topology(
-        self, gateway_id: str, embedded_id: str | None = None
-    ) -> None:
-        """Forget capabilities for a removed gateway or management point."""
-        if self._known_topology is None:
-            return
-        self._known_topology = {
-            key
-            for key in self._known_topology
-            if not (
-                key[0] == gateway_id and (embedded_id is None or key[1] == embedded_id)
-            )
-        }
 
     def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
