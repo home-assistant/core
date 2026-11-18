@@ -121,6 +121,16 @@ class HassIODiscovery(HomeAssistantView):
 
         data.config[ATTR_ADDON] = addon_info.name
 
+        # An app without a panel, or whose panel can't be read, is admin-only
+        panel_admin = True
+        try:
+            panels = await self._supervisor_client.ingress.panels()
+        except SupervisorError as err:
+            _LOGGER.debug("Can't read the panel of app %s: %s", data.addon, err)
+        else:
+            if (panel := panels.get(data.addon)) is not None:
+                panel_admin = panel.admin
+
         # Use config flow
         discovery_flow.async_create_flow(
             self.hass,
@@ -131,6 +141,7 @@ class HassIODiscovery(HomeAssistantView):
                 name=addon_info.name,
                 slug=data.addon,
                 uuid=data.uuid.hex,
+                panel_admin=panel_admin,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,

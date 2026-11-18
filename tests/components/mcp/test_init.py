@@ -6,10 +6,8 @@ import json
 import re
 import ssl
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
-from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import IngressPanel
 import httpx2
 from mcp.types import (
     CallToolResult,
@@ -28,7 +26,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 import respx
 
-from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
+from homeassistant.components.mcp.const import CONF_REQUIRES_ADMIN, CONF_SLUG, DOMAIN
 from homeassistant.components.mcp.coordinator import (
     META_USER_ID,
     create_mcp_httpx_client,
@@ -1161,39 +1159,14 @@ async def test_llm_api_id(hass: HomeAssistant) -> None:
     assert api.id == "mcp-a0d7b954_mcp"
 
 
-def _app_panel(admin: bool) -> IngressPanel:
-    """Create the ingress panel of an app."""
-    return IngressPanel(title="App", icon="mdi:app", admin=admin, enable=True)
-
-
-@pytest.fixture
-def mock_is_hassio(request: pytest.FixtureRequest) -> Generator[None]:
-    """Mock if Home Assistant runs with a Supervisor."""
-    with patch(
-        "homeassistant.components.mcp.is_hassio",
-        return_value=getattr(request, "param", True),
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_ingress_panels(
-    request: pytest.FixtureRequest, mock_is_hassio: None
-) -> Generator[AsyncMock]:
-    """Mock the ingress panels the Supervisor reports."""
-    with patch("homeassistant.components.mcp.get_supervisor_client") as mock_client:
-        mock_client.return_value.ingress.panels = AsyncMock(
-            return_value=getattr(request, "param", {})
-        )
-        yield mock_client.return_value.ingress.panels
-
-
-async def _async_setup_server(hass: HomeAssistant, source: str) -> llm.API:
+async def _async_setup_server(
+    hass: HomeAssistant, source: str, data: dict[str, Any]
+) -> llm.API:
     """Set up a server and return its LLM API."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=source,
-        data={CONF_URL: MCP_SERVER_URL, CONF_SLUG: "app"},
+        data={CONF_URL: MCP_SERVER_URL, CONF_SLUG: "app", **data},
         title=TEST_API_NAME,
     )
     config_entry.add_to_hass(hass)
@@ -1204,79 +1177,40 @@ async def _async_setup_server(hass: HomeAssistant, source: str) -> llm.API:
     )
 
 
-@pytest.mark.usefixtures("fake_mcp_server", "mock_ingress_panels")
+@pytest.mark.usefixtures("fake_mcp_server")
 @pytest.mark.parametrize(
-    ("source", "mock_ingress_panels", "expected"),
+    ("source", "data", "expected"),
     [
+        pytest.param(SOURCE_USER, {}, False, id="remote_server"),
         pytest.param(
-            SOURCE_USER,
-            {"app": _app_panel(admin=True)},
-            False,
-            id="remote_server",
+            SOURCE_HASSIO, {CONF_REQUIRES_ADMIN: True}, True, id="app_admin_panel"
         ),
         pytest.param(
             SOURCE_HASSIO,
-            {"app": _app_panel(admin=True)},
-            True,
-            id="app_admin_panel",
-        ),
-        pytest.param(
-            SOURCE_HASSIO,
-            {"app": _app_panel(admin=False)},
+            {CONF_REQUIRES_ADMIN: False},
             False,
             id="app_panel_for_all_users",
         ),
-        pytest.param(
-            SOURCE_HASSIO,
-            {"other_app": _app_panel(admin=False)},
-            True,
-            id="app_without_panel",
-        ),
+        pytest.param(SOURCE_HASSIO, {}, True, id="app_not_rediscovered"),
     ],
-    indirect=["mock_ingress_panels"],
 )
-async def test_requires_admin(hass: HomeAssistant, source: str, expected: bool) -> None:
+async def test_requires_admin(
+    hass: HomeAssistant, source: str, data: dict[str, Any], expected: bool
+) -> None:
     """Test a server from an app is limited to admin users like the app's panel."""
-    api = await _async_setup_server(hass, source)
+    api = await _async_setup_server(hass, source, data)
 
     assert api.requires_admin is expected
 
 
 @pytest.mark.usefixtures("fake_mcp_server")
-async def test_requires_admin_panels_unavailable(
-    hass: HomeAssistant, mock_ingress_panels: AsyncMock
-) -> None:
-    """Test a server from an app is limited to admin users if its panel is unknown."""
-    mock_ingress_panels.side_effect = SupervisorError("boom")
-
-    api = await _async_setup_server(hass, SOURCE_HASSIO)
-
-    assert api.requires_admin is True
-
-
-@pytest.mark.usefixtures("fake_mcp_server")
-@pytest.mark.parametrize("mock_is_hassio", [False], indirect=True)
-async def test_requires_admin_without_supervisor(
-    hass: HomeAssistant, mock_ingress_panels: AsyncMock
-) -> None:
-    """Test a server from an app is limited to admin users without a Supervisor."""
-    api = await _async_setup_server(hass, SOURCE_HASSIO)
-
-    assert api.requires_admin is True
-    mock_ingress_panels.assert_not_called()
-
-
-@pytest.mark.usefixtures("fake_mcp_server", "mock_ingress_panels")
-@pytest.mark.parametrize(
-    "mock_ingress_panels", [{"app": _app_panel(admin=True)}], indirect=True
-)
 async def test_app_admin_panel_denies_non_admin_users(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_read_only_user: MockUser,
 ) -> None:
     """Test only admin users get the tools of an app with an admin panel."""
-    api = await _async_setup_server(hass, SOURCE_HASSIO)
+    api = await _async_setup_server(hass, SOURCE_HASSIO, {CONF_REQUIRES_ADMIN: True})
 
     def llm_context(user: MockUser) -> llm.LLMContext:
         return llm.LLMContext(

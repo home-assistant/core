@@ -30,7 +30,14 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
 from .auth import AuthenticateHeader
-from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
+from .const import (
+    CONF_AUTHORIZATION_URL,
+    CONF_REQUIRES_ADMIN,
+    CONF_SCOPE,
+    CONF_SLUG,
+    CONF_TOKEN_URL,
+    DOMAIN,
+)
 from .coordinator import (
     TokenManager,
     create_mcp_httpx_client,
@@ -218,7 +225,10 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_discovery_info")
 
-        updates = {CONF_URL: url}
+        updates: dict[str, Any] = {
+            CONF_URL: url,
+            CONF_REQUIRES_ADMIN: discovery_info.panel_admin,
+        }
         # Stored apart from the OAuth token dict, which uses CONF_TOKEN
         if token := discovery_info.config.get(CONF_TOKEN):
             updates[CONF_API_TOKEN] = token
