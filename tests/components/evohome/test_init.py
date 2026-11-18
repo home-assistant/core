@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from evohomeasync2 import exceptions as evo_exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -213,6 +214,53 @@ async def test_client_request_failure_v2(
     assert result is False
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
+
+
+@pytest.mark.parametrize(
+    ("client_api", "exception"),
+    [
+        pytest.param(
+            "evohomeasync2.EvohomeClient.setup",
+            evo_exc.InvalidGetConfigError("The config is invalid"),
+            id="setup_response_invalid",
+        ),
+        pytest.param(
+            "evohomeasync2.location.Location.get_status",
+            evo_exc.ApiCallFailedError(
+                "GET .../status: 502 Bad Gateway",
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            ),
+            id="first_poll_server_error",
+        ),
+    ],
+)
+async def test_initial_fetch_failure_logs_cause(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    client_api: str,
+    exception: evo_exc.EvohomeError,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed initial fetch logs the client's error, not a translation key."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("_evohome.auth.AbstractAuth._make_request", mock_make_request("default")),
+        patch(client_api, side_effect=exception),
+        caplog.at_level(logging.WARNING),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+    assert result is False
+
+    assert (
+        "homeassistant.components.evohome",
+        logging.ERROR,
+        f"Failed to fetch initial data: {exception}",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize("install", ["default"])

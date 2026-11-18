@@ -183,8 +183,27 @@ class EvoAccountCoordinator(_EvoCoordinator[_HighPrecisionTemps]):
 
         try:
             await self.client.setup()  # only config for now
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+
+        except ec2.ApiConnectionFailedError as err:
+            self.logger.debug("The request to the vendor's API failed: %s", err)
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+            ) from err
+
+        except ec2.ApiCallFailedError as err:
+            self.logger.debug("The request to the vendor's API failed: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key=_api_call_error_key(err),
+                retry_after=err.retry_after,
+            ) from err
+
+        except ec2.BadApiResponseError as err:
+            self.logger.debug("The response from the vendor's API is invalid: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_response_invalid"
+            ) from err
 
     @override
     async def _async_update_data(self) -> _HighPrecisionTemps:
@@ -372,8 +391,17 @@ class EvoLocationCoordinator(_EvoCoordinator[EvoLocStatusT]):
                 retry_after=err.retry_after,
             ) from err
 
-        except ec2.EvohomeError as err:
-            raise UpdateFailed(err) from err
+        except ec2.BadApiResponseError as err:
+            self.logger.debug("The response from the vendor's API is invalid: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_response_invalid"
+            ) from err
+
+        except ec2.StaleConfigError as err:
+            self.logger.debug("The location's config is stale: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="config_stale"
+            ) from err
 
         self.logger.debug("Status = %s", status)
 

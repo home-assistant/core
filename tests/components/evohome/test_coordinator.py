@@ -431,18 +431,32 @@ async def test_action_api_call_failed_reason(
             120,
             id="server_error_retry_after",
         ),
+        pytest.param(
+            evo_exc.InvalidGetStatusError("Invalid status"),
+            UpdateFailed,
+            "api_response_invalid",
+            None,
+            id="response_invalid",
+        ),
+        pytest.param(
+            evo_exc.StaleConfigError("Location is no longer accessible"),
+            UpdateFailed,
+            "config_stale",
+            None,
+            id="config_stale",
+        ),
     ],
 )
 @pytest.mark.usefixtures("evohome")
-async def test_poll_api_call_failed(
+async def test_poll_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    exception: evo_exc.ApiCallFailedError,
+    exception: evo_exc.EvohomeError,
     error_type: type[UpdateFailed],
     translation_key: str,
     retry_after: float | None,
 ) -> None:
-    """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
+    """Test a failed poll of a location raises a translated UpdateFailed."""
 
     coordinator = hass.data[EVOHOME_DATA].coordinator
 
