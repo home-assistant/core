@@ -1389,6 +1389,7 @@ async def check_translations(
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
     _original_service_registry_async_register = ServiceRegistry.async_register
+    _original_service_registry_register = ServiceRegistry.register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -1499,6 +1500,37 @@ async def check_translations(
             description_placeholders=description_placeholders,
         )
 
+    def _service_registry_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
+        ],
+        schema: probatio.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        if (
+            (current_frame := inspect.currentframe()) is not None
+            and (caller := current_frame.f_back) is not None
+            and not caller.f_code.co_filename.startswith(str(Path(__file__).parents[0]))
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    None,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
+        _original_service_registry_register(
+            self, domain, service, service_func, schema, supports_response
+        )
+
     # Use override functions
     with (
         patch(
@@ -1516,6 +1548,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_register",
             _service_registry_async_register,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.register",
+            _service_registry_register,
         ),
     ):
         yield
