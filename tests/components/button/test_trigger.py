@@ -22,7 +22,10 @@ from pytest_homeassistant.components.common import (
 )
 
 from homeassistant.components.button.trigger import TRIGGERS
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -73,8 +76,8 @@ def _button_event_state(
         "state": state,
         "attributes": {
             ATTR_DEVICE_CLASS: device_class,
-            ATTR_EVENT_TYPES: event_types,
-            ATTR_EVENT_TYPE: event_type,
+            EventEntityCapabilityAttribute.EVENT_TYPES: event_types,
+            EventEntityStateAttribute.EVENT_TYPE: event_type,
         },
     }
 
@@ -118,6 +121,7 @@ async def target_entities_indirect(
 _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "pressed": TargetSupport.STANDARD,
     "held": TargetSupport.CUSTOM,
+    "hold_ended": TargetSupport.STANDARD,
 }
 
 
@@ -126,6 +130,7 @@ _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
     [
         ("button.pressed", None, False, False),
         ("button.held", None, False, False),
+        ("button.hold_ended", None, False, False),
     ],
 )
 async def test_button_trigger_options_validation(
@@ -575,6 +580,87 @@ async def test_button_state_trigger(
             ),
             id="held_not_button_device_class",
         ),
+        pytest.param(
+            "button.hold_ended",
+            _button_event_states(
+                _ALL_BUTTON_EVENT_TYPES,
+                [
+                    ("press_start", 0),
+                    ("long_press_start", 0),
+                    ("long_press_end", 1),
+                    ("press_end", 0),
+                    ("single_press", 0),
+                    ("multi_press", 0),
+                    ("long_press_end", 1),
+                    ("long_press_end", 1),
+                ],
+            ),
+            id="hold_ended_hold_event_types_declared",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            _button_event_states(
+                ["press_start", "press_end", "long_press_end"],
+                [("press_start", 0), ("press_end", 0), ("long_press_end", 0)],
+            ),
+            id="hold_ended_only_long_press_end_declared",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            _button_event_states(
+                ["press_start", "press_end", "long_press_start"],
+                [("long_press_start", 0), ("long_press_end", 0)],
+            ),
+            id="hold_ended_only_long_press_start_declared",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            _button_event_states([], [("long_press_end", 0)]),
+            id="hold_ended_empty_event_types",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            [
+                {
+                    "included_state": _button_event_state(
+                        STATE_UNAVAILABLE, _HOLD_BUTTON_EVENT_TYPES
+                    ),
+                    "count": 0,
+                },
+                {
+                    "included_state": _button_event_state(
+                        "2026-01-01T00:00:00.000+00:00",
+                        _HOLD_BUTTON_EVENT_TYPES,
+                        "long_press_end",
+                    ),
+                    "count": 0,
+                },
+                {
+                    "included_state": _button_event_state(
+                        "2026-01-01T00:00:01.000+00:00",
+                        _HOLD_BUTTON_EVENT_TYPES,
+                        "long_press_end",
+                    ),
+                    "count": 1,
+                },
+                {
+                    "included_state": _button_event_state(
+                        STATE_UNAVAILABLE, _HOLD_BUTTON_EVENT_TYPES
+                    ),
+                    "count": 0,
+                },
+            ],
+            id="hold_ended_unavailable",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            _button_event_states(
+                _HOLD_BUTTON_EVENT_TYPES,
+                [("long_press_end", 0)],
+                device_class="doorbell",
+            ),
+            id="hold_ended_not_button_device_class",
+        ),
     ],
 )
 async def test_button_event_trigger(
@@ -669,6 +755,55 @@ async def test_button_event_trigger(
             [],
             id="held_supported_event_types",
         ),
+        pytest.param(
+            "button.hold_ended",
+            ["press_start", "press_end", "long_press_end"],
+            "long_press_end",
+            [
+                (
+                    "entity_event_types_not_supported",
+                    {
+                        "entity_id": _EVENT_ENTITY_ID,
+                        "event_types": ["press_start", "press_end", "long_press_end"],
+                    },
+                )
+            ],
+            id="hold_ended_only_long_press_end_declared",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            ["press_start", "press_end", "long_press_start"],
+            "long_press_start",
+            [
+                (
+                    "entity_event_types_not_supported",
+                    {
+                        "entity_id": _EVENT_ENTITY_ID,
+                        "event_types": ["press_start", "press_end", "long_press_start"],
+                    },
+                )
+            ],
+            id="hold_ended_only_long_press_start_declared",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            [],
+            "long_press_end",
+            [
+                (
+                    "entity_event_types_not_supported",
+                    {"entity_id": _EVENT_ENTITY_ID, "event_types": []},
+                )
+            ],
+            id="hold_ended_empty_event_types",
+        ),
+        pytest.param(
+            "button.hold_ended",
+            _HOLD_BUTTON_EVENT_TYPES,
+            "long_press_start",
+            [],
+            id="hold_ended_supported_event_types",
+        ),
     ],
 )
 async def test_button_event_trigger_not_triggered_reports(
@@ -730,16 +865,23 @@ async def test_button_event_trigger_not_triggered_reports(
     unsub()
 
 
+@pytest.mark.parametrize(
+    ("trigger", "event_type"),
+    [
+        pytest.param("button.held", "long_press_start", id="held"),
+        pytest.param("button.hold_ended", "long_press_end", id="hold_ended"),
+    ],
+)
 @pytest.mark.parametrize("entity_id", ["button.test_button", "input_button.test"])
-async def test_button_held_trigger_ignores_buttons(
-    hass: HomeAssistant, entity_id: str
+async def test_button_hold_triggers_ignore_buttons(
+    hass: HomeAssistant, trigger: str, event_type: str, entity_id: str
 ) -> None:
-    """Test the held trigger does not fire for button and input_button entities."""
+    """Test the hold triggers do not fire for button and input_button entities."""
     calls: list[str] = []
     set_or_remove_state(
         hass, entity_id, _button_event_state(STATE_UNKNOWN, _HOLD_BUTTON_EVENT_TYPES)
     )
-    await arm_trigger(hass, "button.held", None, {CONF_ENTITY_ID: entity_id}, calls)
+    await arm_trigger(hass, trigger, None, {CONF_ENTITY_ID: entity_id}, calls)
 
     # Attributes of a hold event, so only the domain filter can keep it out.
     set_or_remove_state(
@@ -748,7 +890,7 @@ async def test_button_held_trigger_ignores_buttons(
         _button_event_state(
             "2026-01-01T00:00:00.000+00:00",
             _HOLD_BUTTON_EVENT_TYPES,
-            "long_press_start",
+            event_type,
         ),
     )
     await hass.async_block_till_done()
@@ -789,7 +931,7 @@ def _make_set_state_step(state: str | None) -> _TimelineStep:
                 "state": state,
                 "attributes": {
                     ATTR_DEVICE_CLASS: "button",
-                    ATTR_EVENT_TYPES: _PHYSICAL_BUTTON_EVENT_TYPES,
+                    EventEntityCapabilityAttribute.EVENT_TYPES: _PHYSICAL_BUTTON_EVENT_TYPES,
                 },
             },
         )

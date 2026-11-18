@@ -4,11 +4,10 @@ rules:
     status: exempt
     comment: No custom actions.
   appropriate-polling:
-    status: exempt
+    status: done
     comment: >-
-      No polling. Telemetry is push-only over the SSE stream
-      (``update_interval=None``); the garage is fetched once at setup
-      (``async_fetch_garage``) to anchor devices and define the streamed set.
+      Telemetry is pushed over the SSE stream. The garage is polled hourly to
+      add vehicles added in ABRP; that poll does not update entity states.
   brands: done
   common-modules: done
   config-flow: done
@@ -66,9 +65,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: Deferred to a follow-up PR.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -76,8 +73,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: todo
-    comment: Deferred to a follow-up PR.
+    status: exempt
+    comment: The only setting is the ABRP account; reauthentication covers changing credentials.
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios.

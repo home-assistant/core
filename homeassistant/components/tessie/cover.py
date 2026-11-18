@@ -108,6 +108,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
 class TessieChargePortEntity(TessieEntity, CoverEntity):
     """Cover entity for the charge port."""
 
+    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, vehicle: TessieVehicleData) -> None:
@@ -136,6 +137,7 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
 class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
     """Cover entity for the charge port."""
 
+    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
     def __init__(self, vehicle: TessieVehicleData) -> None:
@@ -158,6 +160,7 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
 class TessieRearTrunkEntity(TessieEntity, CoverEntity):
     """Cover entity for the charge port."""
 
+    _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, vehicle: TessieVehicleData) -> None:

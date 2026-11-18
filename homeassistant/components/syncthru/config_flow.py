@@ -9,7 +9,7 @@ from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -27,7 +27,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     url: str
-    name: str
+    name: str = ""
 
     @override
     async def async_step_user(
@@ -82,7 +82,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._async_show_form(
             step_id="confirm",
-            user_input={CONF_URL: self.url, CONF_NAME: self.name},
+            user_input={CONF_URL: self.url},
         )
 
     async def _async_show_form(self, step_id, user_input=None, errors=None):
@@ -95,11 +95,6 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, "")
-                    ): str,
-                    # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=home-assistant-config-flow-name-field
-                    probatio.Optional(
-                        CONF_NAME, default=user_input.get(CONF_NAME, "")
                     ): str,
                 }
             ),
@@ -133,10 +128,6 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         try:
             await printer.update()
-            if not user_input.get(CONF_NAME):
-                user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
-                    printer.model() or DEFAULT_MODEL
-                )
         except SyncThruAPINotSupported:
             errors[CONF_URL] = "syncthru_not_supported"
         else:
@@ -149,6 +140,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input.get(CONF_NAME),
+            title=self.name
+            or DEFAULT_NAME_TEMPLATE.format(printer.model() or DEFAULT_MODEL),
             data=user_input,
         )

@@ -5,18 +5,18 @@ from datetime import time
 from typing import Any
 from unittest.mock import patch
 
-from aiopowerwall import (
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from tesla_fleet_api.tesla.powerwall import (
     PowerwallCommandError,
     PowerwallConnectionError,
     PowerwallError,
     PowerwallNotSupportedError,
     PowerwallProtocolError,
 )
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-import probatio
-import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teslemetry.const import (
     CONF_SITE_ID,
@@ -24,47 +24,16 @@ from homeassistant.components.teslemetry.const import (
     SUBENTRY_TYPE_ENERGY_SITE,
 )
 from homeassistant.components.teslemetry.services import (
-    ATTR_DAYS_OF_WEEK,
-    ATTR_DEPARTURE_TIME,
-    ATTR_DURATION,
-    ATTR_ENABLE,
-    ATTR_END_OFF_PEAK_TIME,
-    ATTR_END_TIME,
-    ATTR_GPS,
-    ATTR_OFF_PEAK_CHARGING_ENABLED,
-    ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
-    ATTR_ONE_TIME,
-    ATTR_PIN,
-    ATTR_POWER,
-    ATTR_PRECONDITION_TIME,
-    ATTR_PRECONDITIONING_ENABLED,
-    ATTR_PRECONDITIONING_WEEKDAYS,
-    ATTR_START_TIME,
-    ATTR_TOU_SETTINGS,
-    SERVICE_ADD_CHARGE_SCHEDULE,
-    SERVICE_ADD_PRECONDITION_SCHEDULE,
-    SERVICE_DISPATCH_BATTERY_POWER,
-    SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
-    SERVICE_REMOVE_CHARGE_SCHEDULE,
-    SERVICE_REMOVE_PRECONDITION_SCHEDULE,
-    SERVICE_RESUME_BATTERY_OPERATION,
-    SERVICE_SET_SCHEDULED_CHARGING,
-    SERVICE_SET_SCHEDULED_DEPARTURE,
-    SERVICE_SPEED_LIMIT,
-    SERVICE_TIME_OF_USE,
-    SERVICE_VALET_MODE,
+    TeslemetryService,
+    TeslemetryServiceArgument,
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
-    ATTR_ID,
-    ATTR_LOCATION,
-    ATTR_NAME,
-    ATTR_TIME,
-    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_PASSWORD,
+    CommonServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -78,7 +47,7 @@ lon = 153.3726526
 
 SITE_ID = 123456
 
-# aiopowerwall's PowerwallClient parses the PEM at construction time, so tests
+# PowerwallClient parses the PEM at construction time, so tests
 # that build one need a real (if undersized, for speed) RSA key rather than
 # arbitrary bytes.
 _TEST_RSA_KEY_PEM = rsa.generate_private_key(
@@ -91,13 +60,16 @@ _TEST_RSA_KEY_PEM = rsa.generate_private_key(
 
 LOCAL_BATTERY_SERVICES = [
     pytest.param(
-        SERVICE_DISPATCH_BATTERY_POWER,
-        {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+        TeslemetryService.DISPATCH_BATTERY_POWER,
+        {
+            TeslemetryServiceArgument.POWER: -5000,
+            TeslemetryServiceArgument.DURATION: 1800,
+        },
         "dispatch_battery_power",
         id="dispatch_battery_power",
     ),
     pytest.param(
-        SERVICE_RESUME_BATTERY_OPERATION,
+        TeslemetryService.RESUME_BATTERY_OPERATION,
         {},
         "resume_battery_operation",
         id="resume_battery_operation",
@@ -164,10 +136,10 @@ async def test_services(
     ) as set_scheduled_charging_off:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_CHARGING,
+            TeslemetryService.SET_SCHEDULED_CHARGING,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: False,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: False,
             },
             blocking=True,
         )
@@ -180,10 +152,10 @@ async def test_services(
     ) as set_scheduled_departure_off:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
+            TeslemetryService.SET_SCHEDULED_DEPARTURE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: False,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: False,
             },
             blocking=True,
         )
@@ -197,10 +169,13 @@ async def test_services(
     ) as navigation_gps_request:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            TeslemetryService.NAVIGATION_GPS_REQUEST,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.GPS: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
             },
             blocking=True,
         )
@@ -212,11 +187,11 @@ async def test_services(
     ) as set_scheduled_charging:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_CHARGING,
+            TeslemetryService.SET_SCHEDULED_CHARGING,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_TIME: "06:00",  # 6:00 AM
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.TIME: "06:00",  # 6:00 AM
             },
             blocking=True,
         )
@@ -228,16 +203,16 @@ async def test_services(
     ) as set_scheduled_departure:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
+            TeslemetryService.SET_SCHEDULED_DEPARTURE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_PRECONDITIONING_ENABLED: True,
-                ATTR_PRECONDITIONING_WEEKDAYS: False,
-                ATTR_DEPARTURE_TIME: "06:00",  # 6:00 AM
-                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
-                ATTR_OFF_PEAK_CHARGING_WEEKDAYS: False,
-                ATTR_END_OFF_PEAK_TIME: "05:00",  # 5:00 AM
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.PRECONDITIONING_ENABLED: True,
+                TeslemetryServiceArgument.PRECONDITIONING_WEEKDAYS_ONLY: False,
+                TeslemetryServiceArgument.DEPARTURE_TIME: "06:00",  # 6:00 AM
+                TeslemetryServiceArgument.OFF_PEAK_CHARGING_ENABLED: True,
+                TeslemetryServiceArgument.OFF_PEAK_CHARGING_WEEKDAYS_ONLY: False,
+                TeslemetryServiceArgument.END_OFF_PEAK_TIME: "05:00",  # 5:00 AM
             },
             blocking=True,
         )
@@ -249,11 +224,11 @@ async def test_services(
     ) as set_valet_mode:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_VALET_MODE,
+            TeslemetryService.VALET_MODE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_PIN: 1234,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.PIN: 1234,
             },
             blocking=True,
         )
@@ -265,11 +240,11 @@ async def test_services(
     ) as speed_limit_activate:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SPEED_LIMIT,
+            TeslemetryService.SPEED_LIMIT,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
-                ATTR_PIN: 1234,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.PIN: 1234,
             },
             blocking=True,
         )
@@ -281,11 +256,11 @@ async def test_services(
     ) as speed_limit_deactivate:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SPEED_LIMIT,
+            TeslemetryService.SPEED_LIMIT,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: False,
-                ATTR_PIN: 1234,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: False,
+                TeslemetryServiceArgument.PIN: 1234,
             },
             blocking=True,
         )
@@ -297,10 +272,10 @@ async def test_services(
     ) as set_time_of_use:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIME_OF_USE,
+            TeslemetryService.TIME_OF_USE,
             {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {"utility": "test"},
+                CommonServiceArgument.DEVICE_ID: energy_device,
+                TeslemetryServiceArgument.TOU_SETTINGS: {"utility": "test"},
             },
             blocking=True,
         )
@@ -313,10 +288,10 @@ async def test_services(
     ) as set_time_of_use:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIME_OF_USE,
+            TeslemetryService.TIME_OF_USE,
             {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {
+                CommonServiceArgument.DEVICE_ID: energy_device,
+                TeslemetryServiceArgument.TOU_SETTINGS: {
                     "tariff_content_v2": {"utility": "test"},
                 },
             },
@@ -330,16 +305,19 @@ async def test_services(
     ) as add_charge_schedule:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CHARGE_SCHEDULE,
+            TeslemetryService.ADD_CHARGE_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
-                ATTR_ENABLE: True,
-                ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
-                ATTR_START_TIME: time(7, 0, 0),  # 7:00 AM
-                ATTR_END_TIME: time(18, 0, 0),  # 6:00 PM
-                ATTR_ONE_TIME: False,
-                ATTR_NAME: "Test Schedule",
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.DAYS_OF_WEEK: ["Monday", "Tuesday"],
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.LOCATION: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
+                TeslemetryServiceArgument.START_TIME: time(7, 0, 0),  # 7:00 AM
+                TeslemetryServiceArgument.END_TIME: time(18, 0, 0),  # 6:00 PM
+                TeslemetryServiceArgument.ONE_TIME: False,
+                TeslemetryServiceArgument.NAME: "Test Schedule",
             },
             blocking=True,
         )
@@ -352,11 +330,11 @@ async def test_services(
     ) as add_charge_schedule_minimal:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_CHARGE_SCHEDULE,
+            TeslemetryService.ADD_CHARGE_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
-                ATTR_ENABLE: True,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.DAYS_OF_WEEK: ["Monday", "Tuesday"],
+                TeslemetryServiceArgument.ENABLE: True,
             },
             blocking=True,
         )
@@ -368,10 +346,10 @@ async def test_services(
     ) as remove_charge_schedule:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REMOVE_CHARGE_SCHEDULE,
+            TeslemetryService.REMOVE_CHARGE_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ID: 123,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ID: 123,
             },
             blocking=True,
         )
@@ -383,15 +361,18 @@ async def test_services(
     ) as add_precondition_schedule:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRECONDITION_SCHEDULE,
+            TeslemetryService.ADD_PRECONDITION_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
-                ATTR_ENABLE: True,
-                ATTR_LOCATION: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
-                ATTR_PRECONDITION_TIME: time(7, 0, 0),  # 7:00 AM
-                ATTR_ONE_TIME: False,
-                ATTR_NAME: "Test Precondition Schedule",
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.DAYS_OF_WEEK: ["Monday", "Tuesday"],
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.LOCATION: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
+                TeslemetryServiceArgument.PRECONDITION_TIME: time(7, 0, 0),  # 7:00 AM
+                TeslemetryServiceArgument.ONE_TIME: False,
+                TeslemetryServiceArgument.NAME: "Test Precondition Schedule",
             },
             blocking=True,
         )
@@ -404,12 +385,12 @@ async def test_services(
     ) as add_precondition_schedule_minimal:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_PRECONDITION_SCHEDULE,
+            TeslemetryService.ADD_PRECONDITION_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_DAYS_OF_WEEK: ["Monday", "Tuesday"],
-                ATTR_ENABLE: True,
-                ATTR_PRECONDITION_TIME: time(8, 0, 0),  # 8:00 AM
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.DAYS_OF_WEEK: ["Monday", "Tuesday"],
+                TeslemetryServiceArgument.ENABLE: True,
+                TeslemetryServiceArgument.PRECONDITION_TIME: time(8, 0, 0),  # 8:00 AM
             },
             blocking=True,
         )
@@ -421,10 +402,10 @@ async def test_services(
     ) as remove_precondition_schedule:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_REMOVE_PRECONDITION_SCHEDULE,
+            TeslemetryService.REMOVE_PRECONDITION_SCHEDULE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ID: 123,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ID: 123,
             },
             blocking=True,
         )
@@ -439,10 +420,10 @@ async def test_services(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIME_OF_USE,
+            TeslemetryService.TIME_OF_USE,
             {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
+                CommonServiceArgument.DEVICE_ID: energy_device,
+                TeslemetryServiceArgument.TOU_SETTINGS: {},
             },
             blocking=True,
         )
@@ -462,10 +443,13 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            TeslemetryService.NAVIGATION_GPS_REQUEST,
             {
-                CONF_DEVICE_ID: "nope",
-                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                CommonServiceArgument.DEVICE_ID: "nope",
+                TeslemetryServiceArgument.GPS: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
             },
             blocking=True,
         )
@@ -475,10 +459,10 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_CHARGING,
+            TeslemetryService.SET_SCHEDULED_CHARGING,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_ENABLE: True,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.ENABLE: True,
             },
             blocking=True,
         )
@@ -489,10 +473,10 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
+            TeslemetryService.SET_SCHEDULED_DEPARTURE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_PRECONDITIONING_ENABLED: True,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.PRECONDITIONING_ENABLED: True,
             },
             blocking=True,
         )
@@ -503,10 +487,10 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_SCHEDULED_DEPARTURE,
+            TeslemetryService.SET_SCHEDULED_DEPARTURE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.OFF_PEAK_CHARGING_ENABLED: True,
             },
             blocking=True,
         )
@@ -520,10 +504,13 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            TeslemetryService.NAVIGATION_GPS_REQUEST,
             {
-                CONF_DEVICE_ID: energy_device,
-                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                CommonServiceArgument.DEVICE_ID: energy_device,
+                TeslemetryServiceArgument.GPS: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
             },
             blocking=True,
         )
@@ -533,10 +520,10 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIME_OF_USE,
+            TeslemetryService.TIME_OF_USE,
             {
-                CONF_DEVICE_ID: vehicle_device,
-                ATTR_TOU_SETTINGS: {"utility": "test"},
+                CommonServiceArgument.DEVICE_ID: vehicle_device,
+                TeslemetryServiceArgument.TOU_SETTINGS: {"utility": "test"},
             },
             blocking=True,
         )
@@ -553,10 +540,13 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            TeslemetryService.NAVIGATION_GPS_REQUEST,
             {
-                CONF_DEVICE_ID: other_device.id,
-                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+                CommonServiceArgument.DEVICE_ID: other_device.id,
+                TeslemetryServiceArgument.GPS: {
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
             },
             blocking=True,
         )
@@ -567,28 +557,37 @@ async def test_service_validation_errors(
     ("service", "data", "method", "expected_args"),
     [
         pytest.param(
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                TeslemetryServiceArgument.POWER: -5000,
+                TeslemetryServiceArgument.DURATION: 1800,
+            },
             "dispatch_battery_power",
             (-5000, 1800),
             id="dispatch_battery_power",
         ),
         pytest.param(
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {ATTR_POWER: 10000, ATTR_DURATION: 1800},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                TeslemetryServiceArgument.POWER: 10000,
+                TeslemetryServiceArgument.DURATION: 1800,
+            },
             "dispatch_battery_power",
             (10000, 1800),
             id="dispatch_battery_power_10kw",
         ),
         pytest.param(
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {ATTR_POWER: 100000, ATTR_DURATION: 1800},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                TeslemetryServiceArgument.POWER: 100000,
+                TeslemetryServiceArgument.DURATION: 1800,
+            },
             "dispatch_battery_power",
             (100000, 1800),
             id="dispatch_battery_power_max",
         ),
         pytest.param(
-            SERVICE_RESUME_BATTERY_OPERATION,
+            TeslemetryService.RESUME_BATTERY_OPERATION,
             {},
             "resume_battery_operation",
             (),
@@ -611,11 +610,13 @@ async def test_local_battery_services(
     )
     assert device
 
-    with patch(f"aiopowerwall.PowerwallClient.{method}") as mock_method:
+    with patch(
+        f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+    ) as mock_method:
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     mock_method.assert_awaited_once_with(*expected_args)
@@ -668,7 +669,10 @@ async def test_local_battery_services_errors(
     assert device
 
     with (
-        patch(f"aiopowerwall.PowerwallClient.{method}", side_effect=error),
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
+            side_effect=error,
+        ),
         patch(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}"
         ) as mock_cloud,
@@ -677,7 +681,7 @@ async def test_local_battery_services_errors(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key
@@ -699,7 +703,7 @@ async def test_dispatch_battery_power_out_of_range_message(
 
     with (
         patch(
-            "aiopowerwall.PowerwallClient.dispatch_battery_power",
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power",
             side_effect=PowerwallCommandError(
                 "dispatch_battery_power",
                 11,
@@ -710,8 +714,12 @@ async def test_dispatch_battery_power_out_of_range_message(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {CONF_DEVICE_ID: device.id, ATTR_POWER: 10100, ATTR_DURATION: 1800},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                TeslemetryServiceArgument.POWER: 10100,
+                TeslemetryServiceArgument.DURATION: 1800,
+            },
             blocking=True,
         )
     assert str(exc_info.value) == (
@@ -739,7 +747,7 @@ async def test_local_battery_services_unreachable_gateway(
 
     with (
         patch(
-            f"aiopowerwall.PowerwallClient.{method}",
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}",
             side_effect=PowerwallConnectionError("unreachable"),
         ) as mock_local,
         patch(
@@ -750,7 +758,7 @@ async def test_local_battery_services_unreachable_gateway(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     mock_local.assert_awaited_once()
@@ -761,14 +769,17 @@ async def test_local_battery_services_unreachable_gateway(
     ("service", "data", "method", "expected_args"),
     [
         pytest.param(
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {ATTR_POWER: -5000, ATTR_DURATION: 1800},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                TeslemetryServiceArgument.POWER: -5000,
+                TeslemetryServiceArgument.DURATION: 1800,
+            },
             "dispatch_battery_power",
             (-5000, 1800),
             id="dispatch_battery_power",
         ),
         pytest.param(
-            SERVICE_RESUME_BATTERY_OPERATION,
+            TeslemetryService.RESUME_BATTERY_OPERATION,
             {},
             "resume_battery_operation",
             (),
@@ -814,12 +825,14 @@ async def test_battery_services_cloud(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
             return_value=COMMAND_OK,
         ) as mock_method,
-        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_local,
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+        ) as mock_local,
     ):
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     mock_method.assert_awaited_once_with(*expected_args)
@@ -849,13 +862,19 @@ async def test_dispatch_battery_power_out_of_range(
     assert device
 
     with (
-        patch("aiopowerwall.PowerwallClient.dispatch_battery_power") as mock_method,
+        patch(
+            "tesla_fleet_api.tesla.powerwall.PowerwallClient.dispatch_battery_power"
+        ) as mock_method,
         pytest.raises(probatio.Invalid),
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_DISPATCH_BATTERY_POWER,
-            {CONF_DEVICE_ID: device.id, ATTR_POWER: power, ATTR_DURATION: duration},
+            TeslemetryService.DISPATCH_BATTERY_POWER,
+            {
+                CommonServiceArgument.DEVICE_ID: device.id,
+                TeslemetryServiceArgument.POWER: power,
+                TeslemetryServiceArgument.DURATION: duration,
+            },
             blocking=True,
         )
     mock_method.assert_not_called()
@@ -900,7 +919,9 @@ async def test_battery_services_signed_command_available(
     assert device
 
     with (
-        patch(f"aiopowerwall.PowerwallClient.{method}") as mock_local,
+        patch(
+            f"tesla_fleet_api.tesla.powerwall.PowerwallClient.{method}"
+        ) as mock_local,
         patch(
             f"tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.{method}",
             return_value=COMMAND_OK,
@@ -909,7 +930,7 @@ async def test_battery_services_signed_command_available(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     assert mock_local.await_count == local_calls
@@ -948,7 +969,7 @@ async def test_battery_services_refused_without_pairing(
         await hass.services.async_call(
             DOMAIN,
             service,
-            {CONF_DEVICE_ID: device.id, **data},
+            {CommonServiceArgument.DEVICE_ID: device.id, **data},
             blocking=True,
         )
     assert exc_info.value.translation_key == "energy_site_not_paired"
