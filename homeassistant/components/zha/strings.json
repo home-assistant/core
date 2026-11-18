@@ -2385,6 +2385,12 @@
       "window_open": {
         "name": "Window open"
       }
+    },
+    "update": {
+      "release_notes_messages": {
+        "battery_powered": "Battery powered devices can sometimes take multiple hours to update and you may need to wake the device for the update to begin.",
+        "network_reliability": "If you are having issues updating a specific device, make sure that you've eliminated [common environmental issues]({docs_url}) that could be affecting network reliability. OTA updates require a reliable network."
+      }
     }
   },
   "exceptions": {
