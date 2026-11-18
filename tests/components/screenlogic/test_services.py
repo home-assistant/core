@@ -10,13 +10,9 @@ from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
 
 from homeassistant.components.screenlogic import DOMAIN
-from homeassistant.components.screenlogic.const import (
-    ATTR_COLOR_MODE,
-    ATTR_CONFIG_ENTRY,
-    ATTR_RUNTIME,
-    SERVICE_SET_COLOR_MODE,
-    SERVICE_START_SUPER_CHLORINATION,
-    SERVICE_STOP_SUPER_CHLORINATION,
+from homeassistant.components.screenlogic.services import (
+    ScreenLogicService,
+    ScreenLogicServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -94,8 +90,8 @@ async def setup_screenlogic_services_fixture(
     [
         (
             {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
-                ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
+                ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
             },
             None,
         ),
@@ -113,14 +109,14 @@ async def test_service_set_color_mode(
         "async_set_color_lights"
     ]
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
+    assert hass.services.has_service(DOMAIN, ScreenLogicService.SET_COLOR_MODE)
 
     non_screenlogic_entry = MockConfigEntry(entry_id="test")
     non_screenlogic_entry.add_to_hass(hass)
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_COLOR_MODE,
+        ScreenLogicService.SET_COLOR_MODE,
         service_data=data,
         blocking=True,
         target=target,
@@ -134,8 +130,8 @@ async def test_service_set_color_mode(
     [
         (
             {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
-                ATTR_CONFIG_ENTRY: "invalidconfigentry",
+                ScreenLogicServiceArgument.COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
+                ScreenLogicServiceArgument.CONFIG_ENTRY: "invalidconfigentry",
             },
             None,
             f"Integration {DOMAIN} config entry with ID invalidconfigentry "
@@ -143,8 +139,8 @@ async def test_service_set_color_mode(
         ),
         (
             {
-                ATTR_COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
-                ATTR_CONFIG_ENTRY: NON_SL_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
+                ScreenLogicServiceArgument.CONFIG_ENTRY: NON_SL_CONFIG_ENTRY_ID,
             },
             None,
             f"Config entry Mock Title does not belong to integration {DOMAIN}",
@@ -167,7 +163,7 @@ async def test_service_set_color_mode_error(
     non_screenlogic_entry = MockConfigEntry(entry_id=NON_SL_CONFIG_ENTRY_ID)
     non_screenlogic_entry.add_to_hass(hass)
 
-    assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
+    assert hass.services.has_service(DOMAIN, ScreenLogicService.SET_COLOR_MODE)
 
     with pytest.raises(
         ServiceValidationError,
@@ -175,7 +171,7 @@ async def test_service_set_color_mode_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_COLOR_MODE,
+            ScreenLogicService.SET_COLOR_MODE,
             service_data=data,
             blocking=True,
             target=target,
@@ -190,8 +186,8 @@ async def test_service_set_color_mode_error(
     [
         (
             {
-                ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
-                ATTR_RUNTIME: 24,
+                ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.RUNTIME: 24,
             },
             None,
         ),
@@ -209,11 +205,13 @@ async def test_service_start_super_chlorination(
         "async_set_scg_config"
     ]
 
-    assert hass.services.has_service(DOMAIN, SERVICE_START_SUPER_CHLORINATION)
+    assert hass.services.has_service(
+        DOMAIN, ScreenLogicService.START_SUPER_CHLORINATION
+    )
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START_SUPER_CHLORINATION,
+        ScreenLogicService.START_SUPER_CHLORINATION,
         service_data=data,
         blocking=True,
         target=target,
@@ -227,8 +225,8 @@ async def test_service_start_super_chlorination(
     [
         (
             {
-                ATTR_CONFIG_ENTRY: "invalidconfigentry",
-                ATTR_RUNTIME: 24,
+                ScreenLogicServiceArgument.CONFIG_ENTRY: "invalidconfigentry",
+                ScreenLogicServiceArgument.RUNTIME: 24,
             },
             None,
             f"Integration {DOMAIN} config entry with ID invalidconfigentry "
@@ -236,12 +234,12 @@ async def test_service_start_super_chlorination(
         ),
         (
             {
-                ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
-                ATTR_RUNTIME: 24,
+                ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.RUNTIME: 24,
             },
             None,
             f"Equipment configuration for {MOCK_ADAPTER_NAME} does not"
-            f" support {SERVICE_START_SUPER_CHLORINATION}",
+            f" support {ScreenLogicService.START_SUPER_CHLORINATION}",
         ),
     ],
 )
@@ -258,7 +256,9 @@ async def test_service_start_super_chlorination_error(
         "async_set_scg_config"
     ]
 
-    assert hass.services.has_service(DOMAIN, SERVICE_START_SUPER_CHLORINATION)
+    assert hass.services.has_service(
+        DOMAIN, ScreenLogicService.START_SUPER_CHLORINATION
+    )
 
     with pytest.raises(
         ServiceValidationError,
@@ -266,7 +266,7 @@ async def test_service_start_super_chlorination_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_SUPER_CHLORINATION,
+            ScreenLogicService.START_SUPER_CHLORINATION,
             service_data=data,
             blocking=True,
             target=target,
@@ -281,7 +281,7 @@ async def test_service_start_super_chlorination_error(
     [
         (
             {
-                ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
             },
             None,
         ),
@@ -299,11 +299,11 @@ async def test_service_stop_super_chlorination(
         "async_set_scg_config"
     ]
 
-    assert hass.services.has_service(DOMAIN, SERVICE_STOP_SUPER_CHLORINATION)
+    assert hass.services.has_service(DOMAIN, ScreenLogicService.STOP_SUPER_CHLORINATION)
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_STOP_SUPER_CHLORINATION,
+        ScreenLogicService.STOP_SUPER_CHLORINATION,
         service_data=data,
         blocking=True,
         target=target,
@@ -317,7 +317,7 @@ async def test_service_stop_super_chlorination(
     [
         (
             {
-                ATTR_CONFIG_ENTRY: "invalidconfigentry",
+                ScreenLogicServiceArgument.CONFIG_ENTRY: "invalidconfigentry",
             },
             None,
             f"Integration {DOMAIN} config entry with ID invalidconfigentry "
@@ -325,11 +325,11 @@ async def test_service_stop_super_chlorination(
         ),
         (
             {
-                ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
             },
             None,
             f"Equipment configuration for {MOCK_ADAPTER_NAME} does not"
-            f" support {SERVICE_STOP_SUPER_CHLORINATION}",
+            f" support {ScreenLogicService.STOP_SUPER_CHLORINATION}",
         ),
     ],
 )
@@ -346,7 +346,7 @@ async def test_service_stop_super_chlorination_error(
         "async_set_scg_config"
     ]
 
-    assert hass.services.has_service(DOMAIN, SERVICE_STOP_SUPER_CHLORINATION)
+    assert hass.services.has_service(DOMAIN, ScreenLogicService.STOP_SUPER_CHLORINATION)
 
     with pytest.raises(
         ServiceValidationError,
@@ -354,7 +354,7 @@ async def test_service_stop_super_chlorination_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_STOP_SUPER_CHLORINATION,
+            ScreenLogicService.STOP_SUPER_CHLORINATION,
             service_data=data,
             blocking=True,
             target=target,
@@ -397,7 +397,7 @@ async def test_service_config_entry_not_loaded(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.services.has_service(DOMAIN, SERVICE_SET_COLOR_MODE)
+        assert hass.services.has_service(DOMAIN, ScreenLogicService.SET_COLOR_MODE)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
         await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -411,10 +411,10 @@ async def test_service_config_entry_not_loaded(
         ):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_SET_COLOR_MODE,
+                ScreenLogicService.SET_COLOR_MODE,
                 service_data={
-                    ATTR_COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
-                    ATTR_CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
+                    ScreenLogicServiceArgument.COLOR_MODE: COLOR_MODE.ALL_OFF.name.lower(),
+                    ScreenLogicServiceArgument.CONFIG_ENTRY: MOCK_CONFIG_ENTRY_ID,
                 },
                 blocking=True,
             )

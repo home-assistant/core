@@ -1,11 +1,13 @@
 """Test the UniFi Protect setup flow."""
 
 from collections.abc import Callable, Coroutine
+import dataclasses
 import logging
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uiprotect.data import (
     Camera,
     Light,
@@ -30,6 +32,7 @@ from homeassistant.components.unifiprotect.migrate import (
     async_remove_hdr_switch,
     async_remove_sense_setting_mirrors,
 )
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
@@ -206,6 +209,7 @@ async def test_migrate_insecure_camera_removed_in_use(
         DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.translation_placeholders["entity_id"] == insecure.entity_id
     assert issue.translation_placeholders["replacement"] == secure.entity_id
 
@@ -336,6 +340,7 @@ async def test_migrate_sense_setting_mirror_removed_in_use(
         DOMAIN, f"sense_setting_mirror_removed_{mirror.unique_id}"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.is_persistent
     assert issue.translation_key == translation_key
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
@@ -461,9 +466,220 @@ async def test_migrate_removed_entity_in_use(
     assert entity_registry.async_get(entity.entity_id) is None
     repair = issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}")
     assert repair is not None
+    assert repair.config_entry_id == ufp.entry.entry_id
     assert repair.translation_key == issue
     assert repair.is_persistent
     assert repair.translation_placeholders["entity_id"] == entity.entity_id
+
+
+@pytest.mark.parametrize(("platform", "key", "issue"), REMOVED_ENTITIES)
+async def test_migrate_removed_entity_repair_removed_with_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
+) -> None:
+    """The persistent removal repair goes away with its config entry."""
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+    issue_id = f"{issue}_{doorbell.mac}_{key}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("platform", "unique_id_suffix", "issue", "translation_key", "placeholders"),
+    [
+        pytest.param(
+            Platform.CAMERA,
+            "0_insecure",
+            "insecure_camera_removed",
+            "insecure_camera_removed",
+            {"replacement": "camera.secure"},
+            id="insecure_camera",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "smart_obj_package",
+            "package_binary_sensor_removed",
+            "package_binary_sensor_removed",
+            {},
+            id="package_binary_sensor",
+        ),
+        pytest.param(
+            Platform.SWITCH,
+            "hdr_mode",
+            "hdr_switch_removed",
+            "hdr_switch_removed",
+            {},
+            id="hdr_switch",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "alarm",
+            "sense_setting_mirror_removed",
+            "sense_setting_mirror_removed",
+            {"replacement": "switch.alarm"},
+            id="sense_setting_mirror",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            "sensitivity",
+            "sense_setting_mirror_removed",
+            "sense_setting_mirror_removed_no_replacement",
+            {},
+            id="sense_setting_mirror_no_replacement",
+        ),
+    ],
+)
+async def test_link_unlinked_removal_repair(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    unique_id_suffix: str,
+    issue: str,
+    translation_key: str,
+    placeholders: dict[str, str],
+) -> None:
+    """A removal repair raised before it was linked is linked to its entry."""
+    unique_id = f"{doorbell.mac}_{unique_id_suffix}"
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, unique_id, config_entry=ufp.entry
+    )
+    entity_registry.async_remove(entity.entity_id)
+    issue_id = f"{issue}_{unique_id}"
+    # The repair as earlier releases raised it, ignored by the user.
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=translation_key,
+        translation_placeholders={
+            "entity_id": entity.entity_id,
+            "items": "* `automation.test`\n",
+            **placeholders,
+        },
+    )
+    ir.async_ignore_issue(hass, DOMAIN, issue_id, True)
+    ignored = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert ignored is not None
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    linked = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert linked == dataclasses.replace(ignored, config_entry_id=ufp.entry.entry_id)
+    assert linked.dismissed_version is not None
+
+    await hass.config_entries.async_remove(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    (
+        "deleted_platform",
+        "deleted_unique_id",
+        "deleted_owner",
+        "issue_owner",
+        "persistent",
+    ),
+    [
+        pytest.param(
+            Platform.SWITCH,
+            "112233445566_hdr_mode",
+            "this",
+            None,
+            True,
+            id="unknown_mac",
+        ),
+        pytest.param(
+            Platform.SWITCH, "{mac}_hdr_mode", "other", None, True, id="other_nvr"
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            "{mac}_hdr_mode",
+            "this",
+            None,
+            True,
+            id="other_platform",
+        ),
+        pytest.param(
+            Platform.SWITCH, "{mac}_hdr_mode", "this", "other", True, id="linked"
+        ),
+        pytest.param(
+            Platform.SWITCH,
+            "{mac}_hdr_mode",
+            "this",
+            None,
+            False,
+            id="not_persistent",
+        ),
+    ],
+)
+async def test_link_removal_repair_not_owned(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    deleted_platform: Platform,
+    deleted_unique_id: str,
+    deleted_owner: str,
+    issue_owner: str | None,
+    persistent: bool,
+) -> None:
+    """A removal repair this entry does not own the entity of is left alone."""
+    # Another NVR; disabled so it is not set up with this one.
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id="other", disabled_by=ConfigEntryDisabler.USER
+    )
+    other_entry.add_to_hass(hass)
+    entries = {"this": ufp.entry, "other": other_entry}
+    entity = entity_registry.async_get_or_create(
+        deleted_platform,
+        DOMAIN,
+        deleted_unique_id.format(mac=doorbell.mac),
+        config_entry=entries[deleted_owner],
+    )
+    entity_registry.async_remove(entity.entity_id)
+    issue_id = f"hdr_switch_removed_{doorbell.mac}_hdr_mode"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        config_entry_id={"other": other_entry.entry_id, None: None}[issue_owner],
+        is_fixable=False,
+        is_persistent=persistent,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="hdr_switch_removed",
+        translation_placeholders={
+            "entity_id": entity.entity_id,
+            "items": "* `automation.test`\n",
+        },
+    )
+    before = issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) == before
 
 
 @pytest.mark.parametrize(("platform", "key", "issue"), REMOVED_ENTITIES)
@@ -655,6 +871,7 @@ async def test_migrate_light_setting_mirror_in_use(
         DOMAIN, f"setting_mirror_deprecated_{light.mac}_{key}"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.translation_key == translation_key
     assert issue.breaks_in_ha_version == LIGHT_SETTING_MIRROR_BREAKS_IN
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
@@ -1137,6 +1354,7 @@ async def test_migrate_camera_setting_mirror_in_use(
         DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_{key}"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.translation_key == translation_key
     assert issue.breaks_in_ha_version == CAMERA_SETTING_MIRROR_BREAKS_IN
     replacement_id = entity_registry.async_get_entity_id(
@@ -1263,6 +1481,7 @@ async def test_deprecate_private_only_entity_in_use(
         DOMAIN, f"private_only_entity_deprecated_{platform}_{mac}_{key}"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.translation_key == "private_only_entity_deprecated"
     assert issue.breaks_in_ha_version == "2027.1.0"
     assert issue.translation_placeholders["entity_id"] == entity.entity_id
@@ -1596,6 +1815,7 @@ async def test_deprecate_ring_and_motion_sensor_in_use(
         DOMAIN, f"setting_mirror_deprecated_{doorbell.mac}_{key}"
     )
     assert issue is not None
+    assert issue.config_entry_id == ufp.entry.entry_id
     assert issue.translation_key == translation_key
     assert issue.breaks_in_ha_version == PRIVATE_ONLY_BREAKS_IN
     assert issue.translation_placeholders["entity_id"] == entity.entity_id

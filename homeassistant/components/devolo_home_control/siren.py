@@ -5,7 +5,11 @@ from typing import Any, override
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
-from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
+from homeassistant.components.siren import (
+    SirenEntity,
+    SirenEntityFeature,
+    SirenServiceArgument,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -70,7 +74,7 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
     @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        tone = kwargs.get(ATTR_TONE) or self._default_tone
+        tone = kwargs.get(SirenServiceArgument.TONE) or self._default_tone
         self._set_tone(tone)
 
     @override

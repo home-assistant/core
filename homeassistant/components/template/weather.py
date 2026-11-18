@@ -27,6 +27,7 @@ from homeassistant.components.weather import (
     ENTITY_ID_FORMAT,
     Forecast,
     WeatherEntity,
+    WeatherEntityCapabilityAttribute,
     WeatherEntityFeature,
     WeatherEntityStateAttribute,
 )
@@ -247,7 +248,7 @@ WEATHER_COMMON_MODERN_SCHEMA = probatio.Schema(
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
-    attributes=WeatherEntityStateAttribute
+    attributes=(WeatherEntityCapabilityAttribute, WeatherEntityStateAttribute)
 )
 
 

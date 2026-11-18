@@ -9,13 +9,10 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.components.smlight.services import (
-    ATTR_BPM,
-    ATTR_DURATION,
-    ATTR_NOTES,
-    ATTR_OCTAVE,
-    SERVICE_PLAY_RTTTL,
+    SmlightService,
+    SmlightServiceArgument,
 )
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -36,25 +33,25 @@ TEST_RTTTL_NO_BPM = "S:o=5:16e6,16e6"
     [
         (
             {
-                ATTR_BPM: TEST_BPM,
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_DURATION: TEST_DURATION,
-                ATTR_NOTES: TEST_NOTES,
+                SmlightServiceArgument.BPM: TEST_BPM,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.DURATION: TEST_DURATION,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             TEST_RTTTL,
         ),
         (
             {
-                ATTR_BPM: TEST_BPM,
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_NOTES: TEST_NOTES,
+                SmlightServiceArgument.BPM: TEST_BPM,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             TEST_RTTTL_NO_DURATION,
         ),
         (
             {
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_NOTES: TEST_NOTES,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             TEST_RTTTL_NO_BPM,
         ),
@@ -80,8 +77,8 @@ async def test_play_rtttl_service(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_RTTTL,
-        {ATTR_DEVICE_ID: [device_id], **service_data},
+        SmlightService.PLAY_RTTTL,
+        {CommonServiceArgument.DEVICE_ID: [device_id], **service_data},
         blocking=True,
     )
 
@@ -108,12 +105,12 @@ async def test_play_rtttl_service_not_supported(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_RTTTL,
+            SmlightService.PLAY_RTTTL,
             {
-                ATTR_DEVICE_ID: [device_id],
-                ATTR_BPM: TEST_BPM,
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_NOTES: TEST_NOTES,
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                SmlightServiceArgument.BPM: TEST_BPM,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             blocking=True,
         )
@@ -135,12 +132,12 @@ async def test_play_rtttl_service_no_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_RTTTL,
+            SmlightService.PLAY_RTTTL,
             {
-                ATTR_DEVICE_ID: ["non_existent_device_id"],
-                ATTR_BPM: TEST_BPM,
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_NOTES: TEST_NOTES,
+                CommonServiceArgument.DEVICE_ID: ["non_existent_device_id"],
+                SmlightServiceArgument.BPM: TEST_BPM,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             blocking=True,
         )
@@ -169,12 +166,12 @@ async def test_play_rtttl_service_error(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_RTTTL,
+            SmlightService.PLAY_RTTTL,
             {
-                ATTR_DEVICE_ID: [device_id],
-                ATTR_BPM: TEST_BPM,
-                ATTR_OCTAVE: TEST_OCTAVE,
-                ATTR_NOTES: TEST_NOTES,
+                CommonServiceArgument.DEVICE_ID: [device_id],
+                SmlightServiceArgument.BPM: TEST_BPM,
+                SmlightServiceArgument.OCTAVE: TEST_OCTAVE,
+                SmlightServiceArgument.NOTES: TEST_NOTES,
             },
             blocking=True,
         )

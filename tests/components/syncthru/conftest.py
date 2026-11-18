@@ -8,7 +8,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.syncthru.const import DOMAIN
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 
 
 @pytest.fixture
@@ -75,5 +75,5 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="C430W",
-        data={CONF_URL: "http://192.168.1.2/", CONF_NAME: "My Printer"},
+        data={CONF_URL: "http://192.168.1.2/"},
     )

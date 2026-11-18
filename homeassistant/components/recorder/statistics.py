@@ -38,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER, get_instance, session_scope
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import Undefined
@@ -1041,13 +1040,8 @@ def async_update_statistics_metadata(
     """Update statistics metadata for a statistic_id."""
     if new_unit_of_measurement is not Undefined and new_unit_class is Undefined:
         if not _called_from_ws_api:
-            report_usage(
-                (
-                    "doesn't specify unit_class when calling "
-                    "async_update_statistics_metadata"
-                ),
-                breaks_in_ha_version="2026.11",
-                exclude_integrations={DOMAIN},
+            raise HomeAssistantError(
+                "new_unit_class must be specified with new_unit_of_measurement"
             )
 
         unit = new_unit_of_measurement
@@ -2780,6 +2774,17 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
                 )
 
 
+def _validate_metadata_keys(
+    metadata: StatisticMetaData, called_from_ws_api: bool
+) -> None:
+    """Raise if the metadata misses mean_type or unit_class."""
+    if called_from_ws_api:
+        return
+    for key in ("mean_type", "unit_class"):
+        if key not in metadata:
+            raise HomeAssistantError(f"Statistics metadata must specify {key}")
+
+
 @callback
 def _async_import_statistics(
     hass: HomeAssistant,
@@ -2861,18 +2866,7 @@ def async_import_statistics(
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
 
-    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
-    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify unit_class when calling async_import_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
+    _validate_metadata_keys(metadata, _called_from_ws_api)
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -2898,18 +2892,7 @@ def async_add_external_statistics(
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
 
-    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_add_external_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
-    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
-        report_usage(  # type: ignore[unreachable]
-            "doesn't specify unit_class when calling async_add_external_statistics",
-            breaks_in_ha_version="2026.11",
-            exclude_integrations={DOMAIN},
-        )
+    _validate_metadata_keys(metadata, _called_from_ws_api)
 
     _async_import_statistics(hass, metadata, statistics)
 

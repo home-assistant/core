@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, override
@@ -19,6 +19,7 @@ from aioengiebelgium import (
     Peak,
     PricePeriod,
     PriceSlot,
+    ServicePoint,
     bare_ean,
 )
 
@@ -43,6 +44,7 @@ if TYPE_CHECKING:
 _DIRECTIONS = ("offtake", "injection")
 _DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
 _BLENDED_SLOT_CODE = "EN"
+_SERVICE_POINT_REFRESH_INTERVAL = timedelta(days=1)
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 
@@ -71,12 +73,26 @@ def _current_period(
     return None
 
 
+def _gas_conversion_coefficient(service_point: ServicePoint) -> float | None:
+    """Return the kWh per m³ conversion factor of a gas service point, if any."""
+    if (
+        service_point.market_details is None
+        or service_point.market_details.installation is None
+    ):
+        return None
+    coefficient = service_point.market_details.installation.gas_conversion_coefficient
+    if coefficient is None or coefficient <= 0:
+        return None
+    return coefficient
+
+
 @dataclass
 class EngieBePricesData:
     """Pre-processed price lookup for one business agreement."""
 
     slots: dict[tuple[str, str, str], PriceSlot]
     eans: tuple[str, ...]
+    gas_conversion_coefficients: dict[str, float] = field(default_factory=dict)
 
 
 class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
@@ -109,7 +125,10 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         agreements = {
             agreement.business_agreement_number: agreement
@@ -147,16 +166,28 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.ban = ban
         self.agreement = agreement
         self.ean_energy_types: dict[str, str | None] = {}
-        device_name = (
+        self.gas_conversion_coefficients: dict[str, float] = {}
+        self._service_points_refreshed_at: dict[str, datetime] = {}
+        address = (
             agreement.consumption_address.format()
             if agreement.consumption_address is not None
             else ""
-        ) or ban
+        )
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, ban)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ENGIE Belgium",
-            name=device_name,
+            name=address or None,
+            translation_key=None if address else "business_agreement",
+            translation_placeholders={"ban": mask_identifier(ban)},
+        )
+
+    def _service_point_due(self, ean: str, now: datetime) -> bool:
+        """Return True when the service point of a bare EAN needs a fresh fetch."""
+        refreshed_at = self._service_points_refreshed_at.get(ean)
+        return (
+            refreshed_at is None
+            or now - refreshed_at >= _SERVICE_POINT_REFRESH_INTERVAL
         )
 
     @override
@@ -169,21 +200,28 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
-        new_eans = list(
+        now = dt_util.utcnow()
+        fetch_eans = list(
             dict.fromkeys(
                 ean_prices.ean
                 for ean_prices in prices.items
-                if bare_ean(ean_prices.ean) not in self.ean_energy_types
+                if self._service_point_due(bare_ean(ean_prices.ean), now)
             )
         )
-        if new_eans:
+        if fetch_eans:
             service_points = await asyncio.gather(
-                *(self.client.async_get_service_point(ean) for ean in new_eans),
+                *(self.client.async_get_service_point(ean) for ean in fetch_eans),
                 return_exceptions=True,
             )
-            for ean, service_point_result in zip(new_eans, service_points, strict=True):
+            for ean, service_point_result in zip(
+                fetch_eans, service_points, strict=True
+            ):
+                bare = bare_ean(ean)
                 if isinstance(service_point_result, EngieBeAuthenticationError):
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -191,14 +229,21 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
-                        mask_identifier(bare_ean(ean)),
+                        mask_identifier(bare),
                         service_point_result,
                     )
                     continue
                 if isinstance(service_point_result, BaseException):
                     raise service_point_result
                 self.ean_energy_types.update(service_point_result.ean_energy_types)
-                self.ean_energy_types.setdefault(bare_ean(ean), None)
+                self.ean_energy_types.setdefault(bare, None)
+                if (
+                    coefficient := _gas_conversion_coefficient(service_point_result)
+                ) is None:
+                    self.gas_conversion_coefficients.pop(bare, None)
+                else:
+                    self.gas_conversion_coefficients[bare] = coefficient
+                self._service_points_refreshed_at[bare] = now
 
         brussels = dt_util.get_time_zone("Europe/Brussels")
         assert brussels is not None
@@ -221,6 +266,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         return EngieBePricesData(
             slots=slots,
             eans=tuple(ean_prices.ean for ean_prices in prices.items),
+            gas_conversion_coefficients=dict(self.gas_conversion_coefficients),
         )
 
 
@@ -363,7 +409,10 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EngieBeError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 

@@ -42,6 +42,12 @@ from .common import (
 )
 
 PLAYER_1_ID = "00:00:00:00:00:01"
+PLAYER_1_OPTION_ENTITY_IDS = (
+    "number.test_player_1_bass",
+    "select.test_player_1_link_audio_delay",
+    "switch.test_player_1_enhancer",
+    "text.test_player_1_network_name",
+)
 PLAYER_2_ID = "00:00:00:00:00:02"
 PLAYER_2_ENTITY_ID = "media_player.my_super_test_player_2"
 STALE_PLAYER_ID = "stale_player"
@@ -434,6 +440,8 @@ async def test_player_config_toggle(
     )
     assert device_entry
     assert player_id in config_entry.runtime_data.discovered_players
+    for option_entity_id in PLAYER_1_OPTION_ENTITY_IDS:
+        assert hass.states.get(option_entity_id)
 
     # Simulate a player config update that hides the player from HA
     await trigger_subscription_callback(
@@ -448,6 +456,8 @@ async def test_player_config_toggle(
     assert player_id not in config_entry.runtime_data.discovered_players
     assert not hass.states.get(entity_id)
     assert not entity_registry.async_get(entity_id)
+    for option_entity_id in PLAYER_1_OPTION_ENTITY_IDS:
+        assert not entity_registry.async_get(option_entity_id)
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, player_id), config_entry.entry_id
     )
@@ -470,6 +480,38 @@ async def test_player_config_toggle(
         (DOMAIN, player_id), config_entry.entry_id
     )
     assert device_entry
+    for option_entity_id in PLAYER_1_OPTION_ENTITY_IDS:
+        assert hass.states.get(option_entity_id)
+
+
+async def test_player_options_added_after_player(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that options a player reports after it was added get entities."""
+    # the queue switches of newer servers must not be added again either
+    music_assistant_client.server_info.schema_version = 101
+    players = create_players_from_fixture()
+    player = next(player for player in players if player.player_id == PLAYER_1_ID)
+    late_options, player.options = player.options, []
+    with patch(
+        "tests.components.music_assistant.common.create_players_from_fixture",
+        return_value=players,
+    ):
+        await setup_integration_from_fixtures(hass, music_assistant_client)
+    for entity_id in PLAYER_1_OPTION_ENTITY_IDS:
+        assert hass.states.get(entity_id) is None
+
+    player.options = late_options
+    for _ in range(2):
+        await trigger_subscription_callback(
+            hass, music_assistant_client, EventType.PLAYER_OPTIONS_UPDATED, PLAYER_1_ID
+        )
+
+    for entity_id in PLAYER_1_OPTION_ENTITY_IDS:
+        assert hass.states.get(entity_id)
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_player_config_hides_unregistered_player(
