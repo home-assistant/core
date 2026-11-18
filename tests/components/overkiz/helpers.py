@@ -13,6 +13,7 @@ from pyoverkiz.models import (
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     DeviceUnavailableEvent,
+    DeviceUpdatedEvent,
     Event,
     EventState,
     ExecutionRegisteredEvent,
@@ -105,6 +106,11 @@ def device_removed_event(device_url: str) -> DeviceRemovedEvent:
 def device_created_event(device_url: str) -> DeviceCreatedEvent:
     """Build a DEVICE_CREATED event for the given device."""
     return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
+
+
+def device_updated_event(device_url: str) -> DeviceUpdatedEvent:
+    """Build a DEVICE_UPDATED event for the given device."""
+    return DeviceUpdatedEvent(name=EventName.DEVICE_UPDATED, device_url=device_url)
 
 
 def execution_registered_event(
