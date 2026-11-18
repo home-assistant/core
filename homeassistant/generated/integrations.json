@@ -12861,8 +12861,8 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "royal": {
-      "name": "Royal",
+    "royal1915": {
+      "name": "Royal 1915",
       "integration_type": "virtual",
       "categories": [
         "climate.thermostats_heating"
