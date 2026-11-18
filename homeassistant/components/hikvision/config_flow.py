@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 import logging
 from typing import Any, override
+import uuid
 
 import probatio
 from pyhik.hikvision import HikCamera
@@ -19,7 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_RANDOM_ID, DEFAULT_PORT, DOMAIN
+from .identity import is_made_up_id, is_random_id_made_up
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +80,9 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                         "invalid_auth" if camera.auth_failed else "cannot_connect"
                     )
                 else:
-                    await self.async_set_unique_id(device_id)
+                    # pyHik gives a UUID object for a device whose own ID it made up;
+                    # a unique ID must be a string.
+                    await self.async_set_unique_id(str(device_id))
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(
@@ -90,6 +94,8 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_PASSWORD: password,
                             CONF_SSL: ssl,
                             CONF_VERIFY_SSL: verify_ssl,
+                            # Known only now: the ID is stored as a string.
+                            CONF_RANDOM_ID: is_random_id_made_up(device_id),
                         },
                     )
 
@@ -143,8 +149,11 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                         "invalid_auth" if camera.auth_failed else "cannot_connect"
                     )
                 else:
-                    await self.async_set_unique_id(device_id)
-                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    if not (
+                        isinstance(device_id, uuid.UUID) and is_made_up_id(reauth_entry)
+                    ):
+                        await self.async_set_unique_id(str(device_id))
+                        self._abort_if_unique_id_mismatch(reason="wrong_device")
                     return self.async_update_reload_and_abort(
                         reauth_entry, data_updates=user_input
                     )
@@ -156,7 +165,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": reauth_entry.title},
