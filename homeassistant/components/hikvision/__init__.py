@@ -1,5 +1,7 @@
 """The Hikvision integration."""
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 import logging
 import uuid
@@ -7,6 +9,7 @@ from xml.etree.ElementTree import ParseError
 
 from pyhik.constants import SENSOR_MAP
 from pyhik.hikvision import HikCamera, VideoChannel, get_video_channels
+from pyhik.isapi import ISAPIAuthError, ISAPIClient, ISAPIError, ISAPINotSupportedError
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,11 +28,25 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_RANDOM_ID, DOMAIN
+from .coordinator import (
+    HikvisionImageCoordinator,
+    async_complete,
+    async_run_to_end,
+    async_stop_stream,
+)
 from .identity import is_made_up_id, is_random_id_made_up, looks_made_up
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
+# What the event stream feeds. These are set up before the image settings are
+# read: a camera that is slow to answer must not hold back the events of its stream.
+EVENT_PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.EVENT,
+    Platform.SWITCH,
+]
 
 
 @dataclass
@@ -48,6 +65,9 @@ class HikvisionData:
     username: str
     password: str
     channels: dict[int, VideoChannel] = field(default_factory=dict)
+    image_coordinator: HikvisionImageCoordinator | None = None
+    # The stop of the event stream, shared by everything that stops it
+    stream_stop: asyncio.Task[None] | None = None
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -249,14 +269,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     await hass.async_add_executor_job(camera.start_stream)
 
     async def _async_stop_stream(event: Event) -> None:
-        await hass.async_add_executor_job(camera.disconnect)
+        await async_stop_stream(hass, entry.runtime_data)
 
     # pyHik's stream thread is non-daemonic and publishes straight into hass, so
     # it has to be joined before the event loop closes. Starting it yields, so
     # the stop event may already have been fired by the time we get here, and
     # listening for it now would never hear it.
     if hass.is_stopping:
-        await hass.async_add_executor_job(camera.disconnect)
+        await async_stop_stream(hass, entry.runtime_data)
         raise ConfigEntryNotReady("Home Assistant is stopping")
 
     entry.async_on_unload(
@@ -273,11 +293,223 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         model=device_type,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Without waiting for the image settings: the stream is already running, and
+    # an event that arrives before its entities exist would be lost.
+    event_platforms = [p for p in PLATFORMS if p in EVENT_PLATFORMS]
+    image_platforms = [p for p in PLATFORMS if p not in EVENT_PLATFORMS]
+    # Every platform whose setup was started: a setup that is cancelled, or fails,
+    # halfway through forwarding can leave some of them set up.
+    forwarded = list(event_platforms)
+
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, event_platforms)
+
+        # Image settings are only read from standalone cameras.
+        if device_type != "NVR":
+            entry.runtime_data.image_coordinator = await _async_setup_image_settings(
+                hass, entry, host, port, username, password, ssl, verify_ssl
+            )
+
+        if image_platforms:
+            forwarded.extend(image_platforms)
+            await hass.config_entries.async_forward_entry_setups(entry, image_platforms)
+    except BaseException:
+
+        async def _async_clean_up() -> None:
+            # A setup that fails, or is cancelled, does not call async_unload_entry,
+            # so what it started is stopped here, each step even if one before it
+            # failed: the platforms it forwarded, or else the next setup would find
+            # them already set up...
+            try:
+                await hass.config_entries.async_unload_platforms(entry, forwarded)
+            finally:
+                try:
+                    # ...the image settings client, if the image platforms failed
+                    # after it...
+                    if coordinator := entry.runtime_data.image_coordinator:
+                        await coordinator.async_close()
+                finally:
+                    # ...and the thread of the stream, which would keep the process
+                    # from ending, unless a rejected password stopped it already.
+                    await async_stop_stream(hass, entry.runtime_data)
+
+        try:
+            # To its end, even if the setup is cancelled again meanwhile.
+            await async_complete(_async_clean_up())
+        except Exception:
+            # Why the setup failed is what matters (a retry, or reauth): an error
+            # while cleaning up does not replace it.
+            _LOGGER.exception("Error while cleaning up after a failed setup")
+        raise
+
+
+async def _async_setup_image_settings(
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    host: str,
+    port: int,
+    username: str,
+    password: str,
+    ssl: bool,
+    verify_ssl: bool,
+) -> HikvisionImageCoordinator | None:
+    """Discover the image settings of a camera.
+
+    Image settings are an optional extra: a camera that does not offer them, or
+    does not allow reading them, simply gets no image entities.
+    """
+
+    async def _async_close_unused(unused: ISAPIClient) -> None:
+        """Close a client made for a setup that was cancelled meanwhile."""
+        await async_run_to_end(hass, unused.close)
+
+    client = await async_run_to_end(
+        hass,
+        ISAPIClient,
+        host,
+        port,
+        username,
+        password,
+        ssl,
+        verify_ssl,
+        on_result=_async_close_unused,
+    )
+    closed = False
+
+    async def _async_close() -> None:
+        """Close the client, once and to its end, whatever path asks first."""
+        nonlocal closed
+        if closed:
+            return
+
+        async def _async_close_now() -> None:
+            nonlocal closed
+            await async_run_to_end(hass, client.close)
+            closed = True
+
+        try:
+            await async_complete(_async_close_now())
+        except Exception:
+            # Why the client is closed (no image settings, a rejected password, a
+            # failed setup) matters more than the close: it is not replaced. Not
+            # marked closed, so a later path can try again.
+            _LOGGER.exception("Error closing the image settings client of %s", host)
+
+    try:
+        return await _async_discover_image_settings(
+            hass, entry, host, client, _async_close
+        )
+    except BaseException:
+        # Anything unexpected, or a cancelled setup, must not leave it open. Not
+        # closed twice: a path that already closed it is not repeated.
+        await _async_close()
+        raise
+
+
+async def _async_discover_image_settings(
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    host: str,
+    client: ISAPIClient,
+    close: Callable[[], Awaitable[None]],
+) -> HikvisionImageCoordinator | None:
+    """Read the image settings with the client, and close it if there are none."""
+    try:
+        # To its end even if the setup is cancelled: the client is closed after it.
+        settings = await async_run_to_end(hass, client.get_image_settings)
+    except ISAPINotSupportedError:
+        _LOGGER.debug("%s does not support image settings", host)
+    except ISAPIAuthError as err:
+        if err.status_code == 401:
+            # The device rejects the credentials, not just this request. The event
+            # stream would keep using them, so stop it before asking for new ones.
+            await close()
+            try:
+                await async_stop_stream(hass, entry.runtime_data)
+            except Exception:
+                # Still ask for new credentials: the clean-up of the failed setup
+                # tries to stop the stream again.
+                _LOGGER.exception("Error stopping the event stream of %s", host)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        _LOGGER.warning("Not allowed to read the image settings of %s: %s", host, err)
+    except ISAPIError as err:
+        _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
+    else:
+        coordinator = HikvisionImageCoordinator(hass, entry, client, settings)
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            # The events work without the image settings, so do not hold them back.
+            _LOGGER.warning("Unable to read the image values of %s: %s", host, err)
+        except ConfigEntryAuthFailed:
+            await close()
+            raise
+        else:
+            return coordinator
+    await close()
+    return None
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    # Stop the event stream
-    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
+    coordinator = entry.runtime_data.image_coordinator
+    if coordinator is not None:
+        # Before the first await: a request that ends while the platforms unload must
+        # not start reauthentication. Not a shutdown yet, as the unload can fail and
+        # leave the entry loaded, polling.
+        coordinator.unloading = True
+
+    async def _async_unload_failed() -> None:
+        """Deal with what the unload deferred, the entry staying loaded."""
+        if coordinator is None:
+            return
+        # Without hiding why the unload failed.
+        try:
+            await coordinator.async_unload_failed()
+        except Exception:
+            _LOGGER.exception(
+                "Error while resuming %s after a failed unload", entry.title
+            )
+
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    except BaseException:
+        await _async_unload_failed()
+        raise
+
+    release_failed = False
+
+    async def _async_release() -> None:
+        """Stop the stream and close the client, now that the platforms are gone."""
+        nonlocal release_failed
+        try:
+            try:
+                # Unless a rejected password stopped it already.
+                await async_stop_stream(hass, entry.runtime_data)
+            finally:
+                if coordinator is not None:
+                    # Stop the polling, then wait for a request that is still
+                    # running before the client is closed under it. A request
+                    # queued after that is refused.
+                    await coordinator.async_close()
+        except BaseException:
+            release_failed = True
+            raise
+
+    try:
+        # One operation, to its end even if the unload is cancelled meanwhile: the
+        # client must not stay open once its platforms are gone.
+        await async_complete(_async_release())
+    except Exception:
+        # The stream could not be stopped: the entry stays loaded.
+        await _async_unload_failed()
+        raise
+    except asyncio.CancelledError:
+        # The release ran to its end all the same. Only if it failed does the entry
+        # stay loaded, with what the unload deferred still to deal with; after one
+        # that worked, the stream is stopped and the client closed.
+        if release_failed:
+            await async_complete(_async_unload_failed())
+        raise

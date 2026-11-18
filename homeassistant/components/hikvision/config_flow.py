@@ -9,7 +9,7 @@ import probatio
 from pyhik.hikvision import HikCamera
 import requests
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -154,6 +154,15 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         await self.async_set_unique_id(str(device_id))
                         self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    if reauth_entry.state is ConfigEntryState.FAILED_UNLOAD:
+                        # Home Assistant does not reload an entry whose unload
+                        # failed: only a restart sets it up again, with the new
+                        # credentials. Its stream was stopped when the password
+                        # was rejected.
+                        self.hass.config_entries.async_update_entry(
+                            reauth_entry, data={**reauth_entry.data, **user_input}
+                        )
+                        return self.async_abort(reason="reauth_restart_required")
                     return self.async_update_reload_and_abort(
                         reauth_entry, data_updates=user_input
                     )

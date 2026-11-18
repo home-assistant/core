@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  appropriate-polling:
-    status: exempt
-    comment: |
-      This integration uses local_push and does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done

@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_restart_required": "The new credentials are saved. Restart Home Assistant to use them: the integration could not be unloaded, so it cannot be reloaded until then.",
       "wrong_device": "The credentials belong to a different device than the one being reauthenticated."
     },
     "error": {
@@ -156,9 +157,68 @@
           }
         }
       }
+    },
+    "switch": {
+      "backlight_compensation": {
+        "name": "Backlight compensation"
+      },
+      "digital_slow_shutter": {
+        "name": "Digital slow shutter"
+      },
+      "highlight_compensation": {
+        "name": "Highlight compensation"
+      },
+      "image_flip": {
+        "name": "Image flip"
+      },
+      "image_freeze": {
+        "name": "Image freeze"
+      },
+      "image_loss_detection": {
+        "name": "Image loss detection"
+      },
+      "image_stabilization": {
+        "name": "Image stabilization"
+      },
+      "lens_distortion_correction": {
+        "name": "Lens distortion correction"
+      },
+      "lens_initialization": {
+        "name": "Lens initialization"
+      },
+      "proportional_pan": {
+        "name": "Proportional pan"
+      },
+      "smart_supplement_light": {
+        "name": "Smart supplement light"
+      }
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "image_setting_conflict_hlc": {
+      "message": "This setting cannot be turned on while highlight compensation is on. Turn highlight compensation off first."
+    },
+    "image_setting_conflict_wdr": {
+      "message": "Highlight compensation cannot be turned on while wide dynamic range or defog is on. Turn those off first."
+    },
+    "image_setting_error": {
+      "message": "The device did not accept the image setting."
+    },
+    "image_setting_not_allowed": {
+      "message": "This user is not allowed to change the image settings of the device."
+    },
+    "image_setting_refused": {
+      "message": "The device did not accept the image setting ({code})."
+    },
+    "image_settings_closed": {
+      "message": "The image settings of this camera are being reloaded or removed."
+    },
+    "image_settings_update_failed": {
+      "message": "Unable to read the image settings."
+    },
     "invalid_auth": {
       "message": "The device rejected the username or password."
     }
