@@ -23,6 +23,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_integration_descriptions
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
@@ -788,6 +789,14 @@ class ConfigureFlowTool(Tool):
         )
 
 
+def _url_in_use(hass: HomeAssistant, *, internal: bool) -> str | None:
+    """Return the internal or external URL that Home Assistant uses."""
+    try:
+        return get_url(hass, allow_internal=internal, allow_external=not internal)
+    except NoURLAvailableError:
+        return None
+
+
 def _format_core_config(hass: HomeAssistant) -> JsonObjectType:
     """Return the core config fields that the update tool manages."""
     config = hass.config
@@ -804,7 +813,9 @@ def _format_core_config(hass: HomeAssistant) -> JsonObjectType:
         # Integrations must not use the name of the unit system, so it is private
         "unit_system": config.units._name,  # noqa: SLF001
         "internal_url": config.internal_url,
+        "internal_url_in_use": _url_in_use(hass, internal=True),
         "external_url": config.external_url,
+        "external_url_in_use": _url_in_use(hass, internal=False),
     }
 
 
@@ -816,7 +827,10 @@ class GetCoreConfigTool(Tool):
     description = (
         "Get the core config of Home Assistant: the name and location of the home, "
         "the radius of the home zone in meters, the time zone, country, currency, "
-        "language, unit system, and the internal and external URLs."
+        "language, unit system, and the internal and external URLs. internal_url "
+        "and external_url are only set to override the URLs that Home Assistant "
+        "finds itself: the local network address, and the Home Assistant Cloud "
+        "address. The *_in_use fields show the URLs that Home Assistant uses."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -877,11 +891,17 @@ class UpdateCoreConfigTool(Tool):
             ): probatio.In(["metric", "us_customary"]),
             probatio.Optional(
                 "internal_url",
-                description="URL of Home Assistant on the local network, or null.",
+                description=(
+                    "URL of Home Assistant on the local network. Only set it when "
+                    "the URL in use does not work. null lets Home Assistant find it."
+                ),
             ): probatio.Any(str, None),
             probatio.Optional(
                 "external_url",
-                description="URL of Home Assistant on the internet, or null.",
+                description=(
+                    "URL of Home Assistant on the internet. Only set it when the "
+                    "URL in use does not work. null lets Home Assistant find it."
+                ),
             ): probatio.Any(str, None),
         }
     )

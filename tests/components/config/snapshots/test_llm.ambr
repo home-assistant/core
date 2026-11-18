@@ -140,12 +140,12 @@
           'type': 'integer',
         }),
         'external_url': dict({
-          'description': 'URL of Home Assistant on the internet, or null.',
+          'description': 'URL of Home Assistant on the internet. Only set it when the URL in use does not work. null lets Home Assistant find it.',
           'nullable': True,
           'type': 'string',
         }),
         'internal_url': dict({
-          'description': 'URL of Home Assistant on the local network, or null.',
+          'description': 'URL of Home Assistant on the local network. Only set it when the URL in use does not work. null lets Home Assistant find it.',
           'nullable': True,
           'type': 'string',
         }),

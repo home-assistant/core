@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any, override
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import probatio
 import pytest
@@ -1518,9 +1518,36 @@ async def test_get_core_config(
             "language": "en",
             "unit_system": "metric",
             "internal_url": None,
+            "internal_url_in_use": None,
             "external_url": None,
+            "external_url_in_use": None,
         }
     }
+
+
+async def test_get_core_config_urls_in_use(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the URLs in use are the detected ones until a URL is set."""
+    hass.config.api = Mock(use_ssl=False, port=8123, local_ip="192.168.1.10")
+    tool = GetCoreConfigTool()
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] is None
+    assert result["internal_url_in_use"] == "http://192.168.1.10:8123"
+    assert result["external_url"] is None
+    assert result["external_url_in_use"] is None
+
+    await hass.config.async_update(
+        internal_url="http://homeassistant.local:8123",
+        external_url="https://example.com",
+    )
+    res = await tool.async_call(hass, llm.ToolInput(tool.name, {}), llm_context)
+    result = res.data["result"]
+    assert result["internal_url"] == "http://homeassistant.local:8123"
+    assert result["internal_url_in_use"] == "http://homeassistant.local:8123"
+    assert result["external_url"] == "https://example.com"
+    assert result["external_url_in_use"] == "https://example.com"
 
 
 async def test_update_core_config(
