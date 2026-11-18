@@ -666,6 +666,13 @@ async def test_fan_group_entity_context_propagation(
     assert fan_1_id is not None
     fan_1_cluster = zigpy_app_controller.devices[fan_1_ieee].endpoints[1].fan
 
+    switch_1_ieee = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    switch_1_id = find_entity_id(
+        Platform.SWITCH, gateway_proxy.device_proxies[switch_1_ieee], hass
+    )
+    assert switch_1_id is not None
+    switch_1_cluster = zigpy_app_controller.devices[switch_1_ieee].endpoints[1].on_off
+
     turn_on_context = Context(user_id=hass_admin_user.id, id="fan_turn_on_ctx")
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -684,6 +691,17 @@ async def test_fan_group_entity_context_propagation(
     assert fan_1_state is not None
     assert fan_1_state.state == STATE_ON
     assert fan_1_state.context == turn_on_context
+
+    # An OnOff switch in the same Zigbee group is not controlled by FanGroup commands
+    await send_attributes_report(
+        hass,
+        switch_1_cluster,
+        {general.OnOff.AttributeDefs.on_off.id: 1},
+    )
+    switch_1_state = hass.states.get(switch_1_id)
+    assert switch_1_state is not None
+    assert switch_1_state.state == STATE_ON
+    assert switch_1_state.context != turn_on_context
 
     # Opposing off report within the 5-second window must not inherit turn_on_context
     await send_attributes_report(
