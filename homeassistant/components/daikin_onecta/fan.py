@@ -216,6 +216,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the air purifier."""
+        if preset_mode is not None and percentage is not None:
+            self._raise_service_validation_error("air_purifier_preset_and_percentage")
         if not self._power_control_is_available():
             self._raise_service_validation_error("air_purifier_power_unavailable")
         if self.is_on is None:

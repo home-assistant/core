@@ -501,31 +501,78 @@ async def test_air_purifier_hides_invalid_fixed_speed_control(
     execute.assert_not_awaited()
 
 
-async def test_air_purifier_turn_on_applies_optional_controls(
+async def test_air_purifier_turn_on_rejects_preset_and_percentage(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Apply optional preset and speed arguments through the HA fan service."""
+    """Reject conflicting arguments before any power or mode write."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.async_execute_command = _execute_typed_command(
-        config_entry
-    )
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
+    purification = _air_purification(config_entry)
+    assert purification.power is not None
+    purification.power.value = "off"
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            FAN_SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier",
+                FanServiceArgument.PRESET_MODE: "auto_fan",
+                FanServiceArgument.PERCENTAGE: 65,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "air_purifier_preset_and_percentage"
+    execute.assert_not_awaited()
+    assert purification.power.value == "off"
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_preset", "expected_percentage"),
+    [
+        pytest.param(
+            {FanServiceArgument.PRESET_MODE: "auto_fan"},
+            "auto_fan",
+            None,
+            id="preset-only",
+        ),
+        pytest.param(
+            {FanServiceArgument.PERCENTAGE: 65},
+            None,
+            75,
+            id="percentage-only",
+        ),
+    ],
+)
+async def test_air_purifier_turn_on_applies_one_optional_control(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service_data: dict[str, str | int],
+    expected_preset: str | None,
+    expected_percentage: int | None,
+) -> None:
+    """Apply either a preset or a manual speed through the HA fan service."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    execute = _execute_typed_command(config_entry)
+    config_entry.runtime_data.async_execute_command = execute
 
     await hass.services.async_call(
         FAN_DOMAIN,
         FAN_SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "fan.air_purifier",
-            FanServiceArgument.PRESET_MODE: "auto_fan",
-            FanServiceArgument.PERCENTAGE: 65,
-        },
+        {ATTR_ENTITY_ID: "fan.air_purifier", **service_data},
         blocking=True,
     )
 
     state = hass.states.get("fan.air_purifier")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == 75
-    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] is None
+    assert state.attributes[FanEntityStateAttribute.PRESET_MODE] == expected_preset
+    assert state.attributes[FanEntityStateAttribute.PERCENTAGE] == expected_percentage
+    execute.assert_awaited()
 
 
 async def test_air_purifier_turn_off_is_noop_when_already_off(

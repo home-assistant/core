@@ -459,6 +459,9 @@
     }
   },
   "exceptions": {
+    "air_purifier_preset_and_percentage": {
+      "message": "Choose either a preset or a fan speed for {device}"
+    },
     "air_purifier_mode_unavailable": {
       "message": "Air purifier mode control is unavailable for {device}"
     },
