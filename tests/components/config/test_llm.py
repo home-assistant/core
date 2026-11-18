@@ -665,13 +665,13 @@ async def test_reload_config_entry_invalid_args(
     ("tool_args", "expected_prefix", "expected_domains"),
     [
         pytest.param(
-            {"query": "random", "type": "helper"},
+            {"query": "random"},
             [{"domain": "random", "name": "Random", "categories": ["helpers"]}],
             {"random"},
             id="helper_exact",
         ),
         pytest.param(
-            {"query": "sun", "type": "integration"},
+            {"query": "sun"},
             [
                 {
                     "domain": "sun",
@@ -767,10 +767,16 @@ async def test_reload_config_entry_invalid_args(
             id="query_and_category_no_match",
         ),
         pytest.param(
-            {"category": "energy.meters_monitoring", "type": "helper"},
+            {"category": "helpers.calculate_value", "query": "meter"},
             [],
-            {"integration", "utility_meter"},
-            id="category_and_type",
+            {"utility_meter"},
+            id="helper_by_category",
+        ),
+        pytest.param(
+            {"category": "helpers", "query": "workday"},
+            [],
+            {"workday"},
+            id="helpers_category_includes_integrations",
         ),
     ],
 )
@@ -828,11 +834,9 @@ async def test_search_integrations_unknown_category(
     "invalid_args",
     [
         pytest.param({}, id="missing_query_and_category"),
-        pytest.param({"type": "helper"}, id="type_only"),
         pytest.param({"category": ""}, id="empty_category"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
-        pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
     ],
 )
 async def test_search_integrations_invalid_args(

@@ -93,20 +93,11 @@
               'format': 'lower',
             }),
           ]),
-          'description': "Filter results by category, like 'energy', or by subcategory, like 'energy.energy_prices'. A category includes its subcategories. An unknown category returns the known categories.",
+          'description': "Filter results by category, like 'energy', or by subcategory, like 'energy.energy_prices'. A category includes its subcategories. Use 'helpers' to find helpers. An unknown category returns the known categories.",
         }),
         'query': dict({
           'description': "Search text to match against integration name, domain, or brand (case-insensitive). Required if 'category' is not given.",
           'format': 'strip',
-          'type': 'string',
-        }),
-        'type': dict({
-          'description': "Filter results by type: 'integration' or 'helper'.",
-          'enum': list([
-            'integration',
-            'helper',
-          ]),
-          'format': 'lower',
           'type': 'string',
         }),
       }),
