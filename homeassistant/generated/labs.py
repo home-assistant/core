@@ -25,6 +25,13 @@ LABS_PREVIEW_FEATURES = {
             "report_issue_url": "",
         },
     },
+    "code_mode": {
+        "code_mode": {
+            "feedback_url": "https://github.com/balloobbot/core/tree/llm-code-mode",
+            "learn_more_url": "https://www.home-assistant.io/integrations/code_mode",
+            "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/code_mode&integration_name=Code%20Mode",
+        },
+    },
     "frontend": {
         "winter_mode": {
             "feedback_url": "",

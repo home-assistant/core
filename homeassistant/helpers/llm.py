@@ -112,22 +112,13 @@ async def async_get_api(
         if key not in apis:
             raise HomeAssistantError(f"API {key} not found")
 
-    selected = [apis[key] for key in api_id]
-    wrappers = [item for item in selected if isinstance(item, APIWrapper)]
-    wrapped = [item for item in selected if not isinstance(item, APIWrapper)]
-    if not wrapped:
-        raise HomeAssistantError(f"API {wrappers[0].id} needs another API to change")
-
     api: API
-    if len(wrapped) == 1:
-        api = wrapped[0]
+    if len(api_id) == 1:
+        api = apis[api_id[0]]
     else:
-        api = MergedAPI(wrapped)
+        api = MergedAPI([apis[key] for key in api_id])
 
-    api_instance = await async_get_authorized_api_instance(api, llm_context)
-    for wrapper in wrappers:
-        api_instance = await wrapper.async_wrap_api_instance(api_instance)
-    return api_instance
+    return await async_get_authorized_api_instance(api, llm_context)
 
 
 async def async_get_authorized_api_instance(
@@ -346,24 +337,6 @@ class API(ABC):
         This is used internally by `async_get_api`. Callers should use `async_get_api`
         rather than calling this directly to ensure permission checks are enforced.
         """
-        raise NotImplementedError
-
-
-class APIWrapper(API):
-    """An API that changes how the other selected APIs are exposed to an LLM.
-
-    A wrapper has no tools of its own. `async_get_api` passes it the API
-    instance of the other selected APIs and returns the instance it creates.
-    """
-
-    @override
-    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Raise because a wrapper needs an API instance to change."""
-        raise HomeAssistantError(f"API {self.id} needs another API to change")
-
-    @abstractmethod
-    async def async_wrap_api_instance(self, api_instance: APIInstance) -> APIInstance:
-        """Return the API instance that replaces the given instance."""
         raise NotImplementedError
 
 

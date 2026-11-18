@@ -2384,16 +2384,6 @@
       ],
       "supported_by": "opower"
     },
-    "code_mode": {
-      "name": "Code Mode",
-      "integration_type": "service",
-      "categories": [
-        "ai_voice.ai_models"
-      ],
-      "config_flow": true,
-      "iot_class": "calculated",
-      "single_config_entry": true
-    },
     "coinbase": {
       "name": "Coinbase",
       "integration_type": "service",

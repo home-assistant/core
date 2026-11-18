@@ -1925,6 +1925,7 @@ NO_QUALITY_SCALE = [
     "battery",
     "blueprint",
     "brands",
+    "code_mode",
     "config",
     "configurator",
     "counter",

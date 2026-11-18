@@ -1,4 +1,4 @@
-"""LLM API that replaces the tools of other APIs with code execution."""
+"""Expose the tools of an LLM API as functions for sandboxed code."""
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -9,12 +9,11 @@ from typing import Any, override
 import probatio
 from pydantic_monty import AsyncMonty, CollectString, MontyError, ResourceLimits
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.llm import (
     APIInstance,
-    APIWrapper,
     LLMContext,
     Tool,
     ToolAnnotations,
@@ -59,36 +58,30 @@ _JSON_TYPES = {
 }
 
 
-class CodeModeAPI(APIWrapper):
-    """API that exposes the tools of the other selected APIs as code."""
-
-    def __init__(self, hass: HomeAssistant, pool: AsyncMonty) -> None:
-        """Init the class."""
-        super().__init__(hass=hass, id=DOMAIN, name="Code mode")
-        self._pool = pool
-
-    @override
-    async def async_wrap_api_instance(self, api_instance: APIInstance) -> APIInstance:
-        """Return an API instance with a search tool and an execute tool."""
-        functions = [ToolFunction(api_instance, tool) for tool in api_instance.tools]
-        declarations = "\n\n".join(function.declaration for function in functions)
-        tools: list[Tool] = [ExecuteTool(self._pool, functions)]
-        if len(declarations) <= INLINE_BUDGET:
-            catalog = f"These are all the functions:\n```python\n{declarations}\n```"
-        else:
-            tools.insert(0, SearchTool(functions))
-            names = ", ".join(function.name for function in functions)
-            catalog = (
-                "Get the declaration of a function with the `search` tool before "
-                f"you call the function. These are the functions: {names}"
-            )
-
-        return APIInstance(
-            api=self,
-            api_prompt=f"{api_instance.api_prompt}\n{PROMPT}\n{catalog}",
-            llm_context=api_instance.llm_context,
-            tools=tools,
+@callback
+def async_create_api_instance(
+    pool: AsyncMonty, api_instance: APIInstance
+) -> APIInstance:
+    """Return an API instance with an execute tool, and a search tool if needed."""
+    functions = [ToolFunction(api_instance, tool) for tool in api_instance.tools]
+    declarations = "\n\n".join(function.declaration for function in functions)
+    tools: list[Tool] = [ExecuteTool(pool, functions)]
+    if len(declarations) <= INLINE_BUDGET:
+        catalog = f"These are all the functions:\n```python\n{declarations}\n```"
+    else:
+        tools.insert(0, SearchTool(functions))
+        names = ", ".join(function.name for function in functions)
+        catalog = (
+            "Get the declaration of a function with the `search` tool before "
+            f"you call the function. These are the functions: {names}"
         )
+
+    return APIInstance(
+        api=api_instance.api,
+        api_prompt=f"{api_instance.api_prompt}\n{PROMPT}\n{catalog}",
+        llm_context=api_instance.llm_context,
+        tools=tools,
+    )
 
 
 class ToolFunction:

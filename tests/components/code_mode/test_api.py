@@ -6,10 +6,9 @@ from unittest.mock import patch
 
 import probatio
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.code_mode import api as code_mode_api
-from homeassistant.components.code_mode.const import DOMAIN
+from homeassistant.components.conversation import DATA_CODE_MODE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, llm
@@ -94,26 +93,28 @@ def state_tool() -> GetStateTool:
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, state_tool: GetStateTool
-) -> None:
-    """Set up Code Mode, the LLM integration and the test API."""
+async def setup_integration(hass: HomeAssistant, state_tool: GetStateTool) -> None:
+    """Set up Code Mode and the test API."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "llm", {})
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "code_mode", {})
     llm.async_register_api(hass, TestAPI(hass, state_tool))
+
+
+async def _api_instance(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> llm.APIInstance:
+    """Return the Assist API and the test API with their tools as code."""
+    return hass.data[DATA_CODE_MODE](
+        await llm.async_get_api(hass, [llm.LLM_API_ASSIST, "test"], llm_context)
+    )
 
 
 @pytest.fixture
 async def api_instance(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> llm.APIInstance:
-    """Return the Assist API and the test API, wrapped by Code Mode."""
-    return await llm.async_get_api(
-        hass, [llm.LLM_API_ASSIST, DOMAIN, "test"], llm_context
-    )
+    """Return the Assist API and the test API with their tools as code."""
+    return await _api_instance(hass, llm_context)
 
 
 async def _execute(api_instance: llm.APIInstance, code: str) -> llm.ToolResult:
@@ -121,33 +122,10 @@ async def _execute(api_instance: llm.APIInstance, code: str) -> llm.ToolResult:
     return await api_instance.async_call_tool(llm.ToolInput("execute", {"code": code}))
 
 
-async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test unloading the entry removes the API."""
-    assert DOMAIN in {api.id for api in llm.async_get_apis(hass)}
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-    assert DOMAIN not in {api.id for api in llm.async_get_apis(hass)}
-
-
-async def test_needs_another_api(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test Code Mode cannot be used without another API."""
-    with pytest.raises(HomeAssistantError, match="needs another API"):
-        await llm.async_get_api(hass, DOMAIN, llm_context)
-
-    api = next(api for api in llm.async_get_apis(hass) if api.id == DOMAIN)
-    with pytest.raises(HomeAssistantError, match="needs another API"):
-        await api.async_get_api_instance(llm_context)
-
-
 async def test_declarations_in_prompt(api_instance: llm.APIInstance) -> None:
     """Test a small API has only the execute tool and declares its functions."""
     assert [tool.name for tool in api_instance.tools] == ["execute"]
-    assert api_instance.api.id == DOMAIN
+    assert api_instance.api.id == "assist|test"
     assert "Test prompt." in api_instance.api_prompt
     assert "async def llm__GetDateTime() -> dict:" in api_instance.api_prompt
     assert (
@@ -167,9 +145,7 @@ async def test_search_for_large_api(
 ) -> None:
     """Test a large API lists function names and adds the search tool."""
     with patch.object(code_mode_api, "INLINE_BUDGET", 100):
-        api_instance = await llm.async_get_api(
-            hass, [llm.LLM_API_ASSIST, DOMAIN, "test"], llm_context
-        )
+        api_instance = await _api_instance(hass, llm_context)
 
     assert [tool.name for tool in api_instance.tools] == ["search", "execute"]
     assert "async def" not in api_instance.api_prompt

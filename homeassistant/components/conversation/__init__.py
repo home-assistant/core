@@ -31,6 +31,7 @@ from .chat_log import (
     async_get_chat_log,
 )
 from .const import (
+    DATA_CODE_MODE,
     DATA_COMPONENT,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
@@ -52,6 +53,7 @@ from .trace import ConversationTraceEventType, async_conversation_trace_append
 from .util import async_get_result_from_chat_log, get_config_intents
 
 __all__ = [
+    "DATA_CODE_MODE",
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "AbstractConversationAgent",

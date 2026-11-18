@@ -1,13 +1,18 @@
 {
   "domain": "code_mode",
   "name": "Code Mode",
-  "categories": ["ai_voice.ai_models"],
   "codeowners": ["@balloob"],
-  "config_flow": true,
+  "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/code_mode",
-  "integration_type": "service",
+  "integration_type": "system",
   "iot_class": "calculated",
-  "quality_scale": "bronze",
-  "requirements": ["pydantic-monty==1.6.0"],
-  "single_config_entry": true
+  "preview_features": {
+    "code_mode": {
+      "feedback_url": "https://github.com/balloobbot/core/tree/llm-code-mode",
+      "learn_more_url": "https://www.home-assistant.io/integrations/code_mode",
+      "report_issue_url": "https://github.com/home-assistant/core/issues/new?template=bug_report.yml&integration_link=https://www.home-assistant.io/integrations/code_mode&integration_name=Code%20Mode"
+    }
+  },
+  "quality_scale": "internal",
+  "requirements": ["pydantic-monty==1.6.0"]
 }

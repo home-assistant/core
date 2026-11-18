@@ -2,35 +2,38 @@
 
 from contextlib import AsyncExitStack
 
-from pydantic_monty import AsyncMonty, MontyError
+from pydantic_monty import AsyncMonty
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import llm
+from homeassistant.components.conversation import DATA_CODE_MODE
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, llm
+from homeassistant.helpers.typing import ConfigType
 
-from .api import CodeModeAPI
+from .api import async_create_api_instance
+from .const import DOMAIN
 
-type CodeModeConfigEntry = ConfigEntry[AsyncMonty]
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 MAX_WORKERS = 4
 CHECKOUT_TIMEOUT = 10
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CodeModeConfigEntry) -> None:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the sandbox worker pool."""
     stack = AsyncExitStack()
-    try:
-        entry.runtime_data = await stack.enter_async_context(
-            AsyncMonty(max_processes=MAX_WORKERS, checkout_timeout=CHECKOUT_TIMEOUT)
-        )
-    except (MontyError, OSError) as err:
-        raise ConfigEntryNotReady(f"Cannot start the sandbox: {err}") from err
-    entry.async_on_unload(stack.aclose)
-    entry.async_on_unload(
-        llm.async_register_api(hass, CodeModeAPI(hass, entry.runtime_data))
+    pool = await stack.enter_async_context(
+        AsyncMonty(max_processes=MAX_WORKERS, checkout_timeout=CHECKOUT_TIMEOUT)
     )
 
+    @callback
+    def async_wrap_api_instance(api_instance: llm.APIInstance) -> llm.APIInstance:
+        return async_create_api_instance(pool, api_instance)
 
-async def async_unload_entry(hass: HomeAssistant, entry: CodeModeConfigEntry) -> None:
-    """Unload a config entry."""
+    hass.data[DATA_CODE_MODE] = async_wrap_api_instance
+
+    async def _async_stop_pool(_: Event) -> None:
+        await stack.aclose()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_pool)
+    return True
