@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -69,6 +69,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     device_id = camera.get_id
     if device_id is None:
+        if camera.auth_failed:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            )
         raise ConfigEntryNotReady(f"Unable to get device ID from {host}")
 
     device_name = camera.get_name or host

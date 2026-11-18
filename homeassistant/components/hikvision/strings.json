@@ -1,13 +1,27 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_device": "The credentials belong to a different device than the one being reauthenticated."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The new password for your Hikvision device",
+          "username": "The username for your Hikvision device"
+        },
+        "description": "The credentials for {name} are no longer accepted. Enter the current username and password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -142,6 +156,11 @@
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The device rejected the username or password."
     }
   }
 }
