@@ -986,8 +986,14 @@ async def test_install_upgrade_url_mismatch(
 ) -> None:
     """Test an error when the device downloads from another URL than checked."""
     aioclient_mock.head(ESP8266_OTA_URL, status=200)
-    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    entity_id, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
     await _online(hass, fake)
+    # A removed device stays in the discovery data, without config
+    other = {**config, "mac": "00000049A3BD", "t": "other_plug"}
+    _discover(hass, other)
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{other['mac']}/config", "")
+    await hass.async_block_till_done()
     fake.upgrade_url = CUSTOM_OTA_URL
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -1478,6 +1484,17 @@ async def test_install_topic_changed(
 
 
 @pytest.mark.parametrize(
+    ("config_update", "command_topic"),
+    [
+        ({"t": "tasmotas"}, "tasmotas/cmnd/"),
+        # Below the group topic, devices subscribe to cmnd/tasmotas/#
+        (
+            {"ft": "%prefix%/%topic%/", "t": "tasmotas/kitchen"},
+            "cmnd/tasmotas/kitchen/",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
 )
 async def test_install_group_topic(
@@ -1485,10 +1502,12 @@ async def test_install_group_topic(
     mqtt_mock: MqttMockHAClient,
     entity_registry: er.EntityRegistry,
     mock_github_latest_release: str,
+    config_update: dict[str, str],
+    command_topic: str,
 ) -> None:
-    """Test no commands are sent to a topic which is Tasmota's group topic."""
+    """Test no commands are sent to a topic covered by Tasmota's group topic."""
     entity_id, fake, _ = await _setup_device(
-        hass, mqtt_mock, entity_registry, config_update={"t": "tasmotas"}
+        hass, mqtt_mock, entity_registry, config_update=config_update
     )
     await _online(hass, fake)
     assert UpdateEntityFeature.INSTALL in _features(hass, entity_id)
@@ -1496,7 +1515,7 @@ async def test_install_group_topic(
     with pytest.raises(ServiceValidationError) as exc_info:
         await _install(hass, entity_id)
     assert exc_info.value.translation_key == "topic_group"
-    assert exc_info.value.translation_placeholders == {"topic": "tasmotas/cmnd/"}
+    assert exc_info.value.translation_placeholders == {"topic": command_topic}
     assert fake.commands == []
 
 
@@ -1616,17 +1635,12 @@ async def test_install_topic_overlap(
 
 
 @pytest.mark.parametrize(
-    ("event", "translation_key"),
+    ("change", "translation_key"),
     [
-        (
-            ("stat/STATUS2", _status2("15.2.0(tasmota)", "ESP8266EX")),
-            "install_not_supported",
-        ),
-        (
-            ("stat/STATUS2", _status2("15.3.0(release-tasmota)", "ESP8266EX")),
-            "firmware_changed",
-        ),
-        (("tele/LWT", "Offline"), "device_offline"),
+        ("custom_build", "install_not_supported"),
+        ("newer_status2", "firmware_changed"),
+        ("newer_discovery", "firmware_changed"),
+        ("offline", "device_offline"),
     ],
 )
 @pytest.mark.parametrize(
@@ -1638,17 +1652,24 @@ async def test_install_device_changed_during_download_check(
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_github_latest_release: str,
-    event: tuple[str, str],
+    change: str,
     translation_key: str,
 ) -> None:
     """Test no upgrade when the device changes while its URL is checked."""
-    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    entity_id, fake, config = await _setup_device(hass, mqtt_mock, entity_registry)
     await _online(hass, fake)
 
     async def device_changes_during_head(
         method: str, url: Any, data: Any
     ) -> AiohttpClientMockResponse:
-        fake.fire(*event)
+        if change == "custom_build":
+            fake.fire("stat/STATUS2", _status2("15.2.0(tasmota)", "ESP8266EX"))
+        elif change == "newer_status2":
+            fake.fire("stat/STATUS2", _status2("15.3.0(release-tasmota)", "ESP8266EX"))
+        elif change == "newer_discovery":
+            _discover(hass, {**config, "sw": "15.3.0"})
+        else:
+            fake.fire("tele/LWT", "Offline")
         await _settle(hass)
         return AiohttpClientMockResponse(method, url, status=200)
 
@@ -1685,3 +1706,37 @@ async def test_install_restore_publish_fails(
         await _install(hass, entity_id)
     assert exc_info.value.translation_key == "firmware_not_available"
     assert f"could not restore OtaUrl {CUSTOM_OTA_URL}" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "mock_github_latest_release", [f"v{RELEASE_VERSION}"], indirect=True
+)
+async def test_install_removed_before_ota_url_reset(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    mock_github_latest_release: str,
+) -> None:
+    """Test OtaUrl is not reset when the entity is removed while it is read."""
+    entity_id, fake, _ = await _setup_device(hass, mqtt_mock, entity_registry)
+    await _online(hass, fake)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    async def unload_while_reading(
+        tasmota_update: TasmotaUpdate, timeout: float
+    ) -> str:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        return CUSTOM_OTA_URL
+
+    with (
+        patch.object(
+            TasmotaUpdate,
+            "get_ota_url",
+            autospec=True,
+            side_effect=unload_while_reading,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await _install(hass, entity_id)
+    assert exc_info.value.translation_key == "install_interrupted"
+    assert fake.commands == []

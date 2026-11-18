@@ -409,6 +409,7 @@ class TasmotaUpdateEntity(
     async def _async_install(self) -> None:
         """Check the device and its firmware, then upgrade it."""
         firmware = self._check_firmware()
+        installed_version = self.installed_version
         self._check_topic()
         try:
             previous_ota_url = await self._tasmota_update.get_ota_url(COMMAND_TIMEOUT)
@@ -418,7 +419,7 @@ class TasmotaUpdateEntity(
         try:
             ota_url = await self._async_reset_ota_url()
             await self._async_verify_ota_url(ota_url, firmware)
-            await self._async_upgrade(firmware, ota_url)
+            await self._async_upgrade(firmware, installed_version, ota_url)
         except HomeAssistantError:
             if not self._removed and previous_ota_url not in ("", ota_url):
                 await self._async_restore_ota_url(previous_ota_url)
@@ -454,35 +455,36 @@ class TasmotaUpdateEntity(
                 translation_key="topic_duplicated",
                 translation_placeholders=placeholders,
             )
+        # Tasmota subscribes to <command topic>#, also for the default group
+        # topic, so a device whose command topic or group command topic is a
+        # prefix of this command topic receives these commands as well
         for mac, other_payload in discovery_data.items():
-            # Tasmota subscribes to <command topic>#, so a device whose command
-            # topic is a prefix of this one receives these commands as well
-            if (
-                mac != tasmota_update.mac
-                and other_payload
-                and command_topic.startswith(
-                    other_topic := get_topic_command(other_payload)
+            if not other_payload:
+                continue
+            if command_topic.startswith(
+                get_topic_command({**other_payload, CONF_TOPIC: DEFAULT_GROUP_TOPIC})
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="topic_group",
+                    translation_placeholders=placeholders,
                 )
+            if mac != tasmota_update.mac and command_topic.startswith(
+                other_topic := get_topic_command(other_payload)
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="topic_overlap",
                     translation_placeholders={**placeholders, "other": other_topic},
                 )
-        if get_topic_command({**payload, CONF_TOPIC: DEFAULT_GROUP_TOPIC}) == (
-            command_topic
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="topic_group",
-                translation_placeholders=placeholders,
-            )
 
     async def _async_reset_ota_url(self) -> str:
         """Let the device report the OtaUrl its firmware was built with.
 
         For official builds this is the image of the device's own variant.
         """
+        if self._removed:
+            raise _error("install_interrupted")
         self._check_topic()
         try:
             return await self._tasmota_update.reset_ota_url(COMMAND_TIMEOUT)
@@ -511,13 +513,18 @@ class TasmotaUpdateEntity(
         if status != HTTPStatus.OK:
             raise _error("firmware_not_available", {"url": url, "status": str(status)})
 
-    async def _async_upgrade(self, firmware: TasmotaFirmware, ota_url: str) -> None:
+    async def _async_upgrade(
+        self, firmware: TasmotaFirmware, installed_version: str | None, ota_url: str
+    ) -> None:
         """Send Upgrade 1 and wait until the device reports the result."""
         if self._removed:
             raise _error("install_interrupted")
-        # STATUS2, INFO1 or discovery may have changed things during the checks
+        # STATUS2, INFO1, LWT or discovery may have changed things during the checks
         self._check_topic()
-        if self._check_firmware() != firmware:
+        if (
+            self._check_firmware() != firmware
+            or self.installed_version != installed_version
+        ):
             raise _error("firmware_changed")
         self._install = _Install(
             previous_version=firmware.version,
