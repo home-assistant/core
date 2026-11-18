@@ -545,6 +545,28 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     async def async_set_setting(self, path: str, value: str) -> None:
         """Write one setting and update the stored values."""
+        await self._async_write(
+            self.client.set_image_setting, (path, value), {path: value}
+        )
+
+    async def async_set_linked_setting(self, setting: ImageSetting, value: str) -> None:
+        """Write a mode that also controls an enabled flag, such as BLC."""
+        updates = {setting.path: value}
+        if setting.linked_enabled_path:
+            updates[setting.linked_enabled_path] = (
+                "false" if value == setting.off_value else "true"
+            )
+        await self._async_write(
+            self.client.set_image_linked_setting, (setting, value), updates
+        )
+
+    async def _async_write(
+        self,
+        method: Callable[..., ImageWriteResult],
+        args: tuple[Any, ...],
+        updates: dict[str, str],
+    ) -> None:
+        """Send a write to the camera and store what it changed."""
         try:
             async with self.lock:
                 # Once new credentials are saved, a queued action must not send the
@@ -560,21 +582,20 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     )
                 result = await self._async_send(
-                    self.client.set_image_setting,
-                    path,
-                    value,
-                    on_result=partial(self._async_cancelled_write_done, path, value),
+                    method,
+                    *args,
+                    on_result=partial(self._async_cancelled_write_done, updates),
                 )
         except ISAPIError as err:
             raise await self._async_write_error(err) from err
-        if error := self._apply_write_result(path, value, result):
+        if error := self._apply_write_result(updates, result):
             raise error
         if not self._stopping:
             # Not while unloading: the poll would only be refused.
             await self.async_request_refresh()
 
     async def _async_cancelled_write_done(
-        self, path: str, value: str, result: ImageWriteResult
+        self, updates: dict[str, str], result: ImageWriteResult
     ) -> None:
         """Show what a write did when the action that asked for it was cancelled.
 
@@ -582,13 +603,13 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         would ever show it. The lock is still held here, so the refresh that
         follows a write is only started, to run once it is released.
         """
-        if not self._apply_write_result(path, value, result) and not self._stopping:
+        if not self._apply_write_result(updates, result) and not self._stopping:
             self.config_entry.async_create_background_task(
                 self.hass, self.async_request_refresh(), f"{self.name} refresh"
             )
 
     def _apply_write_result(
-        self, path: str, value: str, result: ImageWriteResult
+        self, updates: dict[str, str], result: ImageWriteResult
     ) -> HomeAssistantError | None:
         """Store what a write changed, and return the error to raise if refused."""
         # The camera may have had to switch other settings off first, even when it
@@ -606,7 +627,8 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
             # only the code of the device is.
             placeholders = {"code": result.sub_status}
             if not others and (
-                conflict := _conflict_key(result.sub_status, {path: value})
+                # A linked write also sets the enabled flag of its mode.
+                conflict := _conflict_key(result.sub_status, updates)
             ):
                 # If the camera switched the blocker off first, and still refused,
                 # the blocker is no longer the reason.
@@ -626,7 +648,7 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         # Not async_set_updated_data either: only what the write changed is known,
         # and after a failed poll the other values are stale. The refresh that
         # follows a write makes the entities available again, once it works.
-        self.data = {**self.data, **others, path: value}
+        self.data = {**self.data, **others, **updates}
         self.async_update_listeners()
         return None
 
