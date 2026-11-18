@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pyvesync.const import AirQualityLevel
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -196,22 +197,22 @@ async def test_cook_end_time_across_updates(
 @pytest.mark.parametrize(
     ("aq_level", "expected_state"),
     [
-        pytest.param(4, "poor", id="poor"),
-        pytest.param(-1, STATE_UNKNOWN, id="unknown"),
+        pytest.param(AirQualityLevel.POOR, "poor", id="poor"),
+        pytest.param(AirQualityLevel.UNKNOWN, STATE_UNKNOWN, id="unknown"),
     ],
 )
 async def test_air_quality(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    aq_level: int,
+    aq_level: AirQualityLevel,
     expected_state: str,
 ) -> None:
     """Test air quality levels, with an unknown level reported as unknown."""
     mock_devices_response(
         aioclient_mock,
         "Air Purifier Vital 200S",
-        details_override={"AQLevel": aq_level},
+        details_override={"AQLevel": aq_level.value},
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
