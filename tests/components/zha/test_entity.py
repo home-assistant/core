@@ -734,6 +734,35 @@ async def test_fan_group_entity_context_propagation(
     assert fan_1_off_state.state == STATE_OFF
     assert fan_1_off_state.context != turn_on_context
 
+    # After fan group turn_off, a physical Medium/on then High/on must not inherit turn_off_context
+    turn_off_context = Context(user_id=hass_admin_user.id, id="fan_turn_off_ctx")
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: fan_group_entity_id},
+        blocking=True,
+        context=turn_off_context,
+    )
+    await send_attributes_report(
+        hass,
+        fan_1_cluster,
+        {hvac.Fan.AttributeDefs.fan_mode.id: hvac.FanMode.Medium},
+    )
+    fan_1_medium_state = hass.states.get(fan_1_id)
+    assert fan_1_medium_state is not None
+    assert fan_1_medium_state.state == STATE_ON
+    assert fan_1_medium_state.context != turn_off_context
+
+    await send_attributes_report(
+        hass,
+        fan_1_cluster,
+        {hvac.Fan.AttributeDefs.fan_mode.id: hvac.FanMode.High},
+    )
+    fan_1_high_state = hass.states.get(fan_1_id)
+    assert fan_1_high_state is not None
+    assert fan_1_high_state.state == STATE_ON
+    assert fan_1_high_state.context != turn_off_context
+
 
 async def test_group_entity_context_not_used_for_unavailable_transition(
     hass: HomeAssistant,
