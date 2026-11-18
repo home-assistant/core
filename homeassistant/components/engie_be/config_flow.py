@@ -93,7 +93,9 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         except EngieBeError:
             LOGGER.exception("Unexpected error during authentication")
             return {"base": "unknown"}
-        self._login = _PendingLogin(client, auth_flow, email, mfa_method)
+        self._login = _PendingLogin(
+            client=client, auth_flow=auth_flow, email=email, mfa_method=mfa_method
+        )
         return {}
 
     @override
@@ -212,11 +214,14 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors={"base": "invalid_auth"},
             )
         await self.async_set_unique_id(subject)
-        tokens = {CONF_ACCESS_TOKEN: access_token, CONF_REFRESH_TOKEN: refresh_token}
+        token_data = {
+            CONF_ACCESS_TOKEN: access_token,
+            CONF_REFRESH_TOKEN: refresh_token,
+        }
         data = {
             CONF_EMAIL: login.email,
             CONF_MFA_METHOD: login.mfa_method.value,
-            **tokens,
+            **token_data,
         }
         if self.source == SOURCE_USER:
             self._abort_if_unique_id_configured()
@@ -224,7 +229,7 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_mismatch()
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=tokens
+                self._get_reauth_entry(), data_updates=token_data
             )
         return self.async_update_reload_and_abort(
             self._get_reconfigure_entry(), data_updates=data, title=login.email
