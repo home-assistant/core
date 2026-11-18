@@ -8,7 +8,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -205,7 +205,7 @@ class GeniusHeatingZone(GeniusZone):
 
 
 def _get_via_device_id(
-    hass: HomeAssistant, entry: ConfigEntry, identifiers
-) -> DeviceInfo:
+    hass: HomeAssistant, entry: ConfigEntry | None, identifiers
+) -> DeviceEntry | None:
     dev_reg = dr.async_get(hass)
     return dev_reg.async_get_device_by_identifier(identifiers, entry.entry_id)

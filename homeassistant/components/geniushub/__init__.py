@@ -94,7 +94,7 @@ def _create_hub_devices(
     entry: GeniusHubConfigEntry,
     hub_uid: str,
     api: str,
-    zones: {any},
+    zones: dict,
 ):
     device_registry = dr.async_get(hass)
     hub_identifiers = (DOMAIN, hub_uid)
