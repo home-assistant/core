@@ -1,7 +1,6 @@
 """Track per-user SmartThings apps provisioned during config flow setup."""
 
 import asyncio
-import logging
 from typing import TypedDict
 
 from homeassistant.components.application_credentials import (
@@ -12,14 +11,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, app_auth_domain
-
-_LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION = 1
 STORAGE_KEY = f"{DOMAIN}.app_ledger"
@@ -106,13 +102,7 @@ class SmartThingsAppLedger:
         """Replace any existing stored credential for an auth_domain with a new one."""
         credentials = self.hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
         for item_id in self._credential_ids(auth_domain):
-            try:
-                await credentials.async_delete_item(item_id)
-            except HomeAssistantError:
-                _LOGGER.debug(
-                    "Could not delete existing credential %s before replacing it",
-                    auth_domain,
-                )
+            await credentials.async_delete_item(item_id)
         await async_import_client_credential(
             self.hass, DOMAIN, credential, auth_domain=auth_domain
         )

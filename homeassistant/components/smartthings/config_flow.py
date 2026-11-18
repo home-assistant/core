@@ -163,6 +163,10 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         # credentials of an app another flow is still authorizing with.
         async with ledger.provisioning_lock:
             apps = await client.list_apps()
+            try:
+                implementations = await async_get_implementations(self.hass, DOMAIN)
+            except ImplementationUnavailableError:
+                implementations = {}
             # Apps from another instance on the same account must not be reused, as
             # regenerating their OAuth credentials would break that instance.
             existing_app = next(
@@ -171,8 +175,14 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     for app in apps
                     if app.app_name.startswith(APP_NAME_PREFIX)
                     and ledger.is_reusable(app.app_id, redirect_uri)
-                    # A replacement must not rotate the secret of an app in use.
-                    and not (self._replace_app and self._is_app_in_use(app.app_id))
+                    # Rotating the secret of an app in use would break its entries.
+                    and not (
+                        self._is_app_in_use(app.app_id)
+                        and (
+                            self._replace_app
+                            or app_auth_domain(app.app_id) not in implementations
+                        )
+                    )
                 ),
                 None,
             )
@@ -181,10 +191,6 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self._app_id = existing_app.app_id
                 # Another flow may have just provisioned this app; regenerating its
                 # credentials would invalidate the secret that flow still uses.
-                try:
-                    implementations = await async_get_implementations(self.hass, DOMAIN)
-                except ImplementationUnavailableError:
-                    implementations = {}
                 if (
                     implementation := implementations.get(app_auth_domain(self._app_id))
                 ) is not None:

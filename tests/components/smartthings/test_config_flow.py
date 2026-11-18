@@ -291,19 +291,13 @@ async def test_pat_flow_only_reuses_owned_app(
     assert hass_storage[STORAGE_KEY]["data"]["apps"][expected_app_id] == REDIRECT_URI
 
 
-@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
+@pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
+@pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
 async def test_pat_flow_reuses_owned_app_when_provider_unavailable(
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
     mock_smartthings: AsyncMock,
 ) -> None:
     """Check an owned app's credentials are regenerated while a provider is down."""
-    hass_storage[STORAGE_KEY] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": STORAGE_KEY,
-        "data": {"apps": {"existing-app-id": REDIRECT_URI}},
-    }
     mock_smartthings.list_apps.return_value = [
         SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
     ]
@@ -333,38 +327,33 @@ async def test_pat_flow_reuses_owned_app_when_provider_unavailable(
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert "client_id=regenerated-client-id" in result["url"]
+    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+    assert [item["client_id"] for item in credentials.async_items()] == [
+        "regenerated-client-id"
+    ]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "with_provisioned_credential")
 @pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
-async def test_pat_flow_keeps_credential_in_use(
+async def test_pat_flow_does_not_rotate_app_in_use(
     hass: HomeAssistant,
     mock_smartthings: AsyncMock,
     mock_config_entry_with_app_id: MockConfigEntry,
 ) -> None:
-    """Check regenerating an app in use keeps its old credential for the entry."""
+    """Check an app in use gets a new app instead of rotating its secret."""
     mock_config_entry_with_app_id.add_to_hass(hass)
     mock_smartthings.list_apps.return_value = [
         SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
     ]
-    mock_smartthings.regenerate_oauth.return_value = SimpleNamespace(
-        client_id="regenerated-client-id",
-        client_secret="regenerated-client-secret",
-    )
 
-    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
-
-    with (
-        patch(
-            "homeassistant.components.smartthings.config_flow.async_get_implementations",
-            wraps=config_entry_oauth2_flow.async_get_implementations,
-            side_effect=[
-                ImplementationUnavailableError(),
-                ImplementationUnavailableError(),
-                DEFAULT,
-            ],
-        ),
-        patch.object(credentials, "async_delete_item", side_effect=HomeAssistantError),
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_implementations",
+        wraps=config_entry_oauth2_flow.async_get_implementations,
+        side_effect=[
+            ImplementationUnavailableError(),
+            ImplementationUnavailableError(),
+            DEFAULT,
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -374,10 +363,12 @@ async def test_pat_flow_keeps_credential_in_use(
         )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert "client_id=regenerated-client-id" in result["url"]
+    assert "client_id=mock-client-id" in result["url"]
+    mock_smartthings.regenerate_oauth.assert_not_called()
+    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
     assert {item["client_id"] for item in credentials.async_items()} == {
         "PROVISIONED_CLIENT_ID",
-        "regenerated-client-id",
+        "mock-client-id",
     }
 
 
