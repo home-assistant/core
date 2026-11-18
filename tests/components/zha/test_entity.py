@@ -13,7 +13,7 @@ from zigpy.profiles import zha
 from zigpy.types import EUI64
 from zigpy.zcl.clusters import general
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha import const as zha_const
 from homeassistant.components.zha.const import DOMAIN
@@ -389,3 +389,94 @@ async def test_group_entity_context_propagation_mixed_platforms(
     assert light_1_off_state is not None
     assert light_1_off_state.state == STATE_OFF
     assert light_1_off_state.context != group_context
+
+
+@pytest.mark.usefixtures("zigpy_app_controller_with_group")
+async def test_group_entity_context_brightness_report_before_on(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    config_entry: MockConfigEntry,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller: ControllerApplication,
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a brightness report arriving before OnOff does not clear group context."""
+    group = zigpy_app_controller.groups[FIXTURE_GRP_WITH_ENTITIES_ID]
+    for ieee in ("01:2d:6f:00:0a:90:69:f1", "01:2d:6f:00:0a:90:69:f2"):
+        light = zigpy_device_mock(
+            {
+                1: {
+                    SIG_EP_INPUT: [
+                        general.OnOff.cluster_id,
+                        general.LevelControl.cluster_id,
+                        general.Basic.cluster_id,
+                        general.Groups.cluster_id,
+                    ],
+                    SIG_EP_OUTPUT: [],
+                    SIG_EP_TYPE: zha.DeviceType.DIMMABLE_LIGHT,
+                    SIG_EP_PROFILE: zha.PROFILE_ID,
+                }
+            },
+            ieee=ieee,
+        )
+        zigpy_app_controller.devices[light.ieee] = light
+        group.add_member(light.endpoints[1], suppress_event=True)
+
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            zha_const.CUSTOM_CONFIGURATION: {
+                zha_const.ZHA_OPTIONS: {
+                    zha_const.CONF_ENABLE_LIGHT_TRANSITIONING_FLAG: False,
+                    zha_const.CONF_GROUP_MEMBERS_ASSUME_STATE: False,
+                },
+            }
+        },
+    )
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    light_group_entity_id = entity_registry.async_get_entity_id(
+        Platform.LIGHT,
+        DOMAIN,
+        f"light_zha_group_0x{FIXTURE_GRP_WITH_ENTITIES_ID:04x}",
+    )
+    assert light_group_entity_id is not None
+
+    light_1_ieee = EUI64.convert("01:2d:6f:00:0a:90:69:f1")
+    light_1_id = find_entity_id(
+        Platform.LIGHT, gateway_proxy.device_proxies[light_1_ieee], hass
+    )
+    assert light_1_id is not None
+
+    group_context = Context(user_id=hass_admin_user.id, id="brightness_first_ctx")
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: light_group_entity_id, ATTR_BRIGHTNESS: 200},
+        blocking=True,
+        context=group_context,
+    )
+
+    light_1_ep = zigpy_app_controller.devices[light_1_ieee].endpoints[1]
+
+    # Brightness report arrives while the member light is still off
+    await send_attributes_report(
+        hass,
+        light_1_ep.level,
+        {general.LevelControl.AttributeDefs.current_level.id: 200},
+    )
+    # Followed by the OnOff report turning the light on
+    await send_attributes_report(
+        hass,
+        light_1_ep.on_off,
+        {general.OnOff.AttributeDefs.on_off.id: 1},
+    )
+
+    light_1_state = hass.states.get(light_1_id)
+    assert light_1_state is not None
+    assert light_1_state.state == STATE_ON
+    assert light_1_state.attributes[ATTR_BRIGHTNESS] == 200
+    assert light_1_state.context == group_context
