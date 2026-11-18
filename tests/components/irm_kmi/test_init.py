@@ -12,7 +12,7 @@ from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAI
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
@@ -22,11 +22,18 @@ from .const import WEATHER_ENTITY_ID
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the IRM KMI configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert {
+        entity.domain
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    } == {"sensor", "weather"}
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
