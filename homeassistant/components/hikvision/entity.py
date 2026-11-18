@@ -104,6 +104,7 @@ class HikvisionImageEntity(CoordinatorEntity[HikvisionImageCoordinator]):
         self._path = path
         # The camera's spelling of a path can change with the firmware, the unique ID must not
         self._attr_unique_id = f"{data.device_id}_image_{path.lower()}"
+        coordinator.entity_paths.add(path.lower())
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device_id)},
             name=data.device_name,
