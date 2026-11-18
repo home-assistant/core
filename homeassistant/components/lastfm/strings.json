@@ -4,9 +4,7 @@
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "authorization_not_granted": "Access was not granted on Last.fm. Open the link, allow access, then submit again.",
-      "wrong_account": "You authorized a different Last.fm account than the selected user."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "reconfigure_successful": "Configuration updated."
@@ -36,6 +34,14 @@
         "data": {
           "username": "Username",
           "api_secret": "API secret"
+        }
+      },
+      "scrobble_failed": {
+        "title": "Authorization failed",
+        "description": "Authorization did not complete. Make sure you are logged in as the correct user.",
+        "menu_options": {
+          "scrobble_user": "Try again",
+          "scrobble_menu": "Back"
         }
       },
       "user": {

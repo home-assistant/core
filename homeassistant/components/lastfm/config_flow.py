@@ -208,21 +208,18 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Pick a user to authorize for scrobbling."""
         stored_secret = self.data.get(CONF_API_SECRET)
-        errors: dict[str, str] = {}
         if user_input is not None:
             api_secret = user_input.get(CONF_API_SECRET, stored_secret)
             try:
                 self._auth_url = await self.hass.async_add_executor_job(
                     get_auth_url, self.data[CONF_API_KEY], api_secret
                 )
-            except WSError:
-                errors["base"] = "invalid_auth"
-            except PyLastError:
-                errors["base"] = "unknown"
-            else:
-                self.data[CONF_API_SECRET] = api_secret
-                self._username = user_input[CONF_USERNAME]
-                return await self.async_step_authorize()
+            except PyLastError as err:
+                _LOGGER.warning("Could not start Last.fm authorization: %s", err)
+                return await self.async_step_scrobble_failed()
+            self.data[CONF_API_SECRET] = api_secret
+            self._username = user_input[CONF_USERNAME]
+            return await self.async_step_authorize()
 
         schema: dict[Any, Any] = {
             probatio.Required(CONF_USERNAME): SelectSelector(
@@ -233,8 +230,15 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             schema[probatio.Required(probatio.Secret(CONF_API_SECRET))] = str
         return self.async_show_form(
             step_id="scrobble_user",
-            errors=errors,
-            description_placeholders=PLACEHOLDERS,
+            description_placeholders={
+                **PLACEHOLDERS,
+                "secret_hint": (
+                    ""
+                    if stored_secret
+                    else "You also need the shared secret from your Last.fm "
+                    f"[API account]({PLACEHOLDERS['api_account_url']})."
+                ),
+            },
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(schema), user_input
             ),
@@ -244,7 +248,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Authorize on Last.fm, then store the session key for this user."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 session_key, account = await self.hass.async_add_executor_job(
@@ -253,28 +256,41 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.data[CONF_API_SECRET],
                     self._auth_url,
                 )
-            except WSError as err:
-                errors["base"] = (
-                    "authorization_not_granted"
-                    if err.status == ERROR_CODE_TOKEN_NOT_AUTHORIZED
-                    else "unknown"
+            except PyLastError as err:
+                _LOGGER.warning("Last.fm authorization failed: %s", err)
+                return await self._async_scrobble_failed()
+            if account.lower() != self._username.lower():
+                _LOGGER.warning(
+                    "Authorized Last.fm account %s does not match selected user %s",
+                    account,
+                    self._username,
                 )
-            except PyLastError:
-                errors["base"] = "unknown"
-            else:
-                if account.lower() != self._username.lower():
-                    errors["base"] = "wrong_account"
-                else:
-                    self.data[CONF_SESSION_KEYS] = {
-                        **self.data[CONF_SESSION_KEYS],
-                        self._username: session_key,
-                    }
-                    return await self.async_step_scrobble_menu()
+                return await self._async_scrobble_failed()
+            self.data[CONF_SESSION_KEYS] = {
+                **self.data[CONF_SESSION_KEYS],
+                self._username: session_key,
+            }
+            return await self.async_step_scrobble_menu()
         return self.async_show_form(
             step_id="authorize",
-            errors=errors,
             data_schema=probatio.Schema({}),
             description_placeholders={"auth_url": self._auth_url},
+        )
+
+    async def _async_scrobble_failed(self) -> ConfigFlowResult:
+        """Forget an unproven secret, then show the failure menu."""
+        if not self.data[CONF_SESSION_KEYS]:
+            # No user was ever authorized, so the secret may be the problem
+            self.data.pop(CONF_API_SECRET, None)
+        return await self.async_step_scrobble_failed()
+
+    async def async_step_scrobble_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Offer to retry or go back after a failed authorization."""
+        return self.async_show_menu(
+            step_id="scrobble_failed",
+            menu_options=["scrobble_user", "scrobble_menu"],
         )
 
     async def async_step_finish(
