@@ -38,6 +38,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _context_expected_state: StateType = None
+    _context_expected_state_matched: bool = False
     _group_target_cluster_ids: frozenset[int] = frozenset()
     remove_future: asyncio.Future[Any]
 
@@ -182,6 +183,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self._context = context
         self._context_set = context_set
         self._context_expected_state = expected_state
+        self._context_expected_state_matched = False
 
     @callback
     def _set_group_context_expected_state(
@@ -210,6 +212,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Set the context the entity currently operates under."""
         super().async_set_context(context)
         self._context_expected_state = None
+        self._context_expected_state_matched = False
 
     @callback
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
@@ -218,22 +221,27 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
         current_state = self.state if self.available else STATE_UNAVAILABLE
-        if (
-            self._context_expected_state is not None
-            and current_state != self._context_expected_state
-        ):
-            # Withhold group context from a mismatched report without discarding
-            # a still-pending command before its matching report arrives.
-            pending_context = self._context
-            pending_context_set = self._context_set
-            self._context = None
-            self._context_set = None
-            try:
-                self.async_write_ha_state()
-            finally:
-                self._context = pending_context
-                self._context_set = pending_context_set
-            return
+        if self._context_expected_state is not None:
+            if current_state == self._context_expected_state:
+                self._context_expected_state_matched = True
+            elif self._context_expected_state_matched:
+                self._context = None
+                self._context_set = None
+                self._context_expected_state = None
+                self._context_expected_state_matched = False
+            else:
+                # Withhold group context from a mismatched report without discarding
+                # a still-pending command before its matching report arrives.
+                pending_context = self._context
+                pending_context_set = self._context_set
+                self._context = None
+                self._context_set = None
+                try:
+                    self.async_write_ha_state()
+                finally:
+                    self._context = pending_context
+                    self._context_set = pending_context_set
+                return
         self.async_write_ha_state()
 
     @override
