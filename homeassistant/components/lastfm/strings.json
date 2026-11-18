@@ -9,7 +9,7 @@
       "wrong_account": "You authorized a different Last.fm account than the selected user."
     },
     "abort": {
-      "reconfigure_successful": "Scrobbling was enabled for the selected user."
+      "reconfigure_successful": "Configuration updated."
     },
     "step": {
       "authorize": {
@@ -22,9 +22,17 @@
         },
         "description": "Fill in other users you want to add."
       },
-      "reconfigure": {
-        "title": "Enable scrobbling",
-        "description": "Choose the user to authorize for scrobbling. You need the API secret from your Last.fm [API account]({api_account_url}). Repeat this for every user who should be able to scrobble.",
+      "scrobble_menu": {
+        "title": "Scrobbling (optional)",
+        "description": "You can enable manual scrobbling for each user, one at the time. Each user has to authorize this integration on Last.fm. You can also do this later by reconfiguring the integration.",
+        "menu_options": {
+          "scrobble_user": "Authorize a user for scrobbling",
+          "finish": "Finish"
+        }
+      },
+      "scrobble_user": {
+        "title": "Authorize a user",
+        "description": "Choose the user to authorize. You also need the shared secret from the Last.fm [API account]({api_account_url}).",
         "data": {
           "username": "Username",
           "api_secret": "API secret"
@@ -35,7 +43,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "main_user": "Last.fm username"
         },
-        "description": "Request an API account at {api_account_url}."
+        "description": "Request an API account [here]({api_account_url})."
       }
     }
   },

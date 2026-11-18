@@ -9,6 +9,7 @@ import probatio
 from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, User, WSError
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -111,7 +112,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
     data: dict[str, Any] = {}
-    _api_secret: str
     _username: str
     _auth_url: str
 
@@ -157,18 +157,12 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             user_input[CONF_USERS] = users
             if not errors:
-                return self.async_create_entry(
-                    title="LastFM",
-                    data={},
-                    options={
-                        CONF_API_KEY: self.data[CONF_API_KEY],
-                        CONF_MAIN_USER: self.data[CONF_MAIN_USER],
-                        CONF_USERS: [
-                            self.data[CONF_MAIN_USER],
-                            *user_input[CONF_USERS],
-                        ],
-                    },
-                )
+                self.data[CONF_USERS] = [
+                    self.data[CONF_MAIN_USER],
+                    *user_input[CONF_USERS],
+                ]
+                self.data[CONF_SESSION_KEYS] = {}
+                return await self.async_step_scrobble_menu()
         friends: list[str] = []
         with suppress(PyLastError):
             friends = await self.hass.async_add_executor_job(
@@ -195,34 +189,50 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Start the scrobbling setup for an existing entry."""
+        self.data = dict(self._get_reconfigure_entry().options)
+        self.data.setdefault(CONF_SESSION_KEYS, {})
+        return await self.async_step_scrobble_menu()
+
+    async def async_step_scrobble_menu(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user authorize users for scrobbling, or finish."""
+        return self.async_show_menu(
+            step_id="scrobble_menu",
+            menu_options=["scrobble_user", "finish"],
+        )
+
+    async def async_step_scrobble_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Pick a user to authorize for scrobbling."""
-        options = self._get_reconfigure_entry().options
-        stored_secret = options.get(CONF_API_SECRET)
+        stored_secret = self.data.get(CONF_API_SECRET)
         errors: dict[str, str] = {}
         if user_input is not None:
             api_secret = user_input.get(CONF_API_SECRET, stored_secret)
             try:
                 self._auth_url = await self.hass.async_add_executor_job(
-                    get_auth_url, options[CONF_API_KEY], api_secret
+                    get_auth_url, self.data[CONF_API_KEY], api_secret
                 )
             except WSError:
                 errors["base"] = "invalid_auth"
             except PyLastError:
                 errors["base"] = "unknown"
             else:
-                self._api_secret = api_secret
+                self.data[CONF_API_SECRET] = api_secret
                 self._username = user_input[CONF_USERNAME]
                 return await self.async_step_authorize()
 
         schema: dict[Any, Any] = {
             probatio.Required(CONF_USERNAME): SelectSelector(
-                SelectSelectorConfig(options=options[CONF_USERS])
+                SelectSelectorConfig(options=self.data[CONF_USERS])
             )
         }
         if stored_secret is None:
             schema[probatio.Required(probatio.Secret(CONF_API_SECRET))] = str
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="scrobble_user",
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
@@ -234,14 +244,13 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Authorize on Last.fm, then store the session key for this user."""
-        entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 session_key, account = await self.hass.async_add_executor_job(
                     get_session_key,
-                    entry.options[CONF_API_KEY],
-                    self._api_secret,
+                    self.data[CONF_API_KEY],
+                    self.data[CONF_API_SECRET],
                     self._auth_url,
                 )
             except WSError as err:
@@ -256,23 +265,31 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 if account.lower() != self._username.lower():
                     errors["base"] = "wrong_account"
                 else:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        options={
-                            **entry.options,
-                            CONF_API_SECRET: self._api_secret,
-                            CONF_SESSION_KEYS: {
-                                **entry.options.get(CONF_SESSION_KEYS, {}),
-                                self._username: session_key,
-                            },
-                        },
-                    )
+                    self.data[CONF_SESSION_KEYS] = {
+                        **self.data[CONF_SESSION_KEYS],
+                        self._username: session_key,
+                    }
+                    return await self.async_step_scrobble_menu()
         return self.async_show_form(
             step_id="authorize",
             errors=errors,
             data_schema=probatio.Schema({}),
             description_placeholders={"auth_url": self._auth_url},
         )
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create or update the entry."""
+        options = dict(self.data)
+        if not options.get(CONF_SESSION_KEYS):
+            options.pop(CONF_SESSION_KEYS, None)
+            options.pop(CONF_API_SECRET, None)
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), options=options
+            )
+        return self.async_create_entry(title="LastFM", data={}, options=options)
 
 
 class LastFmOptionsFlowHandler(OptionsFlowWithReload):
