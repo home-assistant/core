@@ -168,16 +168,18 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         self.ean_energy_types: dict[str, str | None] = {}
         self.gas_conversion_coefficients: dict[str, float] = {}
         self._service_points_refreshed_at: dict[str, datetime] = {}
-        device_name = (
+        address = (
             agreement.consumption_address.format()
             if agreement.consumption_address is not None
             else ""
-        ) or ban
+        )
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, ban)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ENGIE Belgium",
-            name=device_name,
+            name=address or None,
+            translation_key=None if address else "business_agreement",
+            translation_placeholders={"ban": mask_identifier(ban)},
         )
 
     def _service_point_due(self, ean: str, now: datetime) -> bool:
