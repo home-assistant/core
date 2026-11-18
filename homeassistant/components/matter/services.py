@@ -58,9 +58,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_PRESET_SCENARIO): probatio.In(
                 PRESET_SCENARIO_REVERSE_MAP.keys()
             ),
-            probatio.Optional(ATTR_PRESET_NAME): cv.string,
-            probatio.Optional(ATTR_HEATING_SETPOINT): probatio.Coerce(float),
-            probatio.Optional(ATTR_COOLING_SETPOINT): probatio.Coerce(float),
+            probatio.Optional(ATTR_PRESET_NAME): probatio.All(
+                cv.string, probatio.Length(max=64)
+            ),
+            probatio.Optional(ATTR_HEATING_SETPOINT): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=-50, max=100)
+            ),
+            probatio.Optional(ATTR_COOLING_SETPOINT): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=-50, max=100)
+            ),
         },
         func="async_set_thermostat_preset",
     )

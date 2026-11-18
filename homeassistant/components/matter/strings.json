@@ -820,6 +820,42 @@
     "invalid_credential_data": {
       "message": "Invalid credential data: {reason}."
     },
+    "preset_active_not_removable": {
+      "message": "The active preset cannot be removed. Select another preset first."
+    },
+    "preset_builtin_not_removable": {
+      "message": "Built-in presets cannot be removed."
+    },
+    "preset_cooling_setpoint_required": {
+      "message": "A cooling setpoint is required for a new preset on this thermostat."
+    },
+    "preset_heating_setpoint_required": {
+      "message": "A heating setpoint is required for a new preset on this thermostat."
+    },
+    "preset_name_required": {
+      "message": "A name is required for a user-defined preset."
+    },
+    "preset_not_editable": {
+      "message": "`{preset_mode}` is not an editable preset."
+    },
+    "preset_not_found_on_device": {
+      "message": "The preset no longer exists on the thermostat. Refresh and try again."
+    },
+    "preset_not_removable": {
+      "message": "`{preset_mode}` is not a removable preset."
+    },
+    "preset_scenario_not_editable": {
+      "message": "The preset scenario cannot be changed on an existing preset."
+    },
+    "preset_scenario_required": {
+      "message": "A preset scenario is required to add a preset."
+    },
+    "preset_unknown": {
+      "message": "Unknown preset mode `{preset_mode}`."
+    },
+    "preset_update_failed": {
+      "message": "Failed to update the thermostat presets. Check the logs for details."
+    },
     "preset_write_busy": {
       "message": "Failed to update presets: another preset change is already running on the thermostat. Try again."
     },
@@ -830,7 +866,13 @@
       "message": "Failed to update presets: thermostat returned status `{status}`."
     },
     "preset_write_invalid_in_state": {
-      "message": "Failed to update presets: the thermostat ended or refused the edit. Try again."
+      "message": "Failed to update presets: the thermostat's atomic write expired or was refused. Try again."
+    },
+    "presets_not_reported": {
+      "message": "The thermostat did not report its presets."
+    },
+    "presets_not_supported": {
+      "message": "This thermostat does not support presets."
     },
     "set_credential_failed": {
       "message": "Failed to set credential: lock returned status `{status}`."

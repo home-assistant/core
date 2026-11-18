@@ -12,7 +12,10 @@ from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import NullValue
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
+from matter_server.common.helpers.util import (
+    create_attribute_path_from_attribute,
+    parse_value,
+)
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -20,12 +23,14 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
-    from matter_server.client.models.node import MatterEndpoint, MatterNode
+    from matter_server.client.models.node import MatterEndpoint
 
 _Status = clusters.Globals.Enums.status
 _PresetTypeFeature = clusters.Thermostat.Bitmaps.PresetTypeFeaturesBitmap
+_ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 _PresetScenario = clusters.Thermostat.Enums.PresetScenarioEnum
 _PresetStruct = clusters.Thermostat.Structs.PresetStruct
+_PresetsType = clusters.Thermostat.Attributes.Presets.attribute_type.Type
 
 # A DATA_VERSION_MISMATCH mostly comes from another attribute of the cluster
 # changing, such as the measured temperature, so a retried read usually
@@ -41,20 +46,34 @@ _PRESET_WRITE_HINTS: dict[int, str] = {
 }
 
 
-class ThermostatEndpointNotFoundError(HomeAssistantError):
-    """No endpoint on this node implements the Thermostat cluster."""
-
-
 class PresetsNotSupportedError(ServiceValidationError):
     """Thermostat does not support the Presets feature."""
+
+    def __init__(self) -> None:
+        """Initialize the error with a translated message."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="presets_not_supported",
+        )
 
 
 class PresetNotFoundError(ServiceValidationError):
     """Referenced preset handle no longer exists on the device."""
 
+    def __init__(self) -> None:
+        """Initialize the error with a translated message."""
+        super().__init__(
+            translation_domain=DOMAIN,
+            translation_key="preset_not_found_on_device",
+        )
+
 
 class InvalidPresetDataError(ServiceValidationError):
     """A required argument for this preset operation is missing."""
+
+    def __init__(self, translation_key: str) -> None:
+        """Initialize the error with a translated message."""
+        super().__init__(translation_domain=DOMAIN, translation_key=translation_key)
 
 
 class PresetWriteRejectedError(HomeAssistantError):
@@ -75,22 +94,14 @@ def _normalize[T](value: T) -> T | None:
     return None if value is NullValue else value
 
 
-def _get_thermostat_endpoint_or_raise(node: MatterNode) -> MatterEndpoint:
-    """Get the Thermostat endpoint from a node or raise an error."""
-    for endpoint in node.endpoints.values():
-        if endpoint.has_cluster(clusters.Thermostat):
-            return endpoint
-    raise ThermostatEndpointNotFoundError("No thermostat endpoint found on this device")
-
-
 def _ensure_presets_supported(endpoint: MatterEndpoint) -> None:
     """Raise if the endpoint does not advertise the Presets feature."""
     feature_map = (
         endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.FeatureMap)
         or 0
     )
-    if not feature_map & clusters.Thermostat.Bitmaps.Feature.kPresets:
-        raise PresetsNotSupportedError("This thermostat does not support presets")
+    if not feature_map & _ThermostatFeature.kPresets:
+        raise PresetsNotSupportedError
 
 
 def _preset_type_supports_names(preset_types: list[Any], scenario: int) -> bool:
@@ -118,6 +129,26 @@ def _resolve_name(
     return name.strip() if name and name.strip() else None
 
 
+def _validate_new_preset(
+    endpoint: MatterEndpoint,
+    preset_scenario: int,
+    name: str | None,
+    heating_setpoint: int | None,
+    cooling_setpoint: int | None,
+) -> None:
+    """Raise if a new preset lacks data the spec requires for its scenario."""
+    if preset_scenario == _PresetScenario.kUserDefined and not (name and name.strip()):
+        raise InvalidPresetDataError("preset_name_required")
+    feature_map = (
+        endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.FeatureMap)
+        or 0
+    )
+    if feature_map & _ThermostatFeature.kHeating and heating_setpoint is None:
+        raise InvalidPresetDataError("preset_heating_setpoint_required")
+    if feature_map & _ThermostatFeature.kCooling and cooling_setpoint is None:
+        raise InvalidPresetDataError("preset_cooling_setpoint_required")
+
+
 def _write_error_status(result: Any) -> int | None:
     """Return the first unsuccessful Matter status of a write response, if any.
 
@@ -135,7 +166,6 @@ def _write_error_status(result: Any) -> int | None:
 
 async def _write_presets(
     matter_client: MatterClient,
-    node: MatterNode,
     endpoint: MatterEndpoint,
     build_next: Callable[[list[Any]], list[Any]],
 ) -> None:
@@ -150,6 +180,7 @@ async def _write_presets(
     version from this read, so the device refuses it instead of silently
     overwriting a change made elsewhere since.
     """
+    node = endpoint.node
     presets_path = create_attribute_path_from_attribute(
         endpoint_id=endpoint.endpoint_id,
         attribute=clusters.Thermostat.Attributes.Presets,
@@ -158,14 +189,20 @@ async def _write_presets(
     status: int | None = None
     for attempt in range(PRESET_WRITE_ATTEMPTS):
         report = await matter_client.read(node.node_id, [presets_path])
-        current_presets = report.attributes.get(presets_path)
         data_version = (report.data_versions or {}).get(cluster_path)
-        if current_presets is None or data_version is None:
-            raise HomeAssistantError("The device did not report its presets")
+        if presets_path not in report.attributes or data_version is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="presets_not_reported"
+            )
+        # The raw read is the wire format; decode it into PresetStruct entries.
+        current_presets = cast(
+            list[Any],
+            parse_value("presets", report.attributes[presets_path], _PresetsType),
+        )
         result = await matter_client.write_atomic_attribute(
             node_id=node.node_id,
             attribute_path=presets_path,
-            value=build_next(cast(list[Any], current_presets)),
+            value=build_next(current_presets),
             data_version=data_version,
         )
         status = _write_error_status(result)
@@ -180,7 +217,7 @@ async def _write_presets(
 
 async def set_thermostat_preset(
     matter_client: MatterClient,
-    node: MatterNode,
+    endpoint: MatterEndpoint,
     *,
     preset_handle: bytes | None,
     preset_scenario: int | None,
@@ -193,38 +230,41 @@ async def set_thermostat_preset(
     `preset_handle` is None to add a preset (then `preset_scenario` is
     required); otherwise it identifies the preset to edit, whose scenario
     and built-in flag are kept unchanged. Setpoints are in centidegrees; a
-    setpoint of None keeps the preset's current value (new presets default
-    to the fallback the caller passed in).
+    setpoint of None keeps the current value of an existing preset.
     """
-    endpoint = _get_thermostat_endpoint_or_raise(node)
     _ensure_presets_supported(endpoint)
     preset_types = (
         endpoint.get_attribute_value(None, clusters.Thermostat.Attributes.PresetTypes)
         or []
     )
 
-    def build_next(current_presets: list[Any]) -> list[Any]:
-        if preset_handle is None:
-            if preset_scenario is None:
-                raise InvalidPresetDataError(
-                    "preset_scenario is required when adding a new preset"
-                )
-            resolved_name = _resolve_name(preset_types, preset_scenario, name)
-            new_preset = _PresetStruct(
-                presetHandle=NullValue,
-                presetScenario=preset_scenario,
-                name=resolved_name,
-                coolingSetpoint=cooling_setpoint,
-                heatingSetpoint=heating_setpoint,
-                builtIn=False,
-            )
+    if preset_handle is None:
+        if preset_scenario is None:
+            raise InvalidPresetDataError("preset_scenario_required")
+        _validate_new_preset(
+            endpoint, preset_scenario, name, heating_setpoint, cooling_setpoint
+        )
+        new_preset = _PresetStruct(
+            presetHandle=NullValue,
+            presetScenario=preset_scenario,
+            name=_resolve_name(preset_types, preset_scenario, name),
+            coolingSetpoint=cooling_setpoint,
+            heatingSetpoint=heating_setpoint,
+            builtIn=False,
+        )
+
+        def build_add(current_presets: list[Any]) -> list[Any]:
             return [*current_presets, new_preset]
 
+        await _write_presets(matter_client, endpoint, build_add)
+        return
+
+    def build_next(current_presets: list[Any]) -> list[Any]:
         for preset in current_presets:
             if preset.presetHandle == preset_handle:
                 break
         else:
-            raise PresetNotFoundError("The preset no longer exists on the device")
+            raise PresetNotFoundError
 
         resolved_name = _resolve_name(preset_types, preset.presetScenario, name)
         if resolved_name is None:
@@ -250,12 +290,12 @@ async def set_thermostat_preset(
             for preset in current_presets
         ]
 
-    await _write_presets(matter_client, node, endpoint, build_next)
+    await _write_presets(matter_client, endpoint, build_next)
 
 
 async def remove_thermostat_preset(
     matter_client: MatterClient,
-    node: MatterNode,
+    endpoint: MatterEndpoint,
     preset_handle: bytes,
 ) -> None:
     """Remove a preset from the thermostat.
@@ -263,14 +303,13 @@ async def remove_thermostat_preset(
     Built-in, active, or schedule-referenced presets are rejected by the
     device's own write rules (§4.3.11.50) rather than checked here.
     """
-    endpoint = _get_thermostat_endpoint_or_raise(node)
     _ensure_presets_supported(endpoint)
 
     def build_next(current_presets: list[Any]) -> list[Any]:
         if not any(preset.presetHandle == preset_handle for preset in current_presets):
-            raise PresetNotFoundError("The preset no longer exists on the device")
+            raise PresetNotFoundError
         return [
             preset for preset in current_presets if preset.presetHandle != preset_handle
         ]
 
-    await _write_presets(matter_client, node, endpoint, build_next)
+    await _write_presets(matter_client, endpoint, build_next)
