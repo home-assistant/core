@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_all_entities[sensor.front_camera_exposure_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('hikvision', 'DS-2CD2142FWD-I20170101AAAA')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.front_camera_exposure_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Exposure mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exposure mode',
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exposure_mode',
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_image_exposure/exposuretype',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.front_camera_exposure_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Camera Exposure mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_camera_exposure_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---

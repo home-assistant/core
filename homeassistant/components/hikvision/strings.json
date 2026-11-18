@@ -500,6 +500,104 @@
         "name": "Zoom limit ratio"
       }
     },
+    "sensor": {
+      "backlight_compensation": {
+        "name": "Backlight compensation"
+      },
+      "backlight_compensation_mode": {
+        "name": "Backlight compensation mode"
+      },
+      "capture_mode": {
+        "name": "Capture mode"
+      },
+      "color_mode": {
+        "name": "Color mode"
+      },
+      "day_night_mode": {
+        "name": "Day/night mode"
+      },
+      "day_night_schedule_type": {
+        "name": "Day/night schedule type"
+      },
+      "defog": {
+        "name": "Defog"
+      },
+      "digital_slow_shutter_level": {
+        "name": "Digital slow shutter level"
+      },
+      "event_intelligence_brightness_mode": {
+        "name": "Event intelligence brightness mode"
+      },
+      "exposure_mode": {
+        "name": "Exposure mode"
+      },
+      "flip_direction": {
+        "name": "Flip direction"
+      },
+      "focus_distance_mode": {
+        "name": "Focus distance mode"
+      },
+      "focus_limit_mode": {
+        "name": "Focus limit mode"
+      },
+      "focus_mode": {
+        "name": "Focus mode"
+      },
+      "highlight_compensation_mode": {
+        "name": "Highlight compensation mode"
+      },
+      "ir_light_mode": {
+        "name": "IR light mode"
+      },
+      "iris_level": {
+        "name": "Iris level"
+      },
+      "light_brightness_mode": {
+        "name": "Light brightness mode"
+      },
+      "max_shutter_speed": {
+        "name": "Maximum shutter speed"
+      },
+      "min_shutter_speed": {
+        "name": "Minimum shutter speed"
+      },
+      "night_to_day_sensitivity": {
+        "name": "Night-to-day sensitivity"
+      },
+      "noise_reduction": {
+        "name": "Noise reduction"
+      },
+      "p_iris_mode": {
+        "name": "P-Iris mode"
+      },
+      "power_line_frequency": {
+        "name": "Power line frequency"
+      },
+      "scene_mode": {
+        "name": "Scene mode"
+      },
+      "shutter_speed": {
+        "name": "Shutter speed"
+      },
+      "smart_supplement_light_mode": {
+        "name": "Smart supplement light mode"
+      },
+      "supplement_light": {
+        "name": "Supplement light"
+      },
+      "supplement_light_mode": {
+        "name": "Supplement light mode"
+      },
+      "wdr": {
+        "name": "WDR"
+      },
+      "white_balance": {
+        "name": "White balance"
+      },
+      "zoom_limit_ratio": {
+        "name": "Zoom limit ratio"
+      }
+    },
     "switch": {
       "backlight_compensation": {
         "name": "Backlight compensation"
