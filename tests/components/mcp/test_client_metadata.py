@@ -5,6 +5,9 @@ from unittest.mock import Mock
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from yarl import URL
 
@@ -35,10 +38,6 @@ from .conftest import (
     OAUTH_TOKEN_URL,
     TEST_API_NAME,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 OAUTH_DISCOVERY_ENDPOINT = (
     "http://1.1.1.1:8080/.well-known/oauth-authorization-server/mcp"
@@ -122,7 +121,7 @@ async def test_client_metadata_document_creates_an_entry(
     aioclient_mock.post(OAUTH_TOKEN_URL, json=OAUTH_TOKEN_PAYLOAD)
     mock_mcp_client.side_effect = None
     initialized = Mock()
-    initialized.serverInfo.name = TEST_API_NAME
+    initialized.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = initialized
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
