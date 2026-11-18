@@ -64,12 +64,16 @@ _SET_MODE_ERROR_KEYS: Final = {
     evo.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
     evo.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE: "mode_timespan_not_in_future",
 }
+_TIMESPAN_UNSUPPORTED_ERROR_KEYS: Final[dict[str, str]] = {
+    evo.TimingMode.DURATION: "mode_cant_have_duration",
+    evo.TimingMode.PERIOD: "mode_cant_have_period",
+}
 
 
 def _set_mode_error_key(err: evo.InvalidSetModeError) -> str:
     """Return the translation key of a system mode that the client has rejected."""
     if err.reason == evo.RequestErrorReason.TIMESPAN_UNSUPPORTED:
-        return f"mode_cant_have_{err.details['timing_mode']}"  # duration or period
+        return _TIMESPAN_UNSUPPORTED_ERROR_KEYS[err.details["timing_mode"]]
     return _SET_MODE_ERROR_KEYS.get(err.reason, "mode_request_invalid")
 
 
