@@ -3,6 +3,7 @@
 import logging
 
 from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
+from yarl import URL
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -13,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -61,8 +62,25 @@ async def async_setup_entry(
     coordinator = QBittorrentDataCoordinator(hass, config_entry, client)
 
     await coordinator.async_config_entry_first_refresh()
-    config_entry.runtime_data = coordinator
 
+    # shortcut: the resolved scheme is private, use the public URL API when available.
+    web_ui_url = await hass.async_add_executor_job(
+        client._url.build_base_url,  # noqa: SLF001
+        {},
+        {},
+    )
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        configuration_url=URL(web_ui_url)
+        .with_user(None)
+        .with_query(None)
+        .with_fragment(None),
+        entry_type=dr.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="QBittorrent",
+    )
+
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 

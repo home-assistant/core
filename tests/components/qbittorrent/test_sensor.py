@@ -1,6 +1,6 @@
 """Tests for the qBittorrent sensor platform, including errored torrents."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -11,10 +11,9 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_qbittorrent")
 async def test_entities(
     hass: HomeAssistant,
-    mock_qbittorrent: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
