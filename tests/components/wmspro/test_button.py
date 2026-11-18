@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.wmspro.number import SCAN_INTERVAL
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import setup_config_entry
@@ -78,7 +78,7 @@ async def test_button_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity.entity_id},
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -143,7 +143,7 @@ async def test_button_rotation_reset_press(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: range_entity_id,
+                TargetKey.ENTITY_ID: range_entity_id,
                 NumberServiceArgument.VALUE: target_value,
             },
             blocking=True,
@@ -169,7 +169,7 @@ async def test_button_rotation_reset_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: button_entity_id},
+            {TargetKey.ENTITY_ID: button_entity_id},
             blocking=True,
         )
         assert len(mock_action_delitem.mock_calls) == 2

@@ -13,7 +13,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -91,7 +91,7 @@ async def test_number_operation_storage(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: test_entity,
+            TargetKey.ENTITY_ID: test_entity,
             NumberServiceArgument.VALUE: test_value,
         },
         blocking=True,
@@ -130,7 +130,7 @@ async def test_number_operation_storage_with_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: test_entity,
+                TargetKey.ENTITY_ID: test_entity,
                 NumberServiceArgument.VALUE: test_value,
             },
             blocking=True,
@@ -175,7 +175,7 @@ async def test_number_operation_relays(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: test_entity,
+            TargetKey.ENTITY_ID: test_entity,
             NumberServiceArgument.VALUE: test_value,
         },
         blocking=True,
@@ -219,7 +219,7 @@ async def test_number_operation_relays_with_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: test_entity,
+                TargetKey.ENTITY_ID: test_entity,
                 NumberServiceArgument.VALUE: test_value,
             },
             blocking=True,

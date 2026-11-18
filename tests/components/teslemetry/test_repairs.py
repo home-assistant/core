@@ -32,7 +32,10 @@ from homeassistant.components.teslemetry.const import (
     RSA_PARENT_KEY,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
-from homeassistant.components.teslemetry.coordinator import METADATA_INTERVAL
+from homeassistant.components.teslemetry.coordinator import (
+    METADATA_INTERVAL,
+    VEHICLE_INTERVAL,
+)
 from homeassistant.components.teslemetry.repairs import async_create_fix_flow
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -65,6 +68,13 @@ def _metadata_with_issue(issue: str | None) -> dict[str, Any]:
     """Return a copy of the metadata with the vehicle issue set."""
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VEHICLE_VIN]["issue"] = issue
+    return metadata
+
+
+def _metadata_with_polling(polling: bool | None, issue: str | None) -> dict[str, Any]:
+    """Return a copy of the metadata with the vehicle polling and issue set."""
+    metadata = _metadata_with_issue(issue)
+    metadata["vehicles"][VEHICLE_VIN]["polling"] = polling
     return metadata
 
 
@@ -156,6 +166,134 @@ async def test_repair_issue_auto_resolves(
         await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
+
+
+async def test_unpaired_streaming_vehicle_does_not_poll(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_stream_get_config: AsyncMock,
+) -> None:
+    """Test a streaming vehicle without its key gets a repair and is not polled."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_polling(True, "key"),
+    ):
+        entry = await setup_platform(hass)
+
+        freezer.tick(VEHICLE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is not None
+    mock_vehicle_data.assert_not_called()
+    mock_stream_get_config.assert_called()
+
+
+@pytest.mark.parametrize(
+    "issue_type",
+    [
+        pytest.param("key", id="key_paired"),
+        pytest.param("streaming_toggle", id="toggle_enabled"),
+    ],
+)
+async def test_vehicle_able_to_stream_reloads_into_streaming(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_stream_get_config: AsyncMock,
+    mock_stream_update_config: AsyncMock,
+    issue_type: str,
+) -> None:
+    """Test fixing a vehicle reloads the entry so its streaming fields register."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_polling(True, issue_type),
+    ):
+        entry = await setup_platform(hass)
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"{issue_type}_{entry.entry_id}_{VEHICLE_VIN}"
+    )
+    mock_stream_get_config.reset_mock()
+    mock_stream_update_config.reset_mock()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_polling(False, None),
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # A polling vehicle's last scheduled poll can land on the same tick.
+        mock_vehicle_data.reset_mock()
+        freezer.tick(VEHICLE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"{issue_type}_{entry.entry_id}_{VEHICLE_VIN}"
+        )
+        is None
+    )
+    mock_vehicle_data.assert_not_called()
+    mock_stream_get_config.assert_called()
+    mock_stream_update_config.assert_called()
+
+
+@pytest.mark.parametrize(
+    ("issue", "polling_after", "issue_registered"),
+    [
+        pytest.param(None, True, False, id="legacy"),
+        pytest.param(None, None, False, id="legacy_fleet_status_unknown"),
+        pytest.param("streaming_toggle", True, True, id="streaming_toggle_off"),
+    ],
+)
+async def test_polling_vehicle_stays_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_stream_get_config: AsyncMock,
+    issue: str | None,
+    polling_after: bool | None,
+    issue_registered: bool,
+) -> None:
+    """Test a vehicle without a key issue polls and is not reloaded."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_polling(True, issue),
+    ):
+        entry = await setup_platform(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_vehicle_data.assert_called()
+    mock_stream_get_config.assert_not_called()
+    assert issue_registry.async_get_issue(DOMAIN, _vehicle_issue_id(entry)) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"streaming_toggle_{entry.entry_id}_{VEHICLE_VIN}"
+        )
+        is not None
+    ) is issue_registered
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=_metadata_with_polling(polling_after, issue),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_reload.assert_not_called()
 
 
 @pytest.mark.parametrize(

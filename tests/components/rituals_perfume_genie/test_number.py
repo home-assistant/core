@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +62,7 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+            TargetKey.ENTITY_ID: "number.genie_perfume_amount",
             NumberServiceArgument.VALUE: 1,
         },
         blocking=True,
@@ -105,7 +105,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                TargetKey.ENTITY_ID: "number.genie_perfume_amount",
                 NumberServiceArgument.VALUE: 4,
             },
             blocking=True,
@@ -127,7 +127,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                TargetKey.ENTITY_ID: "number.genie_perfume_amount",
                 NumberServiceArgument.VALUE: 0,
             },
             blocking=True,
@@ -161,7 +161,7 @@ async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                TargetKey.ENTITY_ID: "number.genie_perfume_amount",
                 NumberServiceArgument.VALUE: 1.5,
             },
             blocking=True,
@@ -191,7 +191,7 @@ async def test_number_action_error(hass: HomeAssistant) -> None:
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.genie_perfume_amount",
+                TargetKey.ENTITY_ID: "number.genie_perfume_amount",
                 NumberServiceArgument.VALUE: 1,
             },
             blocking=True,

@@ -26,8 +26,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -203,7 +203,7 @@ async def test_block_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            TargetKey.ENTITY_ID: "number.test_name_valve_position",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -240,7 +240,7 @@ async def test_block_set_value_connection_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+                TargetKey.ENTITY_ID: "number.test_name_valve_position",
                 NumberServiceArgument.VALUE: 30,
             },
             blocking=True,
@@ -273,7 +273,7 @@ async def test_block_set_value_auth_error(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_valve_position",
+            TargetKey.ENTITY_ID: "number.test_name_valve_position",
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -363,7 +363,7 @@ async def test_rpc_device_virtual_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 56.7},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -476,7 +476,7 @@ async def test_blu_trv_ext_temp_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 22.2,
         },
         blocking=True,
@@ -509,7 +509,7 @@ async def test_blu_trv_valve_pos_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
@@ -552,7 +552,7 @@ async def test_blu_trv_number_exc(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+                TargetKey.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
                 NumberServiceArgument.VALUE: 20.0,
             },
             blocking=True,
@@ -573,7 +573,7 @@ async def test_blu_trv_number_reauth_error(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+            TargetKey.ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
             NumberServiceArgument.VALUE: 20.0,
         },
         blocking=True,
@@ -634,7 +634,7 @@ async def test_cury_number_entity(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_name_left_slot_intensity",
+            TargetKey.ENTITY_ID: "number.test_name_left_slot_intensity",
             NumberServiceArgument.VALUE: 80.0,
         },
         blocking=True,
@@ -676,7 +676,7 @@ async def test_rpc_ledstrip_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 80.0},
         blocking=True,
     )
     mock_ledstrip_rpc_device.ledstrip_set.assert_called_once_with(0, {control: 80})

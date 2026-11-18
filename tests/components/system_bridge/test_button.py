@@ -30,7 +30,7 @@ from systembridgeconnector.models.settings import (
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.system_bridge.const import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -84,7 +84,7 @@ async def test_power_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -132,7 +132,7 @@ async def test_power_button_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: SHUTDOWN_ENTITY_ID},
+            {TargetKey.ENTITY_ID: SHUTDOWN_ENTITY_ID},
             blocking=True,
         )
 
@@ -146,7 +146,7 @@ async def test_command_button(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: COMMAND_ENTITY_ID},
+        {TargetKey.ENTITY_ID: COMMAND_ENTITY_ID},
         blocking=True,
     )
 
@@ -211,7 +211,7 @@ async def test_command_button_failure(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: COMMAND_ENTITY_ID},
+            {TargetKey.ENTITY_ID: COMMAND_ENTITY_ID},
             blocking=True,
         )
 
