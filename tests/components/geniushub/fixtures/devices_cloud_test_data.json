@@ -75,7 +75,7 @@
   {
     "id": "22",
     "type": "Single Channel Receiver",
-    "assignedZones": [{ "name": "East Berlin" }],
+    "assignedZones": [{ "name": "West Berlin" }],
     "state": { "outputOnOff": "False" }
   },
   {

@@ -4,6 +4,7 @@
     "name": "West Berlin",
     "output": 0,
     "type": "manager",
+    "temperature": 19,
     "mode": "off",
     "schedule": {
       "timer": {},

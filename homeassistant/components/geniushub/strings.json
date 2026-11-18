@@ -34,14 +34,11 @@
     }
   },
   "exceptions": {
-    "invalid_entity_id": {
-      "message": "Unknown Genius Hub entity: {entity_id}"
+    "error_communicating_with_api": {
+      "message": "Connection to geniushub failed (unable to update), message is: {api_err}"
     },
-    "invalid_zone": {
-      "message": "Unknown Genius Hub zone: {entity_id}"
-    },
-    "setup_failed": {
-      "message": "Setup failed, check your configuration"
+    "timeout_communicating_with_api": {
+      "message": "Timeout communicating with GH API: {err_traceback}"
     }
   },
   "services": {
@@ -58,16 +55,22 @@
     "set_zone_mode": {
       "description": "Sets the zone to an operating mode.",
       "fields": {
-        "entity_id": {
-          "description": "The zone's entity ID.",
-          "name": "Entity"
-        },
         "mode": {
           "description": "The zone's operating mode.",
           "name": "[%key:common::config_flow::data::mode%]"
         }
       },
-      "name": "Set zone mode"
+      "name": "Set zone mode (climate)"
+    },
+    "set_zone_mode_water_heater": {
+      "description": "Sets the zone to an operating mode.",
+      "fields": {
+        "mode": {
+          "description": "The zone's operating mode.",
+          "name": "[%key:common::config_flow::data::mode%]"
+        }
+      },
+      "name": "Set zone mode (water heater"
     },
     "set_zone_override": {
       "description": "Overrides the zone's setpoint for a given duration.",
@@ -76,16 +79,26 @@
           "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours.",
           "name": "Duration"
         },
-        "entity_id": {
-          "description": "[%key:component::geniushub::services::set_zone_mode::fields::entity_id::description%]",
-          "name": "Entity"
+        "temperature": {
+          "description": "The target temperature.",
+          "name": "Temperature"
+        }
+      },
+      "name": "Set zone override (climate)"
+    },
+    "set_zone_override_water_heater": {
+      "description": "Overrides the zone's setpoint for a given duration.",
+      "fields": {
+        "duration": {
+          "description": "The duration of the override. Optional, default 1 hour, maximum 24 hours.",
+          "name": "Duration"
         },
         "temperature": {
           "description": "The target temperature.",
           "name": "Temperature"
         }
       },
-      "name": "Set zone override"
+      "name": "Set zone override (water heater)"
     }
   }
 }

@@ -3,40 +3,38 @@
 from datetime import datetime, timedelta
 from typing import Any, override
 
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DURATION, DOMAIN, GeniusHubService, GeniusHubServiceArgument
-
-# temperature is repeated here, as it gives access to high-precision temps
-GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
-GH_DEVICE_ATTRS = {
-    "luminance": "luminance",
-    "measuredTemperature": "measured_temperature",
-    "occupancyTrigger": "occupancy_trigger",
-    "setback": "setback",
-    "setTemperature": "set_temperature",
-    "wakeupInterval": "wakeup_interval",
-}
+from . import DOMAIN, GeniusHubConfigEntry
+from .const import (
+    ATTR_MANUFACTURER,
+    GH_DEVICE_ATTRS,
+    GH_ZONE_ATTRS,
+    IDENTIFIER_DEVICE,
+    IDENTIFIER_ZONE,
+    SERIAL_NO,
+    GeniusHubServiceArgument,
+)
 
 
-class GeniusEntity(Entity):
+class GeniusEntity(CoordinatorEntity):
     """Base for all Genius Hub entities."""
 
     _attr_should_poll = False
 
-    def __init__(self) -> None:
+    def __init__(self, coordinator) -> None:
         """Initialize the entity."""
+        super().__init__(coordinator)
         self._unique_id: str | None = None
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Set up a listener when this entity is added to HA."""
-        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
-
-    async def _refresh(self, payload: dict | None = None) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Process any signals."""
         self.async_schedule_update_ha_state(force_refresh=True)
 
@@ -50,33 +48,55 @@ class GeniusEntity(Entity):
 class GeniusDevice(GeniusEntity):
     """Base for all Genius Hub devices."""
 
-    def __init__(self, broker, device) -> None:
+    def __init__(self, coordinator, device) -> None:
         """Initialize the Device."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._device = device
-        self._unique_id = f"{broker.hub_uid}_device_{device.id}"
+        self._unique_id = f"{coordinator.hub_uid}_device_{device.id}"
         self._last_comms: datetime | None = None
         self._state_attr = None
+        self._hub = coordinator
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attrs = {}
-        attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
+        attrs = {"assigned_zone": self._device.data["assignedZones"][0]["name"]}
         if self._last_comms:
             attrs["last_comms"] = self._last_comms.isoformat()
 
         state = dict(self._device.data["state"])
         if "_state" in self._device.data:  # only via v3 API
-            state.update(self._device.data["_state"])
+            state |= self._device.data["_state"]
 
         attrs["state"] = {
             GH_DEVICE_ATTRS[k]: v for k, v in state.items() if k in GH_DEVICE_ATTRS
         }
 
         return attrs
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Entity device info."""
+        via_device = _get_via_device_id(
+            self.hass,
+            self.coordinator.config_entry,
+            (DOMAIN, IDENTIFIER_ZONE.format(self._device.assigned_zone.id)),
+        )
+
+        name = f"{self._device.type.title()} {self._device.id}"
+        model = f"{self._device.type} ({self._device.device_model})"
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, IDENTIFIER_DEVICE.format(self._device.id))},
+            via_device_id=via_device.id,
+            name=name,
+            manufacturer=ATTR_MANUFACTURER,
+            model=model,
+            serial_number=SERIAL_NO.format("Device", self._device.id),
+        )
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
@@ -89,42 +109,13 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
-    def __init__(self, broker, zone) -> None:
+    def __init__(self, coordinator, zone) -> None:
         """Initialize the Zone."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._zone = zone
-        self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
-
-    @override
-    async def _refresh(self, payload: dict | None = None) -> None:
-        """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
-
-        if payload["unique_id"] != self._unique_id:
-            return
-
-        if payload["service"] == GeniusHubService.SET_ZONE_OVERRIDE:
-            temperature = (
-                round(payload["data"][GeniusHubServiceArgument.TEMPERATURE] * 10) / 10
-            )
-            duration = payload["data"].get(
-                GeniusHubServiceArgument.DURATION, timedelta(hours=1)
-            )
-
-            await self._zone.set_override(temperature, int(duration.total_seconds()))
-            return
-
-        mode = payload["data"][GeniusHubServiceArgument.MODE]
-
-        if mode == "footprint" and not self._zone._has_pir:  # noqa: SLF001
-            raise TypeError(
-                f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
-            )
-
-        await self._zone.set_mode(mode)
+        self._unique_id = f"{coordinator.hub_uid}_zone_{zone.id}"
+        self._hub = coordinator
 
     @property
     @override
@@ -139,12 +130,31 @@ class GeniusZone(GeniusEntity):
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
         return {"status": status}
 
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Entity device info."""
+
+        via_device = _get_via_device_id(
+            self.hass, self.coordinator.config_entry, (DOMAIN, self._hub.hub_uid)
+        )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, IDENTIFIER_ZONE.format(self._zone.id))},
+            name=self._zone.name,
+            via_device_id=via_device.id,
+            manufacturer=ATTR_MANUFACTURER,
+            model=f"{self._zone.data['type'].title()} Zone",
+            serial_number=SERIAL_NO.format("Zone", self._zone.id),
+        )
+
 
 class GeniusHeatingZone(GeniusZone):
     """Base for Genius Heating Zones."""
 
     _max_temp: float
     _min_temp: float
+    _attr_native_temperature_unit: str = UnitOfTemperature.CELSIUS
 
     @property
     def native_current_temperature(self) -> float | None:
@@ -166,13 +176,34 @@ class GeniusHeatingZone(GeniusZone):
         """Return max valid temperature that can be set."""
         return self._max_temp
 
-    @property
-    def native_temperature_unit(self) -> str:
-        """Return the unit of measurement used by the zone."""
-        return UnitOfTemperature.CELSIUS
-
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for this zone."""
-        await self._zone.set_override(
-            kwargs[ATTR_TEMPERATURE], kwargs.get(ATTR_DURATION, 3600)
+        duration: timedelta = kwargs.get(
+            GeniusHubServiceArgument.DURATION, timedelta(hours=1)
         )
+        await self._zone.set_override(
+            kwargs[GeniusHubServiceArgument.TEMPERATURE],
+            kwargs.get(
+                GeniusHubServiceArgument.DURATION, int(duration.total_seconds())
+            ),
+        )
+
+    async def async_set_zone_mode(self, mode):
+        """Set a new zone mode."""
+        if mode == "footprint" and not self._zone._has_pir:  # noqa: SLF001
+            raise ServiceValidationError(
+                f"'{self.entity_id}' cannot support footprint mode (it has no PIR)"
+            )
+
+        await self._zone.set_mode(mode)
+
+    async def async_set_zone_override(self, temperature, duration=timedelta(hours=1)):
+        """Set a new zone override."""
+        await self._zone.set_override(temperature, int(duration.total_seconds()))
+
+
+def _get_via_device_id(
+    hass: HomeAssistant, entry: GeniusHubConfigEntry, identifiers
+) -> DeviceInfo:
+    dev_reg = dr.async_get(hass)
+    return dev_reg.async_get_device_by_identifier(identifiers, entry.entry_id)

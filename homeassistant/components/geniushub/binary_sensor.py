@@ -7,10 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
+from .const import (
+    GH_BINARY_SENSOR_STATE_ATTR,
+    GH_DUAL_CHANNEL_RECEIVER,
+    GH_ELECTRIC_SWITCH_TYPE,
+    GH_RECEIVER_TYPE,
+    GH_TYPE,
+)
 from .entity import GeniusDevice
-
-GH_STATE_ATTR = "outputOnOff"
-GH_TYPE = "Receiver"
 
 
 async def async_setup_entry(
@@ -20,28 +24,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub binary sensor entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusBinarySensor(broker, d, GH_STATE_ATTR)
-        for d in broker.client.device_objs
-        if GH_TYPE in d.data["type"]
+        GeniusBinarySensor(coordinator, d, GH_BINARY_SENSOR_STATE_ATTR)
+        for d in coordinator.client.device_objs
+        if (
+            GH_RECEIVER_TYPE in d.data[GH_TYPE]
+            and d.data[GH_TYPE] != GH_DUAL_CHANNEL_RECEIVER
+        )
+        or GH_ELECTRIC_SWITCH_TYPE in d.data[GH_TYPE]
     )
 
 
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, broker, device, state_attr) -> None:
+    def __init__(self, coordinator, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        super().__init__(broker, device)
+        super().__init__(coordinator, device)
 
         self._state_attr = state_attr
 
-        if device.type[:21] == "Dual Channel Receiver":
-            self._attr_name = f"{device.type[:21]} {device.id}"
-        else:
-            self._attr_name = f"{device.type} {device.id}"
+        self._attr_name = f"{device.type} {device.id}"
 
     @property
     @override

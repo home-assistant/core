@@ -21,7 +21,7 @@ async def test_cloud_unique_id_migration(
     """Test that the cloud unique ID is migrated to the entry_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="Genius hub",
+        title="GeniusHub",
         data={
             CONF_TOKEN: "abcdef",
             CONF_MAC: "aa:bb:cc:dd:ee:ff",
@@ -55,5 +55,8 @@ async def test_setup_client_response_error(
     await hass.config_entries.async_setup(mock_cloud_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_cloud_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_cloud_config_entry.reason == "Setup failed, check your configuration"
+    assert mock_cloud_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_cloud_config_entry.reason
+        == "Connection to geniushub failed (unable to update), message is: 401, message='Unauthorized', url='https://hub'"
+    )

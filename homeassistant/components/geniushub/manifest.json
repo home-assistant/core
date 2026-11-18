@@ -1,7 +1,7 @@
 {
   "domain": "geniushub",
   "name": "Genius Hub",
-  "categories": ["climate.thermostats_heating"],
+  "categories": ["climate.thermostats_heating", "climate.water_heaters"],
   "codeowners": ["@manzanotti"],
   "config_flow": true,
   "connectivity": ["network"],

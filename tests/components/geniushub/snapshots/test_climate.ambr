@@ -8,6 +8,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -20,7 +21,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-29')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -54,6 +55,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -93,6 +95,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -106,7 +109,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-5')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -140,6 +143,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ensuite',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -181,6 +185,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -194,7 +199,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-7')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -228,6 +233,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest room',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -269,6 +275,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -282,7 +289,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-2')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -316,6 +323,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -357,6 +365,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -370,7 +379,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-3')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -404,6 +413,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -445,6 +455,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -457,7 +468,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-1')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -491,6 +502,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lounge',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',
@@ -530,6 +542,7 @@
     'capabilities': dict({
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28.0,
@@ -543,7 +556,7 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': None,
+    'device_id': <DeviceEntry identifiers=[('geniushub', 'zone-30')]>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
@@ -577,6 +590,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:radiator',

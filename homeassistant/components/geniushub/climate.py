@@ -14,16 +14,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
+from .const import (
+    GH_HVAC_TO_HA,
+    GH_PRESET_TO_HA,
+    GH_TYPE,
+    GH_ZONES,
+    HA_HVAC_TO_GH,
+    HA_PRESET_TO_GH,
+)
 from .entity import GeniusHeatingZone
-
-# GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
-HA_HVAC_TO_GH = {HVACMode.OFF: "off", HVACMode.HEAT: "timer"}
-GH_HVAC_TO_HA = {v: k for k, v in HA_HVAC_TO_GH.items()}
-
-HA_PRESET_TO_GH = {PRESET_ACTIVITY: "footprint", PRESET_BOOST: "override"}
-GH_PRESET_TO_HA = {v: k for k, v in HA_PRESET_TO_GH.items()}
-
-GH_ZONES = ["radiator", "wet underfloor"]
 
 
 async def async_setup_entry(
@@ -33,12 +32,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub climate entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusClimateZone(broker, z)
-        for z in broker.client.zone_objs
-        if z.data.get("type") in GH_ZONES
+        GeniusClimateZone(coordinator, z)
+        for z in coordinator.client.zone_objs
+        if z.data.get(GH_TYPE) in GH_ZONES
     )
 
 
@@ -52,9 +51,9 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, broker, zone) -> None:
+    def __init__(self, coordinator, zone) -> None:
         """Initialize the climate device."""
-        super().__init__(broker, zone)
+        super().__init__(coordinator, zone)
 
         self._max_temp = 28.0
         self._min_temp = 4.0
@@ -69,7 +68,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVACMode.HEAT)
+        return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVACMode.AUTO)
 
     @property
     @override
@@ -82,11 +81,12 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if "_state" in self._zone.data:  # only for v3 API
+            if self._zone.data["mode"] == "off":
+                return HVACAction.OFF
             if self._zone.data["output"] == 1:
                 return HVACAction.HEATING
-            if not self._zone.data["_state"].get("bIsActive"):
-                return HVACAction.OFF
             return HVACAction.IDLE
+
         return None
 
     @property

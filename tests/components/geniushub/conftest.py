@@ -50,9 +50,17 @@ def devices() -> list[dict[str, Any]]:
     return load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)
 
 
+@pytest.fixture(scope="package")
+def issues() -> list[dict[str, Any]]:
+    """Return a list of devices."""
+    return load_json_array_fixture("issues_cloud_test_data.json", DOMAIN)
+
+
 @pytest.fixture
 def mock_geniushub_cloud(
-    zones: list[dict[str, Any]], devices: list[dict[str, Any]]
+    zones: list[dict[str, Any]],
+    devices: list[dict[str, Any]],
+    issues: list[dict[str, Any]],
 ) -> Generator[MagicMock]:
     """Mock a GeniusHub."""
     with patch(
@@ -61,12 +69,16 @@ def mock_geniushub_cloud(
     ) as mock_client:
         client = mock_client.return_value
         genius_zones = [GeniusZone(z["id"], z, client) for z in zones]
+        client.zone_by_id = {z["id"]: GeniusZone(z["id"], z, client) for z in zones}
+        client.zone_by_name = {z["name"]: GeniusZone(z["id"], z, client) for z in zones}
         client.zone_objs = genius_zones
         client._zones = genius_zones
         genius_devices = [GeniusDevice(d["id"], d, client) for d in devices]
         client.device_objs = genius_devices
         client._devices = genius_devices
+        client.issues = issues
         client.api_version = 1
+        client.uid = "mock_uid"
         yield client
 
 
@@ -90,7 +102,7 @@ def mock_cloud_config_entry() -> MockConfigEntry:
     """Mock a cloud config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Genius hub",
+        title="GeniusHub",
         data={
             CONF_TOKEN: "abcdef",
         },

@@ -206,7 +206,7 @@ async def test_full_cloud_flow(
     )
     # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Genius hub"
+    assert result["title"] == "GeniusHub"
     assert result["data"] == {
         CONF_TOKEN: "abcdef",
     }

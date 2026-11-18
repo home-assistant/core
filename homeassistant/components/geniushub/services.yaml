@@ -2,14 +2,13 @@
 # Describes the format for available services
 
 set_zone_mode:
+  target:
+    entity:
+      integration: geniushub
+      domain: climate
   fields:
-    entity_id:
-      required: true
-      selector:
-        entity:
-          integration: geniushub
-          domain: climate
     mode:
+      example: timer
       required: true
       selector:
         select:
@@ -18,21 +17,55 @@ set_zone_mode:
             - "timer"
             - "footprint"
 
-set_zone_override:
+set_zone_mode_water_heater:
+  target:
+    entity:
+      integration: geniushub
+      domain: water_heater
   fields:
-    entity_id:
+    mode:
+      example: timer
       required: true
       selector:
-        entity:
-          integration: geniushub
-          domain: climate
+        select:
+          options:
+            - "off"
+            - "timer"
+
+set_zone_override:
+  target:
+    entity:
+      integration: geniushub
+      domain: climate
+  fields:
     temperature:
+      example: 15
       required: true
       selector:
         number:
           min: 4
           max: 28
           step: 0.1
+          unit_of_measurement: "°"
+    duration:
+      example: '{"minutes": 135}'
+      selector:
+        object:
+
+set_zone_override_water_heater:
+  target:
+    entity:
+      integration: geniushub
+      domain: water_heater
+  fields:
+    temperature:
+      example: 60
+      required: true
+      selector:
+        number:
+          min: 30
+          max: 75
+          step: 1
           unit_of_measurement: "°"
     duration:
       example: '{"minutes": 135}'

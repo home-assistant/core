@@ -6,7 +6,13 @@
     "set_zone_mode": {
       "service": "mdi:auto-mode"
     },
+    "set_zone_mode_water_heater": {
+      "service": "mdi:auto-mode"
+    },
     "set_zone_override": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_zone_override_water_heater": {
       "service": "mdi:thermometer-lines"
     }
   }

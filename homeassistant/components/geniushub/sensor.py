@@ -4,21 +4,24 @@ from datetime import timedelta
 from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import GeniusHubConfigEntry
+from .const import (
+    DOMAIN,
+    GH_ATTR_NAME,
+    GH_ATTR_SETPOINT,
+    GH_ATTR_TEMPERATURE,
+    GH_BATTERY_LEVEL_ATTR,
+    GH_LEVEL_MAPPING,
+    GH_TYPE,
+    IDENTIFIER_ZONE,
+)
 from .entity import GeniusDevice, GeniusEntity
-
-GH_STATE_ATTR = "batteryLevel"
-
-GH_LEVEL_MAPPING = {
-    "error": "Errors",
-    "warning": "Warnings",
-    "information": "Information",
-}
 
 
 async def async_setup_entry(
@@ -28,14 +31,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub sensor entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     entities: list[GeniusBattery | GeniusIssue] = [
-        GeniusBattery(broker, d, GH_STATE_ATTR)
-        for d in broker.client.device_objs
-        if GH_STATE_ATTR in d.data["state"]
+        GeniusBattery(coordinator, d, GH_BATTERY_LEVEL_ATTR)
+        for d in coordinator.client.device_objs
+        if GH_BATTERY_LEVEL_ATTR in d.data["state"]
     ]
-    entities.extend([GeniusIssue(broker, i) for i in list(GH_LEVEL_MAPPING)])
+    entities.extend([GeniusIssue(coordinator, i) for i in list(GH_LEVEL_MAPPING)])
+    entities.extend(
+        [
+            GeniusTemp(coordinator, z)
+            for z in coordinator.client.zone_objs
+            if z.data.get(GH_ATTR_TEMPERATURE) and not z.data.get(GH_ATTR_SETPOINT)
+        ]
+    )
 
     async_add_entities(entities)
 
@@ -44,11 +54,11 @@ class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
 
-    def __init__(self, broker, device, state_attr) -> None:
+    def __init__(self, coordinator, device, state_attr) -> None:
         """Initialize the sensor."""
-        super().__init__(broker, device)
+        super().__init__(coordinator, device)
 
         self._state_attr = state_attr
 
@@ -91,16 +101,16 @@ class GeniusBattery(GeniusDevice, SensorEntity):
 class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
-    def __init__(self, broker, level) -> None:
+    def __init__(self, coordinator, level) -> None:
         """Initialize the sensor."""
-        super().__init__()
+        super().__init__(coordinator)
 
-        self._hub = broker.client
-        self._unique_id = f"{broker.hub_uid}_{GH_LEVEL_MAPPING[level]}"
+        self._hub = coordinator.client
+        self._unique_id = f"{coordinator.hub_uid}_{GH_LEVEL_MAPPING[level]}"
 
         self._attr_name = f"GeniusHub {GH_LEVEL_MAPPING[level]}"
         self._level = level
-        self._issues: list = []
+        self._update_issues()
 
     @property
     @override
@@ -116,6 +126,52 @@ class GeniusIssue(GeniusEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Process the sensor's state data."""
+        self._update_issues()
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Entity device info."""
+        return DeviceInfo(identifiers={(DOMAIN, self._hub.uid)})
+
+    def _update_issues(self):
         self._issues = [
             i["description"] for i in self._hub.issues if i["level"] == self._level
         ]
+
+
+class GeniusTemp(GeniusEntity, SensorEntity):
+    """Representation of a Genius Hub sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator, zone) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._hub = coordinator.client
+        self._unique_id = f"{coordinator.hub_uid}_{zone.data.get(GH_TYPE)}_temperature"
+        self._id = zone.id
+        self._temperature = zone.data.get(GH_ATTR_TEMPERATURE)
+
+        self._attr_name = f"{zone.data.get(GH_ATTR_NAME)} Temperature"
+
+    @property
+    @override
+    def native_value(self) -> int:
+        """Return the temperature of the sensor."""
+        return self._temperature
+
+    async def async_update(self) -> None:
+        """Process the sensor's state data."""
+        for z in self.coordinator.client.zone_objs:
+            if z.id == self._id:
+                self._temperature = z.data.get(GH_ATTR_TEMPERATURE)
+                break
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Entity device info."""
+        return DeviceInfo(identifiers={(DOMAIN, IDENTIFIER_ZONE.format(self._id))})

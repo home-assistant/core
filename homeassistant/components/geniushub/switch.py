@@ -8,10 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeniusHubConfigEntry
-from .const import GeniusHubServiceArgument
+from .const import GH_ON_OFF_ZONE, GH_TYPE, GeniusHubServiceArgument
 from .entity import GeniusZone
-
-GH_ON_OFF_ZONE = "on / off"
 
 
 async def async_setup_entry(
@@ -21,23 +19,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Genius Hub switch entities."""
 
-    broker = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        GeniusSwitch(broker, z)
-        for z in broker.client.zone_objs
-        if z.data.get("type") == GH_ON_OFF_ZONE
+        GeniusSwitch(coordinator, z)
+        for z in coordinator.client.zone_objs
+        if z.data.get(GH_TYPE) == GH_ON_OFF_ZONE
     )
 
 
 class GeniusSwitch(GeniusZone, SwitchEntity):
     """Representation of a Genius Hub switch."""
 
-    @property
-    @override
-    def device_class(self) -> SwitchDeviceClass:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return SwitchDeviceClass.OUTLET
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
     @property
     @override
