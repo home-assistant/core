@@ -235,43 +235,17 @@ async def test_device_info_update_failed(
 @pytest.mark.parametrize(
     "exception",
     [
+        WTCApiDisabledError(),
         WTCApiCancelledError(),
         WTCApiQuotaExceededError(),
         WTCApiRequestError(),
         WTCApiServerError(),
         WTCApiTimeoutError(),
         WTCApiValidationError(),
-    ],
-)
-async def test_state_update_failed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-    exception: Exception,
-) -> None:
-    """Test failed state update because of an exception."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_api_client.get_state.side_effect = exception
-
-    freezer.tick(STATE_POLLING_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert not mock_config_entry.runtime_data.state.last_update_success
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        WTCApiDisabledError(),
         WTCApiUnauthorizedError(),
     ],
 )
-async def test_state_api_disabled_or_unauthorized(
+async def test_state_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
