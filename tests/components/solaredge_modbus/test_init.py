@@ -30,7 +30,7 @@ from homeassistant.components.solaredge_modbus.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -631,7 +631,7 @@ async def test_concurrent_control_writes_keep_both_changes(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: EXPORT_LIMITATION_ENTITY,
+                TargetKey.ENTITY_ID: EXPORT_LIMITATION_ENTITY,
                 SelectServiceArgument.OPTION: "production_control",
             },
             blocking=True,
@@ -639,7 +639,7 @@ async def test_concurrent_control_writes_keep_both_changes(
         hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
+            {TargetKey.ENTITY_ID: EXTERNAL_PRODUCTION_ENTITY},
             blocking=True,
         ),
     )

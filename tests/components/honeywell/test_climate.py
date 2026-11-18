@@ -49,6 +49,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -1365,7 +1366,7 @@ async def test_set_hold_until(
     await hass.services.async_call(
         DOMAIN,
         HoneywellService.SET_HOLD_UNTIL,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -1482,7 +1483,7 @@ async def test_set_hold_until_invalid(
         await hass.services.async_call(
             DOMAIN,
             HoneywellService.SET_HOLD_UNTIL,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             blocking=True,
         )
 
@@ -1512,7 +1513,7 @@ async def test_set_hold_until_invalid_schema(
         await hass.services.async_call(
             DOMAIN,
             HoneywellService.SET_HOLD_UNTIL,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             blocking=True,
         )
 
@@ -1564,7 +1565,7 @@ async def test_set_hold_until_failed(
             DOMAIN,
             HoneywellService.SET_HOLD_UNTIL,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 HoneywellServiceArgument.UNTIL: "22:30:00",
             },
             blocking=True,
@@ -1612,7 +1613,10 @@ async def test_set_hold_until_away_preset(
         await hass.services.async_call(
             DOMAIN,
             HoneywellService.SET_HOLD_UNTIL,
-            {ATTR_ENTITY_ID: ENTITY_ID, HoneywellServiceArgument.UNTIL: "22:30:00"},
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                HoneywellServiceArgument.UNTIL: "22:30:00",
+            },
             blocking=True,
         )
 

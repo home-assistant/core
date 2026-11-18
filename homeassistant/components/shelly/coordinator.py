@@ -116,6 +116,7 @@ type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
 RPC_CONFIG_STATE_KEYS: dict[str, frozenset[str] | None] = {
     "plugs_ui": None,
     "powerstrip_ui": None,
+    "ui": None,
     "switch": frozenset({"in_locked"}),
     "cover": frozenset({"in_locked"}),
 }
