@@ -181,9 +181,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             return
 
         self._pending_group_context = True
-        expected_state = self.state
         for member_entity in self._iter_group_member_entities():
-            member_entity.async_set_group_context(context, expected_state)
+            member_entity.async_set_group_context(context)
 
     @callback
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
