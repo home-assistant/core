@@ -48,6 +48,7 @@ from .conftest import (
     DEFAULT_CAPABILITIES,
     EXPECTED_LISTENING_ADDRESSES,
     SCENE_CAPABILITIES,
+    set_mocked_devices,
     setup_light,
 )
 
@@ -139,7 +140,7 @@ async def test_light_setup_retry(
 ) -> None:
     """Test setup retry."""
 
-    mock_govee_api.devices = []
+    set_mocked_devices(mock_govee_api, [])
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -179,15 +180,18 @@ async def test_light_setup_retry_when_no_address_binds(
     """Test setup is retried whenever the controller binds no address at all."""
 
     mock_govee_api.start.side_effect = OSError(bind_errno, os.strerror(bind_errno))
-    mock_govee_api.devices = [
-        GoveeDevice(
-            controller=mock_govee_api,
-            ip="192.168.1.100",
-            fingerprint="asdawdqwdqwd",
-            sku="H615A",
-            capabilities=DEFAULT_CAPABILITIES,
-        )
-    ]
+    set_mocked_devices(
+        mock_govee_api,
+        [
+            GoveeDevice(
+                controller=mock_govee_api,
+                ip="192.168.1.100",
+                fingerprint="asdawdqwdqwd",
+                sku="H615A",
+                capabilities=DEFAULT_CAPABILITIES,
+            )
+        ],
+    )
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -749,7 +753,7 @@ async def test_one_silent_device_does_not_affect_others(
         sku="H615B",
         capabilities=DEFAULT_CAPABILITIES,
     )
-    mock_govee_api.devices = [silent, chatty]
+    set_mocked_devices(mock_govee_api, [silent, chatty])
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -772,6 +776,78 @@ async def test_one_silent_device_does_not_affect_others(
     assert chatty_state is not None
     assert silent_state.state == STATE_UNAVAILABLE
     assert chatty_state.state == STATE_OFF
+
+
+async def test_discovered_device_is_added(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a device found after setup gets an entity.
+
+    Manually added devices arrive through this callback, so it is the path the
+    manual IP feature depends on end to end.
+    """
+    await setup_light(hass, mock_govee_api)
+    assert len(hass.states.async_all()) == 1
+
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+
+    new_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.101",
+        fingerprint="second_device",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    assert discovery_callback(new_device, True) is True
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+    assert hass.states.get("light.H615B") is not None
+
+    # A repeat announcement of a known device must not add it twice.
+    assert discovery_callback(new_device, False) is True
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+
+async def test_light_unavailable_when_update_fails(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test the entity follows the coordinator's update failure."""
+    entry, _ = await setup_light(hass, mock_govee_api)
+
+    coordinator = entry.runtime_data
+    coordinator.last_update_success = False
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.H615A")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_light_fixed_color_mode(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a light with a single supported color mode reports it directly."""
+    _, device = await setup_light(hass, mock_govee_api, ON_OFF_CAPABILITIES)
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": light.entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    mock_govee_api.turn_on_off.assert_awaited_with(device, True)
 
 
 @pytest.mark.usefixtures("mock_network_adapters")

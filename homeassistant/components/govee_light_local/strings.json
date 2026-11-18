@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
@@ -169,6 +172,41 @@
     },
     "port_in_use": {
       "message": "Port {port} is already in use"
+    }
+  },
+  "options": {
+    "abort": {
+      "entry_not_loaded": "The Govee lights local configuration entry is not loaded. Reload it and try again.",
+      "no_devices": "No manually added devices were found"
+    },
+    "error": {
+      "invalid_ip": "{ip} is not a valid IP address"
+    },
+    "step": {
+      "add_device": {
+        "data": {
+          "device_ip": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "device_ip": "The IP address of the Govee light to add. Give the light a static IP address or a DHCP reservation so the address does not change."
+        },
+        "description": "Enter the device's IP address"
+      },
+      "init": {
+        "menu_options": {
+          "add_device": "Add a device",
+          "remove_device": "Remove a device"
+        }
+      },
+      "remove_device": {
+        "data": {
+          "ips_to_remove": "IP addresses to remove"
+        },
+        "data_description": {
+          "ips_to_remove": "The manually added Govee lights to remove."
+        },
+        "description": "Select one or more IP addresses to remove"
+      }
     }
   }
 }

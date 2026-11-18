@@ -3,17 +3,24 @@
 import asyncio
 from errno import EADDRINUSE, EADDRNOTAVAIL, EMFILE, ENETDOWN, ENETUNREACH, ENOBUFS
 import logging
+from typing import TYPE_CHECKING
 
 from govee_local_api.controller import LISTENING_PORT
 
 from homeassistant.components import network
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
-from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
+from .const import CONF_MANUAL_DEVICES, DISCOVERY_TIMEOUT, DOMAIN, REBIND_INTERVAL
+from .coordinator import (
+    GoveeLocalApiConfig,
+    GoveeLocalApiCoordinator,
+    GoveeLocalConfigEntry,
+)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -37,11 +44,69 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_domain=DOMAIN, translation_key="no_listening_addresses"
         )
 
+    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(entry)
+
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
 
+    @callback
+    def _async_device_removed_filter(
+        event_data: EventDeviceRegistryUpdatedData,
+    ) -> bool:
+        """Filter for removals of this entry's devices."""
+        return (
+            event_data["action"] == "remove"
+            and event_data["device"]["config_entry_id"] == entry.entry_id
+        )
+
+    @callback
+    def _async_device_removed(event: Event[EventDeviceRegistryUpdatedData]) -> None:
+        """Forget a deleted device and unconfigure it if it was manual."""
+        if TYPE_CHECKING:
+            # The event filter only lets removals through.
+            assert event.data["action"] == "remove"
+        device_info = event.data["device"]
+
+        fingerprints = {
+            identifier[1]
+            for identifier in device_info["identifiers"]
+            if identifier[0] == DOMAIN
+        }
+        # The device is still known to the controller at this point, which is
+        # what lets us map the fingerprint back to its IP.
+        removed = [
+            device
+            for device in coordinator.devices
+            if device.fingerprint in fingerprints
+        ]
+        removed_ips = {device.ip for device in removed}
+        # A device left in the controller answers the next scan as an already
+        # known device, so the platform would never recreate its entity.
+        for device in removed:
+            coordinator.remove_device(device)
+
+        config = GoveeLocalApiConfig.from_config_entry(entry)
+        if (remaining := config.manual_devices - removed_ips) == config.manual_devices:
+            return
+
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_MANUAL_DEVICES: sorted(remaining)},
+        )
+
     entry.async_on_unload(coordinator.async_cleanup)
+    entry.async_on_unload(entry.add_update_listener(update_options_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            _async_device_removed,
+            event_filter=_async_device_removed_filter,
+        )
+    )
+
+    for device in config.manual_devices:
+        coordinator.add_device_to_discovery_queue(device)
 
     try:
         await coordinator.start()
@@ -90,9 +155,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
+async def update_options_listener(
+    hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+) -> None:
+    """Reconcile the controller with the configured options.
+
+    Options describe the desired set of manual devices, so the listener diffs
+    them against what the controller currently tracks. This is idempotent and
+    never writes back to the entry.
+    """
+    coordinator: GoveeLocalApiCoordinator = config_entry.runtime_data
+    config: GoveeLocalApiConfig = GoveeLocalApiConfig.from_config_entry(config_entry)
+
+    for ip in config.manual_devices:
+        # Re-queueing a known IP would strand it there: the queue is only
+        # drained when a device with a new fingerprint answers.
+        if (
+            ip not in coordinator.discovery_queue
+            and coordinator.get_device_by_ip(ip) is None
+        ):
+            coordinator.add_device_to_discovery_queue(ip)
+
+    # The difference is a new set, so removing entries below cannot mutate what
+    # we are iterating over.
+    for ip in coordinator.manual_device_ips - config.manual_devices:
+        coordinator.async_remove_manual_device(ip)
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: GoveeLocalConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow removing a device.
+
+    The actual cleanup is done in the device registry event.
+    """
+    return True
 
 
 async def async_get_listening_addresses(hass: HomeAssistant) -> list[str]:

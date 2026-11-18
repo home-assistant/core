@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -44,7 +44,7 @@ async def async_setup_entry(
         return True
 
     async_add_entities(
-        GoveeLight(coordinator, device) for device in coordinator.devices
+        GoveeLight(coordinator, govee_device) for govee_device in coordinator.devices
     )
 
     coordinator.set_discovery_callback(discovery_callback)
@@ -80,7 +80,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         super().__init__(coordinator)
         self._device = device
 
-        self._attr_unique_id = device.fingerprint
+        self._attr_unique_id: str = device.fingerprint
 
         capabilities = device.capabilities
         color_modes = {ColorMode.ONOFF}
@@ -106,7 +106,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             # If the light supports only a single color mode, set it now
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, device.fingerprint)
@@ -114,6 +114,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             name=device.sku,
             manufacturer=MANUFACTURER,
             model_id=device.sku,
+            model=device.sku,
             serial_number=device.fingerprint,
         )
 
@@ -215,7 +216,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register update callback when entity is added."""
+        """Register the update callback when the entity is added."""
         await super().async_added_to_hass()
         self._device.set_update_callback(self._update_callback)
 

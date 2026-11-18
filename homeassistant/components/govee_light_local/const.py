@@ -25,3 +25,9 @@ REBIND_INTERVAL = timedelta(minutes=5)
 # socket is still bound and the next setup fails with EADDRINUSE.
 CLEANUP_TIMEOUT = 2
 CLEANUP_WAIT_TIMEOUT = 3
+
+CONF_MANUAL_DEVICES = "manual_devices"
+CONF_DEVICE_IP = "device_ip"
+# Field key of the removal form only; the removal is expressed by the IP
+# disappearing from CONF_MANUAL_DEVICES, not by a persisted work list.
+CONF_IPS_TO_REMOVE = "ips_to_remove"
