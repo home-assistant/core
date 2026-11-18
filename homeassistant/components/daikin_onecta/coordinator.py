@@ -23,7 +23,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
-    OAuth2TokenRequestConnectionError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
@@ -187,8 +186,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 await command(self._client)
             except OAuth2TokenRequestReauthError:
                 self.config_entry.async_start_reauth(self.hass)
-                return False
-            except OAuth2TokenRequestConnectionError:
                 return False
             except OAuth2TokenRequestError:
                 return False
