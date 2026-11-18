@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.network import NoURLAvailableError, get_url, is_hass_url
@@ -337,6 +337,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
         )
+        if not cast_info.is_audio_group:
+            # A cast device's UUID is its UPnP UDN, groups don't have one
+            self._attr_device_info["connections"] = {
+                (CONNECTION_UPNP, f"uuid:{cast_info.uuid}")
+            }
 
         if cast_info.cast_info.cast_type in [
             pychromecast.const.CAST_TYPE_AUDIO,
