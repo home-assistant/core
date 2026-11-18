@@ -848,7 +848,7 @@ class UpdateRegistrySettingsTool(Tool):
     """LLM Tool to update the settings of a registry item."""
 
     annotations = ToolAnnotations(
-        read_only=False, destructive=False, idempotent=True, open_world=False
+        read_only=False, destructive=True, idempotent=True, open_world=False
     )
     integration = DOMAIN
 
@@ -1004,12 +1004,15 @@ def _update_entity_settings(
 def _remove_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Remove an entity that its integration no longer provides."""
     _get_entity_entry(hass, entity_id)
-    if (state := hass.states.get(entity_id)) is not None and not state.attributes.get(
+    # Like the UI, only a restored state shows that the integration no longer
+    # provides the entity. A disabled entity has no state at all.
+    if (state := hass.states.get(entity_id)) is None or not state.attributes.get(
         ATTR_RESTORED
     ):
         raise HomeAssistantError(
-            f"The integration still provides entity '{entity_id}', so it would "
-            "add it again. Disable the entity instead."
+            f"Entity '{entity_id}' is still provided by its integration, or is "
+            "disabled. Only entities that their integration no longer provides "
+            "can be removed."
         )
     er.async_get(hass).async_remove(entity_id)
 

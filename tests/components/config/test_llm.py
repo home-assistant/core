@@ -1795,33 +1795,38 @@ async def test_remove_entity(
         "switch", "test", "1234", suggested_object_id="provided"
     )
     entity_registry.async_get_or_create(
-        "switch", "test", "5678", suggested_object_id="restored"
+        "switch",
+        "test",
+        "5678",
+        suggested_object_id="disabled",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_get_or_create(
-        "switch", "test", "9012", suggested_object_id="no_state"
+        "switch", "test", "9012", suggested_object_id="restored"
     )
     hass.states.async_set("switch.provided", "on")
     hass.states.async_set("switch.restored", "unavailable", {"restored": True})
 
     tool = entity_tools["config__remove_entity"]
-    result = await tool.async_call(
-        hass, llm.ToolInput(tool.name, {"entity_id": "switch.provided"}), llm_context
-    )
-    assert result == llm.ToolResult(
-        data={
-            "error": "The integration still provides entity 'switch.provided', so "
-            "it would add it again. Disable the entity instead."
-        },
-        error=True,
-    )
-    assert entity_registry.async_get("switch.provided") is not None
-
-    for entity_id in ("switch.restored", "switch.no_state"):
+    for entity_id in ("switch.provided", "switch.disabled"):
         result = await tool.async_call(
             hass, llm.ToolInput(tool.name, {"entity_id": entity_id}), llm_context
         )
-        assert result == llm.ToolResult(data={"result": {"entity_id": entity_id}})
-        assert entity_registry.async_get(entity_id) is None
+        assert result == llm.ToolResult(
+            data={
+                "error": f"Entity '{entity_id}' is still provided by its "
+                "integration, or is disabled. Only entities that their "
+                "integration no longer provides can be removed."
+            },
+            error=True,
+        )
+        assert entity_registry.async_get(entity_id) is not None
+
+    result = await tool.async_call(
+        hass, llm.ToolInput(tool.name, {"entity_id": "switch.restored"}), llm_context
+    )
+    assert result == llm.ToolResult(data={"result": {"entity_id": "switch.restored"}})
+    assert entity_registry.async_get("switch.restored") is None
 
     result = await tool.async_call(
         hass, llm.ToolInput(tool.name, {"entity_id": "switch.unknown"}), llm_context
