@@ -49,7 +49,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -2060,12 +2062,24 @@ async def test_average_linear_unevenly_timed(
     assert [event.data["new_state"].state for event in events] == expected_states
 
 
-async def test_ratio_only_change_does_not_write_state(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "customize",
+    [
+        pytest.param(None, id="plain"),
+        pytest.param({"icon": "mdi:thermometer"}, id="customized"),
+    ],
+)
+async def test_ratio_only_change_does_not_write_state(
+    hass: HomeAssistant, customize: dict[str, Any] | None
+) -> None:
     """Test that a change of only the buffer and age ratios writes no new state.
 
     The ratios move on almost every update, so writing them alone would add a
-    recorder row each time while the state stays the same.
+    recorder row each time while the state stays the same. This also holds
+    when the sensor has YAML customizations.
     """
+    if customize is not None:
+        hass.data[DATA_CUSTOMIZE] = EntityValues({"sensor.test": customize})
     events: list[Event[EventStateChangedData]] = []
 
     @callback

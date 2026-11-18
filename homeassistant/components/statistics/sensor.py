@@ -43,6 +43,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -775,13 +776,18 @@ class StatisticsSensor(SensorEntity):
         state itself stays the same. They are written with the next change
         of the state or of any other attribute.
         """
-        if (
-            (current := self.hass.states.get(self.entity_id)) is not None
-            and (calculated := self._async_calculate_state()).state == current.state
-            and _without_ratios(calculated.attributes)
-            == _without_ratios(current.attributes)
-        ):
-            return
+        if (current := self.hass.states.get(self.entity_id)) is not None and (
+            calculated := self._async_calculate_state()
+        ).state == current.state:
+            attributes = calculated.attributes
+            # Writing the state merges the YAML customizations into the
+            # attributes, so compare with them merged in as well.
+            if (customize := self.hass.data.get(DATA_CUSTOMIZE)) and (
+                custom := customize.get(self.entity_id)
+            ):
+                attributes = {**attributes, **custom}
+            if _without_ratios(attributes) == _without_ratios(current.attributes):
+                return
         self.async_write_ha_state()
 
     @callback
