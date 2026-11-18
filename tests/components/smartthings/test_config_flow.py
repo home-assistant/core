@@ -50,6 +50,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import setup_integration
+
 REDIRECT_URI = "https://example.com/auth/external/callback"
 OTHER_REDIRECT_URI = "https://other.example.com/auth/external/callback"
 
@@ -560,9 +562,10 @@ async def test_reauthentication_stale_provisioned_credential(
 
 
 @pytest.mark.usefixtures(
-    "current_request_with_host", "with_provisioned_credential", "mock_setup_entry"
+    "current_request_with_host", "with_provisioned_credential", "devices"
 )
 @pytest.mark.parametrize("ledger_redirect_uri", [REDIRECT_URI])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_reauthentication_new_app(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -570,8 +573,10 @@ async def test_reauthentication_new_app(
     mock_smartthings: AsyncMock,
     mock_config_entry_with_app_id: MockConfigEntry,
 ) -> None:
-    """Check reauth can replace the entry's app with a new one."""
-    mock_config_entry_with_app_id.add_to_hass(hass)
+    """Check reauth can replace the app of a loaded entry with a new one."""
+    await setup_integration(hass, mock_config_entry_with_app_id)
+    assert mock_config_entry_with_app_id.state is ConfigEntryState.LOADED
+    old_subscription_id = mock_config_entry_with_app_id.data[CONF_SUBSCRIPTION_ID]
     mock_smartthings.list_apps.return_value = [
         SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
     ]
@@ -612,9 +617,12 @@ async def test_reauthentication_new_app(
         },
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry_with_app_id.state is ConfigEntryState.LOADED
+    mock_smartthings.delete_subscription.assert_called_with(old_subscription_id)
     assert mock_config_entry_with_app_id.data["auth_implementation"] == (
         f"{DOMAIN}_mock-app-id"
     )
