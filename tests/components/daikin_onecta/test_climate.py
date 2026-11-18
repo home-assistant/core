@@ -57,6 +57,11 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityStateAttribute
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from .conftest import DOMAIN, FAKE_ACCESS_TOKEN, MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture
@@ -1887,6 +1892,82 @@ async def test_climate_platform_services_and_management_points(
         await call_service(SERVICE_SET_HVAC_MODE, hvac_mode=HVACMode.HEAT)
 
     mock_onecta_client.patch_characteristic.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    (
+        "unit_system",
+        "service_temperature",
+        "step_value",
+        "initial_temperature",
+        "expected_temperature",
+        "should_write",
+    ),
+    [
+        pytest.param(
+            US_CUSTOMARY_SYSTEM, 76, 0.5, 20, 24.5, True, id="fahrenheit-conversion"
+        ),
+        pytest.param(METRIC_SYSTEM, 24.4, 1, 20, 24, True, id="whole-step-rounding"),
+        pytest.param(METRIC_SYSTEM, 24.4, None, 20, 24.5, True, id="default-step"),
+        pytest.param(METRIC_SYSTEM, 10.4, 3, 20, 10, True, id="clamp-to-minimum"),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM,
+            76,
+            0.5,
+            24.5,
+            24.5,
+            False,
+            id="rounded-value-is-current-target",
+        ),
+    ],
+)
+async def test_climate_temperature_rounds_to_native_step(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+    unit_system: UnitSystem,
+    service_temperature: float,
+    step_value: float | None,
+    initial_temperature: float,
+    expected_temperature: float,
+    should_write: bool,
+) -> None:
+    """Convert, round, and clamp service targets before writing to Daikin."""
+    hass.config.units = unit_system
+    (
+        entity_id,
+        gateway_id,
+        point,
+        coordinator,
+    ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
+    assert point.climate_control is not None
+    setpoint = point.climate_control.setpoint("roomTemperature", "heating")
+    assert setpoint is not None
+    setpoint.step_value = step_value
+    setpoint.value = initial_temperature
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+    mock_onecta_client.patch_characteristic.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, "temperature": service_temperature},
+        blocking=True,
+    )
+
+    assert setpoint.value == expected_temperature
+    if should_write:
+        mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+            gateway_id,
+            point.embedded_id,
+            "temperatureControl",
+            expected_temperature,
+            path="/operationModes/heating/setpoints/roomTemperature",
+        )
+    else:
+        mock_onecta_client.patch_characteristic.assert_not_awaited()
 
 
 async def test_humidification_is_not_reported_as_dry(
