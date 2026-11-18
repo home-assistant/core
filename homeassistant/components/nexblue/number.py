@@ -106,4 +106,4 @@ class NexBlueDynamicCurrentLimitNumber(
         except NexBlueError as err:
             raise HomeAssistantError(str(err)) from err
 
-        await self.coordinator.async_request_refresh()
+        self.coordinator.async_schedule_command_refreshes(self._serial_number)
