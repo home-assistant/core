@@ -41,6 +41,14 @@
       }
     }
   },
+  "exceptions": {
+    "server_unreachable": {
+      "message": "Unable to reach the Jellyfin server"
+    },
+    "update_failed": {
+      "message": "Error communicating with the Jellyfin server: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
