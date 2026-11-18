@@ -50,6 +50,12 @@ class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle amplifier emitter selection."""
         return await self._async_step_device(NADDeviceType.AMPLIFIER, user_input)
 
+    async def async_step_tuner(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle tuner emitter selection."""
+        return await self._async_step_device(NADDeviceType.TUNER, user_input)
+
     async def async_step_cd_player(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
