@@ -18,7 +18,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -51,7 +51,7 @@ async def test_select_operation_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
+            TargetKey.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
             SelectServiceArgument.OPTION: "1",
         },
         blocking=True,
@@ -81,7 +81,7 @@ async def test_select_tx_ports(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "1",
         },
         blocking=True,
@@ -109,7 +109,7 @@ async def test_select_operation_mode_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
+                TargetKey.ENTITY_ID: "select.hdfury_vrroom_02_operation_mode",
                 SelectServiceArgument.OPTION: "1",
             },
             blocking=True,
@@ -139,7 +139,7 @@ async def test_select_ports_missing_state(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.hdfury_vrroom_02_port_select_tx0",
+                TargetKey.ENTITY_ID: "select.hdfury_vrroom_02_port_select_tx0",
                 SelectServiceArgument.OPTION: "0",
             },
             blocking=True,

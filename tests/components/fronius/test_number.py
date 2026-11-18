@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -76,7 +76,7 @@ async def test_setting_a_value_leaves_a_released_limit_released(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
+        {TargetKey.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -106,7 +106,7 @@ async def test_setting_a_value_re_enables_an_active_limit(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
+        {TargetKey.ENTITY_ID: POWER_LIMIT, NumberServiceArgument.VALUE: 60},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -132,7 +132,7 @@ async def test_battery_setpoint_leaves_the_mode_bits_alone(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT,
+            TargetKey.ENTITY_ID: CHARGE_LIMIT,
             NumberServiceArgument.VALUE: 50,
         },
         blocking=True,
@@ -164,7 +164,7 @@ async def test_battery_rates_are_signed(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: -50},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: -50},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -200,7 +200,7 @@ async def test_forcing_within_the_other_limit(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: DISCHARGE_LIMIT,
+            TargetKey.ENTITY_ID: DISCHARGE_LIMIT,
             NumberServiceArgument.VALUE: -100,
         },
         blocking=True,
@@ -232,7 +232,7 @@ async def test_forcing_beyond_the_other_limit_is_refused(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: DISCHARGE_LIMIT,
+                TargetKey.ENTITY_ID: DISCHARGE_LIMIT,
                 NumberServiceArgument.VALUE: -100,
             },
             blocking=True,
@@ -260,7 +260,7 @@ async def test_a_refused_write_raises(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: CHARGE_LIMIT,
+                TargetKey.ENTITY_ID: CHARGE_LIMIT,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,

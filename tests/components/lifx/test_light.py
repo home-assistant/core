@@ -61,6 +61,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -315,7 +316,7 @@ async def test_effect_pulse_uses_public_effect(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.POWER_ON: False,
             ATTR_MODE: "breathe",
             LIFXServiceArgument.PERIOD: 2.5,
@@ -353,7 +354,7 @@ async def test_effect_service_follows_renamed_entity_id(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: RENAMED_ENTITY_ID},
         blocking=True,
     )
     _, participants = mock_effect_conductor.start.await_args.args
@@ -363,7 +364,7 @@ async def test_effect_service_follows_renamed_entity_id(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -383,7 +384,7 @@ async def test_effect_pulse_reads_color_before_merging(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -411,7 +412,7 @@ async def test_effect_pulse_clamps_brightness_above_zero(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
         blocking=True,
     )
 
@@ -430,7 +431,7 @@ async def test_effect_colorloop_uses_public_effect_defaults(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_BRIGHTNESS_PCT: 50,
             LIFXServiceArgument.SATURATION_MIN: 90,
         },
@@ -459,7 +460,7 @@ async def test_effect_colorloop_orders_saturation_bounds(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SATURATION_MAX: 50},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SATURATION_MAX: 50},
         blocking=True,
     )
 
@@ -478,7 +479,7 @@ async def test_effect_colorloop_clamps_saturation_above_zero(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SATURATION_MIN: 0,
             LIFXServiceArgument.SATURATION_MAX: 0,
         },
@@ -510,7 +511,7 @@ async def test_effect_colorloop_change_is_clamped_to_what_the_library_accepts(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.CHANGE: change},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.CHANGE: change},
         blocking=True,
     )
 
@@ -527,7 +528,7 @@ async def test_effect_colorloop_accepts_absolute_brightness(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -546,7 +547,7 @@ async def test_software_effect_errors_become_home_assistant_errors(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -641,7 +642,7 @@ async def test_firmware_effect_errors_become_home_assistant_errors(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_FLAME,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -666,7 +667,7 @@ async def test_morph_theme_is_sent_by_slug(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_MORPH,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 6, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 6, **service_data},
         blocking=True,
     )
 
@@ -685,7 +686,7 @@ async def test_morph_palette_keeps_the_firmware_path(hass: HomeAssistant) -> Non
         DOMAIN,
         LIFXService.EFFECT_MORPH,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SPEED: 6,
             LIFXServiceArgument.PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)],
         },
@@ -709,7 +710,7 @@ async def test_morph_theme_powers_on_an_off_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_MORPH,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.THEME: "arctic"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.THEME: "arctic"},
         blocking=True,
     )
 
@@ -725,7 +726,7 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
         DOMAIN,
         LIFXService.EFFECT_SKY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SPEED: 50,
             LIFXServiceArgument.SKY_TYPE: "Clouds",
             LIFXServiceArgument.CLOUD_SATURATION_MIN: 50,
@@ -757,7 +758,7 @@ async def test_sky_effect_plays_once_across_a_duration(
         DOMAIN,
         LIFXService.EFFECT_SKY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SKY_TYPE: "Sunrise",
             LIFXServiceArgument.SPEED: 0,
             LIFXServiceArgument.DURATION: 1800,
@@ -781,7 +782,7 @@ async def test_sky_effect_speed_zero_needs_a_duration(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_SKY,
-            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 0},
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 0},
             blocking=True,
         )
 
@@ -799,7 +800,7 @@ async def test_sky_effect_without_a_palette_omits_it(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_SKY,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER_ON: False},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER_ON: False},
         blocking=True,
     )
 
@@ -849,7 +850,7 @@ async def test_color_sweep_effect_uses_public_firmware_api(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORSWEEP,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -870,7 +871,7 @@ async def test_color_sweep_speed_zero_needs_a_duration(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_COLORSWEEP,
-            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.DURATION: 0},
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.DURATION: 0},
             blocking=True,
         )
 
@@ -893,7 +894,7 @@ async def test_color_sweep_effect_skips_other_matrix_lights(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORSWEEP,
-        {ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
+        {TargetKey.ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
         blocking=True,
     )
 
@@ -911,7 +912,7 @@ async def test_move_effect_uses_public_firmware_api(hass: HomeAssistant) -> None
         DOMAIN,
         LIFXService.EFFECT_MOVE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SPEED: 4.5,
             LIFXServiceArgument.DIRECTION: "left",
             LIFXServiceArgument.THEME: "sports",
@@ -957,7 +958,7 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_STOP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -1113,7 +1114,7 @@ async def test_paint_theme_uses_public_device_api(
         DOMAIN,
         LIFXService.PAINT_THEME,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.POWER_ON: False,
             ATTR_TRANSITION: 4,
             **service_data,
@@ -1951,7 +1952,7 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: "light.does_not_exist"},
+            {TargetKey.ENTITY_ID: "light.does_not_exist"},
             blocking=True,
         )
 
@@ -2423,7 +2424,7 @@ async def test_set_mood_applies_one_group_across_the_targets(
         DOMAIN,
         LIFXService.SET_MOOD,
         {
-            ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID],
+            TargetKey.ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID],
             LIFXServiceArgument.MOOD: "dream",
         },
         blocking=True,
@@ -2445,7 +2446,7 @@ async def test_set_mood_follows_a_rename(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.SET_MOOD,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "energising"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "energising"},
         blocking=True,
     )
 
@@ -2467,7 +2468,7 @@ async def test_set_mood_updates_each_target_mood_select(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.SET_MOOD,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "dream"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "dream"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2499,7 +2500,7 @@ async def test_set_mood_rejects_a_component_only_target(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.SET_MOOD,
-            {ATTR_ENTITY_ID: downlight, LIFXServiceArgument.MOOD: "dream"},
+            {TargetKey.ENTITY_ID: downlight, LIFXServiceArgument.MOOD: "dream"},
             blocking=True,
         )
 
@@ -2515,7 +2516,7 @@ async def test_set_mood_requires_a_known_mood(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             LIFXService.SET_MOOD,
-            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "no_such_mood"},
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "no_such_mood"},
             blocking=True,
         )
 

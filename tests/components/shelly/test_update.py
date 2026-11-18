@@ -32,8 +32,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -87,7 +87,7 @@ async def test_block_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -153,7 +153,7 @@ async def test_block_beta_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert mock_block_device.trigger_ota_update.call_count == 1
@@ -204,7 +204,7 @@ async def test_block_update_connection_error(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -230,7 +230,7 @@ async def test_block_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -325,7 +325,7 @@ async def test_rpc_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -485,7 +485,7 @@ async def test_rpc_lora_update_in_progress(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -590,7 +590,7 @@ async def test_rpc_lora_update_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
             blocking=True,
         )
 
@@ -623,7 +623,7 @@ async def test_rpc_lora_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_lora_add_on_firmware"},
         blocking=True,
     )
 
@@ -849,7 +849,7 @@ async def test_rpc_beta_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     inject_rpc_device_event(
@@ -966,7 +966,7 @@ async def test_rpc_update_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+            {TargetKey.ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
 
@@ -1000,7 +1000,7 @@ async def test_rpc_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.test_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -1047,7 +1047,7 @@ async def test_blu_trv_update(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1133,7 +1133,7 @@ async def test_blu_trv_update_progress(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1177,7 +1177,7 @@ async def test_blu_trv_update_refreshes_installed_version(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1206,7 +1206,7 @@ async def test_blu_trv_update_refresh_errors(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -1383,7 +1383,7 @@ async def test_blu_trv_update_install_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -1406,7 +1406,7 @@ async def test_blu_trv_update_install_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: "update.trv_name_firmware"},
+        {TargetKey.ENTITY_ID: "update.trv_name_firmware"},
         blocking=True,
     )
 

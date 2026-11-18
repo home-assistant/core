@@ -1,14 +1,15 @@
 """Test the Qube Heat Pump integration init."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hr_energy_qube.const import DOMAIN
+from homeassistant.components.hr_energy_qube.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -51,6 +52,40 @@ async def test_device_info(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device == snapshot
+
+
+@pytest.mark.parametrize(
+    ("data", "register", "expected"),
+    [
+        pytest.param({CONF_SW_VERSION: "4.1.00"}, None, "4.1.00", id="panel_only"),
+        pytest.param(
+            {CONF_SW_VERSION: "4.1.00"}, "2.15", "4.1.00", id="panel_preferred"
+        ),
+        pytest.param({}, "2.15", "2.15", id="register"),
+        pytest.param({}, None, None, id="unknown"),
+    ],
+)
+async def test_device_sw_version(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    data: dict[str, str],
+    register: str | None,
+    expected: str | None,
+) -> None:
+    """Test the device shows the panel version from discovery, else register 77."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.2.3.4", CONF_PORT: 502, **data}
+    )
+    mock_qube_client.async_get_software_version = AsyncMock(return_value=register)
+
+    await setup_integration(hass, entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == expected
 
 
 async def test_setup_entry_connection_failure(

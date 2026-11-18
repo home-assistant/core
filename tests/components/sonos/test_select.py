@@ -17,7 +17,7 @@ from homeassistant.components.sonos.const import (
     MODEL_SONOS_ARC_ULTRA,
     SCAN_INTERVAL,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -148,7 +148,7 @@ async def test_select_dialog_level_set(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: SELECT_DIALOG_LEVEL_ENTITY,
+            TargetKey.ENTITY_ID: SELECT_DIALOG_LEVEL_ENTITY,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,

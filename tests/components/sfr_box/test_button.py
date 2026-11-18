@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -110,7 +110,7 @@ async def test_reboot_invalid_auth(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            service_data={CommonServiceArgument.ENTITY_ID: "button.sfr_box_restart"},
+            service_data={TargetKey.ENTITY_ID: "button.sfr_box_restart"},
             blocking=True,
         )
     await hass.async_block_till_done()
