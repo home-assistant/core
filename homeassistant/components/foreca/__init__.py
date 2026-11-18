@@ -4,12 +4,23 @@ from pyforeca import ForecaApiClient
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import SUBENTRY_TYPE_LOCATION
+from .const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from .coordinator import ForecaConfigEntry, ForecaUpdateCoordinator
+from .services import async_setup_services
 
-PLATFORMS = [Platform.WEATHER]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Foreca actions."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ForecaConfigEntry) -> None:

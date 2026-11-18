@@ -33,7 +33,6 @@ from yarl import URL
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -80,6 +79,9 @@ from .const import (
     WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
+
+if TYPE_CHECKING:
+    from .coordinator import ShellyConfigEntry
 
 
 @callback
@@ -368,6 +370,21 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
+def get_shelly_manufacturer(device: BlockDevice | RpcDevice) -> str:
+    """Get Shelly device manufacturer.
+
+    Sleeping devices are not initialized during setup and are all made by Shelly.
+    """
+    if (
+        isinstance(device, RpcDevice)
+        and device.initialized
+        and (manufacturer := device.xmod_info.get("m"))
+    ):
+        return cast(str, manufacturer)
+
+    return "Shelly"
+
+
 def get_rpc_key(value: str) -> tuple[bool, str, str]:
     """Get split device key."""
     parts = value.split(":")
@@ -459,7 +476,7 @@ def get_rpc_sub_device_name(
     return f"{component.title()} {component_id}"
 
 
-def get_device_entry_gen(entry: ConfigEntry) -> int:
+def get_device_entry_gen(entry: ShellyConfigEntry) -> int:
     """Return the device generation from config entry."""
     return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
@@ -547,7 +564,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 @callback
 def update_device_fw_info(
-    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ShellyConfigEntry
 ) -> None:
     """Update the firmware version information in the device registry."""
     assert entry.unique_id
@@ -941,7 +958,7 @@ def get_block_device_info(
 
 @callback
 def remove_stale_blu_trv_devices(
-    hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
+    hass: HomeAssistant, rpc_device: RpcDevice, entry: ShellyConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
     dev_reg = dr.async_get(hass)
@@ -972,7 +989,7 @@ def remove_stale_blu_trv_devices(
 
 
 @callback
-def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove sub devices without entities."""
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
@@ -1055,9 +1072,9 @@ def async_migrate_rpc_virtual_components_unique_ids(
     return None
 
 
-def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+def is_rpc_ble_scanner_supported(entry: ShellyConfigEntry) -> bool:
     """Return true if BLE scanner is supported."""
-    return (
+    return bool(
         entry.runtime_data.rpc_supports_scripts
         and not entry.runtime_data.rpc_zigbee_firmware
     )
@@ -1098,7 +1115,7 @@ async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
 
 
 async def async_manage_coiot_issues_task(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ShellyConfigEntry
 ) -> None:
     """CoIoT configuration or push updates issues task."""
     config_issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)

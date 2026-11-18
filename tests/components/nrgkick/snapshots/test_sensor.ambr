@@ -370,8 +370,11 @@
     'name': None,
     'object_id_base': 'Charging rate',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
     'original_icon': None,
     'original_name': 'Charging rate',
     'platform': 'nrgkick',
@@ -386,6 +389,7 @@
 # name: test_sensor_entities[sensor.nrgkick_test_charging_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NRGkick Test Charging rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,

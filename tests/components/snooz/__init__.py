@@ -11,8 +11,8 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info,
 )
 
-from homeassistant.components.snooz.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION, DOMAIN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -20,12 +20,29 @@ TEST_ADDRESS = "00:00:00:00:AB:CD"
 TEST_SNOOZ_LOCAL_NAME = "Snooz-ABCD"
 TEST_SNOOZ_DISPLAY_NAME = "Snooz ABCD"
 TEST_PAIRING_TOKEN = "deadbeefdeadbeef"
+# what the SNOOZ_SERVICE_INFO_* advertisements parse to, as stored in the entry
+TEST_MODEL = 1  # SnoozDeviceModel.ORIGINAL
+TEST_FIRMWARE_VERSION = 2  # SnoozFirmwareVersion.V2
 
 NOT_SNOOZ_SERVICE_INFO = BluetoothServiceInfo(
     name="Definitely not snooz",
     address=TEST_ADDRESS,
     rssi=-63,
     manufacturer_data={3234: b"\x00\x01"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
+TEST_BREEZ_ADDRESS = "00:00:00:00:0B:FA"
+TEST_BREEZ_DISPLAY_NAME = "Breez 0BFA"
+
+# A Breez advertises its name and manufacturer data but no service UUIDs
+BREEZ_SERVICE_INFO = BluetoothServiceInfo(
+    name="Breez-0BFA",
+    address=TEST_BREEZ_ADDRESS,
+    rssi=-63,
+    manufacturer_data={65552: bytes([0x14]) + bytes([0] * 8)},
     service_data={},
     service_uuids=[],
     source="local",
@@ -46,6 +63,21 @@ SNOOZ_SERVICE_INFO_PAIRING = BluetoothServiceInfo(
 
 SNOOZ_SERVICE_INFO_NOT_PAIRING = BluetoothServiceInfo(
     name=TEST_SNOOZ_LOCAL_NAME,
+    address=TEST_ADDRESS,
+    rssi=-63,
+    manufacturer_data={65552: bytes([4]) + bytes([0] * 8)},
+    service_uuids=[
+        "80c37f00-cc16-11e4-8830-0800200c9a66",
+        "90759319-1668-44da-9ef3-492d593bd1e5",
+    ],
+    service_data={},
+    source="local",
+)
+
+# Some Bluetooth stacks report the name stored in the device name characteristic
+# ("Snooz") instead of the advertised name ("Snooz-XXXX") after connecting
+SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME = BluetoothServiceInfo(
+    name="Snooz",
     address=TEST_ADDRESS,
     rssi=-63,
     manufacturer_data={65552: bytes([4]) + bytes([0] * 8)},
@@ -92,7 +124,13 @@ async def create_mock_snooz_config_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_ADDRESS,
-        data={CONF_ADDRESS: TEST_ADDRESS, CONF_TOKEN: TEST_PAIRING_TOKEN},
+        minor_version=2,
+        data={
+            CONF_ADDRESS: TEST_ADDRESS,
+            CONF_TOKEN: TEST_PAIRING_TOKEN,
+            CONF_MODEL: TEST_MODEL,
+            CONF_FIRMWARE_VERSION: TEST_FIRMWARE_VERSION,
+        },
     )
     entry.add_to_hass(hass)
     inject_bluetooth_service_info(hass, SNOOZ_SERVICE_INFO_NOT_PAIRING)

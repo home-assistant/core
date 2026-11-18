@@ -4,19 +4,25 @@ from asyncio import Event, sleep
 from unittest.mock import patch
 
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
-from homeassistant.components.snooz.const import DOMAIN
+from homeassistant.components.snooz.const import CONF_FIRMWARE_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    BREEZ_SERVICE_INFO,
     NOT_SNOOZ_SERVICE_INFO,
+    SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
     SNOOZ_SERVICE_INFO_NOT_PAIRING,
     SNOOZ_SERVICE_INFO_PAIRING,
     TEST_ADDRESS,
+    TEST_BREEZ_DISPLAY_NAME,
+    TEST_FIRMWARE_VERSION,
+    TEST_MODEL,
     TEST_PAIRING_TOKEN,
     TEST_SNOOZ_DISPLAY_NAME,
 )
@@ -49,6 +55,18 @@ async def test_async_step_bluetooth_waits_to_pair(hass: HomeAssistant) -> None:
     await _test_pairs(hass, result["flow_id"])
 
 
+async def test_async_step_bluetooth_characteristic_name(hass: HomeAssistant) -> None:
+    """Test discovery of a device advertising only the bare device name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=SNOOZ_SERVICE_INFO_CHARACTERISTIC_NAME,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["description_placeholders"] == {"name": TEST_SNOOZ_DISPLAY_NAME}
+
+
 async def test_async_step_bluetooth_retries_pairing(hass: HomeAssistant) -> None:
     """Test discovery retries pairing after timeout and completes setup."""
 
@@ -74,6 +92,19 @@ async def test_async_step_bluetooth_not_snooz(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+
+
+async def test_async_step_bluetooth_breez(hass: HomeAssistant) -> None:
+    """Test a Breez advertisement matches and starts a discovery flow."""
+    inject_bluetooth_service_info(hass, BREEZ_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "bluetooth_confirm"
+    assert flows[0]["context"]["title_placeholders"] == {
+        "name": TEST_BREEZ_DISPLAY_NAME
+    }
 
 
 async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
@@ -367,5 +398,8 @@ async def _test_setup_entry(
     assert result["data"] == {
         CONF_ADDRESS: TEST_ADDRESS,
         CONF_TOKEN: TEST_PAIRING_TOKEN,
+        CONF_MODEL: TEST_MODEL,
+        CONF_FIRMWARE_VERSION: TEST_FIRMWARE_VERSION,
     }
     assert result["result"].unique_id == TEST_ADDRESS
+    assert result["result"].minor_version == 2

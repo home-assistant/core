@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from inspect import isawaitable
 from typing import Any, override
 
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -58,6 +59,7 @@ class TessieBaseEntity(
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.data_key, default)
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

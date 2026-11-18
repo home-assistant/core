@@ -1,12 +1,16 @@
 """Helper functions for use with IRM KMI integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_LANGUAGE_OVERRIDE, LANGS
 
+if TYPE_CHECKING:
+    from .coordinator import IrmKmiConfigEntry
 
-def preferred_language(hass: HomeAssistant, config_entry: ConfigEntry) -> str:
+
+def preferred_language(hass: HomeAssistant, config_entry: IrmKmiConfigEntry) -> str:
     """Return the language to use for this config entry.
 
     Falls back to the Home Assistant language, or to English when that one is

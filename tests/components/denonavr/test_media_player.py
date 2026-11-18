@@ -49,7 +49,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -126,7 +126,7 @@ async def test_get_command(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+        TargetKey.ENTITY_ID: ENTITY_ID,
         DenonAvrServiceArgument.COMMAND: "test_command",
     }
     await hass.services.async_call(DOMAIN, DenonAvrService.GET_COMMAND, data)
@@ -146,7 +146,7 @@ async def test_update_entity_reads_before_returning(
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -181,7 +181,7 @@ async def test_update_entity_reads_audyssey_only_with_the_option(
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -209,7 +209,7 @@ async def test_non_connectivity_error_does_not_mark_unavailable(
     await hass.services.async_call(
         media_player.DOMAIN,
         SERVICE_VOLUME_UP,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -236,7 +236,7 @@ async def test_queued_commands_warn_once_when_the_receiver_drops(
             hass.services.async_call(
                 media_player.DOMAIN,
                 SERVICE_VOLUME_UP,
-                {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+                {TargetKey.ENTITY_ID: ENTITY_ID},
                 blocking=True,
             )
         )
@@ -266,7 +266,7 @@ async def test_audyssey_command_failure_warns_with_polling_disabled(
         DOMAIN,
         DenonAvrService.SET_DYNAMIC_EQ,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             DenonAvrServiceArgument.DYNAMIC_EQ: True,
         },
         blocking=True,
@@ -316,7 +316,7 @@ async def test_set_dynamic_eq_connectivity_error_marks_audyssey_unavailable(
         DOMAIN,
         DenonAvrService.SET_DYNAMIC_EQ,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             DenonAvrServiceArgument.DYNAMIC_EQ: True,
         },
     )
@@ -330,7 +330,7 @@ async def test_dynamic_eq(hass: HomeAssistant, client: MagicMock) -> None:
     await setup_denonavr(hass)
 
     data = {
-        CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+        TargetKey.ENTITY_ID: ENTITY_ID,
         DenonAvrServiceArgument.DYNAMIC_EQ: True,
     }
     # Verify on call
@@ -374,7 +374,7 @@ async def test_update_audyssey(
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
 
@@ -624,7 +624,7 @@ async def test_a_polling_audyssey_coordinator_keeps_its_own_verdict(
     await hass.services.async_call(
         media_player.DOMAIN,
         SERVICE_VOLUME_UP,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     client.async_update.side_effect = AvrNetworkError("Network error", "test")
@@ -673,7 +673,7 @@ async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
         DOMAIN,
         DenonAvrService.SET_DYNAMIC_EQ,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             DenonAvrServiceArgument.DYNAMIC_EQ: False,
         },
         blocking=True,
@@ -685,7 +685,7 @@ async def test_repeated_failure_still_reaches_a_coordinator_without_a_poll(
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -721,7 +721,7 @@ async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_po
         DOMAIN,
         DenonAvrService.SET_DYNAMIC_EQ,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             DenonAvrServiceArgument.DYNAMIC_EQ: False,
         },
         blocking=True,
@@ -733,7 +733,7 @@ async def test_repeated_command_failure_still_reaches_a_coordinator_without_a_po
     await hass.services.async_call(
         "homeassistant",
         SERVICE_UPDATE_ENTITY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -790,7 +790,7 @@ async def test_update_audyssey_recovers_only_through_every_zone(
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -820,7 +820,7 @@ async def test_update_audyssey_action_survives_a_receiver_without_audyssey(
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -850,7 +850,7 @@ async def test_update_audyssey_fetches_only_the_targeted_zone(
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
 
@@ -877,7 +877,7 @@ async def test_update_audyssey_connectivity_error_marks_media_player_unavailable
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
 
@@ -904,7 +904,7 @@ async def test_set_dynamic_eq_always_refreshes_audyssey(
             DOMAIN,
             DenonAvrService.SET_DYNAMIC_EQ,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 DenonAvrServiceArgument.DYNAMIC_EQ: False,
             },
         )
@@ -930,7 +930,7 @@ async def test_update_audyssey_keeps_a_pending_audyssey_refresh(
         DOMAIN,
         DenonAvrService.SET_DYNAMIC_EQ,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             DenonAvrServiceArgument.DYNAMIC_EQ: False,
         },
         blocking=True,
@@ -938,7 +938,7 @@ async def test_update_audyssey_keeps_a_pending_audyssey_refresh(
     await hass.services.async_call(
         DOMAIN,
         DenonAvrService.UPDATE_AUDYSSEY,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     freezer.tick(timedelta(seconds=1))

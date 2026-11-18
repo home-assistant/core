@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
-from switchbot import LockStatus, SwitchbotOperationError
+from switchbot import LockStatus, SwitchbotLockUltra, SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -307,3 +307,29 @@ async def test_lock_ultra_half_locked_binary_sensor_unknown(
         sensor_state = hass.states.get("binary_sensor.test_name_half_locked")
         assert sensor_state is not None
         assert sensor_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("sensor_type", "service_info"),
+    [
+        ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+        ("lock_ultra_max", LOCK_ULTRA_MAX_SERVICE_INFO),
+    ],
+)
+async def test_lock_ultra_uses_lock_ultra_class(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    sensor_type: str,
+    service_info: BluetoothServiceInfoBleak,
+) -> None:
+    """Test Lock Ultra and Ultra Max use the class that reads their basic info."""
+    inject_bluetooth_service_info(hass, service_info)
+
+    entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
+    entry.add_to_hass(hass)
+
+    with patch.object(SwitchbotLockUltra, "update", AsyncMock(return_value=None)):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert isinstance(entry.runtime_data.device, SwitchbotLockUltra)

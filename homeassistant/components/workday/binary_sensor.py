@@ -1,7 +1,7 @@
 """Sensor to indicate whether the current day is a workday."""
 
 from datetime import datetime
-from typing import Final, override
+from typing import override
 
 from holidays import HolidayBase
 
@@ -12,9 +12,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
-
-SERVICE_CHECK_DATE: Final = "check_date"
-CHECK_DATE: Final = "check_date"
 
 
 async def async_setup_entry(

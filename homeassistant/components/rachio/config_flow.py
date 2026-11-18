@@ -9,12 +9,7 @@ import probatio
 from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -31,6 +26,7 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
 )
+from .device import RachioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,7 +158,7 @@ class RachioConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RachioConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

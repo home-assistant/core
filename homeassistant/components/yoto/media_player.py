@@ -235,7 +235,6 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="card_detail_failed",
-                        translation_placeholders={"error": str(err)},
                     ) from err
 
             chapter = card.chapters.get(chapter_key)
@@ -275,7 +274,6 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="play_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     @override
@@ -331,7 +329,6 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
                 raise BrowseError(
                     translation_domain=DOMAIN,
                     translation_key="card_detail_failed",
-                    translation_placeholders={"error": str(err)},
                 ) from err
 
         if chapter_key is not None:
@@ -471,7 +468,6 @@ class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
 

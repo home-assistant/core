@@ -208,11 +208,10 @@ class MatterUpdate(MatterEntity, UpdateEntity):
                 UpdateEntityStateAttribute.LATEST_VERSION
             )
 
-        if (extra_data := await self.async_get_last_extra_data()) and (
-            matter_extra_data := MatterUpdateExtraStoredData.from_dict(
+        if extra_data := await self.async_get_last_extra_data():
+            matter_extra_data = MatterUpdateExtraStoredData.from_dict(
                 extra_data.as_dict()
             )
-        ):
             self._software_update = matter_extra_data.software_update
         else:
             # Check for updates when added the first time.

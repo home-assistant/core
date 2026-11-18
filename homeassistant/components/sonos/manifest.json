@@ -14,7 +14,7 @@
   "quality_scale": "bronze",
   "requirements": [
     "defusedxml==0.7.1",
-    "soco==0.32.1",
+    "soco==0.32.2",
     "sonos-websocket==0.2.0"
   ],
   "ssdp": [
