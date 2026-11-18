@@ -54,7 +54,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     ) -> None:
         """Initialise the update entity."""
         super().__init__(device, coordinator, gateway_mp.embedded_id)
-        self._coordinator = coordinator
         self._pending_install: tuple[int, str | None, int] | None = None
 
         self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
@@ -168,11 +167,12 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def available(self) -> bool:
         """Return whether the source device is available."""
+        if not super().available:
+            return False
+
         management_point = self._device.management_point(self._embedded_id)
+        assert management_point is not None
         return (
-            super().available
-            and self._device.available
-            and management_point is not None
-            and management_point.firmware is not None
+            management_point.firmware is not None
             and management_point.firmware.has_installed_version
         )
