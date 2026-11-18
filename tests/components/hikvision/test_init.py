@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+import threading
 from unittest.mock import MagicMock, patch
 from xml.etree.ElementTree import ParseError
 
@@ -20,10 +21,18 @@ from homeassistant.components.hikvision import (
     EVENT_PLATFORMS,
     IMAGE_SETTINGS_RETRY_INTERVAL,
     PLATFORMS,
+    STREAM_CREDENTIALS_ID,
 )
 from homeassistant.components.hikvision.const import DOMAIN
+from homeassistant.components.hikvision.coordinator import SCAN_INTERVAL
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -35,6 +44,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
@@ -717,6 +727,180 @@ async def test_image_settings_client_closed_when_the_setup_fails(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     client.close.assert_called_once()
+
+
+def _credentials_callback(camera: MagicMock):
+    """Return what the integration registered to watch the credentials."""
+    registered = [
+        call.args
+        for call in camera.add_update_callback.call_args_list
+        if call.args[1] == STREAM_CREDENTIALS_ID
+    ]
+    assert len(registered) == 1
+    return registered[0][0]
+
+
+async def test_credentials_rejected_by_the_event_stream_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test a camera without image settings still asks for new credentials."""
+    await setup_integration(hass, mock_config_entry)
+    assert not hass.config_entries.flow.async_progress()
+
+    # pyHik stops the stream and calls its callbacks, from the stream thread.
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(
+        _credentials_callback(camera), STREAM_CREDENTIALS_ID
+    )
+    await hass.async_block_till_done()
+
+    # pyHik only slows the stream down, so it is stopped here.
+    camera.disconnect.assert_called_once()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+async def test_a_stream_that_is_only_down_does_not_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the callback is called for every change of the stream."""
+    await setup_integration(hass, mock_config_entry)
+
+    camera = mock_hikcamera.return_value
+    camera.stream_connected = False
+    await hass.async_add_executor_job(
+        _credentials_callback(camera), STREAM_CREDENTIALS_ID
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress()
+
+
+async def test_credentials_refused_before_the_watch_started_start_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test a refusal that came while the entry was still being set up is not lost."""
+    mock_hikcamera.return_value.stream_auth_failed = True
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_credentials_rejected_by_the_event_stream_stop_the_image_settings(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the image settings do not send the rejected password either."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "number.front_camera_brightness"
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+    reads = mock_image_settings.get_image_values.call_count
+
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(
+        _credentials_callback(camera), STREAM_CREDENTIALS_ID
+    )
+    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL * 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert mock_image_settings.get_image_values.call_count == reads
+    camera.disconnect.assert_called()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+async def test_credentials_rejected_by_the_stream_are_dealt_with_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test the callback, which is called for every change, does not repeat itself."""
+    await setup_integration(hass, mock_config_entry)
+
+    camera = mock_hikcamera.return_value
+    camera.stream_auth_failed = True
+    callback = _credentials_callback(camera)
+    for _ in range(3):
+        await hass.async_add_executor_job(callback, STREAM_CREDENTIALS_ID)
+        await hass.async_block_till_done()
+
+    camera.disconnect.assert_called_once()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_nothing_is_sent_while_the_stream_is_being_stopped(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a write that comes while the stream is stopped does not send the password."""
+    await setup_integration(hass, mock_config_entry)
+    camera = mock_hikcamera.return_value
+    started = threading.Event()
+    release = threading.Event()
+
+    def disconnect() -> None:
+        started.set()
+        release.wait(10)
+
+    # A plain function, so that it runs in a thread and blocks only itself.
+    camera.disconnect = disconnect
+    camera.stream_auth_failed = True
+    await hass.async_add_executor_job(
+        _credentials_callback(camera), STREAM_CREDENTIALS_ID
+    )
+    await hass.async_add_executor_job(started.wait, 10)
+
+    try:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: "number.front_camera_brightness", ATTR_VALUE: 20},
+                blocking=True,
+            )
+    finally:
+        release.set()
+    await hass.async_block_till_done()
+
+    mock_image_settings.set_image_setting.assert_not_called()
+
+
+async def test_credentials_watch_is_removed_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test nothing is left registered on a camera that is shut down."""
+    await setup_integration(hass, mock_config_entry)
+    camera = mock_hikcamera.return_value
+    callback = _credentials_callback(camera)
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    camera.remove_update_callback.assert_any_call(callback, STREAM_CREDENTIALS_ID)
 
 
 @pytest.mark.usefixtures("mock_hikcamera")

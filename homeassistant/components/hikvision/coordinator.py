@@ -156,6 +156,11 @@ class HikvisionImageCoordinator(DataUpdateCoordinator[dict[str, str]]):
         the login. Reauthentication reloads the entry, which starts them again.
         """
         data = self.config_entry.runtime_data
+        if data.image_rejection_handled:
+            # The event stream, or another request, found it first and is dealing
+            # with it.
+            return
+        data.image_rejection_handled = True
         data.image_credentials_rejected = True
         await self.hass.async_add_executor_job(data.camera.disconnect)
         error = ConfigEntryAuthFailed(

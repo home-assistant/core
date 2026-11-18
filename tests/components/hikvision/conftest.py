@@ -155,6 +155,7 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
         camera.auth_failed = False
+        camera.stream_auth_failed = False
         camera.current_event_states = {
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],

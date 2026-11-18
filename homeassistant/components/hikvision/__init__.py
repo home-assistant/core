@@ -42,6 +42,11 @@ _LOGGER = logging.getLogger(__name__)
 # How long to wait before trying the image settings again after a failed read
 IMAGE_SETTINGS_RETRY_INTERVAL = timedelta(minutes=5)
 
+# What the callback that watches the credentials is registered for. The sensors
+# register for their own IDs, and pyHik calls every callback when the stream
+# changes state.
+STREAM_CREDENTIALS_ID = "stream_credentials"
+
 # What the event stream feeds. These are set up before the image settings are
 # read: a camera that is slow to answer must not hold back the events of its stream.
 EVENT_PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
@@ -74,6 +79,8 @@ class HikvisionData:
     image_coordinators: list[HikvisionImageCoordinator] = field(default_factory=list)
     # Set when the device rejected the password, so that no coordinator sends it again
     image_credentials_rejected: bool = False
+    # Set by what stops everything after that, so that it is only done once
+    image_rejection_handled: bool = False
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -231,6 +238,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
         if image_platforms:
             await hass.config_entries.async_forward_entry_setups(entry, image_platforms)
+
+        _async_watch_stream_credentials(hass, entry)
     except BaseException as err:
         # A setup that fails, or is cancelled, does not call async_unload_entry, so
         # what it started is stopped here: the platforms it forwarded...
@@ -244,6 +253,64 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         if not isinstance(err, ConfigEntryAuthFailed):
             await hass.async_add_executor_job(camera.disconnect)
         raise
+
+
+@callback
+def _async_watch_stream_credentials(
+    hass: HomeAssistant, entry: HikvisionConfigEntry
+) -> None:
+    """Ask for new credentials when the event stream is refused them.
+
+    The stream is the only thing that talks to every device all the time, so it is
+    the first to notice a changed password, including on a device with no image
+    settings. pyHik slows the stream down when it happens, so that the account is
+    not locked by retries, and calls the callbacks of the camera. It does not give
+    up, so the stream is stopped here: the entry is reloaded, with a new stream, once
+    the user has entered the new credentials.
+    """
+    data = entry.runtime_data
+    camera = data.camera
+
+    async def _async_credentials_rejected() -> None:
+        if data.image_rejection_handled:
+            # pyHik calls the callbacks at every change of the stream, and a request
+            # may have found the password rejected too: it is being dealt with.
+            return
+        # The image settings use the same login. Marked before the first await, so
+        # that nothing sends the password while the stream is being stopped.
+        data.image_rejection_handled = True
+        data.image_credentials_rejected = True
+        await hass.async_add_executor_job(camera.disconnect)
+        error = ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        )
+        if data.image_coordinators:
+            # A request that is running must end first: its result would make a
+            # coordinator available again.
+            async with data.image_coordinators[0].lock:
+                for coordinator in data.image_coordinators:
+                    await coordinator.async_shutdown()
+                    coordinator.async_set_update_error(error)
+        entry.async_start_reauth(hass)
+
+    @callback
+    def _async_handle() -> None:
+        entry.async_create_task(
+            hass, _async_credentials_rejected(), "hikvision stream credentials"
+        )
+
+    def _stream_changed(_msg: str) -> None:
+        """Check the stream, from the thread of the stream."""
+        if camera.stream_auth_failed:
+            hass.loop.call_soon_threadsafe(_async_handle)
+
+    camera.add_update_callback(_stream_changed, STREAM_CREDENTIALS_ID)
+    entry.async_on_unload(
+        partial(camera.remove_update_callback, _stream_changed, STREAM_CREDENTIALS_ID)
+    )
+    if camera.stream_auth_failed:
+        # It was refused before this was registered.
+        _async_handle()
 
 
 async def _async_setup_image_settings(
