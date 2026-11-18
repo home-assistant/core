@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_SSL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant
 
 from . import setup_integration
@@ -27,9 +27,9 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hikcamera.return_value.start_stream.assert_called_once()
 
-    # Verify HikCamera was called with the ssl parameter
+    # Verify HikCamera was called with the verify_ssl parameter
     mock_hikcamera.assert_called_once_with(
-        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -85,9 +85,47 @@ async def test_setup_entry_with_ssl(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Verify HikCamera was called with ssl=True
+    # Verify HikCamera was called over HTTPS, verifying the certificate
     mock_hikcamera.assert_called_once_with(
         f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
+    )
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "expected_verify_ssl"),
+    [
+        ({CONF_VERIFY_SSL: False}, False),
+        ({CONF_VERIFY_SSL: True}, True),
+        # Entries created before the option existed keep verifying
+        (None, True),
+    ],
+    ids=["unverified", "verified", "legacy_entry"],
+)
+async def test_setup_entry_ssl_verification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    entry_data: dict[str, bool] | None,
+    expected_verify_ssl: bool,
+) -> None:
+    """Test the certificate verification choice is passed to HikCamera."""
+    data = {**mock_config_entry.data, CONF_SSL: True}
+    data.pop(CONF_VERIFY_SSL)
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**data, **(entry_data or {})}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hikcamera.assert_called_once_with(
+        f"https://{TEST_HOST}",
+        TEST_PORT,
+        TEST_USERNAME,
+        TEST_PASSWORD,
+        expected_verify_ssl,
     )
 
 
@@ -121,6 +159,31 @@ async def test_setup_entry_no_device_id(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("amount_of_channels", [2])
+@pytest.mark.parametrize("verify_ssl", [True, False])
+async def test_setup_entry_nvr_channels_ssl_verification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+    mock_hik_get_channels: MagicMock,
+    verify_ssl: bool,
+) -> None:
+    """Test the certificate verification choice is used to list NVR channels."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SSL: True, CONF_VERIFY_SSL: verify_ssl},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_get_channels.assert_called_once_with(
+        TEST_HOST, TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True, verify_ssl
+    )
 
 
 async def test_setup_entry_nvr_fetches_events(
