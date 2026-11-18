@@ -868,14 +868,13 @@ class UpdateCoreConfigTool(Tool):
             probatio.Optional(
                 "language", description="Language code, e.g. 'en' or 'pt-BR'."
             ): str,
-            probatio.Optional("unit_system"): probatio.In(["metric", "us_customary"]),
             probatio.Optional(
-                "update_units",
+                "unit_system",
                 description=(
-                    "With unit_system, also change the units of entities that use "
-                    "the units of the unit system."
+                    "A new unit system also changes the units of sensors, except "
+                    "units the user set."
                 ),
-            ): bool,
+            ): probatio.In(["metric", "us_customary"]),
             probatio.Optional(
                 "internal_url",
                 description="URL of Home Assistant on the local network, or null.",
@@ -893,6 +892,10 @@ class UpdateCoreConfigTool(Tool):
     ) -> ToolResult:
         """Update the core config."""
         args = self.parameters(tool_input.tool_args)
+        # Like the UI, a new unit system also changes the units of the sensors
+        current_unit_system = hass.config.units._name  # noqa: SLF001
+        if args.get("unit_system", current_unit_system) != current_unit_system:
+            args["update_units"] = True
         try:
             data = _UPDATE_CORE_CONFIG_SCHEMA(args)
         except probatio.Invalid as err:

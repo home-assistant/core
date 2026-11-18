@@ -172,15 +172,12 @@
           'type': 'string',
         }),
         'unit_system': dict({
+          'description': 'A new unit system also changes the units of sensors, except units the user set.',
           'enum': list([
             'metric',
             'us_customary',
           ]),
           'type': 'string',
-        }),
-        'update_units': dict({
-          'description': 'With unit_system, also change the units of entities that use the units of the unit system.',
-          'type': 'boolean',
         }),
       }),
       'type': 'object',

@@ -1558,6 +1558,31 @@ async def test_update_core_config(
 
 
 @pytest.mark.parametrize(
+    ("unit_system", "updates_units"),
+    [("us_customary", True), ("metric", False), (None, False)],
+)
+async def test_update_core_config_updates_units(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    unit_system: str | None,
+    updates_units: bool,
+) -> None:
+    """Test that only a new unit system changes the units of the sensors."""
+    tool_args: dict[str, Any] = {"location_name": "Home"}
+    if unit_system:
+        tool_args["unit_system"] = unit_system
+    tool = UpdateCoreConfigTool()
+    with patch(
+        "homeassistant.components.config.core.async_update_suggested_units"
+    ) as mock_update_units:
+        res = await tool.async_call(
+            hass, llm.ToolInput(tool.name, tool_args), llm_context
+        )
+    assert res.error is False
+    assert mock_update_units.called is updates_units
+
+
+@pytest.mark.parametrize(
     ("tool_args", "error"),
     [
         pytest.param({"country": "XX"}, "Invalid input", id="country"),
