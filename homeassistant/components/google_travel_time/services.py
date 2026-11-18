@@ -126,7 +126,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     GoogleTravelTimeServiceArgument.TRAFFIC_MODEL
                 ),
                 departure_time=service.data.get(
-                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME
+                    GoogleTravelTimeServiceArgument.DEPARTURE_TIME,
+                ),
+                travel_routing_preference=service.data.get(
+                    GoogleTravelTimeServiceArgument.TRAVEL_ROUTING_PREFERENCE,
                 ),
             )
         except Exception as ex:  # noqa: BLE001

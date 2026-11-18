@@ -32,8 +32,3 @@ POST_CONNECTION_DELAY = 1
 # Signals
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
-
-# Services
-SERVICE_PANIC = "panic"
-SERVICE_AUX = "aux"
-ATTR_OUTPUT_ID = "output_id"

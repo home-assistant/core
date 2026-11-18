@@ -15,7 +15,7 @@ from homeassistant.components.hydrawise.services import (
     HydrawiseService,
     HydrawiseServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import CommonServiceArgument, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -31,7 +31,7 @@ async def test_start_watering(
         DOMAIN,
         HydrawiseService.START_WATERING,
         {
-            CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering",
+            TargetKey.ENTITY_ID: "binary_sensor.zone_one_watering",
             HydrawiseServiceArgument.DURATION: 20,
         },
         blocking=True,
@@ -51,7 +51,7 @@ async def test_start_watering_no_duration(
     await hass.services.async_call(
         DOMAIN,
         HydrawiseService.START_WATERING,
-        {CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering"},
+        {TargetKey.ENTITY_ID: "binary_sensor.zone_one_watering"},
         blocking=True,
     )
     mock_pydrawise.start_zone.assert_called_once_with(zones[0], custom_run_duration=0)
@@ -67,7 +67,7 @@ async def test_resume(
     await hass.services.async_call(
         DOMAIN,
         HydrawiseService.RESUME,
-        {CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering"},
+        {TargetKey.ENTITY_ID: "binary_sensor.zone_one_watering"},
         blocking=True,
     )
     mock_pydrawise.resume_zone.assert_called_once_with(zones[0])
@@ -84,7 +84,7 @@ async def test_suspend(
         DOMAIN,
         HydrawiseService.SUSPEND,
         {
-            CommonServiceArgument.ENTITY_ID: "binary_sensor.zone_one_watering",
+            TargetKey.ENTITY_ID: "binary_sensor.zone_one_watering",
             HydrawiseServiceArgument.UNTIL: datetime(2026, 1, 1, 0, 0, 0),
         },
         blocking=True,

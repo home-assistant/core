@@ -38,6 +38,7 @@ CONF_METER = "meter"
 CONF_SOURCE_SENSOR: Final = "source"
 CONF_METER_TYPE = "cycle"
 CONF_METER_OFFSET: Final = "offset"
+MAX_METER_OFFSET_DAYS: Final = 27
 CONF_METER_DELTA_VALUES: Final = "delta_values"
 CONF_METER_NET_CONSUMPTION: Final = "net_consumption"
 CONF_METER_PERIODICALLY_RESETTING: Final = "periodically_resetting"

@@ -10,6 +10,7 @@ import yaml
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.os_error import os_read_error
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
@@ -78,18 +79,8 @@ def read_file(call: ServiceCall) -> dict:
     try:
         with open(file_name, encoding="utf-8") as file:
             file_content = file.read()
-    except FileNotFoundError as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="file_not_found",
-            translation_placeholders={"filename": file_name},
-        ) from err
     except OSError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="file_read_error",
-            translation_placeholders={"filename": file_name},
-        ) from err
+        raise os_read_error(err, file_name) from err
 
     loader, error_type = ENCODING_LOADERS[file_encoding]
     try:
