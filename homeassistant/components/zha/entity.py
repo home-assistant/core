@@ -215,16 +215,15 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
-        previous_state = self.state if self.available else STATE_UNAVAILABLE
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self._update_capability_attrs()
         current_state = self.state if self.available else STATE_UNAVAILABLE
-        if self._context_expected_state is not None and current_state not in (
-            previous_state,
-            self._context_expected_state,
+        if (
+            self._context_expected_state is not None
+            and current_state != self._context_expected_state
         ):
-            # Withhold group context from a mismatched transition without discarding
-            # a still-pending newer command before its matching report arrives.
+            # Withhold group context from a mismatched report without discarding
+            # a still-pending command before its matching report arrives.
             pending_context = self._context
             pending_context_set = self._context_set
             self._context = None
