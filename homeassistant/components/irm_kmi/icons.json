@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "image": {
+      "radar": {
+        "default": "mdi:radar"
+      }
+    }
+  }
+}
