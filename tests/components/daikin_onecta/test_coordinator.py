@@ -437,6 +437,29 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.config_entry.async_start_reauth.assert_not_called()
         assert coordinator.last_patch_call is None
 
+    @pytest.mark.parametrize("status", [401, 403])
+    async def test_command_authentication_error_handles_status(
+        self, coordinator: OnectaDataUpdateCoordinator, status: int
+    ) -> None:
+        """Only a 401 write failure starts reauthentication."""
+        coordinator.config_entry.async_start_reauth = MagicMock()
+        error = OnectaAuthenticationError(
+            status=status,
+            method="PATCH",
+            path="/v1/management-points/point/characteristics/temperatureControl",
+        )
+
+        assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
+
+        if status == 401:
+            coordinator.config_entry.async_start_reauth.assert_called_once_with(
+                coordinator.hass
+            )
+        else:
+            coordinator.config_entry.async_start_reauth.assert_not_called()
+            assert coordinator.hass.config_entries.flow.async_progress() == []
+        assert coordinator.last_patch_call is None
+
     def test_polling_intervals_use_reported_daily_limit(self, coordinator):
         """Adapt the polling budget when Daikin reports a different limit."""
         coordinator.client.rate_limit = RateLimit(day_limit=400)

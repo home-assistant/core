@@ -136,7 +136,7 @@ async def test_write_authentication_error(
     status: int,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Start reauthentication and use the platform's translated write failure."""
+    """Only a 401 write authentication failure starts reauthentication."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     command = AsyncMock(
         side_effect=OnectaAuthenticationError(
@@ -152,10 +152,16 @@ async def test_write_authentication_error(
     ):
         assert not await api.async_execute_command(command)
 
-    start_reauth.assert_called_once_with(hass)
+    if status == 401:
+        start_reauth.assert_called_once_with(hass)
+        expected_log = "failed authentication"
+    else:
+        start_reauth.assert_not_called()
+        assert hass.config_entries.flow.async_progress() == []
+        expected_log = "was not authorized"
     assert api.last_patch_call is None
     assert (
-        f"Daikin request PATCH /v1/management-points/point failed authentication "
+        f"Daikin request PATCH /v1/management-points/point {expected_log} "
         f"with HTTP {status}" in caplog.text
     )
 

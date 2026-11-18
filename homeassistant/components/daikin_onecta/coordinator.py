@@ -215,13 +215,21 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OAuth2TokenRequestError:
                 return False
             except OnectaAuthenticationError as err:
-                _LOGGER.debug(
-                    "Daikin request %s %s failed authentication with HTTP %s",
-                    err.method,
-                    err.path,
-                    err.status,
-                )
-                self.config_entry.async_start_reauth(self.hass)
+                if err.status == 401:
+                    _LOGGER.debug(
+                        "Daikin request %s %s failed authentication with HTTP %s",
+                        err.method,
+                        err.path,
+                        err.status,
+                    )
+                    self.config_entry.async_start_reauth(self.hass)
+                else:
+                    _LOGGER.debug(
+                        "Daikin request %s %s was not authorized with HTTP %s",
+                        err.method,
+                        err.path,
+                        err.status,
+                    )
                 return False
             except OnectaRateLimitError as err:
                 self._set_polling_backoff(err.retry_after)
