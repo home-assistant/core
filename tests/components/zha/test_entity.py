@@ -1026,3 +1026,64 @@ async def test_group_entity_context_preserves_pending_context_on_mismatched_repo
     assert member_1_off_state is not None
     assert member_1_off_state.state == STATE_OFF
     assert member_1_off_state.context == turn_off_context
+
+
+async def test_group_entity_context_invalidated_after_matched_opposing_transition(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an already-matched group context is invalidated after an opposing transition."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    [group_entry] = er.async_entries_for_device(entity_registry, group_proxy.device_id)
+    group_entity_id = group_entry.entity_id
+
+    ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    dev_proxy_1 = gateway_proxy.device_proxies[ieee_1]
+    member_1_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_1, hass)
+    assert member_1_entity_id is not None
+
+    cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+
+    turn_on_context = Context(user_id=hass_admin_user.id, id="matched_turn_on_ctx")
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: group_entity_id},
+        blocking=True,
+        context=turn_on_context,
+    )
+
+    # Member matches the group turn_on command
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    member_1_on_state = hass.states.get(member_1_entity_id)
+    assert member_1_on_state is not None
+    assert member_1_on_state.state == STATE_ON
+    assert member_1_on_state.context == turn_on_context
+
+    # Physical off within 5 seconds must invalidate the matched group context
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 0}
+    )
+    member_1_off_state = hass.states.get(member_1_entity_id)
+    assert member_1_off_state is not None
+    assert member_1_off_state.state == STATE_OFF
+    assert member_1_off_state.context != turn_on_context
+
+    # Subsequent physical on within 5 seconds must not inherit the invalidated turn_on_context
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    member_1_re_on_state = hass.states.get(member_1_entity_id)
+    assert member_1_re_on_state is not None
+    assert member_1_re_on_state.state == STATE_ON
+    assert member_1_re_on_state.context != turn_on_context
