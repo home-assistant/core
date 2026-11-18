@@ -11,7 +11,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEntry
 
 from .const import DOMAIN
 from .coordinator import (
@@ -81,10 +81,8 @@ async def async_remove_config_entry_device(
     config_entry: DaikinOnectaConfigEntry,
     device_entry: AnyDeviceEntry,
 ) -> bool:
-    """Allow explicit removal only for gateways confirmed absent from the account."""
-    if config_entry.state is not ConfigEntryState.LOADED or not isinstance(
-        device_entry, DeviceEntry
-    ):
+    """Allow removal only for gateways or points confirmed absent from the account."""
+    if config_entry.state is not ConfigEntryState.LOADED:
         return False
     gateway_id = next(
         (
@@ -99,7 +97,20 @@ async def async_remove_config_entry_device(
         return False
 
     coordinator = config_entry.runtime_data
-    device = (coordinator.data or {}).get(gateway_id)
+    devices = coordinator.data or {}
+    if isinstance(device_entry, ChildDeviceEntry):
+        if not coordinator.last_update_success:
+            return False
+        return not any(
+            current_device.present_in_cloud
+            and any(
+                f"{current_device.id}_{management_point.embedded_id}" == gateway_id
+                for management_point in current_device.device.management_points
+            )
+            for current_device in devices.values()
+        )
+
+    device = devices.get(gateway_id)
     if not coordinator.last_update_success or device is None or device.present_in_cloud:
         return False
     try:
