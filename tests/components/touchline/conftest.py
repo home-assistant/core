@@ -27,7 +27,7 @@ def mock_pytouchline() -> Generator[MagicMock]:
         ),
     ):
         instance = mock_class.return_value
-        instance.get_number_of_devices.return_value = 1
+        instance.get_number_of_devices_async.return_value = 1
         instance.get_controller_id.return_value = "controller-1"
         instance.get_name.return_value = "Zone 1"
         instance.get_device_id.return_value = 0

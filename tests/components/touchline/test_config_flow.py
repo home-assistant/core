@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytouchline_extended import TouchlineConnectionError
 
 from homeassistant import config_entries
 from homeassistant.components.touchline.const import DOMAIN
@@ -42,7 +43,7 @@ async def test_form_success(
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
-        (ConnectionError, "cannot_connect"),
+        (TouchlineConnectionError, "cannot_connect"),
         (Exception("Unexpected backend explosion"), "unknown"),
     ],
 )
@@ -58,9 +59,7 @@ async def test_form_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # The config flow runs validation in a thread executor.
-    # If `get_number_of_devices` fails, validation fails too.
-    mock_pytouchline.get_number_of_devices.side_effect = side_effect
+    mock_pytouchline.get_number_of_devices_async.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -71,7 +70,7 @@ async def test_form_errors(
     assert result["errors"] == {"base": error_key}
 
     # "Fix" the problem, and try again.
-    mock_pytouchline.get_number_of_devices.side_effect = None
+    mock_pytouchline.get_number_of_devices_async.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Any, NamedTuple, override
 
+from pytouchline_extended import TouchlineError
+
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_NONE,
@@ -86,9 +88,9 @@ class Touchline(ClimateEntity):
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update thermostat attributes."""
-        self.unit.update()
+        await self.unit.update_async()
         self._attr_native_current_temperature = self.unit.get_current_temperature()
         self._attr_native_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
@@ -96,18 +98,18 @@ class Touchline(ClimateEntity):
         )
 
     @override
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
         try:
             if not (
-                self.unit.set_operation_mode(preset.mode)
-                and self.unit.set_week_program(preset.program)
+                await self.unit.set_operation_mode_async(preset.mode)
+                and await self.unit.set_week_program_async(preset.program)
             ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_preset"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_preset"
             ) from err
@@ -118,17 +120,17 @@ class Touchline(ClimateEntity):
         self._current_operation_mode = HVACMode.HEAT
 
     @override
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         try:
             self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-            if not self.unit.set_target_temperature(
+            if not await self.unit.set_target_temperature_async(
                 self._attr_native_target_temperature
             ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="error_set_temperature"
                 )
-        except (OSError, ConnectionError) as err:
+        except TouchlineError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="error_set_temperature"
             ) from err
