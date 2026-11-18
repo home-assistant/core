@@ -746,3 +746,57 @@ async def test_group_entity_context_not_used_for_unavailable_transition(
     assert member_1_unavail_state is not None
     assert member_1_unavail_state.state == STATE_UNAVAILABLE
     assert member_1_unavail_state.context != turn_on_context
+
+
+async def test_group_entity_context_when_group_command_returns_non_success(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    setup_zha: Callable[..., Coroutine[Any, Any, None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test group context expected state follows command intent even if group state stays off."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    [group_entry] = er.async_entries_for_device(entity_registry, group_proxy.device_id)
+    group_entity_id = group_entry.entity_id
+
+    ieee_1 = EUI64.convert("01:2d:6f:00:0a:90:69:e1")
+    dev_proxy_1 = gateway_proxy.device_proxies[ieee_1]
+    member_1_entity_id = find_entity_id(Platform.SWITCH, dev_proxy_1, hass)
+    assert member_1_entity_id is not None
+
+    cluster_1 = zigpy_app_controller_with_group.devices[ieee_1].endpoints[1].on_off
+    group_on_off_cluster = group_proxy.group.zigpy_group.endpoint[
+        general.OnOff.cluster_id
+    ]
+
+    with patch.object(
+        group_on_off_cluster,
+        "on",
+        AsyncMock(return_value=[0x01, zcl_f.Status.FAILURE]),
+    ):
+        turn_on_context = Context(
+            user_id=hass_admin_user.id, id="failed_group_turn_on_ctx"
+        )
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: group_entity_id},
+            blocking=True,
+            context=turn_on_context,
+        )
+
+    # Even though SwitchGroup remained off because the group command returned FAILURE,
+    # a member that received the multicast and turns on should inherit the context
+    await send_attributes_report(
+        hass, cluster_1, {general.OnOff.AttributeDefs.on_off.id: 1}
+    )
+    member_1_state = hass.states.get(member_1_entity_id)
+    assert member_1_state is not None
+    assert member_1_state.state == STATE_ON
+    assert member_1_state.context == turn_on_context
