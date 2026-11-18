@@ -12,6 +12,7 @@ from homeassistant.components.earn_e_p1.const import CONF_SERIAL
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import (
@@ -19,12 +20,14 @@ from .conftest import (
     DOMAIN,
     MOCK_EQUIPMENT_ID,
     MOCK_HOST,
+    MOCK_HOST_2,
     MOCK_HOSTNAME,
     MOCK_MAC,
     MOCK_NEW_HOST,
     MOCK_NEW_MAC,
     MOCK_NEW_SERIAL,
     MOCK_SERIAL,
+    MOCK_SERIAL_2,
 )
 
 DISCOVER_PATH = "homeassistant.components.earn_e_p1.config_flow.discover"
@@ -323,6 +326,69 @@ async def test_manual_entry_legacy_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.parametrize(
+    "equipment_id",
+    [
+        pytest.param("REPLACED", id="meter_replaced"),
+        pytest.param(None, id="no_equipment_id"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_manual_entry_matches_dongle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    equipment_id: str | None,
+) -> None:
+    """Test manual entry falls back to the dongle when the meter does not match."""
+    with patch(DISCOVER_PATH, return_value=[]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    with patch(
+        VALIDATE_PATH,
+        return_value=_mock_device(host=MOCK_NEW_HOST, equipment_id=equipment_id),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_NEW_HOST}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == MOCK_NEW_HOST
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_manual_entry_prefers_meter_over_dongle(
+    hass: HomeAssistant, mock_legacy_config_entry: MockConfigEntry
+) -> None:
+    """Test manual entry updates the entry for the meter over one for the dongle."""
+    meter_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST_2})",
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_EQUIPMENT_ID,
+        minor_version=2,
+    )
+    meter_entry.add_to_hass(hass)
+
+    with patch(DISCOVER_PATH, return_value=[]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    with patch(VALIDATE_PATH, return_value=_mock_device(host=MOCK_NEW_HOST)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: MOCK_NEW_HOST}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert meter_entry.data == {CONF_HOST: MOCK_NEW_HOST, CONF_SERIAL: MOCK_SERIAL}
+    assert mock_legacy_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_confirm_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -485,13 +551,18 @@ async def test_dhcp_discovery_swapped_dongle(
         macaddress=MOCK_NEW_MAC,
     )
 
+    discovery_key = DiscoveryKey(domain="dhcp", key=MOCK_NEW_MAC, version=1)
+
     with patch(
         VALIDATE_PATH,
         return_value=_mock_device(host=MOCK_NEW_HOST, serial=MOCK_NEW_SERIAL),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
+            context={
+                "source": config_entries.SOURCE_DHCP,
+                "discovery_key": discovery_key,
+            },
             data=dhcp_info,
         )
 
@@ -502,6 +573,7 @@ async def test_dhcp_discovery_swapped_dongle(
         CONF_SERIAL: MOCK_NEW_SERIAL,
     }
     assert mock_config_entry.title == f"EARN-E P1 ({MOCK_NEW_HOST})"
+    assert mock_config_entry.discovery_keys == {"dhcp": (discovery_key,)}
 
 
 @pytest.mark.parametrize(
@@ -538,10 +610,15 @@ async def test_dhcp_discovery_updates_ip_by_mac(
         macaddress=MOCK_MAC,
     )
 
+    discovery_key = DiscoveryKey(domain="dhcp", key=MOCK_MAC, version=1)
+
     with patch(VALIDATE_PATH) as mock_validate:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
+            context={
+                "source": config_entries.SOURCE_DHCP,
+                "discovery_key": discovery_key,
+            },
             data=dhcp_info,
         )
 
@@ -552,6 +629,7 @@ async def test_dhcp_discovery_updates_ip_by_mac(
         CONF_SERIAL: MOCK_SERIAL,
     }
     assert mock_config_entry.title == f"EARN-E P1 ({MOCK_NEW_HOST})"
+    assert mock_config_entry.discovery_keys == {"dhcp": (discovery_key,)}
     mock_validate.assert_not_called()
 
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 from earn_e_p1 import EarnEP1Device, PacketType, discover, validate
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -68,22 +68,41 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
 
+    async def _async_update_entry(
+        self, entry: ConfigEntry, host: str, data_updates: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Point an existing entry at the device and abort."""
+        # Lets a discovery flow record its discovery key on the entry.
+        await self.async_set_unique_id(entry.unique_id, raise_on_progress=False)
+        return self.async_update_reload_and_abort(
+            entry,
+            title=f"EARN-E P1 ({host})",
+            data_updates=data_updates,
+            reason="already_configured",
+            reload_even_if_entry_is_unchanged=False,
+        )
+
     async def _async_update_existing(
         self, device: EarnEP1Device
     ) -> ConfigFlowResult | None:
-        """Point the entry for this meter at the device, if one exists."""
-        # Entries not yet moved onto the meter are still keyed on the dongle.
-        unique_ids = {_unique_id(device), device.serial}
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id in unique_ids:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    title=f"EARN-E P1 ({device.host})",
-                    data_updates={CONF_HOST: device.host, CONF_SERIAL: device.serial},
-                    reason="already_configured",
-                    reload_even_if_entry_is_unchanged=False,
-                )
-        # Entries ignored before then are keyed on the dongle too.
+        """Point the entry for this meter or dongle at the device, if one exists."""
+        entries = self._async_current_entries(include_ignore=False)
+        # Fall back to the dongle for entries not yet moved onto the meter and
+        # for meters that were replaced or stopped sending their equipment ID.
+        entry = next(
+            (entry for entry in entries if entry.unique_id == _unique_id(device)),
+            None,
+        ) or next(
+            (entry for entry in entries if entry.data[CONF_SERIAL] == device.serial),
+            None,
+        )
+        if entry is not None:
+            return await self._async_update_entry(
+                entry,
+                device.host,
+                {CONF_HOST: device.host, CONF_SERIAL: device.serial},
+            )
+        # Entries ignored before keying on the meter are keyed on the dongle.
         await self.async_set_unique_id(device.serial)
         self._abort_if_unique_id_configured()
         await self.async_set_unique_id(_unique_id(device))
@@ -108,13 +127,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         # The dongle serial is its Wi-Fi MAC.
         for entry in self._async_current_entries(include_ignore=False):
             if format_mac(entry.data[CONF_SERIAL]) == formatted_mac:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    title=f"EARN-E P1 ({ip})",
-                    data_updates={CONF_HOST: ip},
-                    reason="already_configured",
-                    reload_even_if_entry_is_unchanged=False,
-                )
+                return await self._async_update_entry(entry, ip, {CONF_HOST: ip})
 
         try:
             device = await self._async_validate_host(ip)
