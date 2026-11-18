@@ -1374,9 +1374,12 @@ def _get_schema_fields(schema: Any) -> dict[Any, Any] | None:
     if isinstance(schema, probatio.Schema):
         return _get_schema_fields(schema.schema)
     if isinstance(schema, probatio.All):
+        # A validator before the field dict can rewrite the service data
         for validator in schema.validators:
             if (fields := _get_schema_fields(validator)) is not None:
                 return fields
+            if callable(validator):
+                return None
     return None
 
 
