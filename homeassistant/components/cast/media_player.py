@@ -333,7 +333,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._attr_unique_id = str(cast_info.uuid)
         connections: set[tuple[str, str]] = set()
         if not cast_info.is_audio_group:
-            # A cast device's UUID is its UPnP UDN, groups don't have one
             connections.add((CONNECTION_UPNP, f"uuid:{cast_info.uuid}"))
         self._attr_device_info = DeviceInfo(
             connections=connections,
