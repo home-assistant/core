@@ -351,19 +351,31 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             )
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
-            value = kwargs[ClimateServiceArgument.TEMPERATURE]
+            operationmode = self._operation_mode()
+            if operationmode is None:
+                self._raise_service_validation_error(
+                    "climate_operation_mode_unavailable"
+                )
+            omv = operationmode.value
+            setpoint = self._get_setpoint(omv)
+            if setpoint is None or not setpoint.settable:
+                self._raise_service_validation_error("climate_temperature_unavailable")
+
+            step = setpoint.step_value or 0.5
+            value = (
+                round(float(kwargs[ClimateServiceArgument.TEMPERATURE]) / step) * step
+            )
+            value = min(
+                max(
+                    value,
+                    setpoint.min_value
+                    if setpoint.min_value is not None
+                    else self.min_temp,
+                ),
+                setpoint.max_value if setpoint.max_value is not None else self.max_temp,
+            )
+
             if self._attr_native_target_temperature != value:
-                operationmode = self._operation_mode()
-                if operationmode is None:
-                    self._raise_service_validation_error(
-                        "climate_operation_mode_unavailable"
-                    )
-                omv = operationmode.value
-                setpoint = self._get_setpoint(omv)
-                if setpoint is None or not setpoint.settable:
-                    self._raise_service_validation_error(
-                        "climate_temperature_unavailable"
-                    )
                 res = await self._async_execute_climate_command(
                     lambda climate: climate.set_temperature(omv, self._setpoint, value)
                 )
