@@ -41,6 +41,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_clear_address_from_match_history,
     async_discovered_service_info,
+    async_scanner_by_source,
 )
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
@@ -1537,11 +1538,16 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         device that is temporarily out of range stays in the list.
         """
         names: dict[str, str] = dict.fromkeys(selected, "")
-        if (coordinator := self.config_entry.runtime_data.rpc) is not None:
-            source = coordinator.bluetooth_source
-            for service_info in async_discovered_service_info(self.hass, False):
-                if service_info.source == source:
-                    names[service_info.address] = service_info.name
+        # Use this scanner's own cache: the global discovery list keeps only
+        # one source per address and would hide devices another adapter hears.
+        if (coordinator := self.config_entry.runtime_data.rpc) is not None and (
+            scanner := async_scanner_by_source(self.hass, coordinator.bluetooth_source)
+        ):
+            for address, (
+                device,
+                advertisement,
+            ) in scanner.discovered_devices_and_advertisement_data.items():
+                names[address] = advertisement.local_name or device.name or ""
         return [
             SelectOptionDict(
                 value=address,

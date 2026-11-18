@@ -4,6 +4,7 @@ from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
 from ipaddress import ip_address
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
@@ -5831,6 +5832,48 @@ async def test_options_flow_ble_filter(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE}
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_rpc_device")
+async def test_options_flow_ble_filter_address_options(hass: HomeAssistant) -> None:
+    """Test the address list shows devices this Shelly hears and saved ones."""
+    entry = await init_integration(
+        hass,
+        2,
+        options={
+            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
+            CONF_BLE_ALLOWED_ADDRESSES: ["11:22:33:44:55:66"],
+        },
+    )
+    scanner = SimpleNamespace(
+        discovered_devices_and_advertisement_data={
+            "AA:BB:CC:DD:EE:FF": (
+                SimpleNamespace(name=None),
+                SimpleNamespace(local_name="Victron"),
+            ),
+            "CC:DD:EE:FF:00:11": (
+                SimpleNamespace(name="CC:DD:EE:FF:00:11"),
+                SimpleNamespace(local_name=None),
+            ),
+        }
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.async_scanner_by_source",
+        return_value=scanner,
+    ) as mock_scanner_by_source:
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    mock_scanner_by_source.assert_called_once_with(
+        hass, entry.runtime_data.rpc.bluetooth_source
+    )
+    assert result["type"] is FlowResultType.FORM
+    options = result["data_schema"].schema[CONF_BLE_ALLOWED_ADDRESSES].config["options"]
+    assert options == [
+        {"value": "11:22:33:44:55:66", "label": "11:22:33:44:55:66"},
+        {"value": "AA:BB:CC:DD:EE:FF", "label": "Victron (AA:BB:CC:DD:EE:FF)"},
+        {"value": "CC:DD:EE:FF:00:11", "label": "CC:DD:EE:FF:00:11"},
+    ]
 
 
 @pytest.mark.parametrize(
