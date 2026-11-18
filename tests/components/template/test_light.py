@@ -1832,6 +1832,7 @@ async def test_max_mireds_template(
     [
         (2500, "{{ 2500 }}"),
         (2000, "{{ 0 }}"),
+        (2000, "{{ x - 12 }}"),
         (2000, "None"),
         (2000, "{{ none }}"),
         (2000, ""),
@@ -1862,6 +1863,7 @@ async def test_min_kelvin_template(
     [
         (5000, "{{ 5000 }}"),
         (6535, "{{ 0 }}"),
+        (6535, "{{ x - 12 }}"),
         (6535, "None"),
         (6535, "{{ none }}"),
         (6535, ""),
@@ -1879,25 +1881,95 @@ async def test_max_kelvin_template(
     assert state.attributes.get("max_color_temp_kelvin") == expected_max_kelvin
 
 
-@pytest.mark.parametrize(("count", "attribute_template"), [(1, "{{ x - 12 }}")])
+@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("style", "attribute", "state_attribute", "expected"),
-    [
-        (ConfigurationStyle.MODERN, "min_kelvin", "min_color_temp_kelvin", None),
-        (ConfigurationStyle.TRIGGER, "min_kelvin", "min_color_temp_kelvin", 2000),
-        (ConfigurationStyle.MODERN, "max_kelvin", "max_color_temp_kelvin", None),
-        (ConfigurationStyle.TRIGGER, "max_kelvin", "max_color_temp_kelvin", 6535),
-    ],
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
-@pytest.mark.usefixtures("setup_light_with_kelvin")
-async def test_kelvin_range_template_error(
-    hass: HomeAssistant, state_attribute: str, expected: int | None
+@pytest.mark.parametrize(
+    "option", ["min_mireds", "max_mireds", "min_kelvin", "max_kelvin"]
+)
+async def test_color_temp_range_template_error_rgbww(
+    hass: HomeAssistant, count: int, style: ConfigurationStyle, option: str
 ) -> None:
-    """Test a template error in the kelvin range behaves like the mireds range."""
+    """Test a template error in the range keeps the light working in RGBWW mode."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        count,
+        {
+            option: "{{ x - 12 }}",
+            "rgbww": "{{ (255, 0, 0, 10, 10) }}",
+            **RGBWW_ACTION,
+            **COLOR_TEMP_ACTION,
+        },
+        "{{ 1==1 }}",
+        ON_OFF_ACTIONS,
+    )
     await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state is not None
-    assert state.attributes.get(state_attribute) == expected
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == ColorMode.RGBWW
+    assert state.attributes["min_color_temp_kelvin"] == 2000
+    assert state.attributes["max_color_temp_kelvin"] == 6535
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("config", "first_bound", "second_bound"),
+    [
+        pytest.param(
+            {
+                "temperature_kelvin": "{{ 2500 }}",
+                "min_kelvin": "{{ states('sensor.bound') | int }}",
+            },
+            3000,
+            2000,
+            id="kelvin",
+        ),
+        pytest.param(
+            {
+                "temperature": "{{ 400 }}",
+                "max_mireds": "{{ states('sensor.bound') | int }}",
+            },
+            333,
+            500,
+            id="mireds",
+        ),
+    ],
+)
+async def test_temperature_revalidated_when_range_changes(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    first_bound: int,
+    second_bound: int,
+) -> None:
+    """Test the temperature is revalidated when the range widens and narrows."""
+    hass.states.async_set("sensor.bound", str(first_bound))
+    await setup_entity(
+        hass, TEST_LIGHT, style, count, config, "{{ 1==1 }}", ON_OFF_COLOR_TEMP_ACTIONS
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] is None
+
+    # The unchanged temperature becomes valid when the range widens
+    hass.states.async_set("sensor.bound", str(second_bound))
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_OFF)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] == 2500
+
+    # And invalid again when the range narrows
+    hass.states.async_set("sensor.bound", str(first_bound))
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_temp_kelvin"] is None
 
 
 @pytest.mark.parametrize(("count", "extra_config"), [(1, ON_OFF_COLOR_TEMP_ACTIONS)])
