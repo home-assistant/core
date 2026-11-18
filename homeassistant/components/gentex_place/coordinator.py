@@ -1,6 +1,7 @@
 """Coordinator for Place integration — MQTT push for device shadow updates."""
 
 from dataclasses import replace
+from http import HTTPStatus
 import logging
 from typing import NoReturn, override
 
@@ -26,7 +27,10 @@ def raise_mapped_fulfillment_error(
     err: ClientError | PlaceFulfillmentError,
 ) -> NoReturn:
     """Map a Place fulfillment API failure to the matching config entry error."""
-    if isinstance(err, ClientResponseError) and 400 <= err.status <= 499:
+    if isinstance(err, ClientResponseError) and err.status in (
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.FORBIDDEN,
+    ):
         raise ConfigEntryAuthFailed(err) from err
     raise ConfigEntryNotReady(err) from err
 

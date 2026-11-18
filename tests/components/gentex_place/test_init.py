@@ -433,19 +433,37 @@ async def test_setup_auth_transient_failure(
     "mock_get_iot_credentials",
     "mock_mqtt_client",
 )
-async def test_setup_enable_auth_failure(
+@pytest.mark.parametrize("method", ["enable", "discover"])
+@pytest.mark.parametrize(
+    ("status", "expected_state"),
+    [
+        pytest.param(HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR, id="401"),
+        pytest.param(HTTPStatus.FORBIDDEN, ConfigEntryState.SETUP_ERROR, id="403"),
+        pytest.param(HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY, id="400"),
+        pytest.param(
+            HTTPStatus.TOO_MANY_REQUESTS, ConfigEntryState.SETUP_RETRY, id="429"
+        ),
+        pytest.param(
+            HTTPStatus.SERVICE_UNAVAILABLE, ConfigEntryState.SETUP_RETRY, id="503"
+        ),
+    ],
+)
+async def test_setup_fulfillment_http_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_provider: AsyncMock,
+    method: str,
+    status: HTTPStatus,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that a 401 from the fulfillment API fails setup permanently."""
-    mock_provider.enable.side_effect = ClientResponseError(
-        request_info=MagicMock(), history=(), status=HTTPStatus.UNAUTHORIZED
+    """Map fulfillment API HTTP errors to the appropriate setup state."""
+    getattr(mock_provider, method).side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=status
     )
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures(
@@ -453,19 +471,34 @@ async def test_setup_enable_auth_failure(
     "mock_get_iot_credentials",
     "mock_mqtt_client",
 )
-async def test_setup_enable_transient_failure(
+@pytest.mark.parametrize("method", ["enable", "discover"])
+async def test_setup_fulfillment_rate_limit_retries(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_provider: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    method: str,
 ) -> None:
-    """Test that a 5xx from the fulfillment API retries setup."""
-    mock_provider.enable.side_effect = ClientResponseError(
-        request_info=MagicMock(), history=(), status=HTTPStatus.SERVICE_UNAVAILABLE
-    )
+    """A fulfillment API rate limit is retried and setup recovers."""
+    provider_method = getattr(mock_provider, method)
+    provider_method.side_effect = [
+        ClientResponseError(
+            request_info=MagicMock(), history=(), status=HTTPStatus.TOO_MANY_REQUESTS
+        ),
+        provider_method.return_value,
+    ]
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert provider_method.await_count == 2
 
 
 @pytest.mark.usefixtures(
@@ -498,46 +531,6 @@ async def test_setup_enable_fulfillment_error(
 ) -> None:
     """Test that a business-logic failure from the fulfillment API retries setup."""
     mock_provider.enable.side_effect = PlaceFulfillmentError("not authorized")
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures(
-    "aioclient_mock_fixture",
-    "mock_get_iot_credentials",
-    "mock_mqtt_client",
-)
-async def test_setup_discover_auth_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-) -> None:
-    """Test that a 401 from device discovery fails setup permanently."""
-    mock_provider.discover.side_effect = ClientResponseError(
-        request_info=MagicMock(), history=(), status=HTTPStatus.UNAUTHORIZED
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-@pytest.mark.usefixtures(
-    "aioclient_mock_fixture",
-    "mock_get_iot_credentials",
-    "mock_mqtt_client",
-)
-async def test_setup_discover_transient_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-) -> None:
-    """Test that a 5xx from device discovery retries setup."""
-    mock_provider.discover.side_effect = ClientResponseError(
-        request_info=MagicMock(), history=(), status=HTTPStatus.SERVICE_UNAVAILABLE
-    )
 
     await setup_integration(hass, mock_config_entry)
 
