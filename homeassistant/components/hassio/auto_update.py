@@ -12,6 +12,7 @@ from aiohasupervisor.models import UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
+from homeassistant.components.update import async_discard_snapshot
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -468,9 +469,11 @@ class AutoUpdateManager:
         self._attempted_window = window
         await self._store.async_save(self._data_to_save())
 
-        backup = async_get_update_options(self._hass, self._entry)[
-            OPTION_CORE_BACKUP_BEFORE_UPDATE
-        ]
+        backup = bool(
+            async_get_update_options(self._hass, self._entry)[
+                OPTION_CORE_BACKUP_BEFORE_UPDATE
+            ]
+        )
         try:
             if backup:
                 # Imported here like update_helper does, to keep backup out of
@@ -479,7 +482,7 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
-            await snapshot_core_before_update(self._hass)
+            await snapshot_core_before_update(self._hass, backup=backup, automatic=True)
 
             # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
@@ -498,6 +501,7 @@ class AutoUpdateManager:
                     "it is no longer due or safe to install",
                     version,
                 )
+                await async_discard_snapshot(self._hass)
                 return
 
             _LOGGER.info("Installing Home Assistant %s automatically", version)

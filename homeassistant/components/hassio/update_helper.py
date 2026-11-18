@@ -9,6 +9,7 @@ from aiohasupervisor.models import (
 
 from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
+    async_discard_snapshot,
     async_snapshot_before_update,
 )
 from homeassistant.core import HomeAssistant
@@ -45,12 +46,16 @@ async def update_addon(
         ) from err
 
 
-async def snapshot_core_before_update(hass: HomeAssistant) -> None:
+async def snapshot_core_before_update(
+    hass: HomeAssistant, *, backup: bool, automatic: bool
+) -> None:
     """Save the run before a Core update for the update report of its entity."""
     if entity_id := er.async_get(hass).async_get_entity_id(
         UPDATE_DOMAIN, DOMAIN, f"home_assistant_core_{ATTR_VERSION_LATEST}"
     ):
-        await async_snapshot_before_update(hass, entity_id)
+        await async_snapshot_before_update(
+            hass, entity_id, backup=backup, automatic=automatic
+        )
 
 
 async def update_core(
@@ -73,12 +78,17 @@ async def update_core(
         await backup_core_before_update(hass)
 
     if snapshot:
-        await snapshot_core_before_update(hass)
+        await snapshot_core_before_update(hass, backup=backup, automatic=False)
     try:
         await client.homeassistant.update(
             HomeAssistantUpdateOptions(version=version, backup=False)
         )
     except SupervisorError as err:
+        # Supervisor stops Home Assistant during the update; the request may
+        # fail then while the update goes on. Best effort: is_stopping is set
+        # once the shutdown is under way.
+        if not hass.is_stopping:
+            await async_discard_snapshot(hass)
         raise HomeAssistantError(f"Error updating Home Assistant Core: {err}") from err
 
 

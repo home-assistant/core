@@ -611,6 +611,9 @@ async def test_window_crossing_midnight(
     )
 
     assert _installed(supervisor_client) == ["2026.10.2"]
+    before_update = hass_storage[UPDATE_REPORT_STORAGE_KEY]["data"]["before_update"]
+    assert before_update["backup"] is False
+    assert before_update["automatic"] is True
 
 
 @pytest.mark.parametrize(
@@ -812,6 +815,9 @@ async def test_backup_before_update(
 
     mock_backup.assert_called_once_with(hass)
     assert _installed(supervisor_client) == ["2026.10.2"]
+    before_update = hass_storage[UPDATE_REPORT_STORAGE_KEY]["data"]["before_update"]
+    assert before_update["backup"] is True
+    assert before_update["automatic"] is True
 
 
 async def test_one_attempt_per_window(
@@ -1224,6 +1230,8 @@ async def test_turned_off_while_saving(
         )
 
     supervisor_client.homeassistant.update.assert_not_called()
+    # The update did not start, so the next run is not compared with it.
+    assert hass_storage[UPDATE_REPORT_STORAGE_KEY]["data"]["before_update"] is None
 
 
 async def test_withdrawn_then_replacement_skipped(

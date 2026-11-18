@@ -1,77 +1,97 @@
-"""Report what got worse after a Home Assistant Core update."""
+"""Report the repair issues that appeared after a Home Assistant Core update."""
 
 from datetime import datetime, timedelta
 from operator import itemgetter
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from awesomeversion import AwesomeVersion
 import probatio
 
 from homeassistant.components import automation, script, websocket_api
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, __version__
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.const import __version__
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ulid import ulid_now
+
+from .const import DOMAIN
 
 DATA_UPDATE_REPORT: HassKey[UpdateReport] = HassKey("update_report")
 STORAGE_KEY = "update.report"
 STORAGE_VERSION = 1
 # Integrations that poll a cloud service can take minutes to come up.
 STARTUP_GRACE = timedelta(minutes=5)
+MAX_REPORTS = 10
+STALE_ISSUE_PREFIX = "stale_entity_"
+
+ERROR_ISSUE_SEVERITIES = {ir.IssueSeverity.ERROR, ir.IssueSeverity.CRITICAL}
+REFERENCING = {
+    "automation": automation.automations_with_entity,
+    "script": script.scripts_with_entity,
+}
 
 
 class RunSnapshot(TypedDict):
-    """What a run of Home Assistant looked like."""
+    """What a run of Home Assistant looked like when an update started."""
 
     # Entity registry id of the update entity the report belongs to
     update_entity: str
     version: str
     created: str
-    # domain -> {entry_id: title}, only entries that were loaded
-    config_entries: dict[str, dict[str, str]]
+    backup: bool
+    automatic: bool
     # platform -> {registry id: entity_id}, only enabled entities
     entities: dict[str, dict[str, str]]
-    # registry ids of entities without a state or unavailable
-    unavailable: list[str]
-    # registry ids of entities with an unknown state
-    unknown: list[str]
-    # (domain, issue_id) of active issues that are not ignored, without
-    # breaking changes
+    # (domain, issue_id) of active issues that are not ignored
     issues: list[list[str]]
-    # (domain, issue_id) of issues with a breaks_in_ha_version
-    upcoming: list[list[str]]
 
 
 class Report(TypedDict):
-    """What got worse after an update."""
+    """The repair issues that appeared since an update."""
 
+    id: str
     from_version: str
     to_version: str
+    update_started: str
+    backup: bool
+    automatic: bool
+    # When Home Assistant was running again after the update
+    started: str | None
     created: str | None
     pending: bool
-    config_entries: list[dict[str, Any]]
-    entities_unavailable: list[dict[str, Any]]
-    entities_renamed: list[dict[str, Any]]
-    entities_removed: list[dict[str, Any]]
-    issues: list[dict[str, str]]
-    upcoming: list[dict[str, Any]]
+    severity: str | None
+    issues: list[dict[str, str | None]]
+
+
+class PendingReport(TypedDict):
+    """An update whose report is made once startup has settled."""
+
+    id: str
+    baseline: RunSnapshot
+    started: str | None
 
 
 class StoredData(TypedDict):
-    """Stored snapshots and the last report."""
+    """Stored snapshots and reports."""
 
     before_update: RunSnapshot | None
-    baseline: RunSnapshot | None
-    report: Report | None
+    pending: PendingReport | None
+    # Entity registry id of the update entity -> reports, newest first
+    reports: dict[str, list[Report]]
 
 
 class UpdateReport:
@@ -80,29 +100,34 @@ class UpdateReport:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the update report."""
         self.hass = hass
-        self.baseline: RunSnapshot | None = None
-        self.report: Report | None = None
         self._before_update: RunSnapshot | None = None
+        self._pending: PendingReport | None = None
+        self._reports: dict[str, list[Report]] = {}
         self._store: Store[StoredData] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._unsub_stale: CALLBACK_TYPE | None = None
 
     async def async_load(self) -> None:
-        """Load the stored data; a snapshot from before an update becomes the baseline."""
+        """Load the stored data; a snapshot from before an update becomes pending."""
         if (stored := await self._store.async_load()) is None:
             return
-        self.baseline = stored["baseline"]
-        self.report = stored["report"]
+        self._pending = stored["pending"]
+        self._reports = stored["reports"]
         if (before_update := stored["before_update"]) is None:
             return
         # A failed update leaves the version unchanged; drop its snapshot.
         if before_update["version"] != __version__:
-            self.baseline = before_update
-            self.report = None
+            self._pending = {
+                "id": ulid_now(),
+                "baseline": before_update,
+                "started": None,
+            }
         await self._async_save()
 
     @callback
     def async_start(self) -> None:
         """Make the report once startup has settled, if one is pending."""
-        if self.baseline is None or self.report is not None:
+        self._async_track_stale_issues()
+        if self._pending is None:
             return
         job = HassJob(
             self._async_startup_settled,
@@ -112,240 +137,306 @@ class UpdateReport:
 
         @callback
         def _async_started(hass: HomeAssistant) -> None:
+            # A restart within the grace period keeps the first start.
+            if self._pending is not None and self._pending["started"] is None:
+                self._pending["started"] = dt_util.utcnow().isoformat()
+                self._store.async_delay_save(self._data_to_save)
             async_call_later(hass, STARTUP_GRACE, job)
 
         async_at_started(self.hass, _async_started)
 
     async def _async_startup_settled(self, _now: datetime) -> None:
+        # The next update may have finished the report already.
+        if self._pending is None:
+            return
+        self._async_finish_pending()
+        await self._async_save()
+
+    @callback
+    def _async_finish_pending(self) -> None:
         if TYPE_CHECKING:
-            assert self.baseline is not None
-        self.report = async_diff(self.hass, self.baseline, dt_util.utcnow())
-        await self._async_save()
+            assert self._pending is not None
+        baseline = self._pending["baseline"]
+        # Created first, so they count as issues that appeared since the update
+        _async_prune_stale_reference_issues(self.hass)
+        _async_create_stale_reference_issues(self.hass, baseline)
+        reports = self._reports.setdefault(baseline["update_entity"], [])
+        reports.insert(0, async_diff(self.hass, self._pending, dt_util.utcnow()))
+        del reports[MAX_REPORTS:]
+        self._pending = None
+        self._async_track_stale_issues()
 
-    async def async_before_update(self, update_entity: str) -> None:
-        """Save a snapshot of the running instance before it is updated."""
-        self._before_update = async_take_snapshot(self.hass, update_entity)
-        await self._async_save()
-
-    async def _async_save(self) -> None:
-        await self._store.async_save(
-            {
-                "before_update": self._before_update,
-                "baseline": self.baseline,
-                "report": self.report,
-            }
+    @callback
+    def _async_track_stale_issues(self) -> None:
+        """Watch the automations and scripts with a stale reference for a fix."""
+        if self._unsub_stale is not None:
+            self._unsub_stale()
+            self._unsub_stale = None
+        if not (referencing := _async_stale_reference_issues(self.hass)):
+            return
+        self._unsub_stale = async_track_state_change_event(
+            self.hass, referencing, self._async_stale_reference_changed
         )
 
     @callback
-    def async_get_report(self, update_entity: str) -> Report | None:
-        """Return the last report of an update entity, live while pending."""
-        if self.baseline is None or self.baseline["update_entity"] != update_entity:
-            return None
-        if self.report is not None:
-            return self.report
-        return async_diff(self.hass, self.baseline, None)
+    def _async_stale_reference_changed(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        if _async_prune_stale_reference_issues(self.hass, event.data["entity_id"]):
+            self._async_track_stale_issues()
+
+    async def async_before_update(
+        self, update_entity: str, *, backup: bool, automatic: bool
+    ) -> None:
+        """Save a snapshot of the running instance before it is updated."""
+        # This run is the one the pending report is about; it ends now.
+        if self._pending is not None:
+            self._async_finish_pending()
+        self._before_update = async_take_snapshot(
+            self.hass, update_entity, backup=backup, automatic=automatic
+        )
+        await self._async_save()
+
+    async def async_discard_before_update(self) -> None:
+        """Forget the snapshot of an update that did not start."""
+        self._before_update = None
+        await self._async_save()
+
+    async def _async_save(self) -> None:
+        await self._store.async_save(self._data_to_save())
+
+    @callback
+    def _data_to_save(self) -> StoredData:
+        return {
+            "before_update": self._before_update,
+            "pending": self._pending,
+            "reports": self._reports,
+        }
+
+    @callback
+    def async_get_reports(self, update_entity: str) -> list[Report]:
+        """Return the reports of an update entity newest first, live while pending."""
+        reports = self._reports.get(update_entity, [])
+        if (
+            self._pending is None
+            or self._pending["baseline"]["update_entity"] != update_entity
+        ):
+            return reports
+        return [async_diff(self.hass, self._pending, None), *reports][:MAX_REPORTS]
+
+    @callback
+    def async_get_report(self, update_entity: str, report_id: str) -> Report | None:
+        """Return a report of an update entity, live while pending."""
+        if (
+            self._pending is not None
+            and self._pending["id"] == report_id
+            and self._pending["baseline"]["update_entity"] == update_entity
+        ):
+            return async_diff(self.hass, self._pending, None)
+        return next(
+            (
+                report
+                for report in self._reports.get(update_entity, [])
+                if report["id"] == report_id
+            ),
+            None,
+        )
 
 
 @callback
-def _async_active_issues(hass: HomeAssistant) -> list[tuple[str, str]]:
+def _async_active_issues(hass: HomeAssistant) -> list[ir.IssueEntry]:
     issue_registry = ir.async_get(hass)
     return [
-        key
-        for key, issue in issue_registry.issues.items()
+        issue
+        for issue in issue_registry.issues.values()
         if issue.active
         and not issue_registry.async_is_hidden(issue)
         and issue.dismissed_version is None
-        and not issue.breaks_in_ha_version
     ]
 
 
 @callback
-def async_take_snapshot(hass: HomeAssistant, update_entity: str) -> RunSnapshot:
+def async_take_snapshot(
+    hass: HomeAssistant, update_entity: str, *, backup: bool, automatic: bool
+) -> RunSnapshot:
     """Return a snapshot of the running instance."""
-    config_entries: dict[str, dict[str, str]] = {}
-    for entry in hass.config_entries.async_entries():
-        if entry.state is ConfigEntryState.LOADED:
-            config_entries.setdefault(entry.domain, {})[entry.entry_id] = entry.title
-
     entities: dict[str, dict[str, str]] = {}
-    unavailable: list[str] = []
-    unknown: list[str] = []
     for entity_entry in er.async_get(hass).entities.values():
-        if entity_entry.disabled_by is not None:
-            continue
-        entities.setdefault(entity_entry.platform, {})[entity_entry.id] = (
-            entity_entry.entity_id
-        )
-        if (state := hass.states.get(entity_entry.entity_id)) is None or (
-            state.state == STATE_UNAVAILABLE
-        ):
-            unavailable.append(entity_entry.id)
-        elif state.state == STATE_UNKNOWN:
-            unknown.append(entity_entry.id)
+        if entity_entry.disabled_by is None:
+            entities.setdefault(entity_entry.platform, {})[entity_entry.id] = (
+                entity_entry.entity_id
+            )
 
     return {
         "update_entity": update_entity,
         "version": __version__,
         "created": dt_util.utcnow().isoformat(),
-        "config_entries": config_entries,
+        "backup": backup,
+        "automatic": automatic,
         "entities": entities,
-        "unavailable": unavailable,
-        "unknown": unknown,
-        "issues": [list(key) for key in _async_active_issues(hass)],
-        "upcoming": [
-            [domain, issue_id]
-            for (domain, issue_id), issue in ir.async_get(hass).issues.items()
-            if issue.breaks_in_ha_version
+        "issues": [
+            [issue.domain, issue.issue_id] for issue in _async_active_issues(hass)
         ],
     }
 
 
 @callback
-def _async_failed_config_entries(
+def _async_create_stale_reference_issues(
     hass: HomeAssistant, baseline: RunSnapshot
-) -> list[dict[str, Any]]:
-    """Return the config entries that were loaded before and are not now."""
-    failed: list[dict[str, Any]] = []
-    for domain, titles in baseline["config_entries"].items():
-        for entry_id, title in titles.items():
-            if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
-                failed.append(
-                    {
-                        "entry_id": entry_id,
-                        "domain": domain,
-                        "title": title,
-                        "state": None,
-                        "translation_domain": None,
-                        "translation_key": None,
-                        "translation_placeholders": None,
-                    }
-                )
-            elif (
-                entry.disabled_by is None and entry.state is not ConfigEntryState.LOADED
+) -> None:
+    """Create a repair for each automation and script using an entity ID that is gone."""
+    entity_registry = er.async_get(hass)
+    for entity_ids in baseline["entities"].values():
+        for registry_id, old_entity_id in entity_ids.items():
+            if _async_entity_exists(hass, old_entity_id):
+                continue
+            entity_entry = entity_registry.entities.get_entry(registry_id)
+            new_entity_id = entity_entry.entity_id if entity_entry else None
+            for kind, referencing in REFERENCING.items():
+                for kind_entity_id in referencing(hass, old_entity_id):
+                    _async_create_stale_reference_issue(
+                        hass, kind, kind_entity_id, old_entity_id, new_entity_id
+                    )
+
+
+@callback
+def _async_entity_exists(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return whether references to entity_id work, maybe through another entity."""
+    return (
+        er.async_get(hass).async_is_registered(entity_id)
+        or hass.states.get(entity_id) is not None
+    )
+
+
+@callback
+def _async_stale_reference_issues(
+    hass: HomeAssistant,
+) -> dict[str, list[ir.IssueEntry]]:
+    """Return the stale reference issues by the automation or script they are about."""
+    issues: dict[str, list[ir.IssueEntry]] = {}
+    for (domain, issue_id), issue in ir.async_get(hass).issues.items():
+        if domain != DOMAIN or not issue_id.startswith(STALE_ISSUE_PREFIX):
+            continue
+        if TYPE_CHECKING:
+            assert issue.translation_placeholders is not None
+        issues.setdefault(issue.translation_placeholders["kind_entity_id"], []).append(
+            issue
+        )
+    return issues
+
+
+@callback
+def _async_prune_stale_reference_issues(
+    hass: HomeAssistant, kind_entity_id: str | None = None
+) -> bool:
+    """Delete the stale reference issues that are fixed; return whether any was."""
+    deleted = False
+    for referencing_id, issues in _async_stale_reference_issues(hass).items():
+        if kind_entity_id is not None and referencing_id != kind_entity_id:
+            continue
+        for issue in issues:
+            if TYPE_CHECKING:
+                assert issue.translation_placeholders is not None
+            if _async_is_stale_reference(
+                hass, referencing_id, issue.translation_placeholders["old_entity_id"]
             ):
-                failed.append(
-                    {
-                        "entry_id": entry_id,
-                        "domain": entry.domain,
-                        "title": entry.title,
-                        "state": entry.state.value,
-                        "translation_domain": entry.error_reason_translation_domain,
-                        "translation_key": entry.error_reason_translation_key,
-                        "translation_placeholders": (
-                            entry.error_reason_translation_placeholders
-                        ),
-                    }
-                )
-    return sorted(failed, key=itemgetter("domain", "title"))
+                continue
+            ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
+            deleted = True
+    return deleted
+
+
+@callback
+def _async_is_stale_reference(
+    hass: HomeAssistant, kind_entity_id: str, old_entity_id: str
+) -> bool:
+    """Return whether the automation or script still uses the missing entity."""
+    if hass.states.get(kind_entity_id) is None:
+        # Without a state it is being reloaded, unless it was deleted
+        return er.async_get(hass).async_is_registered(kind_entity_id)
+    if _async_entity_exists(hass, old_entity_id):
+        return False
+    referencing = REFERENCING[kind_entity_id.partition(".")[0]]
+    return kind_entity_id in referencing(hass, old_entity_id)
+
+
+@callback
+def _async_create_stale_reference_issue(
+    hass: HomeAssistant,
+    kind: str,
+    kind_entity_id: str,
+    old_entity_id: str,
+    new_entity_id: str | None,
+) -> None:
+    entry = er.async_get(hass).async_get(kind_entity_id)
+    state = hass.states.get(kind_entity_id)
+    placeholders = {
+        "name": state.name if state else kind_entity_id,
+        "kind_entity_id": kind_entity_id,
+        "old_entity_id": old_entity_id,
+        "to_version": __version__,
+        # Only automations and scripts with a unique id have an editor
+        "edit": f"/config/{kind}/edit/{entry.unique_id}"
+        if entry and entry.unique_id
+        else f"/config/{kind}/show/{kind_entity_id}",
+    }
+    if new_entity_id is not None:
+        placeholders["new_entity_id"] = new_entity_id
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"stale_entity_{kind_entity_id}_{old_entity_id}",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=(
+            "stale_entity_removed" if new_entity_id is None else "stale_entity_renamed"
+        ),
+        translation_placeholders=placeholders,
+    )
 
 
 @callback
 def async_diff(
-    hass: HomeAssistant, baseline: RunSnapshot, created: datetime | None
+    hass: HomeAssistant, pending: PendingReport, created: datetime | None
 ) -> Report:
-    """Return what got worse compared to the baseline run."""
-    config_entries = _async_failed_config_entries(hass, baseline)
-    failed_entry_ids = {entry["entry_id"] for entry in config_entries}
-
-    entity_registry = er.async_get(hass)
-    was_unavailable = set(baseline["unavailable"])
-    was_unknown = set(baseline["unknown"])
-    removed: list[dict[str, Any]] = []
-    renamed: list[dict[str, Any]] = []
-    unavailable: list[dict[str, Any]] = []
-    for platform, entity_ids in baseline["entities"].items():
-        for registry_id, old_entity_id in entity_ids.items():
-            if (
-                entity_entry := entity_registry.entities.get_entry(registry_id)
-            ) is None:
-                removed.append({"entity_id": old_entity_id, "platform": platform})
-                continue
-            entity_id = entity_entry.entity_id
-            if entity_id != old_entity_id:
-                renamed.append(
-                    {
-                        "old_entity_id": old_entity_id,
-                        "entity_id": entity_id,
-                        "platform": platform,
-                    }
-                )
-            # Entities of a failed config entry are covered by the entry.
-            if (
-                registry_id in was_unavailable
-                or entity_entry.disabled_by is not None
-                or entity_entry.config_entry_id in failed_entry_ids
-            ):
-                continue
-            # Unknown is only worse than a value; an unpressed button stays unknown.
-            if (state := hass.states.get(entity_id)) is not None and (
-                state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-                or (state.state == STATE_UNKNOWN and registry_id in was_unknown)
-            ):
-                continue
-            unavailable.append(
-                {
-                    "entity_id": entity_id,
-                    "platform": platform,
-                    "state": state.state if state else None,
-                }
-            )
-
+    """Return the issues that appeared since the baseline run."""
+    baseline = pending["baseline"]
     old_issues = {(domain, issue_id) for domain, issue_id in baseline["issues"]}
-    issues = [
-        {"domain": domain, "issue_id": issue_id}
-        for domain, issue_id in _async_active_issues(hass)
-        if (domain, issue_id) not in old_issues
-    ]
-
-    by_entity_id = itemgetter("entity_id")
+    issues = sorted(
+        (
+            {
+                "domain": issue.domain,
+                "issue_id": issue.issue_id,
+                "severity": issue.severity,
+            }
+            for issue in _async_active_issues(hass)
+            if (issue.domain, issue.issue_id) not in old_issues
+        ),
+        key=itemgetter("domain", "issue_id"),
+    )
     return {
+        "id": pending["id"],
         "from_version": baseline["version"],
         "to_version": __version__,
+        "update_started": baseline["created"],
+        "backup": baseline["backup"],
+        "automatic": baseline["automatic"],
+        "started": pending["started"],
         "created": created.isoformat() if created else None,
         "pending": created is None,
-        "config_entries": config_entries,
-        "entities_unavailable": sorted(unavailable, key=by_entity_id),
-        "entities_renamed": sorted(renamed, key=by_entity_id),
-        "entities_removed": sorted(removed, key=by_entity_id),
-        "issues": sorted(issues, key=itemgetter("domain", "issue_id")),
-        "upcoming": _async_upcoming(
-            hass,
-            {(domain, issue_id) for domain, issue_id in baseline["upcoming"]},
-        ),
+        "severity": _severity(issues),
+        "issues": issues,
     }
 
 
-@callback
-def _async_upcoming(
-    hass: HomeAssistant, known: set[tuple[str, str]]
-) -> list[dict[str, Any]]:
-    """Return new issues of set up integrations that break in a future version."""
-    issue_registry = ir.async_get(hass)
-    current = AwesomeVersion(__version__)
-    upcoming = [
-        {
-            "domain": issue.domain,
-            "issue_id": issue.issue_id,
-            "issue_domain": issue.issue_domain,
-            "breaks_in_ha_version": issue.breaks_in_ha_version,
-            "dismissed": issue.dismissed_version is not None,
-        }
-        for key, issue in issue_registry.issues.items()
-        if key not in known
-        and issue.active
-        and not issue_registry.async_is_hidden(issue)
-        and issue.breaks_in_ha_version
-        and AwesomeVersion(issue.breaks_in_ha_version) > current
-        and (issue.issue_domain or issue.domain) in hass.config.components
-    ]
-    return sorted(
-        upcoming,
-        key=lambda issue: (
-            AwesomeVersion(issue["breaks_in_ha_version"]),
-            issue["domain"],
-            issue["issue_id"],
-        ),
-    )
+def _severity(issues: list[dict[str, str | None]]) -> str | None:
+    """Return how bad the new issues are."""
+    if any(issue["severity"] in ERROR_ISSUE_SEVERITIES for issue in issues):
+        return "error"
+    if issues:
+        return "warning"
+    return None
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -353,16 +444,63 @@ async def async_setup(hass: HomeAssistant) -> None:
     update_report = hass.data[DATA_UPDATE_REPORT] = UpdateReport(hass)
     await update_report.async_load()
     update_report.async_start()
+    websocket_api.async_register_command(hass, websocket_reports)
     websocket_api.async_register_command(hass, websocket_report)
 
 
-async def async_snapshot_before_update(hass: HomeAssistant, entity_id: str) -> None:
+async def async_snapshot_before_update(
+    hass: HomeAssistant, entity_id: str, *, backup: bool, automatic: bool
+) -> None:
     """Save the running instance before entity_id updates Home Assistant Core."""
     if (entity_entry := er.async_get(hass).async_get(entity_id)) is None or (
         update_report := hass.data.get(DATA_UPDATE_REPORT)
     ) is None:
         return
-    await update_report.async_before_update(entity_entry.id)
+    await update_report.async_before_update(
+        entity_entry.id, backup=backup, automatic=automatic
+    )
+
+
+async def async_discard_snapshot(hass: HomeAssistant) -> None:
+    """Forget the snapshot when the update did not start."""
+    if (update_report := hass.data.get(DATA_UPDATE_REPORT)) is not None:
+        await update_report.async_discard_before_update()
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "update/reports",
+        probatio.Required("entity_id"): cv.entity_id,
+    }
+)
+@callback
+def websocket_reports(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return the reports of the recent updates of an update entity."""
+    if (entity_entry := er.async_get(hass).async_get(msg["entity_id"])) is None:
+        connection.send_result(msg["id"], [])
+        return
+    connection.send_result(
+        msg["id"],
+        [
+            {
+                "id": report["id"],
+                "from_version": report["from_version"],
+                "to_version": report["to_version"],
+                "update_started": report["update_started"],
+                "created": report["created"],
+                "pending": report["pending"],
+                "severity": report["severity"],
+                "automatic": report["automatic"],
+                "issues": len(report["issues"]),
+            }
+            for report in hass.data[DATA_UPDATE_REPORT].async_get_reports(
+                entity_entry.id
+            )
+        ],
+    )
 
 
 @websocket_api.require_admin
@@ -370,60 +508,20 @@ async def async_snapshot_before_update(hass: HomeAssistant, entity_id: str) -> N
     {
         probatio.Required("type"): "update/report",
         probatio.Required("entity_id"): cv.entity_id,
+        probatio.Required("report_id"): str,
     }
 )
 @callback
 def websocket_report(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Return the report of the last update of an update entity."""
-    if (entity_entry := er.async_get(hass).async_get(msg["entity_id"])) is None or (
-        report := hass.data[DATA_UPDATE_REPORT].async_get_report(entity_entry.id)
-    ) is None:
+    """Return a report of an update of an update entity."""
+    if (entity_entry := er.async_get(hass).async_get(msg["entity_id"])) is None:
         connection.send_result(msg["id"], None)
         return
     connection.send_result(
         msg["id"],
-        {
-            **report,
-            "entities_removed": [
-                entity | _async_references(hass, entity["entity_id"])
-                for entity in report["entities_removed"]
-            ],
-            "entities_renamed": [
-                entity | _async_references(hass, entity["old_entity_id"])
-                for entity in report["entities_renamed"]
-            ],
-        },
-    )
-
-
-@callback
-def _async_references(
-    hass: HomeAssistant, entity_id: str
-) -> dict[str, list[dict[str, str | None]]]:
-    """Return the automations and scripts that still use an old entity ID."""
-    return {
-        "automations": _async_named(
-            hass, automation.automations_with_entity(hass, entity_id)
+        hass.data[DATA_UPDATE_REPORT].async_get_report(
+            entity_entry.id, msg["report_id"]
         ),
-        "scripts": _async_named(hass, script.scripts_with_entity(hass, entity_id)),
-    }
-
-
-@callback
-def _async_named(
-    hass: HomeAssistant, entity_ids: list[str]
-) -> list[dict[str, str | None]]:
-    entity_registry = er.async_get(hass)
-    return [
-        {
-            "entity_id": entity_id,
-            # The editor id, None when the automation or script is not editable
-            "id": entry.unique_id
-            if (entry := entity_registry.async_get(entity_id))
-            else None,
-            "name": state.name if (state := hass.states.get(entity_id)) else None,
-        }
-        for entity_id in sorted(entity_ids)
-    ]
+    )

@@ -1,342 +1,218 @@
 # serializer version: 1
-# name: test_update_report[pending]
+# name: test_report_by_id[other_entity]
+  None
+# ---
+# name: test_report_by_id[stored]
   dict({
-    'config_entries': list([
-      dict({
-        'domain': 'demo',
-        'entry_id': 'failed',
-        'state': 'setup_retry',
-        'title': 'Failed',
-        'translation_domain': 'demo',
-        'translation_key': 'cannot_connect',
-        'translation_placeholders': dict({
-          'host': '1.2.3.4',
-        }),
-      }),
-      dict({
-        'domain': 'old',
-        'entry_id': 'gone_entry',
-        'state': None,
-        'title': 'Gone',
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': None,
-      }),
-    ]),
-    'created': None,
-    'entities_removed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_gone',
-            'id': None,
-            'name': 'Uses gone',
-          }),
-        ]),
-        'entity_id': 'sensor.gone',
-        'platform': 'demo',
-        'scripts': list([
-        ]),
-      }),
-    ]),
-    'entities_renamed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_old_name',
-            'id': None,
-            'name': 'Uses old name',
-          }),
-        ]),
-        'entity_id': 'sensor.renamed',
-        'old_entity_id': 'sensor.old_name',
-        'platform': 'demo',
-        'scripts': list([
-          dict({
-            'entity_id': 'script.uses_old_name',
-            'id': 'uses_old_name',
-            'name': 'uses_old_name',
-          }),
-        ]),
-      }),
-    ]),
-    'entities_unavailable': list([
-      dict({
-        'entity_id': 'sensor.no_state',
-        'platform': 'demo',
-        'state': None,
-      }),
-      dict({
-        'entity_id': 'sensor.unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown',
-        'platform': 'demo',
-        'state': 'unknown',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown_to_unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-    ]),
+    'automatic': False,
+    'backup': False,
+    'created': '2026-10-31T12:00:00+00:00',
     'from_version': '2026.10.0',
+    'id': 'stored',
+    'issues': list([
+    ]),
+    'pending': False,
+    'severity': None,
+    'started': '2026-10-31T12:10:00+00:00',
+    'to_version': '2026.10.1',
+    'update_started': '2026-10-31T12:00:00+00:00',
+  })
+# ---
+# name: test_report_by_id[unknown_report]
+  None
+# ---
+# name: test_update_report[pending][issues]
+  dict({
+  })
+# ---
+# name: test_update_report[pending][report]
+  dict({
+    'automatic': True,
+    'backup': True,
+    'created': None,
+    'from_version': '2026.10.0',
+    'id': '01KA0000000000000000000000',
     'issues': list([
       dict({
         'domain': 'homeassistant',
+        'issue_id': 'new_error',
+        'severity': 'error',
+      }),
+      dict({
+        'domain': 'homeassistant',
         'issue_id': 'new_issue',
+        'severity': 'warning',
       }),
     ]),
     'pending': True,
-    'upcoming': list([
-      dict({
-        'breaks_in_ha_version': '2099.1.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_sooner',
-      }),
-      dict({
-        'breaks_in_ha_version': '2099.3.0',
-        'dismissed': True,
-        'domain': 'homeassistant',
-        'issue_domain': 'http',
-        'issue_id': 'breaks_dismissed',
-      }),
-      dict({
-        'breaks_in_ha_version': '2099.5.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_later',
-      }),
-    ]),
+    'severity': 'error',
+    'started': '2026-11-01T12:00:00+00:00',
+    'update_started': '2026-10-31T12:00:00+00:00',
   })
 # ---
-# name: test_update_report[pending_after_second_restart]
+# name: test_update_report[pending][reports]
+  list([
+    dict({
+      'automatic': True,
+      'created': None,
+      'from_version': '2026.10.0',
+      'id': '01KA0000000000000000000000',
+      'issues': 2,
+      'pending': True,
+      'severity': 'error',
+      'update_started': '2026-10-31T12:00:00+00:00',
+    }),
+  ])
+# ---
+# name: test_update_report[pending_after_second_restart][issues]
   dict({
-    'config_entries': list([
-      dict({
-        'domain': 'demo',
-        'entry_id': 'failed',
-        'state': 'setup_retry',
-        'title': 'Failed',
-        'translation_domain': 'demo',
-        'translation_key': 'cannot_connect',
-        'translation_placeholders': dict({
-          'host': '1.2.3.4',
-        }),
-      }),
-      dict({
-        'domain': 'old',
-        'entry_id': 'gone_entry',
-        'state': None,
-        'title': 'Gone',
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': None,
-      }),
-    ]),
+  })
+# ---
+# name: test_update_report[pending_after_second_restart][report]
+  dict({
+    'automatic': True,
+    'backup': True,
     'created': None,
-    'entities_removed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_gone',
-            'id': None,
-            'name': 'Uses gone',
-          }),
-        ]),
-        'entity_id': 'sensor.gone',
-        'platform': 'demo',
-        'scripts': list([
-        ]),
-      }),
-    ]),
-    'entities_renamed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_old_name',
-            'id': None,
-            'name': 'Uses old name',
-          }),
-        ]),
-        'entity_id': 'sensor.renamed',
-        'old_entity_id': 'sensor.old_name',
-        'platform': 'demo',
-        'scripts': list([
-          dict({
-            'entity_id': 'script.uses_old_name',
-            'id': 'uses_old_name',
-            'name': 'uses_old_name',
-          }),
-        ]),
-      }),
-    ]),
-    'entities_unavailable': list([
-      dict({
-        'entity_id': 'sensor.no_state',
-        'platform': 'demo',
-        'state': None,
-      }),
-      dict({
-        'entity_id': 'sensor.unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown',
-        'platform': 'demo',
-        'state': 'unknown',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown_to_unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-    ]),
     'from_version': '2026.10.0',
+    'id': '01KA0000000000000000000000',
     'issues': list([
       dict({
         'domain': 'homeassistant',
+        'issue_id': 'new_error',
+        'severity': 'error',
+      }),
+      dict({
+        'domain': 'homeassistant',
         'issue_id': 'new_issue',
+        'severity': 'warning',
       }),
     ]),
     'pending': True,
-    'upcoming': list([
-      dict({
-        'breaks_in_ha_version': '2099.1.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_sooner',
-      }),
-      dict({
-        'breaks_in_ha_version': '2099.3.0',
-        'dismissed': True,
-        'domain': 'homeassistant',
-        'issue_domain': 'http',
-        'issue_id': 'breaks_dismissed',
-      }),
-      dict({
-        'breaks_in_ha_version': '2099.5.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_later',
-      }),
-    ]),
+    'severity': 'error',
+    'started': '2026-10-31T12:10:00+00:00',
+    'update_started': '2026-10-31T12:00:00+00:00',
   })
 # ---
-# name: test_update_report[settled]
+# name: test_update_report[pending_after_second_restart][reports]
+  list([
+    dict({
+      'automatic': True,
+      'created': None,
+      'from_version': '2026.10.0',
+      'id': '01KA0000000000000000000000',
+      'issues': 2,
+      'pending': True,
+      'severity': 'error',
+      'update_started': '2026-10-31T12:00:00+00:00',
+    }),
+  ])
+# ---
+# name: test_update_report[settled][issues]
   dict({
-    'config_entries': list([
-      dict({
-        'domain': 'demo',
-        'entry_id': 'failed',
-        'state': 'setup_retry',
-        'title': 'Failed',
-        'translation_domain': 'demo',
-        'translation_key': 'cannot_connect',
-        'translation_placeholders': dict({
-          'host': '1.2.3.4',
-        }),
+    'stale_entity_automation.uses_gone_sensor.gone': dict({
+      'is_persistent': True,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'stale_entity_removed',
+      'translation_placeholders': dict({
+        'edit': '/config/automation/edit/uses_gone',
+        'kind_entity_id': 'automation.uses_gone',
+        'name': 'Uses gone',
+        'old_entity_id': 'sensor.gone',
       }),
-      dict({
-        'domain': 'old',
-        'entry_id': 'gone_entry',
-        'state': None,
-        'title': 'Gone',
-        'translation_domain': None,
-        'translation_key': None,
-        'translation_placeholders': None,
+    }),
+    'stale_entity_automation.uses_old_name_sensor.old_name': dict({
+      'is_persistent': True,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'stale_entity_renamed',
+      'translation_placeholders': dict({
+        'edit': '/config/automation/show/automation.uses_old_name',
+        'kind_entity_id': 'automation.uses_old_name',
+        'name': 'Uses old name',
+        'new_entity_id': 'sensor.renamed',
+        'old_entity_id': 'sensor.old_name',
       }),
-    ]),
+    }),
+    'stale_entity_script.uses_gone_sensor.gone': dict({
+      'is_persistent': True,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'stale_entity_removed',
+      'translation_placeholders': dict({
+        'edit': '/config/script/edit/uses_gone',
+        'kind_entity_id': 'script.uses_gone',
+        'name': 'uses_gone',
+        'old_entity_id': 'sensor.gone',
+      }),
+    }),
+    'stale_entity_script.uses_old_name_sensor.old_name': dict({
+      'is_persistent': True,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'stale_entity_renamed',
+      'translation_placeholders': dict({
+        'edit': '/config/script/edit/uses_old_name',
+        'kind_entity_id': 'script.uses_old_name',
+        'name': 'uses_old_name',
+        'new_entity_id': 'sensor.renamed',
+        'old_entity_id': 'sensor.old_name',
+      }),
+    }),
+  })
+# ---
+# name: test_update_report[settled][report]
+  dict({
+    'automatic': True,
+    'backup': True,
     'created': '2026-11-01T12:05:00+00:00',
-    'entities_removed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_gone',
-            'id': None,
-            'name': 'Uses gone',
-          }),
-        ]),
-        'entity_id': 'sensor.gone',
-        'platform': 'demo',
-        'scripts': list([
-        ]),
-      }),
-    ]),
-    'entities_renamed': list([
-      dict({
-        'automations': list([
-          dict({
-            'entity_id': 'automation.uses_old_name',
-            'id': None,
-            'name': 'Uses old name',
-          }),
-        ]),
-        'entity_id': 'sensor.renamed',
-        'old_entity_id': 'sensor.old_name',
-        'platform': 'demo',
-        'scripts': list([
-          dict({
-            'entity_id': 'script.uses_old_name',
-            'id': 'uses_old_name',
-            'name': 'uses_old_name',
-          }),
-        ]),
-      }),
-    ]),
-    'entities_unavailable': list([
-      dict({
-        'entity_id': 'sensor.no_state',
-        'platform': 'demo',
-        'state': None,
-      }),
-      dict({
-        'entity_id': 'sensor.unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown',
-        'platform': 'demo',
-        'state': 'unknown',
-      }),
-      dict({
-        'entity_id': 'sensor.unknown_to_unavailable',
-        'platform': 'demo',
-        'state': 'unavailable',
-      }),
-    ]),
     'from_version': '2026.10.0',
+    'id': '01KA0000000000000000000000',
     'issues': list([
       dict({
         'domain': 'homeassistant',
+        'issue_id': 'new_error',
+        'severity': 'error',
+      }),
+      dict({
+        'domain': 'homeassistant',
         'issue_id': 'new_issue',
+        'severity': 'warning',
+      }),
+      dict({
+        'domain': 'update',
+        'issue_id': 'stale_entity_automation.uses_gone_sensor.gone',
+        'severity': 'warning',
+      }),
+      dict({
+        'domain': 'update',
+        'issue_id': 'stale_entity_automation.uses_old_name_sensor.old_name',
+        'severity': 'warning',
+      }),
+      dict({
+        'domain': 'update',
+        'issue_id': 'stale_entity_script.uses_gone_sensor.gone',
+        'severity': 'warning',
+      }),
+      dict({
+        'domain': 'update',
+        'issue_id': 'stale_entity_script.uses_old_name_sensor.old_name',
+        'severity': 'warning',
       }),
     ]),
     'pending': False,
-    'upcoming': list([
-      dict({
-        'breaks_in_ha_version': '2099.1.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_sooner',
-      }),
-      dict({
-        'breaks_in_ha_version': '2099.5.0',
-        'dismissed': False,
-        'domain': 'homeassistant',
-        'issue_domain': 'update',
-        'issue_id': 'breaks_later',
-      }),
-    ]),
+    'severity': 'error',
+    'started': '2026-11-01T12:00:00+00:00',
+    'update_started': '2026-10-31T12:00:00+00:00',
   })
+# ---
+# name: test_update_report[settled][reports]
+  list([
+    dict({
+      'automatic': True,
+      'created': '2026-11-01T12:05:00+00:00',
+      'from_version': '2026.10.0',
+      'id': '01KA0000000000000000000000',
+      'issues': 6,
+      'pending': False,
+      'severity': 'error',
+      'update_started': '2026-10-31T12:00:00+00:00',
+    }),
+  ])
 # ---

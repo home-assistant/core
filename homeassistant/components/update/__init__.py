@@ -40,7 +40,7 @@ from .const import (
     UpdateServiceArgument,
 )
 from .entity import UpdateEntity, UpdateEntityDescription
-from .report import async_snapshot_before_update
+from .report import async_discard_snapshot, async_snapshot_before_update
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +77,7 @@ __all__ = [
     "UpdateEntityStateAttribute",
     "UpdateService",
     "UpdateServiceArgument",
+    "async_discard_snapshot",
     "async_snapshot_before_update",
 ]
 
