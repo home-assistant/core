@@ -81,8 +81,22 @@
     'config__search_integrations': dict({
       'additionalProperties': False,
       'properties': dict({
+        'category': dict({
+          'allOf': list([
+            dict({
+              'type': 'string',
+            }),
+            dict({
+              'format': 'strip',
+            }),
+            dict({
+              'format': 'lower',
+            }),
+          ]),
+          'description': "Filter results by category, like 'energy', or by subcategory, like 'energy.energy_prices'. A category includes its subcategories. An unknown category returns the known categories.",
+        }),
         'query': dict({
-          'description': 'Search text to match against integration name, domain, or brand (case-insensitive).',
+          'description': "Search text to match against integration name, domain, or brand (case-insensitive). Required if 'category' is not given.",
           'format': 'strip',
           'type': 'string',
         }),
@@ -96,9 +110,6 @@
           'type': 'string',
         }),
       }),
-      'required': list([
-        'query',
-      ]),
       'type': 'object',
     }),
     'config__start_flow': dict({

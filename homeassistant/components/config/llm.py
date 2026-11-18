@@ -12,7 +12,7 @@ import probatio
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.llm import LLMTools
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlowResult
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, translation
 from homeassistant.helpers.llm import (
@@ -137,8 +137,9 @@ def _iter_searchable_matches(
     descriptions: dict[str, Any],
     title_trans: dict[str, str],
     filter_type: str | None,
-) -> Iterator[tuple[int, str, str, str]]:
-    """Yield (rank, sort_name, domain, name) for config-flow integrations matching query.
+    category: str | None,
+) -> Iterator[tuple[int, str, str, str, list[str]]]:
+    """Yield (rank, sort_name, domain, name, categories) for matching config-flow integrations.
 
     Lower rank numbers sort first with heapq.nsmallest:
     - 0: exact match on domain or name
@@ -176,6 +177,11 @@ def _iter_searchable_matches(
         head = f"{domain} {name_f}".replace("_", " ")
         if not all(word in f"{head} {brand}" for word in words):
             continue
+        categories: list[str] = meta.get("categories", [])
+        if category is not None and not any(
+            cat == category or cat.startswith(f"{category}.") for cat in categories
+        ):
+            continue
         seen.add(domain)
         if query in (domain, name_f):
             rank = 0
@@ -183,7 +189,7 @@ def _iter_searchable_matches(
             rank = 1
         else:
             rank = 2
-        yield (rank, name_f, domain, name)
+        yield (rank, name_f, domain, name, categories)
 
 
 class GetConfigEntriesTool(Tool):
@@ -320,6 +326,23 @@ class ReloadConfigEntryTool(Tool):
         return ToolResult(data={"result": result})
 
 
+async def _async_get_categories(hass: HomeAssistant, language: str) -> JsonObjectType:
+    """Return the names of the integration categories and subcategories by slug."""
+    prefix = f"component.{HOMEASSISTANT_DOMAIN}.integration_category."
+    translations = await translation.async_get_translations(
+        hass, language, "integration_category", {HOMEASSISTANT_DOMAIN}
+    )
+    categories: JsonObjectType = {}
+    for key, name in translations.items():
+        # Keys are '<category>.name' or '<category>.subcategory.<subcategory>.name'
+        match key.removeprefix(prefix).split("."):
+            case [slug, "name"]:
+                categories[slug] = name
+            case [slug, "subcategory", subcategory, "name"]:
+                categories[f"{slug}.{subcategory}"] = name
+    return dict(sorted(categories.items()))
+
+
 class SearchIntegrationsTool(Tool):
     """LLM Tool to search available integrations and helpers."""
 
@@ -328,7 +351,7 @@ class SearchIntegrationsTool(Tool):
     description = (
         "Search the catalog of available Home Assistant integrations and helpers "
         "that can be set up via a config flow (including uninstalled ones) by name, "
-        "domain, or brand. Use config__get_config_entries instead to list "
+        "domain, brand, or category. Use config__get_config_entries instead to list "
         "integrations that are already installed."
     )
     annotations = ToolAnnotations(
@@ -337,11 +360,11 @@ class SearchIntegrationsTool(Tool):
     integration = DOMAIN
     parameters = probatio.Schema(
         {
-            probatio.Required(
+            probatio.Optional(
                 "query",
                 description=(
                     "Search text to match against integration name, domain, or "
-                    "brand (case-insensitive)."
+                    "brand (case-insensitive). Required if 'category' is not given."
                 ),
             ): _NON_EMPTY_STRING,
             probatio.Optional(
@@ -350,6 +373,14 @@ class SearchIntegrationsTool(Tool):
             ): probatio.All(
                 str, probatio.Lower, probatio.In(_INTEGRATION_FILTER_TYPES)
             ),
+            probatio.Optional(
+                "category",
+                description=(
+                    "Filter results by category, like 'energy', or by subcategory, "
+                    "like 'energy.energy_prices'. A category includes its "
+                    "subcategories. An unknown category returns the known categories."
+                ),
+            ): _DOMAIN_STRING,
         }
     )
 
@@ -359,11 +390,25 @@ class SearchIntegrationsTool(Tool):
     ) -> ToolResult:
         """Search available integrations and helpers."""
         args = self.parameters(tool_input.tool_args)
-        query = args["query"].casefold()
+        if "query" not in args and "category" not in args:
+            raise probatio.Invalid("Either 'query' or 'category' is required.")
+        query = args.get("query", "").casefold()
         filter_type: str | None = args.get("type")
+        category: str | None = args.get("category")
+
+        lang = _resolve_language(hass, llm_context.language)
+        if category is not None:
+            known_categories = await _async_get_categories(hass, lang)
+            if category not in known_categories:
+                return ToolResult(
+                    data={
+                        "error": f"Unknown category '{category}'.",
+                        "categories": known_categories,
+                    },
+                    error=True,
+                )
 
         descriptions = await async_get_integration_descriptions(hass)
-        lang = _resolve_language(hass, llm_context.language)
         title_trans = await translation.async_get_translations(
             hass,
             lang,
@@ -373,12 +418,19 @@ class SearchIntegrationsTool(Tool):
 
         best = heapq.nsmallest(
             _SEARCH_LIMIT,
-            _iter_searchable_matches(query, descriptions, title_trans, filter_type),
+            _iter_searchable_matches(
+                query, descriptions, title_trans, filter_type, category
+            ),
         )
         return ToolResult(
             data={
                 "result": list[JsonValueType](
-                    {"domain": domain, "name": name} for _, _, domain, name in best
+                    {
+                        "domain": domain,
+                        "name": name,
+                        "categories": list[JsonValueType](categories),
+                    }
+                    for _, _, domain, name, categories in best
                 )
             }
         )

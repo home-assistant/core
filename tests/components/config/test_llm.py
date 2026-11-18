@@ -666,19 +666,31 @@ async def test_reload_config_entry_invalid_args(
     [
         pytest.param(
             {"query": "random", "type": "helper"},
-            [{"domain": "random", "name": "Random"}],
+            [{"domain": "random", "name": "Random", "categories": ["helpers"]}],
             {"random"},
             id="helper_exact",
         ),
         pytest.param(
             {"query": "sun", "type": "integration"},
-            [{"domain": "sun", "name": "Sun"}],
+            [
+                {
+                    "domain": "sun",
+                    "name": "Sun",
+                    "categories": ["weather_alerts.forecasts"],
+                }
+            ],
             {"sun"},
             id="integration_exact",
         ),
         pytest.param(
             {"query": "Times of the Day"},
-            [{"domain": "tod", "name": "Times of the Day Sensor"}],
+            [
+                {
+                    "domain": "tod",
+                    "name": "Times of the Day Sensor",
+                    "categories": ["helpers.calculate_value"],
+                }
+            ],
             {"tod"},
             id="translated_title_match",
         ),
@@ -696,7 +708,13 @@ async def test_reload_config_entry_invalid_args(
         ),
         pytest.param(
             {"query": "yale bluetooth"},
-            [{"domain": "yalexs_ble", "name": "Yale Access Bluetooth"}],
+            [
+                {
+                    "domain": "yalexs_ble",
+                    "name": "Yale Access Bluetooth",
+                    "categories": ["security_safety.locks_access"],
+                }
+            ],
             {"yalexs_ble"},
             id="multi_word_deduplicated",
         ),
@@ -717,6 +735,42 @@ async def test_reload_config_entry_invalid_args(
             [],
             set(),
             id="hardware_excluded",
+        ),
+        pytest.param(
+            {"category": "pets"},
+            [],
+            {"litterrobot", "surepetcare", "tractive"},
+            id="category_only",
+        ),
+        pytest.param(
+            {"category": "energy.energy_prices"},
+            [],
+            {"energyzero", "nordpool", "tibber"},
+            id="subcategory_only",
+        ),
+        pytest.param(
+            {"query": "tibber", "category": "energy"},
+            [
+                {
+                    "domain": "tibber",
+                    "name": "Tibber",
+                    "categories": ["energy.energy_prices", "energy.meters_monitoring"],
+                }
+            ],
+            {"tibber"},
+            id="query_and_category_includes_subcategories",
+        ),
+        pytest.param(
+            {"query": "hue", "category": "energy"},
+            [],
+            set(),
+            id="query_and_category_no_match",
+        ),
+        pytest.param(
+            {"category": "energy.meters_monitoring", "type": "helper"},
+            [],
+            {"integration", "utility_meter"},
+            id="category_and_type",
         ),
     ],
 )
@@ -741,12 +795,41 @@ async def test_search_integrations(
     assert len(domains) == len(set(domains))
     assert expected_domains <= set(domains)
     assert bool(domains) is bool(expected_domains)
+    if category := tool_args.get("category"):
+        for item in items:
+            assert isinstance(item, dict)
+            assert isinstance(categories := item["categories"], list)
+            assert any(
+                cat == category or str(cat).startswith(f"{category}.")
+                for cat in categories
+            )
+
+
+async def test_search_integrations_unknown_category(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+) -> None:
+    """Test an unknown category returns the known categories."""
+    tool = SearchIntegrationsTool()
+    res = await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"category": "energy.unknown"}),
+        llm_context,
+    )
+    assert res.error is True
+    assert res.data["error"] == "Unknown category 'energy.unknown'."
+    assert isinstance(categories := res.data["categories"], dict)
+    assert categories["energy"] == "Energy"
+    assert categories["energy.energy_prices"] == "Energy prices"
+    assert "energy.unknown" not in categories
 
 
 @pytest.mark.parametrize(
     "invalid_args",
     [
-        pytest.param({}, id="missing_query"),
+        pytest.param({}, id="missing_query_and_category"),
+        pytest.param({"type": "helper"}, id="type_only"),
+        pytest.param({"category": ""}, id="empty_category"),
         pytest.param({"query": ""}, id="empty_query"),
         pytest.param({"query": "   "}, id="whitespace_query"),
         pytest.param({"query": "hue", "type": "unknown"}, id="invalid_type"),
