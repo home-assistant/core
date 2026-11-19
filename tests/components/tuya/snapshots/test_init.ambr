@@ -5679,6 +5679,356 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Multi-Circuit Energy Meter',
+    'model_id': 't88mk4nfhu7ejp4k',
+    'name': 'Multi-Circuit Energy Meter',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_10]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_10',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 10',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_11]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_11',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 11',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_12]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_12',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 12',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_13]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_13',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 13',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_14]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_14',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 14',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_15]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_15',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 15',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_16]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_16',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 16',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_1]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 1',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_2]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_2',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 2',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_3]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 3',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_4]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_4',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 4',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_5]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_5',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 5',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_6]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_6',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 6',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_7]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_7',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 7',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_8]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_8',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 8',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
+# name: test_device_registry[k4pje7uhfn4km88tbdnz_channel_9]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'k4pje7uhfn4km88tbdnz_channel_9',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Channel 9',
+    'name_by_user': None,
+    'parent_device_id': <DeviceEntry identifiers=[('tuya', 'k4pje7uhfn4km88tbdnz')]>,
+  })
+# ---
 # name: test_device_registry[kaapnqxkvzaqd6uaqdjnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

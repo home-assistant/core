@@ -118,6 +118,38 @@ async def test_indexed_phase_child_devices(
     )
 
 
+@pytest.mark.parametrize("mock_device_code", ["zndb_t88mk4nfhu7ejp4k"])
+async def test_indexed_raw_phase_child_devices(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test indexed raw phase sensors are grouped in channel child devices."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    parent = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), mock_config_entry.entry_id
+    )
+    assert parent is not None
+    children = dr.async_entries_for_parent_device(device_registry, parent.id)
+    assert len(children) == 16
+
+    for child in children:
+        assert len(er.async_entries_for_device(entity_registry, child.id)) == 6
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"tuya.{mock_device.id}phase_1electriccurrent"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "14.2"
+    assert state.attributes["unit_of_measurement"] == "A"
+
+
 @pytest.mark.parametrize(
     "mock_device_code",
     ["mcs_8yhypbo7"],
