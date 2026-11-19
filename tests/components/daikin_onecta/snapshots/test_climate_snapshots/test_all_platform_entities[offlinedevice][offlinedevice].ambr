@@ -657,7 +657,6 @@
         'area_id': None,
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            '0',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -693,7 +692,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Studio Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            '0',
           ]),
         }),
         'context': <ANY>,

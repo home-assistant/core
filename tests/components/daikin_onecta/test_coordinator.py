@@ -802,7 +802,7 @@ class TestOnectaDataUpdateCoordinator:
         mock_utcnow.return_value += timedelta(seconds=60)
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            respect_post_write_cooldown=True, bypass_polling_backoff=False
+            bypass_polling_backoff=False
         )
         assert coordinator._polling_backoff_until is None
 
@@ -999,7 +999,7 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            respect_post_write_cooldown=True, bypass_polling_backoff=False
+            bypass_polling_backoff=False
         )
         assert coordinator.update_interval == timedelta(seconds=30)
 
@@ -1026,7 +1026,7 @@ class TestOnectaDataUpdateCoordinator:
 
         assert await coordinator._async_update_data_from_cloud() == {}
         coordinator._async_get_cloud_devices.assert_awaited_once_with(
-            respect_post_write_cooldown=True, bypass_polling_backoff=False
+            bypass_polling_backoff=False
         )
 
     async def test_connection_error_uses_update_failed(self, coordinator):

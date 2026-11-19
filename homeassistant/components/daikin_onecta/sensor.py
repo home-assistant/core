@@ -451,7 +451,11 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
                     )
                 return None
             return state
-        return result if isinstance(result, str | int | float) else None
+        return (
+            result
+            if isinstance(result, str | int | float) and not isinstance(result, bool)
+            else None
+        )
 
     @property
     @override

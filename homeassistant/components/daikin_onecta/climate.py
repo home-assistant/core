@@ -345,8 +345,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
-            # Validate controllability before checking whether rounding is a no-op.
             target_temperature = float(kwargs[ClimateServiceArgument.TEMPERATURE])
+            # Validate controllability before checking whether rounding is a no-op.
             operationmode = self._operation_mode()
             if operationmode is None:
                 self._raise_service_validation_error(

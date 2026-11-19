@@ -136,6 +136,31 @@ async def test_unknown_enum_value_keeps_sensor_updating(
     assert caplog.text.count("Ignoring unsupported Daikin enum value") == 1
 
 
+async def test_boolean_value_is_not_exposed_as_numeric_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Boolean characteristics are not rendered as numeric sensor values."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.scalar_characteristic("controlMode") is not None
+    )
+    characteristic = point.scalar_characteristic("controlMode")
+    assert characteristic is not None
+    characteristic.value = True
+    sensor = DaikinValueSensor(
+        device,
+        config_entry.runtime_data,
+        SENSOR_DESCRIPTIONS["controlMode"],
+        ValueSensorDetails(point.embedded_id, None, "controlMode"),
+    )
+
+    assert sensor.sensor_value() is None
+
+
 @pytest.mark.parametrize(
     "key",
     [

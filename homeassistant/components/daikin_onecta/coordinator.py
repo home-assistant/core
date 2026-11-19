@@ -161,10 +161,18 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         await super().async_request_refresh()
 
     async def async_manual_refresh(self) -> bool:
-        """Refresh immediately, bypassing scheduled-poll backoff.
+        """Refresh immediately unless Daikin has asked us to wait.
 
         Return whether a fresh cloud response was received.
         """
+        if remaining := self._polling_backoff_remaining():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="manual_refresh_deferred",
+                translation_placeholders={
+                    "seconds": str(ceil(remaining.total_seconds()))
+                },
+            )
         if remaining := self._post_write_cooldown_remaining():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -173,6 +181,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     "seconds": str(ceil(remaining.total_seconds()))
                 },
             )
+        # A press can still get rate limited. Keep cached entities available
+        # for that request, while the preflight above prevents retrying during
+        # an already active Retry-After period.
         self._bypass_polling_backoff = True
         previous_sequence = self._cloud_update_sequence
         await self.async_refresh()
@@ -188,7 +199,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_get_cloud_devices(
         self,
         *,
-        respect_post_write_cooldown: bool = True,
         bypass_polling_backoff: bool = False,
     ) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
@@ -198,10 +208,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 and self._polling_backoff_remaining() is not None
             ):
                 return None
-            if (
-                respect_post_write_cooldown
-                and self._post_write_cooldown_remaining() is not None
-            ):
+            if self._post_write_cooldown_remaining() is not None:
                 return None
             try:
                 return await self._client.get_gateway_devices()
@@ -440,7 +447,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self.update_interval = self._determine_update_interval()
             try:
                 cloud_devices = await self._async_get_cloud_devices(
-                    respect_post_write_cooldown=True,
                     bypass_polling_backoff=bypass_polling_backoff,
                 )
             except OAuth2TokenRequestReauthError as err:
@@ -516,7 +522,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 for dev_data in cloud_devices:
                     if dev_data.id in devices:
                         device = devices[dev_data.id]
-                        registry_metadata_changed = device.set_device_data(dev_data)
+                        was_present = device.present_in_cloud
+                        registry_metadata_changed = (
+                            device.set_device_data(dev_data) or not was_present
+                        )
                     else:
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device

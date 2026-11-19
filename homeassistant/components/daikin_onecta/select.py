@@ -182,7 +182,9 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     def get_options(self) -> list[str]:
         """Return readable configured schedules."""
         selection = self.selection()
-        if selection is None:
+        if selection is None or (
+            not selection.enabled and not selection.enabled_settable
+        ):
             return []
         options = [label for label, _ in self._schedule_options(selection)]
         if selection.enabled_settable:

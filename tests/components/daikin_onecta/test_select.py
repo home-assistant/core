@@ -73,33 +73,28 @@ async def test_schedule_select_ignores_current_option(
 async def test_schedule_select_preserves_read_only_disabled_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Keep a read-only enabled flag while changing the selected schedule."""
+    """Do not offer schedules that cannot be enabled."""
     await _async_setup_fixture(hass, config_entry, "gas")
     coordinator = config_entry.runtime_data
-    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    execute_command = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute_command
     state = hass.states.get("select.my_living_room_schedule")
     assert state is not None
     assert state.state == "unknown"
 
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: state.entity_id,
-            SelectServiceArgument.OPTION: "althermaClimateControl1",
-        },
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "althermaClimateControl1",
+            },
+            blocking=True,
+        )
 
-    coordinator.client.put_management_point.assert_awaited_once_with(
-        next(iter(coordinator.data)),
-        "1",
-        "schedule/heating/current",
-        {"scheduleId": "1", "enabled": False},
-    )
-    updated_state = hass.states.get(state.entity_id)
-    assert updated_state is not None
-    assert updated_state.state == "unknown"
+    execute_command.assert_not_awaited()
+    assert state.attributes["options"] == []
 
 
 async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(

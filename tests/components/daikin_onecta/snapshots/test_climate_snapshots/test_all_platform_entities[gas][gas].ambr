@@ -394,9 +394,6 @@
         'area_id': None,
         'capabilities': dict({
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            'althermaClimateControl0',
-            'althermaClimateControl1',
-            'althermaClimateControl2',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -432,9 +429,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Schedule',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-            'althermaClimateControl0',
-            'althermaClimateControl1',
-            'althermaClimateControl2',
           ]),
         }),
         'context': <ANY>,

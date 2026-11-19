@@ -15,9 +15,11 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
     gateway_site_membership,
 )
+from homeassistant.components.daikin_onecta.entity import management_point_device_info
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import ChildDeviceInfo
 
 from .conftest import MockOnectaClient
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
@@ -466,6 +468,60 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
     assert climate_state is not None and climate_state.state != "unavailable"
     assert sensor_state is not None and sensor_state.state != "unavailable"
     schedule_reload.assert_not_called()
+
+
+async def test_removed_gateway_is_registered_again_when_it_returns(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Re-register a gateway whose registry entry was removed while absent."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    coordinator = config_entry.runtime_data
+    gateway_id, device = next(iter(coordinator.data.items()))
+    point = next(
+        point
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    mock_onecta_client.get_gateway_devices.return_value = []
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    gateway_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_id), config_entry.entry_id
+    )
+    assert gateway_entry is not None
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[])]
+    )
+    assert await async_remove_config_entry_device(hass, config_entry, gateway_entry)
+    device_registry.async_remove_device(gateway_entry.id)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, gateway_id), config_entry.entry_id
+        )
+        is None
+    )
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+        "altherma"
+    )
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    restored_gateway = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway_id), config_entry.entry_id
+    )
+    assert restored_gateway is not None
+    assert device.ha_device_id == restored_gateway.id
+    child_info = management_point_device_info(device, point.embedded_id)
+    assert isinstance(child_info, ChildDeviceInfo)
+    restored_child = device_registry.async_get_or_create_child_from_info(
+        config_entry_id=config_entry.entry_id,
+        device_info=child_info,
+    )
+    assert restored_child.parent_device_id == restored_gateway.id
 
 
 async def test_disabled_sensor_is_recreated_after_gateway_removal(

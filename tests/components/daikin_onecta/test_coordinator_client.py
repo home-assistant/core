@@ -115,21 +115,21 @@ async def test_get_device_details_respects_cooldown(
     api._last_patch_call = dt_util.utcnow()
     api.client.get_gateway_devices = AsyncMock()
 
-    assert await api._async_get_cloud_devices(respect_post_write_cooldown=True) is None
+    assert await api._async_get_cloud_devices() is None
     api.client.get_gateway_devices.assert_not_awaited()
 
 
-async def test_get_device_details_can_bypass_post_write_cooldown(
+async def test_get_device_details_always_respects_post_write_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Allow callers to explicitly bypass the post-write cooldown."""
+    """Do not allow callers to bypass the post-write cooldown."""
     api = OnectaDataUpdateCoordinator(hass, config_entry, MagicMock())
     api._last_patch_call = dt_util.utcnow()
     api.client.get_gateway_devices = AsyncMock(return_value=[])
 
-    assert await api._async_get_cloud_devices(respect_post_write_cooldown=False) == []
-    api.client.get_gateway_devices.assert_awaited_once()
+    assert await api._async_get_cloud_devices() is None
+    api.client.get_gateway_devices.assert_not_awaited()
 
 
 @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
@@ -145,7 +145,7 @@ async def test_get_device_details_uses_utc_across_dst_rollback(
     mock_utcnow.return_value = datetime(2026, 10, 25, 1, 1, tzinfo=UTC)
     api.client.get_gateway_devices = AsyncMock(return_value=[])
 
-    assert await api._async_get_cloud_devices(respect_post_write_cooldown=True) == []
+    assert await api._async_get_cloud_devices() == []
     api.client.get_gateway_devices.assert_awaited_once_with()
 
 

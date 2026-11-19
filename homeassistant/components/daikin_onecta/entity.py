@@ -1,6 +1,7 @@
 """Base entities for the Daikin Onecta integration."""
 
 from collections.abc import Awaitable, Callable, Iterable, Iterator
+import logging
 from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
@@ -25,6 +26,7 @@ from .device import DaikinOnectaDevice
 from .discovery import scalar_platform
 
 EntityIdChecker = Callable[[Platform, str], bool]
+_LOGGER = logging.getLogger(__name__)
 
 MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
     "climateControl": "climate_zone",
@@ -145,6 +147,11 @@ def management_point_device_info(
         name = None
 
     if device.ha_device_id is None:
+        _LOGGER.warning(
+            "Gateway %s is not registered before creating management point %s",
+            device.id,
+            embedded_id,
+        )
         return _gateway_device_info(device)
     return ChildDeviceInfo(
         identifiers={(DOMAIN, management_point_unique_id(device.id, embedded_id))},
