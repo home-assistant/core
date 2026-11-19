@@ -136,6 +136,7 @@ LAZY_DISCOVER_FOR_MODEL = {
     "zhimi.fan.za5": True,
     "zhimi.airpurifier.za1": True,
     "dmaker.fan.1c": True,
+    "zhimi.airpurifier.mb3": True,
 }
 
 
