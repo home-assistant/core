@@ -66,7 +66,7 @@
           },
           "data_description": {
             "chat_model": "The chat model to use for the conversation.",
-            "llm_hass_api": "Select which Home Assistant APIs the model can use.",
+            "llm_hass_api": "[%key:common::config_flow::data_description::llm_hass_api%]",
             "name": "The name of this configuration.",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "recommended": "Use the recommended model settings."
