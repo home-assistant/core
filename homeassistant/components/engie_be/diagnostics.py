@@ -16,6 +16,7 @@ from .coordinator import (
     BRUSSELS_TIME_ZONE,
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
+    EngieBePricesData,
     epex_day_available,
     epex_slots_for_day,
 )
@@ -33,15 +34,15 @@ TO_REDACT = {
 
 
 def _hashed_identifier(identifier: str) -> str:
-    """Return a stable fingerprint that keeps households and meters apart."""
+    """Return a short hash that hides an identifier but keeps households and meters apart."""
     return f"**REDACTED_{hashlib.sha256(identifier.encode()).hexdigest()[:16]}"
 
 
-def _peak_diagnostics(peak: Peak) -> dict[str, Any]:
+def _peak_diagnostics(peak: Peak) -> dict[str, float | str]:
     """Return the diagnostics of one capacity tariff peak."""
     return {
-        "peak_kw": peak.peak_kw,
-        "peak_kwh": peak.peak_kwh,
+        "power_kw": peak.peak_kw,
+        "energy_kwh": peak.peak_kwh,
         "start": peak.start.isoformat(),
         "end": peak.end.isoformat(),
     }
@@ -91,9 +92,10 @@ def _household_diagnostics(
 ) -> dict[str, Any]:
     """Return the diagnostics of one business agreement."""
     prices = household.prices
+    prices_data: EngieBePricesData | None = prices.data
     slots: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
     for (ean, direction, slot_code), price_slot in (
-        prices.data.slots.items() if prices.data is not None else ()
+        prices_data.slots.items() if prices_data is not None else ()
     ):
         per_ean = slots.setdefault(_hashed_identifier(bare_ean(ean)), {})
         per_direction = per_ean.setdefault(direction, {})
@@ -102,7 +104,7 @@ def _household_diagnostics(
             "price_value_excl_vat": price_slot.price_value_excl_vat,
         }
     return {
-        "ean_count": len(prices.data.eans) if prices.data is not None else None,
+        "ean_count": len(prices_data.eans) if prices_data is not None else None,
         "is_dynamic": household.is_dynamic,
         "last_update_success": prices.last_update_success,
         "update_interval": str(prices.update_interval),
@@ -166,14 +168,7 @@ async def async_get_config_entry_diagnostics(
             "entry": entry.as_dict(),
             "relations": {
                 "last_update_success": relations.last_update_success,
-                "update_interval": (
-                    str(relations.update_interval)
-                    if relations.update_interval is not None
-                    else None
-                ),
-                "agreement_count": (
-                    len(relations.data) if relations.data is not None else None
-                ),
+                "agreement_count": len(relations.data),
             },
             "households": {
                 _hashed_identifier(ban): _household_diagnostics(household)
