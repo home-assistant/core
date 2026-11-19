@@ -21,16 +21,18 @@ from .coordinator import LidarrConfigEntry, LidarrDataUpdateCoordinator, T
 from .entity import LidarrEntity
 
 
-def get_space(data: list[LidarrRootFolder], name: str) -> str:
+def get_space(data: list[LidarrRootFolder], name: str) -> str | None:
     """Get space."""
-    space: list[float] = []
-    for mount in data:
-        if name in mount.path:
-            mount.freeSpace = mount.freeSpace if mount.accessible else 0
-            space.append(
-                mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
-            )
-    return f"{space[0]:.2f}"
+    # Lidarr omits freeSpace when it can't read the folder, e.g. while a
+    # network share is offline, so the free space is unknown until it returns.
+    space = [
+        getattr(mount, "freeSpace", None) if mount.accessible else None
+        for mount in data
+        if name in mount.path
+    ]
+    if space[0] is None:
+        return None
+    return f"{space[0] / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES):.2f}"
 
 
 def get_modified_description(
@@ -50,7 +52,7 @@ def get_modified_description(
 class LidarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
-    value_fn: Callable[[T, str], str | int]
+    value_fn: Callable[[T, str], str | int | None]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -155,7 +157,7 @@ class LidarrSensor(LidarrEntity[T], SensorEntity):
 
     @property
     @override
-    def native_value(self) -> str | int:
+    def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)
 
