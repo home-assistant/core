@@ -20,14 +20,14 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_DIFFUSE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -97,10 +97,25 @@ async def test_hvac_action_idle(
     )
 
 
+async def test_emergency_heat_mode(
+    hass: HomeAssistant, mock_lyric: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test emergency heat shows as heat."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(LCC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+
+
 @pytest.mark.parametrize(
     ("mode", "expected"),
     [
         pytest.param("Heat", {"heat_setpoint": 21}, id="heat"),
+        pytest.param("EmergencyHeat", {"heat_setpoint": 21}, id="emergency_heat"),
         pytest.param("Cool", {"cool_setpoint": 21}, id="cool"),
     ],
 )
@@ -115,8 +130,8 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_TEMPERATURE: 21},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: LCC_ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21},
         blocking=True,
     )
 
@@ -152,11 +167,11 @@ async def test_set_temperature_range(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 25,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 25,
         },
         blocking=True,
     )
@@ -173,8 +188,11 @@ async def test_set_temperature_range_missing(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_TEMPERATURE: 21},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: LCC_ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 21,
+            },
             blocking=True,
         )
 
@@ -185,8 +203,8 @@ async def test_set_temperature_off(hass: HomeAssistant, mock_lyric: MagicMock) -
     """Test setting the temperature does nothing while the thermostat is off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: TCC_ENTITY_ID, ATTR_TEMPERATURE: 21},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: TCC_ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 21},
         blocking=True,
     )
 
@@ -217,20 +235,45 @@ async def test_set_hvac_mode_lcc(
     """Test setting the HVAC mode on an LCC thermostat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: LCC_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
 
     mock_lyric.update_thermostat.assert_awaited_once_with(ANY, ANY, **expected)
 
 
+async def test_set_hvac_mode_heat_keeps_emergency_heat(
+    hass: HomeAssistant, mock_lyric: MagicMock
+) -> None:
+    """Test setting heat while in emergency heat leaves emergency heat on."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: LCC_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_lyric.update_thermostat.assert_not_awaited()
+
+
 async def test_set_hvac_mode_tcc(hass: HomeAssistant, mock_lyric: MagicMock) -> None:
     """Test setting the HVAC mode on a TCC thermostat."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: TCC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: TCC_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -247,8 +290,11 @@ async def test_set_hvac_mode_tcc_heat_cool(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: TCC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: TCC_ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
 
@@ -264,8 +310,11 @@ async def test_set_hvac_mode_tcc_heat_cool_from_off(
     with patch("homeassistant.components.lyric.climate.asyncio.sleep") as mock_sleep:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: TCC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: TCC_ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
 
@@ -280,8 +329,11 @@ async def test_set_preset_mode(hass: HomeAssistant, mock_lyric: MagicMock) -> No
     """Test setting the preset mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_PRESET_MODE: "PermanentHold"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: LCC_ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: "PermanentHold",
+        },
         blocking=True,
     )
 
@@ -294,8 +346,11 @@ async def test_set_fan_mode(hass: HomeAssistant, mock_lyric: MagicMock) -> None:
     """Test setting the fan mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_FAN_MODE: FAN_DIFFUSE},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: LCC_ENTITY_ID,
+            ClimateServiceArgument.FAN_MODE: FAN_DIFFUSE,
+        },
         blocking=True,
     )
 

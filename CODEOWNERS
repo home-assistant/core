@@ -1299,6 +1299,8 @@ AGENTS.md @home-assistant/core
 /tests/components/mystrom/ @fabaff
 /homeassistant/components/myuplink/ @pajzo @astrandb
 /tests/components/myuplink/ @pajzo @astrandb
+/homeassistant/components/nad_infrared/ @rrooggiieerr
+/tests/components/nad_infrared/ @rrooggiieerr
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/namecheapdns/ @tr4nt0r
@@ -1864,6 +1866,8 @@ AGENTS.md @home-assistant/core
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @peterager @jjlawren
 /tests/components/sonos/ @peterager @jjlawren
+/homeassistant/components/sony_infrared/ @googanhiem
+/tests/components/sony_infrared/ @googanhiem
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
@@ -2006,6 +2010,8 @@ AGENTS.md @home-assistant/core
 /tests/components/tibber/ @danielhiversen
 /homeassistant/components/tile/ @bachya
 /tests/components/tile/ @bachya
+/homeassistant/components/tile_ble/ @joostlek
+/tests/components/tile_ble/ @joostlek
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
 /homeassistant/components/tilt_pi/ @michaelheyman

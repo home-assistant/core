@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -38,8 +37,8 @@ async def test_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
 
@@ -48,8 +47,8 @@ async def test_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -65,8 +64,8 @@ async def test_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -74,8 +73,8 @@ async def test_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id], LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -104,8 +103,8 @@ async def test_things_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [entity_id]},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     mock_update.assert_called_once()
@@ -113,8 +112,8 @@ async def test_things_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id], LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     mock_update.assert_called_once()

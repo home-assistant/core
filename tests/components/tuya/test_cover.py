@@ -11,13 +11,13 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
@@ -197,10 +198,10 @@ async def test_set_tilt_position_not_supported(
     with pytest.raises(ServiceNotSupported):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
+            CoverService.SET_TILT_POSITION,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TILT_POSITION: 50,
+                TargetKey.ENTITY_ID: entity_id,
+                CoverServiceArgument.TILT_POSITION: 50,
             },
             blocking=True,
         )
