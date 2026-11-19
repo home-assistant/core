@@ -163,13 +163,6 @@ STEP_USER_TOPIC_SCHEMA = probatio.Schema(
 RE_TOPIC = re.compile("^[-_a-zA-Z0-9]{1,64}$")
 
 
-def _generate_topic() -> str:
-    """Generate an unpredictable topic name."""
-    return "".join(
-        secrets.choice(string.ascii_letters + string.digits) for _ in range(16)
-    )
-
-
 class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ntfy."""
 
@@ -445,7 +438,9 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
-        topic = _generate_topic()
+        topic = "".join(
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(16)
+        )
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="add_topic",
