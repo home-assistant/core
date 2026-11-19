@@ -171,11 +171,11 @@ def _is_server_url(url: str) -> bool:
     """Return if the URL is an http(s) address that a path can be added to."""
     try:
         cv.url(url)
-    except probatio.Invalid:
+    except probatio.Invalid, ValueError:
         return False
     parsed = urlparse(url)
     # Credentials belong in the authentication section, not in the entry title
-    return not (parsed.query or parsed.fragment or parsed.username)
+    return not (parsed.query or parsed.fragment or "@" in parsed.netloc)
 
 
 def _validate(
