@@ -18,11 +18,11 @@ class GreeEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         name = coordinator.device.device_info.name
-        mac = coordinator.device.device_info.mac
-        self._attr_unique_id = f"{mac}_{desc}"
+        identifier = coordinator.device.device_info.mac
+        self._attr_unique_id = f"{identifier}_{desc}"
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, identifier)},
+            identifiers={(DOMAIN, identifier)},
             manufacturer="Gree",
             name=name,
         )
