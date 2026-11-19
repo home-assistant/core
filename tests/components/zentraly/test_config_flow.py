@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from zentraly import ZentralyAuthenticationError, ZentralyConnectionError
@@ -12,6 +13,7 @@ from homeassistant.components.zentraly.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import DEVICE_ID, HOST, PASSWORD, PORT
@@ -48,6 +50,23 @@ async def test_zeroconf_auth_success(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    assert probatio.to_field_list(
+        result["data_schema"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": CONF_PASSWORD,
+            "required": True,
+            "secret": True,
+            "selector": {
+                "text": {
+                    "type": "password",
+                    "autocomplete": "current-password",
+                    "multiline": False,
+                    "multiple": False,
+                }
+            },
+        }
+    ]
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_PASSWORD: PASSWORD}
     )

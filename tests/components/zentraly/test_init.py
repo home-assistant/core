@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -13,20 +14,26 @@ from zentraly import (
     ZentralyDeviceInfo,
 )
 
+from homeassistant import config_entries
 from homeassistant.components.zentraly.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
-from .conftest import DEVICE_ID, ENTITY_ID, MAC
+from .conftest import DEVICE_ID, ENTITY_ID, HOST, MAC, PORT
 
 pytestmark = pytest.mark.usefixtures("mock_api", "mock_climate_api", "mock_device_info")
 
@@ -109,10 +116,11 @@ async def test_setup_device(
 async def test_setup_unexpected_mac(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Setup retries instead of connecting to a different device."""
+    """A different MAC fails setup without retrying or replacing the identity."""
     mock_api.async_validate_password.return_value = "001122334455"
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.data[CONF_MAC] == MAC
     assert mock_config_entry.error_reason_translation_key == "unexpected_device"
     mock_api.async_connect.assert_not_awaited()
 
@@ -324,3 +332,57 @@ async def test_unload_removes_shutdown_listener(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_api.async_disconnect.assert_awaited_once_with()
+
+
+@pytest.mark.parametrize(
+    ("host", "port"),
+    [
+        pytest.param("192.168.1.99", PORT, id="new-address"),
+        pytest.param(HOST, PORT + 1, id="new-port"),
+        pytest.param(HOST, PORT, id="unchanged-endpoint"),
+    ],
+)
+async def test_zeroconf_recovery_after_identity_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    host: str,
+    port: int,
+) -> None:
+    """Only a corrected endpoint reloads an entry stopped by an unexpected MAC."""
+    mock_api.async_validate_password.return_value = "001122334455"
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_api.async_validate_password.return_value = MAC
+    mock_api.async_validate_password.reset_mock()
+    address = ip_address(host)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=address,
+            ip_addresses=[address],
+            hostname=f"{DEVICE_ID}.local.",
+            name=f"{DEVICE_ID}._zentraly._tcp.local.",
+            port=port,
+            properties={},
+            type="_zentraly._tcp.local.",
+        ),
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_MAC] == MAC
+    assert mock_config_entry.data[CONF_HOST] == host
+    assert mock_config_entry.data[CONF_PORT] == port
+    expected_calls = int((host, port) != (HOST, PORT))
+    assert mock_api.async_validate_password.await_count == expected_calls
+    assert len(hass.states.async_all()) == expected_calls
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, mock_config_entry.entry_id
+            )
+        )
+        == expected_calls
+    )

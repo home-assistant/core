@@ -6,7 +6,11 @@ from typing import Any, override
 import probatio
 from zentraly import ZentralyApi, ZentralyAuthenticationError, ZentralyConnectionError
 
-from homeassistant.config_entries import ConfigFlow as HAConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow as HAConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_HOST,
@@ -15,13 +19,26 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import get_device_platforms
 from .const import DOMAIN
-from .platforms import get_device_platforms
 
 _LOGGER = logging.getLogger(__name__)
-PASSWORD_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+PASSWORD_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        )
+    }
+)
 
 
 class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
@@ -63,6 +80,27 @@ class ZentralyConfigFlow(HAConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(device_id)
+
+        if (
+            (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, device_id
+                )
+            )
+            and entry.state is ConfigEntryState.SETUP_ERROR
+            and entry.error_reason_translation_key == "unexpected_device"
+            and (entry.data[CONF_HOST], entry.data[CONF_PORT])
+            != (discovery_info.host, discovery_info.port)
+        ):
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={
+                    **entry.data,
+                    CONF_HOST: discovery_info.host,
+                    CONF_PORT: discovery_info.port,
+                },
+            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
         self._abort_if_unique_id_configured(
             updates={

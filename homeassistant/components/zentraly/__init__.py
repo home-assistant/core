@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 from zentraly import (
+    DeviceModel,
     ZentralyApi,
     ZentralyApiError,
     ZentralyAuthenticationError,
@@ -31,11 +32,18 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
+from .coordinator import ZentralyUpdateCoordinator
 from .models import ZentralyConfigEntry, ZentralyData, ZentralyDevice
-from .platforms import get_device_platforms
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device_platforms(device_id: str) -> list[Platform]:
+    """Keep discovery aligned with the models supported by this delivery."""
+    if get_device_model(device_id) is DeviceModel.ZTTIN:
+        return PLATFORMS.copy()
+    return []
 
 
 def create_device(
@@ -180,7 +188,7 @@ async def async_setup_entry(
         ) from err
 
     if mac != entry.data[CONF_MAC]:
-        raise ConfigEntryNotReady(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="unexpected_device",
             translation_placeholders={"host": api.host},
@@ -199,15 +207,18 @@ async def async_setup_entry(
         **device.device_info,
     )
 
-    platforms = [Platform.CLIMATE]
-
     # Connection failures are retried inside the library's background task.
     await api.async_connect()
-    entry.async_on_unload(api.async_disconnect)
+
+    async def async_disconnect() -> None:
+        """Release the connection on unload or shutdown."""
+        await api.async_disconnect()
+
+    entry.async_on_unload(async_disconnect)
 
     async def async_shutdown(event: Event) -> None:
-        """Close library connection tasks before Home Assistant stops."""
-        await api.async_disconnect()
+        """Adapt the stop event to the shared connection cleanup."""
+        await async_disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
@@ -221,11 +232,15 @@ async def async_setup_entry(
         parent_device_entry.id,
     )
 
-    entry.runtime_data = ZentralyData(api=api, device=device)
+    entry.runtime_data = ZentralyData(
+        api=api,
+        device=device,
+        coordinator=ZentralyUpdateCoordinator(hass, entry, device),
+    )
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
-        platforms,
+        PLATFORMS,
     )
 
     _LOGGER.info(
@@ -242,9 +257,7 @@ async def async_unload_entry(
 ) -> None:
     """Unload a Zentraly config entry."""
 
-    platforms = [Platform.CLIMATE]
-
     await hass.config_entries.async_unload_platforms_or_raise(
         entry,
-        platforms,
+        PLATFORMS,
     )

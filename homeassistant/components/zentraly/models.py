@@ -1,6 +1,7 @@
 """Home Assistant runtime and registry information for Zentraly."""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from zentraly import ZentralyApi, ZentralyDevice as LibraryDevice
 
@@ -9,6 +10,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .coordinator import ZentralyUpdateCoordinator
 
 
 @dataclass(slots=True)
@@ -55,6 +59,7 @@ class ZentralyData:
 
     api: ZentralyApi
     device: ZentralyDevice
+    coordinator: ZentralyUpdateCoordinator
 
 
 type ZentralyConfigEntry = ConfigEntry[ZentralyData]

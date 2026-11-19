@@ -541,3 +541,109 @@ async def test_fahrenheit_display_step(
         native_target
     )
     assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == display_target
+
+
+async def test_partial_reports_do_not_postpone_polling(
+    hass: HomeAssistant, mock_climate_api: MagicMock
+) -> None:
+    """Reports for one field cannot starve fallback reads of other fields."""
+    mock_climate_api.async_get_target_temperature.reset_mock()
+    mock_climate_api.async_get_target_temperature.return_value = 23.0
+    now = dt_util.utcnow()
+    for minute in range(1, 5):
+        async_fire_time_changed(hass, now + timedelta(minutes=minute))
+        mock_climate_api.add_state_listener.call_args.args[0](
+            {ClimateCapability.LOCAL_TEMPERATURE: 20.0}
+        )
+        await hass.async_block_till_done()
+    mock_climate_api.async_get_target_temperature.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.0
+    async_fire_time_changed(hass, now + timedelta(minutes=5))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_climate_api.async_get_target_temperature.assert_awaited_once_with()
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 23.0
+
+
+async def test_partial_read_failure_preserves_other_fields(
+    hass: HomeAssistant,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """One failed command does not discard successful readings or device availability."""
+    mock_climate_api.async_get_current_temperature.side_effect = ZentralyConnectionError
+    mock_climate_api.async_get_target_temperature.return_value = 23.0
+    connection_state(True)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19.0
+    assert state.attributes[ATTR_TEMPERATURE] == 23.0
+
+
+async def test_partial_report_preserves_confirmed_action(
+    hass: HomeAssistant, mock_climate_api: MagicMock
+) -> None:
+    """An unrelated report cannot restore cached values from before an action."""
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23.0},
+        blocking=True,
+    )
+    mock_climate_api.add_state_listener.call_args.args[0](
+        {ClimateCapability.HUMIDITY: 60.0}
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_TEMPERATURE] == 23.0
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 60.0
+
+
+async def test_unload_cancels_pending_state_reads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Entry unload cancels and awaits state reads owned by the coordinator."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def read() -> float:
+        started.set()
+        try:
+            await asyncio.Future()
+        finally:
+            cancelled.set()
+        return 19.0
+
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    connection_state(True)
+    await started.wait()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert cancelled.is_set()
+
+
+async def test_cancelled_refresh_does_not_reuse_a_completed_read(
+    hass: HomeAssistant, mock_climate_api: MagicMock
+) -> None:
+    """Cancelling a refresh caller does not leave its finished read cached as pending."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read() -> float:
+        started.set()
+        await release.wait()
+        return 20.0
+
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    refresh = hass.async_create_task(async_update_entity(hass, ENTITY_ID))
+    await started.wait()
+    refresh.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await refresh
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_update_entity(hass, ENTITY_ID)
+    assert mock_climate_api.async_get_current_temperature.await_count == 2
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
