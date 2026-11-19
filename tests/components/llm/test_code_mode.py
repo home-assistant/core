@@ -293,6 +293,15 @@ async def test_sandbox(api_instance: llm.APIInstance, code: str, error: str) -> 
     assert error in result.data["error"]
 
 
+async def test_error_size_limit(api_instance: llm.APIInstance) -> None:
+    """Test a large error message of the code is cut."""
+    result = await _execute(api_instance, "raise ValueError('a' * 1000000)")
+
+    assert result.error is True
+    assert result.data["error"].startswith("ValueError: aaa")
+    assert len(result.data["error"]) == code_mode_api.MAX_ERROR_SIZE
+
+
 async def test_cpu_limit(api_instance: llm.APIInstance) -> None:
     """Test a busy loop is stopped."""
     with patch.dict(code_mode_api.LIMITS, {"max_feed_duration_secs": 0.1}):

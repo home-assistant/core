@@ -36,6 +36,8 @@ LIMITS = ResourceLimits(
     max_suspensions=200,
 )
 MAX_OUTPUT_BYTES = 64 * 1024
+# Code can raise an error with a message of any size.
+MAX_ERROR_SIZE = 4096
 # Limit for the result of the code, in values plus characters.
 MAX_RESULT_SIZE = 64 * 1024
 # The JSON encoder of Home Assistant fails on deeper values.
@@ -306,7 +308,9 @@ class ExecuteTool(Tool):
                 await self._async_get_pool(hass, session), code
             )
         except (MontyError, OSError) as err:
-            return ToolResult(data={"error": str(err), "output": ""}, error=True)
+            return ToolResult(
+                data={"error": str(err)[:MAX_ERROR_SIZE], "output": ""}, error=True
+            )
 
     async def _async_get_pool(
         self, hass: HomeAssistant, session: chat_session.ChatSession
@@ -355,7 +359,10 @@ class ExecuteTool(Tool):
                 )
         except (MontyError, TimeoutError) as err:
             return ToolResult(
-                data={"error": str(err) or "Timeout", "output": output.output},
+                data={
+                    "error": str(err)[:MAX_ERROR_SIZE] or "Timeout",
+                    "output": output.output,
+                },
                 error=True,
             )
         finally:
