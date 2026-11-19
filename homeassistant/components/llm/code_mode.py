@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
+from datetime import date, time, timedelta
 import keyword
 import re
 from typing import Any, override
@@ -41,6 +42,8 @@ MAX_RESULT_DEPTH = 100
 # The JSON encoder of Home Assistant fails on integers outside this range.
 MIN_JSON_INT = -(2**63)
 MAX_JSON_INT = 2**64 - 1
+# Types whose string has a size close to the size of the value.
+_SCALAR_TYPES = (bool, int, float, type, date, time, timedelta)
 # Function declarations are part of the prompt up to this size, in characters.
 INLINE_BUDGET = 8000
 SEARCH_LIMIT = 10
@@ -366,22 +369,38 @@ def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
     if budget[0] < 0 or depth < 0:
         raise ValueError("Result too large")
     if isinstance(value, int) and not MIN_JSON_INT <= value <= MAX_JSON_INT:
-        return _json_key(value, budget)
+        return _json_text(value, budget, depth)
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, dict):
         return {
-            _json_key(key, budget): _json_value(item, budget, depth - 1)
+            _json_text(key, budget, depth): _json_value(item, budget, depth - 1)
             for key, item in value.items()
         }
     if isinstance(value, (list, tuple, set, frozenset)):
         return [_json_value(item, budget, depth - 1) for item in value]
-    return _json_key(value, budget)
+    return _json_text(value, budget, depth)
 
 
-def _json_key(value: Any, budget: list[int]) -> str:
-    """Return a value as a string, for a dict key or a value without a JSON type."""
-    text = str(value)
+def _json_text(value: Any, budget: list[int], depth: int) -> str:
+    """Return a dict key, or a value without a JSON type, as a string.
+
+    The string of a value can be much larger than the value, so the size is
+    checked before the conversion where that is possible.
+    """
+    if isinstance(value, str):
+        text = value
+    elif isinstance(value, (tuple, frozenset)):
+        # The conversion of the items applies the budget.
+        text = str(_json_value(value, budget, depth))
+    elif isinstance(value, bytes):
+        if len(value) > budget[0]:
+            raise ValueError("Result too large")
+        text = str(value)
+    elif value is None or isinstance(value, _SCALAR_TYPES):
+        text = str(value)
+    else:
+        text = f"<{type(value).__name__}>"
     budget[0] -= len(text)
     if budget[0] < 0:
         raise ValueError("Result too large")

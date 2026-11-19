@@ -315,7 +315,7 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
     assert result.data["result"] == {
         "items": [1, 2],
         "ids": [1],
-        "(1, 2)": None,
+        "[1, 2]": None,
         "kind": "<class 'int'>",
         "big": "1267650600228229401496703205376",
         "max": 2**64 - 1,
@@ -335,6 +335,8 @@ async def test_result_is_json(api_instance: llm.APIInstance) -> None:
         "{'a' * 100000: 1}",
         "b'a' * 100000",
         "[1, b'a' * 100000]",
+        # A small dict key that contains the same tuple many times.
+        "k = (1,)\nfor _ in range(60):\n    k = (k, k)\n{k: 1}",
     ],
 )
 async def test_result_too_large(api_instance: llm.APIInstance, code: str) -> None:

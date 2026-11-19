@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components.conversation import (
     AssistantContent,
     ConversationInput,
+    SystemContent,
     async_get_chat_log,
 )
 from homeassistant.components.labs import async_update_preview_feature
@@ -26,6 +27,13 @@ async def _tool_names(
     hass: HomeAssistant, conversation_id: str | None = None
 ) -> list[str]:
     """Return the names of the tools that a conversation agent gets."""
+    return [tool.name for tool in (await _llm_data(hass, conversation_id))[0]]
+
+
+async def _llm_data(
+    hass: HomeAssistant, conversation_id: str | None = None
+) -> tuple[list[llm.Tool], str]:
+    """Return the tools and the system prompt that a conversation agent gets."""
     user_input = ConversationInput(
         text="Hello",
         context=Context(),
@@ -48,7 +56,9 @@ async def _tool_names(
         chat_log.async_add_assistant_content_without_tools(
             AssistantContent(agent_id="mock-agent-id", content="Hi")
         )
-        return [tool.name for tool in chat_log.llm_api.tools]
+        system_prompt = chat_log.content[0]
+        assert isinstance(system_prompt, SystemContent)
+        return chat_log.llm_api.tools, system_prompt.content
 
 
 async def test_feature_disabled(hass: HomeAssistant) -> None:
@@ -79,3 +89,14 @@ async def test_toggle_in_conversation(hass: HomeAssistant) -> None:
     await async_update_preview_feature(hass, "llm", "code_mode", False)
 
     assert "llm__GetDateTime" in await _tool_names(hass, conversation_id)
+
+
+async def test_date_time_prompt(hass: HomeAssistant) -> None:
+    """Test the prompt has no fixed time when code can get the time."""
+    assert "Current time is" not in (await _llm_data(hass))[1]
+
+    await async_update_preview_feature(hass, "llm", "code_mode", True)
+
+    _, prompt = await _llm_data(hass)
+    assert "async def llm__GetDateTime() -> dict:" in prompt
+    assert "Current time is" not in prompt

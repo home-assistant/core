@@ -861,6 +861,8 @@ class ChatLog:
                     response=intent_response,
                 ) from err
 
+        # Code mode replaces the tools, so remember the tools of the API.
+        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         if llm_api is not None:
             llm_api = await self._async_apply_code_mode(llm_api)
 
@@ -890,7 +892,6 @@ class ChatLog:
 
         # Append current date and time to the prompt if the
         # corresponding tool is not provided
-        llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
         if not any(tool.name.endswith("GetDateTime") for tool in llm_tools):
             prompt_parts.append(
                 await self._async_expand_prompt_template(
