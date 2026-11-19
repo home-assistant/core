@@ -376,11 +376,26 @@ async def test_failed_firmware_install_preserves_reported_progress(
     )
 
 
-@pytest.mark.parametrize("update_supported", [False, True])
+@pytest.mark.parametrize(
+    ("update_supported", "expected_error", "translation_key"),
+    [
+        pytest.param(
+            False, HomeAssistantError, "service_not_supported", id="unsupported"
+        ),
+        pytest.param(
+            True,
+            ServiceValidationError,
+            "firmware_install_unavailable",
+            id="missing-firmware-id",
+        ),
+    ],
+)
 async def test_firmware_install_rejects_unavailable_firmware(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     update_supported: bool,
+    expected_error: type[HomeAssistantError],
+    translation_key: str,
 ) -> None:
     """Reject an install service if Daikin offers no supported firmware ID."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
@@ -397,24 +412,15 @@ async def test_firmware_install_rejects_unavailable_firmware(
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    if update_supported:
-        with pytest.raises(ServiceValidationError) as err:
-            await hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
-                blocking=True,
-            )
-        assert err.value.translation_key == "firmware_install_unavailable"
-    else:
-        with pytest.raises(HomeAssistantError) as err:
-            await hass.services.async_call(
-                UPDATE_DOMAIN,
-                SERVICE_INSTALL,
-                {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
-                blocking=True,
-            )
-        assert err.value.translation_key == "service_not_supported"
+    with pytest.raises(expected_error) as err:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
     execute.assert_not_awaited()
 
 

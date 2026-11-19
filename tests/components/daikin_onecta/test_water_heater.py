@@ -1,7 +1,9 @@
 """Tests for Daikin Onecta water heater entities."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, call
 
+from daikin_onecta.models import ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -36,44 +38,80 @@ from .platform_helpers import _execute_typed_command, _mock_coordinator
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
-@pytest.mark.parametrize("power_settable", [False, True])
-def test_water_heater_features_follow_power_capability(power_settable: bool) -> None:
+@pytest.mark.parametrize(
+    ("power_settable", "expected_features", "expected_operation_list"),
+    [
+        pytest.param(False, WaterHeaterEntityFeature(0), [], id="read-only"),
+        pytest.param(
+            True,
+            WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE,
+            ["off", STATE_HEAT_PUMP],
+            id="writable",
+        ),
+    ],
+)
+def test_water_heater_features_follow_power_capability(
+    power_settable: bool,
+    expected_features: WaterHeaterEntityFeature,
+    expected_operation_list: list[str],
+) -> None:
     """Only advertise power and operation controls for a writable characteristic."""
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
     point.on_off_mode.settable = power_settable
     entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
-    expected = (
-        WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
-        if power_settable
-        else WaterHeaterEntityFeature(0)
-    )
-    assert entity.supported_features == expected
-    assert entity.operation_list == (["off", STATE_HEAT_PUMP] if power_settable else [])
+    assert entity.supported_features == expected_features
+    assert entity.operation_list == expected_operation_list
 
 
 @pytest.mark.parametrize(
-    "method", ["async_turn_on", "async_turn_off", "async_set_operation_mode"]
+    ("method", "power_value", "args"),
+    [
+        pytest.param(DaikinWaterTank.async_turn_on, "off", (), id="turn-on"),
+        pytest.param(DaikinWaterTank.async_turn_off, "on", (), id="turn-off"),
+        pytest.param(
+            DaikinWaterTank.async_set_operation_mode,
+            "on",
+            ("off",),
+            id="operation-mode",
+        ),
+    ],
 )
-async def test_water_heater_rejects_read_only_power(method: str) -> None:
+async def test_water_heater_rejects_read_only_power(
+    method: Callable[..., Awaitable[None]], power_value: str, args: tuple[str, ...]
+) -> None:
     """Read-only water-heater actions fail without spending a cloud request."""
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
-    point.on_off_mode.value = "off" if method == "async_turn_on" else "on"
+    point.on_off_mode.value = power_value
     entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
     entity._async_execute_hot_water_command = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
-        await getattr(entity, method)(
-            *(["off"] if method == "async_set_operation_mode" else [])
-        )
+        await method(entity, *args)
 
     entity._async_execute_hot_water_command.assert_not_awaited()
 
 
-@pytest.mark.parametrize("power", ["on", "off"])
-def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
+@pytest.mark.parametrize(
+    ("power", "expected_features", "expected_operation_list"),
+    [
+        pytest.param(
+            "on",
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE
+            | WaterHeaterEntityFeature.OPERATION_MODE,
+            [STATE_HEAT_PUMP, STATE_PERFORMANCE],
+            id="on",
+        ),
+        pytest.param("off", WaterHeaterEntityFeature.TARGET_TEMPERATURE, [], id="off"),
+    ],
+)
+def test_water_heater_read_only_power_keeps_writable_boost(
+    power: str,
+    expected_features: WaterHeaterEntityFeature,
+    expected_operation_list: list[str],
+) -> None:
     """Allow writable boost while powered on without advertising power control."""
     device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
     point = device.device.management_points_by_type("domesticHotWaterTank")[0]
@@ -81,13 +119,8 @@ def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
     point.on_off_mode.value = power
     entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
-    assert not entity.supported_features & WaterHeaterEntityFeature.ON_OFF
-    assert bool(
-        entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
-    ) == (power == "on")
-    assert entity.operation_list == (
-        [STATE_HEAT_PUMP, STATE_PERFORMANCE] if power == "on" else []
-    )
+    assert entity.supported_features == expected_features
+    assert entity.operation_list == expected_operation_list
 
 
 def test_water_heater_handles_missing_temperature_values() -> None:
@@ -165,15 +198,47 @@ def test_water_heater_uses_standard_target_temperature_step(
     assert entity.extra_state_attributes is None
 
 
+def _leave_temperature_control_writable(point: ManagementPoint) -> None:
+    """Leave the tank temperature characteristic writable."""
+
+
+def _make_temperature_control_read_only(point: ManagementPoint) -> None:
+    """Make the tank temperature characteristic read-only."""
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.settable = False
+
+
+def _remove_temperature_control(point: ManagementPoint) -> None:
+    """Remove the tank setpoint characteristic."""
+    point.temperature_control.value.operation_modes["heating"].setpoints.pop(
+        "domesticHotWaterTemperature"
+    )
+
+
 @pytest.mark.parametrize(
-    ("operation", "temperature_settable"),
-    [(STATE_OFF, True), (STATE_HEAT_PUMP, False), (STATE_HEAT_PUMP, None)],
+    ("power_value", "change_control", "translation_key"),
+    [
+        pytest.param(
+            "off", _leave_temperature_control_writable, "water_heater_off", id="off"
+        ),
+        pytest.param(
+            "on",
+            _make_temperature_control_read_only,
+            "service_not_supported",
+            id="read-only",
+        ),
+        pytest.param(
+            "on", _remove_temperature_control, "service_not_supported", id="missing"
+        ),
+    ],
 )
 async def test_water_heater_rejects_unavailable_temperature_control(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    operation: str,
-    temperature_settable: bool | None,
+    power_value: str,
+    change_control: Callable[[ManagementPoint], None],
+    translation_key: str,
 ) -> None:
     """Reject a HA temperature request when its device control is unavailable."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
@@ -182,21 +247,11 @@ async def test_water_heater_rejects_unavailable_temperature_control(
     coordinator.async_execute_command = execute
     gateway = next(iter(coordinator.data.values()))
     point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
-    point.on_off_mode.value = "off" if operation == STATE_OFF else "on"
-    if temperature_settable is False:
-        assert point.domestic_hot_water is not None
-        assert point.domestic_hot_water.temperature is not None
-        point.domestic_hot_water.temperature.settable = False
-    elif temperature_settable is None:
-        point.temperature_control.value.operation_modes["heating"].setpoints.pop(
-            "domesticHotWaterTemperature"
-        )
+    point.on_off_mode.value = power_value
+    change_control(point)
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    expected_translation_key = (
-        "water_heater_off" if operation == STATE_OFF else "service_not_supported"
-    )
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -208,22 +263,22 @@ async def test_water_heater_rejects_unavailable_temperature_control(
             blocking=True,
         )
 
-    assert err.value.translation_key == expected_translation_key
+    assert err.value.translation_key == translation_key
     execute.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
-    ("current_operation", "method"),
+    ("power_value", "service"),
     [
-        (STATE_OFF, "async_turn_on"),
-        (STATE_HEAT_PUMP, "async_turn_off"),
+        ("off", WATER_HEATER_SERVICE_TURN_ON),
+        ("on", WATER_HEATER_SERVICE_TURN_OFF),
     ],
 )
 async def test_water_heater_rejects_unavailable_power_control(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    current_operation: str,
-    method: str,
+    power_value: str,
+    service: str,
 ) -> None:
     """Reject unsupported power actions through Home Assistant services."""
     await _async_setup_fixture(hass, config_entry, "holidaymode")
@@ -236,18 +291,12 @@ async def test_water_heater_rejects_unavailable_power_control(
         for point in device.device.management_points
         if point.management_point_type == "domesticHotWaterFlowThrough"
     )
-    point.on_off_mode.value = "off" if current_operation == STATE_OFF else "on"
+    point.on_off_mode.value = power_value
     point.on_off_mode.settable = False
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
     state = hass.states.async_all(WATER_HEATER_DOMAIN)[0]
     assert state is not None
-    service = (
-        WATER_HEATER_SERVICE_TURN_ON
-        if method == "async_turn_on"
-        else WATER_HEATER_SERVICE_TURN_OFF
-    )
-
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
@@ -535,7 +584,6 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
 @pytest.mark.parametrize(
     ("unit_system", "service_temperature", "step_value", "expected_temperature"),
     [
-        (METRIC_SYSTEM, 48.4, 1, 48),
         (METRIC_SYSTEM, 48.6, 1, 49),
         (US_CUSTOMARY_SYSTEM, 120, 1, 49),
         (METRIC_SYSTEM, 48.6, 0.5, 48.5),
@@ -576,16 +624,46 @@ async def test_water_heater_temperature_rounds_to_native_step(
     )
 
     assert point.domestic_hot_water.temperature.value == expected_temperature
-    if expected_temperature == 48:
-        coordinator.client.patch_characteristic.assert_not_awaited()
-    else:
-        coordinator.client.patch_characteristic.assert_awaited_once_with(
-            gateway.id,
-            point.embedded_id,
-            "temperatureControl",
-            expected_temperature,
-            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
-        )
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        point.embedded_id,
+        "temperatureControl",
+        expected_temperature,
+        path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
+
+
+async def test_water_heater_rounded_current_temperature_does_not_write(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Skip a request when the rounded target equals the current tank target."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    point = next(
+        point
+        for device in coordinator.data.values()
+        for point in device.device.management_points
+        if point.management_point_type == "domesticHotWaterTank"
+    )
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.value = 48
+    point.domestic_hot_water.temperature.step_value = 1
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: 48.4,
+        },
+        blocking=True,
+    )
+
+    coordinator.client.patch_characteristic.assert_not_awaited()
 
 
 async def test_water_heater_temperature_rounding_is_anchored_to_minimum(
@@ -734,20 +812,32 @@ async def test_water_heater_publishes_successful_partial_operation_write(
 
 
 @pytest.mark.parametrize(
-    ("method", "args", "power_value"),
+    ("service", "service_data", "power_value"),
     [
-        ("async_turn_on", (), None),
-        ("async_turn_off", (), None),
-        ("async_set_operation_mode", (STATE_HEAT_PUMP,), None),
-        ("async_set_temperature", (50,), None),
-        ("async_set_temperature", (50,), "unknown"),
+        (WATER_HEATER_SERVICE_TURN_ON, {}, None),
+        (WATER_HEATER_SERVICE_TURN_OFF, {}, None),
+        (
+            WATER_HEATER_SERVICE_SET_OPERATION_MODE,
+            {"operation_mode": STATE_HEAT_PUMP},
+            None,
+        ),
+        (
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            {WaterHeaterServiceArgument.TEMPERATURE: 50},
+            None,
+        ),
+        (
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            {WaterHeaterServiceArgument.TEMPERATURE: 50},
+            "unknown",
+        ),
     ],
 )
 async def test_water_heater_rejects_unknown_power_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    method: str,
-    args: tuple[object, ...],
+    service: str,
+    service_data: dict[str, str | int],
     power_value: str | None,
 ) -> None:
     """Reject HA write services when Daikin omits the current power value."""
@@ -764,19 +854,6 @@ async def test_water_heater_rejects_unknown_power_state(
     point.on_off_mode.value = power_value
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
-
-    if method == "async_turn_on":
-        service = WATER_HEATER_SERVICE_TURN_ON
-        service_data = {}
-    elif method == "async_turn_off":
-        service = WATER_HEATER_SERVICE_TURN_OFF
-        service_data = {}
-    elif method == "async_set_operation_mode":
-        service = WATER_HEATER_SERVICE_SET_OPERATION_MODE
-        service_data = {"operation_mode": args[0]}
-    else:
-        service = WATER_HEATER_SERVICE_SET_TEMPERATURE
-        service_data = {WaterHeaterServiceArgument.TEMPERATURE: args[0]}
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(

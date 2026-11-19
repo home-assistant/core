@@ -1702,14 +1702,12 @@ async def test_native_temperature_unit(
     assert setpoint is not None
     assert cc is not None
     setpoint.unit = setpoint_unit
-    sensory_target = (
-        "leavingWaterTemperature"
-        if entity._setpoint == "leavingWaterOffset"
-        else entity._setpoint
-    )
+    sensory_target = {
+        "leavingWaterOffset": "leavingWaterTemperature",
+    }.get(entity._setpoint, entity._setpoint)
     sensory_data = cc.sensory_data(sensory_target)
-    if sensory_data is not None:
-        sensory_data.unit = sensory_unit
+    assert sensory_data is not None
+    sensory_data.unit = sensory_unit
     config_entry.runtime_data.async_update_listeners()
 
     assert entity.native_temperature_unit == expected_unit

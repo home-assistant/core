@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import cast, override
 
-from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoint
+from daikin_onecta.models import Characteristic, EnergyData, ManagementPoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -299,23 +299,41 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._datatype = details.datatype
         self.entity_description = description
         self._sensor_type = details.sensor_type
-        self._aggregate: EnergyAggregate | None = None
+        self._energy_data: EnergyData | None = None
+        self._has_energy_series = False
         self._attr_unique_id = _energy_sensor_unique_id(self._device_id, details)
         self.update_state()
 
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        self._aggregate = self._find_energy_aggregate()
-        self._attr_native_value = self.sensor_value()
         point = self._management_point
-        energy_data = None
-        if point is not None:
-            energy_data = (
-                point.consumption
-                if self._datatype == "consumption"
-                else point.energy_output
+        energy_data = (
+            point.consumption
+            if point is not None and self._datatype == "consumption"
+            else point.energy_output
+            if point is not None
+            else None
+        )
+        self._energy_data = energy_data
+        values_period = "month" if self._period == "year" else self._period
+        self._has_energy_series = (
+            energy_data is not None
+            and energy_data.values(
+                self._sensor_type, self._operation_mode, values_period
             )
+            is not None
+        )
+        self._attr_native_value = (
+            energy_data.current_total(
+                self._sensor_type,
+                self._operation_mode,
+                self._period,
+                month=dt_util.now().month if self._period == "month" else None,
+            )
+            if energy_data is not None
+            else None
+        )
         source = (
             energy_data.source(self._sensor_type) if energy_data is not None else None
         )
@@ -323,51 +341,11 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
             source.unit if source is not None else None, self.entity_description
         )
 
-    def _find_energy_aggregate(self) -> EnergyAggregate | None:
-        """Find the matching energy aggregate in the current model."""
-        point = self._management_point
-        if point is None:
-            return None
-        period = self._period
-        return next(
-            (
-                aggregate
-                for aggregate in point.energy_aggregates
-                if aggregate.data_type == self._datatype
-                and aggregate.source == self._sensor_type
-                and aggregate.operation_mode == self._operation_mode
-                and aggregate.period == period
-            ),
-            None,
-        )
-
     @property
     @override
     def available(self) -> bool:
         """Return whether the matching energy aggregate is still available."""
-        return super().available and self._aggregate is not None
-
-    def sensor_value(self) -> float | None:
-        """Return energy aggregated for the current day, week, month, or year.
-
-        Daikin returns rolling windows for each aggregation period. The first
-        half of the daily, weekly, and yearly arrays represents the preceding
-        period; the second half represents the current period. Consequently,
-        the current day starts at ``d[12]``, the current week at ``w[7]``,
-        and the current year at ``m[12]``. The current month is a single slot
-        in the monthly array.
-
-        Daikin publishes consumption data on its own schedule. ``None`` means
-        that a time slot is not available yet and contributes no consumption
-        until a later update supplies its value.
-        """
-        period = self._period
-        aggregate = self._aggregate
-        if aggregate is None:
-            return None
-        return aggregate.current_total(
-            month=dt_util.now().month if period == "month" else None
-        )
+        return super().available and self._has_energy_series
 
 
 class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
@@ -420,7 +398,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else self._characteristic(self._value)
+            else point.characteristic(self._value)
         )
         return point, characteristic
 

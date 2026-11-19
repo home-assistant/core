@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from daikin_onecta.client import OnectaClient
+from daikin_onecta.models import ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -115,20 +116,49 @@ async def test_air_purifier_ignores_unknown_fixed_speed(
     assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
 
+def _make_purifier_mode_read_only(point: ManagementPoint) -> None:
+    """Make purifier mode selection unavailable while preserving power control."""
+    assert point.air_purification is not None
+    assert point.air_purification.mode is not None
+    point.air_purification.mode.settable = False
+
+
+def _remove_purifier_fixed_speed(point: ManagementPoint) -> None:
+    """Remove the manual fixed-speed control while preserving power control."""
+    assert point.air_purification is not None
+    operation = point.air_purification.fan_operation("manualFan")
+    assert operation is not None
+    assert operation.fan_speed is not None
+    assert operation.fan_speed.modes is not None
+    operation.fan_speed.modes.pop(FANMODE_FIXED)
+
+
 @pytest.mark.parametrize(
-    ("method", "args"),
+    ("service", "service_data", "make_unavailable", "translation_key"),
     [
-        ("async_turn_on", ()),
-        ("async_turn_off", ()),
-        ("async_set_preset_mode", ("auto_fan",)),
-        ("async_set_percentage", (100,)),
+        pytest.param(
+            SERVICE_SET_PRESET_MODE,
+            {FanServiceArgument.PRESET_MODE: "auto_fan"},
+            _make_purifier_mode_read_only,
+            "air_purifier_mode_unavailable",
+            id="mode",
+        ),
+        pytest.param(
+            SERVICE_SET_PERCENTAGE,
+            {FanServiceArgument.PERCENTAGE: 50},
+            _remove_purifier_fixed_speed,
+            "air_purifier_speed_unavailable",
+            id="speed",
+        ),
     ],
 )
 async def test_air_purifier_rejects_unavailable_controls(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    method: str,
-    args: tuple[object, ...],
+    service: str,
+    service_data: dict[str, str | int],
+    make_unavailable: Callable[[ManagementPoint], None],
+    translation_key: str,
 ) -> None:
     """Reject purifier services when the cloud no longer provides its controls."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
@@ -138,30 +168,18 @@ async def test_air_purifier_rejects_unavailable_controls(
     point = next(iter(coordinator.data.values())).device.management_points_by_type(
         "climateControl"
     )[0]
-    point.characteristics.pop("airPurificationMode")
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
-
-    if method in ("async_turn_on", "async_turn_off"):
-        service = (
-            FAN_SERVICE_TURN_ON if method == "async_turn_on" else FAN_SERVICE_TURN_OFF
-        )
-        service_data = {}
-    elif method == "async_set_preset_mode":
-        service = SERVICE_SET_PRESET_MODE
-        service_data = {FanServiceArgument.PRESET_MODE: args[0]}
-    else:
-        service = SERVICE_SET_PERCENTAGE
-        service_data = {FanServiceArgument.PERCENTAGE: args[0]}
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "fan.air_purifier", **service_data},
-        blocking=True,
-    )
+    make_unavailable(point)
     state = hass.states.get("fan.air_purifier")
-    assert state is not None and state.state == "unavailable"
+    assert state is not None and state.state != "unavailable"
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "fan.air_purifier", **service_data},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
     execute.assert_not_awaited()
 
 
@@ -295,9 +313,9 @@ async def test_air_purifier_preserves_unknown_fixed_speed(
     assert state.attributes[FanEntityStateAttribute.PERCENTAGE] is None
 
 
-@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
+@pytest.mark.parametrize("service", [FAN_SERVICE_TURN_ON, FAN_SERVICE_TURN_OFF])
 async def test_air_purifier_rejects_unknown_power_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry, method: str
+    hass: HomeAssistant, config_entry: MockConfigEntry, service: str
 ) -> None:
     """Reject HA power services when Daikin omits its current value."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
@@ -313,7 +331,7 @@ async def test_air_purifier_rejects_unknown_power_state(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             FAN_DOMAIN,
-            FAN_SERVICE_TURN_ON if method == "async_turn_on" else FAN_SERVICE_TURN_OFF,
+            service,
             {ATTR_ENTITY_ID: "fan.air_purifier"},
             blocking=True,
         )

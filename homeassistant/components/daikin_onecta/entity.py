@@ -216,11 +216,10 @@ class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
         )
 
 
-class DaikinEntity(DaikinOnectaEntity):
-    """Base entity backed by a Daikin gateway or management point."""
+class DaikinManagementPointEntity(DaikinOnectaEntity):
+    """Base entity backed by a Daikin management point."""
 
     _attr_has_entity_name = True
-    _embedded_id: str
 
     def __init__(
         self,
@@ -235,11 +234,8 @@ class DaikinEntity(DaikinOnectaEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return whether the coordinator, device, and point are available."""
-        device = self._device
-        if not super().available or not device.available:
-            return False
-        return device.management_point(self._embedded_id) is not None
+        """Return whether the coordinator and gateway are available."""
+        return super().available and self._device.available
 
     async def _async_execute_command(
         self,
@@ -255,12 +251,6 @@ class DaikinEntity(DaikinOnectaEntity):
         """Publish the locally updated model to every entity for the account."""
         self.coordinator.async_update_listeners()
 
-
-class DaikinManagementPointEntity(DaikinEntity):
-    """Base entity backed by a Daikin management point."""
-
-    _embedded_id: str
-
     @property
     def _management_point(self) -> ManagementPoint | None:
         """Return the current source management point."""
@@ -274,7 +264,7 @@ class DaikinManagementPointEntity(DaikinEntity):
     def _characteristic_exposed_on(self, name: str, platform: Platform) -> bool:
         """Return whether a scalar characteristic is still exposed on a platform."""
         point = self._management_point
-        characteristic = self._characteristic(name)
+        characteristic = point.characteristic(name) if point is not None else None
         return (
             point is not None
             and characteristic is not None
