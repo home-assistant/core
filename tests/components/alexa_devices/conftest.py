@@ -90,7 +90,11 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         async def _sync_dnd_state() -> None:
             assert dnd_event_handler, "on_dnd_event handler was not registered"
             await dnd_event_handler[0](
-                dict.fromkeys(client.get_devices_data.return_value, False)
+                {
+                    serial_num: False
+                    for serial_num, device in client.get_devices_data.return_value.items()
+                    if device.voice_control_supported
+                }
             )
 
         client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)
