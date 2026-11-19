@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'friends_configured': 2,
+    'game_icons_cached': 2,
+    'last_update_success': True,
+    'players': list([
+      dict({
+        'community_visibility_state': 1,
+        'has_game_icon': True,
+        'has_last_logoff': True,
+        'in_game': True,
+        'is_config_entry_account': True,
+        'level': 10,
+        'persona_state': 1,
+        'persona_state_flags': 0,
+        'profile_state': 1,
+      }),
+      dict({
+        'community_visibility_state': 1,
+        'has_game_icon': False,
+        'has_last_logoff': True,
+        'in_game': False,
+        'is_config_entry_account': False,
+        'level': 10,
+        'persona_state': 2,
+        'persona_state_flags': 0,
+        'profile_state': 1,
+      }),
+      dict({
+        'community_visibility_state': 3,
+        'has_game_icon': False,
+        'has_last_logoff': False,
+        'in_game': False,
+        'is_config_entry_account': False,
+        'level': 10,
+        'persona_state': 0,
+        'persona_state_flags': 0,
+        'profile_state': None,
+      }),
+    ]),
+    'players_returned': 3,
+  })
+# ---
