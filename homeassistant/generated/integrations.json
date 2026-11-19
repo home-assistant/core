@@ -12850,6 +12850,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "royal1915": {
+      "name": "Royal 1915",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "rss_feed_template": {
       "name": "RSS feed template",
       "integration_type": "hub",
