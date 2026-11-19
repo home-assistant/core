@@ -1,6 +1,7 @@
 """Test Zamg component init."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
@@ -15,8 +16,6 @@ from .conftest import (
     TEST_STATION_NAME,
     TEST_STATION_NAME_2,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

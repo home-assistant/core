@@ -206,17 +206,35 @@ def test_recursive_reference_targets(snapshot: SnapshotAssertion) -> None:
 
 
 @pytest.mark.parametrize(
-    "reference",
+    ("reference", "translation_key"),
     [
-        pytest.param("#/$defs/missing", id="missing"),
-        pytest.param("https://example.com/schema", id="remote"),
-        pytest.param("#/properties/value/anyOf/01", id="leading-zero"),
-        pytest.param("#/properties/value/anyOf/-1", id="negative-index"),
-        pytest.param("#/properties/value/anyOf/9", id="out-of-range"),
-        pytest.param("#/properties/value/anyOf/0/type", id="non-schema-target"),
+        pytest.param("#/$defs/missing", "invalid_schema_reference", id="missing"),
+        pytest.param(
+            "https://example.com/schema", "unsupported_schema_reference", id="remote"
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/01",
+            "invalid_schema_reference",
+            id="leading-zero",
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/-1",
+            "invalid_schema_reference",
+            id="negative-index",
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/9",
+            "invalid_schema_reference",
+            id="out-of-range",
+        ),
+        pytest.param(
+            "#/properties/value/anyOf/0/type",
+            "unsupported_schema_reference",
+            id="non-schema-target",
+        ),
     ],
 )
-def test_invalid_reference(reference: str) -> None:
+def test_invalid_reference(reference: str, translation_key: str) -> None:
     """Invalid references fail before schema adjustments can obscure the cause."""
     schema = {
         "type": "object",
@@ -227,9 +245,11 @@ def test_invalid_reference(reference: str) -> None:
     }
     original = deepcopy(schema)
 
-    with pytest.raises(HomeAssistantError, match="OpenRouter output schema reference"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         adjust_schema(schema)
 
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == {"reference": reference}
     assert schema == original
 
 

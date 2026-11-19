@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator-off",
+        "state": {
+          "on": "mdi:radiator"
+        }
+      }
+    },
     "sensor": {
       "tilt_state": {
         "state": {
@@ -19,6 +27,9 @@
     },
     "activate_vacation": {
       "service": "mdi:compass"
+    },
+    "arm_anyway": {
+      "service": "mdi:shield-alert"
     },
     "deactivate_eco_mode": {
       "service": "mdi:leaf-off"

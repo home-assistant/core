@@ -2,16 +2,18 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyvlx import PyVLXException
 from pyvlx.opening_device import OpeningDevice, Position
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from . import VeluxConfigEntry
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -30,7 +32,7 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: VeluxConfigEntry,
         node: OpeningDevice,
     ) -> None:
         """Initialize the coordinator."""

@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar, override
+from typing import Any, Generic, Protocol, TypeVar, final, override
 import urllib.error
 
 import aiohttp
@@ -37,7 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -57,6 +57,14 @@ class UpdateFailed(HomeAssistantError):
         """Initialize exception."""
         super().__init__(*args, **kwargs)
         self.retry_after = retry_after
+
+
+class UpdateFailedUnreachable(UpdateFailed):
+    """Raised when an update failed because the device or service is unreachable.
+
+    Use for any device or service that cannot be reached, e.g. a device that
+    was turned off. The failure is logged at info level instead of error.
+    """
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -82,7 +90,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | Undefined | None = Undefined,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -99,7 +107,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        if config_entry is UNDEFINED:
+        if config_entry is Undefined:
             # late import to avoid circular imports
             from . import frame  # noqa: PLC0415
 
@@ -122,6 +130,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
+        # Use data_or_none where data can be read before the first update.
         self.data: _DataT = None  # type: ignore[assignment]
 
         # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
@@ -244,6 +253,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if self._unsub_shutdown:
             self._unsub_shutdown()
             self._unsub_shutdown = None
+
+    @final
+    @property
+    def data_or_none(self) -> _DataT | None:
+        """Return the data, or None before the first successful update.
+
+        `data` is annotated as `_DataT` rather than `_DataT | None`, so that
+        entities set up after `async_config_entry_first_refresh` need no checks.
+        Use this instead in code that can run before the first successful
+        update, for example `_async_update_data` reusing the previous data, or
+        entities of a coordinator that is refreshed in the background after setup.
+        """
+        return self.data
 
     @property
     def update_interval(self) -> timedelta | None:
@@ -375,6 +397,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             translation_domain=getattr(cause, "translation_domain", None),
             translation_key=getattr(cause, "translation_key", None),
             translation_placeholders=getattr(cause, "translation_placeholders", None),
+            retry_after=getattr(cause, "retry_after", None),
         )
         ex.__cause__ = cause
         raise ex
@@ -512,9 +535,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
-            # We can only honor a retry_after, after the config entry has been set up
-            # Basically meaning that the retry after can't be used when coming
-            # from an async_config_entry_first_refresh
+            # During async_config_entry_first_refresh the retry_after is passed on
+            # to ConfigEntryNotReady, so the config entry setup retry honors it
             if err.retry_after is not None and not raise_on_entry_error:
                 self._retry_after = err.retry_after
                 self.logger.debug(
@@ -523,7 +545,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 )
 
             if self.last_update_success:
-                if log_failures:
+                if log_failures and isinstance(err, UpdateFailedUnreachable):
+                    self.logger.info("%s is unavailable: %s", self.name, err)
+                elif log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False

@@ -57,6 +57,14 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to fetch the regions from the Ukraine Alarm API"
+    },
+    "deprecated_state_region": {
+      "message": "The region {region_name} is a state-level region, which is no longer supported. Remove this integration entry and add it again, selecting a district or community."
+    }
+  },
   "issues": {
     "deprecated_state_region": {
       "description": "The region `{region_name}` is a state-level region, which is no longer supported. Please remove this integration entry and add it again, selecting a district or community instead of the entire state.",

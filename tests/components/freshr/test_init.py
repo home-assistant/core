@@ -4,6 +4,7 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pyfreshr.exceptions import ApiResponseError, LoginError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.freshr.const import DOMAIN
 from homeassistant.components.freshr.coordinator import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DEVICE_ID, MagicMock, MockConfigEntry
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -3,6 +3,8 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -15,9 +17,6 @@ from .conftest import (
     RAIN_SENSOR_ON,
     mock_response_error,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 @pytest.fixture

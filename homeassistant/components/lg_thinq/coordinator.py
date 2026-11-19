@@ -6,16 +6,20 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from thinqconnect import ThinQAPIException
-from thinqconnect.integration import HABridge
+from thinqconnect.integration import HABridge, NotConnectedDeviceError
 
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
+
+from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
 
 if TYPE_CHECKING:
     from . import ThinqConfigEntry
-
-from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +103,11 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Request to the server to update the status from full response data."""
         try:
             return await self.api.fetch_data()
+        except NotConnectedDeviceError as e:
+            raise UpdateFailedUnreachable(
+                translation_domain=DOMAIN,
+                translation_key="device_not_connected",
+            ) from e
         except ThinQAPIException as e:
             raise UpdateFailed(e) from e
 

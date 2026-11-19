@@ -4,6 +4,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from specialized_turbo import (
     DecryptionError,
     EncryptionKeyProviderError,
@@ -33,6 +34,7 @@ from .conftest import (
     MOCK_ADDRESS,
     MOCK_ADDRESS_FORMATTED,
     MOCK_TCU1_ADDRESS,
+    MOCK_TCU1_ADDRESS_FORMATTED,
     NAME_ONLY_SERVICE_INFO,
     TCU1_SERVICE_INFO,
     TCX_SERVICE_INFO,
@@ -40,8 +42,6 @@ from .conftest import (
     make_service_info,
     make_wrapped_key,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -160,6 +160,7 @@ async def test_bluetooth_discovery_tcu1(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: MOCK_TCU1_ADDRESS}
+    assert result["result"].unique_id == MOCK_TCU1_ADDRESS_FORMATTED
     bike_info = mock_library.connection_constructor.call_args.kwargs["bike_info"]
     assert bike_info.ble_profile is not None
 
@@ -314,6 +315,7 @@ async def test_encrypted_account_setup_uses_managed_http_client(
         CONF_KEY_SOURCE: KEY_SOURCE_ACCOUNT,
         CONF_WRAPPED_KEY: wrapped_key,
     }
+    assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
     cloud_constructor.assert_called_once_with(client=http_client)
     cloud.login.assert_awaited_once_with("rider@example.com", "secret")
     cloud.get_wrapped_key.assert_awaited_once_with(
@@ -599,18 +601,23 @@ async def test_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: MOCK_ADDRESS}
+    assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
     mock_library.connection.connect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    "service_info",
-    [TCU1_SERVICE_INFO, NAME_ONLY_SERVICE_INFO],
+    ("service_info", "expected_unique_id"),
+    [
+        (TCU1_SERVICE_INFO, MOCK_TCU1_ADDRESS_FORMATTED),
+        (NAME_ONLY_SERVICE_INFO, MOCK_ADDRESS_FORMATTED),
+    ],
     ids=["tcu1", "name_only"],
 )
 async def test_user_flow_discovers_supported_variants(
     hass: HomeAssistant,
     mock_library: MockLibrary,
     service_info: BluetoothServiceInfoBleak,
+    expected_unique_id: str,
 ) -> None:
     """Test manual setup discovers TCU1 and name-only WSBC bikes."""
     with patch(
@@ -629,6 +636,7 @@ async def test_user_flow_discovers_supported_variants(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.name
+    assert result["result"].unique_id == expected_unique_id
     mock_library.connection.connect.assert_awaited_once()
 
 
@@ -660,6 +668,7 @@ async def test_user_flow_selects_encryption_source_after_bike(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_ADDRESS_FORMATTED
     mock_library.connection.connect.assert_awaited_once()
 
 
@@ -735,14 +744,7 @@ async def test_reauth_adds_manual_key(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -767,13 +769,7 @@ async def test_reconfigure_replaces_key(
         bytes.fromhex("ffeeddccbbaa99887766554433221100")
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": encrypted_config_entry.entry_id,
-        },
-    )
+    result = await encrypted_config_entry.start_reconfigure_flow(hass)
 
     result = await _choose_key_source(hass, result, "manual_key")
     result = await hass.config_entries.flow.async_configure(
@@ -795,13 +791,7 @@ async def test_reconfigure_unencrypted_entry_not_supported(
     """Test reconfiguration is limited to encrypted entries."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_encrypted"

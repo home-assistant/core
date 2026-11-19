@@ -7,7 +7,11 @@ from homeassistant.components.device_automation import InvalidDeviceAutomationCo
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
@@ -28,7 +32,6 @@ from .device_automation_helpers import (
 )
 from .helpers import (
     async_get_node_from_device_id,
-    check_type_schema_map,
     get_value_state_schema,
     get_zwave_value_from_config,
     node_status_matches,
@@ -78,16 +81,9 @@ TYPE_SCHEMA_MAP = {
     VALUE_TYPE: VALUE_CONDITION_SCHEMA,
 }
 
-
-CONDITION_TYPE_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_TYPE): probatio.In(TYPE_SCHEMA_MAP)},
-    extra=probatio.ALLOW_EXTRA,
-)
-
 CONDITION_SCHEMA = probatio.All(
     remove_keys_with_empty_values,
-    CONDITION_TYPE_SCHEMA,
-    check_type_schema_map(TYPE_SCHEMA_MAP),
+    probatio.TaggedUnion(CONF_TYPE, TYPE_SCHEMA_MAP),
 )
 
 
@@ -125,7 +121,12 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
+    # Conditions are node-scoped; endpoint child devices don't expose any.
+    if isinstance(dr.async_get(hass).async_get(device_id), dr.ChildDeviceEntry):
+        return []
+
     conditions: list[dict] = []
+
     base_condition = {
         CONF_CONDITION: "device",
         CONF_DEVICE_ID: device_id,

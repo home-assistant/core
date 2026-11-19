@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, patch
 
 from essent_dynamic_pricing import EssentPrices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.essent.const import DOMAIN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -28,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for config flow tests."""
     with patch(
         "homeassistant.components.essent.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 

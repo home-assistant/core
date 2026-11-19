@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from motioneye_client.const import KEY_ACTIONS
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import (
@@ -25,8 +26,6 @@ from . import (
     register_test_entity,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_sensor_actions(

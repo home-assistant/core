@@ -10,6 +10,13 @@
       "clientVersion": "1.12.3-td91ea7286-ge1bbbd90c",
       "updateAvailable": true,
       "os": "iOS",
+      "distro": { "name": "ios", "version": "15.0" },
+      "oauthClientId": "kclient1234CNTRL",
+      "postureIdentity": {
+        "serialNumbers": ["C02ABC123XYZ"],
+        "hardwareAddresses": ["00:11:22:33:44:55"],
+        "disabled": false
+      },
       "created": "2021-08-19T09:25:22Z",
       "lastSeen": "2021-09-16T06:11:23Z",
       "keyExpiryDisabled": false,

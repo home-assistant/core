@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solarlog_cli.solarlog_exceptions import (
     SolarLogAuthenticationError,
     SolarLogConnectionError,
@@ -23,8 +24,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_platform
 from .const import HOST
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload(
@@ -212,3 +211,78 @@ async def test_timeout_increase_refresh(
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.data[CONF_TIMEOUT] == 60
+
+
+@pytest.mark.parametrize(
+    "update_method",
+    ["update_energy_data", "update_inverter_data"],
+)
+@pytest.mark.parametrize(
+    ("login_success", "entry_state"),
+    [
+        (False, ConfigEntryState.SETUP_ERROR),
+        (True, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_auth_error_during_extended_data_setup(
+    hass: HomeAssistant,
+    update_method: str,
+    login_success: bool,
+    entry_state: str,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test authentication recovery for extended data coordinators."""
+
+    getattr(
+        mock_solarlog_connector, update_method
+    ).side_effect = SolarLogAuthenticationError
+    mock_solarlog_connector.login.side_effect = [True, login_success]
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert mock_config_entry.state is entry_state
+    assert mock_solarlog_connector.login.await_count == 2
+
+
+async def test_missing_longtime_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test handling of missing longtime data."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    mock_solarlog_connector.update_energy_data.return_value = None
+    basic_data_updates = mock_solarlog_connector.update_basic_data.await_count
+    device_list_updates = mock_solarlog_connector.update_device_list.await_count
+    inverter_data_updates = mock_solarlog_connector.update_inverter_data.await_count
+    battery_data_updates = mock_solarlog_connector.update_battery_data.await_count
+    energy_data_updates = mock_solarlog_connector.update_energy_data.await_count
+
+    freezer.tick(delta=timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        mock_solarlog_connector.update_basic_data.await_count == basic_data_updates + 1
+    )
+    assert (
+        mock_solarlog_connector.update_device_list.await_count
+        == device_list_updates + 1
+    )
+    assert (
+        mock_solarlog_connector.update_inverter_data.await_count
+        == inverter_data_updates + 1
+    )
+    assert (
+        mock_solarlog_connector.update_battery_data.await_count
+        == battery_data_updates + 1
+    )
+    assert (
+        mock_solarlog_connector.update_energy_data.await_count
+        == energy_data_updates + 1
+    )
+    assert mock_config_entry.runtime_data.longtime_data_coordinator.data == EnergyData(
+        None, None
+    )

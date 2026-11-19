@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -11,8 +12,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
 from .conftest import MOCK_MAC, MOCK_SERIAL
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_get_devices")

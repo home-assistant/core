@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, NamedTuple, assert_never, cast, override
+from typing import IO, Any, NamedTuple, assert_never, override
 
 from gazetteer_matcher import FrameCandidate, GazetteerMatcher
 from hassil.expression import Expression, Group, ListReference
@@ -35,6 +35,7 @@ from home_assistant_intents import (
     get_languages,
 )
 import probatio
+from typing_extensions import Sentinel as sentinel
 import yaml
 
 from homeassistant.components.homeassistant.exposed_entities import (
@@ -107,7 +108,7 @@ _DEVICE_REGISTRY_UPDATE_FIELDS = [
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
 
-ERROR_SENTINEL = object()
+ERROR_SENTINEL = sentinel("ERROR_SENTINEL")
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -233,6 +234,13 @@ async def async_setup_default_agent(
     ha_start.async_at_started(hass, async_hass_started)
 
 
+# Errors that mean the sentence did not apply, as opposed to a failure to act on it
+_MATCH_ERROR_CODES = (
+    intent.IntentResponseErrorCode.NO_INTENT_MATCH,
+    intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+)
+
+
 class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
@@ -243,7 +251,7 @@ class DefaultAgent(ConversationEntity):
         """Initialize the default agent."""
         self.hass = hass
 
-        self._lang_intents: dict[str, LanguageIntents | object] = {}
+        self._lang_intents: dict[str, LanguageIntents | ERROR_SENTINEL] = {}
         self._load_intents_lock = asyncio.Lock()
 
         # Intents from common conversation config
@@ -520,6 +528,8 @@ class DefaultAgent(ConversationEntity):
         result: RecognizeResult | None,
         user_input: ConversationInput,
         chat_log: ChatLog,
+        *,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -581,6 +591,7 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
+            discard_match_errors=discard_match_errors,
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
@@ -600,6 +611,8 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
+        *,
+        discard_match_errors: bool = False,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
         language = user_input.language or self.hass.config.language
@@ -619,14 +632,6 @@ class DefaultAgent(ConversationEntity):
 
         if satellite_area is not None:
             slots = slots | {"preferred_area_id": {"value": satellite_area.id}}
-
-        chat_log.async_add_assistant_content_without_tools(
-            AssistantContent(
-                agent_id=user_input.agent_id,
-                content=None,
-                tool_calls=[tool_input],
-            )
-        )
 
         try:
             intent_response = await intent.async_handle(
@@ -673,6 +678,11 @@ class DefaultAgent(ConversationEntity):
                 self._get_error_text(ErrorKey.HANDLE_ERROR, lang_intents),
             )
 
+        if discard_match_errors and intent_response.error_code in _MATCH_ERROR_CODES:
+            # The caller hands the turn to another agent, which must not see
+            # a tool call it did not make
+            return intent_response
+
         if (
             (not intent_response.speech)
             and (intent_response.intent is not None)
@@ -689,6 +699,13 @@ class DefaultAgent(ConversationEntity):
                 )
                 intent_response.async_set_speech(speech)
 
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
+        )
         tool_result = llm.IntentResponseDict(intent_response)
         chat_log.async_add_assistant_content_without_tools(
             ToolResultContent(
@@ -1167,10 +1184,18 @@ class DefaultAgent(ConversationEntity):
         self._intent_cache.clear()
 
     @override
-    async def async_prepare(self, language: str | None = None) -> None:
-        """Load intents for a language."""
+    async def async_prepare(
+        self, language: str | None = None, *, strict_intents_only: bool = False
+    ) -> None:
+        """Build what recognizing a sentence in a language needs."""
         if language is None:
             language = self.hass.config.language
+
+        # Sentence triggers do not depend on the language intents
+        if self._trigger_intents is None and self._trigger_intents_config.get(
+            "intents"
+        ):
+            self._rebuild_trigger_intents()
 
         lang_intents = await self.async_get_or_load_intents(language)
 
@@ -1180,23 +1205,25 @@ class DefaultAgent(ConversationEntity):
 
         await self._make_slot_lists()
 
+        # Strict recognition uses neither the unexposed names nor the gazetteer
+        if strict_intents_only:
+            return
+
+        # Recognition builds this in the executor, but it reads loop-only state
+        self._get_unexposed_entity_names()
+
+        if self._gazetteer.supports(language):
+            await self._gazetteer.async_get_matcher()
+
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
         if lang_intents := self._lang_intents.get(language):
-            return (
-                None
-                if lang_intents is ERROR_SENTINEL
-                else cast(LanguageIntents, lang_intents)
-            )
+            return lang_intents if lang_intents is not ERROR_SENTINEL else None
 
         async with self._load_intents_lock:
             # In case it was loaded now
             if lang_intents := self._lang_intents.get(language):
-                return (
-                    None
-                    if lang_intents is ERROR_SENTINEL
-                    else cast(LanguageIntents, lang_intents)
-                )
+                return lang_intents if lang_intents is not ERROR_SENTINEL else None
 
             start = time.monotonic()
 
@@ -1632,15 +1659,10 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(result, user_input, chat_log)
-        if (
-            response.response_type is intent.IntentResponseType.ERROR
-            and response.error_code
-            not in (
-                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                intent.IntentResponseErrorCode.UNKNOWN,
-            )
-        ):
+        response = await self._async_process_intent_result(
+            result, user_input, chat_log, discard_match_errors=True
+        )
+        if response.error_code in _MATCH_ERROR_CODES:
             # We ignore no matching errors
             return None
         return response

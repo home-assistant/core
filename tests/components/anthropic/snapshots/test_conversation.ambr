@@ -54,6 +54,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -155,6 +156,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -201,7 +203,121 @@
     }),
   ])
 # ---
-# name: test_disabled_thinking[zero_budget]
+# name: test_cache_diagnostics_trace[absent]
+  list([
+    dict({
+      'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_cache_diagnostics_trace[pending]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': None,
+      }),
+      'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_cache_diagnostics_trace[previous_message_not_found]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'type': 'previous_message_not_found',
+        }),
+      }),
+      'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_cache_diagnostics_trace[system_changed]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 123,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_cache_diagnostics_trace[unavailable]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'type': 'unavailable',
+        }),
+      }),
+      'message_id': 'msg_cache_diagnostics_1',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'input_tokens': 0,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_disabled_thinking[between_tools_high_effort]
   list([
     dict({
       'content': '''
@@ -223,16 +339,334 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Hello, how can I help you today?',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
     }),
   ])
 # ---
-# name: test_disabled_thinking[zero_budget].1
+# name: test_disabled_thinking[between_tools_high_effort].1
   dict({
     'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Hello, how can I help you today?',
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-5-5',
+    'output_config': dict({
+      'effort': 'high',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'type': 'between_tools',
+    }),
+  })
+# ---
+# name: test_disabled_thinking[between_tools_low_effort]
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Respond simply and to the point in plain text.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Hello, how can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_disabled_thinking[between_tools_low_effort].1
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Hello, how can I help you today?',
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-5-5',
+    'output_config': dict({
+      'effort': 'low',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'type': 'between_tools',
+    }),
+  })
+# ---
+# name: test_disabled_thinking[between_tools_medium_effort]
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Respond simply and to the point in plain text.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Hello, how can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_disabled_thinking[between_tools_medium_effort].1
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Hello, how can I help you today?',
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-5-5',
+    'output_config': dict({
+      'effort': 'medium',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'type': 'between_tools',
+    }),
+  })
+# ---
+# name: test_disabled_thinking[high_effort]
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Respond simply and to the point in plain text.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Hello, how can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_disabled_thinking[high_effort].1
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': 'Hello, how can I help you today?',
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-haiku-5-5',
+    'output_config': dict({
+      'effort': 'high',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'type': 'disabled',
+    }),
+  })
+# ---
+# name: test_disabled_thinking[without_effort]
+  list([
+    dict({
+      'content': '''
+        You are a voice assistant for Home Assistant.
+        Answer questions about the world truthfully.
+        Respond simply and to the point in plain text.
+        Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+      ''',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'system',
+    }),
+    dict({
+      'attachments': None,
+      'content': 'hello',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Hello, how can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_disabled_thinking[without_effort].1
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -265,7 +699,7 @@
     }),
   })
 # ---
-# name: test_disabled_thinking[no_effort]
+# name: test_disabled_thinking[low_effort]
   list([
     dict({
       'content': '''
@@ -287,16 +721,26 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'Hello, how can I help you today?',
       'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
     }),
   ])
 # ---
-# name: test_disabled_thinking[no_effort].1
+# name: test_disabled_thinking[low_effort].1
   dict({
     'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -309,6 +753,9 @@
       }),
     ]),
     'model': 'claude-opus-4-7',
+    'output_config': dict({
+      'effort': 'low',
+    }),
     'stream': True,
     'system': list([
       dict({
@@ -329,9 +776,12 @@
     }),
   })
 # ---
-# name: test_extended_thinking
+# name: test_extended_thinking[claude-opus-4-5]
   dict({
     'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -354,6 +804,59 @@
       }),
     ]),
     'model': 'claude-opus-4-5',
+    'output_config': dict({
+      'effort': 'medium',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1500,
+      'display': 'summarized',
+      'type': 'enabled',
+    }),
+  })
+# ---
+# name: test_extended_thinking[claude-sonnet-4-6]
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'The user has just greeted me with "Hi". This is a simple greeting and doesn\'t require any Home Assistant function calls. I should respond with a friendly greeting and let them know I\'m available to help with their smart home.',
+            'type': 'thinking',
+          }),
+          dict({
+            'text': 'Hello, how can I help you today?',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-6',
     'output_config': dict({
       'effort': 'medium',
     }),
@@ -406,6 +909,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -421,6 +925,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -452,7 +957,14 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'I have successfully called the function',
       'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -1049,6 +1561,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -1064,6 +1577,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -1079,6 +1593,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -1546,6 +2061,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1654,6 +2170,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1765,6 +2282,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1866,6 +2384,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -1914,6 +2433,284 @@
     }),
   ])
 # ---
+# name: test_token_stats_cancelled
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[premature_eof]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_start]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 0,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 0,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_usage]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'interrupted',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 10,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_interrupted[transport_error_after_stop_reason]
+  list([
+    dict({
+      'diagnostics': dict({
+        'cache_miss_reason': dict({
+          'cache_missed_input_tokens': 12,
+          'type': 'system_changed',
+        }),
+      }),
+      'message_id': 'msg_interrupted',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 12,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'input_tokens': 100,
+        'output_tokens': 12,
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[cumulative_sparse_and_null]
+  list([
+    dict({
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+      'stats': dict({
+        'cache_creation_input_tokens': 30,
+        'cached_input_tokens': 90,
+        'input_tokens': 230,
+        'output_tokens': 40,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 110,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 30,
+        'cache_read_input_tokens': 90,
+        'future_delta_usage': 7,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 110,
+        'output_tokens': 40,
+        'output_tokens_details': dict({
+          'thinking_tokens': 8,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 3,
+          'web_search_requests': 4,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[explicit_zero]
+  list([
+    dict({
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+      'stats': dict({
+        'cache_creation_input_tokens': 0,
+        'cached_input_tokens': 0,
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 0,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 0,
+        'cache_read_input_tokens': 0,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 0,
+        'output_tokens': 0,
+        'output_tokens_details': dict({
+          'thinking_tokens': 0,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 0,
+          'web_search_requests': 0,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[initial_usage]
+  list([
+    dict({
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 100,
+        'output_tokens': 10,
+        'output_tokens_details': dict({
+          'future_output_tokens': 2,
+          'thinking_tokens': 4,
+        }),
+        'server_tool_use': dict({
+          'future_server_tool_requests': 6,
+          'web_fetch_requests': 2,
+          'web_search_requests': 1,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
+# name: test_token_stats_reported[nested_replacement]
+  list([
+    dict({
+      'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+      'stats': dict({
+        'cache_creation_input_tokens': 20,
+        'cached_input_tokens': 80,
+        'input_tokens': 200,
+        'output_tokens': 10,
+        'stop_reason': 'end_turn',
+        'uncached_input_tokens': 100,
+      }),
+      'usage': dict({
+        'cache_creation': dict({
+          'ephemeral_1h_input_tokens': 5,
+          'ephemeral_5m_input_tokens': 15,
+        }),
+        'cache_creation_input_tokens': 20,
+        'cache_read_input_tokens': 80,
+        'future_initial_usage': 5,
+        'inference_geo': 'us',
+        'input_tokens': 100,
+        'output_tokens': 10,
+        'output_tokens_details': dict({
+          'thinking_tokens': 9,
+        }),
+        'server_tool_use': dict({
+          'web_fetch_requests': 4,
+          'web_search_requests': 5,
+        }),
+        'service_tier': 'standard',
+      }),
+    }),
+  ])
+# ---
 # name: test_tool_search
   list([
     dict({
@@ -1930,6 +2727,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -1990,6 +2788,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2084,6 +2883,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2119,7 +2919,14 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'I am unable to perform the tool search at this time.',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -2217,6 +3024,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2276,6 +3084,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2309,6 +3118,7 @@
           }),
         ]),
         'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -2430,6 +3240,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2464,7 +3275,14 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'I am unable to perform the web fetch at this time.',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
@@ -2529,6 +3347,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2584,6 +3403,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2636,6 +3456,7 @@
           }),
         ]),
         'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -2774,6 +3595,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -2862,6 +3684,7 @@
         'citation_details': list([
         ]),
         'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc), skills=None),
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
         'redacted_thinking': None,
         'thinking_signature': None,
       }),
@@ -2967,6 +3790,7 @@
         'citation_details': list([
         ]),
         'container': None,
+        'message_id': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -3001,7 +3825,14 @@
       'agent_id': 'conversation.claude_conversation',
       'content': 'I am unable to perform the web search at this time.',
       'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-      'native': None,
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'message_id': 'msg_1234567890ABCDEFGHIJKLMN',
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,

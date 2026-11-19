@@ -4,6 +4,7 @@ import copy
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from roborock.data import RoborockDockTypeCode
 from roborock.device_features import RoborockDockFeatures
 from roborock.exceptions import RoborockException
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -205,7 +204,13 @@ async def test_mop_drying_sensor_deprecated(
     await hass.async_block_till_done()
 
     assert hass.states.get(MOP_DRYING_ENTITY_ID).state == "off"
-    assert (DOMAIN, MOP_DRYING_ISSUE_ID) in issue_registry.issues
+    issue = issue_registry.async_get_issue(DOMAIN, MOP_DRYING_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == mock_roborock_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, MOP_DRYING_ISSUE_ID) is None
 
 
 @pytest.mark.parametrize(

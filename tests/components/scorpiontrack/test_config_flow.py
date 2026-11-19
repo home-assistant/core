@@ -10,6 +10,7 @@ from pyscorpiontrack import (
     ScorpionTrackShareUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.scorpiontrack.const import (
     CONF_SHARE_TOKEN,
@@ -19,8 +20,6 @@ from homeassistant.components.scorpiontrack.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def _async_start_user_flow(hass: HomeAssistant) -> FlowResult:
@@ -159,6 +158,14 @@ async def test_user_flow_shows_validation_errors(
         == "canonical-token"
     )
 
+    mock_scorpiontrack_client.async_get_share.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SHARE_TOKEN: "canonical-token"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_maps_malformed_input_to_invalid_token(
     hass: HomeAssistant,
@@ -177,6 +184,13 @@ async def test_user_flow_maps_malformed_input_to_invalid_token(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SHARE_TOKEN: "canonical-token"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_recovers_after_invalid_token(

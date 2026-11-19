@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, patch
 
 from PIL import Image as PilImage
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import Image, async_get_image
 from homeassistant.components.proxy.camera import ProxyCamera
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 CROP_CONFIG = {
     "platform": "proxy",
@@ -82,3 +82,25 @@ async def test_crop_stream_after_small_frame(
         if b"\r\n\r\n" in part
     ]
     assert _size(frames[-1]) == (400, 225)
+
+
+async def test_image_return_cached_image_on_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the last cached image is returned when the source camera fails."""
+    assert await async_setup_component(
+        hass, "camera", {"camera": {**CROP_CONFIG, "cache_images": True}}
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.proxy.camera.async_get_image",
+        AsyncMock(
+            side_effect=[_jpeg(1536, 576), HomeAssistantError("Unable to get image")]
+        ),
+    ):
+        first = await async_get_image(hass, "camera.cropped")
+        second = await async_get_image(hass, "camera.cropped")
+
+    assert second.content == first.content
+    assert "Error getting original camera image" in caplog.text

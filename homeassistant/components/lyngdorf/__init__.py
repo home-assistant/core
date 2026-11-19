@@ -36,7 +36,7 @@ def _serial_as_mac(serial: str) -> str | None:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
-) -> bool:
+) -> None:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_model(config_entry.data[CONF_MODEL])
     assert lyngdorf_model is not None
@@ -78,8 +78,8 @@ async def async_setup_entry(
     if receiver.zone_b is not None:
         # Register the main device up front so Zone B can resolve its via_device_id.
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id, **device_info
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=config_entry.entry_id, device_info=device_info
         )
         zone_b_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
@@ -128,16 +128,10 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        await config_entry.runtime_data.receiver.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await config_entry.runtime_data.receiver.disconnect()

@@ -7,11 +7,10 @@ from aioazuredevops.models.build import Build, BuildDefinition
 from aioazuredevops.models.core import Project
 from aioazuredevops.models.work_item import WorkItem, WorkItemFields
 from aioazuredevops.models.work_item_type import Category, Icon, State, WorkItemType
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PAT, CONF_PROJECT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ORGANIZATION: Final[str] = "testorg"
 PROJECT: Final[str] = "testproject"

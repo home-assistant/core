@@ -15,6 +15,7 @@ from aiohttp.hdrs import (
 )
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http import DOMAIN, StaticPathConfig
 from homeassistant.components.http.cors import setup_cors
@@ -23,8 +24,6 @@ from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS, HomeAssistantV
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
-
-from tests.typing import ClientSessionGenerator
 
 TRUSTED_ORIGIN = "https://home-assistant.io"
 

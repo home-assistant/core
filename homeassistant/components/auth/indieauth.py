@@ -1,12 +1,13 @@
 """Helpers to resolve client ID/secret."""
 
+from contextlib import suppress
 from html.parser import HTMLParser
 from http import HTTPStatus
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import json
 import logging
 from typing import override
-from urllib.parse import ParseResult, urljoin, urlparse
+from urllib.parse import ParseResult, urljoin, urlparse, urlsplit
 
 import aiohttp
 import aiohttp.client_exceptions
@@ -19,13 +20,23 @@ _LOGGER = logging.getLogger(__name__)
 # We limit reads of a client_id page to the first 10kB.
 MAX_FETCH_BYTES = 10240
 
+DEFAULT_PORTS = {"http": 80, "https": 443}
+
 
 async def verify_redirect_uri(
-    hass: HomeAssistant, client_id: str, redirect_uri: str
+    hass: HomeAssistant,
+    client_id: str,
+    redirect_uri: str,
+    *,
+    allow_loopback_port_change: bool = False,
+    request_scheme: str,
+    request_netloc: str,
 ) -> bool:
-    """Verify that the client and redirect uri match."""
+    """Verify the redirect URI, allowing loopback port changes only with PKCE."""
     try:
-        client_id_parts = _parse_client_id(client_id)
+        client_id_parts = _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
 
@@ -63,6 +74,16 @@ async def verify_redirect_uri(
     redirect_uris = await fetch_redirect_uris(hass, client_id)
     if redirect_uri in redirect_uris:
         return True
+    # RFC 8252 requires PKCE for native clients choosing a loopback callback port.
+    if (
+        allow_loopback_port_change
+        and (loopback_uri := _without_loopback_port(redirect_uri)) is not None
+        and any(
+            _without_loopback_port(registered_uri) == loopback_uri
+            for registered_uri in redirect_uris
+        )
+    ):
+        return True
     _LOGGER.debug(
         "redirect_uri %s is not among the advertised redirect uris %s for client_id %s",
         redirect_uri,
@@ -70,6 +91,36 @@ async def verify_redirect_uri(
         client_id,
     )
     return False
+
+
+def _without_loopback_port(uri: str) -> str | None:
+    """Remove only the port from an HTTP loopback redirect URI."""
+    try:
+        parts = urlparse(uri)
+        port = parts.port
+    except ValueError:
+        return None
+
+    if (
+        parts.scheme != "http"
+        or parts.hostname not in ("127.0.0.1", "::1", "localhost")
+        or parts.username is not None
+        or "#" in uri
+        or port == 0
+    ):
+        return None
+
+    # urlparse lowercases the scheme, but only the port may differ.
+    scheme = uri[: len(parts.scheme)]
+    prefix = f"{scheme}://{parts.netloc}"
+    if not uri.startswith(prefix):
+        return None
+    if port is None:
+        return uri
+
+    # Preserve the original spelling, path and query, including an empty query.
+    host = parts.netloc.rsplit(":", 1)[0]
+    return f"{scheme}://{host}{uri[len(prefix) :]}"
 
 
 class LinkTagParser(HTMLParser):
@@ -199,10 +250,7 @@ def _parse_link_tag_redirect_uris(url: str, body: bytes) -> list[str]:
     parser = LinkTagParser("redirect_uri")
     parser.feed(body.decode(errors="replace"))
 
-    # Authorization endpoints verifying that a redirect_uri is allowed for use
-    # by a client MUST look for an exact match of the given redirect_uri in the
-    # request against the list of redirect_uris discovered after resolving any
-    # relative URLs.
+    # Resolve relative URLs before comparing registered redirect URIs.
     return [urljoin(url, found) for found in parser.found]
 
 
@@ -214,10 +262,9 @@ def _parse_metadata_document_redirect_uris(
     Per draft-ietf-oauth-client-id-metadata-document the document only counts
     when the client_id URL is https with a path and no fragment, the response
     was a direct 200 (not redirected), the document's client_id round-trips,
-    and every redirect_uris entry is an absolute, fragment-free URI matched
-    exactly. The url and its document are client-controlled and fetched
-    unauthenticated, so rejections log at DEBUG (higher levels would be a
-    log-flood vector).
+    and every redirect_uris entry is an absolute, fragment-free URI. The url
+    and its document are client-controlled and fetched unauthenticated, so
+    rejections log at DEBUG (higher levels would be a log-flood vector).
     """
     # A body at the read cap may be truncated; a truncated prefix must not be
     # trusted even if it happens to be parseable.
@@ -261,8 +308,7 @@ def _parse_metadata_document_redirect_uris(
         )
         return []
 
-    # redirect_uris entries are returned unmodified for RFC 6749 exact matching
-    # rather than resolving relative references.
+    # Return entries unmodified; redirect verification handles loopback ports.
     redirect_uris = document.get("redirect_uris")
     if not isinstance(redirect_uris, list) or not all(
         isinstance(redirect_uri, str) and _is_valid_metadata_redirect_uri(redirect_uri)
@@ -277,10 +323,17 @@ def _parse_metadata_document_redirect_uris(
     return redirect_uris
 
 
-def verify_client_id(client_id: str) -> bool:
+def verify_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> bool:
     """Verify that the client id is valid."""
     try:
-        _parse_client_id(client_id)
+        _parse_client_id(
+            client_id, request_scheme=request_scheme, request_netloc=request_netloc
+        )
     except ValueError:
         return False
     return True
@@ -303,8 +356,46 @@ def _parse_url(url: str) -> ParseResult:
     return parts
 
 
-def _parse_client_id(client_id: str) -> ParseResult:
+def _normalize_ip_netloc(
+    scheme: str, netloc: str
+) -> tuple[str, str | None, IPv4Address | IPv6Address, int | None] | None:
+    """Normalize the scheme, username, IP address and port of an IP netloc."""
+    try:
+        parts = urlsplit(f"{scheme}://{netloc}")
+        scheme = parts.scheme
+        hostname = parts.hostname
+        username = parts.username
+        port = parts.port
+    except ValueError:
+        return None
+
+    if hostname is None:
+        return None
+
+    try:
+        address = ip_address(hostname)
+    except ValueError:
+        return None
+
+    return (
+        scheme,
+        username,
+        address,
+        DEFAULT_PORTS.get(scheme) if port is None else port,
+    )
+
+
+def _parse_client_id(
+    client_id: str,
+    *,
+    request_scheme: str,
+    request_netloc: str,
+) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
+
+    An IP address that is not local is allowed when the client_id has the same
+    scheme and netloc (host including port) as the request, which is how the
+    frontend builds its client_id.
 
     https://indieauth.spec.indieweb.org/#client-identifier
     """
@@ -338,7 +429,7 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # MAY contain a port
     try:
         # parts raises ValueError when port cannot be parsed as int
-        _ = parts.port
+        port = parts.port
     except ValueError as ex:
         raise ValueError("Client ID contains invalid port") from ex
 
@@ -350,21 +441,29 @@ def _parse_client_id(client_id: str) -> ParseResult:
     # We are not goint to follow the spec here. We are going to allow
     # any internal network IP to be used inside a client id.
 
+    # We additionally allow the netloc the request was made to, since the
+    # frontend uses its own origin as client_id.
+
+    # hostname excludes the port and the [, ] around ipv6 addresses
+    if parts.hostname is None:
+        raise ValueError("Client ID must contain a hostname")
+
     address = None
-
-    try:
-        netloc = parts.netloc
-
-        # Strip the [, ] from ipv6 addresses before parsing
-        if netloc[0] == "[" and netloc[-1] == "]":
-            netloc = netloc[1:-1]
-
-        address = ip_address(netloc)
-    except ValueError:
-        # Not an ip address
-        pass
+    with suppress(ValueError):
+        address = ip_address(parts.hostname)
 
     if address is None or is_local(address):
         return parts
 
-    raise ValueError("Hostname should be a domain name or local IP address")
+    # Compare parsed values so default ports and IPv6 notation do not matter.
+    if _normalize_ip_netloc(request_scheme, request_netloc) == (
+        parts.scheme,
+        parts.username,
+        address,
+        DEFAULT_PORTS.get(parts.scheme) if port is None else port,
+    ):
+        return parts
+
+    raise ValueError(
+        "Hostname should be a domain name, a local IP address or the request netloc"
+    )

@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wled import WLEDConnectionError, WLEDError, WLEDUnsupportedVersionError
 
 from homeassistant.components.wled.const import CONF_KEEP_MAIN_LIGHT, DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 CONFIG = {CONF_HOST: "10.10.0.10"}
 
@@ -222,8 +221,12 @@ async def test_zeroconf_during_onboarding(
         (WLEDError, {"base": "invalid_response"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_submission_errors(
-    hass: HomeAssistant, mock_wled: MagicMock, exception: Exception, errors: dict
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    exception: type[Exception],
+    errors: dict[str, str],
 ) -> None:
     """Test errors during form submission."""
     mock_wled.update.side_effect = exception
@@ -242,6 +245,14 @@ async def test_form_submission_errors(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == errors
+
+    mock_wled.update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

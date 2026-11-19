@@ -59,6 +59,21 @@ class ThemeRepository(Repository):
         return f"{self.marketplace.core.config_path}/{configuration.theme_path}"
 
     @override
+    async def remove_local_directory(self) -> bool:
+        """Remove the theme, unless it is not known which folder holds it."""
+        # The custom integration did not store the file name, and with the repository
+        # gone from GitHub nothing tells it anymore. Guessing could hit another theme.
+        if not self.directory:
+            self.logger.warning(
+                "%s Not known which folder in %s holds this theme, remove it by hand",
+                self.string,
+                self._category_directory(),
+            )
+            return True
+
+        return await super().remove_local_directory()
+
+    @override
     def _tree_of_the_content(self) -> list[GitHubGitTreeEntryModel]:
         """Return the tree, or only the theme file when the root is the content."""
         # The whole root is not the theme, only the file validation found in it

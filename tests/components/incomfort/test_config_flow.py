@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientResponseError
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntry
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_CONFIG, MOCK_CONFIG_DHCP
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="rfgateway",
@@ -47,6 +46,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
     assert result["data"] == MOCK_CONFIG
@@ -149,6 +149,7 @@ async def test_dhcp_flow_simple(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.1.12"}
+    assert result["result"].unique_id == "00:04:a3:de:ad:ff"
 
     config_entry: ConfigEntry = result["result"]
     entry_id = config_entry.entry_id

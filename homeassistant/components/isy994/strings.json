@@ -50,6 +50,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_host": {
+      "message": "The ISY/IoX host value in configuration is invalid"
+    }
+  },
   "options": {
     "step": {
       "init": {

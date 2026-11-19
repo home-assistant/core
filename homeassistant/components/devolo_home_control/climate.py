@@ -6,9 +6,9 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.climate import (
-    ATTR_TEMPERATURE,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
@@ -52,7 +52,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = PRECISION_HALVES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
@@ -72,7 +72,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if hasattr(self._device_instance, "multi_level_sensor_property"):
             return next(
@@ -90,7 +90,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._value
 
@@ -101,7 +101,9 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if not self._multi_level_switch_property.set(kwargs[ATTR_TEMPERATURE]):
+        if not self._multi_level_switch_property.set(
+            kwargs[ClimateServiceArgument.TEMPERATURE]
+        ):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_failed",

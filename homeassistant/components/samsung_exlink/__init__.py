@@ -7,14 +7,15 @@ from homeassistant.const import CONF_DEVICE, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, LOGGER, SamsungExLinkConfigEntry
+from .const import DOMAIN, LOGGER
+from .coordinator import SamsungExLinkConfigEntry, SamsungExLinkCoordinator
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SamsungExLinkConfigEntry
-) -> bool:
+) -> None:
     """Set up Samsung ExLink from a config entry."""
     port = entry.data[CONF_DEVICE]
     tv = SamsungTV(port, model=MODELS.get(entry.data.get(CONF_MODEL, "")))
@@ -32,30 +33,29 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err) or type(err).__name__},
         ) from err
 
-    entry.runtime_data = tv
+    coordinator = SamsungExLinkCoordinator(hass, entry, tv)
+    entry.runtime_data = coordinator
+    coordinator.async_set_updated_data(tv.state)
 
     @callback
-    def _on_disconnect(state: TVState | None) -> None:
+    def _on_state_update(state: TVState | None) -> None:
+        coordinator.async_set_updated_data(state)
         # Only reload if the entry is still loaded. During entry removal,
         # disconnect() fires this callback but the entry is already gone.
         if state is None and entry.state is ConfigEntryState.LOADED:
             LOGGER.warning("Samsung TV disconnected, reloading config entry")
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
-    entry.async_on_unload(tv.subscribe(_on_disconnect))
+    entry.async_on_unload(tv.subscribe(_on_state_update))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SamsungExLinkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    await entry.runtime_data.async_shutdown()
+    await entry.runtime_data.tv.disconnect()

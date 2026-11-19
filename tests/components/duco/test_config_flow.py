@@ -12,6 +12,7 @@ from duco_connectivity import (
     LanInfo,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.duco.const import DOMAIN
 from homeassistant.config_entries import (
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_HOST, TEST_MAC, UNSUPPORTED_BOARD_INFOS, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=IPv4Address(TEST_HOST),
@@ -627,6 +626,7 @@ async def test_user_flow_initializes_client_with_host(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
     mock_client_class.assert_called_once_with(
         session=ANY,
         host=TEST_HOST,

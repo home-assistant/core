@@ -75,7 +75,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry", return_value=True
+        "homeassistant.components.NEW_DOMAIN.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 

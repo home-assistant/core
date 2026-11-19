@@ -14,7 +14,6 @@ from aiocomelit.exceptions import (
 from aiohttp import ClientSession, CookieJar
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -24,7 +23,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN, LOGGER, ObjectClassType
-from .coordinator import ComelitBaseCoordinator
+from .coordinator import ComelitBaseCoordinator, ComelitConfigEntry
 from .entity import ComelitBridgeBaseEntity
 
 
@@ -52,7 +51,7 @@ def load_api_data(
 
 async def cleanup_stale_entity(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ComelitConfigEntry,
     entry_unique_id: str,
     device: ComelitDeviceObject,
 ) -> None:
@@ -73,7 +72,7 @@ async def cleanup_stale_entity(
 
 
 def _async_remove_stale_devices(
-    hass: HomeAssistant, identifiers: list[str], config_entry: ConfigEntry
+    hass: HomeAssistant, identifiers: list[str], config_entry: ComelitConfigEntry
 ) -> None:
     """Remove stale devices."""
 

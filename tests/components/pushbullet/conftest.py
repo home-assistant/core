@@ -2,9 +2,8 @@
 
 from pushbullet import PushBullet
 import pytest
+from pytest_homeassistant.common import load_fixture
 from requests_mock import Mocker
-
-from tests.common import load_fixture
 
 
 @pytest.fixture(autouse=True)

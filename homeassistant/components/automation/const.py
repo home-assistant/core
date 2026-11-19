@@ -2,9 +2,42 @@
 
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .entity import BaseAutomationEntity
 
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
+
+ATTR_SOURCE = "source"
+EVENT_AUTOMATION_RELOADED = "automation_reloaded"
+EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
+
+DEFAULT_STOP_ACTIONS = True
+
+
+class AutomationService(StrEnum):
+    """Store keys for automation services."""
+
+    RELOAD = "reload"
+    TOGGLE = "toggle"
+    TRIGGER = "trigger"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class AutomationServiceArgument(StrEnum):
+    """Store keys for automation service arguments."""
+
+    SKIP_CONDITION = "skip_condition"
+    STOP_ACTIONS = "stop_actions"
+    VARIABLES = "variables"
 
 
 class AutomationEntityCapabilityAttribute(StrEnum):

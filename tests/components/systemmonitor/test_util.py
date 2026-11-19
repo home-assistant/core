@@ -4,10 +4,9 @@ from unittest.mock import Mock
 
 from psutil._ntuples import sdiskpart
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

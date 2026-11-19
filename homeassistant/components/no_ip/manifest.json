@@ -1,7 +1,9 @@
 {
   "domain": "no_ip",
   "name": "No-IP.com",
+  "categories": ["computers_network.routers_network"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/no_ip",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy"

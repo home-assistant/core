@@ -50,6 +50,9 @@
       "energy_generation": {
         "name": "Energy generation"
       },
+      "last_reported": {
+        "name": "Last reported"
+      },
       "power_consumption": {
         "name": "Power consumption"
       },

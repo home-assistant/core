@@ -4,15 +4,14 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
+from pytest_homeassistant.common import MockConfigEntry, get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HEALTH_URL = "https://127.0.0.1:9000/api/system/status"
 

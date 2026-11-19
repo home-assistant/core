@@ -8,6 +8,12 @@ from unittest.mock import patch
 from airpatrol.api import AirPatrolAPI
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 
 from homeassistant.components.airpatrol.climate import (
     HA_TO_AP_FAN_MODES,
@@ -39,13 +45,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    MockConfigEntry,
-    SnapshotAssertion,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)

@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     UnitOfDataRate,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -30,7 +30,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DOWNLOAD,
-    ATTR_HOST,
     ATTR_UPLOAD,
     ATTR_VERSION,
     CONF_DURATION,
@@ -44,6 +43,7 @@ from .const import (
     DOMAIN,
     PROTOCOLS,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,10 +103,6 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Optional(ATTR_HOST, default=None): cv.string}
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iperf3 component."""
@@ -119,16 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not conf[CONF_MANUAL]:
             async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
 
-    def update(call: ServiceCall) -> None:
-        """Service call to manually update the data."""
-        called_host = call.data[ATTR_HOST]
-        if called_host in hass.data[DOMAIN]:
-            hass.data[DOMAIN][called_host].update()
-        else:
-            for iperf3_host in hass.data[DOMAIN].values():
-                iperf3_host.update()
-
-    hass.services.async_register(DOMAIN, "speedtest", update, schema=SERVICE_SCHEMA)
+    async_setup_services(hass)
 
     hass.async_create_task(
         async_load_platform(

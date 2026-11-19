@@ -1,5 +1,6 @@
 """Services for the NeoPool integration."""
 
+from enum import StrEnum
 import logging
 
 from neopool_modbus.decoders import combine_u32, decode_device_time
@@ -7,7 +8,7 @@ from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import DEVICE_TIME_REGISTER
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -29,12 +30,17 @@ from .helpers import prepare_device_time
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_GET_DEVICE_TIME = "get_device_time"
-SERVICE_SET_DEVICE_TIME = "set_device_time"
+
+class NeoPoolService(StrEnum):
+    """Store keys for NeoPool services."""
+
+    GET_DEVICE_TIME = "get_device_time"
+    SET_DEVICE_TIME = "set_device_time"
+
 
 SERVICE_DEVICE_TIME_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 
@@ -52,7 +58,7 @@ async def _get_coordinator(
     not met.
     """
     loaded = hass.config_entries.async_loaded_entries(DOMAIN)
-    device_id = call.data.get(ATTR_DEVICE_ID)
+    device_id = call.data.get(CommonServiceArgument.DEVICE_ID)
     if device_id is not None:
         target_ids = await async_extract_config_entry_ids(call)
         entry = next((e for e in loaded if e.entry_id in target_ids), None)
@@ -96,7 +102,6 @@ async def _async_get_device_time(call: ServiceCall) -> ServiceResponse:
     try:
         regs = await coordinator.client.async_read_register(DEVICE_TIME_REGISTER, 2)
     except (NeoPoolError, OSError, ValueError) as err:
-        _LOGGER.error("Failed to read device time: %s (%s)", err, type(err).__name__)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_time_read_failed",
@@ -136,7 +141,6 @@ async def _async_set_device_time(call: ServiceCall) -> None:
     try:
         result = await coordinator.client.async_sync_device_time(timestamp)
     except (NeoPoolError, OSError) as err:
-        _LOGGER.error("Failed to set device time: %s (%s)", err, type(err).__name__)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_time_write_failed",
@@ -159,7 +163,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the NeoPool services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_DEVICE_TIME,
+        NeoPoolService.GET_DEVICE_TIME,
         _async_get_device_time,
         schema=SERVICE_DEVICE_TIME_SCHEMA,
         supports_response=SupportsResponse.ONLY,
@@ -167,7 +171,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_DEVICE_TIME,
+        NeoPoolService.SET_DEVICE_TIME,
         _async_set_device_time,
         schema=SERVICE_DEVICE_TIME_SCHEMA,
     )

@@ -1,7 +1,9 @@
 {
   "domain": "thingspeak",
   "name": "ThingSpeak",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/thingspeak",
   "iot_class": "cloud_push",
   "loggers": ["thingspeak"],

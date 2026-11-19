@@ -114,7 +114,7 @@ class OSOEnergyWaterHeater(
         | WaterHeaterEntityFeature.AWAY_MODE
         | WaterHeaterEntityFeature.ON_OFF
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -150,7 +150,7 @@ class OSOEnergyWaterHeater(
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature of the heater."""
         return self.entity_data.current_temperature
 
@@ -162,19 +162,19 @@ class OSOEnergyWaterHeater(
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
 
     @property
     @override
-    def target_temperature_high(self) -> float:
+    def native_target_temperature_high(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_high
 
     @property
     @override
-    def target_temperature_low(self) -> float:
+    def native_target_temperature_low(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature_low
 
@@ -213,7 +213,9 @@ class OSOEnergyWaterHeater(
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temperature = int(kwargs.get("temperature", self.target_temperature))
+        target_temperature = int(
+            kwargs.get("temperature", self.native_target_temperature)
+        )
         profile = [target_temperature] * 24
 
         await self.osoenergy.hotwater.set_profile(self.entity_data, profile)

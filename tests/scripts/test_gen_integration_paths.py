@@ -11,6 +11,7 @@ from script import gen_integration_paths
 from script.gen_integration_paths import (
     generate,
     get_core_integrations,
+    get_imported_integrations,
     get_transitive_dependencies,
     main,
 )
@@ -25,24 +26,38 @@ components: &components
 """
 
 
+DEPENDENCIES = {
+    "cast": [],
+    "http": [],
+    "lovelace": [],
+    "plex": [],
+    "twilio": ["http"],
+    "twilio_call": ["twilio"],
+    "twilio_sms": ["twilio"],
+}
+SOURCES = {
+    # An integration platform, coupled without declaring the dependency
+    "lovelace": "from homeassistant.components.cast.services import ATTR_URL_PATH",
+    # Imports are not followed transitively, so this must not reach cast
+    "plex": "from homeassistant.components import lovelace",
+    # http is in the core files, so it is left out
+    "twilio": "import homeassistant.components.http",
+}
+
+
 @pytest.fixture
 def components_dir(tmp_path: Path) -> Generator[Path]:
     """Create integrations with a dependency on each other."""
-    dependencies = {
-        "http": [],
-        "twilio": ["http"],
-        "twilio_call": ["twilio"],
-        "twilio_sms": ["twilio"],
-    }
     components_dir = tmp_path / "homeassistant" / "components"
-    for integration, integration_dependencies in dependencies.items():
-        manifest_path = components_dir / integration / "manifest.json"
-        manifest_path.parent.mkdir(parents=True)
-        manifest_path.write_text(
+    for integration, integration_dependencies in DEPENDENCIES.items():
+        integration_dir = components_dir / integration
+        integration_dir.mkdir(parents=True)
+        (integration_dir / "manifest.json").write_text(
             json.dumps(
                 {"domain": integration, "dependencies": integration_dependencies}
             )
         )
+        (integration_dir / "__init__.py").write_text(SOURCES.get(integration, ""))
     with patch.object(gen_integration_paths, "COMPONENTS_DIR", components_dir):
         yield components_dir
 
@@ -99,11 +114,76 @@ def test_get_transitive_dependencies(
     assert get_transitive_dependencies(dependencies) == expected
 
 
+@pytest.mark.usefixtures("components_dir")
+def test_get_imported_integrations() -> None:
+    """Test that imported integrations are detected."""
+    assert get_imported_integrations(DEPENDENCIES) == {
+        "cast": set(),
+        "http": set(),
+        "lovelace": {"cast"},
+        "plex": {"lovelace"},
+        "twilio": {"http"},
+        "twilio_call": set(),
+        "twilio_sms": set(),
+    }
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        pytest.param(
+            "from homeassistant.components.cast import DOMAIN", {"cast"}, id="from"
+        ),
+        pytest.param(
+            "from homeassistant.components.cast.services import ATTR_URL_PATH",
+            {"cast"},
+            id="from-submodule",
+        ),
+        pytest.param("import homeassistant.components.cast", {"cast"}, id="import"),
+        pytest.param(
+            "from homeassistant.components import cast, plex",
+            {"cast", "plex"},
+            id="from-package",
+        ),
+        pytest.param(
+            "from homeassistant.components import (\n    cast,\n    plex,\n)",
+            {"cast", "plex"},
+            id="from-package-parenthesized",
+        ),
+        pytest.param(
+            "from homeassistant.components.unknown import DOMAIN", set(), id="unknown"
+        ),
+        pytest.param(
+            "from homeassistant.helpers import device_registry", set(), id="helper"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("core_files")
+def test_get_imported_integrations_patterns(
+    tmp_path: Path, source: str, expected: set[str]
+) -> None:
+    """Test the import patterns that are picked up."""
+    components_dir = tmp_path / "homeassistant" / "components"
+    for integration in ("cast", "lovelace", "plex"):
+        (components_dir / integration).mkdir(parents=True)
+    (components_dir / "lovelace" / "__init__.py").write_text(source)
+
+    with patch.object(gen_integration_paths, "COMPONENTS_DIR", components_dir):
+        imported = get_imported_integrations(["cast", "lovelace", "plex"])
+
+    assert imported["lovelace"] == expected
+
+
 @pytest.mark.usefixtures("components_dir", "core_files")
 def test_generate() -> None:
-    """Test that dependencies are added, except the ones triggering a full run."""
+    """Test that dependencies and imports are added, except core integrations."""
     assert generate() == (
+        "cast: [homeassistant/components/cast/**, tests/components/cast/**]\n"
         "http: [homeassistant/components/http/**, tests/components/http/**]\n"
+        "lovelace: [homeassistant/components/lovelace/**, "
+        "tests/components/lovelace/**, homeassistant/components/cast/**]\n"
+        "plex: [homeassistant/components/plex/**, tests/components/plex/**, "
+        "homeassistant/components/lovelace/**]\n"
         "twilio: [homeassistant/components/twilio/**, tests/components/twilio/**]\n"
         "twilio_call: [homeassistant/components/twilio_call/**, "
         "tests/components/twilio_call/**, homeassistant/components/twilio/**]\n"

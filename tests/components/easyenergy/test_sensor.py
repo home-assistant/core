@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError, Electricity
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.homeassistant import (
@@ -32,8 +33,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-
 
 @pytest.mark.freeze_time("2026-04-19 13:00:00+00:00")
 async def test_energy_usage_today(
@@ -46,10 +45,8 @@ async def test_energy_usage_today(
     entry_id = init_integration.entry_id
 
     # Current usage energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_usage_current_hour_price")
-    entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_usage_current_hour_price"
-    )
+    state = hass.states.get("sensor.energy_market_price_usage_current_hour")
+    entry = entity_registry.async_get("sensor.energy_market_price_usage_current_hour")
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_current_hour_price"
@@ -67,10 +64,8 @@ async def test_energy_usage_today(
     assert ATTR_ICON not in state.attributes
 
     # Average usage energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_usage_average_price")
-    entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_usage_average_price"
-    )
+    state = hass.states.get("sensor.energy_market_price_usage_average_today")
+    entry = entity_registry.async_get("sensor.energy_market_price_usage_average_today")
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_average_price"
@@ -87,8 +82,10 @@ async def test_energy_usage_today(
     assert ATTR_ICON not in state.attributes
 
     # Highest usage energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_usage_max_price")
-    entry = entity_registry.async_get("sensor.easyenergy_today_energy_usage_max_price")
+    state = hass.states.get("sensor.energy_market_price_usage_highest_price_today")
+    entry = entity_registry.async_get(
+        "sensor.energy_market_price_usage_highest_price_today"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_usage_max_price"
@@ -105,9 +102,11 @@ async def test_energy_usage_today(
     assert ATTR_ICON not in state.attributes
 
     # Highest usage price time sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_usage_highest_price_time")
+    state = hass.states.get(
+        "sensor.energy_market_price_usage_time_of_highest_price_today"
+    )
     entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_usage_highest_price_time"
+        "sensor.energy_market_price_usage_time_of_highest_price_today"
     )
     assert entry
     assert state
@@ -132,10 +131,10 @@ async def test_energy_usage_today(
 
     # Usage periods priced equal or lower sensor
     state = hass.states.get(
-        "sensor.easyenergy_today_energy_usage_hours_priced_equal_or_lower"
+        "sensor.energy_market_price_usage_periods_priced_equal_or_lower_than_current_today"
     )
     entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_usage_hours_priced_equal_or_lower"
+        "sensor.energy_market_price_usage_periods_priced_equal_or_lower_than_current_today"
     )
     assert entry
     assert state
@@ -162,10 +161,8 @@ async def test_energy_return_today(
     entry_id = init_integration.entry_id
 
     # Current return energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_return_current_hour_price")
-    entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_return_current_hour_price"
-    )
+    state = hass.states.get("sensor.energy_market_price_return_current_hour")
+    entry = entity_registry.async_get("sensor.energy_market_price_return_current_hour")
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_current_hour_price"
@@ -183,10 +180,8 @@ async def test_energy_return_today(
     assert ATTR_ICON not in state.attributes
 
     # Average return energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_return_average_price")
-    entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_return_average_price"
-    )
+    state = hass.states.get("sensor.energy_market_price_return_average_today")
+    entry = entity_registry.async_get("sensor.energy_market_price_return_average_today")
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_average_price"
@@ -203,8 +198,10 @@ async def test_energy_return_today(
     assert ATTR_ICON not in state.attributes
 
     # Highest return energy price sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_return_max_price")
-    entry = entity_registry.async_get("sensor.easyenergy_today_energy_return_max_price")
+    state = hass.states.get("sensor.energy_market_price_return_highest_price_today")
+    entry = entity_registry.async_get(
+        "sensor.energy_market_price_return_highest_price_today"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_energy_return_max_price"
@@ -221,9 +218,11 @@ async def test_energy_return_today(
     assert ATTR_ICON not in state.attributes
 
     # Highest return price time sensor
-    state = hass.states.get("sensor.easyenergy_today_energy_return_highest_price_time")
+    state = hass.states.get(
+        "sensor.energy_market_price_return_time_of_highest_price_today"
+    )
     entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_return_highest_price_time"
+        "sensor.energy_market_price_return_time_of_highest_price_today"
     )
     assert entry
     assert state
@@ -248,10 +247,10 @@ async def test_energy_return_today(
 
     # Return periods priced equal or higher sensor
     state = hass.states.get(
-        "sensor.easyenergy_today_energy_return_hours_priced_equal_or_higher"
+        "sensor.energy_market_price_return_periods_priced_equal_or_higher_than_current_today"
     )
     entry = entity_registry.async_get(
-        "sensor.easyenergy_today_energy_return_hours_priced_equal_or_higher"
+        "sensor.energy_market_price_return_periods_priced_equal_or_higher_than_current_today"
     )
     assert entry
     assert state
@@ -279,8 +278,8 @@ async def test_gas_today(
     entry_id = init_integration.entry_id
 
     # Current gas price sensor
-    state = hass.states.get("sensor.easyenergy_today_gas_current_hour_price")
-    entry = entity_registry.async_get("sensor.easyenergy_today_gas_current_hour_price")
+    state = hass.states.get("sensor.gas_market_price_current_hour")
+    entry = entity_registry.async_get("sensor.gas_market_price_current_hour")
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_today_gas_current_hour_price"
@@ -317,12 +316,12 @@ async def test_no_gas_today(
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: "sensor.easyenergy_today_gas_current_hour_price"},
+        {ATTR_ENTITY_ID: "sensor.gas_market_price_current_hour"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.easyenergy_today_gas_current_hour_price")
+    state = hass.states.get("sensor.gas_market_price_current_hour")
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -336,10 +335,18 @@ async def test_no_gas_today(
     ],
 )
 @pytest.mark.parametrize(
-    ("sensor", "expected_state"),
+    ("entity_id", "expected_state"),
     [
-        pytest.param("usage_hours_priced_equal_or_lower", "3", id="usage"),
-        pytest.param("return_hours_priced_equal_or_higher", "2", id="return"),
+        pytest.param(
+            "sensor.energy_market_price_usage_periods_priced_equal_or_lower_than_current_today",
+            "3",
+            id="usage",
+        ),
+        pytest.param(
+            "sensor.energy_market_price_return_periods_priced_equal_or_higher_than_current_today",
+            "2",
+            id="return",
+        ),
     ],
 )
 async def test_price_period_counts(
@@ -348,7 +355,7 @@ async def test_price_period_counts(
     mock_config_entry: MockConfigEntry,
     minutes: int,
     granularity: str,
-    sensor: str,
+    entity_id: str,
     expected_state: str,
 ) -> None:
     """Test inclusive counts for distinct usage and return prices at any interval size."""
@@ -375,7 +382,7 @@ async def test_price_period_counts(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"sensor.easyenergy_today_energy_{sensor}")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

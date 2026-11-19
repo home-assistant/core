@@ -6,10 +6,13 @@ import ssl
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config as hass_config
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.rest import DOMAIN
+from homeassistant.components.rest.services import RestService
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -29,7 +32,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_JSON,
-    SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfInformation,
@@ -39,9 +41,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import SSLCipherList
-
-from tests.common import get_fixture_path
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
@@ -1210,7 +1209,7 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            RestService.RELOAD,
             {},
             blocking=True,
         )

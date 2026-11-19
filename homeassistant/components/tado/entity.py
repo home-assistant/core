@@ -45,7 +45,7 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
             model=device_info["deviceType"],
         )
         if via_device_id:
-            self._attr_device_info["via_device_id"] = via_device_id
+            self._attr_device_info.via_device_id = via_device_id
 
 
 class TadoHomeEntity(TadoCoordinatorEntity):

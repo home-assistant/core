@@ -13,8 +13,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.http import (  # noqa: F401
-    KEY_ALLOW_CONFIGURED_CORS,
+from homeassistant.helpers.http import (
     KEY_AUTHENTICATED,
     KEY_HASS,
     HomeAssistantView,
@@ -29,8 +28,8 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import async_get_and_load_store, async_load_config
-from .const import (  # noqa: F401
+from .config import ConfData, async_get_and_load_store, async_load_config
+from .const import (
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
     CONF_IP_BAN_ENABLED,
@@ -44,22 +43,24 @@ from .const import (  # noqa: F401
     CONF_TRUSTED_PROXIES,
     CONF_USE_X_FORWARDED_FOR,
     CONF_USE_X_FRAME_OPTIONS,
+    CURRENT_SSL_PROFILES,
     DATA_SUPERVISOR_USER,
     DEFAULT_CORS,
     DOMAIN,
+    ISSUE_SSL_PROFILE_OUTDATED,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
 )
-from .decorators import require_admin  # noqa: F401
+from .decorators import require_admin
 from .server import (
     DEFAULT_BIND,
     HassioHTTPConfigView,
-    HomeAssistantHTTP,  # noqa: F401
-    HomeAssistantRequest,  # noqa: F401
-    StaticPathConfig,  # noqa: F401
+    HomeAssistantHTTP,
+    HomeAssistantRequest,
+    StaticPathConfig,
     make_server,
 )
 
@@ -105,6 +106,24 @@ CONFIG_SCHEMA: Final = probatio.Schema(
     {DOMAIN: HTTP_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
+__all__ = [
+    "CONF_SERVER_PORT",
+    "CONF_TRUSTED_PROXIES",
+    "CONF_USE_X_FORWARDED_FOR",
+    "DOMAIN",
+    "KEY_AUTHENTICATED",
+    "KEY_HASS",
+    "KEY_HASS_REFRESH_TOKEN_ID",
+    "KEY_HASS_USER",
+    "ApiConfig",
+    "HomeAssistantHTTP",
+    "HomeAssistantRequest",
+    "HomeAssistantView",
+    "StaticPathConfig",
+    "current_request",
+    "require_admin",
+]
+
 
 class ApiConfig:
     """Configuration settings for API server."""
@@ -121,6 +140,26 @@ class ApiConfig:
         self.host = host
         self.port = port
         self.use_ssl = use_ssl
+
+
+@callback
+def _async_update_ssl_profile_issue(hass: HomeAssistant, conf: ConfData) -> None:
+    """Offer upgrading a superseded SSL profile the server is running with."""
+    if (
+        CONF_SSL_CERTIFICATE not in conf
+        or conf[CONF_SSL_PROFILE] in CURRENT_SSL_PROFILES
+    ):
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_SSL_PROFILE_OUTDATED)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        ISSUE_SSL_PROFILE_OUTDATED,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_SSL_PROFILE_OUTDATED,
+        translation_placeholders={"profile": conf[CONF_SSL_PROFILE]},
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -171,6 +210,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_SERVER_PORT],
             )
         break
+
+    _async_update_ssl_profile_issue(hass, conf)
 
     # Created only after the fallback chain succeeded: if setup fails above,
     # an already running task would be left behind unawaited.

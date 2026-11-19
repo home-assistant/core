@@ -1,9 +1,23 @@
 """Test pi_hole config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
+from typing import Any
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+
 from homeassistant.components import pi_hole
 from homeassistant.components.pi_hole.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_LOCATION,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,7 +33,17 @@ from . import (
     _patch_setup_hole,
 )
 
-from tests.common import MockConfigEntry
+
+@contextmanager
+def _patch_valid_hole() -> Generator[None]:
+    """Patch a reachable Pi-hole that accepts the API key."""
+    mocked_hole = _create_mocked_hole(has_data=False, api_version=6)
+    with (
+        _patch_init_hole(mocked_hole),
+        _patch_config_flow_hole(mocked_hole),
+        _patch_setup_hole(),
+    ):
+        yield
 
 
 async def test_flow_user_with_api_key_v6(hass: HomeAssistant) -> None:
@@ -148,6 +172,13 @@ async def test_flow_user_invalid(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {"api_key": "invalid_auth"}
 
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
     """Test user flow with invalid server (V6 API, wrong password)."""
@@ -169,6 +200,13 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"api_key": "invalid_auth"}
+
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:
@@ -218,6 +256,13 @@ async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_error_response(hass: HomeAssistant) -> None:
     """Test user initialized flow but dataotherbase errors occur."""
@@ -238,3 +283,140 @@ async def test_flow_error_response(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfiguring the Pi-hole connection."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_WITH_API_KEY)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "5.6.7.8",
+                CONF_PORT: 8080,
+                CONF_LOCATION: "admin",
+                CONF_API_KEY: "newkey",
+                CONF_SSL: True,
+                CONF_VERIFY_SSL: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "5.6.7.8:8080",
+        CONF_LOCATION: "admin",
+        CONF_API_KEY: "newkey",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("hole_kwargs", "expected_errors"),
+    [
+        pytest.param(
+            {"api_version": 6, "wrong_host": True},
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
+        pytest.param(
+            {"api_version": 6, "has_data": True, "incorrect_app_password": True},
+            {CONF_API_KEY: "invalid_auth"},
+            id="invalid_auth_v6",
+        ),
+        pytest.param(
+            {"api_version": 5, "ftl_error": True, "has_data": False},
+            {"base": "cannot_connect"},
+            id="ftl_error_v5",
+        ),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    hole_kwargs: dict[str, Any],
+    expected_errors: dict[str, str],
+) -> None:
+    """Test reconfigure errors are shown and the flow can recover."""
+    entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_WITH_API_KEY)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mocked_hole = _create_mocked_hole(**hole_kwargs)
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == expected_errors
+
+    with _patch_valid_hole():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_FLOW_USER,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == CONFIG_ENTRY_WITH_API_KEY
+
+
+async def test_reconfigure_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test reconfiguring to the host and location of another entry aborts."""
+    MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_WITH_API_KEY).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_WITH_API_KEY, CONF_HOST: "5.6.7.8:80"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_FLOW_USER,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "5.6.7.8:80"
+
+
+@pytest.mark.parametrize(
+    ("use_ssl", "port"),
+    [
+        pytest.param(False, 80, id="http"),
+        pytest.param(True, 443, id="https"),
+    ],
+)
+async def test_reconfigure_flow_host_without_port(
+    hass: HomeAssistant, use_ssl: bool, port: int
+) -> None:
+    """Test the reconfigure form for an entry whose host has no port."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_WITH_API_KEY, CONF_HOST: "pi.hole", CONF_SSL: use_ssl},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    schema = result["data_schema"].schema
+    assert get_schema_suggested_value(schema, CONF_HOST) == "pi.hole"
+    assert get_schema_suggested_value(schema, CONF_PORT) == port

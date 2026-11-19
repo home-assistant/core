@@ -27,16 +27,16 @@ class FloRuntimeData:
     devices: list[FloDeviceDataUpdateCoordinator]
 
 
-class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Flo device object."""
 
-    config_entry: ConfigEntry
+    config_entry: FloConfigEntry
     _failure_count: int = 0
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: FloConfigEntry,
         api_client: API,
         location_id: str,
         device_id: str,
@@ -58,7 +58,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Update data via library."""
         try:
             async with asyncio.timeout(20):

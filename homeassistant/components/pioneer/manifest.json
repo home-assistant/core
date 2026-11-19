@@ -1,7 +1,9 @@
 {
   "domain": "pioneer",
   "name": "Pioneer",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/pioneer",
   "iot_class": "local_polling",
   "quality_scale": "legacy"

@@ -13,6 +13,11 @@ from pyimouapi.const import (
 )
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
@@ -27,8 +32,6 @@ from .const import (
     create_online_device,
     sensor_mock_devices,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]], indirect=True)

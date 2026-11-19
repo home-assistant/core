@@ -12,12 +12,15 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.twilio import DATA_TWILIO
+from homeassistant.components.twilio import get_client
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "twilio_call"
 
 CONF_FROM_NUMBER = "from_number"
 
@@ -36,9 +39,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TwilioCallNotificationService:
     """Get the Twilio Call notification service."""
-    return TwilioCallNotificationService(
-        hass.data[DATA_TWILIO], config[CONF_FROM_NUMBER]
-    )
+    return TwilioCallNotificationService(get_client(hass), config[CONF_FROM_NUMBER])
 
 
 class TwilioCallNotificationService(BaseNotificationService):
@@ -62,11 +63,19 @@ class TwilioCallNotificationService(BaseNotificationService):
             twimlet_url = "http://twimlets.com/message?Message="
             twimlet_url += urllib.parse.quote(message, safe="")
 
+        failed_targets: list[str] = []
         for target in targets:
             try:
                 self.client.calls.create(
                     to=target, url=twimlet_url, from_=self.from_number
                 )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except TwilioRestException as exc:
-                _LOGGER.error(exc)
+            except TwilioRestException as err:
+                _LOGGER.debug("Failed to call %s: %s", target, err)
+                failed_targets.append(target)
+
+        if failed_targets:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="call_failed",
+                translation_placeholders={"targets": ", ".join(failed_targets)},
+            )

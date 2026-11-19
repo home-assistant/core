@@ -17,9 +17,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
 
     return {
-        "version": entry.runtime_data.version.version
-        if entry.runtime_data.version
-        else None,
+        "version": entry.runtime_data.api.version.version,
         "monitors": async_redact_data(
             {k: asdict(v) for k, v in entry.runtime_data.data.items()}, TO_REDACT
         ),

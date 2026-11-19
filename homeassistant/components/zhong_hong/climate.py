@@ -186,7 +186,7 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     # Two of the five speeds the gateway addresses have no name of their own in
     # the climate component, so they are named here.
     _attr_translation_key = "air_conditioner"
@@ -207,13 +207,13 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature the device is set to."""
         return self._device.target_temperature
 

@@ -55,12 +55,10 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         if device.mac_address != main.mac_address:
             # The main device is registered during setup, before the platforms
             # are forwarded, so this link always resolves deterministically.
-            self._attr_device_info["via_device_id"] = (
-                dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (DOMAIN, main.mac_address),
-                    config_entry_id=coordinator.config_entry.entry_id,
-                )
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, main.mac_address),
+                config_entry_id=coordinator.config_entry.entry_id,
             )
         self._device = device
         self._device_address = device.mac_address

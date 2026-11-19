@@ -2,11 +2,11 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.local_file.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:

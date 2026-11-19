@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-import logging
 from typing import Any, Concatenate
 
 from aiohttp.web_exceptions import HTTPException
@@ -24,8 +23,6 @@ from .const import DOMAIN, PLATFORMS
 from .entity import HiveEntity
 from .services import async_setup_services
 
-_LOGGER = logging.getLogger(__name__)
-
 type HiveConfigEntry = ConfigEntry[Hive]
 
 
@@ -38,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None:
     """Set up Hive from a config entry."""
     web_session = aiohttp_client.async_get_clientsession(hass)
     hive_config = dict(entry.data)
@@ -49,8 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     try:
         devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Could not connect to the internet: {error}"
+        ) from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
@@ -72,12 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None:

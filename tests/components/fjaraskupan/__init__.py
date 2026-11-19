@@ -1,10 +1,12 @@
 """Tests for the Fjäråskupan integration."""
 
 from fjaraskupan import ANNOUNCE_MANUFACTURER, DEVICE_NAME
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 COOKER_SERVICE_INFO = BluetoothServiceInfoBleak(
     name=DEVICE_NAME,

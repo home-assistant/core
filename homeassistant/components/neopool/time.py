@@ -1,21 +1,16 @@
 """Time platform for the NeoPool integration."""
 
-import asyncio
 from collections.abc import Callable, Mapping
-from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime, time as dt_time, timedelta
+from datetime import time as dt_time
 from typing import Any, Literal, override
 
-from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import is_valid_relay_gpio
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_USE_AUX1,
@@ -23,18 +18,14 @@ from .const import (
     CONF_USE_AUX3,
     CONF_USE_AUX4,
     CONF_USE_LIGHT,
-    DOMAIN,
 )
 from .coordinator import NeoPoolConfigEntry, NeoPoolCoordinator
-from .entity import NeoPoolEntity
+from .entity import NeoPoolDebouncedWriteEntity
 
 # The platform coalesces rapid writes per entity via a debounce timer. Each
 # start/stop entity flushes its own endpoint independently, so a platform
 # semaphore would only add latency between independent UI interactions.
 PARALLEL_UPDATES = 0
-
-# Wait for editing to settle so only the final value hits the device's EEPROM.
-WRITE_DELAY = timedelta(seconds=3)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -141,7 +132,7 @@ async def async_setup_entry(
     )
 
 
-class NeoPoolTime(NeoPoolEntity, TimeEntity):
+class NeoPoolTime(NeoPoolDebouncedWriteEntity[int], TimeEntity):
     """NeoPool timer start/stop time entity."""
 
     entity_description: NeoPoolTimeEntityDescription
@@ -168,16 +159,6 @@ class NeoPoolTime(NeoPoolEntity, TimeEntity):
         self._attr_unique_id = (
             f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
         )
-
-        self._write_unsub: CALLBACK_TYPE | None = None
-        # Optimistic value pending a write, held as seconds-since-midnight.
-        self._pending_value: int | None = None
-        # Bumped per set_value; a flush clears only the value it queued.
-        self._pending_token = 0
-        self._write_future: asyncio.Future[Exception | None] | None = None
-        self._flush_lock = asyncio.Lock()
-        self._flush_tasks: set[asyncio.Task[None]] = set()
-        self._removing = False
 
     def _decode_raw(self) -> dt_time | None:
         """Decode the coordinator-data seconds into HH:MM:SS."""
@@ -208,203 +189,25 @@ class NeoPoolTime(NeoPoolEntity, TimeEntity):
         return self._decode_raw()
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Clear transient write state, in case this entity is re-added.
-
-        An entity-ID change re-adds the same object, leaving _removing set and a
-        cancelled pending value behind; reset both so later flushes do not abort.
-        """
-        self._removing = False
-        self._pending_value = None
-        await super().async_added_to_hass()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel a pending write when removed, and stop any in-flight one."""
-        self._removing = True
-        self._cancel_pending_write()
-        if self._write_future is not None and not self._write_future.done():
-            # Awaiting callers treat cancellation as a clean exit.
-            self._write_future.cancel()
-        # Cancel and await every in-flight flush so no device call outlives
-        # removal and races the client close. Two set_value calls spaced beyond
-        # WRITE_DELAY can overlap, so more than one task may be active.
-        for task in list(self._flush_tasks):
-            task.cancel()
-        for task in list(self._flush_tasks):
-            with suppress(asyncio.CancelledError):
-                await task
-        await super().async_will_remove_from_hass()
-
-    @callback
-    def _cancel_pending_write(self) -> None:
-        """Cancel a scheduled write, if any."""
-        if self._write_unsub is not None:
-            self._write_unsub()
-            self._write_unsub = None
-
-    @override
     async def async_set_value(self, value: dt_time) -> None:
-        """Apply optimistically, then debounce-write to the device.
+        """Apply optimistically, then debounce-write to the device."""
+        await self._debounced_set(value.hour * 3600 + value.minute * 60 + value.second)
 
-        The write is debounced so rapid edits settle into a single EEPROM
-        cycle. Callers in the same window await one shared future the coalesced
-        write resolves, so a blocking service call still sees the outcome.
-        """
-        self._pending_value = value.hour * 3600 + value.minute * 60 + value.second
-        # A fresh token per set_value lets a flush clear exactly the value it
-        # queued, not a newer batch's identical one.
-        self._pending_token += 1
-        self.async_write_ha_state()
-        self._cancel_pending_write()
-        if self._write_future is None or self._write_future.done():
-            self._write_future = self.hass.loop.create_future()
-        future = self._write_future
-        self._write_unsub = async_call_later(
-            self.hass, WRITE_DELAY, self._schedule_flush
-        )
-        try:
-            # Shield so cancelling one caller does not cancel the batch. The
-            # write carries its outcome as the future's result (None on success,
-            # else the error to re-raise) rather than via set_exception, which a
-            # cancelled caller's shield logger would report as unretrieved.
-            outcome = await asyncio.shield(future)
-        except asyncio.CancelledError:
-            if self._removing:
-                return
-            raise
-        if outcome is not None:
-            raise outcome
-
-    @callback
-    def _schedule_flush(self, _now: datetime) -> None:
-        """Run the debounced write as a tracked task so removal can await it."""
-        self._write_unsub = None
-        # Detach this batch synchronously so a set_value racing _async_flush
-        # starts a fresh future and timer instead of reusing this one.
-        # _pending_value stays put to back the optimistic value.
-        future = self._write_future
-        self._write_future = None
-        token = self._pending_token
-        pending = self._pending_value
-        task = self.coordinator.config_entry.async_create_background_task(
-            self.hass,
-            self._async_flush(future, pending, token),
-            name=f"{self._attr_unique_id}_flush",
-        )
-        # Track every in-flight flush so removal can cancel and await them all;
-        # a set_value spaced beyond WRITE_DELAY can start a second task while an
-        # earlier one is still writing.
-        self._flush_tasks.add(task)
-        task.add_done_callback(self._flush_tasks.discard)
-
-    async def _async_flush(
-        self,
-        future: asyncio.Future[Exception | None] | None,
-        pending: int | None,
-        token: int,
-    ) -> None:
-        """Write the settled value, resolving the awaited coalesce future."""
-        resolved = False
-        try:
-            if pending is None:  # pragma: no cover - timer fires only when queued
-                return
-            async with self._flush_lock:
-                if self._abort_if_removing(future):
-                    resolved = True
-                    return
-                block = self.entity_description.timer_block
-                # The library does the read-modify-write, so pass only this
-                # entity's endpoint: start -> on, stop -> stop.
-                lib_key = (
-                    "on" if self.entity_description.timer_field == "start" else "stop"
-                )
-                # Skip the EEPROM cycle if the device already holds this value.
-                if (current := self._decode_raw()) is not None and (
-                    current.hour * 3600 + current.minute * 60 + current.second
-                    == pending % 86400
-                ):
-                    self._clear_pending_if_current(token)
-                    if future is not None and not future.done():
-                        future.set_result(None)
-                    resolved = True
-                    return
-                try:
-                    # Siblings (start/stop) share the block's register set, so
-                    # serialize the library's read-modify-write per block.
-                    async with self.coordinator.timer_write_lock(block):
-                        await self.coordinator.client.write_timer(
-                            block, {lib_key: pending}
-                        )
-                except (NeoPoolError, OSError, TimeoutError) as err:
-                    self._report_write_failure(
-                        future,
-                        token,
-                        HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="modbus_communication_error",
-                            translation_placeholders={"error": str(err)},
-                        ),
-                    )
-                    resolved = True
-                    return
-                except Exception as err:  # noqa: BLE001
-                    # Surface unexpected errors unchanged, not as a comm error.
-                    self._report_write_failure(future, token, err)
-                    resolved = True
-                    return
-                if self._abort_if_removing(future):  # pragma: no cover
-                    # Defensive: removal cancels tracked tasks before they write.
-                    resolved = True
-                    return
-                try:
-                    # Merge before clearing, else the stale register briefly
-                    # surfaces as a rollback.
-                    self.coordinator.async_set_updated_data(
-                        {**self.coordinator.data, self._key: pending}
-                    )
-                    self._clear_pending_if_current(token)
-                    self.coordinator.request_refresh_with_followup()
-                except Exception as err:  # noqa: BLE001
-                    # Write succeeded; surface the merge error unchanged.
-                    self._report_write_failure(future, token, err)
-                    resolved = True
-                    return
-                if future is not None and not future.done():
-                    future.set_result(None)
-                resolved = True
-        finally:
-            if not resolved and future is not None and not future.done():
-                future.cancel()  # pragma: no cover - task cancel is non-deterministic
-
-    @callback
-    def _abort_if_removing(
-        self, future: asyncio.Future[Exception | None] | None
-    ) -> bool:
-        """Skip the write when removed, releasing the detached future cleanly."""
-        if not self._removing:
-            return False
-        if future is not None and not future.done():
-            future.cancel()
-        return True
-
-    @callback
-    def _report_write_failure(
-        self,
-        future: asyncio.Future[Exception | None] | None,
-        batch_token: int,
-        exc: Exception,
-    ) -> None:
-        """Roll the optimistic value back and fail the awaiting caller."""
-        self._clear_pending_if_current(batch_token)
-        if future is not None and not future.done():
-            # Carry the error as the result, not via set_exception; callers
-            # re-raise it after the shield returns.
-            future.set_result(exc)
-
-    @callback
-    def _clear_pending_if_current(self, batch_token: int) -> None:
-        """Drop the optimistic value unless a newer set_value replaced it."""
-        if self._pending_token == batch_token:
-            self._pending_value = None
-        self.async_write_ha_state()
+    @override
+    async def _write_pending(self, pending: int) -> Mapping[str, Any] | None:
+        """Write the settled timer endpoint, skipping a no-op EEPROM cycle."""
+        block = self.entity_description.timer_block
+        # The library does the read-modify-write, so pass only this entity's
+        # endpoint: start -> on, stop -> stop.
+        lib_key = "on" if self.entity_description.timer_field == "start" else "stop"
+        # Skip the EEPROM cycle if the device already holds this value.
+        if (current := self._decode_raw()) is not None and (
+            current.hour * 3600 + current.minute * 60 + current.second
+            == pending % 86400
+        ):
+            return None
+        # Siblings (start/stop) share the block's register set, so serialize the
+        # library's read-modify-write per block.
+        async with self.coordinator.timer_write_lock(block):
+            await self.coordinator.client.write_timer(block, {lib_key: pending})
+        return {self._key: pending}
