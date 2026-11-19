@@ -223,12 +223,21 @@ async def test_dsp_preset_select(
     assert hass.states.get("select.test_group_player_1_dsp_preset") is None
 
 
+@pytest.mark.parametrize(
+    ("option", "expected_preset_id"),
+    [
+        pytest.param("Night (night_1)", "night_1", id="same_name"),
+        pytest.param("Night (night_1) (copy)", "copy", id="name_matches_label"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dsp_preset_select_same_names(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    option: str,
+    expected_preset_id: str,
 ) -> None:
-    """Test presets with the same name can each be shown and applied."""
+    """Test presets with the same name or label can each be shown and applied."""
     music_assistant_client.server_info.schema_version = 101
     config = music_assistant_client.config
     config.get_dsp_preset = AsyncMock(
@@ -236,6 +245,9 @@ async def test_dsp_preset_select_same_names(
             DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night_1"),
             DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night_2"),
             DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party"),
+            DSPConfigPreset(
+                name="Night (night_1)", config=DSPConfig(), preset_id="copy"
+            ),
         ]
     )
     config.get_player_dsp_config = AsyncMock(
@@ -251,6 +263,7 @@ async def test_dsp_preset_select_same_names(
         "Night (night_1)",
         "Night (night_2)",
         "Party",
+        "Night (night_1) (copy)",
     ]
 
     await hass.services.async_call(
@@ -258,11 +271,13 @@ async def test_dsp_preset_select_same_names(
         SelectService.SELECT_OPTION,
         {
             TargetKey.ENTITY_ID: entity_id,
-            SelectServiceArgument.OPTION: "Night (night_1)",
+            SelectServiceArgument.OPTION: option,
         },
         blocking=True,
     )
-    assert config.apply_dsp_preset.call_args == call("00:00:00:00:00:01", "night_1")
+    assert config.apply_dsp_preset.call_args == call(
+        "00:00:00:00:00:01", expected_preset_id
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

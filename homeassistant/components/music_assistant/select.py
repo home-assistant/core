@@ -216,14 +216,18 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
     def _preset_ids_by_label(self) -> dict[str, str | None]:
         # preset names are not unique, the id tells presets with the same name apart
         name_counts = Counter(preset.name for preset in self._dsp_presets)
-        return {
-            (
+        preset_ids_by_label: dict[str, str | None] = {}
+        for preset in self._dsp_presets:
+            label = (
                 preset.name
                 if name_counts[preset.name] == 1
                 else f"{preset.name} ({preset.preset_id})"
-            ): preset.preset_id
-            for preset in self._dsp_presets
-        }
+            )
+            # a label with the id can still match the name of another preset
+            while label in preset_ids_by_label:
+                label = f"{label} ({preset.preset_id})"
+            preset_ids_by_label[label] = preset.preset_id
+        return preset_ids_by_label
 
     @property
     @override
