@@ -20,13 +20,12 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
     BrowseMedia,
     MediaClass,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.components.media_source import PlayMedia
@@ -40,6 +39,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -88,11 +88,11 @@ async def test_play_media_from_media_source(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "media-source://local/song.mp3",
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://local/song.mp3",
             },
             blocking=True,
         )
@@ -109,11 +109,11 @@ async def test_play_media_launches_app(
     """App and URL media types launch the corresponding app on the device."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: "com.netflix.Netflix",
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "com.netflix.Netflix",
         },
         blocking=True,
     )
@@ -154,11 +154,11 @@ async def test_play_media_selects_streaming_method(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
@@ -175,11 +175,11 @@ async def test_play_media_falls_back_to_play_url(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.VIDEO,
-            ATTR_MEDIA_CONTENT_ID: _VIDEO_URL,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.VIDEO,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _VIDEO_URL,
         },
         blocking=True,
     )
@@ -199,11 +199,11 @@ async def test_play_media_raises_when_no_streaming_method(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: _MUSIC_URL,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _MUSIC_URL,
             },
             blocking=True,
         )
@@ -260,11 +260,11 @@ async def test_play_media_raises_ha_error_on_pyatv_failure(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: media_type,
-                ATTR_MEDIA_CONTENT_ID: media_id,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
             },
             blocking=True,
         )
