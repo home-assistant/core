@@ -1,0 +1,4 @@
+type: added
+description: "Added support for Tuya infrared air conditioners (virtual devices behind Smart IR hub) to the Tuya integration."
+integration: tuya
+documentation: https://developer.tuya.com/en/docs/cloud/infrared-air-conditioner-apis

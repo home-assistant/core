@@ -1,0 +1,86 @@
+{
+  "name": "Infrared AC",
+  "category": "infrared_ac",
+  "product_id": "1ownck",
+  "product_name": "Air Conditioner",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "function": {
+    "F": {
+      "type": "ENUM",
+      "value": {
+        "min": 0,
+        "max": 3,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    },
+    "M": {
+      "type": "ENUM",
+      "value": {
+        "min": 0,
+        "max": 4,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    },
+    "PowerOff": {
+      "type": "STRING",
+      "value": "PowerOff"
+    },
+    "PowerOn": {
+      "type": "STRING",
+      "value": "PowerOn"
+    },
+    "T": {
+      "type": "ENUM",
+      "value": {
+        "min": 16,
+        "max": 30,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    }
+  },
+  "status_range": {
+    "wind": {
+      "type": "ENUM",
+      "value": {
+        "min": 0,
+        "max": 3,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    },
+    "mode": {
+      "type": "ENUM",
+      "value": {
+        "min": 0,
+        "max": 4,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    },
+    "power": {
+      "type": "BOOLEAN",
+      "value": {}
+    },
+    "temp": {
+      "type": "ENUM",
+      "value": {
+        "min": 16,
+        "max": 30,
+        "scale": 0,
+        "step": 1,
+        "type": "Integer"
+      }
+    }
+  },
+  "status": {}
+}

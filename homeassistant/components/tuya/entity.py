@@ -93,6 +93,7 @@ class TuyaEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

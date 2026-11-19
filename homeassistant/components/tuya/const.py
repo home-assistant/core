@@ -223,6 +223,8 @@ class DeviceCategory(StrEnum):
     """
     HWSB = "hwsb"
     """Outdoor equipment"""
+    INFRARED_AC = "infrared_ac"
+    """Infrared air conditioner (virtual device behind an IR hub)"""
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
