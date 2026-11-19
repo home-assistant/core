@@ -39,6 +39,7 @@ async def test_bluetooth_step_success(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+    mock_casper_glow.handshake.assert_awaited_once_with(max_attempts=1)
 
     # Inject before configure so async_setup_entry can find the device via
     # async_ble_device_from_address. The unique_id is already claimed by our
