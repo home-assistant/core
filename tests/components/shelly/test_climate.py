@@ -31,11 +31,9 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_LOW,
     PRESET_NONE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -59,6 +57,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -129,8 +128,11 @@ async def test_climate_hvac_mode(
     # Test set hvac mode heat
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
@@ -146,8 +148,11 @@ async def test_climate_hvac_mode(
     # Test set hvac mode off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -194,8 +199,11 @@ async def test_climate_hvac_mode_off_remembers_target(
     for hvac_mode in (HVACMode.OFF, HVACMode.HEAT):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: hvac_mode,
+            },
             blocking=True,
         )
 
@@ -224,8 +232,8 @@ async def test_climate_set_temperature(
     # Test set temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 23},
         blocking=True,
     )
 
@@ -247,8 +255,8 @@ async def test_climate_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 20},
         blocking=True,
     )
 
@@ -277,8 +285,11 @@ async def test_climate_set_preset_mode(
     # Test set Profile2
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "Profile2"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: "Profile2",
+        },
         blocking=True,
     )
 
@@ -295,8 +306,11 @@ async def test_climate_set_preset_mode(
     # Set preset to none
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+        },
         blocking=True,
     )
 
@@ -369,8 +383,11 @@ async def test_block_restored_climate(
     # Test set hvac mode heat, target temp should be set to last target temp (22)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
@@ -446,8 +463,11 @@ async def test_block_restored_climate_us_customary(
     # Test set hvac mode heat, target temp should be set to last target temp (10.0/50)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
@@ -598,8 +618,11 @@ async def test_block_restored_climate_temperature_unit(
     for hvac_mode in (HVACMode.OFF, HVACMode.HEAT):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: hvac_mode,
+            },
             blocking=True,
         )
     mock_block_device.set_thermostat_state.assert_called_with(
@@ -721,8 +744,11 @@ async def test_block_restored_climate_set_preset_before_online(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "Profile1"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: "Profile1",
+            },
             blocking=True,
         )
 
@@ -755,8 +781,11 @@ async def test_block_set_mode_connection_error(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -784,8 +813,11 @@ async def test_block_set_mode_auth_error(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -922,8 +954,11 @@ async def test_rpc_climate_hvac_mode(
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "enable", False)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -972,8 +1007,8 @@ async def test_rpc_climate_set_temperature(
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "target_C", 28)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 28},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 28},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -1114,8 +1149,8 @@ async def test_blu_trv_climate_set_temperature(
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 28},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 28},
         blocking=True,
     )
     mock_blu_trv.mock_update()
@@ -1167,8 +1202,11 @@ async def test_blu_trv_climate_unsupported_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.trv_name", ATTR_HVAC_MODE: hvac_mode},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.trv_name",
+                ClimateServiceArgument.HVAC_MODE: hvac_mode,
+            },
             blocking=True,
         )
 
@@ -1270,8 +1308,11 @@ async def test_blu_trv_set_target_temp_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.trv_name",
+                ClimateServiceArgument.TEMPERATURE: 28,
+            },
             blocking=True,
         )
 
@@ -1287,8 +1328,11 @@ async def test_blu_trv_set_target_temp_auth_error(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.trv_name", ATTR_TEMPERATURE: 28},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.trv_name",
+            ClimateServiceArgument.TEMPERATURE: 28,
+        },
         blocking=True,
     )
 
@@ -1332,8 +1376,11 @@ async def test_rpc_linkedgo_st802_thermostat(
     # Test HVAC mode cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "cool")
@@ -1347,8 +1394,8 @@ async def test_rpc_linkedgo_st802_thermostat(
     # Test set temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 25)
@@ -1362,8 +1409,8 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.number_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HUMIDITY: 66},
+        ClimateService.SET_HUMIDITY,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HUMIDITY: 66},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["number:202"], "value", 66)
@@ -1377,8 +1424,11 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_FROST_PROTECTION,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
@@ -1392,8 +1442,8 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.enum_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_LOW},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["enum:200"], "value", "low")
@@ -1407,8 +1457,11 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:201"], "value", False)
@@ -1433,8 +1486,11 @@ async def test_rpc_linkedgo_st802_thermostat(
     mock_rpc_device.enum_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:201"], "value", True)
@@ -1487,8 +1543,11 @@ async def test_rpc_linkedgo_st802_thermostat_floor_heating(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "floor_heating")
@@ -1526,8 +1585,8 @@ async def test_rpc_linkedgo_st1820_thermostat(
     # Test set temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["number:202"], "value", 25)
@@ -1541,8 +1600,11 @@ async def test_rpc_linkedgo_st1820_thermostat(
     mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_FROST_PROTECTION,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
@@ -1556,8 +1618,11 @@ async def test_rpc_linkedgo_st1820_thermostat(
     mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:202"], "value", False)
