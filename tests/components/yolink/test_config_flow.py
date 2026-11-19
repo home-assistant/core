@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -480,6 +480,7 @@ async def test_oauth_reauthentication_aborts_when_home_lookup_fails(
 async def test_uac_flow(
     hass: HomeAssistant,
     mock_yolink_client: AsyncMock,
+    mock_uac_auth_mgr: MagicMock,
     mock_setup_entry: AsyncMock,
     home_info: BRDP,
     title: str,
@@ -503,6 +504,8 @@ async def test_uac_flow(
     }
     assert result["result"].unique_id == TEST_HOME_ID
     assert len(mock_setup_entry.mock_calls) == 1
+    mock_uac_auth_mgr.assert_called_once_with(ANY, TEST_UAID, TEST_SECRET_KEY)
+    mock_yolink_client.assert_called_once_with(mock_uac_auth_mgr.return_value)
     # Validating the credentials must not load the devices or open MQTT.
     mock_yolink_client.return_value.execute.assert_awaited_once_with(
         url=Endpoints.US.value.url, bsdp={"method": "Home.getGeneralInfo"}
@@ -616,7 +619,9 @@ async def test_uac_flow_aborts_when_home_configured_by_oauth(
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_uac_config_entry")
 async def test_uac_flow_multiple_homes(
-    hass: HomeAssistant, mock_yolink_client: AsyncMock
+    hass: HomeAssistant,
+    mock_yolink_client: AsyncMock,
+    mock_uac_auth_mgr: MagicMock,
 ) -> None:
     """Test entries for different homes coexist."""
     mock_yolink_client.return_value.execute.return_value = home_info_response(
@@ -633,12 +638,14 @@ async def test_uac_flow_multiple_homes(
     assert result["title"] == "Second Home"
     assert result["result"].unique_id == "home_22222"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+    mock_uac_auth_mgr.assert_called_once_with(ANY, "second-uaid", "second-secret")
 
 
 @pytest.mark.usefixtures("mock_yolink_client")
 async def test_uac_reauthentication(
     hass: HomeAssistant,
     mock_uac_config_entry: MockConfigEntry,
+    mock_uac_auth_mgr: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test UAC reauthentication updates the credentials and reloads."""
@@ -662,6 +669,7 @@ async def test_uac_reauthentication(
         CONF_SECRET_KEY: "new-secret",
         CONF_HOME_ID: TEST_HOME_ID,
     }
+    mock_uac_auth_mgr.assert_called_once_with(ANY, "new-uaid", "new-secret")
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -670,6 +678,7 @@ async def test_uac_reauthentication_wrong_home(
     hass: HomeAssistant,
     mock_uac_config_entry: MockConfigEntry,
     mock_yolink_client: AsyncMock,
+    mock_uac_auth_mgr: MagicMock,
 ) -> None:
     """Test UAC reauthentication with credentials for another home."""
     mock_yolink_client.return_value.execute.return_value = home_info_response(
@@ -686,4 +695,5 @@ async def test_uac_reauthentication_wrong_home(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
+    mock_uac_auth_mgr.assert_called_once_with(ANY, "other-uaid", "other-secret")
     assert mock_uac_config_entry.data[CONF_UAID] == TEST_UAID

@@ -83,6 +83,21 @@ def mock_auth_manager() -> Generator[MagicMock]:
         yield mock_auth
 
 
+@pytest.fixture(name="mock_uac_auth_mgr")
+def mock_uac_auth_mgr() -> Generator[MagicMock]:
+    """Mock the UAC authentication manager."""
+    with (
+        patch(
+            "homeassistant.components.yolink.YoLinkUACAuthMgr", autospec=True
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.yolink.config_flow.YoLinkUACAuthMgr",
+            new=mock_auth,
+        ),
+    ):
+        yield mock_auth
+
+
 @pytest.fixture(name="mock_yolink_home")
 def mock_yolink_home() -> Generator[AsyncMock]:
     """Mock YoLink home instance."""

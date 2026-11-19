@@ -10,11 +10,12 @@ from yolink.auth_mgr import YoLinkAuthMgr
 from yolink.client import YoLinkClient
 from yolink.endpoint import Endpoints
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.uac_auth_mgr import YoLinkUACAuthMgr
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow, selector
 
-from .api import StaticTokenAuth, UACAuth
+from .api import StaticTokenAuth
 from .const import (
     AUTH_TYPE_OAUTH,
     AUTH_TYPE_UAC,
@@ -91,7 +92,7 @@ class OAuth2FlowHandler(
         if user_input is not None:
             try:
                 home_info = await _async_fetch_home_info(
-                    UACAuth(
+                    YoLinkUACAuthMgr(
                         aiohttp_client.async_get_clientsession(self.hass),
                         user_input[CONF_UAID],
                         user_input[CONF_SECRET_KEY],

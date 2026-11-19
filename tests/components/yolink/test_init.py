@@ -1,16 +1,13 @@
 """Tests for the yolink integration."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
-from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.model import BRDP
 
-from homeassistant.components.yolink.api import UACAuth
 from homeassistant.components.yolink.const import (
     AUTH_TYPE_UAC,
     CONF_AUTH_TYPE,
@@ -80,7 +77,7 @@ async def test_uac_setup_and_unload(
     hass: HomeAssistant,
     mock_uac_config_entry: MockConfigEntry,
     mock_yolink_home: AsyncMock,
-    aioclient_mock: AiohttpClientMocker,
+    mock_uac_auth_mgr: MagicMock,
 ) -> None:
     """Test UAC config entry setup and unload."""
     assert await hass.config_entries.async_setup(mock_uac_config_entry.entry_id)
@@ -90,20 +87,11 @@ async def test_uac_setup_and_unload(
     # The home id is already known, so it is not looked up again.
     mock_yolink_home.return_value.async_get_home_info.assert_not_awaited()
 
-    auth_mgr = mock_yolink_home.return_value.async_setup.await_args.args[0]
-    assert isinstance(auth_mgr, UACAuth)
-
     # The credentials of the entry are the ones the manager authenticates with.
-    aioclient_mock.post(
-        OAUTH2_TOKEN, json={"access_token": "token-1", "expires_in": 7200}
+    mock_uac_auth_mgr.assert_called_once_with(ANY, TEST_UAID, TEST_SECRET_KEY)
+    mock_yolink_home.return_value.async_setup.assert_awaited_once_with(
+        mock_uac_auth_mgr.return_value, ANY
     )
-    assert await auth_mgr.check_and_refresh_token() == "token-1"
-    assert aioclient_mock.mock_calls[0][2] == {
-        "grant_type": "client_credentials",
-        "scope": "create",
-        "client_id": TEST_UAID,
-        "client_secret": TEST_SECRET_KEY,
-    }
 
     assert await hass.config_entries.async_unload(mock_uac_config_entry.entry_id)
     assert mock_uac_config_entry.state is ConfigEntryState.NOT_LOADED

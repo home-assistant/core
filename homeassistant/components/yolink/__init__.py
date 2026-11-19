@@ -10,6 +10,7 @@ from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
 from yolink.message_listener import MessageListener
+from yolink.uac_auth_mgr import YoLinkUACAuthMgr
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -121,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> None:
     """Set up yolink from a config entry."""
     if entry.data.get(CONF_AUTH_TYPE) == AUTH_TYPE_UAC:
-        auth_mgr = api.UACAuth(
+        auth_mgr = YoLinkUACAuthMgr(
             aiohttp_client.async_get_clientsession(hass),
             entry.data[CONF_UAID],
             entry.data[CONF_SECRET_KEY],
