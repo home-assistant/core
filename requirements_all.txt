@@ -1314,7 +1314,7 @@ haveniaq==0.1.0
 hdate[astral]==1.2.2
 
 # homeassistant.components.hdfury
-hdfury==1.6.1
+hdfury==1.7.0
 
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.6
