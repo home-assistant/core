@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Generator
 from datetime import timedelta
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -162,7 +163,11 @@ async def test_pollen_grace_period(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert caplog.text.count("Could not get pollen data from the API") == 1
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.message.startswith("Could not get pollen data from the API")
+    ] == [logging.INFO]
 
     mock_irm_kmi_api.get_pollen.side_effect = None
 

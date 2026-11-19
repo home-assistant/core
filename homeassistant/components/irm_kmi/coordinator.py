@@ -106,7 +106,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             pollen = await self._api.get_pollen()
         except IrmKmiApiError as err:
             if not self._pollen_failing:
-                _LOGGER.warning("Could not get pollen data from the API: %s", err)
+                _LOGGER.info("Could not get pollen data from the API: %s", err)
                 self._pollen_failing = True
             pollen = self._cached_pollen()
         else:
