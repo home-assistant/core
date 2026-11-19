@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
+from homeassistant.const import STATE_UNAVAILABLE, EntityCategory, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -255,10 +255,11 @@ async def test_queue_playback_speed_registry(
     entity_registry: er.EntityRegistry,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test the playback speed number is added disabled."""
+    """Test the playback speed number is added disabled as a config entity."""
     music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entry = entity_registry.async_get("number.test_player_1_playback_speed")
     assert entry
     assert entry.unique_id == "00:00:00:00:00:01_queue_playback_speed"
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.entity_category is EntityCategory.CONFIG

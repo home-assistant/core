@@ -8,7 +8,7 @@ from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -162,6 +162,7 @@ class MusicAssistantQueuePlaybackSpeed(MusicAssistantEntity, NumberEntity):
     entity_description = NumberEntityDescription(
         key="queue_playback_speed",
         translation_key="queue_playback_speed",
+        entity_category=EntityCategory.CONFIG,
         native_min_value=0.5,
         native_max_value=3.0,
         native_step=0.05,
