@@ -48,7 +48,8 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
             return await self.async_step_authorize()
 
         if self._identify_task is None:
-            self._identify_task = self.hass.async_create_background_task(
+            self._identify_task = self.entry.async_create_background_task(
+                self.hass,
                 self._async_identify_device(),
                 f"homewizard identify {self.entry.entry_id}",
             )
