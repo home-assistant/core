@@ -1,48 +1,58 @@
 """Test camera WebRTC recording."""
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 import concurrent.futures
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from fractions import Fraction
 from functools import partial
 from pathlib import Path
 from typing import cast, override
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiortc import (
+    MediaStreamTrack,
     RTCIceCandidate,
     RTCRtpTransceiver,
     RTCSessionDescription,
-    VideoStreamTrack,
 )
 from aiortc.mediastreams import MediaStreamError
-from av import VideoFrame, open as av_open
+from av import AudioFrame, VideoFrame, open as av_open
 import pytest
+import webrtc_models
 
 from homeassistant.components.camera import (
     Camera,
     WebRTCAnswer,
+    WebRTCCandidate,
     WebRTCClientConfiguration,
+    WebRTCMessage,
     WebRTCRecordingConfiguration,
     WebRTCSendMessage,
 )
 from homeassistant.components.camera.webrtc_recorder import async_record_webrtc
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async_ import run_callback_threadsafe
 
 VIDEO_SIZE = (200, 100)
+ICE_CANDIDATE_SDP = "1 1 udp 2122260223 192.0.2.1 12345 typ host"
+AUDIO_SAMPLE_RATE = 48000
+AUDIO_SAMPLES = 960
 
 
-class _VideoTrack(VideoStreamTrack):
-    def __init__(self, on_frame_emitted: Callable[[], None]) -> None:
+class _FrameTrack(MediaStreamTrack):
+    def __init__(self, on_frame_emitted: Callable[[], None] | None = None) -> None:
         super().__init__()
         self._loop = asyncio.get_running_loop()
         self._frame_semaphore = asyncio.Semaphore(0)
         self._stopped = asyncio.Event()
         self._on_frame_emitted = on_frame_emitted
+        self._frame_index = 0
 
-    def emit_frame_threadsafe(self) -> None:
-        self._loop.call_soon_threadsafe(self._frame_semaphore.release)
+    def emit_frame_threadsafe(self) -> concurrent.futures.Future[None]:
+        return run_callback_threadsafe(self._loop, self._frame_semaphore.release)
 
     def stop_threadsafe(self) -> None:
         self._loop.call_soon_threadsafe(self._stop)
@@ -53,15 +63,43 @@ class _VideoTrack(VideoStreamTrack):
         self._frame_semaphore.release()
 
     @override
-    async def recv(self) -> VideoFrame:
+    async def recv(self) -> AudioFrame | VideoFrame:
         await self._frame_semaphore.acquire()
         if self._stopped.is_set():
             raise MediaStreamError
-        pts, time_base = await self.next_timestamp()
+        frame = self._create_frame(self._frame_index)
+        self._frame_index += 1
+        if self._on_frame_emitted is not None:
+            self._on_frame_emitted()
+        return frame
+
+    @abstractmethod
+    def _create_frame(self, frame_index: int) -> AudioFrame | VideoFrame:
+        """Create a frame with a timestamp."""
+
+
+class _VideoTrack(_FrameTrack):
+    kind = "video"
+
+    @override
+    def _create_frame(self, frame_index: int) -> VideoFrame:
         frame = VideoFrame(*VIDEO_SIZE, format="yuv420p")
-        frame.pts = pts
-        frame.time_base = time_base
-        self._on_frame_emitted()
+        frame.pts = frame_index
+        frame.time_base = Fraction(1, 30)
+        return frame
+
+
+class _AudioTrack(_FrameTrack):
+    kind = "audio"
+
+    @override
+    def _create_frame(self, frame_index: int) -> AudioFrame:
+        frame = AudioFrame(format="s16", layout="mono", samples=AUDIO_SAMPLES)
+        frame.sample_rate = AUDIO_SAMPLE_RATE
+        frame.pts = frame_index * AUDIO_SAMPLES
+        frame.time_base = Fraction(1, AUDIO_SAMPLE_RATE)
+        for plane in frame.planes:
+            plane.update(bytes(plane.buffer_size))
         return frame
 
 
@@ -72,19 +110,32 @@ class _RecordingContext:
     video_track: concurrent.futures.Future[_VideoTrack] = field(
         default_factory=concurrent.futures.Future
     )
-    frame_emitted: asyncio.Event = field(default_factory=asyncio.Event)
+    audio_track: concurrent.futures.Future[_AudioTrack] = field(
+        default_factory=concurrent.futures.Future
+    )
+    video_frame_emitted: asyncio.Event = field(default_factory=asyncio.Event)
+    messages: list[WebRTCMessage] = field(
+        default_factory=lambda: [WebRTCAnswer(answer="v=0\r\n")]
+    )
     peer_connection: _MockPeerConnection | None = None
     transceivers: dict[str, Mock] = field(default_factory=dict)
 
-    def on_frame_emitted(self) -> None:
-        self.main_loop.call_soon_threadsafe(self.frame_emitted.set)
+    def on_video_frame_emitted(self) -> None:
+        self.main_loop.call_soon_threadsafe(self.video_frame_emitted.set)
+
+    async def emit_audio_frame(self) -> None:
+        """Queue audio without waiting for the video gate to open."""
+        async with asyncio.timeout(1):
+            track = await asyncio.shield(asyncio.wrap_future(self.audio_track))
+            await asyncio.wrap_future(track.emit_frame_threadsafe())
 
     async def emit_video_frame(self) -> None:
+        """Wait until the video track produces the requested frame."""
         async with asyncio.timeout(1):
+            self.video_frame_emitted.clear()
             track = await asyncio.shield(asyncio.wrap_future(self.video_track))
-            self.frame_emitted.clear()
-            track.emit_frame_threadsafe()
-            await self.frame_emitted.wait()
+            await asyncio.wrap_future(track.emit_frame_threadsafe())
+            await self.video_frame_emitted.wait()
 
     async def stop_video(self) -> None:
         async with asyncio.timeout(1):
@@ -100,6 +151,7 @@ class _MockPeerConnection:
         self.connectionState = "new"
         self.localDescription: RTCSessionDescription | None = None
         self.remoteDescription: RTCSessionDescription | None = None
+        self.ice_candidates: list[RTCIceCandidate | None] = []
         ctx.peer_connection = self
 
     def on(self, event: str, callback: Callable[..., object]) -> Callable[..., object]:
@@ -122,13 +174,17 @@ class _MockPeerConnection:
 
     async def setRemoteDescription(self, description: RTCSessionDescription) -> None:
         self.remoteDescription = description
-        track = _VideoTrack(self._ctx.on_frame_emitted)
-        self._ctx.video_track.set_result(track)
-        self._callbacks["track"](track)
+        video_track = _VideoTrack(self._ctx.on_video_frame_emitted)
+        audio_track = _AudioTrack()
+        self._ctx.video_track.set_result(video_track)
+        self._ctx.audio_track.set_result(audio_track)
+        for track in (video_track, audio_track):
+            self._callbacks["track"](track)
         await self._set_connection_state("connected")
 
-    async def addIceCandidate(self, _candidate: RTCIceCandidate | None) -> None:
-        raise NotImplementedError
+    async def addIceCandidate(self, candidate: RTCIceCandidate | None) -> None:
+        assert self.remoteDescription is not None
+        self.ice_candidates.append(candidate)
 
     async def close(self) -> None:
         await self._set_connection_state("closed")
@@ -155,6 +211,7 @@ def recording_ctx(hass: HomeAssistant) -> Generator[_RecordingContext]:
     camera.get_webrtc_recording_configuration.return_value = (
         WebRTCRecordingConfiguration()
     )
+    ctx = _RecordingContext(camera, hass.loop)
 
     async def handle_offer(
         offer_sdp: str,
@@ -166,10 +223,10 @@ def recording_ctx(hass: HomeAssistant) -> Generator[_RecordingContext]:
         assert offer_sdp == "v=0\r\n"
         assert session_id
         assert aiortc_compatible
-        send_message(WebRTCAnswer(answer="v=0\r\n"))
+        for message in ctx.messages:
+            send_message(message)
 
     camera.async_handle_async_webrtc_offer = AsyncMock(side_effect=handle_offer)
-    ctx = _RecordingContext(camera, hass.loop)
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
@@ -221,6 +278,87 @@ async def test_record_success(tmp_path: Path, recording_ctx: _RecordingContext) 
 
     recording_ctx.camera.async_handle_async_webrtc_offer.assert_awaited_once()
     recording_ctx.camera.close_webrtc_session.assert_called_once()
+
+
+async def test_record_ice_candidates(
+    tmp_path: Path, recording_ctx: _RecordingContext
+) -> None:
+    """Test camera ICE candidates are added after the remote description is set."""
+    recording_ctx.messages = [
+        WebRTCCandidate(
+            webrtc_models.RTCIceCandidateInit(
+                f"candidate:{ICE_CANDIDATE_SDP}",
+                sdp_mid="1",
+                sdp_m_line_index=1,
+            )
+        ),
+        WebRTCAnswer(answer="v=0\r\n"),
+        WebRTCCandidate(webrtc_models.RTCIceCandidate(ICE_CANDIDATE_SDP)),
+        WebRTCCandidate(webrtc_models.RTCIceCandidateInit("")),
+    ]
+    task = asyncio.create_task(
+        async_record_webrtc(recording_ctx.camera, str(tmp_path / "recording.mp4"), 0.2)
+    )
+    await recording_ctx.emit_video_frame()
+    await recording_ctx.emit_video_frame()
+    await task
+
+    peer_connection = recording_ctx.peer_connection
+    assert peer_connection is not None
+    candidate = RTCIceCandidate(
+        component=1,
+        foundation="1",
+        ip="192.0.2.1",
+        port=12345,
+        priority=2122260223,
+        protocol="udp",
+        type="host",
+    )
+    assert peer_connection.ice_candidates == [
+        replace(candidate, sdpMid="1", sdpMLineIndex=1),
+        candidate,
+        None,
+    ]
+
+
+async def test_record_audio_before_video(
+    tmp_path: Path, recording_ctx: _RecordingContext
+) -> None:
+    """Test audio arriving first does not corrupt the video dimensions."""
+    output = tmp_path / "recording.mp4"
+    task = asyncio.create_task(
+        async_record_webrtc(recording_ctx.camera, str(output), 0.2)
+    )
+    for _ in range(4):
+        await recording_ctx.emit_audio_frame()
+    await recording_ctx.emit_video_frame()
+    await recording_ctx.emit_video_frame()
+    await task
+
+    assert _get_video_frame_sizes(output) == [VIDEO_SIZE] * 2
+    with av_open(output) as container:
+        # Ensure the gate releases audio instead of silently dropping it.
+        assert list(container.decode(audio=0))
+
+
+async def test_record_video_before_audio(
+    tmp_path: Path, recording_ctx: _RecordingContext
+) -> None:
+    """Test video arriving first preserves dimensions and records audio."""
+    output = tmp_path / "recording.mp4"
+    task = asyncio.create_task(
+        async_record_webrtc(recording_ctx.camera, str(output), 0.2)
+    )
+    await recording_ctx.emit_video_frame()
+    await recording_ctx.emit_video_frame()
+    for _ in range(4):
+        await recording_ctx.emit_audio_frame()
+    await task
+
+    assert _get_video_frame_sizes(output) == [VIDEO_SIZE] * 2
+    with av_open(output) as container:
+        # Ensure the gate releases audio instead of silently dropping it.
+        assert list(container.decode(audio=0))
 
 
 async def test_record_cancellation(

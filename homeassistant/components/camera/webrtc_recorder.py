@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import concurrent.futures
+import contextlib
 import logging
 from pathlib import Path
 import threading
@@ -229,9 +230,10 @@ class _WebRTCRecorder:
 
     def cancel_threadsafe(self) -> None:
         """Request cancellation of the thread. Cancellation is not immediate and the thread should still be joined."""
-        self._loop.call_soon_threadsafe(
-            self._set_failure, _WebRTCRecorderCancelledError()
-        )
+        with contextlib.suppress(RuntimeError):
+            self._loop.call_soon_threadsafe(
+                self._set_failure, _WebRTCRecorderCancelledError()
+            )
 
     def _set_failure(self, error: BaseException) -> None:
         """Raise an exception and stop the recording."""

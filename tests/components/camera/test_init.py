@@ -23,6 +23,8 @@ from homeassistant.components.camera.const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     PREVIEW_FEATURE_TWO_WAY_AUDIO,
+    CameraService,
+    CameraServiceArgument,
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
@@ -755,6 +757,55 @@ async def test_record_service(hass: HomeAssistant) -> None:
         mock_record.assert_called_once_with(
             ANY, "/test/recording.mpg", duration=30, lookback=0
         )
+
+
+async def test_record_service_webrtc(
+    hass: HomeAssistant,
+) -> None:
+    """Test record service for WebRTC cameras."""
+    with patch(
+        "homeassistant.components.camera.services.async_record_webrtc",
+        autospec=True,
+    ) as mock_record_webrtc:
+        await hass.services.async_call(
+            DOMAIN,
+            CameraService.RECORD,
+            {
+                ATTR_ENTITY_ID: "camera.demo_camera",
+                CameraServiceArgument.FILENAME: "/test/{{ 'clip' }}.mp4",
+                CameraServiceArgument.DURATION: 10,
+            },
+            blocking=True,
+        )
+
+        mock_record_webrtc.assert_awaited_once_with(
+            get_camera_from_entity_id(hass, "camera.demo_camera"),
+            "/test/clip.mp4",
+            10,
+        )
+
+
+async def test_record_service_webrtc_lookback(hass: HomeAssistant) -> None:
+    """Test WebRTC recording rejects lookback and does not start a recording."""
+    with patch(
+        "homeassistant.components.camera.services.async_record_webrtc",
+        autospec=True,
+    ) as mock_record_webrtc:
+        with pytest.raises(
+            HomeAssistantError, match="WebRTC recordings do not support lookback"
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                CameraService.RECORD,
+                {
+                    ATTR_ENTITY_ID: "camera.demo_camera",
+                    CameraServiceArgument.FILENAME: "/test/clip.mp4",
+                    CameraServiceArgument.LOOKBACK: 1,
+                },
+                blocking=True,
+            )
+
+        mock_record_webrtc.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_camera")
