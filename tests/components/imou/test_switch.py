@@ -18,7 +18,7 @@ from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -111,7 +111,7 @@ async def test_turn_on_via_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: motion_entry.entity_id},
+        {TargetKey.ENTITY_ID: motion_entry.entity_id},
         blocking=True,
     )
 
@@ -146,7 +146,7 @@ async def test_turn_off_via_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: header_entry.entity_id},
+        {TargetKey.ENTITY_ID: header_entry.entity_id},
         blocking=True,
     )
 
@@ -175,7 +175,7 @@ async def test_turn_on_service_propagates_api_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -200,7 +200,7 @@ async def test_turn_on_invalid_auth_starts_reauth(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -256,7 +256,7 @@ async def test_turn_off_unavailable_offline_device_via_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: motion_entry.entity_id},
+        {TargetKey.ENTITY_ID: motion_entry.entity_id},
         blocking=True,
     )
 

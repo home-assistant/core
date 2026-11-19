@@ -21,7 +21,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -81,7 +81,7 @@ async def test_async_set_native_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: target_value,
         },
         blocking=True,
@@ -127,7 +127,7 @@ async def test_async_set_native_value_errors(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature",
+                TargetKey.ENTITY_ID: "number.ouman_eh_800_heating_circuit_1_patterilammitys_water_out_minimum_temperature",
                 NumberServiceArgument.VALUE: 20,
             },
             blocking=True,

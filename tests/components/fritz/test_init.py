@@ -19,7 +19,7 @@ from homeassistant.components.fritz.const import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA
@@ -190,7 +190,7 @@ async def test_execute_action_while_shutdown(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.mock_title_wi_fi_guest"},
+        {TargetKey.ENTITY_ID: "switch.mock_title_wi_fi_guest"},
         blocking=True,
     )
 

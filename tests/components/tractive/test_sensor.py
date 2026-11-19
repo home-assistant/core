@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -37,6 +38,9 @@ async def test_sensor(
             minutes_night_sleep=300,
             minutes_rest=122,
             weight=23700,
+            resting_heart_rate_status="normal",
+            resting_respiratory_rate_status="elevated",
+            scratch_status="normal",
         )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -79,6 +83,9 @@ async def test_sensor_device_assignment(
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
         "sensor.test_pet_weight",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         entry = entity_registry.async_get(entity_id)
         assert entry is not None
@@ -113,6 +120,31 @@ async def test_sensor_weight_update(
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize(
+    "status", ["calculating_baseline", "not_enough_data_today", "not_synced_yet"]
+)
+async def test_sensor_health_status_without_value(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    status: str,
+) -> None:
+    """Test a health status sensor is unknown while Tractive has no value for it."""
+    with patch("homeassistant.components.tractive.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
+    assert state is not None
+    assert state.state == "elevated"
+
+    mock_tractive_client.set_pet_status(resting_heart_rate_status=status)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_pet_resting_heart_rate_status")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_sensor_without_health_data(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
@@ -130,6 +162,9 @@ async def test_sensor_without_health_data(
         "sensor.test_pet_daily_goal",
         "sensor.test_pet_day_sleep",
         "sensor.test_pet_night_sleep",
+        "sensor.test_pet_resting_heart_rate_status",
+        "sensor.test_pet_resting_respiratory_rate_status",
+        "sensor.test_pet_scratch_status",
     ):
         assert hass.states.get(entity_id) is None
 

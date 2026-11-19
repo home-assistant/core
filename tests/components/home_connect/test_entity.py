@@ -38,8 +38,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -472,6 +472,6 @@ async def test_option_entity_functionality_exception(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )

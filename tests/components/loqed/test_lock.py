@@ -12,7 +12,7 @@ from homeassistant.const import (
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -69,7 +69,7 @@ async def test_lock_transition_to_unlocked(
     await hass.services.async_call(
         "lock",
         LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_lock_transition_to_locked(
     await hass.services.async_call(
         "lock",
         LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -103,7 +103,7 @@ async def test_lock_transition_to_open(
     await hass.services.async_call(
         "lock",
         LockService.OPEN,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

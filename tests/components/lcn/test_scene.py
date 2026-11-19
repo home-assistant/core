@@ -7,7 +7,7 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,7 +37,7 @@ async def test_scene_activate(
         await hass.services.async_call(
             SCENE_DOMAIN,
             SceneService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "scene.testmodule_romantic"},
+            {TargetKey.ENTITY_ID: "scene.testmodule_romantic"},
             blocking=True,
         )
 
