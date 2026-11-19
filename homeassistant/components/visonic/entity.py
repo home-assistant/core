@@ -40,7 +40,6 @@ class AlarmBaseLogic(CoordinatorEntity[VisonicCoordinator]):
         self._name = self._panel_ident + "_main_panel"
 
         self._attr_unique_id = slugify(self._name)
-        self._attr_should_poll = False
         self._attr_translation_key = VISONIC_TRANSLATION_KEY
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
