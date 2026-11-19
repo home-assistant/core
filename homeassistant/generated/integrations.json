@@ -16973,6 +16973,17 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "wpalacontrol": {
+      "name": "WPalaControl",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "ws66i": {
       "name": "Soundavo WS66i 6-Zone Amplifier",
       "integration_type": "device",
