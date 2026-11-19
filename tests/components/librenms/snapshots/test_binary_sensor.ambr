@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://librenms/device/1',
       'connections': set({
       }),
@@ -32,7 +32,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://librenms/device/3',
       'connections': set({
       }),
@@ -60,7 +60,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://librenms/device/13',
       'connections': set({
       }),
@@ -88,7 +88,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
+      'config_subentry_id': None,
       'configuration_url': 'https://librenms/device/29',
       'connections': set({
       }),
@@ -123,9 +123,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('librenms', '01KXX1E2EMMSCDQ2K4A0C7JA9T_3')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -174,9 +174,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('librenms', '01KXX1E2EMMSCDQ2K4A0C7JA9T_29')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -225,9 +225,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('librenms', '01KXX1E2EMMSCDQ2K4A0C7JA9T_13')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
@@ -276,9 +276,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('librenms', '01KXX1E2EMMSCDQ2K4A0C7JA9T_1')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,

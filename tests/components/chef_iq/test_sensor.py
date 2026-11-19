@@ -1,6 +1,7 @@
 """Test the Chef iQ sensors."""
 
 from datetime import timedelta
+import logging
 import time
 
 import pytest
@@ -19,12 +20,18 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import CHEFIQ_STATUS_SERVICE_INFO, CHEFIQ_TEMPERATURE_SERVICE_INFO
+
+
+def _food_state(hass: HomeAssistant) -> str:
+    state = hass.states.get("sensor.cq60_079a_food_temperature")
+    assert state is not None
+    return state.state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -51,11 +58,13 @@ async def test_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sleepy_device_keeps_state(
+async def test_probe_unavailable_while_not_broadcasting(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the probe keeps its state and goes to assumed_state when idle."""
+    """Test the sensors go unavailable, logged once, until the probe is seen again."""
+    caplog.set_level(logging.INFO, logger="homeassistant.components.chef_iq")
     start_monotonic = time.monotonic()
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -63,9 +72,7 @@ async def test_sleepy_device_keeps_state(
 
     inject_bluetooth_service_info(hass, CHEFIQ_TEMPERATURE_SERVICE_INFO)
     await hass.async_block_till_done()
-    food = hass.states.get("sensor.cq60_079a_food_temperature")
-    assert food.state == "29.9"
-    assert ATTR_ASSUMED_STATE not in food.attributes
+    assert _food_state(hass) == "29.9"
 
     # Fast-forward past the stale-advertisement window with no advertisements.
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
@@ -80,7 +87,11 @@ async def test_sleepy_device_keeps_state(
         )
         await hass.async_block_till_done()
 
-    # Sleepy devices keep their last value and report assumed_state.
-    food = hass.states.get("sensor.cq60_079a_food_temperature")
-    assert food.state == "29.9"
-    assert food.attributes[ATTR_ASSUMED_STATE] is True
+    assert _food_state(hass) == STATE_UNAVAILABLE
+    assert caplog.text.count("stopped broadcasting") == 1
+
+    # The probe is seen again: the sensors recover and that is logged once too.
+    inject_bluetooth_service_info(hass, CHEFIQ_TEMPERATURE_SERVICE_INFO)
+    await hass.async_block_till_done()
+    assert _food_state(hass) == "29.9"
+    assert caplog.text.count("broadcasting again") == 1

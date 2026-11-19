@@ -6,7 +6,6 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -51,6 +50,7 @@ from .const import (
     UNITS,
     VEHICLE_TYPES,
 )
+from .coordinator import WazeTravelTimeConfigEntry
 from .helpers import is_valid_config_entry
 
 OPTIONS_SCHEMA = probatio.Schema(
@@ -169,7 +169,7 @@ class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: WazeTravelTimeConfigEntry,
     ) -> WazeOptionsFlow:
         """Get the options flow for this handler."""
         return WazeOptionsFlow()

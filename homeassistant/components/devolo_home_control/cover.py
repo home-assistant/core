@@ -3,10 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverServiceArgument,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -72,7 +72,7 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set the blind to the given position."""
-        self._set_cover_position(kwargs[ATTR_POSITION])
+        self._set_cover_position(kwargs[CoverServiceArgument.POSITION])
 
     def _set_cover_position(self, position: int) -> None:
         """Set the blind to the given position."""

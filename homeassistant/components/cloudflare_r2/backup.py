@@ -19,12 +19,15 @@ from homeassistant.components.backup import (
 )
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from . import R2ConfigEntry
 from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
+# Matches the default chunk size of aiobotocore's StreamingBody.iter_chunks
+DOWNLOAD_CHUNK_SIZE = 1024
 
 # S3 part size requirements: 5 MiB to 5 GiB per part
 # We set the threshold to 20 MiB to avoid too many parts.
@@ -125,7 +128,10 @@ class R2BackupAgent(BackupAgent):
         response = await self._client.get_object(
             Bucket=self._bucket, Key=self._with_prefix(tar_filename)
         )
-        return response["Body"].iter_chunks()
+        body = response["Body"]
+        return ResourceChunkIterator(
+            functools.partial(body.read, DOWNLOAD_CHUNK_SIZE), close=body.close
+        )
 
     @override
     async def async_upload_backup(
@@ -348,17 +354,17 @@ class R2BackupAgent(BackupAgent):
         backups = {}
         # Only pass Prefix if a prefix is configured; some S3-compatible APIs
         # (and type checkers) do not like Prefix=None.
-        list_kwargs = {"Bucket": self._bucket}
+        list_kwargs: dict[str, Any] = {"Bucket": self._bucket}
         if self._prefix:
             list_kwargs["Prefix"] = self._prefix + "/"
-        response = await self._client.list_objects_v2(**list_kwargs)
-
-        # Filter for metadata files only
-        metadata_files = [
-            obj
-            for obj in response.get("Contents", [])
-            if obj["Key"].endswith(".metadata.json")
-        ]
+        paginator = self._client.get_paginator("list_objects_v2")
+        metadata_files: list[dict[str, Any]] = []
+        async for page in paginator.paginate(**list_kwargs):
+            metadata_files.extend(
+                obj
+                for obj in page.get("Contents", [])
+                if obj["Key"].endswith(".metadata.json")
+            )
 
         for metadata_file in metadata_files:
             try:

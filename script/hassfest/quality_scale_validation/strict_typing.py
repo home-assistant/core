@@ -8,7 +8,7 @@ from importlib import metadata
 from pathlib import Path
 import re
 
-from script.hassfest.model import Config, Integration
+from hassfest.model import Config, Integration
 
 _STRICT_TYPING_FILE = Path(".strict-typing")
 _COMPONENT_REGEX = r"homeassistant.components.([^.]+).*"

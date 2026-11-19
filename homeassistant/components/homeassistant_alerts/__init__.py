@@ -9,8 +9,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
-    async_begin_issues_refresh,
     async_create_issue,
+    async_refresh_issues,
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # All issues of the domain are alerts, including inactive ones from before
         # a restart which are not in last_alerts
-        with async_begin_issues_refresh(hass, DOMAIN) as refresh:
+        with async_refresh_issues(hass, DOMAIN) as refresh:
             for issue_id, alert in coordinator.data.items():
                 # Skip creation if already created and not updated since then
                 if (

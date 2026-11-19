@@ -12,16 +12,16 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
     FAN_LOW,
     FAN_MIDDLE,
     SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.zhong_hong.const import (
@@ -37,6 +37,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -219,8 +220,8 @@ async def test_turn_on_success(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -266,11 +267,11 @@ async def test_set_temperature_with_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 25,
-            ATTR_HVAC_MODE: HVACMode.COOL,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 25,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -291,8 +292,11 @@ async def test_set_hvac_mode_send_failure_raises(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
@@ -308,8 +312,11 @@ async def test_set_hvac_mode_success(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -326,8 +333,11 @@ async def test_set_hvac_mode_off_turns_the_device_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -342,8 +352,8 @@ async def test_set_fan_mode_success(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_LOW},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_LOW},
         blocking=True,
     )
 
@@ -416,8 +426,8 @@ async def test_a_command_is_read_back(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
         blocking=True,
     )
 
@@ -453,8 +463,8 @@ async def test_commands_in_a_row_are_read_back_once(
     for fan_mode in commands:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: fan_mode},
             blocking=True,
         )
         freezer.tick(timedelta(seconds=1))
@@ -496,8 +506,8 @@ async def test_a_later_command_is_read_back_on_time(
     for _ in range(2):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
             blocking=True,
         )
         freezer.tick(READBACK_DELAY)
@@ -526,8 +536,8 @@ async def test_a_pending_readback_does_not_outlive_the_entry(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
         blocking=True,
     )
 
@@ -557,8 +567,8 @@ async def test_a_command_landing_after_the_unload_schedules_nothing(
     command = hass.async_create_task(
         hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
             blocking=True,
         )
     )

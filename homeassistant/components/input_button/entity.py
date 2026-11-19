@@ -3,19 +3,19 @@
 from typing import Self, override
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import ATTR_EDITABLE, CONF_ICON, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_NAME
 from homeassistant.helpers import collection
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, InputButtonEntityStateAttribute
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputButtonEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -58,7 +58,7 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self.editable}
+        return {InputButtonEntityStateAttribute.EDITABLE: self.editable}
 
     @override
     async def async_press(self) -> None:

@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aioairzone.exceptions import (
     AirzoneError,
     HotWaterNotAvailable,
+    IaqSensorNotAvailable,
     InvalidMethod,
     SystemOutOfRange,
 )
@@ -43,6 +44,10 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -93,6 +98,10 @@ async def test_coordinator_new_devices(
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",

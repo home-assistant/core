@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import AdGuardConfigEntry, AdGuardHomeUpdateCoordinator
 from .entity import AdGuardHomeEntity
 
@@ -79,7 +80,10 @@ class AdGuardHomeUpdate(AdGuardHomeEntity[AdGuardHomeUpdateCoordinator], UpdateE
         try:
             await self.coordinator.client.update.install()
         except AdGuardHomeError as err:
-            raise HomeAssistantError(f"Failed to install update: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_update_failed",
+            ) from err
         self.hass.config_entries.async_schedule_reload(
             self.coordinator.config_entry.entry_id
         )

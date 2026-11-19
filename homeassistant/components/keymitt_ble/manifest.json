@@ -12,6 +12,7 @@
   "categories": ["buttons_remotes"],
   "codeowners": ["@spycle"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/keymitt_ble",
   "integration_type": "device",

@@ -1,6 +1,7 @@
 """Tests for the LIFX component."""
 
 from datetime import timedelta
+from socket import AF_INET, IPPROTO_UDP, SOCK_DGRAM
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -95,16 +96,17 @@ async def test_setup_resolves_a_stored_hostname(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.lifx.Device.connect", return_value=device
         ) as connect,
-        patch(
-            "homeassistant.components.lifx.util.gethostbyname",
-            return_value=IP_ADDRESS,
+        patch.object(
+            hass.loop,
+            "getaddrinfo",
+            return_value=[(AF_INET, SOCK_DGRAM, IPPROTO_UDP, "", (IP_ADDRESS, 0))],
         ) as resolve,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    resolve.assert_called_once_with("lifx.example.com")
+    resolve.assert_awaited_once_with("lifx.example.com", None, type=SOCK_DGRAM)
     connect.assert_awaited_once_with(ip=IP_ADDRESS, serial=SERIAL)
 
 

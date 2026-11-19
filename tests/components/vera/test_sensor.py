@@ -31,7 +31,7 @@ async def run_sensor_test(
     vera_device.name = "dev1"
     vera_device.category = category
     setattr(vera_device, class_property, "33")
-    entity_id = "sensor.dev1_1"
+    entity_id = "sensor.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,
@@ -188,7 +188,7 @@ async def test_scene_controller_sensor(
     vera_device.category = pv.CATEGORY_SCENE_CONTROLLER
     vera_device.get_last_scene_id = MagicMock(return_value="id0")
     vera_device.get_last_scene_time = MagicMock(return_value="0000")
-    entity_id = "sensor.dev1_1"
+    entity_id = "sensor.dev1"
 
     component_data = await vera_component_factory.configure_component(
         hass=hass,

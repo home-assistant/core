@@ -12,24 +12,17 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
 from homeassistant.components.switch_as_x.const import (
     CONF_INVERT,
     CONF_TARGET_DOMAIN,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -88,8 +81,8 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TOGGLE,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -99,8 +92,8 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -114,8 +107,8 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -148,8 +141,8 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -159,8 +152,8 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -193,8 +186,8 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TOGGLE,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TOGGLE,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -204,8 +197,8 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -219,8 +212,8 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "light.decorative_lights"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -253,8 +246,8 @@ async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -264,11 +257,46 @@ async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "switch.decorative_lights"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
     assert hass.states.get("light.decorative_lights").state == STATE_ON
+
+
+async def test_switch_state_change_context(hass: HomeAssistant) -> None:
+    """Test the wrapped light carries the context of the switch state change."""
+    await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await hass.async_block_till_done()
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_ENTITY_ID: "switch.decorative_lights",
+            CONF_INVERT: False,
+            CONF_TARGET_DOMAIN: Platform.LIGHT,
+        },
+        title="decorative_lights",
+        version=SwitchAsXConfigFlowHandler.VERSION,
+        minor_version=SwitchAsXConfigFlowHandler.MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    context = Context()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.decorative_lights")
+    assert state.state == STATE_OFF
+    assert state.context.id == context.id

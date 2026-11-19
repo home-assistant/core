@@ -132,6 +132,9 @@
       "previous_image": {
         "name": "Previous image"
       },
+      "random_image": {
+        "name": "Random image"
+      },
       "reset_filter_usage": {
         "name": "Reset filter usage"
       },
@@ -491,6 +494,12 @@
     "device_without_config_entry": {
       "message": "The device ID {device_id} is not associated with a config entry."
     },
+    "keypad_info_unavailable": {
+      "message": "Unable to retrieve information from the keypad."
+    },
+    "model_not_determined_error": {
+      "message": "Could not determine the model of Switchbot {sensor_type} with address {address} from its Bluetooth advertisements; an actively scanning Bluetooth adapter or proxy in range may be required: {reason}"
+    },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."
     },
@@ -534,6 +543,16 @@
         }
       },
       "name": "Add password"
+    },
+    "get_keypad_info": {
+      "description": "Retrieve keypad settings, firmware and hardware versions, and aggregate credential counts from a keypad vision device.",
+      "fields": {
+        "device_id": {
+          "description": "The device ID of the keypad vision device",
+          "name": "Device ID"
+        }
+      },
+      "name": "Get keypad information"
     }
   }
 }

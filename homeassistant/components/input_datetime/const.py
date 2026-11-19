@@ -13,8 +13,6 @@ DOMAIN: Final = "input_datetime"
 
 DATA_INPUT_DATETIME: HassKey[InputDatetimeData] = HassKey(DOMAIN)
 
-ATTR_DATETIME: Final = "datetime"
-ATTR_TIMESTAMP: Final = "timestamp"
 
 CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"

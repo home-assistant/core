@@ -15,22 +15,23 @@ from syrupy.assertion import SnapshotAssertion
 from ttls.client import TwinklyError
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.twinkly import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -67,8 +68,8 @@ async def test_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"},
         blocking=True,
     )
 
@@ -87,8 +88,11 @@ async def test_turn_on_with_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.BRIGHTNESS: 255,
+        },
         blocking=True,
     )
 
@@ -106,8 +110,11 @@ async def test_brightness_to_zero(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 1},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.BRIGHTNESS: 1,
+        },
         blocking=True,
     )
 
@@ -132,10 +139,10 @@ async def test_turn_on_with_color_rgbw(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         service_data={
-            ATTR_ENTITY_ID: "light.tree_1",
-            ATTR_RGBW_COLOR: (128, 64, 32, 0),
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.RGBW_COLOR: (128, 64, 32, 0),
         },
         blocking=True,
     )
@@ -163,8 +170,11 @@ async def test_turn_on_with_color_rgb(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_RGB_COLOR: (128, 64, 32)},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.RGB_COLOR: (128, 64, 32),
+        },
         blocking=True,
     )
 
@@ -191,13 +201,53 @@ async def test_turn_on_with_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "2 Rainbow",
+        },
         blocking=True,
     )
 
     mock_twinkly_client.interview.assert_called_once_with()
     mock_twinkly_client.set_current_movie.assert_called_once_with(2)
+    mock_twinkly_client.set_mode.assert_called_once_with("movie")
+    assert mock_twinkly_client.default_mode == "movie"
+
+
+async def test_color_mode_reports_effect_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test that a solid color reports off even when a movie id is remembered."""
+    await setup_integration(hass, mock_config_entry)
+
+    attributes = hass.states.get("light.tree_1").attributes
+    assert attributes[ATTR_EFFECT] == EFFECT_OFF
+    assert attributes[ATTR_EFFECT_LIST][0] == EFFECT_OFF
+
+
+async def test_turn_on_reapplies_current_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test that the current movie is sent again after a solid color."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] == EFFECT_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
+        blocking=True,
+    )
+
+    mock_twinkly_client.set_current_movie.assert_called_once_with(1)
     mock_twinkly_client.set_mode.assert_called_once_with("movie")
     assert mock_twinkly_client.default_mode == "movie"
 
@@ -216,8 +266,11 @@ async def test_turn_on_with_current_movie_in_other_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
         blocking=True,
     )
 
@@ -238,8 +291,11 @@ async def test_turn_on_with_current_movie_in_movie_mode(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        },
         blocking=True,
     )
 
@@ -269,14 +325,46 @@ async def test_turn_on_with_color_and_current_movie(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "1 Rainbow"} | data,
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "1 Rainbow",
+        }
+        | data,
         blocking=True,
     )
 
     assert mock_twinkly_client.set_mode.call_args_list == [call("color"), call("movie")]
     mock_twinkly_client.set_current_movie.assert_called_once_with(1)
     assert mock_twinkly_client.default_mode == "movie"
+
+
+@pytest.mark.parametrize("effect", [EFFECT_OFF, "None", "none"])
+async def test_turn_on_with_no_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    effect: str,
+) -> None:
+    """Test that off, including the old None name, selects a solid color."""
+    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: effect,
+        },
+        blocking=True,
+    )
+
+    mock_twinkly_client.interview.assert_called_once_with()
+    mock_twinkly_client.set_mode.assert_called_once_with("color")
+    assert mock_twinkly_client.default_mode == "color"
+    mock_twinkly_client.set_current_movie.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -304,8 +392,8 @@ async def test_turn_on_with_missing_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"} | data,
+        LightService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"} | data,
         blocking=True,
     )
 
@@ -333,8 +421,11 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        LightService.TURN_ON,
+        service_data={
+            TargetKey.ENTITY_ID: "light.tree_1",
+            LightServiceArgument.EFFECT: "2 Rainbow",
+        },
         blocking=True,
     )
 
@@ -351,8 +442,8 @@ async def test_turn_off(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        LightService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: "light.tree_1"},
         blocking=True,
     )
     mock_twinkly_client.turn_off.assert_called_once_with()
@@ -365,6 +456,7 @@ async def test_no_current_movie(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling of missing current movie data."""
+    mock_twinkly_client.get_mode.return_value = {"mode": "movie"}
 
     await setup_integration(hass, mock_config_entry)
 

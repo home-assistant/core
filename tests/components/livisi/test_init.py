@@ -22,6 +22,8 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.livisi.const import (
     DEVICE_POLLING_DELAY,
@@ -30,7 +32,7 @@ from homeassistant.components.livisi.const import (
     LIVISI_REACHABILITY_CHANGE,
     ON_STATE,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -41,6 +43,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -197,20 +200,20 @@ async def test_setup_entities_and_unload(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: switch_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_id, ATTR_TEMPERATURE: 22.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: climate_id, ClimateServiceArgument.TEMPERATURE: 22.0},
         blocking=True,
     )
     connection.async_set_state.assert_has_awaits(
@@ -228,8 +231,8 @@ async def test_setup_entities_and_unload(
     with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: climate_id, ATTR_TEMPERATURE: 22.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: climate_id, ClimateServiceArgument.TEMPERATURE: 22.0},
             blocking=True,
         )
     connection.async_set_state.return_value = True

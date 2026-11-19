@@ -27,6 +27,6 @@ async def async_get_service(
         severity=ir.IssueSeverity.ERROR,
         translation_key="integration_removed",
         translation_placeholders={
-            CONF_URL: "https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/"
+            "url": "https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/"
         },
     )

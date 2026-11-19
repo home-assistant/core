@@ -7,9 +7,10 @@
   ],
   "codeowners": ["@cyberjunky"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/fireservicerota",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyfireservicerota"],
-  "requirements": ["pyfireservicerota==0.0.49"]
+  "requirements": ["pyfireservicerota==0.0.51"]
 }
