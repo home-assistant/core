@@ -419,7 +419,8 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
     """Try to request a token from the device.
 
     This method is used to request a token from the device,
-    it will return None if the token request failed.
+    it will return None if the token request failed and raise
+    RecoverableError if the device could not be reached.
     """
 
     api = HomeWizardEnergyV2(ip_address)
@@ -432,6 +433,10 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
         return await api.get_token(f"home-assistant#{uuid[:6]}")
     except DisabledError:
         return None
+    except RequestError as ex:
+        raise RecoverableError(
+            "Device unreachable or unexpected response", "network_error"
+        ) from ex
     finally:
         await api.close()
 
