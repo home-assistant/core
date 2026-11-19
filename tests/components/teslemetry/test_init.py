@@ -115,8 +115,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
@@ -3427,7 +3427,7 @@ async def test_charge_on_solar_settings_removed_with_entry(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
+            TargetKey.ENTITY_ID: "number.test_charge_on_solar_lower_limit",
             NumberServiceArgument.VALUE: 35,
         },
         blocking=True,
@@ -3630,7 +3630,7 @@ async def test_local_command_survives_site_info_push_before_next_poll(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.energy_site_backup_reserve",
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
                 NumberServiceArgument.VALUE: 80,
             },
             blocking=True,
@@ -3674,7 +3674,7 @@ async def test_local_command_survives_poll_started_before_it(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: "number.energy_site_backup_reserve",
+                TargetKey.ENTITY_ID: "number.energy_site_backup_reserve",
                 NumberServiceArgument.VALUE: 80,
             },
             blocking=True,

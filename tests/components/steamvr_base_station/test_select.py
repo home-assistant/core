@@ -16,7 +16,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -89,7 +89,7 @@ async def test_select_power_mode(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: POWER_MODE,
+            TargetKey.ENTITY_ID: POWER_MODE,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -103,7 +103,7 @@ async def test_select_channel(hass: HomeAssistant, mock_set_channel: AsyncMock) 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: CHANNEL, SelectServiceArgument.OPTION: "5"},
+        {TargetKey.ENTITY_ID: CHANNEL, SelectServiceArgument.OPTION: "5"},
         blocking=True,
     )
     mock_set_channel.assert_awaited_once_with(ANY, 5)
@@ -131,7 +131,7 @@ async def test_standby_not_supported(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: POWER_MODE,
+                TargetKey.ENTITY_ID: POWER_MODE,
                 SelectServiceArgument.OPTION: "standby",
             },
             blocking=True,

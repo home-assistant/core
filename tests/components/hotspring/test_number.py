@@ -20,7 +20,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +72,7 @@ async def test_set_target_temperature(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             NumberServiceArgument.VALUE: 38,
         },
         blocking=True,
@@ -136,7 +136,7 @@ async def test_set_target_temperature_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 38,
             },
             blocking=True,
@@ -167,7 +167,7 @@ async def test_set_target_temperature_celsius(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             NumberServiceArgument.VALUE: 37.5,
         },
         blocking=True,
@@ -207,7 +207,7 @@ async def test_set_salt_output_level(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+            TargetKey.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,
@@ -244,7 +244,7 @@ async def test_set_salt_output_level_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
+                TargetKey.ENTITY_ID: SALT_OUTPUT_LEVEL_ENTITY_ID,
                 NumberServiceArgument.VALUE: 3.0,
             },
             blocking=True,

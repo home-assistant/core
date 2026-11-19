@@ -19,7 +19,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.components.saunum.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +59,7 @@ async def test_set_sauna_duration(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 180},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 180},
         blocking=True,
     )
 
@@ -84,7 +84,7 @@ async def test_set_fan_duration(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 15},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 15},
         blocking=True,
     )
 
@@ -111,7 +111,7 @@ async def test_set_value_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 180,
             },
             blocking=True,
@@ -147,7 +147,7 @@ async def test_set_value_while_session_active(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 180,
             },
             blocking=True,

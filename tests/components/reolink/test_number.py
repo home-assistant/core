@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -59,7 +59,7 @@ async def test_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
     reolink_host.set_volume.assert_called_with(0, volume=50)
@@ -70,7 +70,7 @@ async def test_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -82,7 +82,7 @@ async def test_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -110,7 +110,7 @@ async def test_smart_ai_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
     reolink_host.baichuan.set_smart_ai.assert_called_with(
@@ -123,7 +123,7 @@ async def test_smart_ai_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -150,7 +150,7 @@ async def test_host_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 45},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 45},
         blocking=True,
     )
     reolink_host.set_hub_audio.assert_called_with(alarm_volume=45)
@@ -161,7 +161,7 @@ async def test_host_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 45,
             },
             blocking=True,
@@ -173,7 +173,7 @@ async def test_host_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 45,
             },
             blocking=True,
@@ -204,7 +204,7 @@ async def test_chime_number(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 2},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 2},
         blocking=True,
     )
     reolink_chime.set_option.assert_called_with(volume=2)
@@ -215,7 +215,7 @@ async def test_chime_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 1,
             },
             blocking=True,
@@ -227,7 +227,7 @@ async def test_chime_number(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 1,
             },
             blocking=True,
