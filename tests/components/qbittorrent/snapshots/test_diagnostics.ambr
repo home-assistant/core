@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_diagnostics[with_torrents]
+  dict({
+    'alt_speed_enabled': False,
+    'config_entry': dict({
+      'verify_ssl': False,
+    }),
+    'last_update_success': True,
+    'server_state': dict({
+      'alltime_dl': 861098349149,
+      'alltime_ul': 724759510499,
+      'connection_status': 'connected',
+      'dht_nodes': 370,
+      'dl_info_data': 127006787927,
+      'dl_info_speed': 0,
+      'dl_rate_limit': 0,
+      'free_space_on_disk': 87547486208,
+      'global_ratio': '0.84',
+      'queueing': True,
+      'refresh_interval': 1500,
+      'total_peer_connections': 2,
+      'up_info_data': 119803126285,
+      'up_info_speed': 0,
+      'up_rate_limit': 0,
+      'use_alt_speed_limits': False,
+    }),
+    'torrents': dict({
+      'states': dict({
+        'downloading': 1,
+        'error': 1,
+        'missingFiles': 1,
+        'stalledDL': 1,
+        'stalledUP': 1,
+        'stoppedDL': 1,
+      }),
+      'total': 6,
+    }),
+  })
+# ---
+# name: test_diagnostics[without_torrents]
+  dict({
+    'alt_speed_enabled': False,
+    'config_entry': dict({
+      'verify_ssl': False,
+    }),
+    'last_update_success': True,
+    'server_state': dict({
+      'alltime_dl': 861098349149,
+      'alltime_ul': 724759510499,
+      'connection_status': 'connected',
+      'dht_nodes': 370,
+      'dl_info_data': 127006787927,
+      'dl_info_speed': 0,
+      'dl_rate_limit': 0,
+      'free_space_on_disk': 87547486208,
+      'global_ratio': '0.84',
+      'queueing': True,
+      'refresh_interval': 1500,
+      'total_peer_connections': 2,
+      'up_info_data': 119803126285,
+      'up_info_speed': 0,
+      'up_rate_limit': 0,
+      'use_alt_speed_limits': False,
+    }),
+    'torrents': dict({
+      'states': dict({
+      }),
+      'total': 0,
+    }),
+  })
+# ---
