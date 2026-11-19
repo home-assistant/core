@@ -103,6 +103,7 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "htpcmode3": "0",
                 "mutetx0": "1",
                 "mutetx1": "1",
+                "tcpport": "2210",
                 "relay": "0",
                 "macaddr": "c7:1c:df:9d:f6:40",
                 "ipinterrupt": "0",
