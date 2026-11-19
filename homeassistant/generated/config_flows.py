@@ -887,6 +887,7 @@ FLOWS = {
         "triggercmd",
         "trimlight",
         "trmnl",
+        "tsun",
         "tuya",
         "twentemilieu",
         "twilio",
