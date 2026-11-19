@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from pyocat import (
     AsyncApiClient,
@@ -18,6 +18,7 @@ from pyocat import (
 )
 from pyocat.models import DeviceResponse, MeasurementResponse, StateResponse
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
@@ -25,15 +26,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from . import WatercrystConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_INFO_POLLING_INTERVAL = timedelta(hours=24)
 STATE_POLLING_INTERVAL = timedelta(seconds=30)
 MEASUREMENTS_POLLING_INTERVAL = timedelta(seconds=60)
 RETRY_INTERVAL = 60
+
+
+type WatercrystConfigEntry = ConfigEntry[WatercrystUpdateCoordinator]
 
 
 class WatercrystBaseCoordinator[DataT](DataUpdateCoordinator[DataT]):

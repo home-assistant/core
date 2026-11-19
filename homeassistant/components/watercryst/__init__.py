@@ -2,21 +2,18 @@
 
 from pyocat import AsyncApiClient, AsyncAuth
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .coordinator import (
+    WatercrystConfigEntry,
     WatercrystMeasurementsCoordinator,
     WatercrystStateCoordinator,
     WatercrystUpdateCoordinator,
 )
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-type WatercrystConfigEntry = ConfigEntry[WatercrystUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> None:
