@@ -1495,6 +1495,17 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "bayrol_neopool": {
+      "name": "Bayrol",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "bbox": {
       "name": "Bbox",
       "integration_type": "hub",
