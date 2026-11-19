@@ -106,7 +106,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         )
         self._last_patch_call: datetime | None = None
         self._polling_backoff_until: datetime | None = None
-        self._bypass_polling_backoff = False
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
@@ -148,18 +147,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         await self.session.async_ensure_token_valid()
         return cast("str", self.session.token["access_token"])
 
-    @override
-    async def async_request_refresh(self) -> None:
-        """Refresh on request, even while scheduled polling is rate limited."""
-        # Keep the bypass until the debouncer runs a refresh. A scheduled
-        # refresh may consume it first, which still gives the request a cloud
-        # update without making multiple calls for multiple climate entities.
-        # If a debounced request is dropped while another refresh is running,
-        # the flag may instead reach the next scheduled poll, causing one
-        # extra GET. Accept that rare request to preserve the manual bypass.
-        self._bypass_polling_backoff = True
-        await super().async_request_refresh()
-
     async def async_manual_refresh(self) -> bool:
         """Refresh immediately unless Daikin has asked us to wait.
 
@@ -175,10 +162,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     "seconds": str(ceil(remaining.total_seconds()))
                 },
             )
-        # A press can still get rate limited. Keep cached entities available
-        # for that request, while the preflight above prevents retrying during
-        # an already active Retry-After period.
-        self._bypass_polling_backoff = True
+        # The same backoff check used by scheduled and entity refreshes runs
+        # again after acquiring the cloud lock.
         previous_sequence = self._cloud_update_sequence
         await self.async_refresh()
         return self._cloud_update_sequence > previous_sequence
@@ -190,17 +175,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         remaining = _POST_WRITE_COOLDOWN - (dt_util.utcnow() - self._last_patch_call)
         return remaining if remaining > timedelta(0) else None
 
-    async def _async_get_cloud_devices(
-        self,
-        *,
-        bypass_polling_backoff: bool = False,
-    ) -> list[GatewayDevice] | None:
+    async def _async_get_cloud_devices(self) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
         async with self._cloud_lock:
-            if (
-                not bypass_polling_backoff
-                and self._polling_backoff_remaining() is not None
-            ):
+            if self._polling_backoff_remaining() is not None:
                 return None
             if self._post_write_cooldown_remaining() is not None:
                 return None
@@ -246,6 +224,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             sites = await self.async_get_sites(use_cache=use_cache)
         except OAuth2TokenRequestReauthError as err:
             if start_reauth:
+                self.config_entry.async_start_reauth(self.hass)
+            return SiteLookupResult([], err)
+        except OnectaAuthenticationError as err:
+            if start_reauth and err.status == 401:
                 self.config_entry.async_start_reauth(self.hass)
             return SiteLookupResult([], err)
         except (
@@ -344,6 +326,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             dt_util.utcnow() + _POST_WRITE_COOLDOWN,
         )
 
+    def schedule_post_write_refresh(self) -> None:
+        """Request cloud state after a successful non-characteristic command."""
+        self._schedule_post_write_refresh()
+
     def _set_polling_backoff(self, retry_after: float | None) -> None:
         """Retain Daikin's Retry-After deadline for every later refresh."""
         if retry_after is None or retry_after <= 0:
@@ -416,12 +402,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Fetch the latest device state from Daikin."""
         previous_devices = self.data_or_none
         devices = previous_devices or {}
-        bypass_polling_backoff = self._bypass_polling_backoff
-        self._bypass_polling_backoff = False
-        if (
-            not bypass_polling_backoff
-            and (remaining := self._polling_backoff_remaining()) is not None
-        ):
+        if (remaining := self._polling_backoff_remaining()) is not None:
             self.update_interval = remaining
             if not self.last_update_success:
                 raise UpdateFailed(
@@ -444,9 +425,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             # request fails, retries must not remain at the cooldown cadence.
             self.update_interval = self._determine_update_interval()
             try:
-                cloud_devices = await self._async_get_cloud_devices(
-                    bypass_polling_backoff=bypass_polling_backoff,
-                )
+                cloud_devices = await self._async_get_cloud_devices()
             except OAuth2TokenRequestReauthError as err:
                 # Convert reauth failures so the coordinator notifies entities
                 # that their state is no longer current.
@@ -458,14 +437,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 # Preserve transient token errors so the coordinator retries.
                 raise
             except OnectaRateLimitError as err:
-                if bypass_polling_backoff and self.last_update_success:
-                    # A manual refresh can still be rate limited. Keep the
-                    # last known good state available while scheduled polls
-                    # wait for the Retry-After deadline.
+                if self.last_update_success:
+                    # Preserve known-good entities while every refresh waits
+                    # for Daikin's Retry-After deadline.
                     if remaining := self._polling_backoff_remaining():
                         self.update_interval = remaining
                     _LOGGER.debug(
-                        "Daikin rate-limited a refresh that bypassed polling backoff"
+                        "Daikin rate-limited a refresh; retaining cached state"
                     )
                     return devices
                 raise UpdateFailed(

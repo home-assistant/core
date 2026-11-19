@@ -92,7 +92,7 @@ async def async_remove_config_entry_device(
     config_entry: DaikinOnectaConfigEntry,
     device_entry: AnyDeviceEntry,
 ) -> bool:
-    """Allow removal only for gateways or points confirmed absent from the account."""
+    """Allow removal of empty child devices or devices absent from the account."""
     if config_entry.state is not ConfigEntryState.LOADED:
         return False
     gateway_id = _daikin_device_identifier(device_entry)
@@ -101,7 +101,6 @@ async def async_remove_config_entry_device(
         return False
 
     coordinator = config_entry.runtime_data
-    devices = coordinator.data or {}
     if isinstance(device_entry, ChildDeviceEntry):
         if not coordinator.last_update_success:
             return False
@@ -121,38 +120,35 @@ async def async_remove_config_entry_device(
             er.async_get(hass), device_entry.id, include_disabled_entities=True
         ):
             return True
-        current_device = devices.get(parent_gateway_id)
-        if current_device is not None and current_device.present_in_cloud:
-            if current_device.management_point(embedded_id) is not None:
-                return False
-        else:
-            site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
-            if site_lookup.gateway_membership(parent_gateway_id) is not False:
-                return False
-            # A newer successful poll may have restored the gateway while the
-            # Sites request was in flight. Recheck its management point as well.
-            current_device = (coordinator.data or {}).get(parent_gateway_id)
-            if (
-                current_device is not None
-                and current_device.present_in_cloud
-                and current_device.management_point(embedded_id) is not None
-            ):
-                return False
-        return True
+        return await _async_gateway_or_point_confirmed_absent(
+            coordinator, parent_gateway_id, embedded_id
+        )
 
-    device = devices.get(gateway_id)
-    if not coordinator.last_update_success or (
-        device is not None and device.present_in_cloud
-    ):
+    return await _async_gateway_or_point_confirmed_absent(coordinator, gateway_id)
+
+
+async def _async_gateway_or_point_confirmed_absent(
+    coordinator: OnectaDataUpdateCoordinator,
+    gateway_id: str,
+    embedded_id: str | None = None,
+) -> bool:
+    """Check current data and Sites before allowing device removal."""
+    if not coordinator.last_update_success:
         return False
-    site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
 
-    # Polling may have restored the gateway while the on-demand lookup awaited.
     device = (coordinator.data or {}).get(gateway_id)
+    if device is not None and device.present_in_cloud:
+        return embedded_id is not None and device.management_point(embedded_id) is None
+
+    site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
     if (
         site_lookup.gateway_membership(gateway_id) is not False
         or not coordinator.last_update_success
-        or (device is not None and device.present_in_cloud)
     ):
         return False
+
+    # Polling may restore the gateway while the Sites request is in flight.
+    device = (coordinator.data or {}).get(gateway_id)
+    if device is not None and device.present_in_cloud:
+        return embedded_id is not None and device.management_point(embedded_id) is None
     return True

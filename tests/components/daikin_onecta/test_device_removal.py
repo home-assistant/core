@@ -4,7 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
-from daikin_onecta import OnectaConnectionError, Site
+from daikin_onecta import OnectaAuthenticationError, OnectaConnectionError, Site
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
@@ -207,6 +207,27 @@ async def test_remove_missing_gateway_starts_reauth_for_revoked_token(
             request_info=AsyncMock(),
             status=401,
             message="invalid_grant",
+        )
+    )
+
+    assert not await async_remove_config_entry_device(
+        hass, config_entry, missing_gateway
+    )
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_remove_missing_gateway_starts_reauth_for_sites_401(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+) -> None:
+    """Start reauthentication when the Sites endpoint rejects the access token."""
+    coordinator = config_entry.runtime_data
+    coordinator.async_get_sites = AsyncMock(
+        side_effect=OnectaAuthenticationError(
+            status=401,
+            method="GET",
+            path="/v1/sites",
         )
     )
 

@@ -51,7 +51,12 @@ rules:
       does not use or persist a local network address.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations: done
+  docs-known-limitations:
+    status: done
+    comment: >-
+      If Daikin changes a characteristic so it belongs to a different platform,
+      its existing entity can remain unavailable until the integration reloads.
+      This requires a device capability change; reloading recreates the entity.
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done

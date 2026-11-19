@@ -522,6 +522,8 @@ async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
     assert old_purification.power is not None and old_purification.mode is not None
     old_purification.power.value = "off"
     old_purification.mode.value = "autoFan"
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
     replacement = deepcopy(device.device)
     replacement_point = replacement.management_points_by_type("climateControl")[0]
     assert replacement_point.air_purification is not None

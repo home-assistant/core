@@ -95,13 +95,6 @@ async def test_firmware_install_executes_command(
         hass.states.get(state.entity_id).attributes[
             UpdateEntityStateAttribute.IN_PROGRESS
         ]
-        is True
-    )
-    await _async_fire_coordinator_update(hass, coordinator, freezer)
-    assert (
-        hass.states.get(state.entity_id).attributes[
-            UpdateEntityStateAttribute.IN_PROGRESS
-        ]
         is False
     )
 
@@ -280,6 +273,34 @@ async def test_firmware_pending_install_clears_after_failed_refresh(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("mock_onecta_client")
+async def test_firmware_install_schedules_refresh_after_cooldown(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Refresh cloud state shortly after a successful firmware install."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    refresh = AsyncMock()
+    coordinator.async_refresh = refresh
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: "update.living_room_firmware_update"},
+        blocking=True,
+    )
+
+    refresh.assert_not_awaited()
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    refresh.assert_awaited_once_with()
 
 
 async def test_failed_firmware_install_clears_pending_state(

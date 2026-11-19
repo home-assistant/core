@@ -1,4 +1,8 @@
-"""Shared Daikin metadata used by platform-local entity descriptions."""
+"""Typed Daikin entity metadata shared across platform description modules.
+
+Keep the schema and its derived platform key sets together here; const.py is for
+simple integration-wide values, not the typed entity-description catalog.
+"""
 
 from dataclasses import dataclass
 from typing import Any

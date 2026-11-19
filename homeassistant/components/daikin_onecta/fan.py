@@ -102,17 +102,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @property
     @override
     def is_on(self) -> bool | None:
-        """Return the actual Daikin power state, independent of selected mode."""
-        purification = self._air_purification()
-        return (
-            purification.power.value == "on"
-            if (
-                purification
-                and purification.power
-                and purification.power.value is not None
-            )
-            else None
-        )
+        """Return the cached Daikin power state, including unknown values."""
+        return self._attr_is_on
 
     async def _async_execute_air_purification_command(
         self,
@@ -181,6 +172,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         """Refresh entity state from typed purifier data."""
         purification = self._air_purification()
         if purification is None:
+            self._attr_is_on = None
             self._attr_preset_mode = None
             self._attr_preset_modes = []
             self._attr_percentage = None
@@ -193,6 +185,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             if power is not None and power.value is not None
             else None
         )
+        self._attr_is_on = is_on
         mode = purification.mode
         self._attr_preset_mode = (
             enum_value_to_state(mode.value)
