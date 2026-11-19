@@ -33,7 +33,7 @@
           },
           "description": "A command sends one HTTP request when it is run. It becomes an action that you can use in automations, scripts and dashboards.\n\nURL, payload and header values can be templates. Values that you pass in the action data are available as variables: with the URL `{example_url}` and the action data `{example_data}`, the request goes to the front door.",
           "sections": {
-            "advanced": {
+            "additional": {
               "data": {
                 "content_type": "Content type",
                 "headers": "Headers",
@@ -51,7 +51,7 @@
                 "verify_ssl": "Check the server's SSL/TLS certificate. Turn off only for devices with a self-signed certificate."
               },
               "description": "Headers, timeout and SSL settings. Most commands work without changing these.",
-              "name": "Advanced settings"
+              "name": "More settings"
             },
             "auth": {
               "data": {

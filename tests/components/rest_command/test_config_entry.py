@@ -21,10 +21,9 @@ def _entry(**commands: dict[str, Any]) -> MockConfigEntry:
         title="RESTful Command",
         subentries_data=[
             ConfigSubentryData(
-                data=command,
+                data={"action": action, **command},
                 subentry_type=SUBENTRY_TYPE_COMMAND,
                 title=action,
-                unique_id=action,
             )
             for action, command in commands.items()
         ],

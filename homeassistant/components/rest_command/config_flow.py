@@ -59,7 +59,7 @@ from .const import (
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
-    SECTION_ADVANCED,
+    SECTION_ADDITIONAL,
     SECTION_AUTH,
     SUBENTRY_TYPE_COMMAND,
 )
@@ -102,7 +102,7 @@ COMMAND_FIELDS_SCHEMA = {
         ),
         SectionConfig(collapsed=True),
     ),
-    probatio.Required(SECTION_ADVANCED): section(
+    probatio.Required(SECTION_ADDITIONAL): section(
         probatio.Schema(
             {
                 probatio.Optional(CONF_HEADERS): ObjectSelector(),
@@ -149,8 +149,8 @@ TITLE = "RESTful Command"
 
 def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     """Move the values out of the form sections and drop empty values."""
-    data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADVANCED]}
-    del data[SECTION_AUTH], data[SECTION_ADVANCED]
+    data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADDITIONAL]}
+    del data[SECTION_AUTH], data[SECTION_ADDITIONAL]
     data.pop(CONF_ACTION, None)
     # An empty username or password is valid, like in YAML: some servers
     # expect only a username, others only a token as the password
@@ -223,7 +223,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             if action in ("", "unknown", SERVICE_RELOAD):
                 errors[CONF_ACTION] = "invalid_action"
             elif self.hass.services.has_service(DOMAIN, action) or any(
-                subentry.unique_id == action
+                subentry.data[CONF_ACTION] == action
                 for subentry in self._get_entry().subentries.values()
             ):
                 errors[CONF_ACTION] = "action_exists"
@@ -232,8 +232,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             if not errors:
                 return self.async_create_entry(
                     title=name,
-                    data=data,
-                    unique_id=action,
+                    data={CONF_ACTION: action, **data},
                 )
 
         return self.async_show_form(

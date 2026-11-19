@@ -19,7 +19,7 @@ COMMAND_INPUT = {
     "method": "post",
     "payload": '{"open": true}',
     "auth": {"username": "user", "password": "secret"},
-    "advanced": {
+    "additional": {
         "headers": {"X-Door": "{{ door }}"},
         "timeout": 5.0,
         "verify_ssl": False,
@@ -27,6 +27,7 @@ COMMAND_INPUT = {
 }
 
 COMMAND_DATA = {
+    "action": "open_door",
     "url": TEST_URL + "{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
@@ -51,7 +52,6 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
                 data=COMMAND_DATA,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
                 title="open_door",
-                unique_id="open_door",
             )
         ],
     )
@@ -90,7 +90,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Open door"
     assert result["data"] == COMMAND_DATA
-    assert result["unique_id"] == "open_door"
+    assert result["unique_id"] is None
     assert hass.services.has_service(DOMAIN, "open_door")
     assert len(entry.subentries) == 1
 
@@ -130,7 +130,7 @@ async def test_subentry_errors(
             "url": TEST_URL,
             "method": "get",
             "auth": {},
-            "advanced": {},
+            "additional": {},
             **user_input,
         },
     )
@@ -144,7 +144,7 @@ async def test_subentry_errors(
             "url": TEST_URL,
             "method": "get",
             "auth": {},
-            "advanced": {},
+            "additional": {},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -169,7 +169,7 @@ async def test_empty_credential_is_kept(
             "url": TEST_URL,
             "method": "get",
             "auth": auth,
-            "advanced": {},
+            "additional": {},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -191,7 +191,7 @@ async def test_action_from_yaml_exists(
             "url": TEST_URL,
             "method": "get",
             "auth": {},
-            "advanced": {},
+            "additional": {},
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -204,7 +204,7 @@ async def test_action_from_yaml_exists(
             "url": TEST_URL,
             "method": "get",
             "auth": {},
-            "advanced": {},
+            "additional": {},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -9,6 +9,6 @@ CONF_SKIP_URL_ENCODING = "skip_url_encoding"
 CONF_ACTION = "action"
 
 SECTION_AUTH = "auth"
-SECTION_ADVANCED = "advanced"
+SECTION_ADDITIONAL = "additional"
 
 SUBENTRY_TYPE_COMMAND = "command"

@@ -23,6 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_ACTION,
     CONF_CONTENT_TYPE,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
@@ -86,9 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) 
     # The actions this entry registered, so reloading YAML leaves them alone
     entry.runtime_data = set()
     for subentry in entry.subentries.values():
-        name = str(subentry.unique_id)
+        command_config = dict(subentry.data)
+        name: str = command_config.pop(CONF_ACTION)
         try:
-            validated = COMMAND_SCHEMA(dict(subentry.data))
+            validated = COMMAND_SCHEMA(command_config)
         except probatio.Invalid as err:
             # One broken command must not take the other commands down with it
             _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
