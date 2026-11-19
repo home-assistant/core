@@ -48,8 +48,6 @@ MIN_JSON_INT = -(2**63)
 MAX_JSON_INT = 2**64 - 1
 # Types whose string has a size close to the size of the value.
 _SCALAR_TYPES = (bool, int, float, type, date, time, timedelta)
-# Function declarations are part of the prompt up to this size, in characters.
-INLINE_BUDGET = 8000
 SEARCH_LIMIT = 10
 # Dicts in a parameter type are written with their keys up to this depth.
 MAX_TYPE_DEPTH = 3
@@ -60,6 +58,8 @@ PROMPT = (
     "The tools of this API are Python functions. "
     "You cannot call them directly: write Python code that calls them and run "
     "it with the `execute` tool.\n"
+    "- Find functions with the `search` tool. It returns their declarations. "
+    "Do not guess the name or the parameters of a function.\n"
     "- Every function is async and takes keyword arguments: "
     "`result = await name(param=value)`. The result is a dict.\n"
     '- A parameter type like `{"key": str, "other"?: int}` is a dict with '
@@ -82,7 +82,7 @@ _JSON_TYPES = {
 
 @callback
 def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
-    """Return an API instance with an execute tool, and a search tool if needed."""
+    """Return an API instance with a search tool and an execute tool."""
     functions: list[ToolFunction] = []
     names: set[str] = set()
     for tool in api_instance.tools:
@@ -104,23 +104,11 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
             name = f"{base}_{suffix}"
         names.add(name)
         functions.append(ToolFunction(api_instance, tool, name))
-    declarations = "\n\n".join(function.declaration for function in functions)
-    tools: list[Tool] = [ExecuteTool(api_instance, functions)]
-    if len(declarations) <= INLINE_BUDGET:
-        catalog = f"These are all the functions:\n```python\n{declarations}\n```"
-    else:
-        tools.insert(0, SearchTool(functions))
-        catalog = (
-            "Get the declaration of a function with the `search` tool before "
-            "you call the function. These are the functions: "
-            f"{', '.join(function.name for function in functions)}"
-        )
-
     return APIInstance(
         api=api_instance.api,
-        api_prompt=f"{api_instance.api_prompt}\n{PROMPT}\n{catalog}",
+        api_prompt=f"{api_instance.api_prompt}\n{PROMPT}",
         llm_context=api_instance.llm_context,
-        tools=tools,
+        tools=[SearchTool(functions), ExecuteTool(api_instance, functions)],
         custom_serializer=api_instance.custom_serializer,
     )
 

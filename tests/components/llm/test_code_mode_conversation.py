@@ -69,7 +69,7 @@ async def test_feature_enabled(hass: HomeAssistant) -> None:
     """Test the agent gets the execute tool in place of the tools."""
     await async_update_preview_feature(hass, "llm", "code_mode", True)
 
-    assert await _tool_names(hass) == ["execute"]
+    assert await _tool_names(hass) == ["search", "execute"]
 
     await async_update_preview_feature(hass, "llm", "code_mode", False)
 
@@ -88,7 +88,7 @@ async def test_toggle_in_conversation(hass: HomeAssistant) -> None:
 
     await async_update_preview_feature(hass, "llm", "code_mode", True)
 
-    assert await _tool_names(hass, conversation_id) == ["execute"]
+    assert await _tool_names(hass, conversation_id) == ["search", "execute"]
 
     await async_update_preview_feature(hass, "llm", "code_mode", False)
 
@@ -101,6 +101,6 @@ async def test_date_time_prompt(hass: HomeAssistant) -> None:
 
     await async_update_preview_feature(hass, "llm", "code_mode", True)
 
-    _, prompt, _ = await _llm_data(hass)
-    assert "async def llm__GetDateTime() -> dict:" in prompt
+    tools, prompt, _ = await _llm_data(hass)
+    assert [tool.name for tool in tools] == ["search", "execute"]
     assert "Current time is" not in prompt

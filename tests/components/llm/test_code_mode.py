@@ -128,13 +128,27 @@ async def _execute(api_instance: llm.APIInstance, code: str) -> llm.ToolResult:
     return await api_instance.async_call_tool(llm.ToolInput("execute", {"code": code}))
 
 
-async def test_declarations_in_prompt(api_instance: llm.APIInstance) -> None:
-    """Test a small API has only the execute tool and declares its functions."""
-    assert [tool.name for tool in api_instance.tools] == ["execute"]
+async def _search(api_instance: llm.APIInstance, query: str) -> list[str]:
+    """Return the declarations that the search tool finds."""
+    result = await api_instance.async_call_tool(
+        llm.ToolInput("search", {"query": query})
+    )
+    functions: list[str] = result.data["functions"]
+    return functions
+
+
+async def test_api_instance(api_instance: llm.APIInstance) -> None:
+    """Test the API has two tools and a prompt without the functions."""
+    assert [tool.name for tool in api_instance.tools] == ["search", "execute"]
     assert api_instance.api.id == "assist|test"
     assert "Test prompt." in api_instance.api_prompt
-    assert "async def llm__GetDateTime() -> dict:" in api_instance.api_prompt
-    assert (
+    assert "`search` tool" in api_instance.api_prompt
+    assert "async def" not in api_instance.api_prompt
+
+
+async def test_search(api_instance: llm.APIInstance) -> None:
+    """Test search returns the declarations of the functions that match."""
+    assert (await _search(api_instance, "state of an entity"))[0] == (
         """async def test__get_state(
     *,
     entity_id: str,  # The entity
@@ -142,8 +156,12 @@ async def test_declarations_in_prompt(api_instance: llm.APIInstance) -> None:
     retries: int | None = None,
 ) -> dict:
     \"\"\"Get the state of an entity\"\"\""""
-        in api_instance.api_prompt
     )
+    assert (await _search(api_instance, "GetDateTime"))[0] == (
+        "async def llm__GetDateTime() -> dict:\n"
+        '    """Provides the current date and time."""'
+    )
+    assert await _search(api_instance, "vacuum") == []
 
 
 async def test_nested_parameters(
@@ -194,48 +212,18 @@ async def test_nested_parameters(
         )
     )
 
-    assert (
+    assert (await _search(api_instance, "memory"))[0].startswith(
         """async def save_memory(
     *,
     context: {"fact": str, "tags"?: list[str], "source"?: {"url": str, "meta"?: {"deep"?: dict}}},
     items: list[{"id": int}] = None,
 ) -> dict:"""
-        in api_instance.api_prompt
     )
 
     result = await _execute(
         api_instance, 'await save_memory(context={"fact": "Likes tea"})'
     )
     assert result.data["result"] == {"saved": {"fact": "Likes tea"}}
-
-
-async def test_search_for_large_api(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test a large API lists function names and adds the search tool."""
-    with patch.object(code_mode_api, "INLINE_BUDGET", 100):
-        api_instance = await _api_instance(hass, llm_context)
-
-    assert [tool.name for tool in api_instance.tools] == ["search", "execute"]
-    assert "async def" not in api_instance.api_prompt
-    assert "llm__GetDateTime, test__get_state" in api_instance.api_prompt
-
-    result = await api_instance.async_call_tool(
-        llm.ToolInput("search", {"query": "state of an entity"})
-    )
-    assert result.data["functions"][0].startswith("async def test__get_state(")
-
-    result = await api_instance.async_call_tool(
-        llm.ToolInput("search", {"query": "GetDateTime"})
-    )
-    assert result.data["functions"][0] == (
-        'async def llm__GetDateTime() -> dict:\n    """Provides the current date and time."""'
-    )
-
-    result = await api_instance.async_call_tool(
-        llm.ToolInput("search", {"query": "vacuum"})
-    )
-    assert result.data == {"functions": []}
 
 
 async def test_execute_calls_tools(
@@ -489,7 +477,10 @@ async def test_python_names_are_unique(
         "tool_asyncio",
     )
     for name in names:
-        assert f"async def {name}() -> dict:" in api_instance.api_prompt
+        assert any(
+            declaration.startswith(f"async def {name}() -> dict:")
+            for declaration in await _search(api_instance, name)
+        )
     result = await _execute(
         api_instance, f"[{', '.join(f'await {name}()' for name in names)}]"
     )
