@@ -12,6 +12,8 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.evohome.const import (
     EVOHOME_DATA,
@@ -26,6 +28,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -380,8 +383,8 @@ async def test_action_api_call_failed_reason(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: zone_id, ATTR_TEMPERATURE: 19.1},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: zone_id, ClimateServiceArgument.TEMPERATURE: 19.1},
             blocking=True,
         )
 
@@ -393,10 +396,7 @@ async def test_action_api_call_failed_reason(
     ("exception", "error_type", "translation_key", "retry_after"),
     [
         pytest.param(
-            evo_exc.ApiCallFailedError(
-                "API call failed",
-                reason=evo_exc.ApiCallErrorReason.CONNECTION_FAILED,
-            ),
+            evo_exc.ApiConnectionFailedError("API call failed"),
             UpdateFailedUnreachable,
             "api_connection_failed",
             None,
@@ -418,6 +418,18 @@ async def test_action_api_call_failed_reason(
             "api_server_error",
             None,
             id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                status=503,
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+                retry_after=120,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            120,
+            id="server_error_retry_after",
         ),
     ],
 )
