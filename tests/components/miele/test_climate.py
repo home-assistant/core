@@ -20,7 +20,6 @@ from homeassistant.helpers import entity_registry as er
 pytestmark = pytest.mark.parametrize("platforms", [(Platform.CLIMATE,)])
 
 ENTITY_ID = "climate.freezer"
-SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
 @pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
