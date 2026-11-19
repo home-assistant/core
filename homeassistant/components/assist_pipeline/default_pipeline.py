@@ -763,12 +763,12 @@ class _DefaultPipelineProcessor:
             return
 
         self._pending_intent_start = None
+        self._async_end_agent_speech()
         self._agent_listening_ended.set()
         # Even if the agent never reads its audio again
         self.host.hass.async_create_task(
             self._async_close_audio_run(), "close the audio run of the agent"
         )
-        self._async_end_agent_speech()
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": transcript}}
@@ -783,7 +783,15 @@ class _DefaultPipelineProcessor:
         Satellites stop listening at the end of speech. It comes before the
         response, since ESPHome satellites wait for the response again after it.
         """
-        if not self._sent_stt_vad_end:
+        if self._sent_stt_vad_end:
+            return
+        if (self._audio_run is not None) and (
+            self._audio_run.speech_ended_ms is not None
+        ):
+            # The run's audio stops at the end of the command, before a chunk
+            # could reach it
+            self._async_stt_vad_end(self._audio_run.speech_ended_ms)
+        else:
             self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
 
     @callback
