@@ -59,7 +59,7 @@ async def test_diagnostics(
     assert diagnostics["sites"]["data"][0]["id"] == REDACTED
     assert diagnostics["sites"]["data"][0]["name"] == REDACTED
     assert diagnostics["sites"]["gateway_membership"][0] == {
-        "gateway_device_id": REDACTED,
+        "gateway_device_id": next(iter(coordinator.data)),
         "linked_to_site": True,
     }
     coordinator.client.get_sites.assert_awaited_once_with()

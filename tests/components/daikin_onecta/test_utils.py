@@ -33,3 +33,16 @@ def test_round_temperature_to_step_uses_defaults_and_bounds(
         )
         == expected
     )
+
+
+def test_round_temperature_to_step_uses_zero_when_minimum_is_missing() -> None:
+    """Fallback limits clamp values without changing the native step origin."""
+    assert (
+        round_temperature_to_step(
+            8.0,
+            1.0,
+            fallback_minimum=7.5,
+            fallback_maximum=75.0,
+        )
+        == 8.0
+    )

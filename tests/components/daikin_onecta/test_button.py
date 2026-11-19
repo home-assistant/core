@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
+from .conftest import MockOnectaClient
 from .platform_helpers import _async_fire_coordinator_update
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -68,7 +69,7 @@ async def test_refresh_button_reports_failed_refresh(
 async def test_refresh_button_bypasses_polling_backoff(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_onecta_client,
+    mock_onecta_client: MockOnectaClient,
     last_update_success: bool,
 ) -> None:
     """Manual button refreshes reach the cloud during scheduled poll backoff."""
@@ -92,7 +93,7 @@ async def test_refresh_button_bypasses_polling_backoff(
 async def test_refresh_button_reports_rate_limited_refresh(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_onecta_client,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """A 429 during manual refresh is reported even when cached data is good."""
     await _async_setup_fixture(hass, config_entry, "dry")
@@ -119,7 +120,7 @@ async def test_refresh_button_reports_rate_limited_refresh(
 async def test_refresh_button_reports_post_write_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_onecta_client,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not silently report success when refresh is deferred after a write."""
     await _async_setup_fixture(hass, config_entry, "dry")
@@ -145,7 +146,7 @@ async def test_refresh_button_recovers_after_failed_poll(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    mock_onecta_client,
+    mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Keep the button usable to retry a failed poll without reloading."""
     await _async_setup_fixture(hass, config_entry, "dry")

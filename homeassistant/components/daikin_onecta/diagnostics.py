@@ -15,7 +15,6 @@ TO_REDACT = {
     "embedded_id",
     "entry_id",
     "gatewayDevices",
-    "gateway_device_id",
     "gateway_device_ids",
     "id",
     "ipAddress",

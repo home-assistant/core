@@ -462,9 +462,18 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator.last_patch_call is None
         assert "OAuth2TokenRequestConnectionError" in caplog.text
 
-    @pytest.mark.parametrize("status", [401, 403])
+    @pytest.mark.parametrize(
+        ("status", "expected_reauth_calls"),
+        [
+            pytest.param(401, 1, id="unauthorized"),
+            pytest.param(403, 0, id="forbidden"),
+        ],
+    )
     async def test_command_authentication_error_handles_status(
-        self, coordinator: OnectaDataUpdateCoordinator, status: int
+        self,
+        coordinator: OnectaDataUpdateCoordinator,
+        status: int,
+        expected_reauth_calls: int,
     ) -> None:
         """Only a 401 write failure starts reauthentication."""
         coordinator.config_entry.async_start_reauth = MagicMock()
@@ -476,13 +485,11 @@ class TestOnectaDataUpdateCoordinator:
 
         assert not await coordinator.async_execute_command(AsyncMock(side_effect=error))
 
-        if status == 401:
-            coordinator.config_entry.async_start_reauth.assert_called_once_with(
-                coordinator.hass
-            )
-        else:
-            coordinator.config_entry.async_start_reauth.assert_not_called()
-            assert coordinator.hass.config_entries.flow.async_progress() == []
+        assert (
+            coordinator.config_entry.async_start_reauth.call_count
+            == expected_reauth_calls
+        )
+        assert coordinator.hass.config_entries.flow.async_progress() == []
         assert coordinator.last_patch_call is None
 
     def test_polling_intervals_use_reported_daily_limit(self, coordinator):

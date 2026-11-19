@@ -204,15 +204,16 @@ async def test_duplicate_schedule_names_have_unique_select_options(
     selection = point.schedule_state.active_selection
     assert selection is not None
     schedules = selection.options
+    native_schedules["0"].name = Characteristic(value=f"Workday ({schedules[1].id})")
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
     state = hass.states.get("select.master_schedule")
     assert state is not None
-    assert set(state.attributes[SelectEntityCapabilityAttribute.OPTIONS]) >= {
-        f"Workday ({schedules[1].id})",
-        f"Workday ({schedules[2].id})",
-    }
+    options = state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
+    assert len(options) == len(set(options))
+    assert f"Workday ({schedules[2].id})" in options
+    assert f"Workday ({schedules[1].id} 1)" in options
 
     option = f"Workday ({schedules[2].id})"
     await hass.services.async_call(

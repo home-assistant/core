@@ -193,19 +193,32 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     @staticmethod
     def _schedule_options(selection: ScheduleSelection) -> list[tuple[str, str]]:
         """Return unique display labels paired with their cloud schedule IDs."""
-        names = [schedule.name for schedule in selection.options]
-        name_counts = Counter(names)
-        return [
-            (
-                schedule.id
-                if not schedule.name or schedule.name == "undefined"
-                else (
-                    f"{schedule.name} ({schedule.id})"
-                    if name_counts[schedule.name] > 1
-                    or schedule.name == SCHEDULE_DISABLED
-                    else schedule.name
-                ),
-                schedule.id,
-            )
-            for schedule in selection.options
+        schedules = selection.options
+        labels = [
+            schedule.name
+            if schedule.name and schedule.name != "undefined"
+            else schedule.id
+            for schedule in schedules
         ]
+        counts = Counter(labels)
+        reserved_labels = set(labels)
+        used_labels: set[str] = set()
+        unique_labels: list[str] = []
+        for index, schedule in enumerate(schedules):
+            label = labels[index]
+            disambiguate = counts[label] > 1 or label == SCHEDULE_DISABLED
+            candidate = f"{label} ({schedule.id})" if disambiguate else label
+            suffix = 1
+            while (
+                candidate in used_labels
+                or candidate == SCHEDULE_DISABLED
+                or (disambiguate and candidate in reserved_labels)
+            ):
+                candidate = f"{label} ({schedule.id} {suffix})"
+                suffix += 1
+            used_labels.add(candidate)
+            unique_labels.append(candidate)
+
+        return list(
+            zip(unique_labels, (schedule.id for schedule in schedules), strict=True)
+        )

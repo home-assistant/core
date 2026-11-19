@@ -7,7 +7,7 @@ from daikin_onecta.client import OnectaClient
 from daikin_onecta.models import ManagementPoint
 
 from homeassistant.const import Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -27,28 +27,7 @@ EntityIdChecker = Callable[[Platform, str], bool]
 
 
 class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
-    """Share coordinator state updates and successful-add lifecycle handling."""
-
-    _on_entity_added: CALLBACK_TYPE | None = None
-    _on_entity_removed: CALLBACK_TYPE | None = None
-
-    def set_unique_id_callbacks(
-        self, on_added: CALLBACK_TYPE, on_removed: CALLBACK_TYPE
-    ) -> None:
-        """Set callbacks for tracking an entity after it is added to Home Assistant."""
-        self._on_entity_added = on_added
-        self._on_entity_removed = on_removed
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Release unique IDs only after this entity was actually added."""
-        await super().async_added_to_hass()
-        if (on_added := self._on_entity_added) is not None:
-            on_added()
-            if on_removed := self._on_entity_removed:
-                self.async_on_remove(on_removed)
-            self._on_entity_added = None
-            self._on_entity_removed = None
+    """Share coordinator state updates."""
 
     def update_state(self) -> None:
         """Refresh entity state from the coordinator model."""
@@ -95,14 +74,11 @@ def add_entities_on_coordinator_update(
                 if unique_id is None:
                     continue
 
-                def add_unique_id(unique_id: str = unique_id) -> None:
-                    added_unique_ids.add(unique_id)
-
                 def remove_unique_id(unique_id: str = unique_id) -> None:
                     added_unique_ids.discard(unique_id)
 
-                if isinstance(entity, _DaikinOnectaCoordinatorEntity):
-                    entity.set_unique_id_callbacks(add_unique_id, remove_unique_id)
+                added_unique_ids.add(unique_id)
+                entity.async_on_remove(remove_unique_id)
             async_add_entities(entities)
 
     add_new_entities()

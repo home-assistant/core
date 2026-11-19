@@ -380,6 +380,36 @@ async def test_multiple_new_capabilities_are_added_without_reload(
     schedule_reload.assert_not_called()
 
 
+async def test_disabled_discovered_entity_is_recreated_after_registry_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Recreate an aborted disabled entity when its registry entry is removed."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    devices = _load_gateway_devices("minimal_data")
+    domain, unique_id = _add_scalar(devices)
+    mock_onecta_client.get_gateway_devices.return_value = devices
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.disabled
+    entity_registry.async_remove(entity_id)
+
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    recreated_entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
+    assert recreated_entity_id is not None
+    assert entity_registry.async_get(recreated_entity_id).disabled
+
+
 async def test_binary_key_with_additional_values_is_not_a_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -23,7 +23,7 @@ def round_temperature_to_step(
     fallback_minimum: float | None = None,
     fallback_maximum: float | None = None,
 ) -> float:
-    """Round and clamp a temperature to its nearest minimum-relative step.
+    """Round from the native minimum (or zero) and clamp to available bounds.
 
     Halfway values round away from zero, matching the conventional behavior
     expected for user supplied temperature targets.
@@ -34,15 +34,13 @@ def round_temperature_to_step(
     )
     lower_bound = minimum if minimum is not None else fallback_minimum
     upper_bound = maximum if maximum is not None else fallback_maximum
-    minimum_decimal = (
-        Decimal(str(lower_bound)) if lower_bound is not None else Decimal(0)
-    )
-    steps = ((value_decimal - minimum_decimal) / step_decimal).to_integral_value(
+    step_origin = Decimal(str(minimum)) if minimum is not None else Decimal(0)
+    steps = ((value_decimal - step_origin) / step_decimal).to_integral_value(
         rounding=ROUND_HALF_UP
     )
-    rounded = minimum_decimal + steps * step_decimal
+    rounded = step_origin + steps * step_decimal
     if lower_bound is not None:
-        rounded = max(rounded, minimum_decimal)
+        rounded = max(rounded, Decimal(str(lower_bound)))
     if upper_bound is not None:
         rounded = min(rounded, Decimal(str(upper_bound)))
     return float(rounded)

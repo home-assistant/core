@@ -7,7 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from daikin_onecta.exceptions import OnectaConnectionError
-from daikin_onecta.models import ManagementPoint
+from daikin_onecta.models import Characteristic, ManagementPoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -41,6 +41,7 @@ from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -160,20 +161,169 @@ def test_create_climate_entities_skips_management_points_without_climate_control
     assert _create_climate_entities(device, MagicMock(), lambda *_: False) == []
 
 
+def _keep_climate_available(
+    _coordinator: OnectaDataUpdateCoordinator,
+    _device: DaikinOnectaDevice,
+    _management_point: ManagementPoint,
+) -> None:
+    """Keep the climate fixture available."""
+
+
+def _fail_climate_coordinator(
+    coordinator: OnectaDataUpdateCoordinator,
+    _device: DaikinOnectaDevice,
+    _management_point: ManagementPoint,
+) -> None:
+    """Mark the climate coordinator unavailable."""
+    coordinator.last_update_success = False
+
+
+def _fail_climate_gateway(
+    _coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    _management_point: ManagementPoint,
+) -> None:
+    """Mark the climate gateway unavailable."""
+    device.mark_unavailable()
+
+
+def _remove_climate_management_point(
+    _coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+) -> None:
+    """Remove the climate management point from its gateway."""
+    device.device.management_points.remove(management_point)
+
+
+def _replace_test_management_point(
+    device: DaikinOnectaDevice,
+    previous: ManagementPoint,
+    replacement: ManagementPoint,
+) -> None:
+    """Replace one management point on the wrapped gateway model."""
+    device.device.management_points.remove(previous)
+    device.device.management_points.append(replacement)
+    device.set_device_data(device.device)
+
+
+def _set_missing_power_state(
+    device: DaikinOnectaDevice, management_point: ManagementPoint
+) -> None:
+    """Remove the power characteristic while retaining an active operation mode."""
+    replacement = replace(management_point, on_off_mode=None)
+    assert replacement.operation_mode is not None
+    replacement.operation_mode.value = "auto"
+    _replace_test_management_point(device, management_point, replacement)
+
+
+def _set_unknown_power_state(
+    _device: DaikinOnectaDevice, management_point: ManagementPoint
+) -> None:
+    """Set the existing power characteristic to an unknown value."""
+    assert management_point.climate_control is not None
+    assert management_point.climate_control.on_off_mode is not None
+    management_point.climate_control.on_off_mode.value = None
+
+
+def _set_missing_operation_state(
+    device: DaikinOnectaDevice, management_point: ManagementPoint
+) -> None:
+    """Remove the operation-mode characteristic while power remains on."""
+    assert management_point.climate_control is not None
+    assert management_point.climate_control.on_off_mode is not None
+    management_point.climate_control.on_off_mode.value = "on"
+    replacement = replace(management_point, operation_mode=None)
+    _replace_test_management_point(device, management_point, replacement)
+
+
+def _set_omitted_operation_state(
+    _device: DaikinOnectaDevice, management_point: ManagementPoint
+) -> None:
+    """Keep operation mode present but omit its current value."""
+    assert management_point.climate_control is not None
+    assert management_point.climate_control.on_off_mode is not None
+    assert management_point.climate_control.operation_mode is not None
+    management_point.climate_control.on_off_mode.value = "on"
+    management_point.climate_control.operation_mode.value = None
+
+
+def _remove_fan_control(management_point: ManagementPoint) -> None:
+    """Remove fan control from a climate point."""
+    management_point.fan_control = None
+
+
+def _set_fan_speed_read_only(management_point: ManagementPoint) -> None:
+    """Make fan speed telemetry read-only."""
+    assert management_point.climate_control is not None
+    fan_operation = management_point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_speed is not None
+    fan_operation.fan_speed.current_mode.settable = False
+
+
+def _set_vertical_swing_read_only(management_point: ManagementPoint) -> None:
+    """Make vertical swing telemetry read-only."""
+    assert management_point.climate_control is not None
+    fan_operation = management_point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.vertical is not None
+    fan_operation.fan_direction.vertical.current_mode.settable = False
+
+
+def _set_horizontal_swing_read_only(management_point: ManagementPoint) -> None:
+    """Make horizontal swing telemetry read-only."""
+    assert management_point.climate_control is not None
+    fan_operation = management_point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    assert fan_operation.fan_direction.horizontal is not None
+    fan_operation.fan_direction.horizontal.current_mode.settable = False
+
+
+def _get_fan_speed_modes(
+    management_point: ManagementPoint,
+) -> tuple[Characteristic, Characteristic]:
+    """Return heating and cooling fan-speed modes."""
+    assert management_point.climate_control is not None
+    heating = management_point.climate_control.fan_operation("heating")
+    cooling = management_point.climate_control.fan_operation("cooling")
+    assert heating is not None and heating.fan_speed is not None
+    assert cooling is not None and cooling.fan_speed is not None
+    return heating.fan_speed.current_mode, cooling.fan_speed.current_mode
+
+
+def _get_vertical_swing_modes(
+    management_point: ManagementPoint,
+) -> tuple[Characteristic, Characteristic]:
+    """Return heating and cooling vertical-swing modes."""
+    assert management_point.climate_control is not None
+    heating = management_point.climate_control.fan_operation("heating")
+    cooling = management_point.climate_control.fan_operation("cooling")
+    assert heating is not None and heating.fan_direction is not None
+    assert cooling is not None and cooling.fan_direction is not None
+    assert heating.fan_direction.vertical is not None
+    assert cooling.fan_direction.vertical is not None
+    return (
+        heating.fan_direction.vertical.current_mode,
+        cooling.fan_direction.vertical.current_mode,
+    )
+
+
 @pytest.mark.parametrize(
-    ("failure", "expected_available"),
+    ("apply_failure", "expected_available"),
     [
-        (None, True),
-        ("coordinator", False),
-        ("gateway", False),
-        ("management_point", False),
+        pytest.param(_keep_climate_available, True, id="available"),
+        pytest.param(_fail_climate_coordinator, False, id="coordinator"),
+        pytest.param(_fail_climate_gateway, False, id="gateway"),
+        pytest.param(_remove_climate_management_point, False, id="management-point"),
     ],
 )
 async def test_climate_entity_availability(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    failure: str | None,
+    apply_failure: Callable[
+        [OnectaDataUpdateCoordinator, DaikinOnectaDevice, ManagementPoint], None
+    ],
     expected_available: bool,
 ) -> None:
     """Reflect coordinator and cloud device availability in the entity state."""
@@ -184,12 +334,7 @@ async def test_climate_entity_availability(
         coordinator,
     ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
     device = next(iter(coordinator.data.values()))
-    if failure == "coordinator":
-        coordinator.last_update_success = False
-    elif failure == "gateway":
-        device.mark_unavailable()
-    elif failure == "management_point":
-        device.device.management_points.remove(management_point)
+    apply_failure(coordinator, device, management_point)
     coordinator.async_update_listeners()
 
     state = hass.states.get(entity_id)
@@ -277,11 +422,11 @@ async def test_climate_service_toggles_presets(
         blocking=True,
     )
 
-    enabled_value = (
-        holiday_mode.value.enabled
-        if native_characteristic == "holidayMode"
-        else powerful_mode.value
-    )
+    preset_values = {
+        "holidayMode": holiday_mode.value.enabled,
+        "powerfulMode": powerful_mode.value,
+    }
+    enabled_value = preset_values[native_characteristic]
     assert enabled_value in {True, "on"}
     state = hass.states.get(entity_id)
     assert (
@@ -296,41 +441,51 @@ async def test_climate_service_toggles_presets(
         blocking=True,
     )
 
-    disabled_value = (
-        holiday_mode.value.enabled
-        if native_characteristic == "holidayMode"
-        else powerful_mode.value
-    )
+    preset_values = {
+        "holidayMode": holiday_mode.value.enabled,
+        "powerfulMode": powerful_mode.value,
+    }
+    disabled_value = preset_values[native_characteristic]
     assert disabled_value in {False, "off"}
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes[ClimateEntityStateAttribute.PRESET_MODE] == PRESET_NONE
-    if native_characteristic == "holidayMode":
-        assert mock_onecta_client.post_management_point.await_count == 2
-        assert mock_onecta_client.post_management_point.await_args_list[0].args[:3] == (
-            gateway_id,
-            management_point.embedded_id,
-            "holiday-mode",
-        )
-        assert (
-            mock_onecta_client.post_management_point.await_args_list[0].args[3][
-                "enabled"
-            ]
-            is True
-        )
-        assert mock_onecta_client.post_management_point.await_args_list[1].args == (
-            gateway_id,
-            management_point.embedded_id,
-            "holiday-mode",
-            {"enabled": False},
-        )
-    else:
-        assert mock_onecta_client.patch_characteristic.await_count == 2
-        assert all(
-            call_args.args[:3]
-            == (gateway_id, management_point.embedded_id, native_characteristic)
-            for call_args in mock_onecta_client.patch_characteristic.await_args_list
-        )
+    assert (
+        mock_onecta_client.post_management_point.await_count
+        == {
+            "holidayMode": 2,
+            "powerfulMode": 0,
+        }[native_characteristic]
+    )
+    assert (
+        mock_onecta_client.patch_characteristic.await_count
+        == {
+            "holidayMode": 0,
+            "powerfulMode": 2,
+        }[native_characteristic]
+    )
+    expected_post_prefix = {
+        "holidayMode": [
+            (gateway_id, management_point.embedded_id, "holiday-mode"),
+            (gateway_id, management_point.embedded_id, "holiday-mode"),
+        ],
+        "powerfulMode": [],
+    }
+    assert [
+        call_args.args[:3]
+        for call_args in mock_onecta_client.post_management_point.await_args_list
+    ] == expected_post_prefix[native_characteristic]
+    expected_patch_prefix = {
+        "holidayMode": [],
+        "powerfulMode": [
+            (gateway_id, management_point.embedded_id, native_characteristic),
+            (gateway_id, management_point.embedded_id, native_characteristic),
+        ],
+    }
+    assert [
+        call_args.args[:3]
+        for call_args in mock_onecta_client.patch_characteristic.await_args_list
+    ] == expected_patch_prefix[native_characteristic]
 
 
 @pytest.mark.parametrize(
@@ -616,19 +771,19 @@ async def test_climate_service_rejects_unknown_native_mode(
 
 
 @pytest.mark.parametrize(
-    ("case", "expected_state"),
+    ("configure_state", "expected_state"),
     [
-        ("missing_power", HVACMode.HEAT_COOL),
-        ("unknown_power", "unknown"),
-        ("missing_operation", "unknown"),
-        ("omitted_operation", "unknown"),
+        pytest.param(_set_missing_power_state, HVACMode.HEAT_COOL, id="missing-power"),
+        pytest.param(_set_unknown_power_state, "unknown", id="unknown-power"),
+        pytest.param(_set_missing_operation_state, "unknown", id="missing-operation"),
+        pytest.param(_set_omitted_operation_state, "unknown", id="omitted-operation"),
     ],
 )
 async def test_climate_state_handles_missing_hvac_data(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    case: str,
+    configure_state: Callable[[DaikinOnectaDevice, ManagementPoint], None],
     expected_state: str,
 ) -> None:
     """Expose omitted and malformed power/mode data through HA entity state."""
@@ -641,35 +796,8 @@ async def test_climate_state_handles_missing_hvac_data(
     climate_control = management_point.climate_control
     assert climate_control is not None
     assert climate_control.operation_mode is not None
-    replacement_management_point = management_point
-    if case == "missing_power":
-        replacement_management_point = replace(management_point, on_off_mode=None)
-        assert replacement_management_point.operation_mode is not None
-        replacement_management_point.operation_mode.value = "auto"
-    elif case == "unknown_power":
-        assert climate_control.on_off_mode is not None
-        climate_control.on_off_mode.value = None
-    elif case == "missing_operation":
-        assert climate_control.on_off_mode is not None
-        climate_control.on_off_mode.value = "on"
-        replacement_management_point = replace(management_point, operation_mode=None)
-    else:
-        assert climate_control.on_off_mode is not None
-        climate_control.on_off_mode.value = "on"
-        climate_control.operation_mode.value = None
-    if case in {"missing_power", "missing_operation"}:
-        device = next(iter(coordinator.data.values()))
-        device.set_device_data(
-            replace(
-                device.device,
-                management_points=[
-                    replacement_management_point
-                    if point.embedded_id == management_point.embedded_id
-                    else point
-                    for point in device.device.management_points
-                ],
-            )
-        )
+    device = next(iter(coordinator.data.values()))
+    configure_state(device, management_point)
     coordinator.async_update_listeners()
 
     state = hass.states.get(entity_id)
@@ -760,21 +888,30 @@ async def test_climate_service_publishes_fixed_mode_before_speed_failure(
 
 
 @pytest.mark.parametrize(
-    ("service", "argument", "value", "path", "control"),
+    (
+        "service",
+        "argument",
+        "value",
+        "path",
+        "get_modes",
+        "expected_command",
+    ),
     [
         (
             SERVICE_SET_FAN_MODE,
             "fan_mode",
             "quiet",
             "/operationModes/heating/fanSpeed/currentMode",
-            "fan_speed",
+            _get_fan_speed_modes,
+            "quiet",
         ),
         (
             SERVICE_SET_SWING_MODE,
             "swing_mode",
             SWING_ON,
             "/operationModes/heating/fanDirection/vertical/currentMode",
-            "vertical_swing",
+            _get_vertical_swing_modes,
+            "swing",
         ),
     ],
 )
@@ -787,7 +924,8 @@ async def test_climate_service_keeps_captured_operation_mode(
     argument: str,
     value: str,
     path: str,
-    control: str,
+    get_modes: Callable[[ManagementPoint], tuple[Characteristic, Characteristic]],
+    expected_command: str,
 ) -> None:
     """A live mode change during a command does not redirect its cache write."""
     (
@@ -800,22 +938,9 @@ async def test_climate_service_keeps_captured_operation_mode(
     assert climate_control is not None
     assert management_point.operation_mode is not None
     management_point.operation_mode.value = "heating"
-    heating_operation = climate_control.fan_operation("heating")
-    cooling_operation = climate_control.fan_operation("cooling")
-    assert heating_operation is not None and cooling_operation is not None
-
-    if control == "fan_speed":
-        assert heating_operation.fan_speed is not None
-        assert cooling_operation.fan_speed is not None
-        captured_mode = heating_operation.fan_speed.current_mode.value
-        active_mode = cooling_operation.fan_speed.current_mode.value
-    else:
-        assert heating_operation.fan_direction is not None
-        assert cooling_operation.fan_direction is not None
-        assert heating_operation.fan_direction.vertical is not None
-        assert cooling_operation.fan_direction.vertical is not None
-        captured_mode = heating_operation.fan_direction.vertical.current_mode.value
-        active_mode = cooling_operation.fan_direction.vertical.current_mode.value
+    captured_mode, active_mode = get_modes(management_point)
+    captured_value = captured_mode.value
+    active_value = active_mode.value
 
     def replace_active_mode(*_args, **_kwargs) -> None:
         assert management_point.operation_mode is not None
@@ -833,18 +958,13 @@ async def test_climate_service_keeps_captured_operation_mode(
         gateway_id,
         management_point.embedded_id,
         "fanControl",
-        "quiet" if control == "fan_speed" else "swing",
+        expected_command,
         path=path,
     )
-    if control == "fan_speed":
-        assert heating_operation.fan_speed.current_mode.value == "quiet"
-        assert cooling_operation.fan_speed.current_mode.value == active_mode
-    else:
-        assert heating_operation.fan_direction.vertical.current_mode.value == "swing"
-        assert (
-            cooling_operation.fan_direction.vertical.current_mode.value == active_mode
-        )
-    assert captured_mode != value
+    heating_mode, cooling_mode = get_modes(management_point)
+    assert heating_mode.value == expected_command
+    assert cooling_mode.value == active_value
+    assert captured_value != value
 
 
 async def test_climate_service_aborts_preset_replacement_after_failed_disable(
@@ -1027,16 +1147,13 @@ async def test_climate_service_publishes_preset_disable_before_replacement_failu
     mock_onecta_client.post_management_point.assert_awaited_once()
 
 
-@pytest.mark.parametrize("patch_result", [True, False])
-async def test_climate_service_updates_entity_state(
+async def _async_setup_climate_entity_with_minimal_model(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    patch_result: bool,
-    mock_onecta_client: MockOnectaClient,
-) -> None:
-    """Test climate services through the Home Assistant integration API."""
+) -> str:
+    """Set up a minimal climate entity through the config-entry API."""
     setpoint = SimpleNamespace(
         value=20, min_value=7, max_value=30, step_value=1, settable=True, unit=None
     )
@@ -1076,10 +1193,6 @@ async def test_climate_service_updates_entity_state(
     )
     device.gateway_metadata = (None, None, None)
     device.management_point.return_value = climate_control
-    if not patch_result:
-        mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
-            "test connection failure", method="PATCH", path="/test"
-        )
     gateway_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, device.id)},
@@ -1121,29 +1234,30 @@ async def test_climate_service_updates_entity_state(
     assert child_entry is None
     assert entity_registry.async_get(entity_id).device_id == gateway_entry.id
 
-    service_call = hass.services.async_call(
+    return entity_id
+
+
+async def test_climate_service_updates_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Publish the updated temperature after a successful climate service call."""
+    entity_id = await _async_setup_climate_entity_with_minimal_model(
+        hass, config_entry, device_registry, entity_registry
+    )
+    await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 21},
         blocking=True,
     )
-    if patch_result:
-        await service_call
-        expected_temperature = 21
-    else:
-        with pytest.raises(HomeAssistantError) as err:
-            await service_call
-        assert err.value.translation_domain == DOMAIN
-        assert err.value.translation_key == "set_temperature_failed"
-        assert str(err.value) == "Failed to set the temperature for Daikin"
-        expected_temperature = 20
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert (
-        state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE]
-        == expected_temperature
-    )
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 21
 
     mock_onecta_client.patch_characteristic.assert_awaited_once_with(
         "gateway",
@@ -1153,8 +1267,48 @@ async def test_climate_service_updates_entity_state(
         path="/operationModes/heating/setpoints/roomTemperature",
     )
 
+    coordinator = config_entry.runtime_data
+    device = coordinator.data["gateway"]
     device.async_update_device_registry.reset_mock()
     coordinator.async_update_listeners()
+
+
+async def test_climate_service_failure_preserves_entity_state(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Keep the previous temperature when Daikin rejects a climate write."""
+    entity_id = await _async_setup_climate_entity_with_minimal_model(
+        hass, config_entry, device_registry, entity_registry
+    )
+    mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
+        "test connection failure", method="PATCH", path="/test"
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 21},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "set_temperature_failed"
+    assert str(err.value) == "Failed to set the temperature for Daikin"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 20
+    mock_onecta_client.patch_characteristic.assert_awaited_once_with(
+        "gateway",
+        "zone",
+        "temperatureControl",
+        21,
+        path="/operationModes/heating/setpoints/roomTemperature",
+    )
 
 
 async def test_climate_service_rejected_token_preserves_entity_state(
@@ -1822,45 +1976,57 @@ async def test_climate_platform_services_and_management_points(
         mock_onecta_client.patch_characteristic.side_effect = None
 
     mock_onecta_client.patch_characteristic.reset_mock()
+
+    def make_vertical_swing_read_only() -> None:
+        fan_operation = climate_controls["living_room"].fan_operation()
+        assert fan_operation is not None and fan_operation.fan_direction is not None
+        assert fan_operation.fan_direction.vertical is not None
+        fan_operation.fan_direction.vertical.current_mode.settable = False
+
+    def make_horizontal_swing_read_only() -> None:
+        fan_operation = climate_controls["living_room"].fan_operation()
+        assert fan_operation is not None and fan_operation.fan_direction is not None
+        assert fan_operation.fan_direction.horizontal is not None
+        fan_operation.fan_direction.horizontal.current_mode.settable = False
+
+    def make_powerful_mode_read_only() -> None:
+        characteristic = climate_controls["living_room"].mode_characteristic(
+            "powerfulMode"
+        )
+        assert characteristic is not None
+        characteristic.settable = False
+
     unavailable_controls = (
         (
-            "vertical_swing",
+            make_vertical_swing_read_only,
             SERVICE_SET_SWING_MODE,
             "swing_mode",
             SWING_OFF,
             "swing_control_unavailable",
         ),
         (
-            "horizontal_swing",
+            make_horizontal_swing_read_only,
             SERVICE_SET_SWING_HORIZONTAL_MODE,
             "swing_horizontal_mode",
             SWING_OFF,
             "swing_control_unavailable",
         ),
         (
-            "preset",
+            make_powerful_mode_read_only,
             SERVICE_SET_PRESET_MODE,
             "preset_mode",
             PRESET_BOOST,
             "preset_mode_unavailable",
         ),
     )
-    for control, service, argument, value, translation_key in unavailable_controls:
-        if control == "preset":
-            characteristic = climate_controls["living_room"].mode_characteristic(
-                "powerfulMode"
-            )
-            assert characteristic is not None
-            characteristic.settable = False
-        else:
-            direction = "vertical" if control == "vertical_swing" else "horizontal"
-            fan_operation = climate_controls["living_room"].fan_operation()
-            assert fan_operation is not None
-            assert fan_operation.fan_direction is not None
-            axis = getattr(fan_operation.fan_direction, direction)
-            assert axis is not None
-            axis.current_mode.settable = False
-
+    for (
+        configure_control,
+        service,
+        argument,
+        value,
+        translation_key,
+    ) in unavailable_controls:
+        configure_control()
         with pytest.raises(ServiceValidationError) as err:
             await call_service(service, **{argument: value})
         assert err.value.translation_key == translation_key
@@ -1981,16 +2147,22 @@ async def test_climate_temperature_rounds_to_native_step(
     )
 
     assert setpoint.value == expected_temperature
-    if should_write:
-        mock_onecta_client.patch_characteristic.assert_awaited_once_with(
-            gateway_id,
-            point.embedded_id,
-            "temperatureControl",
-            expected_temperature,
-            path="/operationModes/heating/setpoints/roomTemperature",
-        )
-    else:
-        mock_onecta_client.patch_characteristic.assert_not_awaited()
+    expected_calls = {
+        True: [
+            call(
+                gateway_id,
+                point.embedded_id,
+                "temperatureControl",
+                expected_temperature,
+                path="/operationModes/heating/setpoints/roomTemperature",
+            )
+        ],
+        False: [],
+    }
+    assert (
+        mock_onecta_client.patch_characteristic.await_args_list
+        == expected_calls[should_write]
+    )
 
 
 async def test_climate_temperature_rounding_is_anchored_to_minimum(
@@ -2202,31 +2374,35 @@ async def test_climate_state_keeps_fixed_swing_distinct_from_off(
 
 
 @pytest.mark.parametrize(
-    ("control", "service", "service_data", "feature"),
+    ("configure_control", "service", "service_data", "feature", "translation_key"),
     [
         (
-            "missing",
+            _remove_fan_control,
             SERVICE_SET_FAN_MODE,
             {"fan_mode": "auto"},
             ClimateEntityFeature.FAN_MODE,
+            "fan_control_unavailable",
         ),
         (
-            "speed",
+            _set_fan_speed_read_only,
             SERVICE_SET_FAN_MODE,
             {ClimateServiceArgument.FAN_MODE: "auto"},
             ClimateEntityFeature.FAN_MODE,
+            "fan_mode_unavailable",
         ),
         (
-            "vertical",
+            _set_vertical_swing_read_only,
             SERVICE_SET_SWING_MODE,
             {ClimateServiceArgument.SWING_MODE: SWING_ON},
             ClimateEntityFeature.SWING_MODE,
+            "swing_control_unavailable",
         ),
         (
-            "horizontal",
+            _set_horizontal_swing_read_only,
             SERVICE_SET_SWING_HORIZONTAL_MODE,
             {ClimateServiceArgument.SWING_HORIZONTAL_MODE: SWING_ON},
             ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+            "swing_control_unavailable",
         ),
     ],
 )
@@ -2234,10 +2410,11 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    control: str,
+    configure_control: Callable[[ManagementPoint], None],
     service: str,
     service_data: dict[str, str],
     feature: ClimateEntityFeature,
+    translation_key: str,
 ) -> None:
     """Do not advertise or write read-only fan and swing telemetry."""
     await _async_setup_fixture(hass, config_entry, "ururu")
@@ -2245,22 +2422,7 @@ async def test_read_only_fan_controls_do_not_call_cloud(
     assert coordinator.data is not None
     device = next(iter(coordinator.data.values()))
     point = next(iter(device.device.management_points_by_type("climateControl")))
-    assert point.climate_control is not None
-    fan = point.climate_control.fan_operation()
-    assert fan is not None
-    assert fan.fan_speed is not None
-    assert fan.fan_direction is not None
-    assert fan.fan_direction.vertical is not None
-    assert fan.fan_direction.horizontal is not None
-    if control == "missing":
-        point.fan_control = None
-    else:
-        characteristic = {
-            "speed": fan.fan_speed.current_mode,
-            "vertical": fan.fan_direction.vertical.current_mode,
-            "horizontal": fan.fan_direction.horizontal.current_mode,
-        }[control]
-        characteristic.settable = False
+    configure_control(point)
     coordinator.client.patch_characteristic = AsyncMock()
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, f"{device.id}_{point.embedded_id}_roomTemperature"
@@ -2276,15 +2438,7 @@ async def test_read_only_fan_controls_do_not_call_cloud(
             {ATTR_ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
-    assert (
-        err.value.translation_key
-        == {
-            "missing": "fan_control_unavailable",
-            "speed": "fan_mode_unavailable",
-            "vertical": "swing_control_unavailable",
-            "horizontal": "swing_control_unavailable",
-        }[control]
-    )
+    assert err.value.translation_key == translation_key
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
@@ -2368,9 +2522,8 @@ async def test_climate_state_omits_incomplete_fan_mode(
     assert fan_operation is not None and fan_operation.fan_speed is not None
     fan_speed = fan_operation.fan_speed
     fan_speed.current_mode.value = current_mode
-    if fixed_value is not None or current_mode == FANMODE_FIXED:
-        assert fan_speed.modes is not None
-        fan_speed.modes[FANMODE_FIXED].value = fixed_value
+    assert fan_speed.modes is not None
+    fan_speed.modes[FANMODE_FIXED].value = fixed_value
     coordinator.async_update_listeners()
 
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
@@ -2406,9 +2559,8 @@ async def test_climate_service_translates_failed_fan_writes(
     fan_operation = climate_control.fan_operation("heating")
     assert fan_operation is not None and fan_operation.fan_speed is not None
     fan_operation.fan_speed.current_mode.value = initial_mode
-    if requested_mode.isnumeric():
-        assert fan_operation.fan_speed.modes is not None
-        fan_operation.fan_speed.modes[FANMODE_FIXED].value = 3
+    assert fan_operation.fan_speed.modes is not None
+    fan_operation.fan_speed.modes[FANMODE_FIXED].value = 3
     coordinator.async_update_listeners()
     mock_onecta_client.patch_characteristic.side_effect = OnectaConnectionError(
         "test connection failure", method="PATCH", path="/test"
