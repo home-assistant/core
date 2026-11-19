@@ -596,6 +596,8 @@ class MarketplaceManager:
                         gzip.open(compressed, "wb") as f_out,
                     ):
                         shutil.copyfileobj(f_in, f_out)
+                    # mkstemp creates the file readable by its owner only
+                    shutil.copymode(file_path, compressed)
                     os.replace(compressed, f"{file_path}.gz")
                 finally:
                     if os.path.exists(compressed):
