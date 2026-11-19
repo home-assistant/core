@@ -4645,6 +4645,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fonte_flamme": {
+      "name": "Fonte Flamme",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "foobot": {
       "name": "Foobot",
       "integration_type": "hub",
@@ -5333,6 +5344,17 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "godin": {
+      "name": "Godin",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "gogogate2": {
       "name": "Gogogate2 and ismartgate",
@@ -7077,6 +7099,17 @@
       ],
       "supported_by": "midea"
     },
+    "invicta": {
+      "name": "Invicta",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "iometer": {
       "name": "IOmeter",
       "integration_type": "device",
@@ -7382,6 +7415,17 @@
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "jotul": {
+      "name": "J\u00f8tul",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "justnimbus": {
       "name": "JustNimbus",
@@ -14219,6 +14263,18 @@
             "cloud"
           ],
           "name": "PlayStation Network"
+        },
+        "sony_infrared": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "assumed_state",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "infrared"
+          ],
+          "name": "Sony Infrared"
         }
       }
     },
