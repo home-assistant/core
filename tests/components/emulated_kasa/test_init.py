@@ -19,15 +19,7 @@ from homeassistant.components.fan import (
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_ENTITIES,
-    CONF_NAME,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    TargetKey,
-)
+from homeassistant.const import CONF_ENTITIES, CONF_NAME, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
