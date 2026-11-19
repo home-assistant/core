@@ -13,7 +13,6 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.evohome.climate import EvoZone
 from homeassistant.components.evohome.const import (
     DOMAIN,
-    REFRESH_BREAKS_IN_HA_VERSION,
     EvoService,
     EvoServiceArgument,
 )
@@ -22,44 +21,8 @@ from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import DATA_DOMAIN_PLATFORM_ENTITIES
 from homeassistant.setup import async_setup_component
-
-
-@pytest.mark.parametrize("install", ["default"])
-@pytest.mark.usefixtures("evohome")
-async def test_refresh_system_deprecated(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test Evohome's refresh_system service.
-
-    This service call remains supported during the deprecation window but should cause
-    a Repair issue.
-    """
-
-    # EvoService.REFRESH_SYSTEM
-    with (
-        patch("evohomeasync2.location.Location.get_status") as mock_fcn,
-        patch("evohomeasync.EvohomeClient.get_status") as mock_v1,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.REFRESH_SYSTEM,
-            {},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-        mock_v1.assert_not_awaited()  # high-precision temps are not refreshed on demand
-
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_refresh_system_service")
-    assert issue is not None
-    assert issue.translation_key == "deprecated_refresh_system_service"
-    assert issue.translation_placeholders == {
-        "breaks_in_ha_version": REFRESH_BREAKS_IN_HA_VERSION,
-    }
 
 
 @pytest.mark.parametrize("install", ["default"])

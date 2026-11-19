@@ -75,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for issue_id in (
         "deprecated_clear_zone_override_service",
         "deprecated_preset_reset",
+        "deprecated_refresh_system_service",
         "deprecated_reset_system_service",
         "deprecated_set_system_mode_service",
     ):
