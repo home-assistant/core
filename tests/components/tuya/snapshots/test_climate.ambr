@@ -1,4 +1,93 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[climate.air-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'ej2zsznihehztkzqcaderarfni')]>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.air',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.ej2zsznihehztkzqcaderarfni',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.air-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.air',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[climate.air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -152,6 +241,98 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.ar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('tuya', 'syep74caderarfni')]>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.ar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.syep74caderarfni',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.ar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ar',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 24.0,
+      <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[climate.bathroom_radiator-entry]
@@ -1584,6 +1765,13 @@
     'state': 'heat_cool',
   })
 # ---
+# name: test_us_customary_system[climate.air]
+  ReadOnlyDict({
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+  })
+# ---
 # name: test_us_customary_system[climate.air_conditioner]
   ReadOnlyDict({
     <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22,
@@ -1598,6 +1786,15 @@
     <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
     <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
     <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+  })
+# ---
+# name: test_us_customary_system[climate.ar]
+  ReadOnlyDict({
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 86,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 61,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 75,
   })
 # ---
 # name: test_us_customary_system[climate.bathroom_radiator]
