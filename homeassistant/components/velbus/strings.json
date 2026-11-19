@@ -40,6 +40,16 @@
         "description": "TCP/IP configuration for VelServ, velbus-tcp, or any other Velbus to TCP/IP interface.",
         "title": "TCP/IP configuration"
       },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "Bearer token when Velbus Manager authentication is enabled."
+        },
+        "description": "The Velbus Manager rejected the access token. Provide a new token.",
+        "title": "Reauthenticate Velbus Manager"
+      },
       "usbselect": {
         "data": {
           "port": "[%key:common::config_flow::data::port%]"
@@ -97,6 +107,9 @@
     },
     "connection_failed": {
       "message": "Could not connect to Velbus."
+    },
+    "invalid_access_token": {
+      "message": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."

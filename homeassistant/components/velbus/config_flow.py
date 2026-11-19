@@ -1,5 +1,7 @@
 """Config flow for the Velbus platform."""
 
+from collections.abc import Mapping
+from ipaddress import AddressValueError, ip_address
 from pathlib import Path
 import shutil
 from typing import Any, Final, override
@@ -27,6 +29,32 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from .const import CONF_TLS, CONF_VLP_FILE, DOMAIN, MANAGER_DEFAULT_PORT
 
 STORAGE_PATH: Final = ".storage/velbus.{key}.vlp"
+
+
+def format_manager_dsn(host: str, port: int) -> str:
+    """Build a manager:// DSN, bracketing IPv6 literals when required."""
+    host = host.strip()
+    if host.startswith("[") and host.endswith("]"):
+        bracketed_host = host
+    elif _host_requires_brackets(host):
+        bracketed_host = f"[{host}]"
+    else:
+        bracketed_host = host
+    return f"manager://{bracketed_host}:{port}"
+
+
+def manager_dsn_to_host_port(dsn: str) -> tuple[str, int]:
+    """Parse host and port from a manager:// DSN."""
+    parts = urlparse(dsn)
+    return parts.hostname or "", parts.port or MANAGER_DEFAULT_PORT
+
+
+def _host_requires_brackets(host: str) -> bool:
+    """Return whether *host* is an IPv6 literal that must be bracketed in the DSN."""
+    try:
+        return ip_address(host).version == 6
+    except AddressValueError:
+        return False
 
 
 class InvalidVlpFile(HomeAssistantError):
@@ -155,11 +183,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._title = "Velbus Manager"
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            self._device = f"manager://{host}:{port}"
+            self._device = format_manager_dsn(host, port)
             token = user_input.get(CONF_ACCESS_TOKEN)
             self._access_token = token or None
-            if self.source != SOURCE_RECONFIGURE:
-                self._async_abort_entries_match({CONF_PORT: self._device})
+            self._async_abort_entries_match({CONF_PORT: self._device})
             if connect_error := await self._test_connection():
                 step_errors[connect_error] = (
                     "invalid_access_token"
@@ -180,10 +207,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._create_device()
         elif self.source == SOURCE_RECONFIGURE:
             current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
-            parts = urlparse(current)
+            host, port = manager_dsn_to_host_port(current)
             user_input = {
-                CONF_HOST: parts.hostname or "",
-                CONF_PORT: parts.port or MANAGER_DEFAULT_PORT,
+                CONF_HOST: host,
+                CONF_PORT: port,
             }
             if token := self._get_reconfigure_entry().data.get(CONF_ACCESS_TOKEN):
                 user_input[CONF_ACCESS_TOKEN] = token
@@ -317,6 +344,54 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input,
             ),
             errors=step_errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Reauthenticate a Velbus Manager entry."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Update the Velbus Manager access token."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        self._device = reauth_entry.data[CONF_PORT]
+
+        if user_input is not None:
+            token = user_input.get(CONF_ACCESS_TOKEN)
+            self._access_token = token or None
+            if connect_error := await self._test_connection():
+                errors[connect_error] = (
+                    "invalid_access_token"
+                    if connect_error == CONF_ACCESS_TOKEN
+                    else "cannot_connect"
+                )
+            else:
+                data = dict(reauth_entry.data)
+                if self._access_token:
+                    data[CONF_ACCESS_TOKEN] = self._access_token
+                else:
+                    data.pop(CONF_ACCESS_TOKEN, None)
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
+
+        suggested_input: dict[str, Any] = {}
+        if token := reauth_entry.data.get(CONF_ACCESS_TOKEN):
+            suggested_input[CONF_ACCESS_TOKEN] = token
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Optional(probatio.Secret(CONF_ACCESS_TOKEN)): str,
+                    }
+                ),
+                suggested_values=suggested_input,
+            ),
+            errors=errors,
         )
 
     async def async_step_reconfigure(

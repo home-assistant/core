@@ -7,13 +7,17 @@ import os
 import shutil
 
 from velbusaio.controller import Velbus
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 from velbusaio.helpers import get_property_key_map
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    PlatformNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -155,6 +159,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
     )
     try:
         await controller.connect()
+    except VelbusAuthenticationFailed as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_access_token",
+        ) from error
     except VelbusConnectionFailed as error:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

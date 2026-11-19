@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.velbus import (
@@ -13,8 +13,8 @@ from homeassistant.components.velbus import (
     async_remove_config_entry_device,
 )
 from homeassistant.components.velbus.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_PORT, TargetKey
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_PORT, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -32,6 +32,30 @@ async def test_setup_connection_failed(
     controller.return_value.connect.side_effect = VelbusConnectionFailed()
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_authentication_failed(
+    hass: HomeAssistant,
+    controller: MagicMock,
+) -> None:
+    """Test setup auth failure starts a reauthentication flow for manager entries."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "token",
+        },
+    )
+    entry.add_to_hass(hass)
+    controller.return_value.connect.side_effect = VelbusAuthenticationFailed()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 async def test_setup_start_failed(
