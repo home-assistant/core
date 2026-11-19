@@ -2194,7 +2194,7 @@ pybravia==0.5.3
 pycarwings2==2.14
 
 # homeassistant.components.casper_glow
-pycasperglow==1.2.0
+pycasperglow==1.3.0
 
 # homeassistant.components.cloudflare
 pycfdns==3.0.0
