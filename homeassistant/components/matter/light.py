@@ -356,7 +356,10 @@ class MatterLight(MatterEntity, LightEntity):
             )
             # Remember the brightness so the next plain turn_on can restore it
             # instead of coming back at the minimum level we faded down to.
-            self._off_brightness = self._attr_brightness
+            # Only cache it while the light is on, otherwise we would store the
+            # minimum level and the next turn_on would leave the light off.
+            if self._attr_is_on and self._attr_brightness:
+                self._off_brightness = self._attr_brightness
             await self.send_device_command(
                 clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                     level=min_level,
