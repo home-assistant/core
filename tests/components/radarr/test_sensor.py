@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -227,3 +228,19 @@ async def test_update_failed(
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
     assert hass.states.get(entity).state == "263.10"
+
+
+async def test_disk_space_unknown_when_free_space_missing(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test disk space is unknown while Radarr can't report a folder's free space."""
+    await setup_integration(hass, aioclient_mock)
+    entity = "sensor.mock_title_disk_space_downloads"
+    assert hass.states.get(entity).state == "263.10"
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock, root_folder_fixture="rootfolder-offline")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity).state == STATE_UNKNOWN

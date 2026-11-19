@@ -24,14 +24,14 @@ from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
 from .entity import RadarrEntity
 
 
-def get_space(data: list[Diskspace], path: str) -> str:
+def get_space(data: list[Diskspace], path: str) -> str | None:
     """Get space."""
-    space = [
-        mount.freeSpace / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES)
-        for mount in data
-        if mount.path == path
-    ]
-    return f"{space[0]:.2f}"
+    # Radarr omits freeSpace when it can't read the folder, e.g. while a
+    # network share is offline, so the free space is unknown until it returns.
+    space = [getattr(mount, "freeSpace", None) for mount in data if mount.path == path]
+    if space[0] is None:
+        return None
+    return f"{space[0] / 1024 ** BYTE_SIZES.index(UnitOfInformation.GIGABYTES):.2f}"
 
 
 def get_folder_name(mount: RootFolder) -> str:
@@ -81,7 +81,7 @@ def async_migrate_disk_space_unique_ids(
 class RadarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
-    value_fn: Callable[[T, str], str | int | datetime]
+    value_fn: Callable[[T, str], str | int | datetime | None]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -183,6 +183,6 @@ class RadarrSensor(RadarrEntity[T], SensorEntity):
 
     @property
     @override
-    def native_value(self) -> str | int | datetime:
+    def native_value(self) -> str | int | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)
