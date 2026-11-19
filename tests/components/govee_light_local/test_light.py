@@ -23,7 +23,6 @@ from homeassistant.components.govee_light_local.const import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
@@ -33,14 +32,11 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -243,7 +239,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": light.entity_id},
         blocking=True,
     )
@@ -257,7 +253,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
     # Turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": light.entity_id},
         blocking=True,
     )
@@ -309,8 +305,12 @@ async def test_turn_on_call_order(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
+        LightService.TURN_ON,
+        {
+            "entity_id": light.entity_id,
+            LightServiceArgument.BRIGHTNESS_PCT: 50,
+            attribute: value,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -336,8 +336,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS_PCT: 50},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -350,8 +350,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -364,8 +364,8 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: AsyncMock) 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -389,8 +389,8 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: AsyncMock) -> No
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: [100, 255, 50]},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: [100, 255, 50]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -407,8 +407,8 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: AsyncMock) -> No
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: 4400},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.COLOR_TEMP_KELVIN: 4400},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -434,8 +434,8 @@ async def test_scene_on(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -463,15 +463,15 @@ async def test_scene_restore_rgb(
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: initial_color},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -486,8 +486,8 @@ async def test_scene_restore_rgb(
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -501,8 +501,8 @@ async def test_scene_restore_rgb(
     # Deactivate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -531,8 +531,11 @@ async def test_scene_restore_temperature(
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_COLOR_TEMP_KELVIN: initial_color},
+        LightService.TURN_ON,
+        {
+            "entity_id": light.entity_id,
+            LightServiceArgument.COLOR_TEMP_KELVIN: initial_color,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -546,8 +549,8 @@ async def test_scene_restore_temperature(
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "sunrise"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -561,8 +564,8 @@ async def test_scene_restore_temperature(
     # Deactivate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -624,15 +627,15 @@ async def test_scene_none(hass: HomeAssistant, mock_govee_api: AsyncMock) -> Non
     # Set initial color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.RGB_COLOR: initial_color},
         blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.BRIGHTNESS: 255},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -647,8 +650,8 @@ async def test_scene_none(hass: HomeAssistant, mock_govee_api: AsyncMock) -> Non
     # Activate scene
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+        LightService.TURN_ON,
+        {"entity_id": light.entity_id, LightServiceArgument.EFFECT: "none"},
         blocking=True,
     )
     await hass.async_block_till_done()

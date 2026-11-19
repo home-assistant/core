@@ -22,6 +22,8 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.trimlight.const import SCAN_INTERVAL
 from homeassistant.const import (
@@ -31,6 +33,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -122,8 +125,12 @@ async def test_color(
     """Test brightness and native colors, including RGBWW cold/warm ordering."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 80, attribute: color},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 80,
+            attribute: color,
+        },
         blocking=True,
     )
 
@@ -155,8 +162,8 @@ async def test_brightness_and_poll(
     mock_trimlight.set_light_state.side_effect = check_optimistic_state
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 80},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 80},
         blocking=True,
     )
 
@@ -197,8 +204,11 @@ async def test_commands_do_not_postpone_polling(
 
             await hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_RGB_COLOR: (40, 50, 60)},
+                LightService.TURN_ON,
+                {
+                    TargetKey.ENTITY_ID: ENTITY_ID,
+                    LightServiceArgument.RGB_COLOR: (40, 50, 60),
+                },
                 blocking=True,
             )
 
@@ -236,8 +246,8 @@ async def test_command_during_poll(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_RGB_COLOR: (40, 50, 60)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.RGB_COLOR: (40, 50, 60)},
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).attributes[ATTR_RGB_COLOR] == (40, 50, 60)
@@ -278,8 +288,8 @@ async def test_unknown_output(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 80},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 80},
         blocking=True,
     )
     mock_trimlight.set_light_state.assert_awaited_once_with(
@@ -377,8 +387,11 @@ async def test_command_error(
     ):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_RGB_COLOR: (40, 50, 60)},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                LightServiceArgument.RGB_COLOR: (40, 50, 60),
+            },
             blocking=True,
         )
 
