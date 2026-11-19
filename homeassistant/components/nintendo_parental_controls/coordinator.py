@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
+from aiohttp import ClientError
 from pynintendoauth.exceptions import (
     HttpException,
     InvalidOAuthConfigurationException,
@@ -84,7 +85,10 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
             was_unavailable = device.device_id in self._unavailable_devices
             try:
                 await device.update()
-            except HttpException as err:
+            except InvalidSessionTokenException as err:
+                _LOGGER.debug("Session token invalid, will renew on next update")
+                raise UpdateFailed from err
+            except (HttpException, ClientError, TimeoutError) as err:
                 unavailable.add(device.device_id)
                 if not was_unavailable:
                     _LOGGER.warning(

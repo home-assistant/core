@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pynintendoauth.exceptions import (
     HttpException,
@@ -96,6 +97,14 @@ async def test_update_errors(
         assert expected_log_message in caplog.text
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        HttpException(status_code=500, error_code="unknown", message="Unknown error"),
+        TimeoutError(),
+        ClientError(),
+    ],
+)
 async def test_device_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -104,6 +113,7 @@ async def test_device_update_failure(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
     """Test entities are unavailable when their device fails to update."""
     await setup_integration(hass, mock_config_entry)
@@ -117,9 +127,7 @@ async def test_device_update_failure(
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    mock_nintendo_device.update.side_effect = HttpException(
-        status_code=500, error_code="unknown", message="Unknown error"
-    )
+    mock_nintendo_device.update.side_effect = exception
     freezer.tick(60)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -166,3 +174,25 @@ async def test_device_update_failure_on_setup(
     assert entity_ids
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_device_update_invalid_session_token(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a token rejected while updating a device fails the whole update."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_nintendo_device.update.side_effect = InvalidSessionTokenException(
+        status_code=401, message="invalid_token"
+    )
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not mock_config_entry.runtime_data.last_update_success
+    assert "Session token invalid, will renew on next update" in caplog.text
