@@ -706,3 +706,35 @@ async def test_register_refuses_an_unknown_category(
         is None
     )
     assert marketplace.repositories.get_by_full_name("owner/unknown") is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_mark_installed_integrations_survives_write_error(
+    marketplace: MarketplaceManager,
+    mock_repository: Repository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a marker that can not be written is logged and the flow carries on."""
+    marketplace.repositories = Repositories()
+    mock_repository.data.id = "1337"
+    mock_repository.data.category = RepositoryCategory.INTEGRATION
+    mock_repository.data.domain = "example"
+    mock_repository.data.installed = True
+    marketplace.repositories.register(mock_repository)
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.base.write_marketplace_marker",
+            side_effect=OSError("connection error"),
+        ),
+        patch(
+            "homeassistant.components.marketplace.base.async_mark_marketplace_integration"
+        ) as mark,
+    ):
+        await marketplace.async_mark_installed_integrations()
+
+    assert (
+        "Could not write Marketplace marker for example: connection error"
+        in caplog.text
+    )
+    mark.assert_called_once_with(marketplace.hass, "example")

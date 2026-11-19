@@ -100,6 +100,7 @@
 # ---
 # name: test_install_repository[hacs-test-org/integration-basic]
   list([
+    'custom_components/example/.marketplace',
     'custom_components/example/manifest.json',
   ])
 # ---

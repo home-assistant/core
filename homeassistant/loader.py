@@ -201,8 +201,10 @@ DATA_CUSTOM_COMPONENTS: HassKey[
     dict[str, Integration] | asyncio.Future[dict[str, Integration]]
 ] = HassKey("custom_components")
 DATA_PRELOAD_PLATFORMS: HassKey[list[str]] = HassKey("preload_platforms")
+DATA_MARKETPLACE_DOMAINS: HassKey[set[str]] = HassKey("marketplace_domains")
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
+MARKETPLACE_MARKER = ".marketplace"
 CUSTOM_WARNING = (
     "We found a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
@@ -327,6 +329,7 @@ class Manifest(TypedDict, total=False):
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
+    installation_type: Literal["built_in", "marketplace", "custom"]
     overwrites_built_in: bool
     version: str
     codeowners: list[str]
@@ -403,6 +406,10 @@ async def async_get_custom_components(
             # Retrieve the exception even when there are no concurrent callers.
             future.exception()
             raise
+
+        for domain in hass.data.get(DATA_MARKETPLACE_DOMAINS, ()):
+            if integration := comps.get(domain):
+                integration.mark_marketplace()
 
         # A cache cleared during the scan asks for a newer scan, this one
         # must not put its older result back.
@@ -546,6 +553,7 @@ async def async_get_integration_descriptions(
                 "single_config_entry", False
             ),
             "overwrites_built_in": integration.overwrites_built_in,
+            "installation_type": integration.installation_type,
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -801,12 +809,19 @@ class Integration:
             # Avoid the listdir for virtual integrations
             # as they cannot have any platforms
             is_virtual = manifest.get("integration_type") == "virtual"
+            top_level_files = None if is_virtual else set(os.listdir(file_path))
+            if (
+                is_virtual
+                and root_module.__name__ == PACKAGE_CUSTOM_COMPONENTS
+                and (file_path / MARKETPLACE_MARKER).is_file()
+            ):
+                top_level_files = {MARKETPLACE_MARKER}
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 file_path,
                 manifest,
-                None if is_virtual else set(os.listdir(file_path)),
+                top_level_files,
             )
 
             if not integration.import_executor:
@@ -915,6 +930,7 @@ class Integration:
         self._cache = hass.data[DATA_COMPONENTS]
         self._missing_platforms_cache = hass.data[DATA_MISSING_PLATFORMS]
         self._top_level_files = top_level_files or set()
+        manifest["installation_type"] = self.installation_type
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @cached_property
@@ -1088,6 +1104,21 @@ class Integration:
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
+
+    @property
+    def installation_type(self) -> Literal["built_in", "marketplace", "custom"]:
+        """Return how the integration was installed."""
+        if self.is_built_in:
+            return "built_in"
+        if MARKETPLACE_MARKER in self._top_level_files:
+            return "marketplace"
+        return "custom"
+
+    def mark_marketplace(self) -> None:
+        """Mark the integration as installed from the Marketplace."""
+        self._top_level_files.add(MARKETPLACE_MARKER)
+        self.manifest["installation_type"] = self.installation_type
+        self.__dict__.pop("manifest_json_fragment", None)
 
     @property
     def overwrites_built_in(self) -> bool:
@@ -1512,6 +1543,31 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     if type(int_or_fut) is Integration:
         return int_or_fut
     raise IntegrationNotLoaded(domain)
+
+
+@callback
+def async_mark_marketplace_integration(hass: HomeAssistant, domain: str) -> None:
+    """Mark an integration as installed from the Marketplace.
+
+    The domain is remembered too, for a scan that is still running.
+    """
+    hass.data.setdefault(DATA_MARKETPLACE_DOMAINS, set()).add(domain)
+    custom = hass.data.get(DATA_CUSTOM_COMPONENTS)
+    for integration in (
+        hass.data[DATA_INTEGRATIONS].get(domain),
+        custom.get(domain) if isinstance(custom, dict) else None,
+    ):
+        if type(integration) is Integration:
+            integration.mark_marketplace()
+
+
+@callback
+def async_forget_marketplace_integration(hass: HomeAssistant, domain: str) -> None:
+    """Forget a domain was installed from the Marketplace.
+
+    Integrations that are already loaded keep what they were marked as.
+    """
+    hass.data.get(DATA_MARKETPLACE_DOMAINS, set()).discard(domain)
 
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
