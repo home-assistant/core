@@ -1056,6 +1056,7 @@ class DurationSelectorMode(StrEnum):
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
+    label: str
     enable_day: bool
     enable_second: bool
     enable_millisecond: bool
@@ -1083,6 +1084,8 @@ class DurationSelector(Selector[DurationSelectorConfig]):
                 # Enable day field in frontend. A selection with `days` set is allowed
                 # even if `enable_day` is not set
                 probatio.Optional("enable_day"): cv.boolean,
+                # Label for the duration value in offset mode.
+                probatio.Optional("label"): str,
                 # Enable seconds field in frontend.
                 probatio.Optional("enable_second", default=True): cv.boolean,
                 # Enable millisecond field in frontend.
