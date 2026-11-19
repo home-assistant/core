@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the IRM KMI integration."""
 
+from dataclasses import replace
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Final, override
@@ -59,6 +60,12 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             last_success is not None and dt_util.utcnow() - last_success < GRACE_PERIOD
         )
 
+    def _cached_pollen(self) -> dict[PollenName, PollenLevel | None] | None:
+        """Return the last pollen levels while their grace period lasts."""
+        if self.data is not None and self._within_grace(self._last_pollen_success_time):
+            return self.data.pollen
+        return None
+
     @override
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch and process the IRM KMI data."""
@@ -74,7 +81,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
 
         except IrmKmiApiError as err:
             if self._within_grace(self._last_api_success_time):
-                return self.data
+                return replace(self.data, pollen=self._cached_pollen())
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
@@ -100,12 +107,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             if not self._pollen_failing:
                 _LOGGER.warning("Could not get pollen data from the API: %s", err)
                 self._pollen_failing = True
-            pollen = (
-                self.data.pollen
-                if self.data is not None
-                and self._within_grace(self._last_pollen_success_time)
-                else None
-            )
+            pollen = self._cached_pollen()
         else:
             if self._pollen_failing:
                 _LOGGER.info("Pollen data is available again")

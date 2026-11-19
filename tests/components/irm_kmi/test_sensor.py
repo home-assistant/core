@@ -186,3 +186,34 @@ async def test_pollen_grace_period(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert caplog.text.count("Could not get pollen data from the API") == 2
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_pollen_grace_period_when_forecasts_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test old weather data does not keep pollen beyond its grace period."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
+    mock_irm_kmi_api.get_current_weather.return_value = CurrentWeatherData(
+        **{**CURRENT_WEATHER, "temperature": 9.9}
+    )
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
+
+    mock_irm_kmi_api.refresh_forecasts_coord.side_effect = IrmKmiApiError
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
