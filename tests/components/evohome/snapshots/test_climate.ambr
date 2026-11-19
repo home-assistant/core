@@ -69,16 +69,6 @@
     ),
   ])
 # ---
-# name: test_ctl_set_hvac_mode[sys_006]
-  list([
-    tuple(
-      <SystemMode.HEATING_OFF: 'heating_off'>,
-    ),
-    tuple(
-      <SystemMode.AUTO: 'auto'>,
-    ),
-  ])
-# ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
@@ -122,13 +112,6 @@
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
-  list([
-    tuple(
-      <SystemMode.HEATING_OFF: 'heating_off'>,
-    ),
-  ])
-# ---
-# name: test_ctl_turn_off[sys_006]
   list([
     tuple(
       <SystemMode.HEATING_OFF: 'heating_off'>,
@@ -2567,7 +2550,6 @@
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home 1',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
@@ -2600,7 +2582,7 @@
           'time_until': '2024-07-11T02:00:00+02:00',
         }),
       }),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 272>,
       <ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,

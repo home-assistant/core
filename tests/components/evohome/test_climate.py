@@ -25,6 +25,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
 
+# sys_006 has neither the HeatingOff nor the Off system mode
+_INSTALLS_THAT_CAN_TURN_OFF = [i for i in TEST_INSTALLS if i != "sys_006"]
+
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
 async def test_setup_platform(
@@ -80,7 +83,7 @@ async def test_entities_update_over_time(
             assert x == snapshot(name=f"{x.entity_id}-state-updated")
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", _INSTALLS_THAT_CAN_TURN_OFF)
 async def test_ctl_set_hvac_mode(
     hass: HomeAssistant,
     ctl_id: str,
@@ -102,10 +105,7 @@ async def test_ctl_set_hvac_mode(
             blocking=True,
         )
 
-        try:
-            mock_fcn.assert_awaited_once_with("heating_off")
-        except AssertionError:
-            mock_fcn.assert_awaited_once_with("off")
+        mock_fcn.assert_awaited_once()
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -121,10 +121,7 @@ async def test_ctl_set_hvac_mode(
             blocking=True,
         )
 
-        try:
-            mock_fcn.assert_awaited_once_with("auto")
-        except AssertionError:
-            mock_fcn.assert_awaited_once_with("heat")
+        mock_fcn.assert_awaited_once()
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -151,7 +148,7 @@ async def test_ctl_set_temperature(
         )
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", _INSTALLS_THAT_CAN_TURN_OFF)
 async def test_ctl_turn_off(
     hass: HomeAssistant,
     ctl_id: str,
@@ -172,10 +169,7 @@ async def test_ctl_turn_off(
             blocking=True,
         )
 
-        try:
-            mock_fcn.assert_awaited_once_with("heating_off")
-        except AssertionError:
-            mock_fcn.assert_awaited_once_with("off")
+        mock_fcn.assert_awaited_once()
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -213,24 +207,31 @@ async def test_ctl_set_preset_mode(
 
 
 @pytest.mark.parametrize("install", ["sys_006"])
-async def test_ctl_turn_off_unsupported(
+async def test_ctl_cant_turn_off(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test turning off a controller that has neither the HeatingOff nor Off mode."""
+    """Test a controller that has neither the HeatingOff nor Off mode can't be off."""
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    state = hass.states.get(ctl_id)
+    assert state is not None
+    assert state.attributes["hvac_modes"] == [HVACMode.HEAT]
+
+    with (
+        patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn,
+        pytest.raises(ServiceValidationError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            ClimateService.TURN_OFF,
+            ClimateService.SET_HVAC_MODE,
             {
                 TargetKey.ENTITY_ID: ctl_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "mode_not_supported"
-    assert exc_info.value.translation_placeholders == {"mode": "HeatingOff"}
+    mock_fcn.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -280,10 +281,7 @@ async def test_ctl_turn_on(
             blocking=True,
         )
 
-        try:
-            mock_fcn.assert_awaited_once_with("auto")
-        except AssertionError:
-            mock_fcn.assert_awaited_once_with("heat")
+        mock_fcn.assert_awaited_once()
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 

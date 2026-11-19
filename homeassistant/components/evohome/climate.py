@@ -342,9 +342,14 @@ class EvoController(EvoClimateEntity):
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
-        self._attr_supported_features |= (
-            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
+
+        # some systems can't be turned off (i.e. have neither HeatingOff nor Off)
+        evo_modes = {m[SZ_SYSTEM_MODE] for m in evo_device.allowed_system_modes}
+        self._attr_hvac_modes = [HVACMode.HEAT]
+        self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+        if evo_modes & {EvoSystemMode.HEATING_OFF, EvoSystemMode.OFF}:
+            self._attr_hvac_modes.insert(0, HVACMode.OFF)
+            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
 
     @override
     async def async_set_system_mode(
