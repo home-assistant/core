@@ -93,6 +93,7 @@ def _item(
         "id": entry["id"],
         "title": entry["title"],
         "text": entry.get("text"),
+        "summary": entry.get("summary"),
         "tier": entry.get("tier"),
         "authors": entry.get("authors", []),
         "prs": [_pr(pr) for pr in entry.get("prs", [])],

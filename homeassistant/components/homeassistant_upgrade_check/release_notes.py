@@ -11,7 +11,7 @@ from typing import Any
 # Format of the release notes JSON; consumers skip categories they do not know.
 FORMAT = 1
 # Bump when the parser's output changes, so cached releases are parsed again.
-INDEX_FORMAT = 8
+INDEX_FORMAT = 9
 CATEGORIES = ("breaking", "noteworthy", "quality_scale", "removed")
 
 # 2026-11-04-release-202611.markdown is /blog/2026/11/04/release-202611/.
@@ -71,6 +71,15 @@ def clean(text: str, links: dict[str, str]) -> str:
     )
     text = re.sub(r"\]\((/[^)]*)\)", rf"]({SITE}\1)", text)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def summary(text: str) -> str:
+    """Return the first sentence of cleaned markdown as one plain line."""
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
+    text = re.sub(r"\*\*|`", "", text)
+    text = " ".join(text.split())
+    m = re.match(r"(.+?[.!?])(?:\s|$)", text)
+    return m.group(1) if m else text
 
 
 def parse_version(value: str) -> tuple[int, int]:
@@ -173,6 +182,8 @@ def parse_release(post: str, release: dict[str, Any]) -> dict[str, Any]:
             n += 1
             unique = f"{item_id}-{n}"
         ids.add(unique)
+        if text := fields.get("text"):
+            fields["summary"] = summary(text)
         items.append({"id": unique, "category": category, "since": since, **fields})
 
     # Removed integrations have no docs page left to link to, so their domain
