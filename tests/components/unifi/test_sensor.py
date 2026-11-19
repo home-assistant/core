@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
+from aiounifi import RequestError
 from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
@@ -37,7 +38,10 @@ from homeassistant.components.unifi.const import (
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
-from homeassistant.components.unifi.coordinator import POLL_INTERVAL
+from homeassistant.components.unifi.coordinator import (
+    POLL_INTERVAL,
+    WEBSOCKET_FALLBACK_INTERVAL,
+)
 from homeassistant.components.unifi.sensor import TELEMETRY_UPDATE_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
@@ -663,6 +667,7 @@ async def test_no_clients(hass: HomeAssistant) -> None:
     ],
 )
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT, WIRELESS_CLIENT]])
+@pytest.mark.usefixtures("disable_polling")
 async def test_bandwidth_sensors(
     hass: HomeAssistant,
     mock_websocket_message: WebsocketMessageMock,
@@ -805,8 +810,9 @@ async def test_client_sensors_discovered_when_ssid_changes_to_allowed(
 
 
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
-@pytest.mark.usefixtures("config_entry_setup")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "disable_polling", "entity_registry_enabled_by_default", "config_entry_setup"
+)
 async def test_wired_client_speed_sensor(
     hass: HomeAssistant,
     mock_websocket_message: WebsocketMessageMock,
@@ -838,6 +844,100 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT.copy()]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor_updates_from_fallback(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    client_payload: list[dict[str, Any]],
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """Refresh an entity when its handler has received no updates."""
+    assert hass.states.get("sensor.wired_client_link_speed").state == "1000"
+
+    client_payload[0]["wired_rate_mbps"] = 2500
+    aioclient_mock.clear_requests()
+    mock_requests()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1)
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.wired_client_link_speed").state == "2500"
+
+
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT.copy()]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_omitted_client_sensor_stays_unavailable_after_fallback(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+    mock_requests: Callable[[str, str], None],
+) -> None:
+    """An omitted client is not made available by an unrelated refresh."""
+    client_payload[0]["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    await config_entry_factory()
+    assert hass.states.get("sensor.wired_client_link_speed").state == "1000"
+
+    client_payload.clear()
+    aioclient_mock.clear_requests()
+    mock_requests()
+    freezer.tick(timedelta(seconds=DEFAULT_DETECTION_TIME + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+    freezer.tick(WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            WIRED_CLIENT,
+            WIRED_CLIENT
+            | {"mac": "00:00:00:00:00:03", "hostname": "Other wired client"},
+        ]
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_websocket_fallback_failure_and_push_recovery(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    client_payload: list[dict[str, Any]],
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """A failed handler refresh and a recovering push update all its entities."""
+    entity_ids = (
+        "sensor.wired_client_link_speed",
+        "sensor.other_wired_client_link_speed",
+    )
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_payload[0])
+    await hass.async_block_till_done()
+
+    with patch.object(
+        config_entry_setup.runtime_data.api.clients, "update", side_effect=RequestError
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + WEBSOCKET_FALLBACK_INTERVAL + timedelta(seconds=1)
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    mock_websocket_message(message=MessageKey.CLIENT, data=client_payload[0])
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == "1000"
 
 
 @pytest.mark.parametrize(
@@ -1039,7 +1139,9 @@ async def test_poe_port_switches(
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 async def test_wlan_client_sensors(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[str, str], None],
     mock_websocket_message: WebsocketMessageMock,
     mock_websocket_state: WebsocketStateManager,
     client_payload: list[dict[str, Any]],
@@ -1082,6 +1184,8 @@ async def test_wlan_client_sensors(
     wireless_client_2["essid"] = "SSID 1"
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
     await hass.async_block_till_done()
+    aioclient_mock.clear_requests()
+    mock_requests()
 
     ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "1"
@@ -1096,6 +1200,8 @@ async def test_wlan_client_sensors(
 
     wireless_client_1["essid"] = "SSID"
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_1)
+    aioclient_mock.clear_requests()
+    mock_requests()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
@@ -1107,6 +1213,8 @@ async def test_wlan_client_sensors(
 
     wireless_client_2["last_seen"] = 0
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
+    aioclient_mock.clear_requests()
+    mock_requests()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
@@ -1122,6 +1230,8 @@ async def test_wlan_client_sensors(
 
     # Controller reconnects, the recovery refetches the clients and the mocked
     # payload still lists one on the SSID
+    wireless_client_1["essid"] = "SSID 1"
+    aioclient_mock.clear_requests()
     await mock_websocket_state.reconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
@@ -1944,10 +2054,12 @@ async def test_port_link_speed_sensors(
 )
 async def test_device_client_sensors(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     config_entry_factory: ConfigEntryFactoryType,
+    mock_requests: Callable[[str, str], None],
     mock_websocket_message: WebsocketMessageMock,
-    client_payload: dict[str, Any],
+    client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify that WLAN client sensors are working as expected."""
     client_payload += [
@@ -2014,6 +2126,8 @@ async def test_device_client_sensors(
     wireless_client_1 = client_payload[2]
     wireless_client_1["last_seen"] = 0
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_1)
+    aioclient_mock.clear_requests()
+    mock_requests()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()

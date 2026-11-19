@@ -1,7 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -73,7 +73,7 @@ async def test_smart_away_turn_on(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: smart_away_entity_id},
+        {TargetKey.ENTITY_ID: smart_away_entity_id},
         blocking=True,
     )
 
@@ -97,7 +97,7 @@ async def test_smart_away_turn_off(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: smart_away_entity_id},
+        {TargetKey.ENTITY_ID: smart_away_entity_id},
         blocking=True,
     )
 

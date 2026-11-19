@@ -13,7 +13,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -87,7 +87,7 @@ async def test_set_value(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
+            TargetKey.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
             TimeServiceArgument.TIME: "09:00:00",
         },
         blocking=True,
@@ -127,7 +127,7 @@ async def test_dnd_mode_updates(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
+            TargetKey.ENTITY_ID: "time.robot_vacuum_do_not_disturb_end_time",
             TimeServiceArgument.TIME: "09:00:00",
         },
         blocking=True,
