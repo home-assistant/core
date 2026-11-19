@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import NODE_ONLINE, ProxmoxPermission
+from .const import NODE_ONLINE, VM_CONTAINER_RUNNING, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -243,12 +243,10 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
-                if data.get("uptime") is not None
-                else None
-            )
+        value_fn=lambda data: (
+            dt_util.utcnow() - timedelta(seconds=data["uptime"])
+            if data["status"] == VM_CONTAINER_RUNNING and data.get("uptime")
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -362,12 +360,10 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
-        value_fn=(
-            lambda data: (
-                (dt_util.utcnow() - timedelta(seconds=data["uptime"]))
-                if data.get("uptime") is not None
-                else None
-            )
+        value_fn=lambda data: (
+            dt_util.utcnow() - timedelta(seconds=data["uptime"])
+            if data["status"] == VM_CONTAINER_RUNNING and data.get("uptime")
+            else None
         ),
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,

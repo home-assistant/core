@@ -40,6 +40,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.humidifier import ATTR_HUMIDITY
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SceneService
 from homeassistant.components.shelly.climate import (
     PRESET_FROST_PROTECTION,
     ShellyClimateExtraStoredData,
@@ -54,6 +55,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
@@ -65,6 +67,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
+from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -1121,6 +1124,75 @@ async def test_blu_trv_climate_set_temperature(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_TEMPERATURE] == 28
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.HEAT}),
+        (SERVICE_TURN_ON, {}),
+    ],
+)
+async def test_blu_trv_climate_heat_mode(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Accept the fixed heat mode without sending a device command."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    mock_blu_trv.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "climate.trv_name", **data},
+        blocking=True,
+    )
+
+    assert not mock_blu_trv.mock_calls
+    assert (state := hass.states.get("climate.trv_name"))
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 17.1
+
+
+@pytest.mark.parametrize("hvac_mode", [HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO])
+async def test_blu_trv_climate_unsupported_mode(
+    hass: HomeAssistant, mock_blu_trv: Mock, hvac_mode: HVACMode
+) -> None:
+    """Reject modes the thermostat does not support."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    mock_blu_trv.reset_mock()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.trv_name", ATTR_HVAC_MODE: hvac_mode},
+            blocking=True,
+        )
+
+    assert not mock_blu_trv.mock_calls
+
+
+async def test_blu_trv_climate_scene(hass: HomeAssistant, mock_blu_trv: Mock) -> None:
+    """Restore a scene's temperature after accepting its heat mode."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    assert await async_setup_component(hass, SCENE_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SCENE_DOMAIN,
+        SceneService.APPLY,
+        {
+            "entities": {
+                "climate.trv_name": {"state": HVACMode.HEAT, "temperature": 19.5}
+            }
+        },
+        blocking=True,
+    )
+
+    mock_blu_trv.blu_trv_set_target_temperature.assert_awaited_once_with(200, 19.5)
 
 
 async def test_blu_trv_climate_disabled(

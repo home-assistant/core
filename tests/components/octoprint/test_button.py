@@ -9,7 +9,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.octoprint import OctoprintDataUpdateCoordinator
 from homeassistant.components.octoprint.button import InvalidPrinterState
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -34,7 +34,7 @@ async def test_pause_job(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_pause_job",
+                TargetKey.ENTITY_ID: "button.octoprint_pause_job",
             },
             blocking=True,
         )
@@ -50,7 +50,7 @@ async def test_pause_job(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_pause_job",
+                TargetKey.ENTITY_ID: "button.octoprint_pause_job",
             },
             blocking=True,
         )
@@ -70,7 +70,7 @@ async def test_pause_job(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
                 {
-                    CommonServiceArgument.ENTITY_ID: "button.octoprint_pause_job",
+                    TargetKey.ENTITY_ID: "button.octoprint_pause_job",
                 },
                 blocking=True,
             )
@@ -91,7 +91,7 @@ async def test_resume_job(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_resume_job",
+                TargetKey.ENTITY_ID: "button.octoprint_resume_job",
             },
             blocking=True,
         )
@@ -107,7 +107,7 @@ async def test_resume_job(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_resume_job",
+                TargetKey.ENTITY_ID: "button.octoprint_resume_job",
             },
             blocking=True,
         )
@@ -127,7 +127,7 @@ async def test_resume_job(
                 BUTTON_DOMAIN,
                 ButtonService.PRESS,
                 {
-                    CommonServiceArgument.ENTITY_ID: "button.octoprint_resume_job",
+                    TargetKey.ENTITY_ID: "button.octoprint_resume_job",
                 },
                 blocking=True,
             )
@@ -146,7 +146,7 @@ async def test_stop_job(hass: HomeAssistant, init_integration: MockConfigEntry) 
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_stop_job",
+                TargetKey.ENTITY_ID: "button.octoprint_stop_job",
             },
             blocking=True,
         )
@@ -162,7 +162,7 @@ async def test_stop_job(hass: HomeAssistant, init_integration: MockConfigEntry) 
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_stop_job",
+                TargetKey.ENTITY_ID: "button.octoprint_stop_job",
             },
             blocking=True,
         )
@@ -181,7 +181,7 @@ async def test_stop_job(hass: HomeAssistant, init_integration: MockConfigEntry) 
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: "button.octoprint_stop_job",
+                TargetKey.ENTITY_ID: "button.octoprint_stop_job",
             },
             blocking=True,
         )
@@ -202,7 +202,7 @@ async def test_shutdown_system(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -227,7 +227,7 @@ async def test_reboot_system(hass: HomeAssistant) -> None:
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
@@ -253,7 +253,7 @@ async def test_restart_octoprint(hass: HomeAssistant) -> None:
             BUTTON_DOMAIN,
             ButtonService.PRESS,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
             },
             blocking=True,
         )
