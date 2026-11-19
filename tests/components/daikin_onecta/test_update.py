@@ -242,13 +242,13 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
 
 
-async def test_firmware_pending_install_clears_after_failed_refresh(
+async def test_firmware_pending_install_survives_failed_refresh(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not leave an optimistic install pending when polling fails."""
+    """Keep an install pending through a failed poll until confirmation."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
     coordinator = config_entry.runtime_data
     entity_id = "update.living_room_firmware_update"
@@ -269,7 +269,8 @@ async def test_firmware_pending_install_clears_after_failed_refresh(
     )
     await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-    assert entity._pending_install is None
+    assert entity._pending_install is not None
+    assert entity.in_progress
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"

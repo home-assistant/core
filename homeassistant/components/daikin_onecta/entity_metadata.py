@@ -27,7 +27,7 @@ class DaikinEntityMetadata:
     """Typed metadata used to build platform-specific entity descriptions."""
 
     key: str
-    device_class: Any
+    device_class: SensorDeviceClass | BinarySensorDeviceClass | UpdateDeviceClass | None
     state_class: SensorStateClass | None
     native_unit_of_measurement: str | None
     entity_registry_enabled_default: bool

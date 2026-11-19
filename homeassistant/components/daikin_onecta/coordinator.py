@@ -253,6 +253,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         remaining = self._polling_backoff_until - dt_util.utcnow()
         if remaining <= timedelta(0):
             self._polling_backoff_until = None
+            _LOGGER.info("Daikin polling rate-limit backoff ended")
             return None
         return timedelta(seconds=ceil(remaining.total_seconds()))
 
@@ -337,12 +338,18 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Retain Daikin's Retry-After deadline for every later refresh."""
         if retry_after is None or retry_after <= 0:
             return
+        was_active = self._polling_backoff_remaining() is not None
         retry_at = dt_util.utcnow() + timedelta(seconds=retry_after)
         if (
             self._polling_backoff_until is None
             or retry_at > self._polling_backoff_until
         ):
             self._polling_backoff_until = retry_at
+            if not was_active:
+                _LOGGER.info(
+                    "Daikin rate-limited cloud requests; polling paused for %s seconds",
+                    ceil(retry_after),
+                )
 
     async def _async_post_write_refresh(self, _now: datetime) -> None:
         """Refresh after the successful write cooldown expires."""

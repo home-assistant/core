@@ -150,7 +150,6 @@ def _create_climate_entities(
 class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     """Representation of one Daikin temperature target in a climate zone."""
 
-    _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     # ``setpoint`` is a Daikin target type under

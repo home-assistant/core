@@ -389,8 +389,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_high_scan_interval(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """High scan interval should apply during high-frequency window."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0, 0)
 
@@ -400,8 +402,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_low_scan_interval(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Low scan interval should apply outside transition windows."""
         mock_now.return_value = datetime(2023, 1, 1, 23, 0, 0)
 
@@ -524,8 +528,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     async def test_cloud_response_updates_polling_interval_from_daily_limit(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Apply Daikin's reported daily limit after a cloud refresh."""
         mock_now.return_value = datetime(2023, 1, 1, 10, 0)
         coordinator._last_patch_call = None
@@ -556,19 +562,21 @@ class TestOnectaDataUpdateCoordinator:
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_is_capped_at_window_boundary(
         self,
-        mock_now,
+        mock_now: MagicMock,
         coordinator: OnectaDataUpdateCoordinator,
-        now,
-        expected,
-    ):
+        now: datetime,
+        expected: timedelta,
+    ) -> None:
         """Use at least the high-frequency interval near a window boundary."""
         mock_now.return_value = now
         assert coordinator._determine_update_interval() == expected
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_uses_utc_delay_across_dst_start(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Use the next boundary's UTC offset when daylight saving time starts."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 3, 28, 23, 30, tzinfo=amsterdam)
@@ -583,8 +591,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_uses_clock_transition_for_nonexistent_boundary(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Poll at the DST jump when it begins the high-frequency window."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 3, 29, 1, 59, tzinfo=amsterdam)
@@ -599,8 +609,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_preserves_dst_fold_at_window_boundary(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Use the second occurrence of a boundary during daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 10, 25, 2, 15, tzinfo=amsterdam, fold=1)
@@ -615,8 +627,10 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     def test_scan_interval_uses_repeated_dst_boundary_before_rollback(
-        self, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """Use today's repeated boundary before daylight saving rollback."""
         amsterdam = ZoneInfo("Europe/Amsterdam")
         mock_now.return_value = datetime(2026, 10, 25, 2, 35, tzinfo=amsterdam)
@@ -632,8 +646,11 @@ class TestOnectaDataUpdateCoordinator:
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.now")
     @patch("homeassistant.components.daikin_onecta.coordinator.random")
     def test_transition_period_randomization(
-        self, mock_random, mock_now, coordinator: OnectaDataUpdateCoordinator
-    ):
+        self,
+        mock_random: MagicMock,
+        mock_now: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+    ) -> None:
         """During transition, randomize within the calculated poll intervals."""
         mock_now.return_value = datetime(2023, 1, 1, 22, 5, 0)
         mock_random.randint.return_value = 594
@@ -681,8 +698,29 @@ class TestOnectaDataUpdateCoordinator:
         )
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+    def test_polling_backoff_logs_start_and_end(
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Log once when the polling backoff starts and ends."""
+        caplog.set_level(logging.INFO)
+        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+        mock_utcnow.return_value = now
+
+        coordinator._set_polling_backoff(60)
+        mock_utcnow.return_value = now + timedelta(seconds=60)
+        assert coordinator._polling_backoff_remaining() is None
+
+        assert caplog.text.count("Daikin rate-limited cloud requests") == 1
+        assert caplog.text.count("Daikin polling rate-limit backoff ended") == 1
+
+    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     def test_polling_backoff_remaining_rounds_up_fractional_seconds(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Round up remaining backoff so scheduled refreshes aren't early."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
@@ -944,7 +982,9 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_successful_write_clears_polling_backoff(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Allow commands through during polling backoff and clear it on success."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
@@ -1107,7 +1147,9 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_recent_write_skips_cloud_polling(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Use the configured cooldown before polling after a recent write."""
         mock_utcnow.return_value = datetime(2023, 1, 1, 12, 0)
@@ -1120,7 +1162,9 @@ class TestOnectaDataUpdateCoordinator:
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_post_write_cooldown_uses_utc_across_dst_rollback(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+        self,
+        mock_utcnow: MagicMock,
+        coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Do not extend cooldown when local time moves backward."""
         # In Amsterdam, local time moves from 02:59 CEST back to 02:01 CET here.

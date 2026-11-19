@@ -145,18 +145,23 @@ def test_water_heater_uses_daikin_temperature_unit(
     assert entity.native_temperature_unit == expected_unit
 
 
-def test_water_heater_uses_standard_target_temperature_step() -> None:
-    """Expose the Daikin setpoint increment through the standard capability."""
+@pytest.mark.parametrize(
+    ("step_value", "expected_step"),
+    [(None, 1.0), (0.5, 0.5)],
+)
+def test_water_heater_uses_standard_target_temperature_step(
+    step_value: float | None, expected_step: float
+) -> None:
+    """Expose the Daikin increment or the whole-degree fallback."""
     device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
     point = device.device.management_points_by_type("domesticHotWaterTank")[0]
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.step_value = step_value
 
     entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
-    assert entity.target_temperature_step == float(
-        point.domestic_hot_water.temperature.step_value
-    )
+    assert entity.target_temperature_step == expected_step
     assert entity.extra_state_attributes is None
 
 

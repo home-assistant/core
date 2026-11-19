@@ -115,7 +115,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_target_temperature_step = (
             float(dht.step_value)
             if dht is not None and dht.step_value is not None
-            else None
+            else 1.0
         )
         self._attr_operation_list = self.get_operation_list()
         self._attr_current_operation = self.get_current_operation()

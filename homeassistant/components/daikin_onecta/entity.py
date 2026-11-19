@@ -273,15 +273,6 @@ class DaikinManagementPointEntity(DaikinEntity):
 
     _embedded_id: str
 
-    def __init__(
-        self,
-        device: DaikinOnectaDevice,
-        coordinator: OnectaDataUpdateCoordinator,
-        embedded_id: str,
-    ) -> None:
-        """Initialize a management-point entity."""
-        super().__init__(device, coordinator, embedded_id)
-
     @property
     def _management_point(self) -> ManagementPoint | None:
         """Return the current source management point."""

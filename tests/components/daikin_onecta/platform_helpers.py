@@ -1,7 +1,9 @@
 """Helpers shared by platform tests."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
+from daikin_onecta.client import OnectaClient
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -28,7 +30,7 @@ def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
     coordinator.client.put_management_point = AsyncMock()
     coordinator.client.install_firmware = AsyncMock()
 
-    async def execute(command) -> bool:
+    async def execute(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         await command(coordinator.client)
         return True
 
