@@ -250,6 +250,27 @@ print("checked", len(states))
     assert len(state_tool.calls) == 10
 
 
+async def test_modules_without_import(api_instance: llm.APIInstance) -> None:
+    """Test the code can use the listed modules without an import."""
+    result = await _execute(
+        api_instance,
+        """
+states = await asyncio.gather(
+    test__get_state(entity_id="light.room_0"), test__get_state(entity_id="light.room_1")
+)
+[
+    [state["state"] for state in states],
+    json.dumps({"a": 1}),
+    math.floor(2.5),
+    str(datetime.date(2026, 1, 2)),
+    re.sub("a", "b", "aa"),
+]
+""",
+    )
+
+    assert result.data["result"] == [["on", "off"], '{"a": 1}', 2, "2026-01-02", "bb"]
+
+
 async def test_tool_error_is_returned_to_code(api_instance: llm.APIInstance) -> None:
     """Test a failing tool gives the code an error dict."""
     result = await _execute(

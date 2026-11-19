@@ -49,6 +49,8 @@ MAX_JSON_INT = 2**64 - 1
 # Types whose string has a size close to the size of the value.
 _SCALAR_TYPES = (bool, int, float, type, date, time, timedelta)
 SEARCH_LIMIT = 10
+# Modules that the code can use without an import.
+IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
 # Dicts in a parameter type are written with their keys up to this depth.
 MAX_TYPE_DEPTH = 3
 # Sandbox processes of one chat session, for execute calls that run in parallel.
@@ -64,10 +66,13 @@ PROMPT = (
     "`result = await name(param=value)`. The result is a dict.\n"
     '- A parameter type like `{"key": str, "other"?: int}` is a dict with '
     "those keys. A key with `?` is optional.\n"
+    "- The modules `asyncio`, `datetime`, `json`, `math` and `re` are already "
+    "imported. Do not import them.\n"
     "- Run independent calls in parallel with `asyncio.gather`.\n"
     "- `execute` returns the value of the last expression and the printed "
     "output. Return only the data that you need.\n"
-    "- The code cannot import other modules or access files or the network.\n"
+    "- The code cannot access files or the network, and most other modules "
+    "do not exist.\n"
 )
 
 _JSON_TYPES = {
@@ -87,13 +92,12 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
     names: set[str] = set()
     for tool in api_instance.tools:
         base = re.sub(r"\W", "_", tool.name)
-        # A name of a builtin, or of the module that the prompt tells the model
-        # to import, would hide the function.
+        # A name of a builtin or of an imported module would hide the function.
         if (
             not base.isidentifier()
             or keyword.iskeyword(base)
             or hasattr(builtins, base)
-            or base == "asyncio"
+            or base in IMPORTED_MODULES
         ):
             base = f"tool_{base}"
         # Different tool names can give the same Python name.
@@ -354,6 +358,7 @@ class ExecuteTool(Tool):
                 asyncio.timeout(TIMEOUT),
                 pool.checkout(limits=LIMITS) as session,
             ):
+                await session.feed_run(f"import {', '.join(IMPORTED_MODULES)}")
                 result = await session.feed_run(
                     code,
                     external_lookup={
