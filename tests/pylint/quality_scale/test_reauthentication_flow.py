@@ -4,10 +4,10 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.quality_scale.reauthentication_flow import (
+from pylint_homeassistant.checkers.quality_scale.reauthentication_flow import (
     ReauthenticationFlowChecker,
 )
-from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cache
+from pylint_homeassistant.helpers.quality_scale import clear_quality_scale_cache
 import pytest
 import yaml
 

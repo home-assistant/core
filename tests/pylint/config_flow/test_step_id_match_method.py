@@ -5,7 +5,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint_home_assistant.checkers.config_flow.step_id_match_method import CALLERS
+from pylint_homeassistant.checkers.config_flow.step_id_match_method import CALLERS
 import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker

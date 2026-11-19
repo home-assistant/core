@@ -137,7 +137,7 @@ components: &components
 tests: &tests
   - codecov.yaml
   - packages/hassfest/**
-  - packages/pylint-home-assistant/**
+  - packages/pylint-homeassistant/**
   - packages/pytest-homeassistant/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt

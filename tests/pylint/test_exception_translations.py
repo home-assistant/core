@@ -5,11 +5,11 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.exception_translations import (
+from pylint_homeassistant.checkers.exception_translations import (
     ExceptionTranslationsChecker,
 )
-from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cache
-from pylint_home_assistant.helpers.translations import clear_translations_cache
+from pylint_homeassistant.helpers.quality_scale import clear_quality_scale_cache
+from pylint_homeassistant.helpers.translations import clear_translations_cache
 import pytest
 import yaml
 

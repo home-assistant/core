@@ -6,7 +6,7 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.light_color_mode import HassLightColorModeChecker
+from pylint_homeassistant.checkers.light_color_mode import HassLightColorModeChecker
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.coordinator_entity_available import (
+from pylint_homeassistant.checkers.coordinator_entity_available import (
     CoordinatorEntityAvailableChecker,
 )
 import pytest

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.actions.swallowed_exceptions import (
+from pylint_homeassistant.checkers.actions.swallowed_exceptions import (
     SwallowedActionExceptionsChecker,
 )
 import pytest

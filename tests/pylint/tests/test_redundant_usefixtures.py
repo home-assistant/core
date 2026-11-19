@@ -4,7 +4,7 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.tests.redundant_usefixtures import (
+from pylint_homeassistant.checkers.tests.redundant_usefixtures import (
     RedundantUsefixtures,
 )
 import pytest

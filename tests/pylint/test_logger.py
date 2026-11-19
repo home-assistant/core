@@ -5,7 +5,7 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import UNDEFINED
 from pylint.testutils import MessageTest
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint_home_assistant.checkers.logger import HassLoggerFormatChecker
+from pylint_homeassistant.checkers.logger import HassLoggerFormatChecker
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

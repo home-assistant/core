@@ -506,8 +506,15 @@ jobs:
           # when build locally for testing!
           pip install build
           python -m build
-          python3 -m packages.package_release
+          python3 -m packages.package_release packages/pytest-homeassistant
           python -m build packages/pytest-homeassistant --outdir dist
+
+      - name: Build pylint-homeassistant package
+        if: needs.init.outputs.channel == 'stable' && endsWith(needs.init.outputs.version, '.0')
+        shell: bash
+        run: |
+          python3 -m packages.package_release packages/pylint-homeassistant
+          python -m build packages/pylint-homeassistant --outdir dist
 
       - name: Upload package to PyPI
         uses: pypa/gh-action-pypi-publish@v1.14.3

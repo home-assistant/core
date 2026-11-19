@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.flow_start_helpers import FlowStartHelpersChecker
+from pylint_homeassistant.checkers.flow_start_helpers import FlowStartHelpersChecker
 import pytest
 
 from . import assert_no_messages, walk_checker

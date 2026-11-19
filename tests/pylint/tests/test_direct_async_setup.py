@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.tests.direct_async_setup import DirectAsyncSetup
+from pylint_homeassistant.checkers.tests.direct_async_setup import DirectAsyncSetup
 import pytest
 
 from tests.pylint import assert_no_messages, walk_checker

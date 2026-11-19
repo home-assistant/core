@@ -9,10 +9,10 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 import pylint.testutils
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint_home_assistant.checkers.type_hints.const import _INHERITANCE_MATCH
-from pylint_home_assistant.checkers.type_hints.validators import _TYPE_HINT_MATCHERS
-from pylint_home_assistant.const import ENTITY_COMPONENTS
-from pylint_home_assistant.helpers.module_info import get_module_platform
+from pylint_homeassistant.checkers.type_hints.const import _INHERITANCE_MATCH
+from pylint_homeassistant.checkers.type_hints.validators import _TYPE_HINT_MATCHERS
+from pylint_homeassistant.const import ENTITY_COMPONENTS
+from pylint_homeassistant.helpers.module_info import get_module_platform
 import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages
@@ -116,7 +116,7 @@ def test_ignore_no_annotations(type_hint_checker: BaseChecker, code: str) -> Non
     type_hint_checker.visit_module(func_node.parent)
 
     with patch(
-        "pylint_home_assistant.checkers.type_hints.is_valid_type", return_value=True
+        "pylint_homeassistant.checkers.type_hints.is_valid_type", return_value=True
     ) as mock_is_valid_type:
         type_hint_checker.visit_asyncfunctiondef(func_node)
         mock_is_valid_type.assert_not_called()
@@ -151,7 +151,7 @@ def test_bypass_ignore_no_annotations(
     type_hint_checker.visit_module(func_node.parent)
 
     with patch(
-        "pylint_home_assistant.checkers.type_hints.is_valid_type", return_value=True
+        "pylint_homeassistant.checkers.type_hints.is_valid_type", return_value=True
     ) as mock_is_valid_type:
         type_hint_checker.visit_asyncfunctiondef(func_node)
         mock_is_valid_type.assert_called()
@@ -191,7 +191,7 @@ def test_dont_ignore_partial_annotations(
     type_hint_checker.visit_module(func_node.parent)
 
     with patch(
-        "pylint_home_assistant.checkers.type_hints.is_valid_type", return_value=True
+        "pylint_homeassistant.checkers.type_hints.is_valid_type", return_value=True
     ) as mock_is_valid_type:
         type_hint_checker.visit_asyncfunctiondef(func_node)
         mock_is_valid_type.assert_called()

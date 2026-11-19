@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.init_first import HassInitFirstChecker
+from pylint_homeassistant.checkers.init_first import HassInitFirstChecker
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

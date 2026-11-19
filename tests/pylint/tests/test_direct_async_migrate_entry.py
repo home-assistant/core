@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.tests.direct_async_migrate_entry import (
+from pylint_homeassistant.checkers.tests.direct_async_migrate_entry import (
     DirectAsyncMigrateEntry,
 )
 import pytest

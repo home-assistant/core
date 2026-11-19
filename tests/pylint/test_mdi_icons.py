@@ -5,8 +5,8 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.mdi_icons import MdiIconsChecker
-from pylint_home_assistant.helpers.icons import clear_icons_cache
+from pylint_homeassistant.checkers.mdi_icons import MdiIconsChecker
+from pylint_homeassistant.helpers.icons import clear_icons_cache
 import pytest
 
 from . import assert_no_messages, walk_checker

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.actions.service_registration import (
+from pylint_homeassistant.checkers.actions.service_registration import (
     ServiceRegistrationChecker,
 )
 import pytest

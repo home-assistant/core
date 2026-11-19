@@ -446,7 +446,7 @@ jobs:
           python -m script.gen_requirements_all validate
 
   build-pylint-package:
-    name: Build pylint-home-assistant package
+    name: Build pylint-homeassistant package
     runs-on: ubuntu-26.04
     permissions:
       contents: read
@@ -467,7 +467,7 @@ jobs:
           uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ needs.info.outputs.default_python }}
       - name: Build source distribution and wheel
-        run: uv build packages/pylint-home-assistant --out-dir dist
+        run: uv build packages/pylint-homeassistant --out-dir dist
       - name: Install wheel in a clean environment
         run: |
           uv venv "${RUNNER_TEMP}/package-venv"
@@ -476,7 +476,7 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           "${RUNNER_TEMP}/package-venv/bin/pylint" \
-            --rcfile=/dev/null --load-plugins=pylint_home_assistant --list-msgs > /dev/null
+            --rcfile=/dev/null --load-plugins=pylint_homeassistant --list-msgs > /dev/null
 
   gen-recorder-db-versions:
     name: Check recorder database versions
@@ -720,7 +720,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy --num-workers=4 homeassistant packages/pylint-home-assistant
+          mypy --num-workers=4 homeassistant packages/pylint-homeassistant
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash

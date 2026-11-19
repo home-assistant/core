@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.runtime_data_typed_entry import (
+from pylint_homeassistant.checkers.runtime_data_typed_entry import (
     RuntimeDataTypedEntryChecker,
 )
 import pytest

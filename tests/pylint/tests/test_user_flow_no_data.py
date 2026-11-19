@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.tests.user_flow_no_data import UserFlowNoDataChecker
+from pylint_homeassistant.checkers.tests.user_flow_no_data import UserFlowNoDataChecker
 import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
