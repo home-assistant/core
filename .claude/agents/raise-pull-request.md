@@ -116,7 +116,7 @@ Write a release-note-style PR title summarizing the change. The title becomes th
 | | `Add Nettleie optimization option` |
 | Code quality | `Add exception translations to Teslemetry` |
 | | `Simplify entity init in Proxmox` |
-| Tests | `Improve test coverage of Tesla Fleet` |
+| | `Improve test coverage of Tesla Fleet` |
 | | `Refactor adguard tests to use proper fixtures for mocking` |
 | Developer tooling | `Add pylint checker for flow calls inside a try block` |
 | | `Use all CPUs for full pylint runs in CI` |
@@ -150,8 +150,7 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 | New feature | Adds capability to existing integration |
 | Deprecation | Adds deprecation warnings for future breaking change |
 | Breaking change | Breaks or removes something users rely on, including the removal at the end of an integration deprecation (also a YAML import). Removing a deprecated core API that nothing in core uses anymore is Code quality. See [When it is backward-incompatible](https://contributors.home-assistant.io/releases/guides/backward-incompatible-changes/#when-it-is-backward-incompatible) |
-| Code quality | Only refactoring, typing, performance or similar improvements to existing code, no functional change |
-| Tests | Only changes under tests/ |
+| Code quality | Only refactoring, typing, performance or similar improvements to existing code, or test additions, no functional change |
 | Developer tooling | Only CI, GitHub workflows, linters and checkers (pylint plugins, hassfest), scripts, AI instructions or code owners |
 
 **Track results:**
