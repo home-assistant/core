@@ -18,8 +18,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ENERGY_AGGREGATE_PERIODS,
-    SENSOR_PERIOD_UNIQUE_IDS,
-    SENSORY_DATA_SENSOR_TYPES,
+    SENSOR_PERIOD_DAILY,
+    SENSOR_PERIOD_MONTHLY,
+    SENSOR_PERIOD_WEEKLY,
+    SENSOR_PERIOD_YEARLY,
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
@@ -40,6 +42,22 @@ from .entity_metadata import ENTITY_METADATA, SENSOR_KEYS, entity_description_kw
 from .utils import enum_value_to_state
 
 PARALLEL_UPDATES = 1
+SENSORY_DATA_SENSOR_TYPES = (
+    "roomTemperature",
+    "outdoorTemperature",
+    "leavingWaterTemperature",
+    "tankTemperature",
+    "roomHumidity",
+    "pm1Concentration",
+    "pm25Concentration",
+    "pm10Concentration",
+)
+SENSOR_PERIOD_UNIQUE_IDS = {
+    SENSOR_PERIOD_DAILY: "daily",
+    SENSOR_PERIOD_WEEKLY: "weekly",
+    SENSOR_PERIOD_MONTHLY: "monthly",
+    SENSOR_PERIOD_YEARLY: "yearly",
+}
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     metadata.key: SensorEntityDescription(
@@ -416,7 +434,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else point.scalar_characteristic(self._value)
+            else point.characteristic(self._value)
         )
         return point, characteristic
 

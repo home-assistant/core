@@ -10,7 +10,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SCHEDULE_DISABLED
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import (
@@ -26,6 +25,7 @@ SELECT_DESCRIPTIONS = {
 }
 
 PARALLEL_UPDATES = 1
+SCHEDULE_DISABLED = "home_assistant_schedule_is_disabled"
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
@@ -177,8 +177,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
                 schedule_id,
                 enabled=enabled,
             )
-        self.update_state()
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()
 
     def get_options(self) -> list[str]:
         """Return readable configured schedules."""

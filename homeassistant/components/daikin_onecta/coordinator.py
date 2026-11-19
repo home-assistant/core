@@ -63,6 +63,7 @@ type DaikinOnectaConfigEntry = ConfigEntry[OnectaDataUpdateCoordinator]
 
 def gateway_site_membership(sites: list[Site], gateway_device_id: str) -> bool | None:
     """Return membership without assuming an incomplete site response is empty."""
+    # An empty response cannot confirm absence; users can remove the config entry.
     if not sites:
         return None
     membership = [site.has_gateway_device(gateway_device_id) for site in sites]
@@ -478,6 +479,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     translation_key="connection_failed",
                 ) from err
             except OnectaAuthenticationError as err:
+                # A listing 401 or 403 invalidates account access; a command 403
+                # only denies that characteristic and does not justify reauth.
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",

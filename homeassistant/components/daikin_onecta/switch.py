@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .discovery import scalar_characteristics_for_platform, scalar_platform
+from .discovery import scalar_characteristics_for_platform
 from .entity import (
     DaikinManagementPointEntity,
     EntityIdChecker,
@@ -129,18 +129,8 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     def available(self) -> bool:
         """Return whether the characteristic still exposes writable on/off values."""
-        if not super().available:
-            return False
-        point = self._management_point
-        if point is None:
-            return False
-        characteristic = point.characteristic(self._value)
-        return bool(
-            characteristic is not None
-            and scalar_platform(
-                self._value, characteristic, point.management_point_type
-            )
-            is Platform.SWITCH
+        return super().available and self._characteristic_exposed_on(
+            self._value, Platform.SWITCH
         )
 
     @override
@@ -174,5 +164,4 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         )
         if characteristic is not None:
             characteristic.value = state
-        self.update_state()
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()

@@ -2,12 +2,16 @@
 
 from typing import Any
 
+from daikin_onecta.client import ONECTA_API_URL
+
 from homeassistant.components import system_health
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DAIKIN_API_URL, DOMAIN, OAUTH2_AUTHORIZE
+from .const import DOMAIN, OAUTH2_AUTHORIZE
 from .coordinator import DaikinOnectaConfigEntry
+
+DAIKIN_API_URL = ONECTA_API_URL
 
 
 def _entry_label(config_entry: DaikinOnectaConfigEntry) -> str:

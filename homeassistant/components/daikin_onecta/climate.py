@@ -347,6 +347,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
 
         if ClimateServiceArgument.TEMPERATURE in kwargs:
+            # Validate controllability before checking whether rounding is a no-op.
             target_temperature = float(kwargs[ClimateServiceArgument.TEMPERATURE])
             operationmode = self._operation_mode()
             if operationmode is None:
@@ -377,7 +378,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     setpointdict = self._get_setpoint(omv)
                     if setpointdict is not None:
                         setpointdict.value = value
-                        self.coordinator.async_update_listeners()
+                        self._publish_write_update()
                 else:
                     self._raise_command_failed("set_temperature_failed")
 
@@ -474,8 +475,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 cc.on_off_mode.value = on_off_mode
                 # Publish the confirmed power change before a subsequent
                 # operation-mode write, which may be rejected by the cloud.
-                self.update_state()
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()
 
         # Only set the advertised operationMode when it has changed.
         if (
@@ -493,8 +493,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 cc.operation_mode.value = operation_mode
             # When switching HVAC mode it could be that we can set min/max/target/etc
             # which we couldn't set with a previous HVAC mode.
-            self.update_state()
-            self.coordinator.async_update_listeners()
+            self._publish_write_update()
 
     def _get_fan_mode(self) -> str | None:
         """Return the active fan mode."""
@@ -596,7 +595,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 fan_speed.current_mode.value = FANMODE_FIXED
                 # The fan is already in fixed mode even if the following speed
                 # write fails, so publish this confirmed intermediate state.
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()
             fixed = fan_speed.modes.get(FANMODE_FIXED) if fan_speed.modes else None
             new_fixed_mode = int(fan_mode)
             if fixed is not None and fixed.value != new_fixed_mode:
@@ -627,7 +626,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             fan_speed = fan_operation.fan_speed
             fan_speed.current_mode.value = fan_mode
 
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()
 
     def _get_swing_mode_for_direction(
         self, direction: Literal["vertical", "horizontal"]
@@ -735,7 +734,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             res = await self._async_set_swing("vertical", swing_mode)
 
             if res is True:
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
 
@@ -749,7 +748,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             res = await self._async_set_swing("horizontal", swing_horizontal_mode)
 
             if res is True:
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
 
@@ -823,14 +822,12 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         if (current_preset := self.preset_mode) not in (None, PRESET_NONE):
             if not await self._async_disable_preset_mode(current_preset):
                 self._raise_command_failed("set_preset_mode_failed")
-            self.update_state()
-            self.coordinator.async_update_listeners()
+            self._publish_write_update()
 
         if preset_mode != PRESET_NONE:
             if not await self._async_enable_preset_mode(preset_mode):
                 self._raise_command_failed("set_preset_mode_failed")
-            self.update_state()
-            self.coordinator.async_update_listeners()
+            self._publish_write_update()
 
     def _get_preset_modes(self) -> list[str]:
         """Return supported preset modes."""
@@ -867,7 +864,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 if cc is None or cc.on_off_mode is None:
                     return
                 cc.on_off_mode.value = "on"
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()
 
     @override
     async def async_turn_off(self) -> None:
@@ -889,4 +886,4 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 if cc is None or cc.on_off_mode is None:
                     return
                 cc.on_off_mode.value = "off"
-                self.coordinator.async_update_listeners()
+                self._publish_write_update()

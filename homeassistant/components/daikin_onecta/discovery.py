@@ -6,13 +6,18 @@ from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoin
 
 from homeassistant.const import Platform
 
-from .const import (
-    CONTROL_MANAGEMENT_POINT_TYPES,
-    ENERGY_AGGREGATE_PERIODS,
-    SENSOR_PERIODS,
-)
+from .const import ENERGY_AGGREGATE_PERIODS, SENSOR_PERIODS
 from .entity_metadata import BINARY_SENSOR_KEYS, SENSOR_KEYS, SWITCH_KEYS
 from .utils import is_read_only_on_off_value
+
+CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
+    {
+        "climateControl",
+        "climateControlMainZone",
+        "domesticHotWaterFlowThrough",
+        "domesticHotWaterTank",
+    }
+)
 
 
 def scalar_platform(

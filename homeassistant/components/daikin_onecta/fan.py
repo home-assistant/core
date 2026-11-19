@@ -275,8 +275,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             purification = self._air_purification()
             if purification is not None and purification.power is not None:
                 purification.power.value = "on"
-            self.update_state()
-            self.coordinator.async_update_listeners()
+            self._publish_write_update()
         if native_preset is not None:
             await self._async_set_mode(native_preset)
         if percentage is not None:
@@ -298,8 +297,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         purification = self._air_purification()
         if purification is not None and purification.power is not None:
             purification.power.value = "off"
-        self.update_state()
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -368,8 +366,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         purification = self._air_purification()
         if purification is not None and purification.mode is not None:
             purification.mode.value = mode
-        self.update_state()
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()
 
     @override
     async def async_set_percentage(self, percentage: int) -> None:
@@ -406,5 +403,4 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             and (fixed := operation.fan_speed.modes.get(FANMODE_FIXED)) is not None
         ):
             fixed.value = speed
-        self.update_state()
-        self.coordinator.async_update_listeners()
+        self._publish_write_update()

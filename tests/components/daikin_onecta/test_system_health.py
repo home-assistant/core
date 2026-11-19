@@ -4,8 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.const import DAIKIN_API_URL, DOMAIN
+from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.system_health import (
+    DAIKIN_API_URL,
     _entry_info,
     async_register,
     system_health_info,

@@ -19,11 +19,23 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
+from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
+from .discovery import scalar_platform
 
 EntityIdChecker = Callable[[Platform, str], bool]
+
+MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
+    "climateControl": "climate_zone",
+    "climateControlMainZone": "climate_zone",
+    "domesticHotWaterFlowThrough": "domestic_hot_water_flow_through",
+    "domesticHotWaterTank": "domestic_hot_water_tank",
+    "indoorUnit": "indoor_unit",
+    "indoorUnitHydro": "indoor_hydro_unit",
+    "outdoorUnit": "outdoor_unit",
+    "userInterface": "user_interface",
+}
 
 
 class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
@@ -245,6 +257,12 @@ class DaikinEntity(DaikinOnectaEntity):
         if not await self.coordinator.async_execute_command(command):
             self._raise_command_failed(translation_key)
 
+    @callback
+    def _publish_write_update(self) -> None:
+        """Publish the locally updated model to every entity for this device."""
+        self.update_state()
+        self.coordinator.async_update_listeners()
+
 
 class DaikinManagementPointEntity(DaikinEntity):
     """Base entity backed by a Daikin management point."""
@@ -264,6 +282,17 @@ class DaikinManagementPointEntity(DaikinEntity):
     def _management_point(self) -> ManagementPoint | None:
         """Return the current source management point."""
         return self._device.management_point(self._embedded_id)
+
+    def _characteristic_exposed_on(self, name: str, platform: Platform) -> bool:
+        """Return whether a scalar characteristic is still exposed on a platform."""
+        point = self._management_point
+        characteristic = point.characteristic(name) if point is not None else None
+        return (
+            point is not None
+            and characteristic is not None
+            and scalar_platform(name, characteristic, point.management_point_type)
+            is platform
+        )
 
     @property
     @override

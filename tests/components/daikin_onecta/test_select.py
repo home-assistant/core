@@ -6,7 +6,7 @@ from daikin_onecta.models import Characteristic
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.daikin_onecta.const import SCHEDULE_DISABLED
+from homeassistant.components.daikin_onecta.select import SCHEDULE_DISABLED
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,

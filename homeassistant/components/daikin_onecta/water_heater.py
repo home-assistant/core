@@ -166,11 +166,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             translation_key,
         )
 
-    def _publish_write_update(self) -> None:
-        """Publish a successful write to all entities sharing the device data."""
-        self.update_state()
-        self.coordinator.async_update_listeners()
-
     @property
     def domestic_hotwater_temperature(self) -> Setpoint | None:
         """Return the domestic hot-water temperature setpoint."""
