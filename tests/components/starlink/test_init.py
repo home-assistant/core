@@ -116,7 +116,7 @@ async def test_unimplemented_rpcs_are_not_retried_on_later_polls(
     with (
         LOCATION_DATA_UNIMPLEMENTED_PATCHER as location_mock,
         SLEEP_DATA_UNIMPLEMENTED_PATCHER as sleep_mock,
-        STATUS_DATA_SUCCESS_PATCHER as _status_mock,
+        STATUS_DATA_SUCCESS_PATCHER as status_mock,
         HISTORY_STATS_SUCCESS_PATCHER as _history_mock,
     ):
         entry.add_to_hass(hass)
@@ -126,16 +126,18 @@ async def test_unimplemented_rpcs_are_not_retried_on_later_polls(
 
         assert location_mock.call_count == 1
         assert sleep_mock.call_count == 1
+        assert status_mock.call_count == 1
 
-        freezer.tick(timedelta(seconds=5))
+        freezer.tick(timedelta(seconds=6))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        freezer.tick(timedelta(seconds=5))
+        freezer.tick(timedelta(seconds=6))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert location_mock.call_count == 1
         assert sleep_mock.call_count == 1
+        assert status_mock.call_count == 3
 
 
 async def test_sleep_entities_not_created_when_sleep_unimplemented(
@@ -260,7 +262,7 @@ async def test_device_tracker_unavailable_when_location_becomes_unsupported(
         assert _entity_state(hass, entity_id) != "unavailable"
 
         with LOCATION_DATA_UNIMPLEMENTED_PATCHER:
-            freezer.tick(timedelta(seconds=5))
+            freezer.tick(timedelta(seconds=6))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
 
@@ -322,7 +324,7 @@ async def test_switches_unavailable_when_coordinator_refresh_fails(
         assert _entity_state(hass, "switch.starlink_sleep_schedule") in ("on", "off")
 
         with STATUS_DATA_UNAVAILABLE_PATCHER:
-            freezer.tick(timedelta(seconds=5))
+            freezer.tick(timedelta(seconds=6))
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
 
