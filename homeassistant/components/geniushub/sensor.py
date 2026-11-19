@@ -43,7 +43,8 @@ async def async_setup_entry(
         [
             GeniusTemp(coordinator, z)
             for z in coordinator.client.zone_objs
-            if z.data.get(GH_ATTR_TEMPERATURE) and not z.data.get(GH_ATTR_SETPOINT)
+            if z.data.get(GH_ATTR_TEMPERATURE) is not None
+            and z.data.get(GH_ATTR_SETPOINT) is None
         ]
     )
 
@@ -152,7 +153,7 @@ class GeniusTemp(GeniusEntity, SensorEntity):
         super().__init__(coordinator)
 
         self._hub = coordinator.client
-        self._unique_id = f"{coordinator.hub_uid}_{zone.data.get(GH_TYPE)}_temperature"
+        self._unique_id = f"{coordinator.hub_uid}_zone_{zone.id}_temperature"
         self._id = zone.id
         self._temperature = zone.data.get(GH_ATTR_TEMPERATURE)
 

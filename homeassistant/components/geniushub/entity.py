@@ -12,9 +12,9 @@ from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
 from .const import (
     ATTR_MANUFACTURER,
+    DOMAIN,
     GH_DEVICE_ATTRS,
     GH_ZONE_ATTRS,
     IDENTIFIER_DEVICE,
@@ -31,6 +31,7 @@ class GeniusEntity(CoordinatorEntity):
     def __init__(self, coordinator: GeniusCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self.coordinator: GeniusCoordinator = coordinator
         self._unique_id: str | None = None
 
     @override
@@ -83,7 +84,7 @@ class GeniusDevice(GeniusEntity):
         """Entity device info."""
         via_device = _get_via_device_id(
             self.hass,
-            self.coordinator.config_entry,
+            self.coordinator.config_entry,  # type: ignore[arg-type]
             (DOMAIN, IDENTIFIER_ZONE.format(self._device.assigned_zone.id)),
         )
 
@@ -138,7 +139,9 @@ class GeniusZone(GeniusEntity):
         """Entity device info."""
 
         via_device = _get_via_device_id(
-            self.hass, self.coordinator.config_entry, (DOMAIN, self._hub.hub_uid)
+            self.hass,
+            self.coordinator.config_entry,  # type: ignore[arg-type]
+            (DOMAIN, self._hub.hub_uid),
         )
 
         return DeviceInfo(
@@ -205,7 +208,7 @@ class GeniusHeatingZone(GeniusZone):
 
 
 def _get_via_device_id(
-    hass: HomeAssistant, entry: ConfigEntry | None, identifiers
-) -> DeviceEntry | None:
+    hass: HomeAssistant, entry: ConfigEntry, identifiers
+) -> DeviceEntry:
     dev_reg = dr.async_get(hass)
-    return dev_reg.async_get_device_by_identifier(identifiers, entry.entry_id)
+    return dev_reg.async_get_device_by_identifier(identifiers, entry.entry_id)  # type: ignore[return-value]

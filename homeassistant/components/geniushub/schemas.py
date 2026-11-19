@@ -12,7 +12,7 @@ from .const import GeniusHubServiceArgument
 
 CLOUD_API_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 
@@ -21,7 +21,7 @@ LOCAL_API_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -51,7 +51,7 @@ SET_ZONE_OVERRIDE_SCHEMA: VolDictType = {
 }
 SET_ZONE_OVERRIDE_HOT_WATER_SCHEMA: VolDictType = {
     probatio.Required(GeniusHubServiceArgument.TEMPERATURE): probatio.All(
-        probatio.Coerce(float), probatio.Range(min=35, max=75)
+        probatio.Coerce(float), probatio.Range(min=30, max=75)
     ),
     probatio.Optional(GeniusHubServiceArgument.DURATION): probatio.All(
         cv.time_period,
