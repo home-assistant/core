@@ -9,7 +9,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import Platform, UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -345,6 +346,11 @@ def test_reserved_slot_name(name: str) -> None:
             id="other_accepts",
         ),
         pytest.param(
+            DeviceSlot(SwitchDeviceClass.SWITCH, required=True),
+            "cannot change what slot TestPlug.outlet accepts",
+            id="device_class_with_value_of_platform",
+        ),
+        pytest.param(
             DeviceSlot(Platform.SWITCH),
             "cannot make required slot TestPlug.outlet optional",
             id="optional",
@@ -361,6 +367,23 @@ def test_invalid_redeclaration(redeclared: DeviceSlot, message: str) -> None:
 
     with pytest.raises(TypeError, match=message):
         type("TestPowerStrip", (TestPlug,), {"outlet": redeclared})
+    assert get_device_type_class("test_power_strip") is None
+
+
+def test_redeclaration_with_device_class_of_other_platform() -> None:
+    """Test a redeclared slot cannot swap in an equal device class of another platform."""
+
+    class TestPlug(DeviceType):
+        """A plug."""
+
+        power = DeviceSlot(SensorDeviceClass.POWER)
+
+    with pytest.raises(TypeError, match="cannot change what slot TestPlug.power"):
+        type(
+            "TestPowerStrip",
+            (TestPlug,),
+            {"power": DeviceSlot(NumberDeviceClass.POWER)},
+        )
     assert get_device_type_class("test_power_strip") is None
 
 
@@ -413,6 +436,11 @@ def test_slot_reused() -> None:
             (UnitOfPower.WATT,),
             "not a device class of an entity platform",
             id="core_enum",
+        ),
+        pytest.param(
+            (SensorStateClass.MEASUREMENT,),
+            "not a device class of an entity platform",
+            id="platform_enum",
         ),
     ],
 )
@@ -537,7 +565,7 @@ def test_async_get_bound_device_type_generic(
 ) -> None:
     """Test a device without a known type is of the generic type."""
     _add_entity(entity_registry, "switch", "outlet")
-    device = device_registry.async_update_device(
+    device = device_registry._async_update_device(
         device.id,
         original_device_type=original_device_type,
         original_device_slots={"outlet": (("switch", "outlet"),)},
@@ -556,7 +584,7 @@ def test_async_get_bound_device_type_child_device(
     device: dr.DeviceEntry,
 ) -> None:
     """Test a child device is of the generic type, even below a typed device."""
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={"outlet": (("switch", "outlet"),)},
@@ -599,7 +627,7 @@ def test_async_get_bound_device_type_binding(
     ):
         _add_entity(entity_registry, domain, unique_id, platform, **kwargs)
     entity_registry.async_update_entity("sensor.user_power", device_class="power")
-    device = device_registry.async_update_device(
+    device = device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={
@@ -672,7 +700,7 @@ def test_async_get_bound_device_type_missing_required(
 ) -> None:
     """Test the required slots without an entity of a resolved device."""
     _add_entity(entity_registry, "switch", "outlet")
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots=original_device_slots,
@@ -693,7 +721,7 @@ def test_async_get_bound_device_type_config_entry_gone(
 ) -> None:
     """Test nothing resolves when the config entry of the device is gone."""
     _add_entity(entity_registry, "switch", "outlet")
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={"outlet": (("switch", "outlet"),)},
@@ -719,7 +747,7 @@ def test_async_get_bound_device_type_no_fit(
     _add_entity(entity_registry, "sensor", "energy", original_device_class="energy")
     _add_entity(entity_registry, "sensor", "power", original_device_class="power")
     entity_registry.async_update_entity("sensor.power", device_class="energy")
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={"power": (("sensor", "energy"), ("sensor", "power"))},
@@ -751,7 +779,7 @@ def _update_device_slots(
     entity_registry: er.EntityRegistry,
     device_id: str,
 ) -> None:
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device_id, original_device_slots={"power": (("sensor", "power"),)}
     )
 
@@ -894,7 +922,7 @@ def test_async_get_bound_device_type_invalidation(
     other_slots: dict[str, tuple[str, ...]],
 ) -> None:
     """Test a registry change drops the cached bound device types it affects."""
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={
@@ -950,7 +978,7 @@ def test_async_get_bound_device_type_kept(
     changes: dict[str, Any],
 ) -> None:
     """Test an entity update that cannot change the resolution keeps the cache."""
-    device_registry.async_update_device(
+    device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
         original_device_slots={"outlet": (("switch", "outlet"),)},

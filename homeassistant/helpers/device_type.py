@@ -26,6 +26,7 @@ _ENTITY_RESOLUTION_CHANGES = frozenset(
     {"device_class", "entity_id", "original_device_class", "platform", "unique_id"}
 )
 
+# Device class enums share no base class, so their members are checked at runtime
 type Accepts = Platform | StrEnum
 type EntityReference = tuple[Platform, str]
 
@@ -47,9 +48,11 @@ def _device_class_domain(device_class: StrEnum) -> str:
     must not import, so the domain comes from the enum's module path.
     """
     module = type(device_class).__module__
-    if (match := _COMPONENT_MODULE.match(module)) is None or match[1] not in {
-        platform.value for platform in Platform
-    }:
+    if (
+        not type(device_class).__name__.endswith("DeviceClass")
+        or (match := _COMPONENT_MODULE.match(module)) is None
+        or match[1] not in {platform.value for platform in Platform}
+    ):
         raise TypeError(
             f"{device_class!r} is not a device class of an entity platform"
             f" (defined in {module})"
@@ -122,6 +125,14 @@ class DeviceSlot:
     def entity_domains(self) -> tuple[str, ...]:
         """Return the entity domains the slot accepts entities of."""
         return self._entity_domains
+
+    def accepts_same_as(self, other: DeviceSlot) -> bool:
+        """Return if both slots accept the same entities.
+
+        Members of different enums with the same value are equal, so the enum
+        members themselves cannot be compared.
+        """
+        return self._matches == other._matches
 
     def accepts_entity(self, domain: str, device_class: str | None) -> bool:
         """Return if an entity with this domain and device class fits the slot."""
@@ -259,7 +270,7 @@ class DeviceType:
 
 def _check_redeclaration(inherited: DeviceSlot, slot: DeviceSlot) -> None:
     """Check a redeclared slot only makes its inherited slot required."""
-    if frozenset(slot.accepts) != frozenset(inherited.accepts):
+    if not slot.accepts_same_as(inherited):
         raise TypeError(
             f"{slot.defined_by.__name__}.{slot.slot_id} cannot change what slot"
             f" {inherited.defined_by.__name__}.{inherited.slot_id} accepts"

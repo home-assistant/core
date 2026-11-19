@@ -5798,75 +5798,6 @@ async def test_get_or_create_invalid_device_type(
     assert device_registry.async_get_device(identifiers={("hue", "789")}) is None
 
 
-async def test_update_device_original_device_type(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test async_update_device updates original_device_type."""
-    entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("hue", "456")},
-    )
-    assert entry.original_device_type is None
-    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    entry = device_registry.async_update_device(
-        entry.id, original_device_type="smart_plug"
-    )
-    assert entry.original_device_type == "smart_plug"
-
-    # Not passing original_device_type leaves it untouched
-    entry = device_registry.async_update_device(entry.id, model="New model")
-    assert entry.original_device_type == "smart_plug"
-
-    await hass.async_block_till_done()
-    assert [event.data for event in update_events] == [
-        {
-            "action": "update",
-            "device_id": entry.id,
-            "changes": {"original_device_type": None},
-        },
-        {
-            "action": "update",
-            "device_id": entry.id,
-            "changes": {"model": None},
-        },
-    ]
-
-
-async def test_update_device_original_device_slots(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test async_update_device updates original_device_slots."""
-    entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={("hue", "456")},
-    )
-    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
-
-    entry = device_registry.async_update_device(
-        entry.id, original_device_slots={"outlet": [["switch", "outlet"]]}
-    )
-    assert entry.original_device_slots == {"outlet": (("switch", "outlet"),)}
-
-    # Identical slots are not a change
-    entry = device_registry.async_update_device(
-        entry.id, original_device_slots={"outlet": (("switch", "outlet"),)}
-    )
-
-    await hass.async_block_till_done()
-    assert [event.data for event in update_events] == [
-        {
-            "action": "update",
-            "device_id": entry.id,
-            "changes": {"original_device_slots": {}},
-        },
-    ]
-
-
 async def test_format_mac(
     device_registry: dr.DeviceRegistry, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -5946,8 +5877,6 @@ async def test_update(
             name="name",
             new_connections=new_connections,
             new_identifiers=new_identifiers,
-            original_device_slots={"outlet": [["switch", "outlet"]]},
-            original_device_type="smart_plug",
             serial_number="serial_no",
             sw_version="version",
             via_device_id=via_device.id,
@@ -5974,8 +5903,6 @@ async def test_update(
         modified_at=modified_at,
         name_by_user="Test Friendly Name",
         name="name",
-        original_device_slots={"outlet": (("switch", "outlet"),)},
-        original_device_type="smart_plug",
         serial_number="serial_no",
         sw_version="version",
         via_device_id=via_device.id,
@@ -6030,8 +5957,6 @@ async def test_update(
             "model_id": None,
             "name": None,
             "name_by_user": None,
-            "original_device_slots": {},
-            "original_device_type": None,
             "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
