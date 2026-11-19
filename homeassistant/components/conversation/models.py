@@ -35,7 +35,8 @@ class ConversationAudioInput:
     stream: AsyncIterable[bytes]
     """Audio chunks until the end of the voice command.
 
-    Read it to its end: satellites stop listening when it ends.
+    The command also ends when the agent starts to answer. Read the stream to
+    its end: satellites stop listening when it ends.
     """
 
 
@@ -45,7 +46,11 @@ class ConversationAudioOutput(Protocol):
     def async_set_audio_stream(
         self, pcm_format: PcmFormat, audio_stream: AsyncGenerator[bytes]
     ) -> None:
-        """Set the raw PCM audio of the spoken response."""
+        """Set the raw PCM audio of the spoken response.
+
+        Set it once per turn, with all speech of the response, also after
+        tool calls.
+        """
 
 
 @dataclass(slots=True)

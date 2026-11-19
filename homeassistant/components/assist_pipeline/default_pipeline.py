@@ -234,7 +234,10 @@ class _DefaultPipelineProcessor:
     _agent_audio_output: bool = field(init=False, default=False)
     """True if the conversation agent provides the response audio instead of TTS."""
     _pending_intent_start: PipelineEvent | None = field(init=False, default=None)
-    """Start of intent recognition, held back while the agent listens."""
+    """Start of intent recognition, held back while the agent listens.
+
+    It is set before the agent gets the spoken audio.
+    """
     _invalidated: bool = field(init=False, default=False)
     _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     _audio_run: voice_support.AudioRun | None = field(
@@ -703,9 +706,16 @@ class _DefaultPipelineProcessor:
             requires_external_vad=True
         )
 
+        async def command_stream() -> AsyncGenerator[EnhancedAudioChunk]:
+            async for chunk in stream:
+                # The voice command is over once the agent answers
+                if self._pending_intent_start is None:
+                    break
+                yield chunk
+
         async def agent_audio_stream() -> AsyncGenerator[bytes]:
             async for chunk in self._speech_to_text_stream(
-                audio_stream=stream,
+                audio_stream=command_stream(),
                 stt_vad=stt_vad,
                 run=run,
                 command_timeout_ms=command_timeout_ms,
@@ -746,9 +756,8 @@ class _DefaultPipelineProcessor:
     ) -> None:
         """Play the spoken response of the conversation agent."""
         assert self.tts_stream is not None
-        # Satellites would start playing again on a second tts_start_streaming
         if self._streamed_response:
-            return
+            raise RuntimeError("The response audio of this turn is already set")
 
         self._streamed_response = True
         self.tts_stream.async_set_audio_stream(pcm_format, audio_stream)
