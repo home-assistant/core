@@ -106,6 +106,26 @@ async def test_radar_without_animation_data(
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+@pytest.mark.usefixtures("mock_rain_graph")
+async def test_radar_without_country(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+) -> None:
+    """Test the entity is unavailable when the country is missing."""
+    mock_irm_kmi_api.get_country.return_value = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, RADAR_ENTITY_ID)
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
 async def test_radar_style_option_round_trip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

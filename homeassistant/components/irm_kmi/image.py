@@ -2,7 +2,7 @@
 
 import asyncio
 import copy
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from irm_kmi_api import IrmKmiApiError, RainGraph
 
@@ -51,7 +51,11 @@ class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
     @override
     def available(self) -> bool:
         """Return whether the provider published a radar loop to render."""
-        return super().available and self.coordinator.data.animation is not None
+        return (
+            super().available
+            and self.coordinator.data.animation is not None
+            and self.coordinator.data.country is not None
+        )
 
     @property
     @override
@@ -76,15 +80,20 @@ class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
         async with self._lock:
             if self._cached_image is not None:
                 return self._cached_image.content
-            if (animation := self.coordinator.data.animation) is None:
+            if (animation := self.coordinator.data.animation) is None or (
+                country := self.coordinator.data.country
+            ) is None:
                 return None
             frames = copy.deepcopy(animation)
+            tz = await dt_util.async_get_time_zone(TIMEZONE)
+            if TYPE_CHECKING:
+                assert tz is not None
             graph = RainGraph(
                 animation_data=frames,
-                country=self.coordinator.data.country,
+                country=country,
                 style=self._style,
                 dark_mode=self._dark_mode,
-                tz=await dt_util.async_get_time_zone(TIMEZONE),
+                tz=tz,
                 api_client=self.coordinator.api,
             )
             try:
@@ -94,8 +103,12 @@ class IrmKmiRadarImage(IrmKmiBaseEntity, ImageEntity):
                     translation_domain=DOMAIN,
                     translation_key="radar_unavailable",
                 ) from err
-            if animation == self.coordinator.data.animation and all(
-                isinstance(frame["image"], bytes) for frame in frames["sequence"]
+            if (
+                animation == self.coordinator.data.animation
+                and frames["sequence"] is not None
+                and all(
+                    isinstance(frame["image"], bytes) for frame in frames["sequence"]
+                )
             ):
                 self._cached_image = Image(
                     content_type=self.content_type, content=content
