@@ -19,7 +19,7 @@ from pytest_homeassistant.components.common import (
 
 from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
 from homeassistant.components.gate.condition import CONDITIONS
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_CLASS, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -236,7 +236,7 @@ async def test_gate_condition_excludes_non_gate_device_class(
     condition_any = await create_target_condition(
         hass,
         condition=condition_key,
-        target={CONF_ENTITY_ID: [entity_id_gate, entity_id_door]},
+        target={TargetKey.ENTITY_ID: [entity_id_gate, entity_id_door]},
         behavior="any",
     )
 
