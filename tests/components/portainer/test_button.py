@@ -20,7 +20,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import ButtonService
 from homeassistant.components.portainer.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -72,7 +72,7 @@ async def test_buttons_containers(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -107,7 +107,7 @@ async def test_buttons_containers_exceptions(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -127,9 +127,7 @@ async def test_buttons_invalid_auth_starts_reauth(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {
-                CommonServiceArgument.ENTITY_ID: "button.practical_morse_restart_container"
-            },
+            {TargetKey.ENTITY_ID: "button.practical_morse_restart_container"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -182,7 +180,7 @@ async def test_buttons_endpoint(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -214,9 +212,7 @@ async def test_buttons_endpoints_exceptions(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {
-                CommonServiceArgument.ENTITY_ID: "button.my_environment_prune_unused_images"
-            },
+            {TargetKey.ENTITY_ID: "button.my_environment_prune_unused_images"},
             blocking=True,
         )
 
@@ -232,7 +228,7 @@ async def test_button_update_stack(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+        {TargetKey.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
         blocking=True,
     )
 
@@ -264,7 +260,7 @@ async def test_button_update_stack_exceptions(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
+            {TargetKey.ENTITY_ID: UPDATE_STACK_ENTITY_ID},
             blocking=True,
         )
     assert exc_info.value.translation_key == translation_key

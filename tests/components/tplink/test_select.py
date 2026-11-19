@@ -13,7 +13,7 @@ from homeassistant.components.select import (
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.entity import EXCLUDED_FEATURES
 from homeassistant.components.tplink.select import SELECT_DESCRIPTIONS
-from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
+from homeassistant.const import CONF_HOST, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -149,7 +149,7 @@ async def test_select_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "Second choice",
         },
         blocking=True,

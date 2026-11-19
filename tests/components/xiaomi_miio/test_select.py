@@ -28,8 +28,8 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -88,7 +88,7 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
             SelectService.SELECT_OPTION,
             {
                 SelectServiceArgument.OPTION: "up",
-                CommonServiceArgument.ENTITY_ID: entity_id + "_display_orientation",
+                TargetKey.ENTITY_ID: entity_id + "_display_orientation",
             },
             blocking=True,
         )
@@ -114,7 +114,7 @@ async def test_select_option(hass: HomeAssistant) -> None:
         SelectService.SELECT_OPTION,
         {
             SelectServiceArgument.OPTION: "left",
-            CommonServiceArgument.ENTITY_ID: entity_id + "_display_orientation",
+            TargetKey.ENTITY_ID: entity_id + "_display_orientation",
         },
         blocking=True,
     )

@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -46,6 +46,7 @@ async def test_number_entities(
         ("number.hdfury_vrroom_02_restart_timer", "set_reboot_timer"),
         ("number.hdfury_vrroom_02_unmute_delay", "set_audio_unmute"),
         ("number.hdfury_vrroom_02_earc_unmute_delay", "set_earc_unmute"),
+        ("number.hdfury_vrroom_02_ip_interrupt_port", "set_tcp_port"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -63,7 +64,7 @@ async def test_number_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
+        {TargetKey.ENTITY_ID: entity_id, NumberServiceArgument.VALUE: 50},
         blocking=True,
     )
 
@@ -77,6 +78,7 @@ async def test_number_set_value(
         ("number.hdfury_vrroom_02_restart_timer", "set_reboot_timer"),
         ("number.hdfury_vrroom_02_unmute_delay", "set_audio_unmute"),
         ("number.hdfury_vrroom_02_earc_unmute_delay", "set_earc_unmute"),
+        ("number.hdfury_vrroom_02_ip_interrupt_port", "set_tcp_port"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -101,7 +103,7 @@ async def test_number_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 50,
             },
             blocking=True,
@@ -115,6 +117,7 @@ async def test_number_error(
         ("number.hdfury_vrroom_02_restart_timer"),
         ("number.hdfury_vrroom_02_unmute_delay"),
         ("number.hdfury_vrroom_02_earc_unmute_delay"),
+        ("number.hdfury_vrroom_02_ip_interrupt_port"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
