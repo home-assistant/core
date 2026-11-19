@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Generator
 from datetime import timedelta
-import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -29,6 +28,7 @@ from . import setup_integration
 from .const import (
     ALDER_POLLEN_ENTITY_ID,
     CURRENT_WEATHER,
+    POLLEN,
     TEMPERATURE_ENTITY_ID,
     WIND_DIRECTION_ENTITY_ID,
     WIND_GUST_SPEED_ENTITY_ID,
@@ -134,17 +134,14 @@ async def test_pollen_without_data(
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
-async def test_pollen_grace_period(
+async def test_pollen_unavailable_until_next_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_irm_kmi_api: MagicMock,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the last pollen levels are only kept for the grace period."""
+    """Test a pollen failure only makes the pollen sensors unavailable."""
     await setup_integration(hass, mock_config_entry)
-
-    assert "Pollen data is available again" not in caplog.text
 
     mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
     mock_irm_kmi_api.get_current_weather.return_value = CurrentWeatherData(
@@ -155,19 +152,8 @@ async def test_pollen_grace_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
     assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert [
-        record.levelno
-        for record in caplog.records
-        if record.message.startswith("Could not get pollen data from the API")
-    ] == [logging.INFO]
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
 
     mock_irm_kmi_api.get_pollen.side_effect = None
 
@@ -176,21 +162,6 @@ async def test_pollen_grace_period(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
-    assert caplog.text.count("Pollen data is available again") == 1
-
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert caplog.text.count("Pollen data is available again") == 1
-
-    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
-
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert caplog.text.count("Could not get pollen data from the API") == 2
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
@@ -200,73 +171,20 @@ async def test_pollen_kept_when_forecasts_fail(
     mock_irm_kmi_api: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test old weather data keeps pollen within its grace period."""
+    """Test a forecast failure does not touch the pollen sensors."""
     await setup_integration(hass, mock_config_entry)
 
     mock_irm_kmi_api.refresh_forecasts_coord.side_effect = IrmKmiApiError
+    mock_irm_kmi_api.get_pollen.return_value = {
+        **POLLEN,
+        PollenName.ALDER: PollenLevel.RED,
+    }
 
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
-
-
-@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
-async def test_pollen_grace_period_when_forecasts_fail(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_irm_kmi_api: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test old weather data does not keep pollen beyond its grace period."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
-    mock_irm_kmi_api.get_current_weather.return_value = CurrentWeatherData(
-        **{**CURRENT_WEATHER, "temperature": 9.9}
-    )
-
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
-
-    mock_irm_kmi_api.refresh_forecasts_coord.side_effect = IrmKmiApiError
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
-
-
-@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
-async def test_pollen_grace_period_after_processing_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_irm_kmi_api: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test pollen from an update that failed does not extend the grace period."""
-    await setup_integration(hass, mock_config_entry)
-
-    mock_irm_kmi_api.get_current_weather.side_effect = ValueError
-
-    freezer.tick(timedelta(minutes=8))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    # Beyond the grace period of the weather data
+    for _ in range(3):
+        freezer.tick(timedelta(minutes=8))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
-
-    mock_irm_kmi_api.get_current_weather.side_effect = None
-    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
-
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
-    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.RED
