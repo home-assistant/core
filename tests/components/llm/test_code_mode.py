@@ -146,6 +146,69 @@ async def test_declarations_in_prompt(api_instance: llm.APIInstance) -> None:
     )
 
 
+async def test_nested_parameters(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the declaration shows the keys of dict parameters."""
+
+    class MemoryTool(llm.Tool):
+        """Tool with nested parameters."""
+
+        name = "save_memory"
+        description = "Save a memory"
+        integration = "test"
+        parameters = probatio.Schema(
+            {
+                probatio.Required("context"): {
+                    probatio.Required("fact"): str,
+                    probatio.Optional("tags"): [str],
+                    probatio.Optional("source"): {
+                        probatio.Required("url"): str,
+                        probatio.Optional("meta"): {
+                            probatio.Optional("deep"): {
+                                probatio.Optional("deeper"): str
+                            }
+                        },
+                    },
+                },
+                probatio.Optional("items"): [{probatio.Required("id"): int}],
+            }
+        )
+
+        @override
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> llm.ToolResult:
+            """Return the fact."""
+            return llm.ToolResult(data={"saved": tool_input.tool_args["context"]})
+
+    api_instance = code_mode_api.async_create_api_instance(
+        llm.APIInstance(
+            api=TestAPI(hass, MemoryTool()),
+            api_prompt="",
+            llm_context=llm_context,
+            tools=[MemoryTool()],
+        )
+    )
+
+    assert (
+        """async def save_memory(
+    *,
+    context: {"fact": str, "tags"?: list[str], "source"?: {"url": str, "meta"?: {"deep"?: dict}}},
+    items: list[{"id": int}] = None,
+) -> dict:"""
+        in api_instance.api_prompt
+    )
+
+    result = await _execute(
+        api_instance, 'await save_memory(context={"fact": "Likes tea"})'
+    )
+    assert result.data["result"] == {"saved": {"fact": "Likes tea"}}
+
+
 async def test_search_for_large_api(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
