@@ -9,7 +9,12 @@ import pytest
 from pytest_homeassistant.common import ANY, async_capture_events, flush_store
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import PERCENTAGE, EntityStateAttribute, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityStateAttribute,
+    UnitOfRatio,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -37,6 +42,14 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
         {
             EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             EntityStateAttribute.UNIT_OF_MEASUREMENT: PERCENTAGE,
+        },
+    )
+    hass.states.async_set(
+        "sensor.mock_carbon_dioxide",
+        "1234",
+        {
+            EntityStateAttribute.DEVICE_CLASS: SensorDeviceClass.CO2,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
         },
     )
 
@@ -74,6 +87,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id=None,
         humidity_entity_id=None,
+        carbon_dioxide_entity_id=None,
     )
     assert len(area_registry.areas) == 1
 
@@ -95,6 +109,7 @@ async def test_create_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
 
     assert area2 == ar.AreaEntry(
@@ -109,6 +124,7 @@ async def test_create_area(
         modified_at=utcnow(),
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
     assert len(area_registry.areas) == 2
     assert area.created_at != area2.created_at
@@ -217,6 +233,7 @@ async def test_update_area(
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
 
     assert updated_area != area
@@ -232,6 +249,7 @@ async def test_update_area(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
     assert len(area_registry.areas) == 1
 
@@ -336,6 +354,18 @@ async def test_update_area_with_normalized_name_already_in_use(
             {"humidity_entity_id": "sensor.random"},
             "Entity sensor.random is not a humidity sensor",
         ),
+        (
+            {"carbon_dioxide_entity_id": "sensor.invalid"},
+            "Entity sensor.invalid does not exist",
+        ),
+        (
+            {"carbon_dioxide_entity_id": "light.kitchen"},
+            "Entity light.kitchen is not a carbon dioxide sensor",
+        ),
+        (
+            {"carbon_dioxide_entity_id": "sensor.random"},
+            "Entity sensor.random is not a carbon dioxide sensor",
+        ),
     ],
 )
 async def test_update_area_entity_validation(
@@ -356,6 +386,7 @@ async def test_update_area_entity_validation(
 
     assert area.temperature_entity_id is None
     assert area.humidity_entity_id is None
+    assert area.carbon_dioxide_entity_id is None
 
 
 async def test_load_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
@@ -401,6 +432,7 @@ async def test_loading_area_from_storage(
                     "modified_at": modified_at.isoformat(),
                     "temperature_entity_id": "sensor.mock_temperature",
                     "humidity_entity_id": "sensor.mock_humidity",
+                    "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
                 }
             ]
         },
@@ -423,6 +455,7 @@ async def test_loading_area_from_storage(
         modified_at=modified_at,
         temperature_entity_id="sensor.mock_temperature",
         humidity_entity_id="sensor.mock_humidity",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
 
 
@@ -463,6 +496,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            carbon_dioxide_entity_id=None,
         ),
         ar.AreaEntry(
             name="bbb",
@@ -476,6 +510,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            carbon_dioxide_entity_id=None,
         ),
         ar.AreaEntry(
             name="CCC",
@@ -489,6 +524,7 @@ async def test_migration_from_1_1(
             labels=set(),
             picture=None,
             temperature_entity_id=None,
+            carbon_dioxide_entity_id=None,
         ),
     ]
 
@@ -512,6 +548,7 @@ async def test_migration_from_1_1(
                     "name": "AAA",
                     "picture": None,
                     "temperature_entity_id": None,
+                    "carbon_dioxide_entity_id": None,
                 },
                 {
                     "aliases": [],
@@ -525,6 +562,7 @@ async def test_migration_from_1_1(
                     "name": "bbb",
                     "picture": None,
                     "temperature_entity_id": None,
+                    "carbon_dioxide_entity_id": None,
                 },
                 {
                     "aliases": [],
@@ -538,6 +576,7 @@ async def test_migration_from_1_1(
                     "name": "CCC",
                     "picture": None,
                     "temperature_entity_id": None,
+                    "carbon_dioxide_entity_id": None,
                 },
             ]
         },
@@ -728,6 +767,9 @@ async def test_removing_labels(
             "temperature_entity_id", SensorDeviceClass.TEMPERATURE, id="temperature"
         ),
         pytest.param("humidity_entity_id", SensorDeviceClass.HUMIDITY, id="humidity"),
+        pytest.param(
+            "carbon_dioxide_entity_id", SensorDeviceClass.CO2, id="carbon_dioxide"
+        ),
     ],
 )
 async def test_entity_renamed(

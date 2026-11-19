@@ -48,6 +48,7 @@ def websocket_list_areas(
         probatio.Required("name"): str,
         probatio.Optional("picture"): probatio.Any(str, None),
         probatio.Optional("temperature_entity_id"): probatio.Any(str, None),
+        probatio.Optional("carbon_dioxide_entity_id"): probatio.Any(str, None),
     }
 )
 @websocket_api.require_admin
@@ -118,6 +119,7 @@ def websocket_delete_area(
         probatio.Optional("name"): str,
         probatio.Optional("picture"): probatio.Any(str, None),
         probatio.Optional("temperature_entity_id"): probatio.Any(str, None),
+        probatio.Optional("carbon_dioxide_entity_id"): probatio.Any(str, None),
     }
 )
 @websocket_api.require_admin

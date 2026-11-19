@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -50,6 +51,14 @@ async def mock_temperature_humidity_entity(hass: HomeAssistant) -> None:
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
+    hass.states.async_set(
+        "sensor.mock_carbon_dioxide",
+        "1234",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CO2,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION,
+        },
+    )
 
 
 async def test_list_areas(
@@ -74,6 +83,7 @@ async def test_list_areas(
         labels={"label_1", "label_2"},
         picture="/image/example.png",
         temperature_entity_id="sensor.mock_temperature",
+        carbon_dioxide_entity_id="sensor.mock_carbon_dioxide",
     )
 
     await client.send_json_auto_id({"type": "config/area_registry/list"})
@@ -92,6 +102,7 @@ async def test_list_areas(
             "name": "mock 1",
             "picture": None,
             "temperature_entity_id": None,
+            "carbon_dioxide_entity_id": None,
         },
         {
             "aliases": unordered(["alias_1", "alias_2"]),
@@ -105,6 +116,7 @@ async def test_list_areas(
             "name": "mock 2",
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
+            "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
         },
     ]
 
@@ -138,6 +150,7 @@ async def test_create_area(
         "modified_at": utcnow().timestamp(),
         "temperature_entity_id": None,
         "humidity_entity_id": None,
+        "carbon_dioxide_entity_id": None,
     }
     assert len(area_registry.areas) == 1
 
@@ -152,6 +165,7 @@ async def test_create_area(
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
             "humidity_entity_id": "sensor.mock_humidity",
+            "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
             "type": "config/area_registry/create",
         }
     )
@@ -171,6 +185,7 @@ async def test_create_area(
         "modified_at": utcnow().timestamp(),
         "temperature_entity_id": "sensor.mock_temperature",
         "humidity_entity_id": "sensor.mock_humidity",
+        "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
     }
     assert len(area_registry.areas) == 2
 
@@ -185,6 +200,7 @@ async def test_create_area(
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
             "humidity_entity_id": "sensor.mock_humidity",
+            "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
             "type": "config/area_registry/create",
         }
     )
@@ -204,6 +220,7 @@ async def test_create_area(
         "modified_at": utcnow().timestamp(),
         "temperature_entity_id": "sensor.mock_temperature",
         "humidity_entity_id": "sensor.mock_humidity",
+        "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
     }
     assert len(area_registry.areas) == 3
 
@@ -288,6 +305,7 @@ async def test_update_area(
             "name": "mock 2",
             "picture": "/image/example.png",
             "temperature_entity_id": "sensor.mock_temperature",
+            "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
         }
     )
 
@@ -305,6 +323,7 @@ async def test_update_area(
         "temperature_entity_id": "sensor.mock_temperature",
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
+        "carbon_dioxide_entity_id": "sensor.mock_carbon_dioxide",
     }
     assert len(area_registry.areas) == 1
 
@@ -322,6 +341,7 @@ async def test_update_area(
             "labels": [],
             "picture": None,
             "temperature_entity_id": None,
+            "carbon_dioxide_entity_id": None,
         }
     )
 
@@ -339,6 +359,7 @@ async def test_update_area(
         "humidity_entity_id": None,
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
+        "carbon_dioxide_entity_id": None,
     }
     assert len(area_registry.areas) == 1
 
@@ -356,6 +377,7 @@ async def test_update_area(
             "labels": [],
             "picture": None,
             "temperature_entity_id": None,
+            "carbon_dioxide_entity_id": None,
         }
     )
 
@@ -373,6 +395,7 @@ async def test_update_area(
         "humidity_entity_id": None,
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
+        "carbon_dioxide_entity_id": None,
     }
     assert len(area_registry.areas) == 1
 
