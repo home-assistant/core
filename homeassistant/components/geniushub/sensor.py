@@ -18,7 +18,6 @@ from .const import (
     GH_ATTR_TEMPERATURE,
     GH_BATTERY_LEVEL_ATTR,
     GH_LEVEL_MAPPING,
-    GH_TYPE,
     IDENTIFIER_ZONE,
 )
 from .coordinator import GeniusCoordinator
