@@ -218,7 +218,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Pick a user to authorize for scrobbling."""
         stored_secret = self.data.get(CONF_API_SECRET)
         if user_input is not None:
-            api_secret = user_input.get(CONF_API_SECRET, stored_secret)
+            api_secret: str = (
+                user_input.get(CONF_API_SECRET) or self.data[CONF_API_SECRET]
+            )
             try:
                 self._auth_url = await self.hass.async_add_executor_job(
                     get_auth_url, self.data[CONF_API_KEY], api_secret

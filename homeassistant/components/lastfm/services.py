@@ -1,5 +1,7 @@
 """Services for the LastFM integration."""
 
+from typing import Any
+
 import probatio
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -15,7 +17,7 @@ from .const import (
     SERVICE_SCROBBLE,
 )
 
-SCROBBLE_SCHEMA = {
+SCROBBLE_SCHEMA: dict[Any, Any] = {
     probatio.Required(ATTR_ARTIST): cv.string,
     probatio.Required(ATTR_TITLE): cv.string,
     probatio.Optional(ATTR_ALBUM): cv.string,
