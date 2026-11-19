@@ -9,10 +9,10 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util
 
 from .conftest import MockOnectaClient
 from .platform_helpers import _async_fire_coordinator_update
@@ -45,10 +45,7 @@ async def test_refresh_button_reports_failed_refresh(
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
 
-    async def fail_refresh() -> None:
-        coordinator.last_update_success = False
-
-    coordinator.async_manual_refresh = AsyncMock(side_effect=fail_refresh)
+    coordinator.async_manual_refresh = AsyncMock(return_value=False)
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -127,12 +124,25 @@ async def test_refresh_button_reports_rate_limited_refresh(
 async def test_refresh_button_reports_post_write_cooldown(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Do not silently report success when refresh is deferred after a write."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
-    coordinator._last_patch_call = dt_util.utcnow()
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+        "network unavailable", method="GET", path="/v1/gateway-devices"
+    )
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+    assert not coordinator.last_update_success
+    entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == "unavailable"
+
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    mock_onecta_client.get_gateway_devices.side_effect = None
+    command = AsyncMock()
+    assert await coordinator.async_execute_command(lambda _client: command())
     mock_onecta_client.get_gateway_devices.reset_mock()
 
     with pytest.raises(HomeAssistantError) as err:
@@ -147,6 +157,8 @@ async def test_refresh_button_reports_post_write_cooldown(
     assert err.value.translation_key == "manual_refresh_deferred"
     assert err.value.translation_placeholders == {"seconds": "30"}
     mock_onecta_client.get_gateway_devices.assert_not_awaited()
+    assert not coordinator.last_update_success
+    assert hass.states.get(state.entity_id) == state
 
 
 async def test_refresh_button_recovers_after_failed_poll(

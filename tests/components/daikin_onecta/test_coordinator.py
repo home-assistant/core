@@ -48,6 +48,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .conftest import MockOnectaClient
+from .platform_helpers import _async_fire_coordinator_update
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
@@ -632,27 +633,37 @@ class TestOnectaDataUpdateCoordinator:
             mock_random.randint.assert_called_once_with(594, 1782)
 
     async def test_rate_limit_uses_update_failed_retry_after(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """A Daikin rate limit should use the coordinator retry-after mechanism."""
-        coordinator._last_patch_call = None
-        coordinator.last_update_success = False
-        coordinator.client.get_gateway_devices = AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=3060),
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+            EXPECTED_CONNECTION_ERROR,
+            method="GET",
+            path="/v1/gateway-devices",
         )
-        initial_interval = coordinator.update_interval
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        assert not coordinator.last_update_success
+        state = hass.states.get(entity_id)
+        assert state is not None and state.state == "unavailable"
 
-        # Simulate daily rate limit reached
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+        mock_onecta_client.get_gateway_devices.reset_mock()
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+            RateLimit(retry_after=EXPECTED_RATE_LIMIT_RETRY_AFTER),
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        assert exc_info.value.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
-        assert exc_info.value.translation_key == "rate_limit_exceeded"
-        assert coordinator.update_interval == initial_interval
+        assert not coordinator.last_update_success
+        assert isinstance(coordinator.last_exception, UpdateFailed)
+        assert coordinator.last_exception.retry_after == EXPECTED_RATE_LIMIT_RETRY_AFTER
         assert coordinator._polling_backoff_remaining() == timedelta(
             seconds=EXPECTED_RATE_LIMIT_RETRY_AFTER
         )
@@ -786,30 +797,46 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
     async def test_scheduled_update_respects_write_polling_backoff(
-        self, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Scheduled polls keep using cached state during write backoff."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        state_before = hass.states.get(entity_id)
+        assert state_before is not None
         command = AsyncMock(
             side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
+                RateLimit(retry_after=3600),
                 method="PATCH",
                 path="/v1/management-points/point/characteristics/power",
             )
         )
         assert not await coordinator.async_execute_command(lambda _client: command())
-        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        mock_onecta_client.get_gateway_devices.reset_mock()
 
-        assert await coordinator._async_update_data_from_cloud() == {}
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
 
-        coordinator.client.get_gateway_devices.assert_not_awaited()
+        mock_onecta_client.get_gateway_devices.assert_not_awaited()
+        assert hass.states.get(entity_id) == state_before
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_rate_limited_write_defers_polling(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
-        """Defer cloud polling after a rate-limited write without retrying it."""
-        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
+        """Defer manual entity refresh until a write's Retry-After expires."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        state_before = hass.states.get(entity_id)
+        assert state_before is not None
         command = AsyncMock(
             side_effect=OnectaRateLimitError(
                 RateLimit(retry_after=60),
@@ -819,73 +846,64 @@ class TestOnectaDataUpdateCoordinator:
         )
 
         assert not await coordinator.async_execute_command(lambda _client: command())
-        assert coordinator._polling_backoff_until == now + timedelta(seconds=60)
-
-        coordinator._async_get_cloud_devices = AsyncMock(return_value=[])
-        assert await coordinator._async_update_data_from_cloud() == {}
-        assert coordinator.update_interval == timedelta(seconds=60)
-        coordinator._async_get_cloud_devices.assert_not_awaited()
-        command.assert_awaited_once()
-
-        mock_utcnow.return_value += timedelta(seconds=60)
-        assert await coordinator._async_update_data_from_cloud() == {}
-        coordinator._async_get_cloud_devices.assert_awaited_once_with()
-        assert coordinator._polling_backoff_until is None
-
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    async def test_backoff_skipped_poll_preserves_failed_state(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
-    ) -> None:
-        """Do not mark the coordinator successful when backoff skips a poll."""
-        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
-        coordinator.last_update_success = False
-        coordinator.client.get_gateway_devices = AsyncMock(
-            side_effect=OnectaRateLimitError(
-                RateLimit(retry_after=60),
-                method="GET",
-                path="/v1/gateway-devices",
-            )
+        mock_onecta_client.get_gateway_devices.reset_mock()
+        mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+            "minimal_data"
         )
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+        await async_update_entity(hass, entity_id)
+        mock_onecta_client.get_gateway_devices.assert_not_awaited()
+        assert hass.states.get(entity_id) == state_before
+        command.assert_awaited_once()
 
-        assert exc_info.value.retry_after == 60
-        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+        freezer.tick(timedelta(seconds=60))
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
-
-        assert exc_info.value.retry_after == 60
-        coordinator.client.get_gateway_devices.assert_awaited_once_with()
-
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
-    async def test_write_cooldown_skipped_poll_preserves_failed_state(
-        self, mock_utcnow, coordinator: OnectaDataUpdateCoordinator
+    async def test_manual_update_during_write_cooldown_keeps_failed_state(
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
-        """Do not mark the coordinator successful when cooldown skips a poll."""
-        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
-        coordinator.last_update_success = False
-        coordinator._last_patch_call = now
-        coordinator._async_get_cloud_devices = AsyncMock()
+        """Keep entities unavailable if a manual update is deferred after a write."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+            EXPECTED_CONNECTION_ERROR,
+            method="GET",
+            path="/v1/gateway-devices",
+        )
+        await _async_fire_coordinator_update(hass, coordinator, freezer)
+        assert not coordinator.last_update_success
+        assert hass.states.get(entity_id).state == "unavailable"
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await coordinator._async_update_data_from_cloud()
+        mock_onecta_client.get_gateway_devices.reset_mock()
+        mock_onecta_client.get_gateway_devices.side_effect = None
+        command = AsyncMock()
+        assert await coordinator.async_execute_command(lambda _client: command())
 
-        assert exc_info.value.retry_after == 30
-        coordinator._async_get_cloud_devices.assert_not_awaited()
+        await async_update_entity(hass, entity_id)
 
-    @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
+        mock_onecta_client.get_gateway_devices.assert_not_awaited()
+        assert not coordinator.last_update_success
+        assert hass.states.get(entity_id).state == "unavailable"
+
     async def test_poll_rechecks_backoff_after_acquiring_cloud_lock(
-        self, mock_utcnow, hass: HomeAssistant, coordinator
+        self,
+        hass: HomeAssistant,
+        config_entry: MockConfigEntry,
+        mock_onecta_client: MockOnectaClient,
     ) -> None:
-        """Preserve failed poll state if backoff starts while a poll waits."""
-        now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
-        mock_utcnow.return_value = now
-        coordinator.last_update_success = False
-        coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
+        """Keep entity state if a refresh waits on a rate-limited command."""
+        await _async_setup_fixture(hass, config_entry, "minimal_data")
+        coordinator = config_entry.runtime_data
+        entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
+        state_before = hass.states.get(entity_id)
+        assert state_before is not None
+        mock_onecta_client.get_gateway_devices.reset_mock()
         command_started = asyncio.Event()
         finish_command = asyncio.Event()
 
@@ -902,16 +920,15 @@ class TestOnectaDataUpdateCoordinator:
             coordinator.async_execute_command(rate_limited_command)
         )
         await command_started.wait()
-        poll_task = hass.async_create_task(coordinator._async_update_data_from_cloud())
+        poll_task = hass.async_create_task(async_update_entity(hass, entity_id))
         await asyncio.sleep(0)
         finish_command.set()
         assert not await command_task
 
-        with pytest.raises(UpdateFailed) as exc_info:
-            await poll_task
-        assert exc_info.value.retry_after == 60
-        coordinator.client.get_gateway_devices.assert_not_awaited()
-        assert coordinator.update_interval == timedelta(seconds=60)
+        await poll_task
+        mock_onecta_client.get_gateway_devices.assert_not_awaited()
+        assert coordinator.last_update_success
+        assert hass.states.get(entity_id) == state_before
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_successful_write_clears_polling_backoff(
