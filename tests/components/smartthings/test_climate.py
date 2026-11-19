@@ -19,7 +19,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -30,13 +29,10 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_NONE,
     PRESET_SLEEP,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_HORIZONTAL,
     SWING_OFF,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -49,6 +45,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -107,8 +104,11 @@ async def test_ac_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_FAN_MODE: "auto"},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.FAN_MODE: "auto",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -131,10 +131,10 @@ async def test_ac_set_hvac_mode_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.OFF,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
     )
@@ -177,8 +177,11 @@ async def test_ac_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: hvac_mode,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -202,10 +205,10 @@ async def test_ac_set_hvac_mode_turns_on(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -245,10 +248,10 @@ async def test_ac_set_hvac_mode_auto_uses_aicomfort(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -280,10 +283,10 @@ async def test_ac_set_hvac_mode_auto_prefers_auto_when_aicomfort_supported(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -314,10 +317,10 @@ async def test_ac_set_hvac_mode_auto_turns_on_uses_aicomfort(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -356,11 +359,11 @@ async def test_ac_set_temperature_and_hvac_mode_auto_uses_aicomfort(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.TEMPERATURE: 23,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -442,10 +445,10 @@ async def test_ac_set_hvac_mode_fan(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_HVAC_MODE: HVACMode.FAN_ONLY,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.FAN_ONLY,
         },
         blocking=True,
     )
@@ -469,8 +472,11 @@ async def test_ac_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.TEMPERATURE: 23,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -493,11 +499,11 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.TEMPERATURE: 23,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -543,11 +549,11 @@ async def test_ac_set_temperature_and_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.AUTO,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.TEMPERATURE: 23,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
     )
@@ -581,11 +587,11 @@ async def test_ac_set_temperature_and_hvac_mode_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_TEMPERATURE: 23,
-            ATTR_HVAC_MODE: HVACMode.OFF,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.TEMPERATURE: 23,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
     )
@@ -655,10 +661,10 @@ async def test_ac_set_swing_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
-            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
-            ATTR_SWING_MODE: SWING_OFF,
+            TargetKey.ENTITY_ID: "climate.theater_ac_office_granit",
+            ClimateServiceArgument.SWING_MODE: SWING_OFF,
         },
         blocking=True,
     )
@@ -695,8 +701,11 @@ async def test_ac_set_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.clim_salon", ATTR_PRESET_MODE: mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.clim_salon",
+            ClimateServiceArgument.PRESET_MODE: mode,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_with(
@@ -977,8 +986,11 @@ async def test_thermostat_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.theater_virtual_thermostat", ATTR_FAN_MODE: "on"},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.theater_virtual_thermostat",
+            ClimateServiceArgument.FAN_MODE: "on",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -1001,8 +1013,11 @@ async def test_thermostat_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.thermostat",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -1102,8 +1117,8 @@ async def test_thermostat_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.theater_virtual_thermostat"} | data,
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: "climate.theater_virtual_thermostat"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -1268,8 +1283,11 @@ async def test_heat_pump_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.warmepumpe_indoor1",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -1292,8 +1310,11 @@ async def test_heat_pump_hvac_mode_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.warmepumpe_indoor1",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -1315,8 +1336,11 @@ async def test_heat_pump_hvac_mode_from_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor2", ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.warmepumpe_indoor2",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == [
@@ -1354,8 +1378,11 @@ async def test_heat_pump_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_TEMPERATURE: 35},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.warmepumpe_indoor1",
+            ClimateServiceArgument.TEMPERATURE: 35,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
