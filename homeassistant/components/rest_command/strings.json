@@ -109,6 +109,12 @@
       "message": "Timeout when calling resource \"{request_url}\""
     }
   },
+  "issues": {
+    "invalid_command": {
+      "description": "The command {action} of {server} could not be set up, so the action is not available: {error}.\n\nThis can happen when its saved settings are no longer valid after an update. Go to Settings > Devices & services > RESTful Command, delete the command and add it again.",
+      "title": "RESTful Command {action} is not valid"
+    }
+  },
   "selector": {
     "authentication": {
       "options": {

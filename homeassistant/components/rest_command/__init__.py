@@ -1,7 +1,6 @@
 """Support for exposing regular REST commands as services."""
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 import probatio
@@ -22,7 +21,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -33,8 +32,6 @@ from .const import (
     DOMAIN,
 )
 from .services import async_register_rest_command, async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
@@ -104,12 +101,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) 
     for subentry in entry.subentries.values():
         command_config = merge_command_config(entry.data, subentry.data)
         name: str = command_config.pop(CONF_ACTION)
+        issue_id = f"invalid_command_{subentry.subentry_id}"
         try:
             validated = COMMAND_SCHEMA(command_config)
         except probatio.Invalid as err:
             # One broken command must not take the other commands down with it
-            _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                config_entry_id=entry.entry_id,
+                config_subentry_id=subentry.subentry_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="invalid_command",
+                translation_placeholders={
+                    "action": f"{DOMAIN}.{name}",
+                    "server": entry.title,
+                    "error": str(err),
+                },
+            )
             continue
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
         entry.async_on_unload(async_register_rest_command(hass, name, validated))
         entry.runtime_data.add(name)
 

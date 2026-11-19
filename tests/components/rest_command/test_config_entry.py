@@ -10,6 +10,7 @@ from homeassistant.components.rest_command.const import DOMAIN, SUBENTRY_TYPE_CO
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL
@@ -90,7 +91,9 @@ async def test_unload_removes_actions(hass: HomeAssistant) -> None:
     assert hass.services.has_service(DOMAIN, "reload")
 
 
-async def test_invalid_stored_command(hass: HomeAssistant) -> None:
+async def test_invalid_stored_command(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test a stored command that no longer validates does not block the others."""
     entry = _entry(broken={"path": "/{{ door"}, working={})
     entry.add_to_hass(hass)
@@ -99,6 +102,20 @@ async def test_invalid_stored_command(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(DOMAIN, "broken")
     assert hass.services.has_service(DOMAIN, "working")
+    broken = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.data["action"] == "broken"
+    )
+    issue_id = f"invalid_command_{broken.subentry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_placeholders["action"] == "rest_command.broken"
+
+    # Deleting the command removes its issue
+    hass.config_entries.async_remove_subentry(entry, broken.subentry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_reload_keeps_ui_commands(hass: HomeAssistant) -> None:
