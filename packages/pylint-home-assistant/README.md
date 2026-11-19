@@ -1066,7 +1066,7 @@ constructors do -- `EntityDescription` becomes a platform-specific
 description, a base coordinator type becomes the integration's own -- so
 `W0246` never fires on them.
 
-### `R7406`: `home-assistant-redundant-entity-init`
+### `R7407`: `home-assistant-redundant-entity-init`
 
 The `__init__` of a class inheriting from `Entity` does nothing but pass its
 own parameters to `super().__init__()`. Remove the method:

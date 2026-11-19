@@ -185,7 +185,7 @@ class RedundantEntityInitChecker(BaseChecker):
     name = "home_assistant_redundant_entity_init"
     priority = -1
     msgs = {
-        "R7406": (
+        "R7407": (
             "`__init__` of `%s` only forwards its arguments to "
             "`super().__init__`, remove it",
             "home-assistant-redundant-entity-init",

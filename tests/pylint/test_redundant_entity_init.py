@@ -55,7 +55,7 @@ class MyBaseEntity(Entity):
 
 @pytest.fixture(name="checker")
 def checker_fixture(linter: UnittestLinter) -> RedundantEntityInitChecker:
-    """Fixture to provide the R7406 checker."""
+    """Fixture to provide the R7407 checker."""
     return RedundantEntityInitChecker(linter)
 
 
