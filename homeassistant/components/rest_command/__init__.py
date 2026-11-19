@@ -88,9 +88,15 @@ def merge_command_config(
     """Combine the settings of a server with those of one of its commands."""
     config = {**server, **command}
     config[CONF_URL] = server[CONF_URL] + config.pop(CONF_PATH, "")
-    # Headers of the command are added to those of the server, and win
-    if headers := {**server.get(CONF_HEADERS, {}), **command.get(CONF_HEADERS, {})}:
-        config[CONF_HEADERS] = headers
+    # Headers of the command are added to those of the server, and win.
+    # Header names are case-insensitive, so they are compared in lowercase.
+    headers = {
+        name.lower(): (name, value)
+        for source in (server, command)
+        for name, value in source.get(CONF_HEADERS, {}).items()
+    }
+    if headers:
+        config[CONF_HEADERS] = dict(headers.values())
     return config
 
 

@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+from multidict import CIMultiDict
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
@@ -47,7 +48,7 @@ async def test_call_command_from_entry(
             "path": "/{{ door }}",
             "method": "post",
             "payload": '{"door": "{{ door }}"}',
-            "headers": {"X-Door": "{{ door }}", "X-Api-Version": "2"},
+            "headers": {"X-Door": "{{ door }}", "x-api-version": "2"},
             "content_type": "application/json",
         },
     )
@@ -74,7 +75,7 @@ async def test_call_command_from_entry(
     headers = aioclient_mock.mock_calls[0][3]
     assert headers["X-Door"] == "front"
     assert headers["Authorization"] == "Bearer token"
-    assert headers["X-Api-Version"] == "2"
+    assert CIMultiDict(headers).getall("X-Api-Version") == ["2"]
 
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:
