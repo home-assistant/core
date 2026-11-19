@@ -224,6 +224,48 @@ async def test_dsp_preset_select(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dsp_preset_select_same_names(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test presets with the same name can each be shown and applied."""
+    music_assistant_client.server_info.schema_version = 101
+    config = music_assistant_client.config
+    config.get_dsp_preset = AsyncMock(
+        return_value=[
+            DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night_1"),
+            DSPConfigPreset(name="Night", config=DSPConfig(), preset_id="night_2"),
+            DSPConfigPreset(name="Party", config=DSPConfig(), preset_id="party"),
+        ]
+    )
+    config.get_player_dsp_config = AsyncMock(
+        return_value=DSPConfig(enabled=True, preset_id="night_2")
+    )
+    config.apply_dsp_preset = AsyncMock()
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "select.test_player_1_dsp_preset"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Night (night_2)"
+    assert state.attributes["options"] == [
+        "Night (night_1)",
+        "Night (night_2)",
+        "Party",
+    ]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: "Night (night_1)",
+        },
+        blocking=True,
+    )
+    assert config.apply_dsp_preset.call_args == call("00:00:00:00:00:01", "night_1")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dsp_preset_select_update_while_loading(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,

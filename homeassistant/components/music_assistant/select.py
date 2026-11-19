@@ -1,5 +1,6 @@
 """Music Assistant select platform."""
 
+from collections import Counter
 from typing import TYPE_CHECKING, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
@@ -212,10 +213,23 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
         return super().available and bool(self._dsp_presets)
 
     @property
+    def _preset_ids_by_label(self) -> dict[str, str | None]:
+        # preset names are not unique, the id tells presets with the same name apart
+        name_counts = Counter(preset.name for preset in self._dsp_presets)
+        return {
+            (
+                preset.name
+                if name_counts[preset.name] == 1
+                else f"{preset.name} ({preset.preset_id})"
+            ): preset.preset_id
+            for preset in self._dsp_presets
+        }
+
+    @property
     @override
     def options(self) -> list[str]:
         """Return the names of the DSP presets."""
-        return [preset.name for preset in self._dsp_presets]
+        return list(self._preset_ids_by_label)
 
     @property
     @override
@@ -225,9 +239,9 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
             return None
         return next(
             (
-                preset.name
-                for preset in self._dsp_presets
-                if preset.preset_id == self._dsp_config.preset_id
+                label
+                for label, preset_id in self._preset_ids_by_label.items()
+                if preset_id == self._dsp_config.preset_id
             ),
             None,
         )
@@ -236,11 +250,11 @@ class MusicAssistantDspPresetSelect(MusicAssistantEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Apply the chosen DSP preset to the player."""
-        preset = next(preset for preset in self._dsp_presets if preset.name == option)
+        preset_id = self._preset_ids_by_label[option]
         if TYPE_CHECKING:
             # stored presets always have an id
-            assert preset.preset_id is not None
-        await self.mass.config.apply_dsp_preset(self.player_id, preset.preset_id)
+            assert preset_id is not None
+        await self.mass.config.apply_dsp_preset(self.player_id, preset_id)
 
     def _on_dsp_config_updated(self, event: MassEvent) -> None:
         self._dsp_config = DSPConfig.from_dict(event.data)
