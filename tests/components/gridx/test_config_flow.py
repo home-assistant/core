@@ -1,5 +1,6 @@
 """Tests for the gridX config flow."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from gridx_connector import GridXAuthenticationError, GridXConnectionError
@@ -28,7 +29,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"], {**USER_INPUT, CONF_USERNAME: f" {USERNAME.upper()} "}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -100,7 +101,31 @@ async def test_flow_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"], {**USER_INPUT, CONF_USERNAME: USERNAME.upper()}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_concurrent_flows(hass: HomeAssistant, mock_connector: AsyncMock) -> None:
+    """Test overlapping logins for the same account create only one entry."""
+    mock_connector.initialize.side_effect = asyncio.Barrier(2).wait
+    results = await asyncio.gather(
+        *(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_USER},
+                data={**USER_INPUT, CONF_USERNAME: username},
+            )
+            for username in (USERNAME, USERNAME.upper())
+        )
+    )
+    assert {result["type"] for result in results} == {
+        FlowResultType.CREATE_ENTRY,
+        FlowResultType.ABORT,
+    }
+    aborted = next(
+        result for result in results if result["type"] is FlowResultType.ABORT
+    )
+    assert aborted["reason"] == "already_configured"

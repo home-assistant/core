@@ -32,7 +32,7 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            username: str = user_input[CONF_USERNAME]
+            username: str = user_input[CONF_USERNAME].strip().lower()
             password: str = user_input[CONF_PASSWORD]
             self._async_abort_entries_match({CONF_USERNAME: username})
             connector = create_connector(self.hass, username, password)
@@ -49,6 +49,8 @@ class GridxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not connector.systems:
                     errors["base"] = "no_systems"
                 else:
+                    # Another flow may have added this account during initialization.
+                    self._async_abort_entries_match({CONF_USERNAME: username})
                     return self.async_create_entry(
                         title=username,
                         data={
