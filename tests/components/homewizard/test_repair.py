@@ -70,7 +70,7 @@ async def test_repair_acquires_token(
 
     flow_id = result["flow_id"]
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_identify"
 
     result = await process_repair_fix_flow(client, flow_id)
 
@@ -121,20 +121,27 @@ async def _async_open_migrate_repair(
         client, DOMAIN, f"migrate_to_v2_api_{mock_config_entry.entry_id}"
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
     return client, result
 
 
 @pytest.mark.usefixtures("fast_identify")
 @pytest.mark.parametrize(
-    ("device_fixture", "identify_side_effect", "identify_calls"),
+    ("device_fixture", "identify_side_effect", "identify_calls", "step_id"),
     [
         pytest.param(
-            "HWE-SKT-11", [None, None, RequestError], 3, id="repeats_until_error"
+            "HWE-SKT-11",
+            [None, None, RequestError],
+            3,
+            "confirm_identify",
+            id="repeats_until_error",
         ),
-        pytest.param("HWE-SKT-11", DisabledError, 1, id="api_disabled"),
-        pytest.param("HWE-SKT-11", UnsupportedError, 1, id="unsupported"),
-        pytest.param("HWE-KWH1", None, 0, id="not_supported_by_device"),
+        pytest.param(
+            "HWE-SKT-11", DisabledError, 1, "confirm_identify", id="api_disabled"
+        ),
+        pytest.param(
+            "HWE-SKT-11", UnsupportedError, 1, "confirm_identify", id="unsupported"
+        ),
+        pytest.param("HWE-KWH1", None, 0, "confirm", id="not_supported_by_device"),
     ],
 )
 async def test_repair_identifies_device(
@@ -144,13 +151,15 @@ async def test_repair_identifies_device(
     hass_client: ClientSessionGenerator,
     identify_side_effect: list[type[Exception] | None] | type[Exception] | None,
     identify_calls: int,
+    step_id: str,
 ) -> None:
     """Test the migration repair keeps identifying the device until it fails."""
     mock_homewizardenergy.identify.side_effect = identify_side_effect
 
-    await _async_open_migrate_repair(hass, mock_config_entry, hass_client)
+    _, result = await _async_open_migrate_repair(hass, mock_config_entry, hass_client)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert result["step_id"] == step_id
     assert len(mock_homewizardenergy.identify.mock_calls) == identify_calls
 
 

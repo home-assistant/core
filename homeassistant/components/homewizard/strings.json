@@ -216,7 +216,11 @@
             "title": "[%key:component::homewizard::config::step::authorize::title%]"
           },
           "confirm": {
-            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nIf the device supports it, its status light blinks until you select **Submit**, so you can find it.\n\nSelect **Submit** to start the reconfiguration.",
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration.",
+            "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
+          },
+          "confirm_identify": {
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nThe status light of the device blinks until you select **Submit**, so you can find it.\n\nSelect **Submit** to start the reconfiguration.",
             "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
           }
         }

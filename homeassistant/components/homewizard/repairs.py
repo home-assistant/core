@@ -47,6 +47,12 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
             self._async_stop_identify()
             return await self.async_step_authorize()
 
+        placeholders = {"title": self.entry.title}
+        if not self._can_identify():
+            return self.async_show_form(
+                step_id="confirm", description_placeholders=placeholders
+            )
+
         if self._identify_task is None:
             self._identify_task = self.entry.async_create_background_task(
                 self.hass,
@@ -54,7 +60,19 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
                 f"homewizard identify {self.entry.entry_id}",
             )
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"title": self.entry.title}
+            step_id="confirm_identify", description_placeholders=placeholders
+        )
+
+    async def async_step_confirm_identify(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step while the device is identifying itself."""
+        return await self.async_step_confirm(user_input)
+
+    def _can_identify(self) -> bool:
+        return (
+            self.entry.state is ConfigEntryState.LOADED
+            and self.entry.runtime_data.data.device.supports_identify()
         )
 
     @callback
@@ -71,11 +89,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
     async def _async_identify_device(self) -> None:
         """Keep blinking the status light so the user can find the device."""
-        if self.entry.state is not ConfigEntryState.LOADED:
-            return
         coordinator = self.entry.runtime_data
-        if not coordinator.data.device.supports_identify():
-            return
         try:
             async with asyncio.timeout(IDENTIFY_DURATION):
                 while True:
