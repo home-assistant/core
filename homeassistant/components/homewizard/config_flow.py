@@ -91,7 +91,13 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         # Tell device we want a token, user must now press the
         # button within 30 seconds. The first attempt will always
         # fail, but this opens the window to press the button.
-        token = await async_request_token(self.hass, self.ip_address)
+        try:
+            token = await async_request_token(self.hass, self.ip_address)
+        except RecoverableError as ex:
+            return self.async_show_form(
+                step_id="authorize", errors={"base": ex.error_code}
+            )
+
         errors: dict[str, str] | None = None
 
         if token is None:
@@ -255,7 +261,12 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = None
 
-        token = await async_request_token(self.hass, self.ip_address)
+        try:
+            token = await async_request_token(self.hass, self.ip_address)
+        except RecoverableError as ex:
+            return self.async_show_form(
+                step_id="reauth_confirm_update_token", errors={"base": ex.error_code}
+            )
 
         if user_input is not None:
             if token is None:
@@ -362,7 +373,8 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
     """Try to request a token from the device.
 
     This method is used to request a token from the device,
-    it will return None if the token request failed.
+    it will return None if the token request failed and raise
+    RecoverableError if the device could not be reached.
     """
 
     api = HomeWizardEnergyV2(ip_address)
@@ -375,6 +387,10 @@ async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | Non
         return await api.get_token(f"home-assistant#{uuid[:6]}")
     except DisabledError:
         return None
+    except RequestError as ex:
+        raise RecoverableError(
+            "Device unreachable or unexpected response", "network_error"
+        ) from ex
     finally:
         await api.close()
 

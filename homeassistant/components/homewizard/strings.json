@@ -200,7 +200,8 @@
     "migrate_to_v2_api": {
       "fix_flow": {
         "error": {
-          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
+          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]",
+          "network_error": "[%key:common::config_flow::error::cannot_connect%]"
         },
         "step": {
           "authorize": {

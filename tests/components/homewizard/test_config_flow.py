@@ -767,6 +767,50 @@ async def test_manual_flow_detects_failed_user_authorization(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
+async def test_manual_flow_authorize_network_error(
+    hass: HomeAssistant,
+    mock_homewizardenergy_v2: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test config flow shows a recoverable error if the token request fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Simulate v2 support, but device unreachable when requesting a token
+    mock_homewizardenergy_v2.device.side_effect = UnauthorizedError
+    mock_homewizardenergy_v2.get_token.side_effect = RequestError
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.has_v2_api", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    # Restore normal functionality
+    mock_homewizardenergy_v2.device.side_effect = None
+    mock_homewizardenergy_v2.get_token.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_reauth_flow_updates_token(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -845,6 +889,49 @@ async def test_reauth_flow_handles_user_not_pressing_button(
         hass.config_entries.async_entries(DOMAIN)[0].data.get(CONF_TOKEN)
         == "cool_new_token"
     )
+    assert len(mock_setup_entry.mock_calls) == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
+async def test_reauth_flow_network_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test reauth flow shows a recoverable error if the token request fails."""
+
+    mock_config_entry_v2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    # Simulate device unreachable when requesting a token
+    mock_homewizardenergy_v2.get_token.side_effect = RequestError
+
+    result = await mock_config_entry_v2.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm_update_token"
+    assert result["errors"] == {"base": "network_error"}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm_update_token"
+    assert result["errors"] == {"base": "network_error"}
+
+    # Simulate user pressing the button and getting a new token
+    mock_homewizardenergy_v2.get_token.side_effect = None
+    mock_homewizardenergy_v2.get_token.return_value = "cool_new_token"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    await hass.async_block_till_done()
+    assert mock_config_entry_v2.data.get(CONF_TOKEN) == "cool_new_token"
     assert len(mock_setup_entry.mock_calls) == 2
 
 
