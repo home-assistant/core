@@ -781,6 +781,33 @@ async def test_manual_flow_button_not_pressed_in_time(
     assert result["data"][CONF_TOKEN] == "cool_token"
 
 
+async def test_manual_flow_closed_while_connecting(
+    hass: HomeAssistant,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test no token polling starts when the flow is closed while connecting."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    def close_flow_and_reject(*args: object) -> None:
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        raise UnauthorizedError
+
+    mock_homewizardenergy_v2.device.side_effect = close_flow_and_reject
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.has_v2_api", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "flow_closed"
+    mock_homewizardenergy_v2.get_token.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_reauth_flow_updates_token(

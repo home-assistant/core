@@ -27,7 +27,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import instance_id
@@ -38,7 +38,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
 
 TOKEN_POLL_INTERVAL = 2
-TOKEN_TIMEOUT = 120
+TOKEN_TIMEOUT = 300
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,6 +52,13 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     serial: str | None = None
     _token: str | None = None
     _token_task: asyncio.Task[str] | None = None
+    _removed = False
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Mark the flow as removed so no token polling is started for it."""
+        self._removed = True
 
     @override
     async def async_step_user(
@@ -101,6 +108,10 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.ip_address
 
         if self._token_task is None:
+            # The flow manager would not track or cancel a task started after
+            # the flow was closed, e.g. while the user step was connecting
+            if self._removed:
+                return self.async_abort(reason="flow_closed")
             self._token_task = self.hass.async_create_task(
                 async_wait_for_token(self.hass, self.ip_address)
             )

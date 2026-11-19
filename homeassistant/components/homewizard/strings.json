@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "device_not_supported": "This device is not supported",
+      "flow_closed": "The setup was closed before the device was authorized.",
       "invalid_discovery_parameters": "Invalid discovery parameters",
       "reauth_enable_api_successful": "Enabling API was successful",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
@@ -23,7 +24,7 @@
         "title": "Authorize"
       },
       "authorize_timeout": {
-        "description": "The button on the HomeWizard device was not pressed within two minutes. Select the button below to try again.",
+        "description": "The button on the HomeWizard device was not pressed within five minutes. Select the button below to try again.",
         "title": "[%key:component::homewizard::config::step::authorize::title%]"
       },
       "discovery_confirm": {
