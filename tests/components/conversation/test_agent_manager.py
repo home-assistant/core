@@ -1,6 +1,7 @@
 """Test agent manager."""
 
 from collections.abc import AsyncGenerator
+from dataclasses import replace
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -22,7 +23,11 @@ from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session
-from homeassistant.helpers.intent import IntentResponse, IntentResponseErrorCode
+from homeassistant.helpers.intent import (
+    IntentResponse,
+    IntentResponseErrorCode,
+    IntentResponseType,
+)
 
 
 async def test_async_converse(hass: HomeAssistant, init_components) -> None:
@@ -198,6 +203,47 @@ async def test_async_converse_error_in_open_turn(
 
     assert [(c.role, c.content) for c in chat_log.content[1:]] == [
         ("user", "Hello"),
+        ("assistant", "Error: Provider is down"),
+    ]
+
+
+async def test_async_converse_error_in_open_spoken_turn(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test an error before the transcript is added to the open spoken turn."""
+    audio = ConversationAudioInput(
+        pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+        stream=_audio_stream(),
+    )
+    with (
+        chat_session.async_get_chat_session(hass, "koala", context=None) as session,
+        async_get_chat_log(
+            hass, session, replace(mock_conversation_input, text="", audio=audio)
+        ) as chat_log,
+        patch.object(
+            DefaultAgent,
+            "supported_features",
+            new_callable=PropertyMock,
+            return_value=ConversationEntityFeature.AUDIO_INPUT,
+        ),
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_handle_message",
+            side_effect=HomeAssistantError("Provider is down"),
+        ),
+    ):
+        result = await async_converse(
+            hass,
+            "",
+            "koala",
+            Context(),
+            agent_id="conversation.home_assistant",
+            audio=audio,
+        )
+
+    assert result.response.response_type == IntentResponseType.ERROR
+    assert [(c.role, c.content) for c in chat_log.content[1:]] == [
         ("assistant", "Error: Provider is down"),
     ]
 

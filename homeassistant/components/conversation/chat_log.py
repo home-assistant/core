@@ -147,7 +147,6 @@ def async_get_chat_log(
     try:
         yield chat_log
     except (Exception, asyncio.CancelledError) as err:
-        chat_log.awaiting_transcript = False
         chat_log.async_add_error(agent_id, err)
         raise
     finally:
@@ -458,6 +457,8 @@ class ChatLog:
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
         """Add the error that ended a turn as assistant content."""
+        # Also when it ended before the transcript of the spoken audio
+        self.awaiting_transcript = False
         # The chat log adds the cause before it raises ConverseError.
         if isinstance(error, ConverseError):
             return
