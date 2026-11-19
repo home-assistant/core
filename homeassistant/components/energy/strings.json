@@ -79,6 +79,14 @@
       "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
     },
+    "entity_unexpected_unit_heat": {
+      "description": "The following entities do not have an expected unit of measurement (either of {heat_units}):",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
+    "entity_unexpected_unit_heat_price": {
+      "description": "[%key:component::energy::issues::entity_unexpected_unit_energy_price::description%]",
+      "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"
+    },
     "entity_unexpected_unit_power": {
       "description": "The following entities do not have an expected unit of measurement (either of {power_units}):",
       "title": "[%key:component::energy::issues::entity_unexpected_unit_energy::title%]"

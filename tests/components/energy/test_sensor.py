@@ -1161,6 +1161,52 @@ async def test_cost_sensor_handle_gas_kwh(
     assert state.state == "50.0"
 
 
+async def test_cost_sensor_handle_heat(
+    setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test heat cost price from fixed number."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "heat",
+            "stat_energy_from": "sensor.heat_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        100,
+        energy_attributes,
+    )
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.heat_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set(
+        "sensor.heat_consumption",
+        200,
+        energy_attributes,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.heat_consumption_cost")
+    assert state.state == "50.0"
+
+
 @pytest.mark.parametrize(
     ("usage_unit", "price_unit"),
     [

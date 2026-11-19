@@ -77,6 +77,11 @@ WATER_PRICE_UNITS = tuple(
 )
 WATER_UNIT_ERROR = "entity_unexpected_unit_water"
 WATER_PRICE_UNIT_ERROR = "entity_unexpected_unit_water_price"
+HEAT_USAGE_DEVICE_CLASSES = ENERGY_USAGE_DEVICE_CLASSES
+HEAT_USAGE_UNITS = ENERGY_USAGE_UNITS
+HEAT_UNIT_ERROR = "entity_unexpected_unit_heat"
+HEAT_PRICE_UNITS = ENERGY_PRICE_UNITS
+HEAT_PRICE_UNIT_ERROR = "entity_unexpected_unit_heat_price"
 
 
 def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | None:
@@ -113,6 +118,14 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     if issue_type == WATER_PRICE_UNIT_ERROR:
         return {
             "price_units": ", ".join(f"{currency}{unit}" for unit in WATER_PRICE_UNITS),
+        }
+    if issue_type == HEAT_UNIT_ERROR:
+        return {
+            "heat_units": ", ".join(HEAT_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]),
+        }
+    if issue_type == HEAT_PRICE_UNIT_ERROR:
+        return {
+            "price_units": ", ".join(f"{currency}{unit}" for unit in HEAT_PRICE_UNITS),
         }
     if issue_type == VOLUME_FLOW_RATE_UNIT_ERROR:
         return {
@@ -745,6 +758,66 @@ def _validate_water_source(
         )
 
 
+def _validate_heat_source(
+    hass: HomeAssistant,
+    source: data.HeatSourceType,
+    statistics_metadata: dict[str, tuple[int, recorder.models.StatisticMetaData]],
+    wanted_statistics_metadata: set[str],
+    source_result: ValidationIssues,
+    validate_calls: list[functools.partial[None]],
+) -> None:
+    """Validate heat energy source."""
+    wanted_statistics_metadata.add(source["stat_energy_from"])
+    validate_calls.append(
+        functools.partial(
+            _async_validate_usage_stat,
+            hass,
+            statistics_metadata,
+            source["stat_energy_from"],
+            HEAT_USAGE_DEVICE_CLASSES,
+            HEAT_USAGE_UNITS,
+            HEAT_UNIT_ERROR,
+            source_result,
+        )
+    )
+
+    if (stat_cost := source.get("stat_cost")) is not None:
+        wanted_statistics_metadata.add(stat_cost)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_cost_stat,
+                hass,
+                statistics_metadata,
+                stat_cost,
+                source_result,
+            )
+        )
+    elif (entity_energy_price := source.get("entity_energy_price")) is not None:
+        validate_calls.append(
+            functools.partial(
+                _async_validate_price_entity,
+                hass,
+                entity_energy_price,
+                source_result,
+                HEAT_PRICE_UNITS,
+                HEAT_PRICE_UNIT_ERROR,
+            )
+        )
+
+    if (
+        source.get("entity_energy_price") is not None
+        or source.get("number_energy_price") is not None
+    ):
+        validate_calls.append(
+            functools.partial(
+                _async_validate_auto_generated_cost_entity,
+                hass,
+                source["stat_energy_from"],
+                source_result,
+            )
+        )
+
+
 def _validate_battery_source(
     hass: HomeAssistant,
     source: data.BatterySourceType,
@@ -858,6 +931,16 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
 
         elif source["type"] == "water":
             _validate_water_source(
+                hass,
+                source,
+                statistics_metadata,
+                wanted_statistics_metadata,
+                source_result,
+                validate_calls,
+            )
+
+        elif source["type"] == "heat":
+            _validate_heat_source(
                 hass,
                 source,
                 statistics_metadata,

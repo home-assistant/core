@@ -150,6 +150,7 @@ async def test_save_preferences(
             },
             {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
             {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},
+            {"type": "heat", "stat_energy_from": "sensor.heat", "name": "My heat"},
         ],
         "device_consumption": [
             {
