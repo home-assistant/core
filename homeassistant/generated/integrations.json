@@ -2098,6 +2098,17 @@
       ],
       "supported_by": "midea"
     },
+    "casatelli": {
+      "name": "Casatelli",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "casper_glow": {
       "name": "Casper Glow",
       "integration_type": "device",
