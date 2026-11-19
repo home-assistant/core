@@ -8,6 +8,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .const import (
     CONF_CLOUD_ID,
@@ -115,28 +116,17 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         entry = self._get_reconfigure_entry()
+        cloud_id = entry.data[CONF_CLOUD_ID]
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            existing_entry = await self.async_set_unique_id(user_input[CONF_CLOUD_ID])
-            if existing_entry is not None and existing_entry.entry_id != entry.entry_id:
-                self._abort_if_unique_id_configured()
-
-            # Another Cloud ID is a different gateway, so its meters are
-            # unrelated to the meter already configured
-            preferred_hardware_address = (
-                entry.data[CONF_HARDWARE_ADDRESS]
-                if user_input[CONF_CLOUD_ID] == entry.data[CONF_CLOUD_ID]
-                else None
-            )
-
             try:
                 eagle_type, hardware_address = await async_get_type(
                     self.hass,
-                    user_input[CONF_CLOUD_ID],
+                    cloud_id,
                     user_input[CONF_INSTALL_CODE],
                     user_input[CONF_HOST],
-                    preferred_hardware_address,
+                    entry.data[CONF_HARDWARE_ADDRESS],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -146,43 +136,38 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data_updates: dict[str, Any] | None = None
                 if not eagle_type:
                     errors["base"] = "unknown_device_type"
-                elif eagle_type == TYPE_EAGLE_100:
-                    data_updates = {
-                        **user_input,
-                        CONF_TYPE: eagle_type,
-                        CONF_HARDWARE_ADDRESS: None,
-                    }
-                elif eagle_type == TYPE_EAGLE_200:
-                    if not hardware_address:
-                        errors["base"] = "no_meters_connected"
-                    else:
-                        data_updates = {
-                            **user_input,
-                            CONF_TYPE: eagle_type,
-                            CONF_HARDWARE_ADDRESS: hardware_address,
-                        }
-                else:
+                elif eagle_type not in (TYPE_EAGLE_100, TYPE_EAGLE_200):
                     errors["base"] = "unsupported_device_type"
-
-                if data_updates is not None:
-                    # A title the user renamed is not the generated one.
-                    title = (
-                        user_input[CONF_CLOUD_ID]
-                        if entry.title == entry.data[CONF_CLOUD_ID]
-                        else entry.title
-                    )
+                elif eagle_type == TYPE_EAGLE_200 and not hardware_address:
+                    errors["base"] = "no_meters_connected"
+                else:
                     return self.async_update_reload_and_abort(
                         entry,
-                        unique_id=user_input[CONF_CLOUD_ID],
-                        title=title,
-                        data_updates=data_updates,
+                        data_updates={
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_INSTALL_CODE: user_input[CONF_INSTALL_CODE],
+                            CONF_TYPE: eagle_type,
+                            CONF_HARDWARE_ADDRESS: hardware_address
+                            if eagle_type == TYPE_EAGLE_200
+                            else None,
+                        },
                     )
 
+        form_data = user_input if user_input is not None else entry.data
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=create_schema(user_input or entry.data),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_HOST, default=form_data[CONF_HOST]): str,
+                    probatio.Required(CONF_CLOUD_ID, default=cloud_id): TextSelector(
+                        TextSelectorConfig(read_only=True)
+                    ),
+                    probatio.Required(
+                        CONF_INSTALL_CODE, default=form_data[CONF_INSTALL_CODE]
+                    ): str,
+                }
+            ),
             errors=errors,
         )
