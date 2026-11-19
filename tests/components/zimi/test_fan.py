@@ -4,8 +4,12 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, FanEntityFeature
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntityFeature,
+    FanService,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,7 +47,7 @@ async def test_fan_entity(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
+        FanService.TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -52,7 +56,7 @@ async def test_fan_entity(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
+        FanService.TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )

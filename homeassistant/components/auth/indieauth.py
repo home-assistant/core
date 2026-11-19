@@ -13,6 +13,7 @@ import aiohttp
 import aiohttp.client_exceptions
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import MAXIMUM_HEADER_SIZE
 from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,7 +211,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     redirected = False
     try:
         async with (
-            aiohttp.ClientSession() as session,
+            # A session of its own, the client_id comes from whoever signs in
+            aiohttp.ClientSession(
+                max_line_size=MAXIMUM_HEADER_SIZE, max_field_size=MAXIMUM_HEADER_SIZE
+            ) as session,
             session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp,
         ):
             status = resp.status

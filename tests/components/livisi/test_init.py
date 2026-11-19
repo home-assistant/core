@@ -22,6 +22,8 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.livisi.const import (
     DEVICE_POLLING_DELAY,
@@ -210,8 +212,8 @@ async def test_setup_entities_and_unload(
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_id, ATTR_TEMPERATURE: 22.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: climate_id, ClimateServiceArgument.TEMPERATURE: 22.0},
         blocking=True,
     )
     connection.async_set_state.assert_has_awaits(
@@ -229,8 +231,8 @@ async def test_setup_entities_and_unload(
     with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: climate_id, ATTR_TEMPERATURE: 22.0},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: climate_id, ClimateServiceArgument.TEMPERATURE: 22.0},
             blocking=True,
         )
     connection.async_set_state.return_value = True

@@ -43,10 +43,12 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     SWING_ON,
     SWING_VERTICAL,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.midea.climate import FAN_FULL_SPEED, FAN_SILENT
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -903,10 +905,10 @@ async def test_set_temperature_unsupported_hvac_mode_raises(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_entry.entity_id,
-                ATTR_TEMPERATURE: 23.0,
+                TargetKey.ENTITY_ID: entity_entry.entity_id,
+                ClimateServiceArgument.TEMPERATURE: 23.0,
                 "hvac_mode": HVACMode.DRY,
             },
             blocking=True,

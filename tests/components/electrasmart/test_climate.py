@@ -10,21 +10,15 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.electrasmart.const import (
@@ -32,13 +26,7 @@ from homeassistant.components.electrasmart.const import (
     PRESET_SHABAT,
     SCAN_INTERVAL_SEC,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -53,7 +41,10 @@ async def test_turn_on_keeps_the_mode_the_ac_was_last_running_in(
 ) -> None:
     """Turning on must not force a mode on the device."""
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_device.turn_on.assert_called_once_with()
@@ -69,7 +60,10 @@ async def test_turn_on_falls_back_to_cool_when_no_mode_can_be_restored(
     mock_device.turn_on = Mock(return_value=False)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_device.turn_on.assert_called_once_with()
@@ -83,7 +77,10 @@ async def test_turn_off_turns_the_device_off(
 ) -> None:
     """Turning off goes through set_hvac_mode, which calls turn_off()."""
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     mock_device.turn_off.assert_called_once_with()
@@ -97,8 +94,11 @@ async def test_set_hvac_mode_still_selects_the_requested_mode(
     """Explicitly picking a mode must keep working."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -114,8 +114,8 @@ async def test_set_fan_mode(
     """Setting a fan mode sends the new speed to the API."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: FAN_HIGH},
         blocking=True,
     )
 
@@ -130,8 +130,8 @@ async def test_set_temperature(
     """Setting a target temperature sends it to the API."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
 
@@ -160,8 +160,8 @@ async def test_set_swing_mode(
     """Each swing mode sets both swing axes on the device."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: swing_mode},
+        ClimateService.SET_SWING_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.SWING_MODE: swing_mode},
         blocking=True,
     )
 
@@ -184,8 +184,11 @@ async def test_set_preset_mode(
     """Selecting a preset switches the Shabat mode on the device."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: preset_mode,
+        },
         blocking=True,
     )
 
@@ -203,8 +206,8 @@ async def test_command_failure_raises(hass: HomeAssistant, mock_api: Mock) -> No
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -219,8 +222,8 @@ async def test_rejected_command_raises(hass: HomeAssistant, mock_api: Mock) -> N
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -261,7 +264,10 @@ async def test_update_is_skipped_right_after_a_command(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     # The scheduled poll now lands inside the window where the API still
@@ -325,7 +331,10 @@ async def test_a_command_only_pauses_the_polls_of_that_ac(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        CLIMATE_DOMAIN,
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
 
     # The poll lands inside the window where the API still serves the state

@@ -4,6 +4,7 @@ check_date:
       integration: workday
   fields:
     check_date:
+      required: true
       example: "2022-12-25"
       selector:
         date:
