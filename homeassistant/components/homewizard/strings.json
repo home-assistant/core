@@ -12,7 +12,6 @@
     },
     "error": {
       "api_not_enabled": "The local API is disabled. Go to the HomeWizard app and enable the API in the device settings.",
-      "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
     },
     "progress": {
@@ -20,7 +19,6 @@
     },
     "step": {
       "authorize": {
-        "description": "Press the button on the HomeWizard device for two seconds, then select the button below.",
         "title": "Authorize"
       },
       "authorize_timeout": {
@@ -207,16 +205,23 @@
     },
     "migrate_to_v2_api": {
       "fix_flow": {
-        "error": {
-          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
+        "progress": {
+          "wait_for_button": "Press the button on the HomeWizard device for two seconds. The reconfiguration continues automatically once the button is pressed."
         },
         "step": {
           "authorize": {
-            "description": "[%key:component::homewizard::config::step::authorize::description%]",
+            "title": "[%key:component::homewizard::config::step::authorize::title%]"
+          },
+          "authorize_timeout": {
+            "description": "[%key:component::homewizard::config::step::authorize_timeout::description%]",
             "title": "[%key:component::homewizard::config::step::authorize::title%]"
           },
           "confirm": {
             "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration.",
+            "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
+          },
+          "confirm_identify": {
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nTo help you find the device, its status light blinks until the reconfiguration is done.\n\nSelect **Submit** to start the reconfiguration.",
             "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]"
           }
         }

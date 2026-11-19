@@ -46,7 +46,7 @@ async def _get_forecast(
 
 @pytest.mark.usefixtures("mock_get_forecasts_coord")
 @pytest.mark.parametrize("forecast_fixture", ["forecast_nl.json"])
-@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_weather_nl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -65,7 +65,7 @@ async def test_weather_nl(
     "forecast_type",
     ["daily", "twice_daily", "hourly"],
 )
-@pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
+@pytest.mark.freeze_time("2026-01-25T15:30:00+01:00")
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

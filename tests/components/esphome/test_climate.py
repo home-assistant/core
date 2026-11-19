@@ -21,32 +21,24 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
     ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     SWING_BOTH,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -93,8 +85,11 @@ async def test_climate_entity(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 25,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -186,8 +181,11 @@ async def test_climate_entity_with_step_and_two_point(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 25,
+        },
         blocking=True,
     )
 
@@ -204,12 +202,12 @@ async def test_climate_entity_with_step_and_two_point(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_my_climate",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
         },
         blocking=True,
     )
@@ -274,11 +272,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_my_climate",
-            ATTR_HVAC_MODE: HVACMode.AUTO,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            ClimateServiceArgument.TEMPERATURE: 25,
         },
         blocking=True,
     )
@@ -290,22 +288,22 @@ async def test_climate_entity_with_step_and_target_temp(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.test_my_climate",
-                ATTR_HVAC_MODE: HVACMode.AUTO,
-                ATTR_TARGET_TEMP_LOW: 20,
-                ATTR_TARGET_TEMP_HIGH: 30,
+                TargetKey.ENTITY_ID: "climate.test_my_climate",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 20,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
             },
             blocking=True,
         )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.test_my_climate",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -322,8 +320,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_PRESET_MODE: "away"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.PRESET_MODE: "away",
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -339,8 +340,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_PRESET_MODE: "preset1"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.PRESET_MODE: "preset1",
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -350,8 +354,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_FAN_MODE: FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.FAN_MODE: FAN_HIGH,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -361,8 +368,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_FAN_MODE: "fan2"},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.FAN_MODE: "fan2",
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -372,8 +382,11 @@ async def test_climate_entity_with_step_and_target_temp(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_SWING_MODE: SWING_BOTH},
+        ClimateService.SET_SWING_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.SWING_MODE: SWING_BOTH,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -433,8 +446,11 @@ async def test_climate_entity_with_humidity(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HUMIDITY,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_HUMIDITY: 23},
+        ClimateService.SET_HUMIDITY,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.HUMIDITY: 23,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -482,8 +498,11 @@ async def test_climate_entity_with_heat(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 23,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -531,11 +550,11 @@ async def test_climate_entity_with_heat_cool(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.test_my_climate",
-            ATTR_TARGET_TEMP_HIGH: 23,
-            ATTR_TARGET_TEMP_LOW: 20,
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 23,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20,
         },
         blocking=True,
     )
@@ -588,10 +607,10 @@ async def test_climate_set_temperature_unsupported_mode(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.test_my_climate",
-                ATTR_TEMPERATURE: 25,
+                TargetKey.ENTITY_ID: "climate.test_my_climate",
+                ClimateServiceArgument.TEMPERATURE: 25,
             },
             blocking=True,
         )
@@ -771,8 +790,11 @@ async def test_climate_entity_single_setpoint_target_temp_in_auto_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 22.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 22.5,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_has_calls(
@@ -980,8 +1002,11 @@ async def test_climate_entity_fahrenheit_unit(
     # set_temperature is called in °C; ESPHome must receive the °F equivalent
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 10},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 10,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_called_once_with(
@@ -1022,8 +1047,11 @@ async def test_climate_entity_fahrenheit_unit_fahrenheit_system(
     # set_temperature is called in °F; ESPHome must receive the same value
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.test_my_climate", ATTR_TEMPERATURE: 86},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.test_my_climate",
+            ClimateServiceArgument.TEMPERATURE: 86,
+        },
         blocking=True,
     )
     mock_client.climate_command.assert_called_once_with(

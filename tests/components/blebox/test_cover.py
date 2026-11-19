@@ -11,23 +11,16 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -266,7 +259,7 @@ async def test_open(feature, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "cover",
-        SERVICE_OPEN_COVER,
+        CoverService.OPEN,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -283,7 +276,7 @@ async def test_close(feature, hass: HomeAssistant) -> None:
     await async_setup_entity(hass, entity_id)
 
     await hass.services.async_call(
-        "cover", SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
+        "cover", CoverService.CLOSE, {"entity_id": entity_id}, blocking=True
     )
 
     feature_mock.async_close.assert_called_once_with()
@@ -298,7 +291,7 @@ async def test_stop(feature, hass: HomeAssistant) -> None:
     await async_setup_entity(hass, entity_id)
 
     await hass.services.async_call(
-        "cover", SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
+        "cover", CoverService.STOP, {"entity_id": entity_id}, blocking=True
     )
 
     feature_mock.async_stop.assert_called_once_with()
@@ -347,8 +340,8 @@ async def test_set_position(feature, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "cover",
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 1},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 1},
         blocking=True,
     )  # almost closed
 
@@ -525,8 +518,8 @@ async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "cover",
-        SERVICE_SET_COVER_TILT_POSITION,
-        {"entity_id": entity_id, ATTR_TILT_POSITION: 80},
+        CoverService.SET_TILT_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.TILT_POSITION: 80},
         blocking=True,
     )
 
@@ -554,7 +547,7 @@ async def test_open_tilt(
 
     await hass.services.async_call(
         "cover",
-        SERVICE_OPEN_COVER_TILT,
+        CoverService.OPEN_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -570,7 +563,7 @@ async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "cover",
-        SERVICE_CLOSE_COVER_TILT,
+        CoverService.CLOSE_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
