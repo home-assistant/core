@@ -1,15 +1,18 @@
 """Tests for REST commands set up from a config entry."""
 
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.rest_command.const import DOMAIN, SUBENTRY_TYPE_COMMAND
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_IMPORT,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -71,10 +74,7 @@ async def test_call_command_from_entry(
 
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:
-    """Test unloading the entry removes its actions only."""
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
-    )
+    """Test unloading the entry removes its actions and keeps reload."""
     entry = _entry({"action": "from_ui", "url": TEST_URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -84,85 +84,116 @@ async def test_unload_removes_actions(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.services.has_service(DOMAIN, "from_ui")
-    assert hass.services.has_service(DOMAIN, "from_yaml")
+    assert hass.services.has_service(DOMAIN, "reload")
 
 
-async def test_yaml_reload_keeps_ui_actions(hass: HomeAssistant) -> None:
-    """Test reloading YAML leaves the actions from the UI alone."""
+async def test_import_from_yaml(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the commands from YAML are imported into a new entry."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "open_door": {
+                    "url": TEST_URL + "{{ door }}",
+                    "method": "post",
+                    "headers": {"X-Door": "{{ door }}"},
+                    "username": "user",
+                    "password": "secret",
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.source == SOURCE_IMPORT
+    assert entry.state is ConfigEntryState.LOADED
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.title == "open_door"
+    assert subentry.unique_id == "open_door"
+    assert subentry.data == {
+        "action": "open_door",
+        "url": TEST_URL + "{{ door }}",
+        "method": "post",
+        "headers": {"X-Door": "{{ door }}"},
+        "username": "user",
+        "password": "secret",
+        "timeout": 10,
+        "verify_ssl": True,
+        "insecure_cipher": False,
+        "skip_url_encoding": False,
+    }
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_imported") is not None
+    assert not hass.config_entries.subentries.async_progress()
+
+    aioclient_mock.post(TEST_URL + "front")
+    await hass.services.async_call(
+        DOMAIN, "open_door", {"door": "front"}, blocking=True
+    )
+    assert aioclient_mock.mock_calls[0][3]["X-Door"] == "front"
+
+
+async def test_import_only_new_commands(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test an import keeps the commands that were imported before."""
+    entry = _entry({"action": "existing", "url": TEST_URL + "ui"})
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "existing": {"url": TEST_URL + "yaml"},
+                "new": {"url": TEST_URL},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    commands = {
+        subentry.unique_id: subentry.data for subentry in entry.subentries.values()
+    }
+    assert commands["existing"]["url"] == TEST_URL + "ui"
+    assert commands["new"]["url"] == TEST_URL
+    assert hass.services.has_service(DOMAIN, "existing")
+    assert hass.services.has_service(DOMAIN, "new")
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_imported") is not None
+
+
+async def test_no_import_when_ignored(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test nothing is imported when the user ignored the integration."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
+
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
     )
-    entry = _entry({"action": "from_ui", "url": TEST_URL})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.config.load_yaml_config_file",
-        autospec=True,
-        return_value={
-            DOMAIN: {
-                "new_yaml": {"url": TEST_URL},
-                "from_ui": {"url": TEST_URL},
-            }
-        },
-    ):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
-
-    assert hass.services.has_service(DOMAIN, "from_ui")
-    assert hass.services.has_service(DOMAIN, "new_yaml")
     assert not hass.services.has_service(DOMAIN, "from_yaml")
-
-    # The UI action was not replaced by the YAML one with the same name
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert not hass.services.has_service(DOMAIN, "from_ui")
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_imported") is None
 
 
-async def test_conflict_with_yaml(
+async def test_no_import_without_yaml(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test a UI command with the name of a YAML command is not set up."""
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"same": {"url": TEST_URL}}}
-    )
-    entry = _entry({"action": "same", "url": TEST_URL + "ui"})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    """Test no entry is created when there is no YAML."""
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    subentry_id = next(iter(entry.subentries))
-    issue = issue_registry.async_get_issue(DOMAIN, f"action_conflict_{subentry_id}")
-    assert issue is not None
-    assert issue.translation_placeholders == {"action": "rest_command.same"}
-
-    # Unloading must not remove the action from YAML
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert hass.services.has_service(DOMAIN, "same")
-
-
-async def test_conflict_issue_removed(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test the conflict issue goes away once the conflict is solved."""
-    entry = _entry({"action": "same", "url": TEST_URL})
-    entry.add_to_hass(hass)
-    subentry_id = next(iter(entry.subentries))
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"action_conflict_{subentry_id}",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="action_conflict",
-        translation_placeholders={"action": "rest_command.same"},
-    )
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.services.has_service(DOMAIN, "same")
-    assert (
-        issue_registry.async_get_issue(DOMAIN, f"action_conflict_{subentry_id}") is None
-    )
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert issue_registry.async_get_issue(DOMAIN, "yaml_imported") is None
 
 
 async def test_invalid_stored_command(

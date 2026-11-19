@@ -19,7 +19,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -29,11 +29,8 @@ from .const import (
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
 )
-from .services import (
-    async_register_rest_command,
-    async_register_yaml_commands,
-    async_setup_services,
-)
+from .services import async_register_rest_command, async_setup_services
+from .yaml_import import async_import_yaml_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,8 +72,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
-    async_register_yaml_commands(hass, config.get(DOMAIN, {}))
     async_setup_services(hass)
+    async_import_yaml_commands(hass, config.get(DOMAIN, {}))
 
     return True
 
@@ -86,21 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for subentry in entry.subentries.values():
         command_config = dict(subentry.data)
         name: str = command_config.pop(CONF_ACTION)
-        issue_id = f"action_conflict_{subentry.subentry_id}"
-        if hass.services.has_service(DOMAIN, name):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                config_entry_id=entry.entry_id,
-                config_subentry_id=subentry.subentry_id,
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="action_conflict",
-                translation_placeholders={"action": f"{DOMAIN}.{name}"},
-            )
-            continue
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
         try:
             validated = COMMAND_SCHEMA(command_config)
         except probatio.Invalid as err:

@@ -35,7 +35,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
@@ -44,10 +43,9 @@ from .const import (
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
 )
+from .yaml_import import async_import_yaml_commands
 
 _LOGGER = logging.getLogger(__package__)
-
-YAML_COMMANDS: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_commands")
 
 
 @callback
@@ -240,26 +238,8 @@ def async_register_rest_command(
     return _async_unregister
 
 
-@callback
-def async_register_yaml_commands(
-    hass: HomeAssistant, commands: dict[str, dict[str, Any]]
-) -> None:
-    """Register the commands from YAML, skipping names already in use."""
-    yaml_commands = hass.data.setdefault(YAML_COMMANDS, set())
-    for name, command_config in commands.items():
-        if hass.services.has_service(DOMAIN, name):
-            _LOGGER.warning(
-                "Not registering %s.%s from YAML, the action already exists",
-                DOMAIN,
-                name,
-            )
-            continue
-        async_register_rest_command(hass, name, command_config)
-        yaml_commands.add(name)
-
-
 async def _async_reload_service_handler(service: ServiceCall) -> None:
-    """Remove the rest_commands from YAML and load new ones from config."""
+    """Import the commands from YAML that are not imported yet."""
     hass = service.hass
     conf = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -267,13 +247,7 @@ async def _async_reload_service_handler(service: ServiceCall) -> None:
     if conf is None:
         return
 
-    # Only the commands from YAML are reloaded, the ones from the UI stay
-    yaml_commands = hass.data.setdefault(YAML_COMMANDS, set())
-    for name in yaml_commands:
-        hass.services.async_remove(DOMAIN, name)
-    yaml_commands.clear()
-
-    async_register_yaml_commands(hass, conf.get(DOMAIN, {}))
+    async_import_yaml_commands(hass, conf.get(DOMAIN, {}))
 
 
 @callback

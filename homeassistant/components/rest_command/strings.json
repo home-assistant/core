@@ -137,9 +137,9 @@
     }
   },
   "issues": {
-    "action_conflict": {
-      "description": "The command {action} from the UI was not set up, because an action with that name already exists, probably from YAML. Remove one of the two and restart Home Assistant.",
-      "title": "REST command {action} is defined twice"
+    "yaml_imported": {
+      "description": "Your rest_command YAML configuration was imported into the UI. Each command is now listed under Settings > Devices & services > RESTful Command, and keeps its action name.\n\nRemove the rest_command: section from your configuration.yaml and restart Home Assistant to fix this issue.\n\nChanges to commands that were already imported are no longer read from YAML. New commands in YAML are still imported when Home Assistant starts or when you run the reload action. Secrets from secrets.yaml are stored in the UI configuration in plain text.",
+      "title": "RESTful Command YAML configuration was imported"
     }
   },
   "selector": {
@@ -161,7 +161,7 @@
   },
   "services": {
     "reload": {
-      "description": "Reloads RESTful commands from the YAML configuration. Commands set up in the UI are not affected.",
+      "description": "Imports new RESTful commands from the YAML configuration into the UI. Commands that were already imported are not changed.",
       "name": "[%key:common::action::reload%]"
     }
   }

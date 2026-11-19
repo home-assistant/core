@@ -43,14 +43,17 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
+    await hass.async_block_till_done()
+
+    # New commands are imported, the ones imported before stay
     assert hass.services.has_service(DOMAIN, "new_test")
-    assert not hass.services.has_service(DOMAIN, "get_test")
+    assert hass.services.has_service(DOMAIN, "get_test")
 
 
 async def test_reload_without_domain_config(
     hass: HomeAssistant, setup_component: ComponentSetup
 ) -> None:
-    """Verify reload removes all commands when the domain key is gone."""
+    """Verify reload keeps the imported commands when the domain key is gone."""
     await setup_component()
 
     assert hass.services.has_service(DOMAIN, "get_test")
@@ -61,8 +64,9 @@ async def test_reload_without_domain_config(
         return_value={},
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+    await hass.async_block_till_done()
 
-    assert not hass.services.has_service(DOMAIN, "get_test")
+    assert hass.services.has_service(DOMAIN, "get_test")
     assert hass.services.has_service(DOMAIN, SERVICE_RELOAD)
 
 

@@ -221,9 +221,19 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the entry that holds the commands."""
         return self.async_create_entry(title="RESTful Command", data={})
 
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Create the entry with the commands imported from YAML."""
+        return self.async_create_entry(
+            title="RESTful Command",
+            data={},
+            subentries=import_data["subentries"],
+        )
+
     @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start the flow for the first command after creating the entry."""
+        if self.source != SOURCE_USER:
+            return result
         subentry_result = await self.hass.config_entries.subentries.async_init(
             (result["result"].entry_id, SUBENTRY_TYPE_COMMAND),
             context=SubentryFlowContext(source=SOURCE_USER),
