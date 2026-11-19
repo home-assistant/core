@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from gridx_connector import GridXSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.gridx.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 USERNAME = "test@example.com"
 PASSWORD = "test-password"
@@ -20,7 +19,7 @@ SYSTEM_ID = "11111111-1111-1111-1111-111111111111"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.gridx.async_setup_entry", return_value=True
+        "homeassistant.components.gridx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

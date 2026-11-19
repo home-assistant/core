@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from gridx_connector import GridXAuthenticationError, GridXConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gridx.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
@@ -111,14 +110,18 @@ async def test_flow_already_configured(
 async def test_concurrent_flows(hass: HomeAssistant, mock_connector: AsyncMock) -> None:
     """Test overlapping logins for the same account create only one entry."""
     mock_connector.initialize.side_effect = asyncio.Barrier(2).wait
+    flows = [
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        for _ in range(2)
+    ]
     results = await asyncio.gather(
         *(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_USER},
-                data={**USER_INPUT, CONF_USERNAME: username},
+            hass.config_entries.flow.async_configure(
+                flow["flow_id"], {**USER_INPUT, CONF_USERNAME: username}
             )
-            for username in (USERNAME, USERNAME.upper())
+            for flow, username in zip(flows, (USERNAME, USERNAME.upper()), strict=True)
         )
     )
     assert {result["type"] for result in results} == {
