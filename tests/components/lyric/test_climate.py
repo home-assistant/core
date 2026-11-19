@@ -97,10 +97,25 @@ async def test_hvac_action_idle(
     )
 
 
+async def test_emergency_heat_mode(
+    hass: HomeAssistant, mock_lyric: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test emergency heat shows as heat."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(LCC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+
+
 @pytest.mark.parametrize(
     ("mode", "expected"),
     [
         pytest.param("Heat", {"heat_setpoint": 21}, id="heat"),
+        pytest.param("EmergencyHeat", {"heat_setpoint": 21}, id="emergency_heat"),
         pytest.param("Cool", {"cool_setpoint": 21}, id="cool"),
     ],
 )
