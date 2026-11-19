@@ -1512,6 +1512,351 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
     }
 
 
+DECLARED_SERVICE_DESCRIPTIONS = """
+    declared:
+      target:
+        entity:
+          domain: light
+      fields:
+        topic:
+          selector:
+            text:
+    other:
+    """
+DECLARED_DESCRIPTION = {
+    "fields": {
+        "topic": {"selector": {"text": {"multiple": False, "multiline": False}}}
+    },
+    "target": {"entity": [{"domain": ["light"]}]},
+}
+UNREGISTERED_DECLARED = {
+    **DECLARED_DESCRIPTION,
+    "response": None,
+    "description_placeholders": None,
+}
+UNREGISTERED_OTHER = {"fields": {}, "response": None, "description_placeholders": None}
+
+
+def _load_declared_yaml(fname: str, secrets: Any = None) -> JSON_TYPE:
+    with io.StringIO(DECLARED_SERVICE_DESCRIPTIONS) as file:
+        return parse_yaml(file)
+
+
+async def test_async_declare_service(hass: HomeAssistant) -> None:
+    """Test declared services are described before and after their registration."""
+    domain = "test_domain"
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+
+    with patch(
+        "annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml
+    ) as mock_load_yaml:
+        await service.async_declare_service(hass, f"{domain}.declared")
+        # Declaring again does not reload the YAML
+        await service.async_declare_service(hass, f"{domain}.declared")
+    mock_load_yaml.assert_called_once_with(
+        "homeassistant/components/test_domain/services.yaml", None
+    )
+
+    # Declared services are not registered
+    assert await service.async_get_all_descriptions(hass) == {}
+    descriptions = await service.async_get_all_descriptions(hass, registered_only=False)
+    assert descriptions == {
+        domain: {"declared": UNREGISTERED_DECLARED, "other": UNREGISTERED_OTHER}
+    }
+    assert (
+        await service.async_get_all_descriptions(hass, registered_only=False)
+        is descriptions
+    )
+
+    # Registering fills in what only the registration knows, from the declared YAML
+    hass.services.async_register(
+        domain,
+        "declared",
+        lambda call: None,
+        supports_response=SupportsResponse.OPTIONAL,
+        description_placeholders={"placeholder": "beer"},
+    )
+    with patch(
+        "homeassistant.helpers.service._load_services_files"
+    ) as mock_load_services_files:
+        descriptions = await service.async_get_all_descriptions(hass)
+    mock_load_services_files.assert_not_called()
+    registered_declared = {
+        **DECLARED_DESCRIPTION,
+        "response": {"optional": True},
+        "description_placeholders": {"placeholder": "beer"},
+    }
+    assert descriptions == {domain: {"declared": registered_declared}}
+    descriptions = await service.async_get_all_descriptions(hass, registered_only=False)
+    assert descriptions == {
+        domain: {"declared": registered_declared, "other": UNREGISTERED_OTHER}
+    }
+
+    # A removed service stays described with what was learnt from its registration
+    hass.services.async_remove(domain, "declared")
+    assert await service.async_get_all_descriptions(hass) == {}
+    descriptions = await service.async_get_all_descriptions(hass, registered_only=False)
+    assert descriptions == {
+        domain: {"declared": registered_declared, "other": UNREGISTERED_OTHER}
+    }
+
+
+async def test_registered_service_declares_domain(hass: HomeAssistant) -> None:
+    """Test loading services.yaml for a registered service declares the others."""
+    domain = "test_domain"
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    hass.services.async_register(domain, "declared", lambda call: None)
+
+    with patch(
+        "annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml
+    ) as mock_load_yaml:
+        assert await service.async_get_all_descriptions(hass) == {
+            domain: {"declared": DECLARED_DESCRIPTION}
+        }
+        assert await service.async_get_all_descriptions(
+            hass, registered_only=False
+        ) == {
+            domain: {
+                "declared": DECLARED_DESCRIPTION,
+                "other": UNREGISTERED_OTHER,
+            }
+        }
+        # Declaring a service of a loaded domain does not read the YAML again
+        await service.async_declare_service(hass, f"{domain}.declared")
+    mock_load_yaml.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("top_level_files", "yaml_cache", "log_message"),
+    [
+        # Not cached, so the lookup is retried once the integration is installed
+        pytest.param(
+            None, {}, "Integration not found: test_domain", id="unknown_integration"
+        ),
+        pytest.param(
+            set(),
+            {"test_domain": {}},
+            "Failed to load services.yaml for integration: test_domain",
+            id="no_services_yaml",
+        ),
+    ],
+)
+async def test_async_declare_service_without_descriptions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    top_level_files: set[str] | None,
+    yaml_cache: dict[str, dict[str, Any]],
+    log_message: str,
+) -> None:
+    """Test declaring services of an integration without services.yaml."""
+    domain = "test_domain"
+    if top_level_files is not None:
+        mock_integration(hass, MockModule(domain), top_level_files=top_level_files)
+
+    with patch("annotatedyaml.loader.load_yaml") as mock_load_yaml:
+        await service.async_declare_service(hass, f"{domain}.declared")
+    mock_load_yaml.assert_not_called()
+
+    assert await service.async_get_all_descriptions(hass, registered_only=False) == {}
+    assert hass.data[service.YAML_SERVICE_DESCRIPTIONS_CACHE] == yaml_cache
+    assert log_message in caplog.text
+
+
+async def test_async_declare_service_installed_later(hass: HomeAssistant) -> None:
+    """Test a declared service is described once its integration is installed."""
+    domain = "test_domain"
+    await service.async_declare_service(hass, f"{domain}.declared")
+    assert await service.async_get_all_descriptions(hass, registered_only=False) == {}
+
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    with patch("annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml):
+        await service.async_declare_service(hass, f"{domain}.declared")
+    assert await service.async_get_all_descriptions(hass, registered_only=False) == {
+        domain: {"declared": UNREGISTERED_DECLARED, "other": UNREGISTERED_OTHER}
+    }
+
+
+async def test_async_subscribe_service_events(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test subscribing to changes of the service descriptions."""
+    domain = "test_domain"
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    listener = AsyncMock()
+    unsubscribe = service.async_subscribe_service_events(hass, listener)
+
+    # The first event has all descriptions
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with({}, {})
+    listener.reset_mock()
+
+    with patch("annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml):
+        await service.async_declare_service(hass, f"{domain}.declared")
+        await hass.async_block_till_done()
+    listener.assert_awaited_once_with(
+        {domain: {"declared": UNREGISTERED_DECLARED, "other": UNREGISTERED_OTHER}},
+        {},
+    )
+    listener.reset_mock()
+
+    # Registrations in a burst are coalesced into one event
+    hass.services.async_register(
+        domain,
+        "declared",
+        lambda call: None,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(domain, "dynamic", lambda call: None)
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with(
+        {
+            domain: {
+                "declared": {**DECLARED_DESCRIPTION, "response": {"optional": True}},
+                "dynamic": {"fields": {}},
+            }
+        },
+        {},
+    )
+    listener.reset_mock()
+
+    # Describing a dynamic service updates it
+    dynamic_schema = {"name": "Dynamic", "description": "A dynamic service"}
+    service.async_set_service_schema(hass, domain, "dynamic", dynamic_schema)
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with(
+        {domain: {"dynamic": {**dynamic_schema, "fields": {}}}}, {}
+    )
+    listener.reset_mock()
+
+    # Removing a declared service keeps it described, removing a dynamic one does not
+    hass.services.async_remove(domain, "declared")
+    hass.services.async_remove(domain, "dynamic")
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with({}, {domain: {"dynamic"}})
+    listener.reset_mock()
+
+    # A new listener gets all descriptions, a failing one is logged
+    failing_listener = AsyncMock(side_effect=ValueError("boom"))
+    unsubscribe_failing = service.async_subscribe_service_events(hass, failing_listener)
+    await hass.async_block_till_done()
+    failing_listener.assert_awaited_once_with(
+        {
+            domain: {
+                "declared": {**DECLARED_DESCRIPTION, "response": {"optional": True}},
+                "other": UNREGISTERED_OTHER,
+            }
+        },
+        {},
+    )
+    assert "Error while notifying service event listener" in caplog.text
+    listener.assert_not_awaited()
+
+    hass.services.async_register(domain, "dynamic", lambda call: None)
+    await hass.async_block_till_done()
+    listener.assert_awaited_once()
+    assert failing_listener.await_count == 2
+    unsubscribe_failing()
+    listener.reset_mock()
+
+    unsubscribe()
+    hass.services.async_remove(domain, "dynamic")
+    await hass.async_block_till_done()
+    listener.assert_not_awaited()
+
+
+async def test_async_subscribe_service_events_from_executor(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting a service schema from the executor notifies listeners."""
+    domain = "test_domain"
+    listener = AsyncMock()
+    service.async_subscribe_service_events(hass, listener)
+    hass.services.async_register(domain, "dynamic", lambda call: None)
+    await hass.async_block_till_done()
+    listener.reset_mock()
+
+    # Integrations with a sync setup call this from the executor
+    await hass.async_add_executor_job(
+        service.async_set_service_schema, hass, domain, "dynamic", {"name": "Dynamic"}
+    )
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with(
+        {domain: {"dynamic": {"name": "Dynamic", "description": "", "fields": {}}}},
+        {},
+    )
+
+
+async def test_async_subscribe_service_events_registration(
+    hass: HomeAssistant,
+) -> None:
+    """Test a registration describes the whole services.yaml in one event."""
+    domain = "test_domain"
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    listener = AsyncMock()
+    service.async_subscribe_service_events(hass, listener)
+    await hass.async_block_till_done()
+    listener.reset_mock()
+
+    with patch("annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml):
+        hass.services.async_register(domain, "declared", lambda call: None)
+        await hass.async_block_till_done()
+    listener.assert_awaited_once_with(
+        {
+            domain: {
+                "declared": DECLARED_DESCRIPTION,
+                "other": UNREGISTERED_OTHER,
+            }
+        },
+        {},
+    )
+
+
+async def test_async_subscribe_service_events_unsubscribe_before_snapshot(
+    hass: HomeAssistant,
+) -> None:
+    """Test unsubscribing before the first event."""
+    listener = AsyncMock()
+    unsubscribe = service.async_subscribe_service_events(hass, listener)
+    unsubscribe()
+    await hass.async_block_till_done()
+    listener.assert_not_awaited()
+
+
+async def test_async_subscribe_service_events_change_during_round(
+    hass: HomeAssistant,
+) -> None:
+    """Test a service registered while an event is prepared is sent afterwards."""
+    domain = "test_domain"
+    mock_integration(hass, MockModule(domain), top_level_files={"services.yaml"})
+    listener = AsyncMock()
+    service.async_subscribe_service_events(hass, listener)
+    await hass.async_block_till_done()
+    listener.reset_mock()
+
+    load_services_files = service._load_services_files
+
+    def _load_services_files(integrations: Iterable[Integration]) -> dict[str, Any]:
+        hass.services.register(domain, "dynamic", lambda call: None)
+        return load_services_files(integrations)
+
+    with (
+        patch("annotatedyaml.loader.load_yaml", side_effect=_load_declared_yaml),
+        patch(
+            "homeassistant.helpers.service._load_services_files",
+            _load_services_files,
+        ),
+    ):
+        hass.services.async_register(domain, "declared", lambda call: None)
+        await hass.async_block_till_done()
+    assert listener.await_args_list == [
+        mock_call(
+            {domain: {"declared": DECLARED_DESCRIPTION, "other": UNREGISTERED_OTHER}},
+            {},
+        ),
+        mock_call({domain: {"dynamic": {"fields": {}}}}, {}),
+    ]
+
+
 @pytest.mark.parametrize(
     ("target", "expected"),
     [
