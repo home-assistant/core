@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
@@ -36,7 +37,9 @@ def _entry(*commands: dict[str, Any]) -> MockConfigEntry:
 
 
 async def test_call_command_from_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a command from the UI renders its templates with the action data."""
     entry = _entry(
@@ -45,7 +48,7 @@ async def test_call_command_from_entry(
             "url": TEST_URL + "{{ door }}",
             "method": "post",
             "payload": '{"door": "{{ door }}"}',
-            "headers": {"X-Door": "{{ door }}"},
+            "headers": {"X-Door": "{{ door }}", "Authorization": "Bearer secret"},
             "content_type": "application/json",
         }
     )
@@ -70,6 +73,7 @@ async def test_call_command_from_entry(
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == b'{"door": "front"}'
     assert aioclient_mock.mock_calls[0][3]["X-Door"] == "front"
+    assert "Bearer secret" not in caplog.text
 
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:
