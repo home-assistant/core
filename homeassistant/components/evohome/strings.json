@@ -37,10 +37,19 @@
       "message": "The mode `{mode}` can't be set as requested"
     },
     "mode_timespan_not_in_future": {
-      "message": "The mode `{mode}` must end in the future"
+      "message": "The 'Duration' or 'Period' of the mode `{mode}` must end in the future"
     },
     "mode_timespan_required": {
       "message": "The mode `{mode}` requires a 'Duration' or 'Period'"
+    },
+    "mode_unknown": {
+      "message": "The mode `{mode}` is not a valid system mode"
+    },
+    "override_not_in_future": {
+      "message": "The override must end in the future (if the duration is 0, the next scheduled setpoint may have already passed)"
+    },
+    "override_request_invalid": {
+      "message": "The override can't be set as requested"
     },
     "request_invalid": {
       "message": "The request is not valid"

@@ -36,6 +36,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SCHEDULE_MAX_AGE
+from .helpers import as_camel_case
 
 # any other reason gets "api_request_failed"
 _API_CALL_ERROR_TRANSLATION_KEYS: Final[dict[ec2.ApiCallErrorReason, str]] = {
@@ -54,7 +55,7 @@ def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
 
 # a request that the client rejected, before any API call (i.e. invalid arguments)
 _REQUEST_ERROR_TRANSLATION_KEYS: Final[dict[ec2.RequestErrorReason, str]] = {
-    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_not_supported",
+    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_unknown",
     ec2.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
     ec2.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
     ec2.RequestErrorReason.TIMESPAN_REQUIRED: "mode_timespan_required",
@@ -70,12 +71,23 @@ def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
     """Return the translated error of a request that the client has rejected.
 
     The reason picks the message, and the details supply its placeholders (only the
-    mode is used, which every InvalidSetModeError has).
+    mode is used, spelt as the set_system_mode action expects it). A zone/DHW override
+    has its own messages, without a placeholder.
     """
 
-    if (mode := err.details.get("mode")) is None:  # e.g. an InvalidSetScheduleError
+    if (mode := err.details.get("mode")) is None:  # e.g. TIMESPAN_CONFLICTING
         return ServiceValidationError(
             translation_domain=DOMAIN, translation_key="request_invalid"
+        )
+
+    if mode in ec2.ZoneMode:  # a zone/DHW override (DHW uses ZoneMode too)
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=(
+                "override_not_in_future"
+                if err.reason == ec2.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE
+                else "override_request_invalid"
+            ),
         )
 
     if err.reason == ec2.RequestErrorReason.TIMESPAN_UNSUPPORTED:
@@ -88,7 +100,7 @@ def _bad_request_error(err: ec2.BadApiRequestError) -> ServiceValidationError:
     return ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key=key,
-        translation_placeholders={"mode": mode},
+        translation_placeholders={"mode": as_camel_case(mode)},
     )
 
 

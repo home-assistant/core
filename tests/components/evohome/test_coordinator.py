@@ -530,23 +530,34 @@ async def test_failed_schedule_poll_keeps_entities_available(
         pytest.param(
             evo_exc.InvalidSetModeError(
                 "Invalid mode",
-                reason=evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
-                mode="temporary_override",
-                timing_mode="until",
+                reason=evo_exc.RequestErrorReason.MODE_UNSUPPORTED,
+                mode="heating_off",
             ),
-            "mode_timespan_not_in_future",
-            {"mode": "temporary_override"},
-            id="timespan_not_in_future",
+            "mode_not_supported",
+            {"mode": "HeatingOff"},
+            id="mode_unsupported",
         ),
         pytest.param(
             evo_exc.InvalidSetModeError(
                 "Invalid mode",
-                reason=evo_exc.RequestErrorReason.MODE_UNSUPPORTED,
-                mode="temporary_override",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_REQUIRED,
+                mode="away",
+                required_timing_mode="period",
             ),
-            "mode_not_supported",
-            {"mode": "temporary_override"},
-            id="mode_unsupported",
+            "mode_timespan_required",
+            {"mode": "Away"},
+            id="timespan_required",
+        ),
+        pytest.param(
+            evo_exc.InvalidSetModeError(
+                "Invalid mode",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_NOT_IN_FUTURE,
+                mode="auto_with_eco",
+                timing_mode="duration",
+            ),
+            "mode_timespan_not_in_future",
+            {"mode": "AutoWithEco"},
+            id="timespan_not_in_future",
         ),
         pytest.param(
             evo_exc.InvalidSetModeError(
@@ -557,21 +568,24 @@ async def test_failed_schedule_poll_keeps_entities_available(
                 required_timing_mode="period",
             ),
             "mode_cant_have_duration",
-            {"mode": "away"},
+            {"mode": "Away"},
             id="timespan_unsupported",
         ),
         pytest.param(
             evo_exc.InvalidSetModeError(
                 "Invalid mode",
-                reason=evo_exc.RequestErrorReason.TEMPERATURE_INVALID,
-                mode="temporary_override",
+                reason=evo_exc.RequestErrorReason.TIMESPAN_OUT_OF_RANGE,
+                mode="away",
+                timing_mode="period",
             ),
             "mode_request_invalid",
-            {"mode": "temporary_override"},
+            {"mode": "Away"},
             id="fallback",
         ),
         pytest.param(
-            evo_exc.BadApiRequestError("Invalid request"),
+            evo_exc.InvalidSetModeError(
+                "Invalid mode", reason=evo_exc.RequestErrorReason.TIMESPAN_CONFLICTING
+            ),
             "request_invalid",
             None,
             id="no_mode",
@@ -581,7 +595,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
 @pytest.mark.usefixtures("evohome")
 async def test_action_request_rejected_by_client(
     hass: HomeAssistant,
-    zone_id: str,
+    ctl_id: str,
     caplog: pytest.LogCaptureFixture,
     exception: evo_exc.BadApiRequestError,
     translation_key: str,
@@ -595,13 +609,16 @@ async def test_action_request_rejected_by_client(
     caplog.set_level(logging.DEBUG, logger="homeassistant.components.evohome")
 
     with (
-        patch("evohomeasync2.zone.Zone.set_temperature", side_effect=exception),
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=exception,
+        ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: zone_id, ATTR_TEMPERATURE: 19.1},
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ctl_id},
             blocking=True,
         )
 
