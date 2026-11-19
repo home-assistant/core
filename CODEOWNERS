@@ -1866,6 +1866,8 @@ AGENTS.md @home-assistant/core
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @peterager @jjlawren
 /tests/components/sonos/ @peterager @jjlawren
+/homeassistant/components/sony_infrared/ @googanhiem
+/tests/components/sony_infrared/ @googanhiem
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
