@@ -40,6 +40,7 @@ from .const import (
     SERVICE_SYNC,
     RemoteEntityFeature,
     RemoteEntityStateAttribute,
+    RemoteNavigation,
     RemoteService,
     RemoteServiceArgument,
 )
@@ -87,6 +88,7 @@ __all__ = [
     "RemoteEntityDescription",
     "RemoteEntityFeature",
     "RemoteEntityStateAttribute",
+    "RemoteNavigation",
     "RemoteService",
     "RemoteServiceArgument",
 ]
