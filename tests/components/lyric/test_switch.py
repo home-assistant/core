@@ -62,30 +62,46 @@ async def test_switch(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def _async_set_mode(
+    hass: HomeAssistant,
+    mock_lyric: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mode: str,
+) -> None:
+    """Set the thermostat mode and refresh the coordinator."""
+    device = mock_lyric.locations[0].devices_dict[LCC_MAC_ID]
+    device.attributes["changeableValues"]["mode"] = mode
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
 async def test_switch_on(
     hass: HomeAssistant, mock_lyric: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test the switch is on while the thermostat is in emergency heat."""
-    device = mock_lyric.locations[0].devices_dict[LCC_MAC_ID]
-    device.attributes["changeableValues"]["mode"] = "EmergencyHeat"
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await _async_set_mode(hass, mock_lyric, freezer, "EmergencyHeat")
 
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 @pytest.mark.parametrize(
-    ("service", "mode"),
+    ("current_mode", "service", "mode"),
     [
-        pytest.param(SERVICE_TURN_ON, "EmergencyHeat", id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, "Heat", id="turn_off"),
+        pytest.param("Heat", SERVICE_TURN_ON, "EmergencyHeat", id="turn_on"),
+        pytest.param("EmergencyHeat", SERVICE_TURN_OFF, "Heat", id="turn_off"),
     ],
 )
 async def test_turn_on_off(
-    hass: HomeAssistant, mock_lyric: MagicMock, service: str, mode: str
+    hass: HomeAssistant,
+    mock_lyric: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    current_mode: str,
+    service: str,
+    mode: str,
 ) -> None:
     """Test turning emergency heat on and off."""
+    await _async_set_mode(hass, mock_lyric, freezer, current_mode)
     mock_lyric.get_locations.reset_mock()
 
     await hass.services.async_call(
@@ -94,6 +110,23 @@ async def test_turn_on_off(
 
     mock_lyric.update_thermostat.assert_awaited_once_with(ANY, ANY, mode=mode)
     mock_lyric.get_locations.assert_awaited_once()
+
+
+@pytest.mark.parametrize("current_mode", ["Off", "Heat", "Cool", "Auto"])
+async def test_turn_off_keeps_other_modes(
+    hass: HomeAssistant,
+    mock_lyric: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    current_mode: str,
+) -> None:
+    """Test turning the switch off when emergency heat is off leaves the mode alone."""
+    await _async_set_mode(hass, mock_lyric, freezer, current_mode)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_lyric.update_thermostat.assert_not_awaited()
 
 
 async def test_turn_on_error(hass: HomeAssistant, mock_lyric: MagicMock) -> None:

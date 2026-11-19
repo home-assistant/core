@@ -72,7 +72,8 @@ class LyricEmergencyHeatSwitch(LyricDeviceEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn emergency heat off, returning the thermostat to heat."""
-        await self._async_set_mode(LYRIC_HVAC_MODE_HEAT)
+        if self.is_on:
+            await self._async_set_mode(LYRIC_HVAC_MODE_HEAT)
 
     async def _async_set_mode(self, mode: str) -> None:
         """Set the thermostat mode, then refresh the coordinator."""
