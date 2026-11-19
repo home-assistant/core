@@ -1,6 +1,5 @@
 """Code to handle a Dynalite bridge."""
 
-import asyncio
 from collections.abc import Callable, Mapping
 from typing import Any
 
@@ -23,9 +22,6 @@ from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATF
 from .convert_config import convert_config
 
 type DynaliteConfigEntry = ConfigEntry[DynaliteBridge]
-
-# dynalite-devices <= 0.1.48 can wait for bus traffic before its reset returns
-RESET_TIMEOUT = 5
 
 
 class DynaliteBridge:
@@ -54,13 +50,7 @@ class DynaliteBridge:
     async def async_reset(self) -> None:
         """Close the connection to the gateway."""
         LOGGER.debug("Resetting bridge - host %s", self.host)
-        try:
-            async with asyncio.timeout(RESET_TIMEOUT):
-                await self.dynalite_devices.async_reset()
-        except TimeoutError:
-            LOGGER.warning(
-                "Timed out closing the connection to %s, cancelling it", self.host
-            )
+        await self.dynalite_devices.async_reset()
 
     def reload_config(self, config: Mapping[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""

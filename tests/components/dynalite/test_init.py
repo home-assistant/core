@@ -1,7 +1,6 @@
 """Test Dynalite __init__."""
 
-import asyncio
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import call, patch
 
 from probatio import MultipleInvalid
 import pytest
@@ -170,28 +169,3 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         for cur_call in mock_unload.mock_calls:
             assert cur_call in expected_calls
         mock_reset.assert_awaited_once()
-
-
-async def test_unload_entry_reset_timeout(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that unloading finishes when the library's reset never returns."""
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: "1.2.3.4"})
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-    never_returns = asyncio.Event()
-    with (
-        patch("homeassistant.components.dynalite.bridge.RESET_TIMEOUT", 0.01),
-        patch(
-            "homeassistant.components.dynalite.bridge.DynaliteDevices.async_reset",
-            AsyncMock(side_effect=never_returns.wait),
-        ),
-    ):
-        assert await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-    assert "Timed out closing the connection to 1.2.3.4" in caplog.text
