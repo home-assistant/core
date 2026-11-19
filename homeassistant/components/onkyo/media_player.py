@@ -220,7 +220,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _query_av_info_unsub: CALLBACK_TYPE | None = None
     _query_net_unsub: CALLBACK_TYPE | None = None
 
-    _net_source: bool = False
+    # The selected input, while it is one played by the NET/USB player
+    _net_input: InputSource | None = None
     _net_state: MediaPlayerState | None = None
 
     def __init__(
@@ -339,7 +340,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def clear_net_playback(self) -> None:
         """Forget the NET/USB player state."""
-        self._net_source = False
+        self._net_input = None
         self._net_state = None
         self._attr_media_content_type = None
         self._attr_media_title = None
@@ -517,7 +518,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                     self._attr_source = source_meaning
 
                 if self._zone is Zone.MAIN:
-                    self._update_net_source(source in NET_SOURCES)
+                    self._update_net_input(source)
 
                 self._query_av_info_delayed()
 
@@ -584,7 +585,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 | status.NetAlbum()
                 | status.NetTrack()
                 | status.NetTime()
-            ) if self._net_source:
+            ) if self._net_input is not None:
                 self._process_net_update(message)
 
             case status.NotAvailable(kind=Kind.AUDIO_INFORMATION):
@@ -623,12 +624,16 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             self.hass, QUERY_AV_INFO_DELAY, coro
         )
 
-    def _update_net_source(self, net_source: bool) -> None:
-        if net_source and not self._net_source:
+    def _update_net_input(self, source: InputSource) -> None:
+        net_input = source if source in NET_SOURCES else None
+        if net_input is self._net_input:
+            # Repeated report of the same input
+            return
+        # Playback state belongs to the previous input
+        self.clear_net_playback()
+        if net_input is not None:
+            self._net_input = net_input
             self._query_net_delayed()
-        elif not net_source:
-            self.clear_net_playback()
-        self._net_source = net_source
 
     def _process_net_update(
         self,
@@ -661,11 +666,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def _query_net_delayed(self) -> None:
         if self._query_net_unsub is not None:
-            return
+            # Another input change restarts the delay
+            self._query_net_unsub()
+            self._query_net_unsub = None
 
         async def coro(_now: datetime) -> None:
             self._query_net_unsub = None
-            if not self._net_source:
+            if self._net_input is None:
                 return
             await self._manager.write(query.NetPlayStatus())
             await self._manager.write(query.NetTitle())

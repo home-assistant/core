@@ -23,6 +23,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_fire_time_changed_exact,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -567,6 +568,64 @@ async def test_net_playback_cleared(
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & NET_FEATURES
     assert ATTR_MEDIA_TITLE not in state.attributes
     assert ATTR_MEDIA_POSITION not in state.attributes
+
+
+async def test_net_input_switch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test switching between NET/USB inputs clears and queries again."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+    writes.clear()
+
+    # A repeated report of the same input keeps the state
+    await receive_messages(read_queue, _input_source("2B"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() not in writes
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_PLAYING
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Title"
+
+    # Switching from NETWORK to USB drops the old track
+    await receive_messages(read_queue, _input_source("29"))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_ON
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & NET_FEATURES
+
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() in writes
+
+
+async def test_net_input_switch_restarts_query_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test a second input change before the query restarts its delay."""
+    await receive_messages(read_queue, _input_source("2B"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+
+    await receive_messages(read_queue, _input_source("29"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() not in writes
+
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert writes.count(query.NetPlayStatus()) == 1
 
 
 async def test_net_status_ignored_on_other_source(
