@@ -1,6 +1,7 @@
 """Test the Blink init."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -10,6 +11,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.components import blink
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.components.blink.coordinator import SCAN_INTERVAL
 from homeassistant.components.blink.services import BlinkService
@@ -103,6 +105,34 @@ async def test_scheduled_refresh_is_not_forced(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_blink_api.refresh.assert_awaited_once_with()
+
+
+async def test_every_token_refresh_is_stored(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test each token refresh reaches storage, not only the first one."""
+    # BlinkPy updates its own dict in place and returns that same dict
+    login_attributes = dict(mock_config_entry.data)
+    mock_blink_auth_api.login_attributes = login_attributes
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    token_refreshed = blink.Auth.call_args.kwargs["callback"]
+
+    for token in ("first_token", "second_token"):
+        login_attributes["token"] = token
+        token_refreshed()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        (stored_entry,) = hass_storage["core.config_entries"]["data"]["entries"]
+        assert stored_entry["data"]["token"] == token
 
 
 async def test_migrate_V0(
