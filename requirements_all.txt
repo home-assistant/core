@@ -2959,7 +2959,7 @@ pyvesync==3.4.2
 pyvisonic==4.1.3
 
 # homeassistant.components.visonic
-pyvisonicalarm==0.4.2
+pyvisonicalarm==0.4.3
 
 # homeassistant.components.velux
 pyvlx==0.2.36

@@ -14,6 +14,7 @@ from pyvisonic import (
     VisonicClientCallbacks,
     VisonicClientSettings,
 )
+from pyvisonicalarm.core import API
 
 from homeassistant.components.visonic.cloud import VisonicCloudConnection
 from homeassistant.components.visonic.connection_test import ConnectionTest
@@ -58,6 +59,21 @@ def mock_visonic_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         client.panel_model = "PowerMax Pro"
         client.send_command.return_value = AlCommandStatus.SUCCESS
         yield client
+
+
+@pytest.fixture
+def mock_cloud_state_api() -> Generator[MagicMock]:
+    """Supply cloud responses while exercising the published alarm library."""
+    api = MagicMock(spec=API)
+    api.app_id = "test-app-id"
+    api.panel_login.return_value = True
+    api.get_panels.return_value = [
+        {"panel_serial": "ABCDEF", "panel_model": "PowerMaster"}
+    ]
+    api.get_panel_info.return_value = {"partitions": [{"id": 1}]}
+    api.get_devices.return_value = []
+    with patch.object(VisonicCloudConnection, "authenticate", return_value=api):
+        yield api
 
 
 @pytest.fixture

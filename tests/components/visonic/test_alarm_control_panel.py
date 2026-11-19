@@ -66,6 +66,48 @@ from homeassistant.helpers.dispatcher import (
 from .helpers import SetupIntegration, create_mock_config_entry
 
 
+@pytest.mark.parametrize(
+    ("partition_state", "expected_state"),
+    [
+        pytest.param("AWAY", AlarmControlPanelState.ARMED_AWAY, id="away"),
+        pytest.param("HOME", AlarmControlPanelState.ARMED_HOME, id="home"),
+        pytest.param("ALARM", AlarmControlPanelState.TRIGGERED, id="active-alarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    "memory_date",
+    [
+        pytest.param("2026-10-19 06:48:53", id="old-memory"),
+        pytest.param(None, id="undated-memory"),
+    ],
+)
+async def test_cloud_alarm_memory_preserves_panel_state(
+    hass: HomeAssistant,
+    mock_cloud_state_api: MagicMock,
+    partition_state: str,
+    expected_state: AlarmControlPanelState,
+    memory_date: str | None,
+) -> None:
+    """Retained cloud memory must not override the current alarm entity state."""
+    mock_cloud_state_api.get_status.return_value = {
+        "connected": True,
+        "partitions": [{"id": 1, "state": partition_state, "status": ""}],
+    }
+    mock_cloud_state_api.get_alarms.return_value = [
+        {"alarm_type": "ALARM_IN_MEMORY", "datetime": memory_date, "partitions": [1]}
+    ]
+    entry = create_mock_config_entry(data={CONF_TYPE: DeviceType.CLOUD})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.visonic_alarm_p1")
+    assert state is not None
+    assert state.state == expected_state
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
 @pytest.mark.usefixtures("mock_panel_connect", "mock_async_zeroconf")
 @pytest.mark.parametrize(
     ("device_type", "powerlink", "code_format", "code_arm_required"),

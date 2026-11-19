@@ -13,6 +13,6 @@
   "requirements": [
     "serialx==1.15.1",
     "pyvisonic==4.1.3",
-    "pyvisonicalarm==0.4.2"
+    "pyvisonicalarm==0.4.3"
   ]
 }

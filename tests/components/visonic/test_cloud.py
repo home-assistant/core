@@ -663,7 +663,6 @@ def test_process_devices_propagates_invalid_device(
         "status_partitions",
         "alarm_partitions",
         "expected_armcode",
-        "expected_siren",
         "expected_ready",
     ),
     [
@@ -675,7 +674,6 @@ def test_process_devices_propagates_invalid_device(
             ],
             [1],
             AlarmPanelStatus.ARMED_AWAY,
-            True,
             False,
             id="multi-partition-update",
         ),
@@ -684,7 +682,6 @@ def test_process_devices_propagates_invalid_device(
             [{"id": 1, "state": "AWAY", "status": "", "ready": True}],
             [1],
             AlarmPanelStatus.ARMED_AWAY,
-            True,
             True,
             id="first-single-partition-update",
         ),
@@ -696,7 +693,6 @@ def test_process_devices_propagates_invalid_device(
             ],
             [1],
             AlarmPanelStatus.DISARMED,
-            False,
             True,
             id="inactive-partition-ignored",
         ),
@@ -709,8 +705,7 @@ def test_process_devices_propagates_invalid_device(
             [3],
             AlarmPanelStatus.ARMED_AWAY,
             True,
-            True,
-            id="sparse-partition-siren",
+            id="sparse-partition-memory",
         ),
         pytest.param(
             [{"id": 1, "active": True}, {"id": 2, "active": True}],
@@ -720,9 +715,8 @@ def test_process_devices_propagates_invalid_device(
             ],
             [1],
             AlarmPanelStatus.ARMED_AWAY,
-            False,
             True,
-            id="intrusion-in-disarmed-partition",
+            id="memory-in-disarmed-partition",
         ),
         pytest.param(
             [{"id": 1, "active": True}, {"id": 2, "active": True}],
@@ -732,7 +726,6 @@ def test_process_devices_propagates_invalid_device(
             ],
             [],
             AlarmPanelStatus.ENTRY_DELAY,
-            False,
             True,
             id="entry-delay-first",
         ),
@@ -744,7 +737,6 @@ def test_process_devices_propagates_invalid_device(
             ],
             [],
             AlarmPanelStatus.ENTRY_DELAY,
-            False,
             True,
             id="entry-delay-last",
         ),
@@ -756,7 +748,6 @@ def test_process_devices_propagates_invalid_device(
             ],
             [],
             AlarmPanelStatus.TRIGGERED,
-            False,
             True,
             id="triggered-over-entry-delay",
         ),
@@ -768,7 +759,6 @@ async def test_connected_state_snapshot(
     status_partitions: list[dict[str, Any]],
     alarm_partitions: list[int],
     expected_armcode: AlarmPanelStatus,
-    expected_siren: bool,
     expected_ready: bool,
 ) -> None:
     """Build connected snapshots for both panel partition configurations."""
@@ -810,7 +800,7 @@ async def test_connected_state_snapshot(
     assert snapshot.statusdict == {}
     assert snapshot.ispowermaster is True
     assert snapshot.armcode is expected_armcode
-    assert snapshot.siren_active is expected_siren
+    assert not snapshot.siren_active
     assert snapshot.panelstate.attributes["ready"] is expected_ready
     assert "partition" not in snapshot.panelstate.as_dict()
     cloud.callbacks.panel_ready.assert_not_called()
@@ -830,12 +820,12 @@ async def test_connected_state_snapshot(
         pytest.param((1, 0), id="newest-first"),
     ],
 )
-async def test_snapshot_keeps_alarm_in_another_partition(
+async def test_snapshot_ignores_memory_in_all_partitions(
     cloud: VisonicCloudConnection,
     newer_partition: int,
     alarm_order: tuple[int, int],
 ) -> None:
-    """An unrelated newer alarm cannot hide an armed partition's alarm."""
+    """Memory records must not trigger any armed partition."""
     cloud.cloud_alarm.get_status = AsyncMock(
         return_value=Status(
             {
@@ -884,7 +874,7 @@ async def test_snapshot_keeps_alarm_in_another_partition(
 
     assert snapshot.connected
     assert snapshot.armcode is AlarmPanelStatus.ARMED_AWAY
-    assert snapshot.siren_active
+    assert not snapshot.siren_active
 
 
 @pytest.mark.parametrize(
