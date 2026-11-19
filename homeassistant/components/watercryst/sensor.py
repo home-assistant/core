@@ -32,8 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WatercrystConfigEntry
-from .coordinator import WatercrystBaseCoordinator
+from .coordinator import WatercrystBaseCoordinator, WatercrystConfigEntry
 from .entity import WatercrystEntity
 
 
@@ -47,7 +46,7 @@ class WatercrystSensorEntityDescription[DataT](SensorEntityDescription):
 
 STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
     WatercrystSensorEntityDescription[StateResponse](
-        key="mode.id",
+        key="mode_id",
         translation_key="mode_id",
         device_class=SensorDeviceClass.ENUM,
         options=[mode.value for mode in ModeId],
@@ -56,21 +55,21 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
         ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
-        key="event.event_id",
+        key="event_id",
         translation_key="event_id",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.event.event_id if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
-        key="event.category",
+        key="event_category",
         translation_key="event_category",
         device_class=SensorDeviceClass.ENUM,
         options=[cat.value for cat in EventCategory],
         value_fn=lambda data: data.event.category if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
-        key="water_protection.pause_leakage_protection_until_utc",
-        translation_key="pause_leakage_protection_until_utc",
+        key="pause_leakage_protection_until",
+        translation_key="pause_leakage_protection_until",
         device_class=SensorDeviceClass.TIMESTAMP,
         supported_fn=lambda data: data.has_leakage_protection_system,
         value_fn=lambda data: (

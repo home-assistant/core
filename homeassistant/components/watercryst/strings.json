@@ -68,7 +68,7 @@
           "water_treatment": "Water treatment"
         }
       },
-      "pause_leakage_protection_until_utc": {
+      "pause_leakage_protection_until": {
         "name": "Pause leakage protection until"
       },
       "todays_consumption": {

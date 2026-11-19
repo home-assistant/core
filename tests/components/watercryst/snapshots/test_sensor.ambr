@@ -45,7 +45,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode_id',
-    'unique_id': '2026123456789123_mode.id',
+    'unique_id': '2026123456789123_mode_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -114,7 +114,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_category',
-    'unique_id': '2026123456789123_event.category',
+    'unique_id': '2026123456789123_event_category',
     'unit_of_measurement': None,
   })
 # ---
@@ -170,7 +170,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_id',
-    'unique_id': '2026123456789123_event.event_id',
+    'unique_id': '2026123456789123_event_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -371,57 +371,6 @@
     'state': 'success',
   })
 # ---
-# name: test_all_entities[sensor.ha_device_pause_leakage_protection_until-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('watercryst', '2026123456789123')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ha_device_pause_leakage_protection_until',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Pause leakage protection until',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Pause leakage protection until',
-    'platform': 'watercryst',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pause_leakage_protection_until_utc',
-    'unique_id': '2026123456789123_water_protection.pause_leakage_protection_until_utc',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.ha_device_pause_leakage_protection_until-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Pause leakage protection until',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ha_device_pause_leakage_protection_until',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2026-06-08T13:13:00+00:00',
-  })
-# ---
 # name: test_all_entities[sensor.ha_device_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -478,6 +427,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.68',
+  })
+# ---
+# name: test_all_entities[sensor.ha_device_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('watercryst', '2026123456789123')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ha_device_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timestamp',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'watercryst',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pause_leakage_protection_until',
+    'unique_id': '2026123456789123_pause_leakage_protection_until',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.ha_device_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ha_device_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-06-08T13:13:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.ha_device_today_s_water_consumption-entry]
@@ -758,7 +758,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode_id',
-    'unique_id': '2026123456789123_mode.id',
+    'unique_id': '2026123456789123_mode_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -827,7 +827,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_category',
-    'unique_id': '2026123456789123_event.category',
+    'unique_id': '2026123456789123_event_category',
     'unit_of_measurement': None,
   })
 # ---
@@ -883,7 +883,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event_id',
-    'unique_id': '2026123456789123_event.event_id',
+    'unique_id': '2026123456789123_event_id',
     'unit_of_measurement': None,
   })
 # ---
