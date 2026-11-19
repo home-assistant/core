@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.abode.services import AbodeService
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import ATTR_ENTITY_ID, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -38,7 +38,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -54,7 +54,7 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: DEVICE_ID},
+            {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -70,7 +70,7 @@ async def test_turn_automation_off(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: AUTOMATION_ID},
+            {TargetKey.ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -86,7 +86,7 @@ async def test_turn_automation_on(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: AUTOMATION_ID},
+            {TargetKey.ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
         await hass.async_block_till_done()

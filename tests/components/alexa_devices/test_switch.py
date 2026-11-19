@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -80,7 +80,7 @@ async def test_switch_dnd(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -91,7 +91,7 @@ async def test_switch_dnd(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -276,7 +276,7 @@ async def test_switch_communication(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -303,7 +303,7 @@ async def test_switch_communication(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device_data.communication_settings = {
@@ -342,7 +342,7 @@ async def test_switch_led(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: LED_ENTITY_ID},
         blocking=True,
     )
 
@@ -360,7 +360,7 @@ async def test_switch_led(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: LED_ENTITY_ID},
         blocking=True,
     )
 
@@ -439,7 +439,7 @@ async def test_switch_led_cannot_set_feature(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: LED_ENTITY_ID},
+            {TargetKey.ENTITY_ID: LED_ENTITY_ID},
             blocking=True,
         )
 
