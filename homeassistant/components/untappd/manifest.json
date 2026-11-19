@@ -1,0 +1,14 @@
+{
+  "domain": "untappd",
+  "name": "Untappd",
+  "categories": ["news_social_media"],
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/untappd",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiountappd"],
+  "quality_scale": "bronze",
+  "requirements": ["aiountappd==0.1.0"]
+}

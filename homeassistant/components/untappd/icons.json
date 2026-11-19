@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "last_beer": { "default": "mdi:glass-mug-variant" },
+      "last_brewery": { "default": "mdi:factory" },
+      "last_checkin": { "default": "mdi:map-marker-check" },
+      "last_rating": { "default": "mdi:star" },
+      "total_badges": { "default": "mdi:medal" },
+      "total_beers": { "default": "mdi:beer" },
+      "total_checkins": { "default": "mdi:check-all" },
+      "total_friends": { "default": "mdi:account-multiple" }
+    }
+  }
+}

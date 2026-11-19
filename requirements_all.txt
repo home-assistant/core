@@ -499,6 +499,9 @@ aiotrimlight==0.4.0
 # homeassistant.components.unifi
 aiounifi==100
 
+# homeassistant.components.untappd
+aiountappd==0.1.0
+
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
 

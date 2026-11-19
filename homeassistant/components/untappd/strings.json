@@ -1,0 +1,47 @@
+{
+  "application_credentials": {
+    "description": "Untappd only gives API access to approved apps. Apply for an app on the [Untappd API page]({developer_url}), then enter its client ID and client secret here. For more details, see the [Untappd integration documentation]({more_info_url})."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "unique_id_mismatch": "The account you signed in with is not the account that was set up before. Sign in with the same Untappd account.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Untappd integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_beer": { "name": "Last beer" },
+      "last_brewery": { "name": "Last brewery" },
+      "last_checkin": { "name": "Last check-in" },
+      "last_rating": { "name": "Last rating" },
+      "total_badges": { "name": "Badges", "unit_of_measurement": "badges" },
+      "total_beers": { "name": "Unique beers", "unit_of_measurement": "beers" },
+      "total_checkins": { "name": "Check-ins", "unit_of_measurement": "check-ins" },
+      "total_friends": { "name": "Friends", "unit_of_measurement": "friends" }
+    }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "The Untappd access token is no longer valid."
+    },
+    "update_failed": {
+      "message": "An error occurred while fetching data from Untappd: {error}"
+    }
+  }
+}

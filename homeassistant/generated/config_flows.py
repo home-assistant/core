@@ -900,6 +900,7 @@ FLOWS = {
         "unifi_direct",
         "unifi_discovery",
         "unifiprotect",
+        "untappd",
         "upb",
         "upcloud",
         "upnp",

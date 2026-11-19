@@ -1,0 +1,47 @@
+{
+  "meta": {"code": 200, "response_time": {"time": 0.08, "measure": "seconds"}},
+  "notifications": [],
+  "response": {
+    "pagination": {"next_url": "", "max_id": 1000000001},
+    "checkins": {
+      "count": 2,
+      "items": [
+        {
+          "checkin_id": 1000000002,
+          "created_at": "Tue, 17 Nov 2026 19:32:10 +0000",
+          "checkin_comment": "Lovely",
+          "rating_score": 4.25,
+          "beer": {
+            "bid": 4473,
+            "beer_name": "Pliny the Elder",
+            "beer_label": "https://untappd.akamaized.net/site/beer_logos/beer-4473.jpeg",
+            "beer_abv": 8,
+            "beer_style": "IPA - Imperial / Double",
+            "beer_active": 1
+          },
+          "brewery": {
+            "brewery_id": 5143,
+            "brewery_name": "Russian River Brewing Company",
+            "brewery_label": "https://untappd.akamaized.net/site/brewery_logos/brewery-5143.jpeg"
+          },
+          "venue": {"venue_id": 9917985, "venue_name": "Untappd at Home"}
+        },
+        {
+          "checkin_id": 1000000001,
+          "created_at": "Mon, 16 Nov 2026 18:00:00 +0000",
+          "checkin_comment": "",
+          "rating_score": 0,
+          "beer": {
+            "bid": 1,
+            "beer_name": "Test Lager",
+            "beer_label": "",
+            "beer_abv": 5.0,
+            "beer_style": "Lager - Pale"
+          },
+          "brewery": {"brewery_id": 2, "brewery_name": "Test Brewery"},
+          "venue": []
+        }
+      ]
+    }
+  }
+}

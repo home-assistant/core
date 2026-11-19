@@ -1,0 +1,31 @@
+{
+  "meta": {"code": 200, "response_time": {"time": 0.05, "measure": "seconds"}},
+  "notifications": [],
+  "response": {
+    "user": {
+      "uid": 1234567,
+      "id": 1234567,
+      "user_name": "hopsfan",
+      "first_name": "Hops",
+      "last_name": "Fan",
+      "user_avatar": "https://untappd.akamaized.net/profile/avatar.jpg",
+      "user_avatar_hd": "https://untappd.akamaized.net/profile/avatar_hd.jpg",
+      "user_cover_photo": "",
+      "location": "Amsterdam",
+      "is_supporter": 1,
+      "url": "",
+      "bio": "",
+      "untappd_url": "https://untappd.com/user/hopsfan",
+      "account_type": "user",
+      "stats": {
+        "total_badges": 87,
+        "total_friends": 42,
+        "total_checkins": 1337,
+        "total_beers": 912,
+        "total_created_beers": 0,
+        "total_followings": 3,
+        "total_photos": 250
+      }
+    }
+  }
+}
