@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_WEBHOOK_ID,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -442,7 +443,7 @@ async def test_service_set_temperature_with_end_datetime(
         DOMAIN,
         NetatmoService.SET_TEMPERATURE_WITH_END_DATETIME,
         {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
             NetatmoServiceArgument.TARGET_TEMPERATURE: 25,
             NetatmoServiceArgument.END_DATETIME: "2023-11-17 12:23:00",
         },
@@ -500,7 +501,7 @@ async def test_service_set_temperature_with_time_period(
         DOMAIN,
         NetatmoService.SET_TEMPERATURE_WITH_TIME_PERIOD,
         {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
             NetatmoServiceArgument.TARGET_TEMPERATURE: 25,
             NetatmoServiceArgument.TIME_PERIOD: "02:24:00",
         },
@@ -587,7 +588,7 @@ async def test_service_clear_temperature_setting(
     await hass.services.async_call(
         DOMAIN,
         NetatmoService.CLEAR_TEMPERATURE_SETTING,
-        {ATTR_ENTITY_ID: climate_entity_livingroom},
+        {TargetKey.ENTITY_ID: climate_entity_livingroom},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -696,7 +697,7 @@ async def test_service_schedule_thermostats(
             "netatmo",
             NetatmoService.SET_SCHEDULE,
             {
-                ATTR_ENTITY_ID: climate_entity_livingroom,
+                TargetKey.ENTITY_ID: climate_entity_livingroom,
                 NetatmoServiceArgument.SCHEDULE_NAME: "Winter",
             },
             blocking=True,
@@ -732,7 +733,7 @@ async def test_service_schedule_thermostats(
             "netatmo",
             NetatmoService.SET_SCHEDULE,
             {
-                ATTR_ENTITY_ID: climate_entity_livingroom,
+                TargetKey.ENTITY_ID: climate_entity_livingroom,
                 NetatmoServiceArgument.SCHEDULE_NAME: "summer",
             },
             blocking=True,
@@ -761,7 +762,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
         "netatmo",
         NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
         {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
+            TargetKey.ENTITY_ID: climate_entity_livingroom,
             ATTR_PRESET_MODE: PRESET_AWAY,
             NetatmoServiceArgument.END_DATETIME: (
                 dt_util.now() + timedelta(days=10)
@@ -792,7 +793,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
             "netatmo",
             NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
             {
-                ATTR_ENTITY_ID: climate_entity_livingroom,
+                TargetKey.ENTITY_ID: climate_entity_livingroom,
                 ATTR_PRESET_MODE: PRESET_BOOST,
                 NetatmoServiceArgument.END_DATETIME: (
                     dt_util.now() + timedelta(days=10)
@@ -808,7 +809,7 @@ async def test_service_preset_mode_with_end_time_thermostats(
             "netatmo",
             NetatmoService.SET_PRESET_MODE_WITH_END_DATETIME,
             {
-                ATTR_ENTITY_ID: climate_entity_livingroom,
+                TargetKey.ENTITY_ID: climate_entity_livingroom,
                 ATTR_PRESET_MODE: PRESET_AWAY,
             },
             blocking=True,

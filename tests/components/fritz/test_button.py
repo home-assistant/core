@@ -15,7 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.fritz.const import DOMAIN, SCAN_INTERVAL, MeshRoles
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -76,7 +76,7 @@ async def test_buttons(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         mock_press_action.assert_called_once()
@@ -110,7 +110,7 @@ async def test_wol_button(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: "button.printer_wake_on_lan"},
+            {TargetKey.ENTITY_ID: "button.printer_wake_on_lan"},
             blocking=True,
         )
         mock_press_action.assert_called_once_with("AA:BB:CC:00:11:22")

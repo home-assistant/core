@@ -24,7 +24,7 @@ from homeassistant.components.todo import (
     TodoServices,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TOKEN, Platform
+from homeassistant.const import CONF_TOKEN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -80,7 +80,7 @@ async def test_update_ingredient(
             ATTR_ITEM: "unique_id_mehl",
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },
-        target={ATTR_ENTITY_ID: "todo.cookidoo_shopping_list"},
+        target={TargetKey.ENTITY_ID: "todo.cookidoo_shopping_list"},
         blocking=True,
     )
 
@@ -120,7 +120,7 @@ async def test_update_ingredient_exception(
                 ATTR_ITEM: "unique_id_mehl",
                 ATTR_STATUS: TodoItemStatus.COMPLETED,
             },
-            target={ATTR_ENTITY_ID: "todo.cookidoo_shopping_list"},
+            target={TargetKey.ENTITY_ID: "todo.cookidoo_shopping_list"},
             blocking=True,
         )
 
@@ -140,7 +140,7 @@ async def test_add_additional_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         service_data={ATTR_ITEM: "Äpfel"},
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+        target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -168,7 +168,7 @@ async def test_add_additional_item_exception(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             service_data={ATTR_ITEM: "Äpfel"},
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+            target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
@@ -192,7 +192,7 @@ async def test_update_additional_item(
             ATTR_RENAME: "Peperoni",
             ATTR_STATUS: TodoItemStatus.COMPLETED,
         },
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+        target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -242,7 +242,7 @@ async def test_update_additional_item_exception(
                 ATTR_RENAME: "Peperoni",
                 ATTR_STATUS: TodoItemStatus.COMPLETED,
             },
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+            target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
@@ -262,7 +262,7 @@ async def test_delete_additional_items(
         TODO_DOMAIN,
         TodoServices.REMOVE_ITEM,
         service_data={ATTR_ITEM: "unique_id_tomaten"},
-        target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+        target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
         blocking=True,
     )
 
@@ -290,7 +290,7 @@ async def test_delete_additional_items_exception(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             service_data={ATTR_ITEM: "unique_id_tomaten"},
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+            target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
@@ -316,7 +316,7 @@ async def test_failed_action_persists_rotated_tokens(
             TODO_DOMAIN,
             TodoServices.REMOVE_ITEM,
             service_data={ATTR_ITEM: "unique_id_tomaten"},
-            target={ATTR_ENTITY_ID: "todo.cookidoo_additional_purchases"},
+            target={TargetKey.ENTITY_ID: "todo.cookidoo_additional_purchases"},
             blocking=True,
         )
 
