@@ -409,6 +409,23 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
     model="Smart Thermostat",
     hardware_version=None,
     software_version="thermostat_test_software_version",
+TEST_DEVICE_PLUG_SN = "plug_test_serial_number"
+TEST_DEVICE_PLUG = AmazonDevice(
+    account_name="Smart Plug Test",
+    capabilities=[],
+    device_family="Endpoint Only",
+    device_type="ANH27KST2WA2G",
+    primary_display_category="SMARTPLUG",
+    household_device=False,
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members={TEST_DEVICE_PLUG_SN: None},
+    parent_clusters=[],
+    online=True,
+    serial_number=TEST_DEVICE_PLUG_SN,
+    manufacturer="Amazon",
+    model="Alexa Smart Plug",
+    hardware_version=None,
+    software_version="plug_test_software_version",
     entity_id="13131313-2424-3535-4646-575757575757",
     endpoint_id="G1234567890123456789012345678E",
     notifications_supported=False,
@@ -421,6 +438,10 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
             "": AmazonDeviceFeature(
                 properties=["temperature"],
                 supported_operations=[],
+        "power": {
+            "": AmazonDeviceFeature(
+                properties=["powerState"],
+                supported_operations=["turnOn", "turnOff"],
                 supported_modes=[],
                 friendly_name=None,
                 minimum_value=None,
@@ -526,6 +547,7 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                     "primaryHeaterStage": "primaryHeaterStage",
                     "fanStage": "fanStage",
                 },
+                sensor_keys={"powerState": "plug_power"},
             )
         },
     },
@@ -821,12 +843,18 @@ TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
     "fanStage": AmazonDeviceSensor(
         name="fanStage",
         value="OFF",
+TEST_DEVICE_PLUG_SENSORS: dict[str, AmazonDeviceSensor] = {
+    "plug_power": AmazonDeviceSensor(
+        name="plug_power",
+        value="ON",
         error=False,
         error_msg=None,
         error_type=None,
         scale=None,
         feature_name="hvac",
         property_name="fanStage",
+        feature_name="power",
+        property_name="powerState",
         instance="",
     ),
 }
