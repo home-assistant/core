@@ -50,10 +50,25 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._uuid = system.uuid
         self._version = system.version
 
+        # From DMI, which only Linux hosts report
+        manufacturer = model = hw_version = None
+        if hardware := system.device_info:
+            hw_version = hardware.version
+            if hardware.model:
+                manufacturer = hardware.manufacturer
+                model = hardware.model
+            else:
+                # Self-built computers have no model, so their motherboard stands in
+                manufacturer = hardware.board_vendor
+                model = hardware.board_name
+
         self._attr_device_info = DeviceInfo(
             configuration_url=self._configuration_url,
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
+            hw_version=hw_version,
             identifiers={(DOMAIN, self._uuid)},
+            manufacturer=manufacturer,
+            model=model,
             name=self._hostname,
             sw_version=self._version,
         )

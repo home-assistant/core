@@ -12,8 +12,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
@@ -65,7 +65,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        {TargetKey.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_on.assert_called_once()
@@ -74,7 +74,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        {TargetKey.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.turn_off.assert_called_once()
@@ -83,7 +83,7 @@ async def test_switch_turn_on_off_toggle(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
+        {TargetKey.ENTITY_ID: "switch.outdoor_smart_plug_relay"},
         blocking=True,
     )
     device.toggle.assert_called_once()
@@ -155,7 +155,7 @@ async def test_configuration_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_433_mhz"},
+        {TargetKey.ENTITY_ID: "switch.outdoor_smart_plug_433_mhz"},
         blocking=True,
     )
     mock_setting_433mhz.disable.assert_called_once_with(device)
@@ -164,7 +164,7 @@ async def test_configuration_switches(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.outdoor_smart_plug_cloud_access"},
+        {TargetKey.ENTITY_ID: "switch.outdoor_smart_plug_cloud_access"},
         blocking=True,
     )
     mock_setting_cloud.enable.assert_called_once_with(device)

@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_diagnostics[malformed]
+  dict({
+    'config_entry': dict({
+      'max_entries': 20,
+    }),
+    'coordinator': dict({
+      'last_exception': None,
+      'last_update_success': True,
+      'new_entries': 1,
+    }),
+    'feed': dict({
+      'bozo': True,
+      'bozo_exception': 'SAXParseException',
+      'entry_count': 1,
+      'http_status': None,
+      'updated': None,
+      'version': 'RSS 2.0',
+    }),
+    'last_entry_timestamp': '2018-04-30T05:10:00+00:00',
+  })
+# ---
+# name: test_diagnostics[one_entry]
+  dict({
+    'config_entry': dict({
+      'max_entries': 20,
+    }),
+    'coordinator': dict({
+      'last_exception': None,
+      'last_update_success': True,
+      'new_entries': 1,
+    }),
+    'feed': dict({
+      'bozo': False,
+      'bozo_exception': None,
+      'entry_count': 1,
+      'http_status': None,
+      'updated': '2018-04-30T02:00:00+00:00',
+      'version': 'RSS 2.0',
+    }),
+    'last_entry_timestamp': '2018-04-30T05:10:00+00:00',
+  })
+# ---
+# name: test_diagnostics[without_items]
+  dict({
+    'config_entry': dict({
+      'max_entries': 20,
+    }),
+    'coordinator': dict({
+      'last_exception': None,
+      'last_update_success': True,
+      'new_entries': None,
+    }),
+    'feed': dict({
+      'bozo': False,
+      'bozo_exception': None,
+      'entry_count': 0,
+      'http_status': None,
+      'updated': '2018-04-30T02:00:00+00:00',
+      'version': 'RSS 2.0',
+    }),
+    'last_entry_timestamp': None,
+  })
+# ---

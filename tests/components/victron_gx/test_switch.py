@@ -15,7 +15,7 @@ from homeassistant.components.victron_gx.const import (
     BINARY_SENSOR_ON_ID,
     DOMAIN,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -178,7 +178,7 @@ async def test_switch_action_transport_failure(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity.entity_id},
+            {TargetKey.ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 

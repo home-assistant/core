@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -64,7 +64,7 @@ async def test_set_hot_water_plus_level(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.basement_my_water_heater_hot_water_plus_level",
+            TargetKey.ENTITY_ID: "select.basement_my_water_heater_hot_water_plus_level",
             SelectServiceArgument.OPTION: hass_level,
         },
     )

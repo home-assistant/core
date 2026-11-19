@@ -5,7 +5,7 @@ from collections.abc import Callable
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util.uuid import random_uuid_hex
+from homeassistant.util.uuid import secure_uuid_hex
 
 PUSH_CONFIRM_TIMEOUT = 10  # seconds
 
@@ -36,7 +36,7 @@ class PushChannel:
             self._send_message(data)
             return
 
-        confirm_id = random_uuid_hex()
+        confirm_id = secure_uuid_hex()
         data["hass_confirm_id"] = confirm_id
 
         async def handle_push_failed(_=None):

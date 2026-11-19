@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .const import PLAYER_SETTINGS_SCHEMA_VERSION
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
@@ -42,16 +42,25 @@ async def async_setup_entry(
         assert mass.server_info is not None
     # older servers drop the preset when DSP is switched, so they get no preset select
     dsp_supported = mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION
+    # player_id -> keys of the player options that got an entity
+    added_option_keys_by_player: dict[str, set[str]] = {}
 
     def add_player(player_id: str) -> None:
         """Handle add player."""
+        if (player := mass.players.get(player_id)) is None:
+            return
+        # a group applies the DSP of each member, it has none of its own
+        if dsp_supported and player.type is not PlayerType.GROUP:
+            async_add_entities([MusicAssistantDspPresetSelect(mass, player_id)])
+        add_player_options(player_id)
+
+    def add_player_options(player_id: str) -> None:
+        """Add entities for the player options that do not have one yet."""
         player = mass.players.get(player_id)
         if player is None:
             return
-        entities: list[SelectEntity] = []
-        # a group applies the DSP of each member, it has none of its own
-        if dsp_supported and player.type is not PlayerType.GROUP:
-            entities.append(MusicAssistantDspPresetSelect(mass, player_id))
+        entities: list[MusicAssistantPlayerConfigSelect] = []
+        added_option_keys = added_option_keys_by_player.setdefault(player_id, set())
         for player_option in player.options:
             if (
                 not player_option.read_only
@@ -69,8 +78,12 @@ async def async_setup_entry(
                 # the provider developer. In that case, the
                 # frontend falls back to showing the state's
                 # bare translation key.
-                if player_option.translation_key not in PLAYER_OPTIONS_SELECT:
+                if (
+                    player_option.translation_key not in PLAYER_OPTIONS_SELECT
+                    or player_option.key in added_option_keys
+                ):
                     continue
+                added_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigSelect(
@@ -88,8 +101,18 @@ async def async_setup_entry(
                 )
         async_add_entities(entities)
 
-    # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.SELECT, add_player)
+    def remove_player(player_id: str) -> None:
+        """Forget the option keys of a removed player."""
+        added_option_keys_by_player.pop(player_id, None)
+
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.SELECT,
+        PlatformHandlers(
+            add_player=add_player,
+            remove_player=remove_player,
+            update_player_options=add_player_options,
+        ),
+    )
 
 
 class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectEntity):
