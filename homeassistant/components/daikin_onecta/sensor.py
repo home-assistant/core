@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoint
 
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ENERGY_AGGREGATE_PERIODS
-from .coordinator import DaikinOnectaConfigEntry
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import (
     energy_description_key,
@@ -58,9 +58,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     for metadata in ENTITY_METADATA
     if metadata.key in SENSOR_KEYS
 }
-
-if TYPE_CHECKING:
-    from .coordinator import OnectaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

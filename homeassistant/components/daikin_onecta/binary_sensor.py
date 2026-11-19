@@ -1,6 +1,6 @@
 """Support for Daikin Onecta binary sensors."""
 
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,7 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import DaikinOnectaConfigEntry
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform
 from .entity import (
@@ -40,9 +40,6 @@ BINARY_SENSOR_DESCRIPTIONS = {
     for metadata in ENTITY_METADATA
     if metadata.translation_key in BINARY_SENSOR_TRANSLATION_KEYS
 }
-
-if TYPE_CHECKING:
-    from .coordinator import OnectaDataUpdateCoordinator
 
 
 async def async_setup_entry(

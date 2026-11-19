@@ -734,8 +734,8 @@ async def test_water_heater_publishes_successful_partial_operation_write(
         ("async_turn_on", (), None),
         ("async_turn_off", (), None),
         ("async_set_operation_mode", (STATE_HEAT_PUMP,), None),
-        ("async_set_tank_temperature", (50,), None),
-        ("async_set_tank_temperature", (50,), "unknown"),
+        ("async_set_temperature", (50,), None),
+        ("async_set_temperature", (50,), "unknown"),
     ],
 )
 async def test_water_heater_rejects_unknown_power_state(

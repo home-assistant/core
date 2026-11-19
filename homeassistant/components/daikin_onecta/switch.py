@@ -1,13 +1,13 @@
 """Support for Daikin Onecta switches."""
 
-from typing import TYPE_CHECKING, Any, Literal, override
+from typing import Any, Literal, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import DaikinOnectaConfigEntry
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform
 from .entity import (
@@ -32,9 +32,6 @@ SWITCH_DESCRIPTIONS = {
     for metadata in ENTITY_METADATA
     if metadata.translation_key in SWITCH_TRANSLATION_KEYS
 }
-
-if TYPE_CHECKING:
-    from .coordinator import OnectaDataUpdateCoordinator
 
 
 async def async_setup_entry(

@@ -116,7 +116,8 @@ async def test_refresh_button_reports_rate_limited_refresh(
         )
 
     assert err.value.translation_domain == "daikin_onecta"
-    assert err.value.translation_key == "refresh_failed"
+    assert err.value.translation_key == "manual_refresh_deferred"
+    assert err.value.translation_placeholders == {"seconds": "60"}
     assert coordinator.last_update_success
     mock_onecta_client.get_gateway_devices.assert_awaited_once()
 

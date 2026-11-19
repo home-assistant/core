@@ -1,7 +1,7 @@
 """Support for the Daikin BRP069A62."""
 
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from daikin_onecta.client import DomesticHotWaterClient
 from daikin_onecta.models import DomesticHotWater, Setpoint
@@ -18,7 +18,7 @@ from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import DaikinOnectaConfigEntry
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
@@ -30,9 +30,6 @@ from .entity import (
 from .utils import round_temperature_to_step
 
 PARALLEL_UPDATES = 1
-
-if TYPE_CHECKING:
-    from .coordinator import OnectaDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -250,12 +247,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if dht is not None:
                 dht.value = target_temperature
             self._publish_write_update()
-
-    async def async_set_tank_temperature(self, value: float) -> None:
-        """Set new target temperature."""
-        await self._async_write_tank_temperature(
-            self._validated_target_temperature(value)
-        )
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

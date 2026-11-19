@@ -1,7 +1,7 @@
 """Provide Daikin schedule selection entities."""
 
 from collections import Counter
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from daikin_onecta.models import ScheduleSelection
 
@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import DaikinOnectaConfigEntry
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
@@ -26,9 +26,6 @@ SELECT_DESCRIPTIONS = {
 
 PARALLEL_UPDATES = 1
 SCHEDULE_DISABLED = "home_assistant_schedule_is_disabled"
-
-if TYPE_CHECKING:
-    from .coordinator import OnectaDataUpdateCoordinator
 
 
 async def async_setup_entry(

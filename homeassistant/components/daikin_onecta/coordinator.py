@@ -7,7 +7,7 @@ from datetime import datetime, time, timedelta, tzinfo
 import logging
 from math import ceil
 import random
-from typing import cast, override
+from typing import Never, cast, override
 
 from aiohttp import ClientError
 from daikin_onecta import Site
@@ -155,18 +155,25 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         if remaining := (
             self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
         ):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="manual_refresh_deferred",
-                translation_placeholders={
-                    "seconds": str(ceil(remaining.total_seconds()))
-                },
-            )
+            self._raise_manual_refresh_deferred(remaining)
         # The same backoff check used by scheduled and entity refreshes runs
         # again after acquiring the cloud lock.
         previous_sequence = self._cloud_update_sequence
         await self.async_refresh()
+        if remaining := (
+            self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
+        ):
+            self._raise_manual_refresh_deferred(remaining)
         return self._cloud_update_sequence > previous_sequence
+
+    @staticmethod
+    def _raise_manual_refresh_deferred(remaining: timedelta) -> Never:
+        """Raise the translated error when a manual refresh is deferred."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="manual_refresh_deferred",
+            translation_placeholders={"seconds": str(ceil(remaining.total_seconds()))},
+        )
 
     def _post_write_cooldown_remaining(self) -> timedelta | None:
         """Return the remaining post-write cooldown, if any."""

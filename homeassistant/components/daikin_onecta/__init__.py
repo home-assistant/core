@@ -18,6 +18,7 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry, ChildDeviceEnt
 
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
+from .device import DaikinOnectaDevice
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -102,8 +103,6 @@ async def async_remove_config_entry_device(
 
     coordinator = config_entry.runtime_data
     if isinstance(device_entry, ChildDeviceEntry):
-        if not coordinator.last_update_success:
-            return False
         parent_device = dr.async_get(hass).async_get(
             device_entry.parent_device_id, include_child_devices=False
         )
@@ -119,7 +118,7 @@ async def async_remove_config_entry_device(
         if not er.async_entries_for_device(
             er.async_get(hass), device_entry.id, include_disabled_entities=True
         ):
-            return True
+            return coordinator.last_update_success
         return await _async_gateway_or_point_confirmed_absent(
             coordinator, parent_gateway_id, embedded_id
         )
@@ -138,7 +137,7 @@ async def _async_gateway_or_point_confirmed_absent(
 
     device = (coordinator.data or {}).get(gateway_id)
     if device is not None and device.present_in_cloud:
-        return embedded_id is not None and device.management_point(embedded_id) is None
+        return _management_point_is_absent(device, embedded_id)
 
     site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
     if (
@@ -150,5 +149,12 @@ async def _async_gateway_or_point_confirmed_absent(
     # Polling may restore the gateway while the Sites request is in flight.
     device = (coordinator.data or {}).get(gateway_id)
     if device is not None and device.present_in_cloud:
-        return embedded_id is not None and device.management_point(embedded_id) is None
+        return _management_point_is_absent(device, embedded_id)
     return True
+
+
+def _management_point_is_absent(
+    device: DaikinOnectaDevice, embedded_id: str | None
+) -> bool:
+    """Return whether the requested point is absent from a present gateway."""
+    return embedded_id is not None and device.management_point(embedded_id) is None

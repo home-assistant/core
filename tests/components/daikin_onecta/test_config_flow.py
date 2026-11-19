@@ -149,7 +149,7 @@ async def test_zeroconf_flow_uses_oauth_discovery(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Test zeroconf flow uses the OAuth discovery confirmation step."""
     assert await async_setup_component(hass, "daikin_onecta", {})
@@ -227,7 +227,7 @@ async def test_reauth_oauth_create_entry(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Update the existing entry after successful reauthentication."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -281,7 +281,7 @@ async def test_reauth_requires_gateway_api_access(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
     api_error: OnectaAuthenticationError | OnectaConnectionError,
     reason: str,
 ) -> None:
@@ -322,7 +322,7 @@ async def test_reauth_invalid_token_aborts_without_changing_entry(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Abort reauthentication when the OAuth response has an invalid token."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -358,7 +358,7 @@ async def test_reauth_rejects_different_account(
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Reject reauthentication with a different Daikin account."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -406,7 +406,7 @@ async def test_oauth_errors_can_be_retried_from_supported_sources(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
     source: str,
     failure: str,
     reason: str,
