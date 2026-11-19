@@ -11757,6 +11757,17 @@
       ],
       "supported_by": "neopool"
     },
+    "poolwatch_neopool": {
+      "name": "Poolwatch",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "portainer": {
       "name": "Portainer",
       "integration_type": "service",
