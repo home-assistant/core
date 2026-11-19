@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from aioonkyo import Code, Kind, Status, Zone, command, query, status
+from aioonkyo import Code, Kind, NetPlaybackState, Status, Zone, command, query, status
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -17,6 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -54,11 +55,39 @@ SUPPORTED_FEATURES_VOLUME = (
     | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
+SUPPORTED_FEATURES_NET = (
+    MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+)
+
 PLAYABLE_SOURCES = (
     InputSource.FM,
     InputSource.AM,
     InputSource.DAB,
 )
+
+# Inputs played by the receiver's NET/USB player
+NET_SOURCES = (
+    InputSource.MUSIC_SERVER_P4S_DLNA,
+    InputSource.INTERNET_RADIO,
+    InputSource.USB,
+    InputSource.USB_REAR,
+    InputSource.NETWORK,
+    InputSource.AIRPLAY,
+    InputSource.BLUETOOTH,
+)
+
+NET_PLAYBACK_STATES = {
+    NetPlaybackState.PLAYING: MediaPlayerState.PLAYING,
+    NetPlaybackState.FAST_FORWARD: MediaPlayerState.PLAYING,
+    NetPlaybackState.FAST_REVERSE: MediaPlayerState.PLAYING,
+    NetPlaybackState.PAUSED: MediaPlayerState.PAUSED,
+    NetPlaybackState.STOPPED: MediaPlayerState.IDLE,
+    NetPlaybackState.END: MediaPlayerState.IDLE,
+}
 
 ATTR_PRESET = "preset"
 ATTR_AUDIO_INFORMATION = "audio_information"
@@ -67,6 +96,11 @@ ATTR_VIDEO_OUT = "video_out"
 
 QUERY_STATE_DELAY = 4
 QUERY_AV_INFO_DELAY = 8
+QUERY_NET_DELAY = 1
+
+# The receiver reports the position every second while playing. Only a jump
+# this large (in seconds) from the expected position is written to the state.
+NET_POSITION_TOLERANCE = 2
 
 AUDIO_INFORMATION_MAPPING = [
     "audio_input_port",
@@ -130,6 +164,7 @@ async def async_setup_entry(
         for entity in entities.values():
             if entity.enabled:
                 entity.cancel_pending()
+                entity.clear_net_playback()
                 entity.async_write_ha_state()
 
     async def update_callback(message: Status) -> None:
@@ -183,6 +218,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     _query_state_unsub: CALLBACK_TYPE | None = None
     _query_av_info_unsub: CALLBACK_TYPE | None = None
+    _query_net_unsub: CALLBACK_TYPE | None = None
+
+    _net_source: bool = False
+    _net_state: MediaPlayerState | None = None
 
     def __init__(
         self,
@@ -256,6 +295,22 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """Return if entity is available."""
         return self._manager.connected
 
+    @property
+    @override
+    def state(self) -> MediaPlayerState | None:
+        """Return the playback state while the NET/USB player reports one."""
+        if self._attr_state is MediaPlayerState.ON and self._net_state is not None:
+            return self._net_state
+        return self._attr_state
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Add transport controls while the NET/USB player reports a state."""
+        if self._attr_state is MediaPlayerState.ON and self._net_state is not None:
+            return self._attr_supported_features | SUPPORTED_FEATURES_NET
+        return self._attr_supported_features
+
     async def query_state(self) -> None:
         """Query the receiver for all the info, that we care about."""
         await self._manager.write(query.Power(self._zone))
@@ -278,6 +333,22 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         if self._query_av_info_unsub is not None:
             self._query_av_info_unsub()
             self._query_av_info_unsub = None
+        if self._query_net_unsub is not None:
+            self._query_net_unsub()
+            self._query_net_unsub = None
+
+    def clear_net_playback(self) -> None:
+        """Forget the NET/USB player state."""
+        self._net_source = False
+        self._net_state = None
+        self._attr_media_content_type = None
+        self._attr_media_title = None
+        self._attr_media_artist = None
+        self._attr_media_album_name = None
+        self._attr_media_track = None
+        self._attr_media_duration = None
+        self._attr_media_position = None
+        self._attr_media_position_updated_at = None
 
     @override
     async def async_turn_on(self) -> None:
@@ -380,15 +451,44 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         message = command.TunerPreset(self._zone, int(media_id))
         await self._manager.write(message)
 
+    async def _net_operation(self, param: command.NetOperation.Param) -> None:
+        await self._manager.write(command.NetOperation(param))
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self._net_operation(command.NetOperation.Param.PLAY)
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._net_operation(command.NetOperation.Param.PAUSE)
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._net_operation(command.NetOperation.Param.STOP)
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Send next track command."""
+        await self._net_operation(command.NetOperation.Param.NEXT)
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Send previous track command."""
+        await self._net_operation(command.NetOperation.Param.PREVIOUS)
+
     def process_update(self, message: status.Known) -> None:
         """Process update."""
         match message:
             case status.Power(param=status.Power.Param.ON):
-                if self.state != MediaPlayerState.ON:
+                if self._attr_state != MediaPlayerState.ON:
                     self._query_state_delayed()
                 self._attr_state = MediaPlayerState.ON
             case status.Power(param=status.Power.Param.STANDBY):
                 self._attr_state = MediaPlayerState.OFF
+                self.clear_net_playback()
 
             case status.Volume(param=volume):
                 if not self._supports_volume:
@@ -415,6 +515,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                         self.entity_id,
                     )
                     self._attr_source = source_meaning
+
+                if self._zone is Zone.MAIN:
+                    self._update_net_source(source in NET_SOURCES)
 
                 self._query_av_info_delayed()
 
@@ -474,6 +577,16 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.FLDisplay():
                 self._query_av_info_delayed()
 
+            case (
+                status.NetPlayStatus()
+                | status.NetTitle()
+                | status.NetArtist()
+                | status.NetAlbum()
+                | status.NetTrack()
+                | status.NetTime()
+            ) if self._net_source:
+                self._process_net_update(message)
+
             case status.NotAvailable(kind=Kind.AUDIO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_audio_info = True
@@ -509,3 +622,81 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._query_av_info_unsub = async_call_later(
             self.hass, QUERY_AV_INFO_DELAY, coro
         )
+
+    def _update_net_source(self, net_source: bool) -> None:
+        if net_source and not self._net_source:
+            self._query_net_delayed()
+        elif not net_source:
+            self.clear_net_playback()
+        self._net_source = net_source
+
+    def _process_net_update(
+        self,
+        message: status.NetPlayStatus
+        | status.NetTitle
+        | status.NetArtist
+        | status.NetAlbum
+        | status.NetTrack
+        | status.NetTime,
+    ) -> None:
+        match message:
+            case status.NetPlayStatus(playback=playback) if playback is not None:
+                self._set_net_state(NET_PLAYBACK_STATES[playback])
+            case status.NetTitle(text=text):
+                self._attr_media_title = text or None
+                self._attr_media_content_type = MediaType.MUSIC
+            case status.NetArtist(text=text):
+                self._attr_media_artist = text or None
+            case status.NetAlbum(text=text):
+                self._attr_media_album_name = text or None
+            case status.NetTrack(current=current):
+                self._attr_media_track = current
+            case status.NetTime(position=position, duration=duration):
+                self._attr_media_duration = duration
+                if self._net_position_jumped(position):
+                    self._attr_media_position = position
+                    self._attr_media_position_updated_at = (
+                        dt_util.utcnow() if position is not None else None
+                    )
+
+    def _query_net_delayed(self) -> None:
+        if self._query_net_unsub is not None:
+            return
+
+        async def coro(_now: datetime) -> None:
+            self._query_net_unsub = None
+            if not self._net_source:
+                return
+            await self._manager.write(query.NetPlayStatus())
+            await self._manager.write(query.NetTitle())
+            await self._manager.write(query.NetArtist())
+            await self._manager.write(query.NetAlbum())
+            await self._manager.write(query.NetTrack())
+            await self._manager.write(query.NetTime())
+
+        self._query_net_unsub = async_call_later(self.hass, QUERY_NET_DELAY, coro)
+
+    def _expected_net_position(self) -> float | None:
+        """Return the position HA extrapolates from the last one written."""
+        position = self._attr_media_position
+        updated_at = self._attr_media_position_updated_at
+        if position is None or updated_at is None:
+            return None
+        if self.state is MediaPlayerState.PLAYING:
+            return position + (dt_util.utcnow() - updated_at).total_seconds()
+        return float(position)
+
+    def _set_net_state(self, state: MediaPlayerState) -> None:
+        if state is not self._net_state:
+            # Anchor the position where the old state left it
+            if (expected := self._expected_net_position()) is not None:
+                self._attr_media_position = round(expected)
+                self._attr_media_position_updated_at = dt_util.utcnow()
+            self._net_state = state
+
+    def _net_position_jumped(self, position: int | None) -> bool:
+        """Return if a reported position differs from the extrapolated one."""
+        expected = self._expected_net_position()
+        if position is None or expected is None:
+            return position != self._attr_media_position
+        return abs(position - expected) > NET_POSITION_TOLERANCE
