@@ -245,11 +245,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     ) -> SiteLookupResult:
         """Get Sites and normalize expected lookup failures for callers."""
         try:
-            sites = (
-                await self.async_get_sites(use_cache=True)
-                if use_cache
-                else await self.async_get_sites()
-            )
+            sites = await self.async_get_sites(use_cache=use_cache)
         except (
             OAuth2TokenRequestError,
             OnectaError,

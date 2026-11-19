@@ -37,8 +37,9 @@ from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
 def test_sensor_keys_exclude_other_platform_keys() -> None:
-    """Never create value sensors for binary, switch, or update keys."""
+    """Never create value sensors for binary, switch, update, or select keys."""
     assert SENSOR_KEYS.isdisjoint(BINARY_SENSOR_KEYS | SWITCH_KEYS | UPDATE_KEYS)
+    assert "schedule" not in SENSOR_KEYS
 
 
 @pytest.mark.parametrize(

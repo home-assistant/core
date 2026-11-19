@@ -1,12 +1,15 @@
 """Base entities for the Daikin Onecta integration."""
 
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable, Iterator
 from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
+from daikin_onecta.models import ManagementPoint
 
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.const import Platform
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     ChildDeviceInfo,
     DeviceEntryType,
@@ -20,23 +23,32 @@ from .const import DOMAIN, MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 
+EntityIdChecker = Callable[[Platform, str], bool]
+
 
 class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
     """Share coordinator state updates and successful-add lifecycle handling."""
 
-    _remove_unique_id_callback: CALLBACK_TYPE | None = None
+    _on_entity_added: CALLBACK_TYPE | None = None
+    _on_entity_removed: CALLBACK_TYPE | None = None
 
-    def set_unique_id_cleanup_callback(self, cleanup_callback: CALLBACK_TYPE) -> None:
-        """Set cleanup to run after this entity has actually been added."""
-        self._remove_unique_id_callback = cleanup_callback
+    def set_unique_id_callbacks(
+        self, on_added: CALLBACK_TYPE, on_removed: CALLBACK_TYPE
+    ) -> None:
+        """Set callbacks for tracking an entity after it is added to Home Assistant."""
+        self._on_entity_added = on_added
+        self._on_entity_removed = on_removed
 
     @override
     async def async_added_to_hass(self) -> None:
         """Release unique IDs only after this entity was actually added."""
         await super().async_added_to_hass()
-        if (cleanup_callback := self._remove_unique_id_callback) is not None:
-            self.async_on_remove(cleanup_callback)
-            self._remove_unique_id_callback = None
+        if (on_added := self._on_entity_added) is not None:
+            on_added()
+            if on_removed := self._on_entity_removed:
+                self.async_on_remove(on_removed)
+            self._on_entity_added = None
+            self._on_entity_removed = None
 
     def update_state(self) -> None:
         """Refresh entity state from the coordinator model."""
@@ -49,14 +61,26 @@ class _DaikinOnectaCoordinatorEntity(CoordinatorEntity[OnectaDataUpdateCoordinat
 
 
 def add_entities_on_coordinator_update(
+    hass: HomeAssistant,
     config_entry: DaikinOnectaConfigEntry,
     coordinator: OnectaDataUpdateCoordinator,
     async_add_entities: AddConfigEntryEntitiesCallback,
-    create_entities: Callable[[set[str]], Iterable[Entity]],
+    create_entities: Callable[[EntityIdChecker], Iterable[Entity]],
 ) -> None:
     """Add newly available entities whenever the cloud model changes."""
     added_unique_ids: set[str] = set()
+    registry = er.async_get(hass)
     last_cloud_update_sequence: int | None = None
+
+    def already_known(platform: Platform, unique_id: str) -> bool:
+        if unique_id in added_unique_ids:
+            return True
+        entity_id = registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
+        return (
+            entity_id is not None
+            and (entity_entry := registry.async_get(entity_id)) is not None
+            and entity_entry.disabled
+        )
 
     @callback
     def add_new_entities() -> None:
@@ -64,28 +88,35 @@ def add_entities_on_coordinator_update(
         if last_cloud_update_sequence == coordinator.cloud_update_sequence:
             return
         last_cloud_update_sequence = coordinator.cloud_update_sequence
-        entities = [
-            entity
-            for entity in create_entities(added_unique_ids)
-            if not isinstance(entity, DaikinOnectaEntity)
-            or entity.device_present_in_cloud
-        ]
+        entities = list(create_entities(already_known))
         if entities:
             for entity in entities:
                 unique_id = entity.unique_id
                 if unique_id is None:
                     continue
-                added_unique_ids.add(unique_id)
+
+                def add_unique_id(unique_id: str = unique_id) -> None:
+                    added_unique_ids.add(unique_id)
 
                 def remove_unique_id(unique_id: str = unique_id) -> None:
                     added_unique_ids.discard(unique_id)
 
                 if isinstance(entity, _DaikinOnectaCoordinatorEntity):
-                    entity.set_unique_id_cleanup_callback(remove_unique_id)
+                    entity.set_unique_id_callbacks(add_unique_id, remove_unique_id)
             async_add_entities(entities)
 
     add_new_entities()
     config_entry.async_on_unload(coordinator.async_add_listener(add_new_entities))
+
+
+def present_devices(
+    coordinator: OnectaDataUpdateCoordinator,
+) -> Iterator[DaikinOnectaDevice]:
+    """Yield gateway devices present in the latest cloud response."""
+    if coordinator.data is not None:
+        yield from (
+            device for device in coordinator.data.values() if device.present_in_cloud
+        )
 
 
 def _gateway_device_info(device: DaikinOnectaDevice) -> DeviceInfo:
@@ -138,8 +169,6 @@ def management_point_device_info(
 class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
     """Base entity for a Daikin gateway device."""
 
-    _cached_device_info: DeviceInfo | ChildDeviceInfo
-
     def __init__(
         self,
         coordinator: OnectaDataUpdateCoordinator,
@@ -148,13 +177,11 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
         """Initialize the entity with its coordinator and gateway device."""
         super().__init__(coordinator)
         self._device_id = device.id
-        self._device_name = device.name
         self._initial_device = device
-        self._cached_device_info = _gateway_device_info(device)
 
     @property
-    def _device(self) -> DaikinOnectaDevice | None:
-        """Return the current gateway wrapper, which may be replaced on polling."""
+    def _device(self) -> DaikinOnectaDevice:
+        """Return the current gateway wrapper, which may be replaced on reappearance."""
         data = self.coordinator.data
         if isinstance(data, dict) and (device := data.get(self._device_id)) is not None:
             return device
@@ -163,38 +190,29 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
     @property
     def device_present_in_cloud(self) -> bool:
         """Return whether the entity's gateway is present in the latest response."""
-        device = self._device
-        return device is not None and device.present_in_cloud
+        return self._device.present_in_cloud
 
     def _raise_service_validation_error(self, translation_key: str) -> Never:
         """Raise a translated error for an unavailable device control."""
-        device_name = (
-            self._device.name if self._device is not None else self._device_name
-        )
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": device_name},
+            translation_placeholders={"device": self._device.name},
         )
 
     def _raise_command_failed(self, translation_key: str) -> Never:
         """Raise a translated error when Daikin rejects a command."""
-        device_name = (
-            self._device.name if self._device is not None else self._device_name
-        )
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders={"device": device_name},
+            translation_placeholders={"device": self._device.name},
         )
 
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return the gateway device registry information."""
-        if device := self._device:
-            return _gateway_device_info(device)
-        return self._cached_device_info
+        return _gateway_device_info(self._device)
 
 
 class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
@@ -236,7 +254,7 @@ class DaikinEntity(DaikinOnectaEntity):
     def available(self) -> bool:
         """Return whether the coordinator, device, and point are available."""
         device = self._device
-        if not super().available or device is None or not device.available:
+        if not super().available or not device.available:
             return False
         return self._embedded_id is None or (
             device.management_point(self._embedded_id) is not None
@@ -265,12 +283,14 @@ class DaikinManagementPointEntity(DaikinEntity):
     ) -> None:
         """Initialize a management-point entity."""
         super().__init__(device, coordinator, embedded_id)
-        self._cached_device_info = management_point_device_info(device, embedded_id)
+
+    @property
+    def _management_point(self) -> ManagementPoint | None:
+        """Return the current source management point."""
+        return self._device.management_point(self._embedded_id)
 
     @property
     @override
     def device_info(self) -> DeviceInfo | ChildDeviceInfo:
         """Return consistent device info for the source management point."""
-        if device := self._device:
-            return management_point_device_info(device, self._embedded_id)
-        return self._cached_device_info
+        return management_point_device_info(self._device, self._embedded_id)

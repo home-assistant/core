@@ -286,9 +286,6 @@
       "deltad": {
         "name": "DeltaD"
       },
-      "economode": {
-        "name": "Econo mode"
-      },
       "errorcode": {
         "name": "Error code"
       },
@@ -408,9 +405,6 @@
       "roomtemperature": {
         "name": "Room temperature"
       },
-      "schedule": {
-        "name": "Schedule"
-      },
       "setpointmode": {
         "name": "Setpoint mode",
         "state": {
@@ -425,9 +419,6 @@
       },
       "ssid": {
         "name": "SSID"
-      },
-      "streamermode": {
-        "name": "Streamer mode"
       },
       "suctiontemperature": {
         "name": "Suction temperature"

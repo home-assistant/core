@@ -29,7 +29,6 @@ class DaikinEntityMetadata:
     entity_registry_enabled_default: bool
     entity_category: EntityCategory | None
     translation_key: str
-    model_attribute: str | None = None
     options: tuple[str, ...] | None = None
 
 
@@ -42,17 +41,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="sgtin",
-        model_attribute=None,
-    ),
-    DaikinEntityMetadata(
-        key="schedule",
-        device_class=None,
-        state_class=None,
-        native_unit_of_measurement=None,
-        entity_registry_enabled_default=True,
-        entity_category=None,
-        translation_key="schedule",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="controlMode",
@@ -62,7 +50,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="controlmode",
-        model_attribute=None,
         options=(
             "leaving_water_temperature",
             "external_room_temperature",
@@ -77,7 +64,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="onoffmode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="operationMode",
@@ -87,7 +73,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="operationmode",
-        model_attribute=None,
         options=(
             "fan_only",
             "heating",
@@ -108,7 +93,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="airpurificationmode",
-        model_attribute=None,
         options=(
             "manual_fan",
             "auto_fan",
@@ -128,7 +112,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="setpointmode",
-        model_attribute=None,
         options=(
             "fixed",
             "weather_dependent",
@@ -144,7 +127,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatupmode",
-        model_attribute=None,
         options=("reheat_only", "reheat_schedule", "schedule_only", "scheduled_reheat"),
     ),
     DaikinEntityMetadata(
@@ -155,7 +137,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="wificonnectionssid",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="wifiConnectionStrength",
@@ -165,7 +146,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="wificonnectionstrength",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="ssid",
@@ -175,7 +155,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="ssid",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isHolidayModeActive",
@@ -185,7 +164,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isholidaymodeactive",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInErrorState",
@@ -195,7 +173,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isinerrorstate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInWarningState",
@@ -205,7 +182,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isinwarningstate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInInstallerState",
@@ -215,7 +191,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isininstallerstate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInEmergencyState",
@@ -225,7 +200,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isinemergencystate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isPowerfulModeActive",
@@ -235,7 +209,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="ispowerfulmodeactive",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isCoolHeatMaster",
@@ -245,7 +218,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="iscoolheatmaster",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInModeConflict",
@@ -255,7 +227,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isinmodeconflict",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isInCautionState",
@@ -265,7 +236,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isincautionstate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isLockFunctionEnabled",
@@ -275,7 +245,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="islockfunctionenabled",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="ledEnabled",
@@ -285,7 +254,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="ledenabled",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="isFirmwareUpdateSupported",
@@ -295,7 +263,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="isfirmwareupdatesupported",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="daylightSavingTimeEnabled",
@@ -305,7 +272,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="daylightsavingtimeenabled",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="roomTemperature",
@@ -315,7 +281,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="roomtemperature",
-        model_attribute="room_temperature",
     ),
     DaikinEntityMetadata(
         key="outdoorTemperature",
@@ -325,7 +290,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="outdoortemperature",
-        model_attribute="outdoor_temperature",
     ),
     DaikinEntityMetadata(
         key="leavingWaterTemperature",
@@ -335,7 +299,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="leavingwatertemperature",
-        model_attribute="leaving_water_temperature",
     ),
     DaikinEntityMetadata(
         key="leavingWaterOffset",
@@ -345,7 +308,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="leavingwateroffset",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="calculatedLeavingWaterTemperature",
@@ -355,7 +317,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="calculatedleavingwatertemperature",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="tankTemperature",
@@ -365,7 +326,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="tanktemperature",
-        model_attribute="tank_temperature",
     ),
     DaikinEntityMetadata(
         key="heatExchangerTemperature",
@@ -375,7 +335,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatexchangertemperature",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="suctionTemperature",
@@ -385,7 +344,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="suctiontemperature",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="deltaD",
@@ -395,7 +353,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="deltad",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="dryKeepSetting",
@@ -405,7 +362,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="drykeepsetting",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="streamerMode",
@@ -415,7 +371,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="streamermode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="powerfulMode",
@@ -425,7 +380,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="powerfulmode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="econoMode",
@@ -435,7 +389,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="economode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="fanMotorRotationSpeed",
@@ -445,7 +398,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="fanmotorrotationspeed",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="ipAddress",
@@ -455,7 +407,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="ipaddress",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="dateTime",
@@ -465,7 +416,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="datetime",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="regionCode",
@@ -475,7 +425,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="regioncode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="errorCode",
@@ -485,7 +434,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="errorcode",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="timeZone",
@@ -495,7 +443,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="timezone",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="roomHumidity",
@@ -505,7 +452,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="roomhumidity",
-        model_attribute="room_humidity",
     ),
     DaikinEntityMetadata(
         key="pm1Concentration",
@@ -515,7 +461,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="pm1concentration",
-        model_attribute="pm1_concentration",
     ),
     DaikinEntityMetadata(
         key="pm25Concentration",
@@ -525,7 +470,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="pm25concentration",
-        model_attribute="pm25_concentration",
     ),
     DaikinEntityMetadata(
         key="pm10Concentration",
@@ -535,7 +479,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="pm10concentration",
-        model_attribute="pm10_concentration",
     ),
     DaikinEntityMetadata(
         key="CoolingDailyElectricalConsumption",
@@ -545,7 +488,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingdailyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingWeeklyElectricalConsumption",
@@ -555,7 +497,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingweeklyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingMonthlyElectricalConsumption",
@@ -565,7 +506,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingmonthlyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingYearlyElectricalConsumption",
@@ -575,7 +515,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingyearlyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingDailyElectricalConsumption",
@@ -585,7 +524,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingdailyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingWeeklyElectricalConsumption",
@@ -595,7 +533,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingweeklyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingMonthlyElectricalConsumption",
@@ -605,7 +542,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingmonthlyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingYearlyElectricalConsumption",
@@ -615,7 +551,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingyearlyelectricalconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingDailyGasConsumption",
@@ -625,7 +560,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingdailygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingWeeklyGasConsumption",
@@ -635,7 +569,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingweeklygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingMonthlyGasConsumption",
@@ -645,7 +578,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingmonthlygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingYearlyGasConsumption",
@@ -655,7 +587,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingyearlygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingDailyGasConsumption",
@@ -665,7 +596,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingdailygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingWeeklyGasConsumption",
@@ -675,7 +605,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingweeklygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingMonthlyGasConsumption",
@@ -685,7 +614,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingmonthlygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingYearlyGasConsumption",
@@ -695,7 +623,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingyearlygasconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="RatelimitRemainingDay",
@@ -705,7 +632,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="ratelimitremainingday",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="FirmwareUpdate",
@@ -715,7 +641,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="firmwareupdate",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="currentPowerConsumption",
@@ -725,7 +650,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="currentpowerconsumption",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="currentHeatProduction",
@@ -735,7 +659,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="currentthermaloutput",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingMonthlyThermalOutput",
@@ -745,7 +668,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingmonthlythermaloutput",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="HeatingYearlyThermalOutput",
@@ -755,7 +677,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="heatingyearlythermaloutput",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingMonthlyThermalOutput",
@@ -765,7 +686,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingmonthlythermaloutput",
-        model_attribute=None,
     ),
     DaikinEntityMetadata(
         key="CoolingYearlyThermalOutput",
@@ -775,7 +695,6 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
         entity_registry_enabled_default=True,
         entity_category=None,
         translation_key="coolingyearlythermaloutput",
-        model_attribute=None,
     ),
 )
 

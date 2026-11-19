@@ -14,6 +14,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
+from homeassistant.components.daikin_onecta.entity import EntityIdChecker
 from homeassistant.components.daikin_onecta.sensor import (
     SENSOR_DESCRIPTIONS,
     DaikinEnergySensor,
@@ -233,7 +234,7 @@ def test_unsupported_energy_aggregate_is_skipped() -> None:
             ],
         ),
         sensors,
-        set(),
+        lambda *_: False,
     )
 
     assert sensors == []
@@ -259,7 +260,7 @@ def test_unsupported_energy_period_is_skipped() -> None:
             ],
         ),
         sensors,
-        set(),
+        lambda *_: False,
     )
 
     assert sensors == []
@@ -402,9 +403,9 @@ async def test_disabled_value_sensor_is_not_rebuilt_on_poll(
     created_unique_ids: list[str] = []
 
     def track_created_entities(
-        coordinator: OnectaDataUpdateCoordinator, added_unique_ids: set[str]
+        coordinator: OnectaDataUpdateCoordinator, is_known: EntityIdChecker
     ) -> list[DaikinValueSensor]:
-        entities = _create_device_sensors(coordinator, added_unique_ids)
+        entities = _create_device_sensors(coordinator, is_known)
         created_unique_ids.extend(
             entity.unique_id for entity in entities if entity.unique_id is not None
         )

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, override
 
 from daikin_onecta.client import DomesticHotWaterClient
-from daikin_onecta.models import ManagementPoint, Setpoint
+from daikin_onecta.models import Setpoint
 
 from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
@@ -14,7 +14,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
     WaterHeaterServiceArgument,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,8 +22,10 @@ from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .utils import round_temperature_to_step
 
@@ -41,20 +43,21 @@ async def async_setup_entry(
     """Set up Daikin water tank entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_water_tanks(coordinator, added),
+        lambda is_known: _create_water_tanks(coordinator, is_known),
     )
 
 
 def _create_water_tanks(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinWaterTank]:
     """Create water heaters for management points with typed tank data."""
     entities: list[DaikinWaterTank] = []
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         supported_management_point_types = (
             "domesticHotWaterTank",
             "domesticHotWaterFlowThrough",
@@ -70,8 +73,10 @@ def _create_water_tanks(
                     management_point_type
                 )
                 if management_point.domestic_hot_water is not None
-                and management_point_unique_id(device.id, management_point.embedded_id)
-                not in added_unique_ids
+                and not is_known(
+                    Platform.WATER_HEATER,
+                    management_point_unique_id(device.id, management_point.embedded_id),
+                )
             )
     return entities
 
@@ -123,7 +128,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         setpoint = self.domestic_hotwater_temperature
         unit = setpoint.unit if setpoint is not None else None
         if unit is None:
-            point = self.hot_water_management_point
+            point = self._management_point
             tank_temperature = (
                 point.sensory_characteristic("tankTemperature")
                 if point is not None
@@ -141,7 +146,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     def available(self) -> bool:
         """Return whether domestic-hot-water data is still available."""
-        point = self.hot_water_management_point
+        point = self._management_point
         return (
             super().available
             and point is not None
@@ -167,24 +172,16 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self.coordinator.async_update_listeners()
 
     @property
-    def hot_water_management_point(self) -> ManagementPoint | None:
-        """Return the typed hot-water management point."""
-        device = self._device
-        return (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
-
-    @property
     def domestic_hotwater_temperature(self) -> Setpoint | None:
         """Return the domestic hot-water temperature setpoint."""
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         return hot_water.temperature if hot_water is not None else None
 
     def get_supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         sf = WaterHeaterEntityFeature(0)
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         if (
             hot_water is not None
@@ -204,7 +201,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     def get_current_temperature(self) -> float | None:
         """Return tank temperature."""
         ret = None
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         if hot_water is not None and hot_water.current_temperature is not None:
             ret = float(hot_water.current_temperature)
@@ -221,7 +218,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         if (
             hot_water is not None
@@ -266,7 +263,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     def get_current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         onoff = hot_water.power if hot_water is not None else None
         if onoff is None or onoff.value not in {"on", "off"}:
@@ -283,7 +280,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     def get_operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         states: list[str] = []
-        point = self.hot_water_management_point
+        point = self._management_point
         hot_water = point.domestic_hot_water if point is not None else None
         power = hot_water.power if hot_water is not None else None
         if power is not None and power.settable:
@@ -307,14 +304,14 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if operation_mode == STATE_OFF:
             on_off_mode = "off" if self.current_operation != STATE_OFF else ""
         elif operation_mode == STATE_PERFORMANCE:
-            point = self.hot_water_management_point
+            point = self._management_point
             hot_water = point.domestic_hot_water if point is not None else None
             power_mode = hot_water.powerful_mode if hot_water is not None else None
             if power_mode is not None and power_mode.value != "on":
                 powerful_mode = "on"
             on_off_mode = "on" if self.current_operation == STATE_OFF else ""
         elif operation_mode == STATE_HEAT_PUMP:
-            point = self.hot_water_management_point
+            point = self._management_point
             hot_water = point.domestic_hot_water if point is not None else None
             power_mode = hot_water.powerful_mode if hot_water is not None else None
             if power_mode is not None and power_mode.value == "on":
@@ -341,7 +338,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_power(on_off_mode == "on"),
                 "water_heater_set_operation_mode_failed",
             )
-            hwtd = self.hot_water_management_point
+            hwtd = self._management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = on_off_mode
             self._publish_write_update()
@@ -352,7 +349,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_powerful_mode(powerful_mode == "on"),
                 "water_heater_set_operation_mode_failed",
             )
-            hwtd = self.hot_water_management_point
+            hwtd = self._management_point
             hot_water = hwtd.domestic_hot_water if hwtd is not None else None
             pwf = hot_water.powerful_mode if hot_water is not None else None
             if pwf is not None and pwf.settable:
@@ -371,7 +368,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_power(True),
                 "water_heater_turn_on_failed",
             )
-            hwtd = self.hot_water_management_point
+            hwtd = self._management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "on"
             self._publish_write_update()
@@ -388,7 +385,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_power(False),
                 "water_heater_turn_off_failed",
             )
-            hwtd = self.hot_water_management_point
+            hwtd = self._management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "off"
             self._publish_write_update()

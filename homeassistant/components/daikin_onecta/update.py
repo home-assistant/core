@@ -10,6 +10,7 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -18,8 +19,10 @@ from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .entity_metadata import ENTITY_METADATA, entity_description_kwargs
 
@@ -46,16 +49,17 @@ async def async_setup_entry(
     """Set up Daikin update entities from a config entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_firmware_entities(coordinator, added),
+        lambda is_known: _create_firmware_entities(coordinator, is_known),
     )
 
 
 def _create_firmware_entities(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinFirmwareUpdateEntity]:
     """Create firmware update entities from the current cloud model."""
     return [
@@ -64,13 +68,15 @@ def _create_firmware_entities(
             device,
             management_point,
         )
-        for device in (coordinator.data or {}).values()
+        for device in present_devices(coordinator)
         for management_point in device.device.management_points
         if management_point.firmware is not None
-        and management_point_unique_id(
-            device.id, management_point.embedded_id, "firmware"
+        and not is_known(
+            Platform.UPDATE,
+            management_point_unique_id(
+                device.id, management_point.embedded_id, "firmware"
+            ),
         )
-        not in added_unique_ids
     ]
 
 
@@ -122,12 +128,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             )
         except HomeAssistantError:
             self._pending_install = None
-            device = self._device
-            management_point = (
-                device.management_point(self._embedded_id)
-                if device is not None
-                else None
-            )
+            management_point = self._management_point
             if management_point is not None:
                 self._update_from_management_point(management_point)
             else:
@@ -201,8 +202,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def update_state(self) -> None:
         """Refresh firmware update state from the current management point."""
-        device = self._device
-        mp = device.management_point(self._embedded_id) if device is not None else None
+        mp = self._management_point
         if mp is not None:
             self._update_from_management_point(mp)
 
@@ -213,10 +213,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         if not super().available:
             return False
 
-        device = self._device
-        management_point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        management_point = self._management_point
         if management_point is None:
             return False
         # Daikin can omit the installed version while still reporting update

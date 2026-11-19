@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
-async def test_unknown_characteristic_is_skipped() -> None:
+async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
     """Do not create untranslated binary sensors for unknown values."""
     management_point = SimpleNamespace(
         embedded_id="point",
@@ -29,7 +29,8 @@ async def test_unknown_characteristic_is_skipped() -> None:
         },
     )
     device = SimpleNamespace(
-        device=SimpleNamespace(management_points=[management_point])
+        device=SimpleNamespace(management_points=[management_point]),
+        present_in_cloud=True,
     )
     coordinator = SimpleNamespace(
         data={"gateway": device},
@@ -41,7 +42,7 @@ async def test_unknown_characteristic_is_skipped() -> None:
     )
     async_add_entities = MagicMock()
 
-    await async_setup_binary_sensors(MagicMock(), config_entry, async_add_entities)
+    await async_setup_binary_sensors(hass, config_entry, async_add_entities)
 
     async_add_entities.assert_not_called()
 

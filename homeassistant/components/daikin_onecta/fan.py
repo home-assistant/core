@@ -7,6 +7,7 @@ from daikin_onecta.air_purification import AirPurificationClient
 from daikin_onecta.models import AirPurification
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -19,8 +20,10 @@ from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .utils import enum_value_to_state
 
@@ -35,20 +38,21 @@ async def async_setup_entry(
     """Set up Daikin air-purifier fan entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_air_purifiers(coordinator, added),
+        lambda is_known: _create_air_purifiers(coordinator, is_known),
     )
 
 
 def _create_air_purifiers(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinAirPurifier]:
     """Create supported air purifiers from the current cloud model."""
     entities: list[DaikinAirPurifier] = []
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         entities.extend(
             DaikinAirPurifier(device, management_point.embedded_id, coordinator)
             for management_point in device.device.management_points_by_type(
@@ -59,10 +63,12 @@ def _create_air_purifiers(
                 and (power := management_point.air_purification.power) is not None
                 and power.settable
             )
-            and management_point_unique_id(
-                device.id, management_point.embedded_id, "air_purifier"
+            and not is_known(
+                Platform.FAN,
+                management_point_unique_id(
+                    device.id, management_point.embedded_id, "air_purifier"
+                ),
             )
-            not in added_unique_ids
         )
     return entities
 
@@ -88,10 +94,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
 
     def _air_purification(self) -> AirPurification | None:
         """Return the typed air-purification state view."""
-        device = self._device
-        management_point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        management_point = self._management_point
         return (
             management_point.air_purification if management_point is not None else None
         )

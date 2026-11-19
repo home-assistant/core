@@ -16,8 +16,10 @@ from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform, scalar_platform
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .entity_metadata import (
     BINARY_SENSOR_TRANSLATION_KEYS,
@@ -51,20 +53,21 @@ async def async_setup_entry(
     """Set up Daikin binary sensors."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_binary_sensors(coordinator, added),
+        lambda is_known: _create_binary_sensors(coordinator, is_known),
     )
 
 
 def _create_binary_sensors(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinBinarySensor]:
     """Create supported binary sensors from the current cloud model."""
     sensors: list[DaikinBinarySensor] = []
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         for management_point in device.device.management_points:
             for value, _characteristic in scalar_characteristics_for_platform(
                 management_point, Platform.BINARY_SENSOR
@@ -72,7 +75,7 @@ def _create_binary_sensors(
                 unique_id = management_point_unique_id(
                     device.id, management_point.embedded_id, value
                 )
-                if unique_id in added_unique_ids:
+                if is_known(Platform.BINARY_SENSOR, unique_id):
                     continue
                 sensors.append(
                     DaikinBinarySensor(
@@ -114,10 +117,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         characteristic = (
             point.characteristic(self._value) if point is not None else None
         )
@@ -136,10 +136,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         if point is None:
             return False
         characteristic = point.characteristic(self._value)

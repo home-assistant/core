@@ -82,7 +82,7 @@ async def test_remove_missing_gateway_requires_complete_sites(
         is expected
     )
     assert (gateway_id in coordinator.data) is not expected
-    coordinator.async_get_sites.assert_awaited_once_with()
+    coordinator.async_get_sites.assert_awaited_once_with(use_cache=False)
 
 
 @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ async def test_remove_missing_gateway_rejects_empty_sites(
         hass, config_entry, missing_gateway
     )
     assert coordinator.data
-    coordinator.async_get_sites.assert_awaited_once_with()
+    coordinator.async_get_sites.assert_awaited_once_with(use_cache=False)
 
 
 async def test_remove_gateway_absent_from_cached_devices(
@@ -139,7 +139,7 @@ async def test_remove_gateway_absent_from_cached_devices(
     )
 
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
-    coordinator.async_get_sites.assert_awaited_once_with()
+    coordinator.async_get_sites.assert_awaited_once_with(use_cache=False)
 
 
 async def test_remove_missing_gateway_rejects_site_membership(
@@ -305,7 +305,8 @@ async def test_remove_missing_gateway_rechecks_presence_after_lookup(
     coordinator = config_entry.runtime_data
     device = next(iter(coordinator.data.values()))
 
-    async def restore_gateway() -> list[Site]:
+    async def restore_gateway(*, use_cache: bool = False) -> list[Site]:
+        assert not use_cache
         device.set_device_data(device.device)
         return []
 
@@ -345,7 +346,7 @@ async def test_remove_child_of_missing_gateway_requires_sites_confirmation(
     )
 
     assert not await async_remove_config_entry_device(hass, config_entry, child)
-    coordinator.async_get_sites.assert_awaited_once_with()
+    coordinator.async_get_sites.assert_awaited_once_with(use_cache=False)
 
 
 async def test_remove_child_of_missing_gateway_keeps_gateway_in_coordinator(
@@ -463,6 +464,37 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
     assert climate_state is not None and climate_state.state != "unavailable"
     assert sensor_state is not None and sensor_state.state != "unavailable"
     schedule_reload.assert_not_called()
+
+
+async def test_disabled_sensor_is_recreated_after_gateway_removal(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    missing_gateway: dr.DeviceEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Recreate a disabled-by-default sensor after its gateway is removed."""
+    coordinator = config_entry.runtime_data
+    sensor_entity_id = "sensor.altherma_ip_address"
+    disabled_sensor = entity_registry.async_get(sensor_entity_id)
+    assert disabled_sensor is not None and disabled_sensor.disabled
+    coordinator.async_get_sites = AsyncMock(
+        return_value=[Site(id="site", gateway_device_ids=[])]
+    )
+
+    assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
+    device_registry.async_remove_device(missing_gateway.id)
+    assert entity_registry.async_get(sensor_entity_id) is None
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
+        "minimal_data"
+    )
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    restored_sensor = entity_registry.async_get(sensor_entity_id)
+    assert restored_sensor is not None and restored_sensor.disabled
 
 
 async def test_removed_child_reappearing_does_not_reload_entry(

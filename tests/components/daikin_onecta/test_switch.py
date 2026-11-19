@@ -126,7 +126,7 @@ async def test_switch_rejects_unknown_state(
     execute_command.assert_not_awaited()
 
 
-async def test_unknown_characteristic_is_skipped() -> None:
+async def test_unknown_characteristic_is_skipped(hass: HomeAssistant) -> None:
     """Do not create untranslated switches for unknown characteristics."""
     management_point = SimpleNamespace(
         embedded_id="point",
@@ -138,7 +138,8 @@ async def test_unknown_characteristic_is_skipped() -> None:
         },
     )
     device = SimpleNamespace(
-        device=SimpleNamespace(management_points=[management_point])
+        device=SimpleNamespace(management_points=[management_point]),
+        present_in_cloud=True,
     )
     coordinator = SimpleNamespace(
         data={"gateway": device},
@@ -150,6 +151,6 @@ async def test_unknown_characteristic_is_skipped() -> None:
     )
     async_add_entities = MagicMock()
 
-    await async_setup_switches(MagicMock(), config_entry, async_add_entities)
+    await async_setup_switches(hass, config_entry, async_add_entities)
 
     async_add_entities.assert_not_called()

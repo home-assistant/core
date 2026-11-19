@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 from daikin_onecta.models import ScheduleSelection
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -14,8 +15,10 @@ from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 
 SELECT_DESCRIPTIONS = {
@@ -36,20 +39,21 @@ async def async_setup_entry(
     """Set up Daikin select entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_schedule_selects(coordinator, added),
+        lambda is_known: _create_schedule_selects(coordinator, is_known),
     )
 
 
 def _create_schedule_selects(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinScheduleSelect]:
     """Create schedule selects from the current cloud model."""
     sensors: list[DaikinScheduleSelect] = []
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         sensors.extend(
             DaikinScheduleSelect(
                 device,
@@ -60,10 +64,12 @@ def _create_schedule_selects(
             )
             for management_point in device.device.management_points
             if management_point.schedule_state is not None
-            and management_point_unique_id(
-                device.id, management_point.embedded_id, "schedule"
+            and not is_known(
+                Platform.SELECT,
+                management_point_unique_id(
+                    device.id, management_point.embedded_id, "schedule"
+                ),
             )
-            not in added_unique_ids
         )
 
     return sensors
@@ -97,10 +103,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
 
     def selection(self) -> ScheduleSelection | None:
         """Return the schedule selection for the current schedule mode."""
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         schedule = point.schedule_state if point is not None else None
         if schedule is None:
             return None
@@ -166,10 +169,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             ),
             "schedule_select_failed",
         )
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         schedule_state = point.schedule_state if point is not None else None
         if schedule_state is not None:
             schedule_state.apply_selection(

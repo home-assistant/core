@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -36,8 +36,10 @@ from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .utils import round_temperature_to_step
 
@@ -94,13 +96,14 @@ async def async_setup_entry(
     """Set up Daikin climate based on config_entry."""
     coordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: [
+        lambda is_known: [
             entity
-            for device in (coordinator.data or {}).values()
-            for entity in _create_climate_entities(device, coordinator, added)
+            for device in present_devices(coordinator)
+            for entity in _create_climate_entities(device, coordinator, is_known)
         ],
     )
 
@@ -108,7 +111,7 @@ async def async_setup_entry(
 def _create_climate_entities(
     device: DaikinOnectaDevice,
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinClimate]:
     """Create climate entities for each Daikin temperature target.
 
@@ -130,7 +133,7 @@ def _create_climate_entities(
             unique_id = management_point_unique_id(
                 device.id, management_point.embedded_id, setpoint_type
             )
-            if unique_id in added_unique_ids:
+            if is_known(Platform.CLIMATE, unique_id):
                 continue
             entities.append(
                 DaikinClimate(
@@ -210,7 +213,6 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         device = self._device
         return (
             super().available
-            and device is not None
             and device.available
             and (climate_control := self._climate_control()) is not None
             and self._setpoint in climate_control.setpoint_types
@@ -218,10 +220,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
 
     def _climate_control(self) -> ClimateControl | None:
         """Return typed native climate-control state from the library."""
-        device = self._device
-        management_point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        management_point = self._management_point
         return (
             management_point.climate_control if management_point is not None else None
         )

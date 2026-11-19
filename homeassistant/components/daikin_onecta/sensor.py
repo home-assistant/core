@@ -31,8 +31,10 @@ from .discovery import (
 from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .entity_metadata import ENTITY_METADATA, SENSOR_KEYS, entity_description_kwargs
 from .utils import enum_value_to_state
@@ -97,7 +99,7 @@ def add_energy_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
     supported_aggregates = []
@@ -128,7 +130,7 @@ def add_energy_sensors(
             aggregate.data_type,
         )
         unique_id = _energy_sensor_unique_id(device.id, details)
-        if unique_id in added_unique_ids:
+        if is_known(Platform.SENSOR, unique_id):
             continue
         sensors.append(
             DaikinEnergySensor(
@@ -145,7 +147,7 @@ def add_simple_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> None:
     """Add sensors for simple characteristics of one management point."""
     for value, _characteristic in scalar_characteristics_for_platform(
@@ -154,7 +156,7 @@ def add_simple_sensors(
         unique_id = _value_sensor_unique_id(
             device.id, management_point.embedded_id, None, value
         )
-        if unique_id in added_unique_ids:
+        if is_known(Platform.SENSOR, unique_id):
             continue
         sensors.append(
             DaikinValueSensor(
@@ -175,7 +177,7 @@ def add_sensory_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> None:
     """Add sensors for sensory data exposed by one management point."""
     sensors.extend(
@@ -192,10 +194,12 @@ def add_sensory_sensors(
         for sensor in SENSORY_DATA_SENSOR_TYPES
         if sensor in SENSOR_DESCRIPTIONS
         and management_point.sensory_characteristic(sensor) is not None
-        and _value_sensor_unique_id(
-            device.id, management_point.embedded_id, "sensoryData", sensor
+        and not is_known(
+            Platform.SENSOR,
+            _value_sensor_unique_id(
+                device.id, management_point.embedded_id, "sensoryData", sensor
+            ),
         )
-        not in added_unique_ids
     )
 
 
@@ -204,14 +208,12 @@ def add_management_point_sensors(
     device: DaikinOnectaDevice,
     management_point: ManagementPoint,
     sensors: list[SensorEntity],
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> None:
     """Add all sensors exposed by a management point."""
-    add_simple_sensors(coordinator, device, management_point, sensors, added_unique_ids)
-    add_sensory_sensors(
-        coordinator, device, management_point, sensors, added_unique_ids
-    )
-    add_energy_sensors(coordinator, device, management_point, sensors, added_unique_ids)
+    add_simple_sensors(coordinator, device, management_point, sensors, is_known)
+    add_sensory_sensors(coordinator, device, management_point, sensors, is_known)
+    add_energy_sensors(coordinator, device, management_point, sensors, is_known)
 
 
 def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> str:
@@ -256,23 +258,24 @@ async def async_setup_entry(
     ]
     async_add_entities(sensors)
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_device_sensors(coordinator, added),
+        lambda is_known: _create_device_sensors(coordinator, is_known),
     )
 
 
 def _create_device_sensors(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[SensorEntity]:
     """Create supported device sensors from the current cloud model."""
     sensors: list[SensorEntity] = []
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         for management_point in device.device.management_points:
             add_management_point_sensors(
-                coordinator, device, management_point, sensors, added_unique_ids
+                coordinator, device, management_point, sensors, is_known
             )
     return sensors
 
@@ -301,10 +304,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         self._attr_native_value = self.sensor_value()
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         energy_data = None
         if point is not None:
             energy_data = (
@@ -321,10 +321,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
 
     def _energy_aggregate(self) -> EnergyAggregate | None:
         """Return the matching energy aggregate from the current model."""
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         if point is None:
             return None
         period = self._period
@@ -413,10 +410,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         self,
     ) -> tuple[ManagementPoint | None, Characteristic | None]:
         """Return the current characteristic from its management point."""
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         if point is None:
             return None, None
         characteristic = (

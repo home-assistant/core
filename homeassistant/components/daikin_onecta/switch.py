@@ -12,8 +12,10 @@ from .device import DaikinOnectaDevice
 from .discovery import scalar_characteristics_for_platform, scalar_platform
 from .entity import (
     DaikinManagementPointEntity,
+    EntityIdChecker,
     add_entities_on_coordinator_update,
     management_point_unique_id,
+    present_devices,
 )
 from .entity_metadata import (
     ENTITY_METADATA,
@@ -43,21 +45,22 @@ async def async_setup_entry(
     """Set up Daikin switches based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     add_entities_on_coordinator_update(
+        hass,
         config_entry,
         coordinator,
         async_add_entities,
-        lambda added: _create_switches(coordinator, added),
+        lambda is_known: _create_switches(coordinator, is_known),
     )
 
 
 def _create_switches(
     coordinator: OnectaDataUpdateCoordinator,
-    added_unique_ids: set[str],
+    is_known: EntityIdChecker,
 ) -> list[DaikinSwitch]:
     """Create supported switches from the current cloud model."""
     sensors: list[DaikinSwitch] = []
 
-    for device in (coordinator.data or {}).values():
+    for device in present_devices(coordinator):
         for management_point in device.device.management_points:
             for value, _characteristic in scalar_characteristics_for_platform(
                 management_point, Platform.SWITCH
@@ -65,7 +68,7 @@ def _create_switches(
                 unique_id = management_point_unique_id(
                     device.id, management_point.embedded_id, value
                 )
-                if unique_id in added_unique_ids:
+                if is_known(Platform.SWITCH, unique_id):
                     continue
                 sensors.append(
                     DaikinSwitch(
@@ -115,10 +118,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     def sensor_value(self) -> str | None:
         """Return the state of the switch."""
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         characteristic = (
             point.characteristic(self._value) if point is not None else None
         )
@@ -131,10 +131,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         """Return whether the characteristic still exposes writable on/off values."""
         if not super().available:
             return False
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         if point is None:
             return False
         characteristic = point.characteristic(self._value)
@@ -171,10 +168,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             ).set_characteristic(self._value, state),
             translation_key,
         )
-        device = self._device
-        point = (
-            device.management_point(self._embedded_id) if device is not None else None
-        )
+        point = self._management_point
         characteristic = (
             point.characteristic(self._value) if point is not None else None
         )
