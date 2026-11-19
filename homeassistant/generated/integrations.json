@@ -7077,6 +7077,17 @@
       ],
       "supported_by": "midea"
     },
+    "invicta": {
+      "name": "Invicta",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "iometer": {
       "name": "IOmeter",
       "integration_type": "device",
