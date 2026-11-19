@@ -2897,6 +2897,46 @@ def _stt_to_intent_input(
     )
 
 
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_invalid_run_keeps_follow_up_agent(
+    hass: HomeAssistant, mock_chat_session: chat_session.ChatSession
+) -> None:
+    """Test a run that fails validation leaves the follow-up to the next run."""
+    conversation_data = async_get_pipeline_conversation_data(hass, mock_chat_session)
+    conversation_data.continue_conversation_agent = "test-agent"
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        stt_metadata=_stt_metadata(),
+        stt_stream=_audio_agent_input(),
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=async_get_pipeline(hass, AUDIO_AGENT_ID),
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            event_callback=Mock(),
+            tts_audio_output="wav",
+        ),
+    )
+
+    # The agent that asked for the follow-up can't hear the user
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
+            return_value=conversation.AgentInfo(
+                id="test-agent", name="Test Agent", supports_streaming=False
+            ),
+        ),
+        pytest.raises(
+            PipelineRunValidationError,
+            match="does not support speech-to-text",
+        ),
+    ):
+        await pipeline_input.validate()
+
+    assert conversation_data.continue_conversation_agent == "test-agent"
+
+
 @pytest.mark.parametrize(
     ("prefer_local_intents", "continue_conversation_agent", "prepared_intents"),
     [

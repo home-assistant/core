@@ -860,20 +860,22 @@ class _DefaultPipelineProcessor:
             self.host.hass, session
         )
 
-        if self._conversation_data.continue_conversation_agent is not None:
+        if (
+            continue_agent := self._conversation_data.continue_conversation_agent
+        ) is not None:
             agent_info = conversation.async_get_agent_info(
-                self.host.hass, self._conversation_data.continue_conversation_agent
+                self.host.hass, continue_agent
             )
-            self._conversation_data.continue_conversation_agent = None
             if agent_info is None:
+                self._conversation_data.continue_conversation_agent = None
                 raise IntentRecognitionError(
                     code="intent-agent-not-found",
                     message=(
-                        f"Intent recognition engine"
-                        f" {self._conversation_data.continue_conversation_agent}"
+                        f"Intent recognition engine {continue_agent}"
                         " asked for follow-up but is no longer found"
                     ),
                 )
+            # The run takes the follow-up once it is valid
             self._intent_agent_only = True
 
         else:
@@ -1766,6 +1768,11 @@ class _DefaultPipelineProcessor:
             <= end_stage_index
         ):
             await self.prepare_text_to_speech()
+
+        if self._intent_agent_only:
+            if TYPE_CHECKING:
+                assert self._conversation_data is not None
+            self._conversation_data.continue_conversation_agent = None
 
 
 @dataclass
