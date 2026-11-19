@@ -54,11 +54,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
 
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
-        res = {}
-        for username in self.config_entry.options[CONF_USERS]:
-            data = await self.hass.async_add_executor_job(self._get_user_data, username)
-            if data is not None:
-                res[username] = data
+        res = await self.hass.async_add_executor_job(self._get_users_data)
         if not res:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -66,10 +62,19 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             )
         return res
 
+    def _get_users_data(self) -> dict[str, LastFMUserData]:
+        """Fetch the data of all users."""
+        res = {}
+        for username in self.config_entry.options[CONF_USERS]:
+            data = self._get_user_data(username)
+            if data is not None:
+                res[username] = data
+        return res
+
     def _get_user_data(self, username: str) -> LastFMUserData | None:
         user = self._client.get_user(username)
         try:
-            play_count = user.get_playcount()
+            play_count = int(user.get_playcount())
             image = user.get_image()
             top_tracks = user.get_top_tracks(limit=1)
         except PyLastError as exc:

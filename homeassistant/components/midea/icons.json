@@ -1,6 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
+      "child_lock": {
+        "default": "mdi:lock-open",
+        "state": {
+          "on": "mdi:lock"
+        }
+      },
       "header_exist": {
         "default": "mdi:air-filter"
       },
@@ -50,6 +56,9 @@
       }
     },
     "sensor": {
+      "cooking_mode": {
+        "default": "mdi:microwave"
+      },
       "dehydration_level": {
         "default": "mdi:tumble-dryer"
       },
@@ -67,6 +76,9 @@
       },
       "filter_life_level": {
         "default": "mdi:air-filter"
+      },
+      "fire_power": {
+        "default": "mdi:fire"
       },
       "hcho": {
         "default": "mdi:molecule"

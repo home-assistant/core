@@ -12,7 +12,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import REGULAR_INTERVAL
 
@@ -75,7 +79,9 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
                 things = await self.bapi.async_get_things(force=True)
                 return {thing.serial: thing for thing in things}
         except ServerDisconnectedError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Error communicating with API: {err}"
+            ) from err
         except ClientResponseError as err:
             if err.status == 403:
                 raise ConfigEntryAuthFailed from err

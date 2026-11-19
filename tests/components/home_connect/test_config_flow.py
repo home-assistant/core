@@ -5,7 +5,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from aiohomeconnect.model import HomeAppliance
+from aiohomeconnect.model import ApplianceType, HomeAppliance
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -137,6 +137,60 @@ async def test_full_flow(
 
     with patch(
         "homeassistant.components.home_connect.async_setup_entry", return_value=None
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_full_flow_china_region(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Check full flow for china region."""
+    hass.config.country = "CN"
+
+    assert await setup.async_setup_component(hass, "home_connect", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE.replace('.com', '.cn')}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN.replace(".com", ".cn"),
+        json={
+            "refresh_token": FAKE_REFRESH_TOKEN,
+            "access_token": FAKE_ACCESS_TOKEN,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -545,7 +599,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="bosch-cookprocessor-123456789012345678",
                 macaddress="c8d778000000",
             ),
-            "CookProcessor",
+            ApplianceType.COOK_PROCESSOR,
         ),
         (
             DhcpServiceInfo(
@@ -553,7 +607,7 @@ async def test_dhcp_flow_already_setup(
                 hostname="BOSCH-HCS000000-68A40E000000",
                 macaddress="68a40e000000",
             ),
-            "Hob",
+            ApplianceType.HOB,
         ),
     ],
     indirect=["appliance"],

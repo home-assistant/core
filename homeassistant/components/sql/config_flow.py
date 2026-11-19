@@ -109,9 +109,8 @@ def validate_db_connection(db_url: str) -> bool:
             engine.dispose()
         raise
 
-    if sess:
-        sess.close()
-        engine.dispose()
+    sess.close()
+    engine.dispose()
 
     return True
 
@@ -127,25 +126,22 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
         result: Result = sess.execute(sqlalchemy.text(query))
     except SQLAlchemyError as error:
         _LOGGER.debug("Execution error %s", error)
-        if sess:
-            sess.close()
-            engine.dispose()
+        sess.close()
+        engine.dispose()
         raise InvalidSqlQuery from error
 
     for res in result.mappings():
         if column not in res:
             _LOGGER.debug("Column `%s` is not returned by the query", column)
-            if sess:
-                sess.close()
-                engine.dispose()
+            sess.close()
+            engine.dispose()
             raise NoSuchColumnError(f"Column {column} is not returned by the query.")
 
         data = res[column]
         _LOGGER.debug("Return value from query: %s", data)
 
-    if sess:
-        sess.close()
-        engine.dispose()
+    sess.close()
+    engine.dispose()
 
     return True
 

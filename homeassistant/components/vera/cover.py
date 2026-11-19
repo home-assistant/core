@@ -4,7 +4,7 @@ from typing import Any, override
 
 import pyvera as veraApi
 
-from homeassistant.components.cover import ATTR_POSITION, ENTITY_ID_FORMAT, CoverEntity
+from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,7 +37,6 @@ class VeraCover(VeraEntity[veraApi.VeraCurtain], CoverEntity):
     ) -> None:
         """Initialize the Vera device."""
         VeraEntity.__init__(self, vera_device, controller_data)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     @override

@@ -10,14 +10,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import weather
 from homeassistant.components.demo.weather import WEATHER_UPDATE_INTERVAL
-from homeassistant.components.weather import (
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-)
+from homeassistant.components.weather import WeatherEntityStateAttribute
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -48,12 +41,12 @@ async def test_attributes(hass: HomeAssistant, weather_only) -> None:
     assert state.state == "sunny"
 
     data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == 21.6
-    assert data.get(ATTR_WEATHER_HUMIDITY) == 92
-    assert data.get(ATTR_WEATHER_PRESSURE) == 1099
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 1.8  # 0.5 m/s -> km/h
-    assert data.get(ATTR_WEATHER_WIND_BEARING) is None
-    assert data.get(ATTR_WEATHER_OZONE) is None
+    assert data.get(WeatherEntityStateAttribute.TEMPERATURE) == 21.6
+    assert data.get(WeatherEntityStateAttribute.HUMIDITY) == 92
+    assert data.get(WeatherEntityStateAttribute.PRESSURE) == 1099
+    assert data.get(WeatherEntityStateAttribute.WIND_SPEED) == 1.8  # 0.5 m/s -> km/h
+    assert data.get(WeatherEntityStateAttribute.WIND_BEARING) is None
+    assert data.get(WeatherEntityStateAttribute.OZONE) is None
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
 
 

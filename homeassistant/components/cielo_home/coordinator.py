@@ -86,7 +86,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         Instead, the coordinator applies the action result locally for the affected
         device and schedules a later refresh to reconcile with the backend state.
         """
-        if not self.data or not self.data.parsed or device_id not in self.data.parsed:
+        if not self.data.parsed or device_id not in self.data.parsed:
             await self.async_request_refresh()
             return
 

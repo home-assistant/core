@@ -19,8 +19,6 @@ from pytest_homeassistant.common import (
 from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_FRIENDLY_NAME,
     CONF_AUTH_MFA_MODULES,
     CONF_AUTH_PROVIDERS,
     CONF_CUSTOMIZE,
@@ -29,6 +27,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_SYSTEM,
     EVENT_CORE_CONFIG_UPDATE,
+    EntityStateAttribute,
     __version__,
 )
 from homeassistant.core import HomeAssistant, State
@@ -108,15 +107,20 @@ def test_core_config_schema_internal_external_warning(
 
 def test_customize_dict_schema() -> None:
     """Test basic customize config validation."""
-    values = ({ATTR_FRIENDLY_NAME: None}, {ATTR_ASSUMED_STATE: "2"})
+    values = (
+        {EntityStateAttribute.FRIENDLY_NAME: None},
+        {EntityStateAttribute.ASSUMED_STATE: "2"},
+    )
 
     for val in values:
         with pytest.raises(MultipleInvalid):
             _CUSTOMIZE_DICT_SCHEMA(val)
 
-    assert _CUSTOMIZE_DICT_SCHEMA({ATTR_FRIENDLY_NAME: 2, ATTR_ASSUMED_STATE: "0"}) == {
-        ATTR_FRIENDLY_NAME: "2",
-        ATTR_ASSUMED_STATE: False,
+    assert _CUSTOMIZE_DICT_SCHEMA(
+        {EntityStateAttribute.FRIENDLY_NAME: 2, EntityStateAttribute.ASSUMED_STATE: "0"}
+    ) == {
+        EntityStateAttribute.FRIENDLY_NAME: "2",
+        EntityStateAttribute.ASSUMED_STATE: False,
     }
 
 
@@ -1032,9 +1036,17 @@ async def test_event_on_update(hass: HomeAssistant) -> None:
 
 
 async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
-    """Test bad timezone raises ValueError."""
+    """Test bad timezone raises ValueError and changes nothing."""
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
+    country = hass.config.country
+    assert country != "NL"
+
     with pytest.raises(ValueError):
-        await hass.config.async_update(time_zone="not_a_timezone")
+        await hass.config.async_update(country="NL", time_zone="not_a_timezone")
+    await hass.async_block_till_done()
+
+    assert hass.config.country == country
+    assert events == []
 
 
 async def test_additional_data_in_core_config(
