@@ -12,7 +12,7 @@ from tis_smartbus import Telegram, TISGateway, commands as cmd
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import POLL_INTERVAL
+from .const import MAX_PARALLEL_READS, POLL_INTERVAL
 
 if TYPE_CHECKING:
     from . import TISConfigEntry
@@ -49,6 +49,7 @@ class TISHub:
         self._subscribers: dict[Address, list[Callable[[], None]]] = defaultdict(list)
         self._unsubs: list[CALLBACK_TYPE] = []
         self._modules: set[Address] = {(d["subnet"], d["device"]) for d in devices}
+        self._read_slots = asyncio.Semaphore(MAX_PARALLEL_READS)
 
     async def async_start(self) -> None:
         """Start listening to the bus and read every module once."""
@@ -91,7 +92,7 @@ class TISHub:
         """
         targets = sorted(self._modules)
         results = await asyncio.gather(
-            *(self.gateway.read_channels(*address) for address in targets)
+            *(self._async_read(address) for address in targets)
         )
         for address, levels in zip(targets, results, strict=True):
             was_online = self.online.get(address)
@@ -104,6 +105,11 @@ class TISHub:
             if was_online is False:
                 _LOGGER.info("TIS module %s.%s is answering again", *address)
             self._notify(address)
+
+    async def _async_read(self, address: Address) -> list[int] | None:
+        """Read one module, a few at a time, so each read's timeout runs from when it is sent."""
+        async with self._read_slots:
+            return await self.gateway.read_channels(*address)
 
     @callback
     def _on_telegram(self, telegram: Telegram) -> None:
