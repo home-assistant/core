@@ -108,6 +108,9 @@
       "htpcmode3": {
         "default": "mdi:desktop-classic"
       },
+      "ipinterrupt": {
+        "default": "mdi:console-network"
+      },
       "iractive": {
         "default": "mdi:remote"
       },

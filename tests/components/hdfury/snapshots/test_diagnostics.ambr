@@ -20,6 +20,7 @@
       'htpcmode1': '0',
       'htpcmode2': '0',
       'htpcmode3': '0',
+      'ipinterrupt': '0',
       'iractive': '1',
       'macaddr': 'c7:1c:df:9d:f6:40',
       'mutetx0': '1',

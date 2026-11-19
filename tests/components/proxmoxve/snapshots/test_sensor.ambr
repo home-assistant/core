@@ -2752,7 +2752,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.0',
+    'state': '0.0',
   })
 # ---
 # name: test_all_entities[sensor.vm_db_memory_usage_percentage-entry]
@@ -2809,7 +2809,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '0.0',
   })
 # ---
 # name: test_all_entities[sensor.vm_db_network_input-entry]
@@ -3398,7 +3398,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.0',
+    'state': '0.5',
   })
 # ---
 # name: test_all_entities[sensor.vm_web_memory_usage_percentage-entry]
@@ -3455,7 +3455,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '25.0',
   })
 # ---
 # name: test_all_entities[sensor.vm_web_network_input-entry]

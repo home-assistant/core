@@ -2,6 +2,7 @@
 
 import base64
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 
 import aiohttp
@@ -221,6 +222,31 @@ async def test_rest_command_configured_authorization_header_wins(
 
     # The generated basic auth must not be sent as a second Authorization header
     assert CIMultiDict(headers).getall("Authorization") == ["Bearer configured"]
+
+
+async def test_rest_command_header_values_not_logged(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Call a rest command and check its header values stay out of the log."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.rest_command")
+    await setup_component(
+        {
+            "header_test": {
+                "url": TEST_URL,
+                "headers": {"Authorization": "Bearer secret"},
+            }
+        }
+    )
+    aioclient_mock.get(TEST_URL, content=b"success")
+    caplog.clear()
+
+    await hass.services.async_call(DOMAIN, "header_test", {}, blocking=True)
+
+    assert "Authorization" in caplog.text
+    assert "Bearer secret" not in caplog.text
 
 
 @pytest.mark.usefixtures("aioclient_mock")
