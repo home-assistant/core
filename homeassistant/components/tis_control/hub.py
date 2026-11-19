@@ -50,6 +50,9 @@ class TISHub:
         self._unsubs: list[CALLBACK_TYPE] = []
         self._modules: set[Address] = {(d["subnet"], d["device"]) for d in devices}
         self._read_slots = asyncio.Semaphore(MAX_PARALLEL_READS)
+        # Loop time of the last level telegram heard from each module.
+        self._heard: dict[Address, float] = {}
+        self._scanning = False
 
     async def async_start(self) -> None:
         """Start listening to the bus and read every module once."""
@@ -85,31 +88,44 @@ class TISHub:
     async def _async_poll(self, _now: datetime | None = None) -> None:
         """Read every module to learn which ones answer.
 
-        The library hands each status reply to the bus listeners as it arrives, so _on_telegram has
-        already stored the levels, in bus order. The poll must not store them again: gather() returns
-        only when the slowest module has answered, and a module may have announced a newer level in
-        the meantime.
+        A scan of many silent modules can outlast POLL_INTERVAL, and the timer does not wait for the
+        previous run, so a scan that is still running makes the next tick skip instead of queueing
+        another batch of reads.
         """
-        targets = sorted(self._modules)
-        results = await asyncio.gather(
-            *(self._async_read(address) for address in targets)
-        )
-        for address, levels in zip(targets, results, strict=True):
-            was_online = self.online.get(address)
-            self.online[address] = levels is not None
-            if levels is None:
-                if was_online is not False:
-                    _LOGGER.info("TIS module %s.%s is not answering", *address)
-                    self._notify(address)
-                continue
-            if was_online is False:
-                _LOGGER.info("TIS module %s.%s is answering again", *address)
-            self._notify(address)
+        if self._scanning:
+            _LOGGER.debug("Previous TIS scan still running, skipping this one")
+            return
+        self._scanning = True
+        try:
+            await asyncio.gather(
+                *(self._async_check(address) for address in sorted(self._modules))
+            )
+        finally:
+            self._scanning = False
 
-    async def _async_read(self, address: Address) -> list[int] | None:
-        """Read one module, a few at a time, so each read's timeout runs from when it is sent."""
-        async with self._read_slots:
-            return await self.gateway.read_channels(*address)
+    async def _async_check(self, address: Address) -> None:
+        """Read one module and record whether it answers.
+
+        The library hands each status reply to the bus listeners as it arrives, so _on_telegram has
+        already stored the levels, in bus order; this only decides availability, as soon as this
+        module's own read ends. A module heard on the bus while its read was pending is online,
+        even if the read itself timed out.
+        """
+        async with self._read_slots:  # a few at a time: each timeout runs from its send
+            sent = self.hass.loop.time()
+            levels = await self.gateway.read_channels(*address)
+        if levels is None and self._heard.get(address, float("-inf")) >= sent:
+            return
+        was_online = self.online.get(address)
+        self.online[address] = levels is not None
+        if levels is None:
+            if was_online is not False:
+                _LOGGER.info("TIS module %s.%s is not answering", *address)
+                self._notify(address)
+            return
+        if was_online is False:
+            _LOGGER.info("TIS module %s.%s is answering again", *address)
+        self._notify(address)
 
     @callback
     def _on_telegram(self, telegram: Telegram) -> None:
@@ -121,6 +137,7 @@ class TISHub:
             return
         for item in levels:
             self.set_level((*address, item.channel), item.level)
+        self._heard[address] = self.hass.loop.time()
         if self.online.get(address) is False:
             _LOGGER.info("TIS module %s.%s is answering again", *address)
         self.online[address] = True

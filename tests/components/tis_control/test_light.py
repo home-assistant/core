@@ -1,5 +1,6 @@
 """Test the TIS Control lights."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -235,3 +236,60 @@ async def test_send_failure_raises(
         )
     assert err.value.translation_key == "cannot_send"
     assert hass.states.get(CHANNEL_1).state == STATE_ON
+
+
+async def test_scan_still_running_skips_the_next_tick(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_gateway: MagicMock,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """A scan that outlasts the poll interval is not joined by a second one."""
+    read = mock_gateway.read_channels.side_effect
+    release = asyncio.Event()
+
+    async def slow_read(
+        subnet: int, device: int, timeout: float = 2.0
+    ) -> list[int] | None:
+        await release.wait()
+        return await read(subnet, device, timeout)
+
+    mock_gateway.read_channels.side_effect = slow_read
+    calls = mock_gateway.read_channels.call_count
+    for _ in range(3):
+        freezer.tick(POLL_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        for _ in range(5):
+            await asyncio.sleep(0)
+    assert mock_gateway.read_channels.call_count == calls + 1
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    freezer.tick(POLL_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_gateway.read_channels.call_count == calls + 2
+
+
+async def test_heard_during_a_failed_read_stays_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_gateway: MagicMock,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """The read times out, but the module announced itself meanwhile: it is not marked unavailable."""
+
+    async def announce_then_time_out(
+        subnet: int, device: int, timeout: float = 2.0
+    ) -> list[int] | None:
+        mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f828"))
+        return None
+
+    mock_gateway.read_channels.side_effect = announce_then_time_out
+    freezer.tick(POLL_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(CHANNEL_1)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == value_to_brightness((1, 100), 40)
