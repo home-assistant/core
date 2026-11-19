@@ -101,7 +101,13 @@ async def async_converse(
     audio: ConversationAudioInput | None = None,
     audio_output: ConversationAudioOutput | None = None,
 ) -> ConversationResult:
-    """Process text or spoken audio and get intent."""
+    """Process text or spoken audio and get intent.
+
+    Context for the spoken audio goes in the extra system prompt, not the text.
+    """
+    if audio is not None and text:
+        raise ValueError("Text and spoken audio can't be processed together")
+
     if agent_id is None:
         agent_id = HOME_ASSISTANT_AGENT
 

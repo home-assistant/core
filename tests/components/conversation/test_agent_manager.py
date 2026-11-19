@@ -149,6 +149,37 @@ async def test_async_converse_audio_not_supported(
         )
 
 
+async def test_async_converse_text_with_audio(
+    hass: HomeAssistant, init_components: None
+) -> None:
+    """Test text can't come with spoken audio, which replaces it."""
+    with (
+        patch.object(
+            DefaultAgent,
+            "supported_features",
+            new_callable=PropertyMock,
+            return_value=ConversationEntityFeature.AUDIO_INPUT,
+        ),
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
+        ) as mock_process,
+        pytest.raises(ValueError, match="Text and spoken audio"),
+    ):
+        await async_converse(
+            hass,
+            text="turn on the light",
+            conversation_id=None,
+            context=Context(),
+            agent_id="conversation.home_assistant",
+            audio=ConversationAudioInput(
+                pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+                stream=_audio_stream(),
+            ),
+        )
+
+    mock_process.assert_not_called()
+
+
 async def test_async_converse_error_in_open_turn(
     hass: HomeAssistant,
     init_components: None,
