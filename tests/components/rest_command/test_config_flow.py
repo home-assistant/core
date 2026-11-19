@@ -9,6 +9,7 @@ from homeassistant.components.rest_command.const import DOMAIN, SUBENTRY_TYPE_CO
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL
 
@@ -212,3 +213,37 @@ async def test_empty_password_is_kept(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "user"
     assert result["data"]["password"] == ""
+
+
+async def test_action_from_yaml_exists(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test a command cannot take the action name of a command from YAML."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
+    )
+    result = await _start_subentry_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "action": "From YAML",
+            "url": TEST_URL,
+            "method": "get",
+            "auth": {},
+            "advanced": {},
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"action": "action_exists"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "action": "From UI",
+            "url": TEST_URL,
+            "method": "get",
+            "auth": {},
+            "advanced": {},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
