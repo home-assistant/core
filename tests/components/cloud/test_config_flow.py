@@ -1,4 +1,4 @@
-"""Test the Home Assistant Cloud config flow."""
+"""Test the Home Assistant Link config flow."""
 
 from unittest.mock import patch
 
@@ -25,7 +25,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "system"}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Home Assistant Cloud"
+        assert result["title"] == "Home Assistant Link"
         assert result["data"] == {}
         await hass.async_block_till_done()
 

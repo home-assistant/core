@@ -9,6 +9,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 
 
 async def test_switch_set_state(
@@ -196,6 +197,77 @@ async def test_arming(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_current_state.value == 4
 
 
+@pytest.mark.parametrize(
+    ("features", "target", "service", "armed_state"),
+    [
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME,
+            0,
+            "alarm_arm_home",
+            AlarmControlPanelState.ARMED_HOME,
+            id="home",
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_NIGHT,
+            2,
+            "alarm_arm_night",
+            AlarmControlPanelState.ARMED_NIGHT,
+            id="night",
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_NIGHT,
+            2,
+            "alarm_arm_night",
+            AlarmControlPanelState.ARMED_NIGHT,
+            id="home_night",
+        ),
+    ],
+)
+async def test_arming_without_away_keeps_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+    features: AlarmControlPanelEntityFeature,
+    target: int,
+    service: str,
+    armed_state: AlarmControlPanelState,
+) -> None:
+    """Test arming a panel without away keeps the target requested from HomeKit."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": features},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+    async_mock_service(hass, ALARM_CONTROL_PANEL_DOMAIN, service)
+
+    # Two arm cycles: a valid push must not re-arm a per-cycle warning.
+    for _ in range(2):
+        acc.char_target_state.client_update_value(target)
+        await hass.async_block_till_done()
+
+        # Call the update path directly: the state-change dispatcher swallows
+        # callback exceptions, so a raising set_value would go unnoticed there.
+        acc.async_update_state(State(entity_id, AlarmControlPanelState.ARMING))
+        assert acc.char_target_state.value == target
+        assert acc.char_current_state.value == 3
+
+        acc.async_update_state(State(entity_id, armed_state))
+        assert acc.char_target_state.value == target
+        assert acc.char_current_state.value == target
+
+        acc.async_update_state(State(entity_id, AlarmControlPanelState.DISARMED))
+
+    assert "Skipping unsupported" not in caplog.text
+    assert "invalid value" not in caplog.text
+
+
 async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
     """Test different supported states."""
     code = "1234"
@@ -363,3 +435,95 @@ async def test_handle_non_alarm_states(
 
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 3
+
+
+@pytest.mark.parametrize(
+    ("build_features", "value_is_valid", "expected_current", "expected_target"),
+    [
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_AWAY, False, 3, 3, id="outside_valid"
+        ),
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_HOME, True, 0, 0, id="inside_valid"
+        ),
+    ],
+)
+async def test_set_if_valid_guards_frozen_valid_values(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+    build_features: AlarmControlPanelEntityFeature,
+    value_is_valid: bool,
+    expected_current: int,
+    expected_target: int,
+) -> None:
+    """Test armed_home is pushed only when it is in the frozen valid values.
+
+    armed_home maps to StayArm (0) for both the current and target
+    characteristics, so a build without ARM_HOME must skip both.
+    """
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": build_features},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert (0 in acc.char_current_state.properties["ValidValues"].values()) is (
+        value_is_valid
+    )
+
+    # Call the update path directly: the state-change dispatcher swallows
+    # callback exceptions, so a regressed set_value would raise unnoticed there.
+    # The live state advertises ARM_HOME, as after a reload-skipping feature change.
+    acc.async_update_state(
+        State(
+            entity_id,
+            AlarmControlPanelState.ARMED_HOME,
+            attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_HOME},
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_current_state.value == expected_current
+    assert acc.char_target_state.value == expected_target
+    assert ("Skipping unsupported" in caplog.text) is not value_is_valid
+
+
+async def test_skip_warning_logged_once_per_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+) -> None:
+    """Test each unsupported value is warned about once, across arm cycles."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Alternate two unsupported states with valid pushes in between, as a
+    # read-only panel (e.g. SIA) does on every arm cycle.
+    for _ in range(2):
+        for state in (
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.DISARMED,
+        ):
+            acc.async_update_state(State(entity_id, state))
+
+    for char in ("SecuritySystemCurrentState", "SecuritySystemTargetState"):
+        for value in (0, 2):
+            assert caplog.text.count(f"Skipping unsupported {char} value {value}") == 1

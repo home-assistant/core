@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     AIR_QUALITY_CATEGORY_MAP,
@@ -34,7 +33,6 @@ from .const import (
     ATTR_LEVEL,
     ATTR_SPEED,
     ATTR_VALUE,
-    ATTRIBUTION,
     MAX_FORECAST_DAYS,
     POLLEN_CATEGORY_MAP,
 )
@@ -43,6 +41,7 @@ from .coordinator import (
     AccuWeatherDailyForecastDataUpdateCoordinator,
     AccuWeatherObservationDataUpdateCoordinator,
 )
+from .entity import AccuWeatherEntity
 
 PARALLEL_UPDATES = 1
 
@@ -413,12 +412,10 @@ async def async_setup_entry(
 
 
 class AccuWeatherSensor(
-    CoordinatorEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherObservationDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -432,7 +429,6 @@ class AccuWeatherSensor(
         self.entity_description = description
         self._sensor_data = self._get_sensor_data(coordinator.data, description.key)
         self._attr_unique_id = f"{coordinator.location_key}-{description.key}".lower()
-        self._attr_device_info = coordinator.device_info
 
     @property
     @override
@@ -468,12 +464,10 @@ class AccuWeatherSensor(
 
 
 class AccuWeatherForecastSensor(
-    CoordinatorEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
+    AccuWeatherEntity[AccuWeatherDailyForecastDataUpdateCoordinator], SensorEntity
 ):
     """Define an AccuWeather entity."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
     entity_description: AccuWeatherSensorDescription
 
     def __init__(
@@ -492,7 +486,6 @@ class AccuWeatherForecastSensor(
         self._attr_unique_id = (
             f"{coordinator.location_key}-{description.key}-{forecast_day}".lower()
         )
-        self._attr_device_info = coordinator.device_info
         self._attr_translation_placeholders = {"forecast_day": str(forecast_day)}
         self.forecast_day = forecast_day
 

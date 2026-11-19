@@ -4,6 +4,7 @@
   "categories": ["plugs_switches"],
   "codeowners": ["@Phunkafizer"],
   "config_flow": true,
+  "connectivity": ["rf"],
   "dependencies": ["radio_frequency"],
   "documentation": "https://www.home-assistant.io/integrations/klik_aan_klik_uit",
   "integration_type": "device",

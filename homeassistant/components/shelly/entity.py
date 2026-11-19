@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
-from functools import wraps
+from functools import partial, wraps
 from typing import Any, Concatenate, cast, override
 
 from aioshelly.block_device import Block
@@ -11,7 +11,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -162,6 +162,18 @@ def async_setup_entry_rpc(
         async_restore_rpc_attribute_entities(
             hass, config_entry, async_add_entities, coordinator, sensors, sensor_class
         )
+        # Restoring only covers the registry, add entities that are new since then
+        coordinator.async_on_initialized(
+            partial(
+                async_setup_rpc_attribute_entities,
+                hass,
+                config_entry,
+                async_add_entities,
+                sensors,
+                sensor_class,
+                skip_registered=True,
+            )
+        )
 
 
 @callback
@@ -171,6 +183,8 @@ def async_setup_rpc_attribute_entities(
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
+    *,
+    skip_registered: bool = False,
 ) -> None:
     """Set up entities for RPC attributes."""
     coordinator = config_entry.runtime_data.rpc
@@ -230,6 +244,16 @@ def async_setup_rpc_attribute_entities(
                         coordinator, key, sensor_id, description
                     )
                 )
+
+    if skip_registered:
+        ent_reg = er.async_get(hass)
+        domain = sensor_class.__module__.split(".")[-1]
+        entities = [
+            entity
+            for entity in entities
+            if ent_reg.async_get_entity_id(domain, DOMAIN, entity.unique_id) is None
+        ]
+
     if not entities:
         return
 
@@ -725,18 +749,14 @@ def get_entity_class(
 def get_entity_block_device_info(
     coordinator: ShellyBlockCoordinator,
     block: Block | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for block entities."""
     return get_block_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         block,
-        suggested_area=coordinator.suggested_area,
     )
 
 
@@ -744,19 +764,15 @@ def get_entity_rpc_device_info(
     coordinator: ShellyRpcCoordinator,
     key: str | None = None,
     emeter_phase: str | None = None,
-) -> DeviceInfo:
+) -> DeviceInfo | ChildDeviceInfo:
     """Get device info for RPC entities."""
     return get_rpc_device_info(
         coordinator.hass,
         coordinator.config_entry.entry_id,
         coordinator.device,
         coordinator.mac,
-        coordinator.configuration_url,
-        coordinator.model,
-        coordinator.model_name,
         key,
         emeter_phase=emeter_phase,
-        suggested_area=coordinator.suggested_area,
     )
 
 

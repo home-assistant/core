@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from hass_nabucasa import (
     AutoLoginController,
@@ -11,6 +11,7 @@ from hass_nabucasa import (
     LoginFailedReason,
     LogoutEvent,
 )
+from hass_nabucasa.remote import Certificate
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 
@@ -23,6 +24,7 @@ from homeassistant.components.cloud import (
     async_listen_cloudhook_change,
     async_listen_connection_change,
     async_remote_ui_url,
+    async_remote_ui_urls,
 )
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
@@ -39,6 +41,7 @@ from homeassistant.components.cloud.prefs import (
     GOOGLE_SETTINGS_VERSION,
     STORAGE_KEY,
 )
+from homeassistant.components.cloud.services import CloudService
 from homeassistant.const import (
     CONF_MODE,
     EVENT_HOMEASSISTANT_STARTED,
@@ -49,6 +52,7 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 REMOTE_UI_UNIQUE_ID = "cloud-remote-ui-connectivity"
 
@@ -124,18 +128,22 @@ async def test_remote_services(
     """Setup cloud component and test services."""
     cloud = hass.data[DATA_CLOUD]
 
-    assert hass.services.has_service(DOMAIN, "remote_connect")
-    assert hass.services.has_service(DOMAIN, "remote_disconnect")
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_CONNECT)
+    assert hass.services.has_service(DOMAIN, CloudService.REMOTE_DISCONNECT)
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
-        await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_CONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
-        await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.services.async_call(
+            DOMAIN, CloudService.REMOTE_DISCONNECT, blocking=True
+        )
         await hass.async_block_till_done()
 
     assert mock_disconnect.called
@@ -149,7 +157,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_connect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_CONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_connect.called is False
@@ -159,7 +170,10 @@ async def test_remote_services(
         pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
-            DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
+            DOMAIN,
+            CloudService.REMOTE_DISCONNECT,
+            blocking=True,
+            context=non_admin_context,
         )
 
     assert mock_disconnect.called is False
@@ -291,6 +305,50 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
         cl.client.prefs._prefs["remote_domain"] = None
         with patch.object(cl.remote, "_instance_domain", "live.example.com"):
             assert async_remote_ui_url(hass) == "https://live.example.com"
+
+
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_urls(hass: HomeAssistant) -> None:
+    """Test getting the remote ui urls with custom domains first."""
+    cl = hass.data[DATA_CLOUD]
+
+    with pytest.raises(CloudNotAvailable):
+        async_remote_ui_urls(hass)
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cl.remote, "connect"),
+        patch.object(type(cl.remote), "alias", new_callable=PropertyMock) as alias,
+        patch.object(
+            type(cl.remote), "certificate", new_callable=PropertyMock
+        ) as certificate,
+    ):
+        await cl.client.prefs.async_update(remote_enabled=True)
+        await hass.async_block_till_done()
+        cl.client.prefs._prefs["remote_domain"] = "example.com"
+        alias.return_value = ["ha.example.com"]
+
+        # No certificate loaded yet
+        certificate.return_value = None
+        assert async_remote_ui_urls(hass) == ["https://example.com"]
+
+        # The certificate does not cover the custom domain
+        certificate.return_value = Certificate(
+            "example.com", utcnow(), "fingerprint", alternative_names=["example.com"]
+        )
+        assert async_remote_ui_urls(hass) == ["https://example.com"]
+
+        # The certificate covers the custom domain
+        certificate.return_value = Certificate(
+            "example.com",
+            utcnow(),
+            "fingerprint",
+            alternative_names=["example.com", "ha.example.com"],
+        )
+        assert async_remote_ui_urls(hass) == [
+            "https://ha.example.com",
+            "https://example.com",
+        ]
 
 
 @pytest.mark.parametrize(
@@ -692,3 +750,32 @@ async def test_assistant_settings_migrated_at_startup(
 
     assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
     assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
+
+
+@pytest.mark.parametrize(
+    ("title", "expected_title"),
+    [
+        pytest.param("Home Assistant Cloud", "Home Assistant Link", id="legacy"),
+        pytest.param("Custom title", "Custom title", id="custom"),
+    ],
+)
+async def test_setup_entry_renames_legacy_title(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    title: str,
+    expected_title: str,
+) -> None:
+    """Test a config entry with the legacy default title is renamed on setup."""
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    hass.config_entries.async_update_entry(entry, title=title)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.title == expected_title

@@ -24,8 +24,8 @@ from homeassistant.components.androidtv.const import (
     DOMAIN,
 )
 from homeassistant.components.androidtv.services import (
-    ATTR_DEVICE_PATH,
-    ATTR_LOCAL_PATH,
+    AndroidTVService,
+    AndroidTVServiceArgument,
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -46,7 +46,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_STOP,
@@ -56,6 +55,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
@@ -461,16 +461,18 @@ async def test_select_source_firetv(
 
 
 @pytest.mark.parametrize(
-    ("config", "connect"),
+    ("config", "connect", "translation_key"),
     [
-        (CONFIG_ANDROID_DEFAULT, False),
-        (CONFIG_FIRETV_DEFAULT, False),
-        (CONFIG_ANDROID_DEFAULT, True),
-        (CONFIG_FIRETV_DEFAULT, True),
+        (CONFIG_ANDROID_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, False, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_FIRETV_DEFAULT, True, "cannot_connect_python_adb"),
+        (CONFIG_ANDROID_ADB_SERVER, False, "cannot_connect_adb_server"),
+        (CONFIG_FIRETV_ADB_SERVER, False, "cannot_connect_adb_server"),
     ],
 )
 async def test_setup_fail(
-    hass: HomeAssistant, config: dict[str, Any], connect: bool
+    hass: HomeAssistant, config: dict[str, Any], connect: bool, translation_key: str
 ) -> None:
     """Test entity is not created when ADB connection is not established."""
     patch_key, entity_id, config_entry = _setup(config)
@@ -488,6 +490,11 @@ async def test_setup_fail(
         await async_update_entity(hass, entity_id)
         state = hass.states.get(entity_id)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.error_reason_translation_key == translation_key
+        assert (
+            config_entry.error_reason_translation_placeholders["address"]
+            == f"{TEST_HOST_NAME}:{DEFAULT_PORT}"
+        )
         assert state is None
 
 
@@ -510,8 +517,11 @@ async def test_adb_command(hass: HomeAssistant) -> None:
         ) as patch_shell:
             service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.COMMAND: command,
+                },
                 blocking=True,
                 return_response=True,
             )
@@ -542,8 +552,11 @@ async def test_adb_command_empty_response(hass: HomeAssistant) -> None:
         ) as patch_shell:
             service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.COMMAND: command,
+                },
                 blocking=True,
                 return_response=True,
             )
@@ -575,8 +588,11 @@ async def test_adb_command_unicode_decode_error(hass: HomeAssistant) -> None:
         ):
             service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.COMMAND: command,
+                },
                 blocking=True,
                 return_response=True,
             )
@@ -606,8 +622,11 @@ async def test_adb_command_key(hass: HomeAssistant) -> None:
         ) as patch_shell:
             service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.COMMAND: command,
+                },
                 blocking=True,
                 return_response=True,
             )
@@ -639,8 +658,11 @@ async def test_adb_command_get_properties(hass: HomeAssistant) -> None:
         ) as patch_get_props:
             service_response = await hass.services.async_call(
                 DOMAIN,
-                "adb_command",
-                {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+                AndroidTVService.ADB_COMMAND,
+                {
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.COMMAND: command,
+                },
                 blocking=True,
                 return_response=True,
             )
@@ -671,8 +693,8 @@ async def test_learn_sendevent(hass: HomeAssistant) -> None:
         ) as patch_learn_sendevent:
             await hass.services.async_call(
                 DOMAIN,
-                "learn_sendevent",
-                {ATTR_ENTITY_ID: entity_id},
+                AndroidTVService.LEARN_SENDEVENT,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
@@ -740,11 +762,11 @@ async def test_download(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_pull") as patch_pull:
             await hass.services.async_call(
                 DOMAIN,
-                "download",
+                AndroidTVService.DOWNLOAD,
                 {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -757,11 +779,11 @@ async def test_download(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                "download",
+                AndroidTVService.DOWNLOAD,
                 {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -786,11 +808,11 @@ async def test_upload(hass: HomeAssistant) -> None:
         with patch("androidtv.basetv.basetv_async.BaseTVAsync.adb_push") as patch_push:
             await hass.services.async_call(
                 DOMAIN,
-                "upload",
+                AndroidTVService.UPLOAD,
                 {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )
@@ -803,11 +825,11 @@ async def test_upload(hass: HomeAssistant) -> None:
         ):
             await hass.services.async_call(
                 DOMAIN,
-                "upload",
+                AndroidTVService.UPLOAD,
                 {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_DEVICE_PATH: device_path,
-                    ATTR_LOCAL_PATH: local_path,
+                    TargetKey.ENTITY_ID: entity_id,
+                    AndroidTVServiceArgument.DEVICE_PATH: device_path,
+                    AndroidTVServiceArgument.LOCAL_PATH: local_path,
                 },
                 blocking=True,
             )

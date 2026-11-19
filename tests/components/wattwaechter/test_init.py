@@ -1,4 +1,4 @@
-"""Tests for the WattWächter Plus integration setup."""
+"""Tests for the WattWächter integration setup."""
 
 from __future__ import annotations
 
@@ -12,13 +12,22 @@ from aio_wattwaechter import (
     WattwaechterError,
     WattwaechterNoDataError,
 )
+from aio_wattwaechter.models import SystemInfo, _parse_system_info
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
-from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.wattwaechter.const import (
+    CONF_FW_VERSION,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_MODEL
 from homeassistant.core import HomeAssistant
@@ -28,6 +37,8 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_ID,
     MOCK_HOST,
+    MOCK_METER_DATA_GAS,
+    MOCK_METER_DATA_WATER,
     MOCK_SYSTEM_INFO_GAS,
     MOCK_SYSTEM_INFO_WATER,
 )
@@ -213,6 +224,55 @@ async def test_device_model_follows_system_info(
     assert device_registry.async_get(device.id).model == "WattWächter Gas"
 
 
+def _system_info_with_version(version: str) -> SystemInfo:
+    """Return the Plus system info reporting the given firmware version."""
+    data = load_json_object_fixture("system_info.json", DOMAIN)
+    data["esp"] = [
+        {**item, "value": version} if item["name"] == "os_version" else item
+        for item in data["esp"]
+    ]
+    return _parse_system_info(data)
+
+
+async def test_device_sw_version_follows_firmware(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the firmware version is updated after a firmware update."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_FW_VERSION: "1.1.5"},
+        unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The version stored at setup is replaced by the one the device reports
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_ID), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "1.2.3"
+
+    # The device installs a firmware update
+    mock_client.system_info.return_value = _system_info_with_version("1.3.0")
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device.id).sw_version == "1.3.0"
+
+    # The last known version is kept when the system info is unavailable on reload
+    mock_client.system_info.side_effect = WattwaechterConnectionError("offline")
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert device_registry.async_get(device.id).sw_version == "1.3.0"
+
+
 async def test_migrate_gw_entry_to_bare_device_id(
     hass: HomeAssistant,
     mock_client: AsyncMock,
@@ -221,6 +281,7 @@ async def test_migrate_gw_entry_to_bare_device_id(
 ) -> None:
     """Test a gas/water entry stored with the WWGW- prefix gets the bare ID."""
     mock_client.system_info.return_value = MOCK_SYSTEM_INFO_WATER
+    mock_client.meter_data.return_value = MOCK_METER_DATA_WATER
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={**MOCK_CONFIG_DATA, CONF_DEVICE_ID: LEGACY_GW_ID},
@@ -254,7 +315,7 @@ async def test_migrate_gw_entry_to_bare_device_id(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == MOCK_DEVICE_ID
     assert entry.data[CONF_DEVICE_ID] == MOCK_DEVICE_ID
     assert device_registry.async_get(device.id).identifiers == {
@@ -284,7 +345,7 @@ async def test_migrate_plus_entry_unchanged(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == MOCK_DEVICE_ID
     assert entry.data == MOCK_CONFIG_DATA
 
@@ -307,6 +368,58 @@ async def test_migrate_keeps_id_when_device_configured_twice(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.unique_id == LEGACY_GW_ID
     assert entry.data[CONF_DEVICE_ID] == LEGACY_GW_ID
+
+
+@pytest.mark.parametrize(
+    ("disabled_by", "pref_disable_new_entities", "expected"),
+    [
+        pytest.param(er.RegistryEntryDisabler.INTEGRATION, False, None, id="enabled"),
+        pytest.param(
+            er.RegistryEntryDisabler.INTEGRATION,
+            True,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="new_entities_disabled",
+        ),
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            False,
+            er.RegistryEntryDisabler.USER,
+            id="disabled_by_user",
+        ),
+    ],
+)
+async def test_migrate_enables_generic_gas_power(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    disabled_by: er.RegistryEntryDisabler,
+    pref_disable_new_entities: bool,
+    expected: er.RegistryEntryDisabler | None,
+) -> None:
+    """Test the gas power set up as a disabled generic sensor gets enabled."""
+    mock_client.system_info.return_value = MOCK_SYSTEM_INFO_GAS
+    mock_client.meter_data.return_value = MOCK_METER_DATA_GAS
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_DEVICE_ID,
+        minor_version=2,
+        pref_disable_new_entities=pref_disable_new_entities,
+    )
+    entry.add_to_hass(hass)
+    gas_power = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_DEVICE_ID}_7-0:16.7.0",
+        config_entry=entry,
+        disabled_by=disabled_by,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 3
+    assert entity_registry.async_get(gas_power.entity_id).disabled_by is expected

@@ -1,49 +1,57 @@
 """Tests for Vallox date platform."""
 
 from datetime import date
+from unittest.mock import AsyncMock, patch
 
-from pytest_homeassistant.common import MockConfigEntry
-from vallox_websocket_api import MetricData
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.date import DOMAIN as DATE_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import ATTR_DATE, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DATE, ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import patch_set_filter_change_date
+from . import setup_integration
+
+DATE_ENTITY_ID = "date.vallox_filter_change_date"
 
 
-async def test_set_filter_change_date(
-    mock_entry: MockConfigEntry,
+@pytest.mark.usefixtures("mock_vallox_client")
+async def test_all_entities(
     hass: HomeAssistant,
-    setup_fetch_metric_data_mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test set filter change date."""
+    """Test the date entity."""
+    with patch("homeassistant.components.vallox.PLATFORMS", [Platform.DATE]):
+        await setup_integration(hass, mock_config_entry)
 
-    entity_id = "date.vallox_filter_change_date"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    class MockMetricData(MetricData):
-        @property
-        def filter_change_date(self):
-            return date(2024, 1, 1)
 
-    setup_fetch_metric_data_mock(metric_data_class=MockMetricData)
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("metrics", [{"A_CYC_FILTER_CHANGED_DAY": None}])
+async def test_filter_change_date_missing(hass: HomeAssistant) -> None:
+    """Test a filter change date the unit does not report."""
+    state = hass.states.get(DATE_ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
-    with patch_set_filter_change_date() as set_filter_change_date:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
 
-        state = hass.states.get(entity_id)
-        assert state
+@pytest.mark.usefixtures("init_integration")
+async def test_set_filter_change_date(
+    hass: HomeAssistant, mock_vallox_client: AsyncMock
+) -> None:
+    """Test setting the filter change date."""
+    await hass.services.async_call(
+        DATE_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: DATE_ENTITY_ID, ATTR_DATE: "2024-02-25"},
+        blocking=True,
+    )
 
-        assert state.state == "2024-01-01"
-
-        await hass.services.async_call(
-            DATE_DOMAIN,
-            SERVICE_SET_VALUE,
-            service_data={
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_DATE: "2024-02-25",
-            },
-        )
-        await hass.async_block_till_done()
-        set_filter_change_date.assert_called_once_with(date(2024, 2, 25))
+    mock_vallox_client.set_filter_change_date.assert_called_once_with(date(2024, 2, 25))
+    # One fetch at setup, and one refresh after the change.
+    assert mock_vallox_client.fetch_metric_data.call_count == 2

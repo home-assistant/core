@@ -120,13 +120,13 @@
         "name": "Charged energy"
       },
       "charging_current": {
-        "name": "Charging current"
+        "name": "Offered charging current"
       },
       "charging_rate": {
         "name": "Charging rate"
       },
       "charging_voltage": {
-        "name": "Charging voltage"
+        "name": "Average voltage"
       },
       "connector_l1_temperature": {
         "name": "Connector L1 temperature"
@@ -366,6 +366,12 @@
     },
     "unreachable": {
       "message": "Could not connect to the NRGkick device. Make sure it is switched on and that the host or IP address is correct."
+    }
+  },
+  "issues": {
+    "json_api_disabled": {
+      "description": "Home Assistant can't read data from your NRGkick {device_name}, because its JSON API is disabled.\n\nTo enable it:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n\nAfter enabling it, the integration reconnects at the next update. If Home Assistant was started while the JSON API was disabled, reload the NRGkick integration.",
+      "title": "JSON API is disabled on {device_name}"
     }
   }
 }

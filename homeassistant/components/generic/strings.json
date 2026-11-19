@@ -106,11 +106,5 @@
       }
     }
   },
-  "services": {
-    "reload": {
-      "description": "Reloads generic cameras from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
-    }
-  },
   "title": "Generic Camera"
 }

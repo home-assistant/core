@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,11 +18,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -45,7 +45,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
@@ -59,7 +59,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -188,7 +188,7 @@
     'state': 'auto',
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -207,11 +207,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -234,7 +234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
@@ -248,14 +248,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'automatic',
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -274,11 +274,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -301,7 +301,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
@@ -315,7 +315,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -871,7 +871,7 @@
     'state': 'auto',
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -890,11 +890,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l1')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -917,7 +917,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
@@ -931,14 +931,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_1_patterilammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'automatic',
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -957,11 +957,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <DeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
+    'device_id': <ChildDeviceEntry identifiers=[('ouman_eh_800', '01JABCDEFGHIJKLMNOPQRSTUVW_l2')]>,
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -984,7 +984,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+# name: test_entities[select-room_sensors][select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
@@ -998,7 +998,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'entity_id': 'select.ouman_eh_800_heating_circuit_2_lattialammitys_operation_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

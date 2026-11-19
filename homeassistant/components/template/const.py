@@ -36,6 +36,7 @@ PLATFORMS = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -45,6 +46,29 @@ PLATFORMS = [
     Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
+
+DEFAULT_NAMES: dict[Platform, str] = {
+    Platform.ALARM_CONTROL_PANEL: "Template Alarm Control Panel",
+    Platform.BINARY_SENSOR: "Template Binary Sensor",
+    Platform.BUTTON: "Template Button",
+    Platform.CLIMATE: "Template Climate",
+    Platform.COVER: "Template Cover",
+    Platform.DEVICE_TRACKER: "Template Device Tracker",
+    Platform.EVENT: "Template Event",
+    Platform.FAN: "Template Fan",
+    Platform.IMAGE: "Template Image",
+    Platform.LIGHT: "Template Light",
+    Platform.LOCK: "Template Lock",
+    Platform.MEDIA_PLAYER: "Template Media Player",
+    Platform.NUMBER: "Template Number",
+    Platform.SELECT: "Template Select",
+    Platform.SENSOR: "Template Sensor",
+    Platform.SWITCH: "Template Switch",
+    Platform.UPDATE: "Template Update",
+    Platform.VACUUM: "Template Vacuum",
+    Platform.WATER_HEATER: "Template Water Heater",
+    Platform.WEATHER: "Template Weather",
+}
 
 
 class TemplateConfig(dict):

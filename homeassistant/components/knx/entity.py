@@ -8,12 +8,12 @@ from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -123,7 +123,7 @@ class _KnxEntityBase(Entity):
 
     # `assumed_state` toggles when a restored state is confirmed by the bus,
     # which would otherwise write a new attributes row for every entity on startup
-    _unrecorded_attributes = frozenset({ATTR_ASSUMED_STATE})
+    _unrecorded_attributes = frozenset({EntityStateAttribute.ASSUMED_STATE})
     _attr_has_entity_name = True
     _attr_should_poll = False
 
