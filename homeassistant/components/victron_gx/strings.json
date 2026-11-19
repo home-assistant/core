@@ -601,8 +601,8 @@
       "vebus_weak_ac_input": {
         "name": "AC input strength",
         "state": {
-          "strong": "Strong AC input",
-          "weak": "Weak AC input"
+          "strong": "Strong",
+          "weak": "Weak"
         }
       }
     },
