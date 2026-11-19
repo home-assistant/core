@@ -33,7 +33,7 @@ from homeassistant.components.update import (
     UpdateServiceArgument,
 )
 from homeassistant.config_entries import SOURCE_SYSTEM
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -395,7 +395,7 @@ async def test_install(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             UpdateServiceArgument.VERSION: category_test_data["version_update"],
         },
         blocking=True,
@@ -431,7 +431,7 @@ async def test_install_update_from_the_catalog(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -493,7 +493,7 @@ async def test_install_newest_commit_of_a_custom_repository(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -526,7 +526,7 @@ async def test_install_update_of_a_custom_repository(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -563,7 +563,7 @@ async def test_template_update_writes_only_the_template(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -586,7 +586,7 @@ async def test_install_already_installed_version(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "1.0.0",
             },
             blocking=True,
@@ -602,7 +602,7 @@ async def test_install_refuses_a_version_that_is_a_path(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "../../other/repo/archive/refs/heads/main",
             },
             blocking=True,
@@ -620,7 +620,7 @@ async def test_install_without_an_update(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: integration_update_entity},
+            {TargetKey.ENTITY_ID: integration_update_entity},
             blocking=True,
         )
 
@@ -643,7 +643,7 @@ async def test_install_failure_without_its_own_message(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "2.0.0",
             },
             blocking=True,
@@ -672,7 +672,7 @@ async def test_install_version_without_a_manifest(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "3.0.0",
             },
             blocking=True,
@@ -701,7 +701,7 @@ async def test_install_version_requiring_a_newer_core(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "3.0.0",
             },
             blocking=True,
@@ -734,7 +734,7 @@ async def test_install_catalog_update_requiring_a_newer_core(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: integration_update_entity},
+            {TargetKey.ENTITY_ID: integration_update_entity},
             blocking=True,
         )
 
@@ -766,7 +766,7 @@ async def test_install_download_failure(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "2.0.0",
             },
             blocking=True,
@@ -793,7 +793,7 @@ async def test_release_notes(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == snapshot
+    assert response["result"]["release_notes"] == snapshot
 
 
 async def test_release_notes_while_pending_restart(
@@ -813,7 +813,7 @@ async def test_release_notes_while_pending_restart(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] is None
+    assert response["result"]["release_notes"] is None
 
 
 @pytest.mark.parametrize("github_token", [None])
@@ -827,7 +827,7 @@ async def test_install_without_github(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            TargetKey.ENTITY_ID: integration_update_entity,
             UpdateServiceArgument.VERSION: "2.0.0",
         },
         blocking=True,
@@ -857,7 +857,7 @@ async def test_install_needs_accepted_warning(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "2.0.0",
             },
             blocking=True,
@@ -874,7 +874,7 @@ async def test_install_needs_accepted_warning(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            TargetKey.ENTITY_ID: integration_update_entity,
             UpdateServiceArgument.VERSION: "2.0.0",
         },
         blocking=True,
@@ -901,7 +901,7 @@ async def test_install_needs_warning_accepted_by_caller(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "2.0.0",
             },
             blocking=True,
@@ -914,7 +914,7 @@ async def test_install_needs_warning_accepted_by_caller(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
         {
-            CommonServiceArgument.ENTITY_ID: integration_update_entity,
+            TargetKey.ENTITY_ID: integration_update_entity,
             UpdateServiceArgument.VERSION: "2.0.0",
         },
         blocking=True,
@@ -962,7 +962,7 @@ async def test_install_rate_limited_without_github(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
             {
-                CommonServiceArgument.ENTITY_ID: integration_update_entity,
+                TargetKey.ENTITY_ID: integration_update_entity,
                 UpdateServiceArgument.VERSION: "2.0.0",
             },
             blocking=True,
@@ -1015,7 +1015,7 @@ async def test_release_notes_rate_limited_without_github(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == ""
+    assert response["result"]["release_notes"] == ""
     assert not marketplace.system.disabled
 
 
@@ -1055,8 +1055,8 @@ async def test_release_notes_stop_at_the_version_on_offer(
     )
     response = await client.receive_json()
 
-    assert "What 2.0.0 brings" in response["result"]
-    assert "3.0.0" not in response["result"]
+    assert "What 2.0.0 brings" in response["result"]["release_notes"]
+    assert "3.0.0" not in response["result"]["release_notes"]
     assert repository.data.last_version == "2.0.0"
 
 

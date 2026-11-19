@@ -20,7 +20,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberService
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -103,7 +103,7 @@ async def test_successful_write_does_not_recover_failed_coordinator(
         hass.services.async_call(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
-            {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
             blocking=True,
         )
     )
@@ -173,7 +173,7 @@ async def test_set_bypass_supply_temperature_target(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
-            {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
             blocking=True,
         )
 
@@ -212,7 +212,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
         blocking=True,
     )
 
@@ -227,7 +227,7 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
-            {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
             blocking=True,
         )
 
@@ -253,7 +253,7 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
         blocking=True,
     )
 
@@ -286,7 +286,7 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 76.6},
+        {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 76.6},
         blocking=True,
     )
 
@@ -380,6 +380,6 @@ async def test_set_bypass_supply_temperature_target_error(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
-            {CommonServiceArgument.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            {TargetKey.ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
             blocking=True,
         )

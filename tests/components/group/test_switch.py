@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -261,7 +261,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
     assert hass.states.get("switch.ac").state == STATE_OFF
@@ -270,7 +270,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -280,7 +280,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.switch_group"},
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -450,7 +450,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TOGGLE,
-            {CommonServiceArgument.ENTITY_ID: "switch.nested_group"},
+            {TargetKey.ENTITY_ID: "switch.nested_group"},
             blocking=True,
         )
     assert hass.states.get("switch.ac").state == STATE_OFF

@@ -40,8 +40,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -199,13 +199,13 @@ async def test_setup_entities_and_unload(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: switch_id},
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch_id},
+        {TargetKey.ENTITY_ID: switch_id},
         blocking=True,
     )
     await hass.services.async_call(

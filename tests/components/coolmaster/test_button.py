@@ -2,7 +2,7 @@
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -19,7 +19,7 @@ async def test_button(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
         {
-            CommonServiceArgument.ENTITY_ID: button.entity_id,
+            TargetKey.ENTITY_ID: button.entity_id,
         },
         blocking=True,
     )

@@ -23,8 +23,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -207,7 +207,7 @@ async def test_switch_toggle(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
         {
-            CommonServiceArgument.ENTITY_ID: entity,
+            TargetKey.ENTITY_ID: entity,
         },
         blocking=True,
     )
@@ -242,7 +242,7 @@ async def test_switch_toggle_returns_false(
             SWITCH_DOMAIN,
             SwitchService.TOGGLE,
             {
-                CommonServiceArgument.ENTITY_ID: entity,
+                TargetKey.ENTITY_ID: entity,
             },
             blocking=True,
         )
@@ -333,7 +333,7 @@ async def test_switch_toggle_raises_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TOGGLE,
-            {CommonServiceArgument.ENTITY_ID: entity},
+            {TargetKey.ENTITY_ID: entity},
             blocking=True,
         )
     client_method.assert_awaited_once_with(*expected_args)

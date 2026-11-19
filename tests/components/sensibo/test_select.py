@@ -14,7 +14,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -84,7 +84,7 @@ async def test_select_set_option(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SelectServiceArgument.OPTION: "dim",
             },
             blocking=True,
@@ -117,7 +117,7 @@ async def test_select_set_option(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SelectServiceArgument.OPTION: "dim",
             },
             blocking=True,
@@ -134,7 +134,7 @@ async def test_select_set_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SelectServiceArgument.OPTION: "dim",
         },
         blocking=True,
