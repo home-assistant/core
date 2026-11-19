@@ -12,9 +12,9 @@ from homeassistant.components.emulated_kasa.const import (
     DOMAIN,
 )
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -267,12 +267,12 @@ async def test_template(hass: HomeAssistant) -> None:
 
     # Turn all devices on to known state
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_FAN}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_FAN}, blocking=True
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 33},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: 33},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -290,8 +290,8 @@ async def test_template(hass: HomeAssistant) -> None:
     # Fan High:
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 100},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: 100},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -303,7 +303,10 @@ async def test_template(hass: HomeAssistant) -> None:
 
     # Fan off:
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_FAN}, blocking=True
+        FAN_DOMAIN,
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_FAN},
+        blocking=True,
     )
     await hass.async_block_till_done()
     plug_it = emulated_kasa.get_plug_devices(hass, config)
@@ -454,12 +457,12 @@ async def test_multiple_devices(hass: HomeAssistant) -> None:
     )
     hass.states.async_set(ENTITY_SENSOR, 35)
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_FAN}, blocking=True
+        FAN_DOMAIN, FanService.TURN_ON, {TargetKey.ENTITY_ID: ENTITY_FAN}, blocking=True
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 66},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: ENTITY_FAN, FanServiceArgument.PERCENTAGE: 66},
         blocking=True,
     )
     await hass.async_block_till_done()
