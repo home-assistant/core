@@ -9,6 +9,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -19,7 +20,7 @@ async def test_sensors(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot the three readings and their shared device metadata."""
+    """Snapshot the readings and their shared device metadata."""
     assert snapshot == {
         state.entity_id: (state.state, state.attributes.get("unit_of_measurement"))
         for state in hass.states.async_all("sensor")
@@ -28,7 +29,7 @@ async def test_sensors(
         ("busy", init_integration.unique_id), init_integration.entry_id
     )
     assert device is not None
-    assert (device.manufacturer, device.model) == ("BUSY", "BUSY Bar")
+    assert (device.manufacturer, device.model) == ("Flipper FZCO", "BUSY Bar")
     assert device.serial_number == "BUSY123"
     assert device.sw_version == "1.0"
     assert device.hw_version == "BB.1"
@@ -87,7 +88,9 @@ async def test_missing_readings(
     firmware: types.StatusFirmware | None,
 ) -> None:
     """Handle optional metadata and a disconnected Wi-Fi network."""
-    mock_client.status.return_value = types.Status(firmware=firmware)
+    mock_client.status.return_value = types.Status(
+        firmware=firmware, power=types.StatusPower()
+    )
     mock_client.wifi_status.return_value = types.StatusResponse(
         state=types.WifiState.DISCONNECTED
     )
@@ -95,6 +98,18 @@ async def test_missing_readings(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert {state.state for state in hass.states.async_all("sensor")} == {"unknown"}
+
+
+async def test_missing_power(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Treat a status without its power section as a failed poll."""
+    mock_client.status.return_value = types.Status()
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.usefixtures("init_integration")

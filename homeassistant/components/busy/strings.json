@@ -35,9 +35,6 @@
     "sensor": {
       "wifi_signal": {
         "name": "Wi-Fi signal"
-      },
-      "wifi_ssid": {
-        "name": "Wi-Fi network"
       }
     }
   },

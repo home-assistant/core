@@ -8,7 +8,7 @@ from typing import override
 from busylib import AsyncBusyBar
 from busylib.exceptions import BusyBarAPIError, BusyBarError
 from busylib.transports import AiohttpTransport
-from busylib.types import Status, StatusResponse
+from busylib.types import Status, StatusPower, StatusResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
@@ -28,6 +28,7 @@ class BusyData:
     """Status and Wi-Fi responses from one poll."""
 
     status: Status
+    power: StatusPower
     wifi: StatusResponse
 
 
@@ -57,7 +58,8 @@ class BusyCoordinator(DataUpdateCoordinator[BusyData]):
     async def _async_update_data(self) -> BusyData:
         """Read status and Wi-Fi information."""
         try:
-            return BusyData(await self.client.status(), await self.client.wifi_status())
+            status = await self.client.status()
+            wifi = await self.client.wifi_status()
         except BusyBarError as err:
             if isinstance(err, BusyBarAPIError) and err.status_code in (401, 403):
                 try:
@@ -69,3 +71,7 @@ class BusyCoordinator(DataUpdateCoordinator[BusyData]):
                         translation_domain=DOMAIN, translation_key="invalid_auth"
                     ) from err
             raise UpdateFailed("Cannot read BUSY Bar") from err
+        # The firmware always reports it; busylib types every status section as optional.
+        if status.power is None:
+            raise UpdateFailed("BUSY Bar reported no power status")
+        return BusyData(status, status.power, wifi)

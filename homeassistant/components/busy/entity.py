@@ -27,7 +27,7 @@ class BusyEntity(CoordinatorEntity[BusyCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cast(str, entry.unique_id))},
             name=entry.title,
-            manufacturer="BUSY",
+            manufacturer="Flipper FZCO",
             model="BUSY Bar",
             serial_number=status.device.serial_number if status.device else None,
             hw_version=status.device.otp_model if status.device else None,
