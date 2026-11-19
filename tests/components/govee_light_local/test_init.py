@@ -306,6 +306,59 @@ async def test_reconfigure_subentry_moves_device(
     mock_govee_api.add_device_to_discovery_queue.assert_called_with("192.168.1.102")
 
 
+async def test_subentry_added_during_setup_is_queued(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test a device added while setup is still starting up reaches the controller."""
+
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="discovered-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [discovered])
+
+    start_blocked = asyncio.Event()
+
+    async def _start(**kwargs: bool) -> None:
+        await start_blocked.wait()
+
+    mock_govee_api.start.side_effect = _start
+
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    setup_task = hass.async_create_task(
+        hass.config_entries.async_setup(config_entry.entry_id)
+    )
+    await asyncio.sleep(0)
+    assert not setup_task.done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Setup is still parked in start(), so only yield to let the update
+    # listener run; waiting for all tasks would deadlock on the setup task.
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(
+        "192.168.1.100"
+    )
+
+    start_blocked.set()
+    assert await setup_task
+    await hass.async_block_till_done()
+
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+
 async def test_setup_without_listening_addresses(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:

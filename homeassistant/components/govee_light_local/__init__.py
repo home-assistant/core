@@ -49,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
         hass=hass, config_entry=entry, listening_addresses=listening_addresses
     )
+    # Assigned before the update listener registers: a subentry changed while
+    # setup is still waiting for discovery must find the coordinator.
+    entry.runtime_data = coordinator
 
     @callback
     def _async_device_removed_filter(
@@ -151,7 +154,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -
             translation_domain=DOMAIN, translation_key="no_devices_found"
         ) from ex
 
-    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
