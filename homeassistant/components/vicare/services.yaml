@@ -23,6 +23,35 @@
                 - "cycles_5_10"
               translation_key: circulation_mode
 
+schedule_holiday:
+  target:
+    entity:
+      integration: vicare
+      domain: climate
+  fields:
+    program: &holiday_program
+      default: holiday
+      selector:
+        select:
+          options:
+            - "holiday"
+            - "holiday_at_home"
+          translation_key: holiday_program
+    start_date:
+      required: true
+      selector:
+        date:
+    end_date:
+      required: true
+      selector:
+        date:
+cancel_holiday:
+  target:
+    entity:
+      integration: vicare
+      domain: climate
+  fields:
+    program: *holiday_program
 get_circulation_schedule:
   target:
     entity:

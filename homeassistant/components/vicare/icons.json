@@ -161,8 +161,14 @@
     }
   },
   "services": {
+    "cancel_holiday": {
+      "service": "mdi:calendar-remove"
+    },
     "get_circulation_schedule": {
       "service": "mdi:calendar-search"
+    },
+    "schedule_holiday": {
+      "service": "mdi:beach"
     },
     "set_circulation_schedule": {
       "service": "mdi:calendar-clock"
