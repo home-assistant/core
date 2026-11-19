@@ -648,6 +648,29 @@ async def test_zeroconf_unreadable_instance_name_is_probed(
     assert result["result"].unique_id == SERIAL_NUMBER
 
 
+async def test_zeroconf_known_inverter_behind_a_proxy_is_kept(
+    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
+) -> None:
+    """A known inverter not answering at its announced address keeps its entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id=SERIAL_NUMBER,
+        data={**tcp_data(), CONF_HOST: "192.168.1.10", CONF_PORT: 5020},
+    )
+    entry.add_to_hass(hass)
+    mock_modbus_unit.fail_read(40000, ModbusTimeoutError("timed out"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=_discovery()
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert entry.data[CONF_HOST] == "192.168.1.10"
+    assert entry.data[CONF_PORT] == 5020
+
+
 async def test_zeroconf_another_inverter_on_a_configured_address(
     hass: HomeAssistant, mock_modbus_connection: MockModbusConnection
 ) -> None:

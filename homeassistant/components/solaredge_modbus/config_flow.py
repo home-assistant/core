@@ -7,7 +7,12 @@ import probatio
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
@@ -178,13 +183,19 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if announced_serial_number := _discovered_serial_number(discovery_info):
             await self.async_set_unique_id(announced_serial_number)
-            self._abort_if_unique_id_configured(
-                updates={CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
-            )
+            if (
+                entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    DOMAIN, announced_serial_number
+                )
+            ) and (
+                entry.source == SOURCE_IGNORE
+                or (
+                    entry.data.get(CONF_HOST) == data[CONF_HOST]
+                    and entry.data.get(CONF_PORT) == data[CONF_PORT]
+                )
+            ):
+                return self.async_abort(reason="already_configured")
 
-        # An address is not an identity: the one an entry is configured with
-        # can end up hosting another inverter, and that one deserves to be
-        # offered.
         errors, solaredge = await self._async_validate(data)
         if solaredge is None:
             return self.async_abort(reason=errors["base"])
