@@ -3,7 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from irm_kmi_api import CurrentWeatherData
+from freezegun.api import FrozenDateTimeFactory
+from irm_kmi_api import CurrentWeatherData, WarningData
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
@@ -14,7 +15,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import (
+    NEXT_WARNING_ENTITY_ID,
     TEMPERATURE_ENTITY_ID,
+    WARNINGS,
     WIND_DIRECTION_ENTITY_ID,
     WIND_GUST_SPEED_ENTITY_ID,
 )
@@ -84,3 +87,58 @@ async def test_current_condition_sensor_without_its_key(
     assert state
     assert state.state == STATE_UNKNOWN
     assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+
+
+@pytest.mark.parametrize(
+    ("now", "warnings", "expected_state"),
+    [
+        pytest.param(
+            "2023-12-28T15:30:00+01:00",
+            WARNINGS,
+            "2023-12-28T15:00:00+00:00",
+            id="before_any_warning",
+        ),
+        pytest.param(
+            "2023-12-28T18:00:00+01:00",
+            WARNINGS,
+            "2023-12-29T05:00:00+00:00",
+            id="while_one_is_in_effect",
+        ),
+        pytest.param(
+            "2023-12-29T06:00:00+01:00",
+            WARNINGS,
+            STATE_UNKNOWN,
+            id="as_the_last_one_starts",
+        ),
+        pytest.param(
+            "2023-12-29T13:00:00+01:00",
+            WARNINGS,
+            STATE_UNKNOWN,
+            id="after_every_warning",
+        ),
+        pytest.param(
+            "2023-12-28T15:30:00+01:00",
+            [],
+            STATE_UNKNOWN,
+            id="without_any_warning",
+        ),
+    ],
+)
+async def test_next_warning(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    warnings: list[WarningData],
+    expected_state: str,
+) -> None:
+    """Test the sensor reports the start of the earliest upcoming warning."""
+    freezer.move_to(now)
+    mock_irm_kmi_api.get_warnings.return_value = warnings
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(NEXT_WARNING_ENTITY_ID)
+    assert state
+    assert state.state == expected_state

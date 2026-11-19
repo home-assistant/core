@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -21,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .coordinator import IrmKmiConfigEntry
 from .data import ProcessedCoordinatorData
@@ -34,7 +36,20 @@ PARALLEL_UPDATES = 0
 class IrmKmiSensorEntityDescription(SensorEntityDescription):
     """Class describing IRM KMI sensor entities."""
 
-    value_fn: Callable[[ProcessedCoordinatorData], StateType]
+    value_fn: Callable[[ProcessedCoordinatorData], StateType | datetime]
+
+
+def _next_warning(data: ProcessedCoordinatorData) -> datetime | None:
+    """Return when the next warning starts, or None if none is pending."""
+    now = dt_util.utcnow()
+    return min(
+        (
+            warning["starts_at"]
+            for warning in data.warnings
+            if now < warning["starts_at"]
+        ),
+        default=None,
+    )
 
 
 SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
@@ -82,6 +97,12 @@ SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: data.current_weather.get("uv_index"),
     ),
+    IrmKmiSensorEntityDescription(
+        key="next_warning",
+        translation_key="next_warning",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=_next_warning,
+    ),
 )
 
 
@@ -111,6 +132,6 @@ class IrmKmiSensor(IrmKmiBaseEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
