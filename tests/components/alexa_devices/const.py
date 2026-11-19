@@ -440,7 +440,12 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                     "thermostatMode",
                 ],
                 supported_operations=["setThermostatMode", "setTargetSetpoint"],
-                supported_modes=["HEAT", "COOL", "AUTO", "OFF"],
+                supported_modes={
+                    "HEAT": "HEAT",
+                    "COOL": "COOL",
+                    "AUTO": "AUTO",
+                    "OFF": "OFF",
+                },
                 friendly_name=None,
                 minimum_value=None,
                 maximum_value=None,
@@ -462,7 +467,7 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
             "5": AmazonDeviceFeature(
                 properties=["mode"],
                 supported_operations=["setMode"],
-                supported_modes=["1", "2", "3"],
+                supported_modes={"1": "On", "2": "Auto", "3": "Circulate"},
                 friendly_name="Fan Mode",
                 minimum_value=None,
                 maximum_value=None,

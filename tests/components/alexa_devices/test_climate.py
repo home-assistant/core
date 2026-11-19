@@ -371,6 +371,52 @@ async def test_command_replaces_errored_setpoint(
     assert state.attributes[ATTR_TEMPERATURE] == 20.0
 
 
+async def test_celsius_command_replaces_errored_setpoint(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test replacing an errored setpoint keeps the thermostat in Celsius."""
+    sensors = mock_amazon_devices_client.sensors[TEST_DEVICE_THERMOSTAT_SN]
+    for sensor in sensors.values():
+        sensor.scale = "CELSIUS" if sensor.scale else None
+    sensors["thermostatMode"].value = "HEAT"
+    target = sensors["targetSetpoint"]
+    target.value = None
+    target.scale = None
+    target.error = True
+    target.error_type = "NOT_FOUND"
+    target.error_msg = "NOT_FOUND"
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.attributes[ATTR_TEMPERATURE] == 21.5
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 0.5
+
+
+async def test_thermostat_with_instance_not_added(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a thermostat feature reported with an instance creates no entity."""
+    device = deepcopy(TEST_DEVICE_THERMOSTAT)
+    device.features["thermostat"] = {"1": device.features["thermostat"][""]}
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_THERMOSTAT_SN: device
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ENTITY_ID) is None
+
+
 async def test_thermostat_without_temperature_sensor(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,

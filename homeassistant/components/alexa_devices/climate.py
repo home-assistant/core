@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN
+from .const import AMAZON_TO_UNIT, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
 
@@ -48,11 +48,11 @@ HVAC_MODE_TO_AMAZON = {
     HVACMode.OFF: "OFF",
 }
 
-AMAZON_TO_UNIT = {
-    "CELSIUS": UnitOfTemperature.CELSIUS,
-    "FAHRENHEIT": UnitOfTemperature.FAHRENHEIT,
-}
 UNIT_TO_AMAZON: dict[str, str] = {value: key for key, value in AMAZON_TO_UNIT.items()}
+
+# the thermostat reports half degrees in Celsius
+TARGET_TEMP_STEP_CELSIUS = 0.5
+TARGET_TEMP_STEP_FAHRENHEIT = 1.0
 
 
 async def async_setup_entry(
@@ -75,7 +75,7 @@ async def async_setup_entry(
             async_add_entities(
                 AmazonClimateEntity(coordinator, serial_num, THERMOSTAT_DESCRIPTION)
                 for serial_num in new_devices
-                if "thermostat" in coordinator.data[serial_num].features
+                if "" in coordinator.data[serial_num].features.get("thermostat", {})
             )
 
     _check_device()
@@ -113,10 +113,8 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
             if feature.sensor_keys.get("mode") == "fan_mode":
                 self._fan_instance = instance
                 self._fan_modes = {
-                    slugify(option["modeResources"]["friendlyName"]["value"]["text"]): (
-                        option["value"]
-                    )
-                    for option in feature.raw_configuration.get("modeOptions") or []
+                    slugify(name): value
+                    for value, name in feature.supported_modes.items()
                 }
         if self._fan_modes:
             self._base_features |= ClimateEntityFeature.FAN_MODE
@@ -206,10 +204,9 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
-        # the thermostat reports half degrees in Celsius
         if self.native_temperature_unit == UnitOfTemperature.CELSIUS:
-            return 0.5
-        return 1
+            return TARGET_TEMP_STEP_CELSIUS
+        return TARGET_TEMP_STEP_FAHRENHEIT
 
     @property
     @override
@@ -286,13 +283,14 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
             return super().max_temp
         return allowed_range[1]
 
-    async def _call(
+    async def _async_call_feature_operation(
         self,
         operation_name: str,
         command_payload: dict[str, Any],
         new_values: dict[str, Any],
         feature_name: str = "thermostat",
         instance: str | None = None,
+        scale: str | None = None,
     ) -> None:
         """Invoke a feature operation and store the new values."""
         async with alexa_api_call(self.coordinator):
@@ -312,23 +310,19 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 )
             ) is not None:
                 sensor.value = value
+                # an errored setpoint has no scale, which would change the unit
+                if scale is not None:
+                    sensor.scale = scale
                 sensor.error = False
                 sensor.error_type = None
                 sensor.error_msg = None
         self.async_write_ha_state()
 
-    def _temperature_payload(self, value: float) -> dict[str, float | str]:
-        """Return a setpoint payload in the thermostat scale."""
-        return {
-            "value": value,
-            "scale": UNIT_TO_AMAZON[self.native_temperature_unit],
-        }
-
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         mode = HVAC_MODE_TO_AMAZON[hvac_mode]
-        await self._call(
+        await self._async_call_feature_operation(
             "setThermostatMode", {"thermostatMode": mode}, {"thermostatMode": mode}
         )
 
@@ -350,7 +344,7 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         value = self._fan_modes[fan_mode]
-        await self._call(
+        await self._async_call_feature_operation(
             "setMode",
             {"mode": value},
             {"mode": value},
@@ -367,21 +361,24 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 translation_domain=DOMAIN,
                 translation_key="hvac_mode_with_temperature",
             )
+        scale = UNIT_TO_AMAZON[self.native_temperature_unit]
         if ATTR_TEMPERATURE in kwargs:
             target = kwargs[ATTR_TEMPERATURE]
-            await self._call(
+            await self._async_call_feature_operation(
                 "setTargetSetpoint",
-                {"targetSetpoint": self._temperature_payload(target)},
+                {"targetSetpoint": {"value": target, "scale": scale}},
                 {"targetSetpoint": target},
+                scale=scale,
             )
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
             low = kwargs[ATTR_TARGET_TEMP_LOW]
             high = kwargs[ATTR_TARGET_TEMP_HIGH]
-            await self._call(
+            await self._async_call_feature_operation(
                 "setTargetSetpoint",
                 {
-                    "lowerSetpoint": self._temperature_payload(low),
-                    "upperSetpoint": self._temperature_payload(high),
+                    "lowerSetpoint": {"value": low, "scale": scale},
+                    "upperSetpoint": {"value": high, "scale": scale},
                 },
                 {"lowerSetpoint": low, "upperSetpoint": high},
+                scale=scale,
             )
