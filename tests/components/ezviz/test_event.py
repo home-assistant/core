@@ -19,10 +19,13 @@ ENTITY_ID = "event.camera_1_motion"
 SERIAL = "C123456789"
 
 
-def _camera(last_alarm_time: str | None) -> dict[str, dict[str, object]]:
+def _camera(
+    last_alarm_time: str | None, status: int = 1
+) -> dict[str, dict[str, object]]:
     """Return coordinator data with the given last alarm."""
     return {
         SERIAL: _mock_camera_data(
+            status=status,
             last_alarm_time=last_alarm_time,
             last_alarm_type_code="10079",
             last_alarm_type_name="Smart Detection Alarm",
@@ -35,9 +38,10 @@ async def _refresh(
     freezer: FrozenDateTimeFactory,
     mock_ezviz_client: AsyncMock,
     last_alarm_time: str | None,
+    status: int = 1,
 ) -> None:
     """Let the coordinator fetch new camera data."""
-    mock_ezviz_client.load_cameras.return_value = _camera(last_alarm_time)
+    mock_ezviz_client.load_cameras.return_value = _camera(last_alarm_time, status)
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -109,6 +113,43 @@ async def test_event_after_outage(
     await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:40")
 
     assert changes == [
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, "2026-11-17T12:01:00.000+00:00"),
+    ]
+
+
+async def test_event_kept_while_camera_offline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+) -> None:
+    """Test an alarm reported while the camera is offline fires when it is back."""
+    freezer.move_to("2026-11-17 12:00:00+00:00")
+    mock_ezviz_client.load_cameras.return_value = _camera("2026-11-17 10:00:00")
+
+    await setup_integration(hass, mock_config_entry)
+
+    changes: list[tuple[str | None, str]] = []
+
+    @callback
+    def _record(event: Event[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        assert new_state is not None
+        changes.append((old_state.state if old_state else None, new_state.state))
+
+    async_track_state_change_event(hass, ENTITY_ID, _record)
+
+    # The camera is offline: the new alarm is not consumed yet
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20", status=2)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    # Back online with the same alarm: it fires as a separate state change
+    await _refresh(hass, freezer, mock_ezviz_client, "2026-11-17 12:00:20")
+
+    assert changes == [
+        (STATE_UNKNOWN, STATE_UNAVAILABLE),
         (STATE_UNAVAILABLE, STATE_UNKNOWN),
         (STATE_UNKNOWN, "2026-11-17T12:01:00.000+00:00"),
     ]

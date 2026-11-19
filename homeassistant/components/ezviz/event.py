@@ -58,6 +58,10 @@ class EzvizMotionEvent(EzvizEntity, EventEntity):
         # first refresh after an outage is a separate state change and is not
         # dropped by triggers that ignore changes from unavailable.
         super()._handle_coordinator_update()
+        # Keep an alarm reported while the camera is offline until it is back,
+        # otherwise the event is written while unavailable and gets lost.
+        if not self.available:
+            return
         last_alarm_time = self.data.get("last_alarm_time")
         if last_alarm_time and last_alarm_time != self._last_alarm_time:
             self._last_alarm_time = last_alarm_time
