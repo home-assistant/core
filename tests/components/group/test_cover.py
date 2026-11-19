@@ -13,14 +13,17 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
     CoverState,
 )
 from homeassistant.components.group.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
     SERVICE_CLOSE_COVER,
@@ -954,3 +957,54 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get(DEMO_COVER_TILT).state == CoverState.CLOSING
     assert hass.states.get("cover.bedroom_group").state == CoverState.CLOSING
     assert hass.states.get("cover.nested_group").state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize(
+    ("extra_config", "expected_device_class"),
+    [
+        pytest.param({}, None, id="no_device_class"),
+        pytest.param(
+            {CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE},
+            CoverDeviceClass.GARAGE,
+            id="garage",
+        ),
+    ],
+)
+async def test_device_class(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    extra_config: dict[str, Any],
+    expected_device_class: CoverDeviceClass | None,
+) -> None:
+    """Test the device class can be configured in YAML."""
+    config = {
+        COVER_DOMAIN: {
+            **CONFIG_ATTRIBUTES[COVER_DOMAIN],
+            **extra_config,
+        }
+    }
+    with assert_setup_component(1, COVER_DOMAIN):
+        await async_setup_component(hass, COVER_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
+
+    entry = entity_registry.async_get(COVER_GROUP)
+    assert entry
+    assert entry.original_device_class == expected_device_class
+
+
+async def test_invalid_device_class(hass: HomeAssistant) -> None:
+    """Test an invalid device class is rejected."""
+    config = {
+        COVER_DOMAIN: {
+            **CONFIG_ATTRIBUTES[COVER_DOMAIN],
+            CONF_DEVICE_CLASS: "not_a_device_class",
+        }
+    }
+    with assert_setup_component(0, COVER_DOMAIN):
+        await async_setup_component(hass, COVER_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(COVER_GROUP) is None
