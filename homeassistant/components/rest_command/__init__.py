@@ -32,7 +32,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ACTION,
     CONF_CONTENT_TYPE,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
@@ -90,10 +89,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up the REST commands configured in the UI."""
     for subentry in entry.subentries.values():
-        command_config = dict(subentry.data)
-        name: str = command_config.pop(CONF_ACTION)
+        name = str(subentry.unique_id)
         try:
-            validated = COMMAND_SCHEMA(command_config)
+            validated = COMMAND_SCHEMA(dict(subentry.data))
         except probatio.Invalid as err:
             # One broken command must not take the other commands down with it
             _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
@@ -135,7 +133,7 @@ def async_import_yaml_commands(
 
     subentries = [
         ConfigSubentryData(
-            data={CONF_ACTION: name, **_to_storable(command_config)},
+            data=_to_storable(command_config),
             subentry_type=SUBENTRY_TYPE_COMMAND,
             title=name,
             unique_id=name,

@@ -20,7 +20,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import TEST_URL
 
 
-def _entry(*commands: dict[str, Any]) -> MockConfigEntry:
+def _entry(**commands: dict[str, Any]) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="RESTful Command",
@@ -28,10 +28,10 @@ def _entry(*commands: dict[str, Any]) -> MockConfigEntry:
             ConfigSubentryData(
                 data=command,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
-                title=command["action"],
-                unique_id=command["action"],
+                title=action,
+                unique_id=action,
             )
-            for command in commands
+            for action, command in commands.items()
         ],
     )
 
@@ -43,8 +43,7 @@ async def test_call_command_from_entry(
 ) -> None:
     """Test a command from the UI renders its templates with the action data."""
     entry = _entry(
-        {
-            "action": "open_door",
+        open_door={
             "url": TEST_URL + "{{ door }}",
             "method": "post",
             "payload": '{"door": "{{ door }}"}',
@@ -78,7 +77,7 @@ async def test_call_command_from_entry(
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:
     """Test unloading the entry removes its actions and keeps reload."""
-    entry = _entry({"action": "from_ui", "url": TEST_URL})
+    entry = _entry(from_ui={"url": TEST_URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -122,7 +121,6 @@ async def test_import_from_yaml(
     assert subentry.title == "open_door"
     assert subentry.unique_id == "open_door"
     assert subentry.data == {
-        "action": "open_door",
         "url": TEST_URL + "{{ door }}",
         "method": "post",
         "headers": {"X-Door": "{{ door }}"},
@@ -147,7 +145,7 @@ async def test_import_only_new_commands(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test an import keeps the commands that were imported before."""
-    entry = _entry({"action": "existing", "url": TEST_URL + "ui"})
+    entry = _entry(existing={"url": TEST_URL + "ui"})
     entry.add_to_hass(hass)
 
     assert await async_setup_component(
@@ -201,10 +199,7 @@ async def test_no_import_without_yaml(
 
 async def test_invalid_stored_command(hass: HomeAssistant) -> None:
     """Test a stored command that no longer validates does not block the others."""
-    entry = _entry(
-        {"action": "broken", "url": "{{ door"},
-        {"action": "working", "url": TEST_URL},
-    )
+    entry = _entry(broken={"url": "{{ door"}, working={"url": TEST_URL})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

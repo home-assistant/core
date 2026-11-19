@@ -26,7 +26,6 @@ COMMAND_INPUT = {
 }
 
 COMMAND_DATA = {
-    "action": "open_door",
     "url": TEST_URL + "{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
@@ -185,7 +184,6 @@ async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.subentries[subentry_id].data == {
-        "action": "open_door",
         "url": TEST_URL,
         "method": "put",
         "timeout": 20,

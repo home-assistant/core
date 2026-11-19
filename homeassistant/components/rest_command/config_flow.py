@@ -46,7 +46,13 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import slugify
 
-from . import COMMAND_SCHEMA, DEFAULT_METHOD, DEFAULT_TIMEOUT, SUPPORT_REST_METHODS
+from . import (
+    COMMAND_SCHEMA,
+    DEFAULT_METHOD,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERIFY_SSL,
+    SUPPORT_REST_METHODS,
+)
 from .const import (
     CONF_ACTION,
     CONF_CONTENT_TYPE,
@@ -121,7 +127,9 @@ COMMAND_FIELDS_SCHEMA = {
                         unit_of_measurement="s",
                     )
                 ),
-                probatio.Optional(CONF_VERIFY_SSL, default=True): BooleanSelector(),
+                probatio.Optional(
+                    CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                ): BooleanSelector(),
                 probatio.Optional(
                     CONF_INSECURE_CIPHER, default=False
                 ): BooleanSelector(),
@@ -147,6 +155,8 @@ DESCRIPTION_PLACEHOLDERS = {
 }
 RECONFIGURE_SCHEMA = probatio.Schema(COMMAND_FIELDS_SCHEMA)
 
+TITLE = "RESTful Command"
+
 
 def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     """Move the values out of the form sections and drop empty values."""
@@ -157,7 +167,7 @@ def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         key: value
         for key, value in data.items()
-        if key == CONF_PASSWORD or value not in (None, "", {})
+        if value not in (None, "", {}) or (key == CONF_PASSWORD and value == "")
     }
 
 
@@ -198,12 +208,12 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create the entry that holds the commands."""
-        return self.async_create_entry(title="RESTful Command", data={})
+        return self.async_create_entry(title=TITLE, data={})
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Create the entry with the commands imported from YAML."""
         return self.async_create_entry(
-            title="RESTful Command",
+            title=TITLE,
             data={},
             subentries=import_data["subentries"],
         )
@@ -250,7 +260,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             if not errors:
                 return self.async_create_entry(
                     title=name,
-                    data={CONF_ACTION: action, **data},
+                    data=data,
                     unique_id=action,
                 )
 
@@ -276,7 +286,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_update_and_abort(
                     self._get_entry(),
                     subentry,
-                    data={CONF_ACTION: subentry.data[CONF_ACTION], **data},
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -286,7 +296,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             ),
             description_placeholders={
                 **DESCRIPTION_PLACEHOLDERS,
-                "action": f"{DOMAIN}.{subentry.data[CONF_ACTION]}",
+                "action": f"{DOMAIN}.{subentry.unique_id}",
             },
             errors=errors,
         )
