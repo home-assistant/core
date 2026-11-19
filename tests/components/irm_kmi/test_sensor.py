@@ -217,3 +217,32 @@ async def test_pollen_grace_period_when_forecasts_fail(
 
     assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
     assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_pollen_grace_period_after_processing_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test pollen from an update that failed does not extend the grace period."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_irm_kmi_api.get_current_weather.side_effect = ValueError
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_irm_kmi_api.get_current_weather.side_effect = None
+    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"

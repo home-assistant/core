@@ -101,6 +101,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         lang = preferred_language(self.hass, self.config_entry)
 
         pollen: dict[PollenName, PollenLevel | None] | None
+        pollen_fetched_at: datetime | None = None
         try:
             pollen = await self._api.get_pollen()
         except IrmKmiApiError as err:
@@ -112,12 +113,15 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             if self._pollen_failing:
                 _LOGGER.info("Pollen data is available again")
                 self._pollen_failing = False
-            self._last_pollen_success_time = dt_util.utcnow()
+            pollen_fetched_at = dt_util.utcnow()
 
-        return ProcessedCoordinatorData(
+        data = ProcessedCoordinatorData(
             current_weather=self._api.get_current_weather(tz),
             daily_forecast=self._api.get_daily_forecast(tz, lang),
             hourly_forecast=self._api.get_hourly_forecast(tz),
             country=self._api.get_country(),
             pollen=pollen,
         )
+        if pollen_fetched_at is not None:
+            self._last_pollen_success_time = pollen_fetched_at
+        return data
