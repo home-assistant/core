@@ -1,10 +1,12 @@
 """The Hikvision integration."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import Any
 from xml.etree.ElementTree import ParseError
 
 from pyhik.constants import SENSOR_MAP
@@ -32,7 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 from .coordinator import (
@@ -46,6 +48,11 @@ _LOGGER = logging.getLogger(__name__)
 
 # How long to wait before trying the image settings again after a failed read
 IMAGE_SETTINGS_RETRY_INTERVAL = timedelta(minutes=5)
+
+# What reads again a part of the image settings that could not be read: the requests
+# to make one after the other, each with the client that is given to it. They are
+# separate so that nothing is sent once the password is known to be refused.
+type _Probe = tuple[Callable[[ISAPIClient], object], ...]
 
 # What the callback that watches the credentials is registered for. The sensors
 # register for their own IDs, and pyHik calls every callback when the stream
@@ -333,13 +340,18 @@ async def _async_setup_image_settings(
     # Not only at the end of the setup: a setup that fails, or is cancelled, runs
     # this too, and unloading the entry does as well.
     entry.async_on_unload(_async_close)
+    retries: list[_Probe] = []
     if is_nvr:
         coordinators = await _async_setup_nvr_image_settings(
-            hass, entry, client, lock, quiet=False
+            hass, entry, client, lock, retries, quiet=False
         )
     else:
         coordinators = await _async_setup_camera_image_settings(
-            hass, entry, client, lock
+            hass, entry, client, lock, retries
+        )
+    if retries:
+        _async_retry_image_settings_later(
+            hass, entry, retries, (host, port, username, password, ssl, verify_ssl)
         )
     if not coordinators:
         await _async_close()
@@ -352,8 +364,12 @@ async def _async_setup_camera_image_settings(
     entry: HikvisionConfigEntry,
     client: ISAPIClient,
     lock: asyncio.Lock,
+    retries: list[_Probe],
 ) -> list[HikvisionImageCoordinator]:
-    """Discover the image settings of a standalone camera."""
+    """Discover the image settings of a standalone camera.
+
+    What fails and may work later is added to ``retries``.
+    """
     host = entry.data[CONF_HOST]
     try:
         settings = await async_run_alone(hass, entry, lock, client.get_image_settings)
@@ -364,14 +380,14 @@ async def _async_setup_camera_image_settings(
         return []
     except ISAPIConnectionError as err:
         _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
-        _async_retry_image_settings_later(hass, entry)
+        retries.append(_READ_CAMERA)
         return []
     except ISAPIError as err:
         # Some recorders report the type of a camera, so the device type cannot
         # tell them apart. They answer the camera's endpoints with an error, but
         # the cameras attached to them are reachable through the NVR's.
         if coordinators := await _async_setup_nvr_image_settings(
-            hass, entry, client, lock, quiet=True
+            hass, entry, client, lock, retries, quiet=True
         ):
             _LOGGER.debug(
                 "%s is a recorder: reading the image settings of its cameras", host
@@ -382,7 +398,7 @@ async def _async_setup_camera_image_settings(
         else:
             _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
             if _is_server_busy(err):
-                _async_retry_image_settings_later(hass, entry)
+                retries.append(_READ_CAMERA)
         return []
 
     coordinator = HikvisionImageCoordinator(hass, entry, client, settings, lock=lock)
@@ -392,7 +408,7 @@ async def _async_setup_camera_image_settings(
         # The events work without the image settings, so do not hold them back.
         _LOGGER.warning("Unable to read the image values of %s: %s", host, err)
         if _may_work_later(err):
-            _async_retry_image_settings_later(hass, entry)
+            retries.append(_READ_CAMERA)
         return []
     return [coordinator]
 
@@ -402,6 +418,7 @@ async def _async_setup_nvr_image_settings(
     entry: HikvisionConfigEntry,
     client: ISAPIClient,
     lock: asyncio.Lock,
+    retries: list[_Probe],
     *,
     quiet: bool,
 ) -> list[HikvisionImageCoordinator]:
@@ -409,7 +426,8 @@ async def _async_setup_nvr_image_settings(
 
     The cameras are read through the NVR's proxy endpoints, with the channel IDs
     the NVR lists. With ``quiet`` a failure to list them is only logged for
-    debugging, because the device may simply not be an NVR.
+    debugging, because the device may simply not be an NVR. What fails and may work
+    later is added to ``retries``.
     """
     host = entry.data[CONF_HOST]
     try:
@@ -420,8 +438,7 @@ async def _async_setup_nvr_image_settings(
         if isinstance(err, ISAPIAuthError) and err.status_code == 401:
             raise await _async_credentials_rejected(hass, entry) from err
         if isinstance(err, ISAPIConnectionError) or _is_server_busy(err):
-            # Whether it is logged or not: the camera may only have been busy.
-            _async_retry_image_settings_later(hass, entry)
+            retries.append(_LIST_CHANNELS)
         if quiet or isinstance(err, ISAPINotSupportedError):
             _LOGGER.debug("%s does not list image channels: %s", host, err)
         elif isinstance(err, ISAPIAuthError):
@@ -432,7 +449,6 @@ async def _async_setup_nvr_image_settings(
             _LOGGER.warning("Unable to read the image settings of %s: %s", host, err)
         return []
 
-    retry = False
     coordinators: list[HikvisionImageCoordinator] = []
     for image_channel in image_channels:
         if image_channel.enabled is False:
@@ -458,9 +474,8 @@ async def _async_setup_nvr_image_settings(
                 host,
                 err,
             )
-            retry = (
-                retry or isinstance(err, ISAPIConnectionError) or _is_server_busy(err)
-            )
+            if isinstance(err, ISAPIConnectionError) or _is_server_busy(err):
+                retries.append(_read_channel(channel))
             continue
         coordinator = HikvisionImageCoordinator(
             hass, entry, client, settings, channel, lock
@@ -474,11 +489,10 @@ async def _async_setup_nvr_image_settings(
                 host,
                 err,
             )
-            retry = retry or _may_work_later(err)
+            if _may_work_later(err):
+                retries.append(_read_channel(channel))
             continue
         coordinators.append(coordinator)
-    if retry:
-        _async_retry_image_settings_later(hass, entry)
     return coordinators
 
 
@@ -496,6 +510,19 @@ async def _async_credentials_rejected(
     )
 
 
+def _is_server_busy(err: ISAPIError) -> bool:
+    """Return whether the device answered that it cannot serve the request now.
+
+    A server error such as an HTTP 500 or 503 is how a busy camera answers. Any
+    other error that is not a connection error is not expected to go away.
+    """
+    return (
+        not isinstance(err, ISAPINotSupportedError)
+        and err.status_code is not None
+        and err.status_code >= 500
+    )
+
+
 def _may_work_later(err: BaseException) -> bool:
     """Return whether a failed read may work if it is tried again later.
 
@@ -510,38 +537,144 @@ def _may_work_later(err: BaseException) -> bool:
     return True
 
 
-def _is_server_busy(err: ISAPIError) -> bool:
-    """Return whether the device answered that it cannot serve the request now.
+def _get_settings(client: ISAPIClient) -> None:
+    """Read the image settings of a standalone camera."""
+    client.get_image_settings()
 
-    A server error such as an HTTP 500 or 503 is how a busy camera answers. Any
-    other error that is not a connection error is not expected to go away.
-    """
+
+def _get_values(client: ISAPIClient) -> None:
+    """Read the image values of a standalone camera."""
+    client.get_image_values()
+
+
+def _get_channels(client: ISAPIClient) -> None:
+    """List the image channels of an NVR."""
+    client.get_image_channels(proxy=True)
+
+
+def _get_channel_settings(client: ISAPIClient, channel: int) -> None:
+    """Read the image settings of a camera attached to an NVR."""
+    client.get_image_settings(channel, proxy=True)
+
+
+def _get_channel_values(client: ISAPIClient, channel: int) -> None:
+    """Read the image values of a camera attached to an NVR."""
+    client.get_image_values(channel, proxy=True)
+
+
+_READ_CAMERA: _Probe = (_get_settings, _get_values)
+_LIST_CHANNELS: _Probe = (_get_channels,)
+
+
+def _read_channel(channel: int) -> _Probe:
+    """Return the probe of a camera attached to an NVR."""
     return (
-        not isinstance(err, ISAPINotSupportedError)
-        and err.status_code is not None
-        and err.status_code >= 500
+        partial(_get_channel_settings, channel=channel),
+        partial(_get_channel_values, channel=channel),
     )
 
 
+@callback
 def _async_retry_image_settings_later(
-    hass: HomeAssistant, entry: HikvisionConfigEntry
+    hass: HomeAssistant,
+    entry: HikvisionConfigEntry,
+    probes: list[_Probe],
+    client_args: tuple[Any, ...],
 ) -> None:
-    """Try the image settings again later, by reloading the entry.
+    """Try again, later, to read what the device did not give.
 
     The camera may only have been busy or restarting, and without this its image
-    entities would be missing until the integration is reloaded by hand.
+    entities would be missing until the integration is reloaded by hand. Reloading
+    stops the event stream and starts it again, and a camera that stays out of reach
+    would do it every time. So it is read again with a client of its own, and the
+    entry is reloaded only when something can be read.
     """
+    pending = list(probes)
+    running = False
+    # What this setup started must not act on another one: Home Assistant waits only
+    # a few seconds for the tasks of an entry, so a slow probe can end after a reload.
+    data = entry.runtime_data
+
+    def _stale() -> bool:
+        """Return whether nothing more is wanted from this probe."""
+        # A request would send a rejected password again, and a reload would cancel
+        # the reauthentication that waits for a new one. A probe that was running
+        # when the entry was unloaded must not bring it back.
+        return not entry_is_current(entry, data) or data.image_credentials_rejected
+
+    async def _async_probe() -> None:
+        nonlocal pending, running
+        running = True
+        client = await hass.async_add_executor_job(ISAPIClient, *client_args)
+        try:
+            recovered = False
+            still_failing: list[_Probe] = []
+            # Grows when a camera that was busy turns out to be a recorder.
+            queue = list(pending)
+            for probe in queue:
+                for step in probe:
+                    if _stale():
+                        pending = []
+                        return
+                    try:
+                        await hass.async_add_executor_job(step, client)
+                    except ISAPIAuthError as err:
+                        if err.status_code == 401:
+                            pending = []
+                            if _stale():
+                                # The probe outlived its setup: the refusal is of
+                                # the password of that one.
+                                return
+                            # The camera refuses the password: everything that
+                            # would send it again is stopped, and new credentials
+                            # are asked for.
+                            await async_reject_credentials(hass, entry)
+                            return
+                        # It does not allow it, and will not change its mind.
+                        break
+                    except ISAPINotSupportedError:
+                        if probe is _READ_CAMERA and _LIST_CHANNELS not in queue:
+                            # Not a camera: a recorder has its channels to list, as
+                            # setup does when the camera endpoint is not there.
+                            queue.append(_LIST_CHANNELS)
+                        break
+                    except ISAPIError as err:
+                        if (
+                            probe is _READ_CAMERA
+                            and not isinstance(err, ISAPIConnectionError)
+                            and _LIST_CHANNELS not in queue
+                        ):
+                            # Setup falls back to the recorder endpoints on any
+                            # error of the camera's, and so does this.
+                            queue.append(_LIST_CHANNELS)
+                        if isinstance(err, ISAPIConnectionError) or _is_server_busy(
+                            err
+                        ):
+                            still_failing.append(probe)
+                        break
+                else:
+                    recovered = True
+            if recovered:
+                pending = []
+                # The last probe took time: the password may have been refused, or
+                # the entry unloaded, in the meantime.
+                if not _stale():
+                    hass.config_entries.async_schedule_reload(entry.entry_id)
+            else:
+                pending = still_failing
+        finally:
+            running = False
+            await hass.async_add_executor_job(client.close)
 
     @callback
-    def _reload(_now: datetime) -> None:
-        # A reload would send the rejected password again, and cancel the
-        # reauthentication that is waiting for a new one.
-        if entry.runtime_data.image_credentials_rejected:
-            return
-        hass.config_entries.async_schedule_reload(entry.entry_id)
+    def _retry(_now: datetime) -> None:
+        if pending and not running:
+            entry.async_create_task(
+                hass, _async_probe(), "hikvision image settings retry"
+            )
 
     entry.async_on_unload(
-        async_call_later(hass, IMAGE_SETTINGS_RETRY_INTERVAL, _reload)
+        async_track_time_interval(hass, _retry, IMAGE_SETTINGS_RETRY_INTERVAL)
     )
 
 

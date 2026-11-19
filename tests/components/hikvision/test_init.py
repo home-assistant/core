@@ -539,6 +539,63 @@ async def test_image_settings_are_tried_again_after_a_failure(
     assert mock_config_entry.runtime_data.image_coordinators
 
 
+async def test_a_camera_that_stays_out_of_reach_does_not_stop_the_events(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the entry is not reloaded, which restarts the stream, to try again."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    reads = mock_image_settings.get_image_settings.call_count
+
+    for _ in range(3):
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # It was read again each time, with a client that was closed after use.
+    assert mock_image_settings.get_image_settings.call_count == reads + 3
+    assert mock_image_settings.close.call_count == 3 + 1
+    # The entry, and its event stream, were left alone.
+    assert mock_hikcamera.call_count == 1
+    mock_hikcamera.return_value.disconnect.assert_not_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Once it can be read the entry is loaded again, once.
+    mock_image_settings.get_image_settings.side_effect = None
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_hikcamera.call_count == 2
+    assert mock_config_entry.runtime_data.image_coordinators
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_the_retry_stops_when_the_camera_rejects_the_password(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the retry does not send a rejected password again."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    mock_image_settings.get_image_settings.side_effect = ISAPIAuthError("No", 401)
+    mock_image_settings.get_image_settings.reset_mock()
+
+    for _ in range(3):
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_image_settings.get_image_settings.call_count == 1
+    assert not mock_config_entry.runtime_data.image_coordinators
+
+
 @pytest.mark.usefixtures("mock_hikcamera")
 async def test_recorder_listing_is_tried_again_after_a_timeout(
     hass: HomeAssistant,
@@ -558,30 +615,6 @@ async def test_recorder_listing_is_tried_again_after_a_timeout(
     await hass.async_block_till_done()
 
     assert client.get_image_channels.call_count == 2
-
-
-@pytest.mark.usefixtures("mock_hikcamera")
-@pytest.mark.parametrize("status", [500, 503])
-async def test_image_settings_are_tried_again_after_a_server_error(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_config_entry: MockConfigEntry,
-    mock_image_settings: MagicMock,
-    status: int,
-) -> None:
-    """Test a camera that answered busy gets its image entities when it recovers."""
-    mock_image_settings.get_image_settings.side_effect = ISAPIError("busy", status)
-
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.runtime_data.image_coordinators == []
-
-    mock_image_settings.get_image_settings.side_effect = None
-    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data.image_coordinators
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
@@ -977,6 +1010,200 @@ async def test_a_stream_callback_queued_before_the_unload_does_nothing_after_it(
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
+async def test_no_reload_when_the_password_is_refused_during_the_last_probe(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a reload would not send the refused password again."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    data = mock_config_entry.runtime_data
+
+    def get_image_values() -> dict[str, str]:
+        # The event stream is refused the password while the probe is running.
+        data.image_credentials_rejected = True
+        return {}
+
+    mock_image_settings.get_image_settings.side_effect = None
+    mock_image_settings.get_image_values.side_effect = get_image_values
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is data
+    assert data.image_coordinators == []
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_probe_that_ends_during_the_unload_does_not_load_the_entry_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a probe that was running when the entry was unloaded does not reload it."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    started = threading.Event()
+    release = threading.Event()
+
+    def get_image_values() -> dict[str, str]:
+        started.set()
+        assert release.wait(5)
+        return {}
+
+    mock_image_settings.get_image_settings.side_effect = None
+    # A plain function, so that it runs in a thread and blocks only itself.
+    mock_image_settings.get_image_values = get_image_values
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(5):
+        while not started.is_set():
+            await asyncio.sleep(0)
+
+    unload = hass.async_create_task(
+        hass.config_entries.async_unload(mock_config_entry.entry_id)
+    )
+    # The clock is frozen, so wait for the state, not for time.
+    async with asyncio.timeout(5):
+        while mock_config_entry.state is ConfigEntryState.LOADED:
+            await asyncio.sleep(0)
+    release.set()
+    await unload
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_the_values_are_not_read_if_the_password_is_refused_meanwhile(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a probe checks again between its two requests."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    data = mock_config_entry.runtime_data
+
+    def get_image_settings() -> list:
+        # The event stream is refused the password while this is being read.
+        data.image_credentials_rejected = True
+        return []
+
+    mock_image_settings.get_image_settings.side_effect = get_image_settings
+    mock_image_settings.get_image_values.reset_mock()
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_image_settings.get_image_values.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_probe_refused_the_password_asks_for_new_credentials(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test the rejection is entry-wide, so that nothing else sends the password."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+
+    mock_image_settings.get_image_settings.side_effect = ISAPIAuthError(
+        "Invalid credentials", 401
+    )
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.runtime_data.image_credentials_rejected
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_probe_of_an_earlier_setup_does_not_reload_the_new_one(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a slow probe that ends after a reload leaves the new setup alone."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    old = mock_config_entry.runtime_data
+    started = threading.Event()
+    release = threading.Event()
+
+    def get_image_values() -> dict[str, str]:
+        started.set()
+        assert release.wait(5)
+        return {}
+
+    mock_image_settings.get_image_settings.side_effect = None
+    # A plain function, so that it runs in a thread and blocks only itself.
+    mock_image_settings.get_image_values = get_image_values
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(5):
+        while not started.is_set():
+            await asyncio.sleep(0)
+
+    # A new setup took the place of the one that started the probe.
+    new = dataclasses.replace(old)
+    mock_config_entry.runtime_data = new
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is new
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_probe_of_an_earlier_setup_does_not_reject_the_new_password(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    mock_image_settings: MagicMock,
+) -> None:
+    """Test a refusal that comes after a reload is not held against the new setup."""
+    mock_image_settings.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+    started = threading.Event()
+    release = threading.Event()
+
+    def get_image_values() -> dict[str, str]:
+        started.set()
+        assert release.wait(5)
+        raise ISAPIAuthError("Invalid credentials", 401)
+
+    mock_image_settings.get_image_settings.side_effect = None
+    mock_image_settings.get_image_values = get_image_values
+    freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    async with asyncio.timeout(5):
+        while not started.is_set():
+            await asyncio.sleep(0)
+
+    new = dataclasses.replace(mock_config_entry.runtime_data)
+    mock_config_entry.runtime_data = new
+    mock_hikcamera.return_value.disconnect.reset_mock()
+    release.set()
+    await hass.async_block_till_done()
+
+    assert not new.image_credentials_rejected
+    mock_hikcamera.return_value.disconnect.assert_not_called()
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
 async def test_a_poll_of_an_earlier_setup_does_not_ask_for_new_credentials(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -1033,6 +1260,78 @@ async def test_requests_are_refused_before_the_platforms_unload(
     assert closed_during_unload == [True]
     # The entry is still there, and works.
     assert not any(coordinator.closed for coordinator in coordinators)
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_busy_recorder_is_read_as_a_recorder_when_it_answers_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test a camera endpoint that is not there leads to the channels of a recorder."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = ISAPIConnectionError("busy")
+    await setup_integration(hass, mock_config_entry)
+
+    client.get_image_settings.side_effect = ISAPINotSupportedError("Not found", 404)
+    client.get_image_channels.side_effect = None
+    client.get_image_channels.reset_mock()
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    client.get_image_channels.assert_called_once()
+    reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+@pytest.mark.parametrize("status", [500, 503])
+async def test_a_camera_that_answered_busy_is_read_again(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+    status: int,
+) -> None:
+    """Test a server error of the camera is tried again, without a manual reload."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = ISAPIError("busy", status)
+    await setup_integration(hass, mock_config_entry)
+
+    client.get_image_settings.side_effect = None
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_hikcamera")
+async def test_a_retry_falls_back_to_the_recorder_on_a_server_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_isapi_client: MagicMock,
+) -> None:
+    """Test a recorder that answers 503 on the camera endpoint is not retried forever."""
+    client = mock_isapi_client.return_value
+    client.get_image_settings.side_effect = ISAPIConnectionError("timeout")
+    await setup_integration(hass, mock_config_entry)
+
+    # Its recorder endpoints work, the camera's does not.
+    client.get_image_settings.side_effect = ISAPIError("unavailable", 503)
+    client.get_image_channels.side_effect = None
+    client.get_image_channels.reset_mock()
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        freezer.tick(IMAGE_SETTINGS_RETRY_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    client.get_image_channels.assert_called_once()
+    reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_hikcamera")
