@@ -1,16 +1,25 @@
 """The climate tests for the tado platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from PyTado.interface.api.my_tado import TadoZone
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -67,6 +76,67 @@ async def test_heater_set_temperature(
 
     mock_set_state.assert_called_once()
     snapshot.assert_match(mock_set_state.call_args)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aircon_set_fan_mode_keeps_target_temperature(
+    hass: HomeAssistant,
+) -> None:
+    """Test a fan mode change sends the target temperature reported by tado."""
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+    ) as mock_set_state:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.air_conditioning_air_conditioning",
+                ATTR_FAN_MODE: "high",
+            },
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    assert mock_set_state.call_args.args[2] == 17.78
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_aircon_turn_on_keeps_target_temperature(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test turning on again sends the target temperature from before the zone was off."""
+    zone_states = await async_load_json_object_fixture(hass, "zone_states.json", DOMAIN)
+    zone_states["zoneStates"]["3"] = await async_load_json_object_fixture(
+        hass, "smartac3.hvac_off.json", DOMAIN
+    )
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    with patch(
+        "PyTado.interface.api.my_tado.Tado.get_zone_states", return_value=zone_states
+    ):
+        freezer.tick(coordinator.update_interval + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("climate.air_conditioning_air_conditioning").state == (
+        HVACMode.OFF
+    )
+
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
+    ) as mock_set_state:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.air_conditioning_air_conditioning",
+                ATTR_HVAC_MODE: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    assert mock_set_state.call_args.args[2] == 17.78
 
 
 @pytest.mark.parametrize(

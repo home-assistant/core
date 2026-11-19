@@ -327,6 +327,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
+        if self._tado_zone_data.target_temp is not None:
+            self._target_temp = self._tado_zone_data.target_temp
 
         if self._is_valid_setting_for_hvac_mode(TADO_FANLEVEL_SETTING):
             self._current_tado_fan_level = self._tado_zone_data.current_fan_level
