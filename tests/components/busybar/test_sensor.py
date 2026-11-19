@@ -26,7 +26,7 @@ async def test_sensors(
         for state in hass.states.async_all("sensor")
     }
     device = device_registry.async_get_device_by_identifier(
-        ("busy", init_integration.unique_id), init_integration.entry_id
+        ("busybar", init_integration.unique_id), init_integration.entry_id
     )
     assert device is not None
     assert (device.manufacturer, device.model) == ("Flipper FZCO", "BUSY Bar")

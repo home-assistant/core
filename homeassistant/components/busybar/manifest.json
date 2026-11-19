@@ -1,10 +1,10 @@
 {
-  "domain": "busy",
+  "domain": "busybar",
   "name": "BUSY Bar",
   "categories": ["sensors"],
   "codeowners": ["@truetug", "@gornekich"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/busy",
+  "documentation": "https://www.home-assistant.io/integrations/busybar",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["busylib"],

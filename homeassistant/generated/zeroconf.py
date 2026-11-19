@@ -615,7 +615,7 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
-            "domain": "busy",
+            "domain": "busybar",
             "name": "busybar-*",
         },
         {

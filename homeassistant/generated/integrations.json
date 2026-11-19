@@ -2035,7 +2035,7 @@
       ],
       "supported_by": "opower"
     },
-    "busy": {
+    "busybar": {
       "name": "BUSY Bar",
       "integration_type": "device",
       "categories": [

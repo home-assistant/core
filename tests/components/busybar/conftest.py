@@ -36,7 +36,7 @@ def mock_client() -> Generator[AsyncMock]:
     client.wifi_status.return_value = types.StatusResponse(
         state=types.WifiState.CONNECTED, ssid="Home", rssi=-48
     )
-    module = "homeassistant.components.busy"
+    module = "homeassistant.components.busybar"
     with (
         patch(f"{module}.config_flow.AsyncBusyBar", return_value=client),
         patch(f"{module}.AsyncBusyBar", return_value=client),
@@ -49,7 +49,7 @@ def mock_client() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Provide a paired bar."""
     return MockConfigEntry(
-        domain="busy",
+        domain="busybar",
         unique_id=DEVICE_ID,
         title="BUSY Bar",
         data={"host": HOST, "token": "12345678-token"},
@@ -73,6 +73,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Isolate config flows from platform setup."""
     with patch(
-        "homeassistant.components.busy.async_setup_entry", return_value=None
+        "homeassistant.components.busybar.async_setup_entry", return_value=None
     ) as setup:
         yield setup

@@ -1,3 +1,3 @@
 """Constants for BUSY Bar."""
 
-DOMAIN = "busy"
+DOMAIN = "busybar"

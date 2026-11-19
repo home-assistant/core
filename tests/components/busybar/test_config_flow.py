@@ -34,7 +34,7 @@ def discovery(host: str = HOST, name: str = "Office") -> ZeroconfServiceInfo:
 async def start_user(hass: HomeAssistant) -> ConfigFlowResult:
     """Submit the manual address form."""
     result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_USER}
+        "busybar", context={"source": SOURCE_USER}
     )
     return await hass.config_entries.flow.async_configure(
         result["flow_id"], {"host": HOST}
@@ -46,7 +46,7 @@ async def test_manual_supersedes_discovery(
 ) -> None:
     """Pair manually while discovery is awaiting confirmation."""
     discovered = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_ZEROCONF}, data=discovery()
+        "busybar", context={"source": SOURCE_ZEROCONF}, data=discovery()
     )
     assert discovered["step_id"] == "zeroconf_confirm"
     result = await start_user(hass)
@@ -64,7 +64,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_client: AsyncMock) -> None:
         usb_mac="00:11:22:33:44:55"
     )
     result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_ZEROCONF}, data=discovery()
+        "busybar", context={"source": SOURCE_ZEROCONF}, data=discovery()
     )
     assert result["step_id"] == "zeroconf_confirm"
     mock_client.access_token_mint.assert_not_awaited()
@@ -142,7 +142,7 @@ async def test_zeroconf_retry(hass: HomeAssistant, mock_client: AsyncMock) -> No
     """Retry discovery confirmation after a connection failure."""
     mock_client.access.side_effect = BusyBarRequestError("offline")
     result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_ZEROCONF}, data=discovery(name="")
+        "busybar", context={"source": SOURCE_ZEROCONF}, data=discovery(name="")
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["step_id"] == "zeroconf_confirm"
@@ -170,7 +170,7 @@ async def test_discovery_updates_host(
     """Update the address of a configured bar."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        "busy", context={"source": SOURCE_ZEROCONF}, data=discovery("192.168.50.21")
+        "busybar", context={"source": SOURCE_ZEROCONF}, data=discovery("192.168.50.21")
     )
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data["host"] == "192.168.50.21"

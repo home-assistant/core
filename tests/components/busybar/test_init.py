@@ -66,4 +66,4 @@ async def test_remove(
     mock_client.access_tokens_revoke.side_effect = error
     assert await hass.config_entries.async_remove(init_integration.entry_id)
     mock_client.access_tokens_revoke.assert_awaited_once_with("12345678")
-    assert not hass.config_entries.async_entries("busy")
+    assert not hass.config_entries.async_entries("busybar")
