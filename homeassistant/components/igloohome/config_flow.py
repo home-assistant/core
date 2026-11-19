@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CLIENT_ID): str,
-        probatio.Required(CONF_CLIENT_SECRET): str,
+        probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): str,
     }
 )
 

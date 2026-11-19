@@ -27,7 +27,7 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Required(CONF_DOMAIN): cv.string,
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_INTERVAL
                 ): probatio.All(cv.time_period, cv.positive_timedelta),

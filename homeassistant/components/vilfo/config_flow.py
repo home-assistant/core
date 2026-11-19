@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST, default=ROUTER_DEFAULT_HOST): str,
-        probatio.Required(CONF_ACCESS_TOKEN, default=""): str,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN), default=""): str,
     }
 )
 

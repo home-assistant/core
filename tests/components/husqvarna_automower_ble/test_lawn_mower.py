@@ -7,13 +7,12 @@ from automower_ble.protocol import MowerActivity, MowerState
 from bleak import BleakError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("mock_automower_client")
 
@@ -150,18 +149,25 @@ OPERATIONAL_STATES = [
 @pytest.mark.parametrize(
     ("mower_states", "mower_activities", "expected_state"),
     [
-        # MowerState ERROR, FATAL_ERROR, OFF, STOPPED, WAIT_FOR_SAFETYPIN -> Mapped to
-        # LawnMowerActivity.ERROR
+        # MowerState ERROR, FATAL_ERROR -> Mapped to LawnMowerActivity.ERROR
         (
             [
                 MowerState.ERROR,
                 MowerState.FATAL_ERROR,
+            ],
+            list(MowerActivity),
+            LawnMowerActivity.ERROR,
+        ),
+        # MowerState OFF, STOPPED, WAIT_FOR_SAFETYPIN -> Mapped to
+        # LawnMowerActivity.IDLE
+        (
+            [
                 MowerState.OFF,
                 MowerState.STOPPED,
                 MowerState.WAIT_FOR_SAFETYPIN,
             ],
             list(MowerActivity),
-            LawnMowerActivity.ERROR,
+            LawnMowerActivity.IDLE,
         ),
         # MowerState PAUSED -> Mapped to LawnMowerActivity.PAUSED
         ([MowerState.PAUSED], list(MowerActivity), LawnMowerActivity.PAUSED),

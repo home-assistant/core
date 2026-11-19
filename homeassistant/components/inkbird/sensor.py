@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
-from . import INKBIRDConfigEntry
+from .coordinator import INKBIRDConfigEntry
 
 SENSOR_DESCRIPTIONS = {
     (DeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(

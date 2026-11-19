@@ -52,6 +52,42 @@
       "matchStrings": ["RECOMMENDED_VERSION = \"(?<currentValue>[\\d.]+)\""],
       "depNameTemplate": "ghcr.io/alexxit/go2rtc",
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the newest MariaDB entry (the latest LTS) in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStrings": [
+        "MARIADB_VERSIONS: \".*'mariadb:(?<currentValue>\\d+\\.\\d+\\.\\d+)','mysql:"
+      ],
+      "depNameTemplate": "mariadb",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the PostgreSQL entries in the CI database test matrix",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yaml$/"],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "POSTGRESQL_VERSIONS: \".*\"",
+        "postgres:(?<currentValue>\\d+\\.\\d+)"
+      ],
+      "depNameTemplate": "postgres",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "description": "Update pins in CONSTRAINT_BASE of gen_requirements_all.py alongside package_constraints.txt, which is generated from it",
+      "managerFilePatterns": ["/^script/gen_requirements_all\\.py$/"],
+      "matchStringsStrategy": "recursive",
+      "matchStrings": [
+        "CONSTRAINT_BASE = \"\"\"[\\s\\S]*?\"\"\"",
+        "\\n(?<depName>[A-Za-z0-9][A-Za-z0-9._-]*)==(?<currentValue>[^\\s#]+)"
+      ],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
     }
   ],
 
@@ -85,7 +121,7 @@
         "aiohttp_cors",
         "aiohttp-asyncmdnsresolver",
         "yarl",
-        "httpx",
+        "httpx2",
         "requests",
         "urllib3",
         "certifi",
@@ -154,6 +190,12 @@
       "labels": ["dependency", "core"]
     },
     {
+      "description": "pydantic (allowlisted). Pinned in requirements_test.txt and in CONSTRAINT_BASE, which generates package_constraints.txt; all are updated in the same PR.",
+      "matchPackageNames": ["pydantic"],
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
       "description": "Test dependencies (allowlisted)",
       "matchPackageNames": [
         "pytest",
@@ -179,7 +221,14 @@
         "ruff",
         "codespell",
         "yamllint",
-        "zizmor"
+        "zizmor",
+        "license-expression",
+        "mock-open",
+        "pipdeptree",
+        "prek",
+        "PyGithub",
+        "pytest-codspeed",
+        "tqdm"
       ],
       "enabled": true,
       "labels": ["dependency"]
@@ -218,11 +267,16 @@
       "labels": ["dependency"]
     },
     {
-      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "description": "types-* stubs (allowlisted). Enabled without matchUpdateTypes, because update types are unknown when Renovate decides whether a package is enabled.",
       "matchPackageNames": ["/^types-/"],
-      "matchUpdateTypes": ["patch"],
       "enabled": true,
       "labels": ["dependency"]
+    },
+    {
+      "description": "For types-* stubs, only allow patch updates. Major/minor bumps track the upstream runtime package version and must be manually coordinated with the corresponding pin.",
+      "matchPackageNames": ["/^types-/"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
     },
     {
       "description": "Pre-commit hook repos (allowlisted, matched by owner/repo)",
@@ -230,7 +284,8 @@
         "astral-sh/ruff-pre-commit",
         "codespell-project/codespell",
         "adrienverge/yamllint",
-        "zizmorcore/zizmor-pre-commit"
+        "zizmorcore/zizmor-pre-commit",
+        "pre-commit/pre-commit-hooks"
       ],
       "enabled": true,
       "labels": ["dependency"]
@@ -241,6 +296,36 @@
       "enabled": true,
       "minimumReleaseAge": null,
       "labels": ["dependency"]
+    },
+    {
+      "description": "Latest MariaDB LTS tested in CI (allowlisted). Since MariaDB 12, only the x.3 series are LTS.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "allowedVersions": "/^\\d+\\.3\\.\\d+$/",
+      "enabled": true,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Only open a MariaDB PR for a new LTS series, not for its patch releases",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["mariadb"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
+    },
+    {
+      "description": "PostgreSQL versions tested in CI (allowlisted). Docker Hub returns no release timestamps for these tags, so the global cooldown needs to be bypassed.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "labels": ["dependency"]
+    },
+    {
+      "description": "Keep each PostgreSQL entry on its major version. Adding a new major to the matrix is a deliberate choice.",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     },
     {
       "description": "Group ruff pre-commit hook with its PyPI twin into one PR",
@@ -270,7 +355,14 @@
       "description": "Group pylint with astroid (their versions are linked and must move together)",
       "matchPackageNames": ["pylint", "astroid"],
       "groupName": "pylint",
-      "groupSlug": "pylint"
+      "groupSlug": "pylint",
+      "separateMinorPatch": true
+    },
+    {
+      "description": "Only move astroid to a new minor or major together with pylint. pylint pins the astroid minor it supports, so an astroid minor on its own can't be installed. The group above separates minor and patch updates, so astroid patches are still offered on their own.",
+      "matchPackageNames": ["astroid"],
+      "matchUpdateTypes": ["major", "minor"],
+      "minimumGroupSize": 2
     },
     {
       "description": "Group the github/codeql-action subactions into one PR (they share a release)",
@@ -289,6 +381,24 @@
       "matchPackageNames": ["ghcr.io/alexxit/go2rtc"],
       "groupName": "go2rtc",
       "groupSlug": "go2rtc"
+    },
+    {
+      "description": "Group the types-* stub updates into one PR",
+      "matchPackageNames": ["/^types-/"],
+      "groupName": "types stubs",
+      "groupSlug": "types-stubs"
+    },
+    {
+      "description": "Group the PostgreSQL CI matrix updates into one PR (all supported majors are released on the same day)",
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["postgres"],
+      "groupName": "PostgreSQL CI matrix",
+      "groupSlug": "postgresql-ci"
+    },
+    {
+      "description": "uv and pnpm release almost daily, so the cooldown alone still gives a PR (and a full CI run) nearly every day. Limit them to one PR per week.",
+      "matchPackageNames": ["uv", "pnpm"],
+      "schedule": ["after 5pm on friday"]
     }
   ]
 }

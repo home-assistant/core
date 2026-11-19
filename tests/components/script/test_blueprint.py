@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import script
 from homeassistant.components.blueprint import (
@@ -14,13 +15,19 @@ from homeassistant.components.blueprint import (
     Blueprint,
     DomainBlueprints,
 )
+from homeassistant.components.script.const import ScriptEntityStateAttribute
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import (
+    Context,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import device_registry as dr, template
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.common import MockConfigEntry, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(script.__file__).parent / "blueprints"
 
@@ -95,14 +102,29 @@ async def test_confirmable_notification(
     turn_on_calls = async_mock_service(hass, "homeassistant", "turn_on")
     context = Context()
 
+    triggers_attached = asyncio.Event()
+
+    @callback
+    def _async_script_changed(event: Event[EventStateChangedData]) -> None:
+        # The script writes this action as soon as its wait triggers are attached
+        if (
+            event.data["new_state"].attributes.get(
+                ScriptEntityStateAttribute.LAST_ACTION
+            )
+            == "Awaiting response"
+        ):
+            triggers_attached.set()
+
+    async_track_state_change_event(hass, "script.confirm", _async_script_changed)
+
     with patch(
         "homeassistant.components.mobile_app.device_action.async_call_action_from_config"
     ) as mock_call_action:
         # Trigger script
         await hass.services.async_call(script.DOMAIN, "confirm", context=context)
 
-        # Give script the time to attach the trigger.
-        await asyncio.sleep(0.1)
+        async with asyncio.timeout(1):
+            await triggers_attached.wait()
 
     hass.bus.async_fire("mobile_app_notification_action", {"action": "ANYTHING_ELSE"})
     hass.bus.async_fire(

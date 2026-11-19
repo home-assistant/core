@@ -119,7 +119,8 @@ class PrivateDevicesCoordinator:
         self._irk_to_mac[irk] = mac
 
         # Stop ignoring this MAC
-        self._ignored.pop(mac, None)
+        if cancel := self._ignored.pop(mac, None):
+            cancel()
 
         # Ignore availability events for the previous address
         if cancel := self._unavailability_trackers.pop(irk, None):
@@ -155,7 +156,10 @@ class PrivateDevicesCoordinator:
                 return
 
         def _unignore(service_info: bluetooth.BluetoothServiceInfoBleak) -> None:
-            self._ignored.pop(service_info.address, None)
+            # Unavailable callbacks stay registered after firing, so cancel it
+            # or one callback leaks per ignored (rotating) address forever.
+            if cancel := self._ignored.pop(service_info.address, None):
+                cancel()
 
         self._ignored[mac] = bluetooth.async_track_unavailable(
             self.hass, _unignore, mac, False

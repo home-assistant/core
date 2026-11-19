@@ -61,4 +61,8 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
         except ElectricityMapsInvalidTokenError as err:
             raise ConfigEntryAuthFailed from err
         except ElectricityMapsError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

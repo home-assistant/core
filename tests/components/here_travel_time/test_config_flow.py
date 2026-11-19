@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.here_travel_time.config_flow import (
@@ -41,15 +42,13 @@ from .const import (
     ORIGIN_LONGITUDE,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def bypass_setup_fixture():
     """Prevent setup."""
     with patch(
         "homeassistant.components.here_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -351,6 +350,29 @@ async def do_common_reconfiguration_steps(hass: HomeAssistant) -> None:
     )
 
 
+async def _finish_flow(
+    hass: HomeAssistant, flow_id: str
+) -> config_entries.ConfigFlowResult:
+    """Enter a valid API key and pick zone.home as origin and destination."""
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_API_KEY: API_KEY, CONF_MODE: TRAVEL_MODE_CAR}
+    )
+    assert result["type"] is FlowResultType.MENU
+    await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "origin_entity"}
+    )
+    await hass.config_entries.flow.async_configure(
+        flow_id, {"origin_entity_id": "zone.home"}
+    )
+    await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "destination_entity"}
+    )
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {"destination_entity_id": "zone.home"}
+    )
+
+
+@pytest.mark.usefixtures("valid_response")
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -372,7 +394,11 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    result3 = await _finish_flow(hass, result["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("valid_response")
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -393,6 +419,9 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    result3 = await _finish_flow(hass, result["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("valid_response")

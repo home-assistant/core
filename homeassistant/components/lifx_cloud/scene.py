@@ -27,7 +27,7 @@ DEFAULT_TIMEOUT = 10
 PLATFORM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_PLATFORM): "lifx_cloud",
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )

@@ -4,7 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from nrgkick_api import NRGkickAPI
+from nrgkick_api import (
+    NRGkickAPI,
+    NRGkickAPIDisabledError,
+    NRGkickAuthenticationError,
+    NRGkickConnectionError,
+    NRGkickInvalidResponseError,
+)
 import probatio
 import yarl
 
@@ -20,14 +26,6 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .api import (
-    NRGkickApiClientApiDisabledError,
-    NRGkickApiClientAuthenticationError,
-    NRGkickApiClientCommunicationError,
-    NRGkickApiClientError,
-    NRGkickApiClientInvalidResponseError,
-    async_api_call,
-)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,11 +46,13 @@ def _normalize_host(value: str) -> str:
             url = yarl.URL(cv.url(value))
         except ValueError as err:
             raise probatio.Invalid("invalid url") from err
-        if not url.host:
+        # Keep the brackets of an IPv6 host and only a port that was given.
+        if not (host := url.host_port_subcomponent):
             raise probatio.Invalid("invalid url")
-        if url.port is not None:
-            return f"{url.host}:{url.port}"
-        return url.host
+        if url.explicit_port is not None and url.is_default_port():
+            # host_port_subcomponent leaves out a default port, even if given.
+            host = f"{host}:{url.explicit_port}"
+        return host
     return value.strip("/").split("/", 1)[0]
 
 
@@ -70,7 +70,7 @@ STEP_AUTH_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="off")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -92,8 +92,8 @@ async def validate_input(
         session=session,
     )
 
-    await async_api_call(api.test_connection())
-    info = await async_api_call(api.get_info(["general"], raw=True))
+    await api.test_connection()
+    info = await api.get_info(["general"], raw=True)
 
     device_name = info.get("general", {}).get("device_name")
     if not device_name:
@@ -101,7 +101,7 @@ async def validate_input(
 
     serial = info.get("general", {}).get("serial_number")
     if not serial:
-        raise NRGkickApiClientInvalidResponseError
+        raise NRGkickInvalidResponseError("Device did not report a serial number")
 
     return {
         "title": device_name,
@@ -132,15 +132,15 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         try:
             return await validate_input(self.hass, host), False
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             errors["base"] = "json_api_disabled"
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             return None, True
-        except NRGkickApiClientInvalidResponseError:
+        except NRGkickInvalidResponseError:
             errors["base"] = "invalid_response"
-        except NRGkickApiClientCommunicationError:
+        except NRGkickConnectionError:
             errors["base"] = "cannot_connect"
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             errors["base"] = "unknown"
         return None, False
@@ -157,15 +157,15 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             return await validate_input(
                 self.hass, host, username=username, password=password
             )
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             errors["base"] = "json_api_disabled"
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             errors["base"] = "invalid_auth"
-        except NRGkickApiClientInvalidResponseError:
+        except NRGkickInvalidResponseError:
             errors["base"] = "invalid_response"
-        except NRGkickApiClientCommunicationError:
+        except NRGkickConnectionError:
             errors["base"] = "cannot_connect"
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             errors["base"] = "unknown"
         return None
@@ -386,18 +386,15 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self._discovered_host)
-        except NRGkickApiClientAuthenticationError:
+        except NRGkickAuthenticationError:
             self._pending_host = self._discovered_host
             return await self.async_step_user_auth()
-        except NRGkickApiClientApiDisabledError:
+        except NRGkickAPIDisabledError:
             # mDNS metadata may be stale; fall back to the enable guidance.
             return await self.async_step_zeroconf_enable_json_api()
-        except (
-            NRGkickApiClientCommunicationError,
-            NRGkickApiClientInvalidResponseError,
-        ):
+        except NRGkickConnectionError, NRGkickInvalidResponseError:
             return self.async_abort(reason="cannot_connect")
-        except NRGkickApiClientError:
+        except Exception:
             _LOGGER.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 

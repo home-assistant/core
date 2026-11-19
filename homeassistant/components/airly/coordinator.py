@@ -2,6 +2,7 @@
 
 from asyncio import timeout
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from math import ceil
 from typing import override
@@ -13,6 +14,7 @@ from airly.exceptions import AirlyError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -107,6 +109,15 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str | float | i
             async with timeout(DEFAULT_TIMEOUT):
                 await self.measurements.update()
         except (AirlyError, ClientConnectorError, TimeoutError) as error:
+            if (
+                isinstance(error, AirlyError)
+                and error.status_code == HTTPStatus.UNAUTHORIZED
+            ):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_error",
+                    translation_placeholders={"entry": self.config_entry.title},
+                ) from error
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",

@@ -9,6 +9,11 @@ from onedrive_personal_sdk.const import DriveType
 from onedrive_personal_sdk.exceptions import HttpRequestException
 from onedrive_personal_sdk.models.items import Drive
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -16,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

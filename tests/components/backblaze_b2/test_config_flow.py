@@ -4,25 +4,19 @@ from unittest.mock import patch
 
 from b2sdk.v2 import exception
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2.const import (
     CONF_APPLICATION_KEY,
     CONF_KEY_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import BackblazeFixture
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def _async_start_flow(
@@ -268,6 +262,16 @@ async def test_config_flow_errors(
             "error_message": "test (bad_request)",
         }
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **USER_INPUT,
+            CONF_KEY_ID: b2_fixture.key_id,
+            CONF_APPLICATION_KEY: b2_fixture.application_key,
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("flow_type", "scenario"),
@@ -290,13 +294,9 @@ async def test_advanced_flows(
     mock_config_entry.add_to_hass(hass)
 
     if flow_type == "reauth":
-        source = SOURCE_REAUTH
         step_name = "reauth_confirm"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source, "entry_id": mock_config_entry.entry_id},
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == step_name
 
@@ -319,14 +319,20 @@ async def test_advanced_flows(
             assert result.get("type") is FlowResultType.FORM
             assert result.get("errors") == {"base": "invalid_credentials"}
 
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_KEY_ID: b2_fixture.key_id,
+                    CONF_APPLICATION_KEY: b2_fixture.application_key,
+                },
+            )
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reauth_successful"
+
     elif flow_type == "reconfigure":
-        source = SOURCE_RECONFIGURE
         step_name = "reconfigure"
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": source, "entry_id": mock_config_entry.entry_id},
-        )
+        result = await mock_config_entry.start_reconfigure_flow(hass)
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == step_name
 
@@ -359,6 +365,18 @@ async def test_advanced_flows(
         if scenario == "validation_error":
             assert result.get("type") is FlowResultType.FORM
             assert result.get("errors") == {"base": "invalid_credentials"}
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_KEY_ID: b2_fixture.key_id,
+                    CONF_APPLICATION_KEY: b2_fixture.application_key,
+                    "bucket": "testBucket",
+                    "prefix": "new_prefix/",
+                },
+            )
+            assert result.get("type") is FlowResultType.ABORT
+            assert result.get("reason") == "reconfigure_successful"
         else:
             assert result.get("type") is FlowResultType.ABORT
             assert result.get("reason") == "reconfigure_successful"

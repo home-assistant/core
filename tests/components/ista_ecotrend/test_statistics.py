@@ -1,10 +1,12 @@
 """Tests for the ista EcoTrend Statistics import."""
 
-import datetime
+import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.statistics import statistics_during_period
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import extend_statistics
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.mark.usefixtures("recorder_mock", "entity_registry_enabled_by_default")
@@ -45,7 +44,7 @@ async def test_statistics_import(
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,
-            datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+            dt.datetime.fromtimestamp(0, tz=dt.UTC),
             None,
             {statistic_id},
             "month",
@@ -60,13 +59,13 @@ async def test_statistics_import(
     # appended to the statistics
     mock_ista.get_consumption_data = extend_statistics
 
-    freezer.tick(datetime.timedelta(days=1))
+    freezer.tick(dt.timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
-    freezer.tick(datetime.timedelta(days=1))
+    freezer.tick(dt.timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
 
     for entity in entities:
@@ -74,7 +73,7 @@ async def test_statistics_import(
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,
-            datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+            dt.datetime.fromtimestamp(0, tz=dt.UTC),
             None,
             {statistic_id},
             "month",
@@ -102,7 +101,7 @@ async def test_remove(
     assert await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",
@@ -119,7 +118,7 @@ async def test_remove(
     assert await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",
@@ -135,7 +134,7 @@ async def test_remove(
     assert not await hass.async_add_executor_job(
         statistics_during_period,
         hass,
-        datetime.datetime.fromtimestamp(0, tz=datetime.UTC),
+        dt.datetime.fromtimestamp(0, tz=dt.UTC),
         None,
         {"ista_ecotrend:bahnhofsstr_1a_heating"},
         "month",

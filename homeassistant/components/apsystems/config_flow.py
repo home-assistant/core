@@ -16,7 +16,7 @@ from .const import DEFAULT_PORT, DOMAIN
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_IP_ADDRESS): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
     }
 )
 

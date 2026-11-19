@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock
 from aiohortos import HortosConnectionError, Readout, Source
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -21,8 +26,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import load_readouts
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _sunrise_readout(value: float, sampled_at: datetime | None = None) -> Readout:

@@ -7,6 +7,7 @@ from pyplaato.models.airlock import PlaatoAirlock
 from pyplaato.models.device import PlaatoDeviceType
 from pyplaato.models.keg import PlaatoKeg
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.plaato.const import (
     CONF_DEVICE_NAME,
@@ -16,8 +17,6 @@ from homeassistant.components.plaato.const import (
 )
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 # Note: It would be good to replace this test data
 # with actual data from the API

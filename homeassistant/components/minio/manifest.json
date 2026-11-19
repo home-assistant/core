@@ -1,10 +1,12 @@
 {
   "domain": "minio",
   "name": "Minio",
+  "categories": ["computers_network.cloud_developer_tools"],
   "codeowners": ["@tkislan"],
+  "connectivity": ["cloud", "network"],
   "documentation": "https://www.home-assistant.io/integrations/minio",
   "iot_class": "cloud_push",
   "loggers": ["minio"],
   "quality_scale": "legacy",
-  "requirements": ["minio==7.1.12"]
+  "requirements": ["minio==7.2.20"]
 }

@@ -2,6 +2,8 @@
 
 import base64
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
@@ -11,8 +13,6 @@ from homeassistant.components.smartthings.application_credentials import (
 )
 from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 TOKEN_URL = "https://auth-global.api.smartthings.com/oauth/token"
 

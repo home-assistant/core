@@ -1,0 +1,78 @@
+{
+  "contracts": [
+    {
+      "uuid": "00000000-0000-4000-8000-000000000301",
+      "label": "Laadpaal",
+      "type": "charge_point_installation",
+      "start_date": "2023-10-08T22:00:00.000000Z",
+      "end_date": null,
+      "meta": {
+        "serial_number": "SERIAL0000004",
+        "identifier": "SERIAL0000004",
+        "first_measured_at": "2026-01-15T08:00:00.000000Z",
+        "last_measured_at": "2026-09-29T11:55:00.000000Z",
+        "charge_point_model_name": "Example Charger 11",
+        "show_in_contract_screen": true,
+        "session_charging_cost_total": 25000000,
+        "charging_cost_total": 1500000000,
+        "session_flex_result": 2000000,
+        "session_average_cost_in_cents": 2500000,
+        "session_charged_energy": 10000,
+        "flex_result": null,
+        "charged_energy": 600000,
+        "average_cost_in_cents": 2500000
+      },
+      "state": {
+        "connectivity_state": true,
+        "state": "Charging",
+        "processing": false,
+        "power_actual": 11000,
+        "energy_delivered_session": 10000,
+        "start_mode": "AlwaysFlex",
+        "can_charge": true,
+        "can_schedule": true,
+        "charging_manually": false,
+        "charging_automatically": true,
+        "plug_and_charge": false,
+        "overload_protection_active": false,
+        "dynamic_load_balancing_health": "HEALTHY",
+        "dynamic_charging_enabled": true,
+        "charge_on_solar_enabled": false,
+        "charge_on_solar_active": false,
+        "plugged_in_at": "2026-09-29T09:55:00.000000Z",
+        "last_known_vehicle_uuid": "00000000-0000-4000-8000-000000000401",
+        "dynamic_charging_flex_enabled": true,
+        "dynamic_charging_flex_suppressed": false,
+        "dynamic_charging_user_constraints": {
+          "desired_distance_in_kilometers": 150,
+          "desired_additional_battery_percentage": null,
+          "desired_end_time": "2026-09-30T05:00:00.000000Z"
+        },
+        "charge_point_session": {
+          "start_time": "2026-09-29T10:00:00.000000Z",
+          "charged_distance_in_kilometers": 60
+        }
+      },
+      "charge_schedules": [
+        {
+          "start_time": "2026-09-29T12:00:00.000000Z",
+          "end_time": "2026-09-29T14:00:00.000000Z"
+        },
+        {
+          "start_time": "2026-09-30T02:00:00.000000Z",
+          "end_time": "2026-09-30T04:00:00.000000Z",
+          "suppress_home_battery": true
+        }
+      ]
+    }
+  ],
+  "powerplay": null,
+  "vehicles": [
+    {
+      "uuid": "00000000-0000-4000-8000-000000000401",
+      "label": "Example Car",
+      "battery_capacity_useable_wh": 60000,
+      "consumption_wh_per_km": 160
+    }
+  ]
+}

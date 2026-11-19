@@ -1,6 +1,6 @@
 """Test for Nest event platform."""
 
-import datetime
+import datetime as dt
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -237,7 +237,7 @@ async def test_event_threads(
     assert state.state == "unknown"
 
     # Doorbell event is received
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     await subscriber.async_receive_event(
         create_event_messages(
             {
@@ -262,7 +262,7 @@ async def test_event_threads(
     }
 
     # Media arrives in a second message that ends the thread
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     await subscriber.async_receive_event(
         create_event_messages(
             {
@@ -293,7 +293,7 @@ async def test_event_threads(
     }
 
     # An additional doorbell press event happens (with an updated session id)
-    freezer.tick(datetime.timedelta(seconds=2))
+    freezer.tick(dt.timedelta(seconds=2))
     await subscriber.async_receive_event(
         create_event_messages(
             {

@@ -1,11 +1,13 @@
 """Tests for the LIFX component."""
 
 from datetime import timedelta
+from socket import AF_INET, IPPROTO_UDP, SOCK_DGRAM
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from lifx import DiscoveredDevice, LifxError, LifxTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -19,8 +21,6 @@ from homeassistant.util import dt as dt_util
 
 from . import IP_ADDRESS, SERIAL, _patch_config_flow_try_connect, async_setup_lifx_entry
 from .helpers import create_mock_light
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_configuring_lifx_causes_discovery(hass: HomeAssistant) -> None:
@@ -96,16 +96,17 @@ async def test_setup_resolves_a_stored_hostname(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.lifx.Device.connect", return_value=device
         ) as connect,
-        patch(
-            "homeassistant.components.lifx.util.gethostbyname",
-            return_value=IP_ADDRESS,
+        patch.object(
+            hass.loop,
+            "getaddrinfo",
+            return_value=[(AF_INET, SOCK_DGRAM, IPPROTO_UDP, "", (IP_ADDRESS, 0))],
         ) as resolve,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    resolve.assert_called_once_with("lifx.example.com")
+    resolve.assert_awaited_once_with("lifx.example.com", None, type=SOCK_DGRAM)
     connect.assert_awaited_once_with(ip=IP_ADDRESS, serial=SERIAL)
 
 

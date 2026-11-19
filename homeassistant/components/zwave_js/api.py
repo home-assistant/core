@@ -203,14 +203,14 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = probatio.All(
         {
             probatio.Required(DSK): str,
             probatio.Required(SECURITY_CLASSES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.Coerce(SecurityClass)],
             ),
             probatio.Optional(
                 STATUS, default=ProvisioningEntryStatus.ACTIVE
             ): probatio.Coerce(ProvisioningEntryStatus),
             probatio.Optional(REQUESTED_SECURITY_CLASSES): probatio.All(
-                cv.ensure_list, [probatio.Coerce(SecurityClass)]
+                probatio.EnsureList(), [probatio.Coerce(SecurityClass)]
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
@@ -224,7 +224,7 @@ QR_PROVISIONING_INFORMATION_SCHEMA = probatio.All(
         {
             probatio.Required(VERSION): probatio.Coerce(QRCodeVersion),
             probatio.Required(SECURITY_CLASSES): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.Coerce(SecurityClass)],
             ),
             probatio.Required(DSK): str,
@@ -238,14 +238,14 @@ QR_PROVISIONING_INFORMATION_SCHEMA = probatio.All(
             probatio.Optional(MAX_INCLUSION_REQUEST_INTERVAL): probatio.Any(int, None),
             probatio.Optional(UUID): probatio.Any(str, None),
             probatio.Optional(SUPPORTED_PROTOCOLS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.Coerce(Protocols)],
             ),
             probatio.Optional(
                 STATUS, default=ProvisioningEntryStatus.ACTIVE
             ): probatio.Coerce(ProvisioningEntryStatus),
             probatio.Optional(REQUESTED_SECURITY_CLASSES): probatio.All(
-                cv.ensure_list, [probatio.Coerce(SecurityClass)]
+                probatio.EnsureList(), [probatio.Coerce(SecurityClass)]
             ),
         },
         extra=probatio.ALLOW_EXTRA,
@@ -1079,7 +1079,7 @@ async def websocket_subscribe_s2_inclusion(
         probatio.Required(TYPE): "zwave_js/grant_security_classes",
         probatio.Required(ENTRY_ID): str,
         probatio.Required(SECURITY_CLASSES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.Coerce(SecurityClass)],
         ),
         probatio.Optional(CLIENT_SIDE_AUTH, default=False): bool,
@@ -1288,7 +1288,7 @@ async def websocket_unprovision_smart_start_node(
 ) -> None:
     """Unprovision a smart start node."""
     try:
-        cv.has_at_least_one_key(DSK, NODE_ID)(msg)
+        probatio.AtLeastOne(DSK, NODE_ID)(msg)
     except probatio.Invalid as err:
         connection.send_error(
             msg[ID],
@@ -2370,9 +2370,7 @@ async def websocket_subscribe_log_updates(
                     probatio.Optional(FORCE_CONSOLE): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key(
-                ENABLED, FILENAME, FORCE_CONSOLE, LEVEL, LOG_TO_FILE
-            ),
+            probatio.AtLeastOne(ENABLED, FILENAME, FORCE_CONSOLE, LEVEL, LOG_TO_FILE),
             filename_is_present_if_logging_to_file,
         ),
     },
@@ -2413,7 +2411,6 @@ async def websocket_get_log_config(
     driver: Driver,
 ) -> None:
     """Get log configuration for the Z-Wave JS driver."""
-    assert client and client.driver
     connection.send_result(
         msg[ID],
         dataclasses.asdict(driver.log_config),
@@ -2475,7 +2472,6 @@ async def websocket_data_collection_status(
     driver: Driver,
 ) -> None:
     """Return data collection preference and status."""
-    assert client and client.driver
     result = {
         OPTED_IN: entry.data.get(CONF_DATA_COLLECTION_OPTED_IN),
         ENABLED: await driver.async_is_statistics_enabled(),

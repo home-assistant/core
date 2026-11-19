@@ -46,13 +46,13 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
             schema = probatio.Schema(
                 {
                     probatio.Required(CONF_URL): str,
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 }
             )
         else:
             schema = probatio.Schema(
                 {
-                    probatio.Required(CONF_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
                 }
             )
 

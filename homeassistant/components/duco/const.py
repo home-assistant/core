@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 SCAN_INTERVAL = timedelta(seconds=10)
 BOX_NODE_ID = 1

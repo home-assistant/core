@@ -123,7 +123,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="password",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=self._errors,
@@ -160,7 +160,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Optional(
                         CONF_HAS_PWD, default=reconfigure_entry.data[CONF_HAS_PWD]
                     ): bool,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
         )
@@ -188,7 +188,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Optional(
                     CONF_HAS_PWD, default=reauth_entry.data[CONF_HAS_PWD]
                 ): bool,
-                probatio.Optional(CONF_PASSWORD): str,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
         return self.async_show_form(

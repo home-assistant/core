@@ -1,41 +1,35 @@
 """Integration for Crownstone."""
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from .const import PLATFORMS
-from .entry_manager import CrownstoneConfigEntry, CrownstoneEntryManager
+DOMAIN = "crownstone"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CrownstoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Initiate setup for a Crownstone config entry."""
-    manager = CrownstoneEntryManager(hass, entry)
-
-    if not await manager.async_setup():
-        return False
-
-    entry.runtime_data = manager
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # HA specific listeners
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.on_shutdown)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "entries": f"/config/integrations/integration/{DOMAIN}"
+        },
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CrownstoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    entry.runtime_data.async_unload()
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_update_listener(
-    hass: HomeAssistant, entry: CrownstoneConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        while entries := hass.config_entries.async_entries(DOMAIN):
+            await hass.config_entries.async_remove(entries[0].entry_id)

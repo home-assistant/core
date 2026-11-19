@@ -84,7 +84,7 @@ TIMEOUT = 10
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
     }
 )

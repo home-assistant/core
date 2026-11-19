@@ -52,9 +52,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional(CONF_EXTRA_PROJECTS, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             probatio.Schema(
                 [
                     probatio.Schema(
@@ -66,12 +66,14 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
                             probatio.Optional(
                                 CONF_PROJECT_WHITELIST, default=[]
                             ): probatio.All(
-                                cv.ensure_list,
+                                probatio.EnsureList(),
                                 [probatio.All(cv.string, probatio.Lower)],
                             ),
                             probatio.Optional(
                                 CONF_PROJECT_LABEL_WHITELIST, default=[]
-                            ): probatio.All(cv.ensure_list, [probatio.All(cv.string)]),
+                            ): probatio.All(
+                                probatio.EnsureList(), [probatio.All(cv.string)]
+                            ),
                         }
                     )
                 ]
@@ -113,7 +115,7 @@ async def async_setup_platform(
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
 
-    api = TodoistAPIAsync(token)
+    api = await hass.async_add_executor_job(TodoistAPIAsync, token)
     coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
 
@@ -123,6 +125,7 @@ async def async_setup_platform(
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
+        await api.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_coordinator)
 

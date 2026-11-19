@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.selector import BooleanSelector
 
-from . import AzureDataExplorerClient
+from .client import AzureDataExplorerClient
 from .const import (
     CONF_ADX_CLUSTER_INGEST_URI,
     CONF_ADX_DATABASE_NAME,
@@ -31,7 +31,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ADX_DATABASE_NAME): str,
         probatio.Required(CONF_ADX_TABLE_NAME): str,
         probatio.Required(CONF_APP_REG_ID): str,
-        probatio.Required(CONF_APP_REG_SECRET): str,
+        probatio.Required(probatio.Secret(CONF_APP_REG_SECRET)): str,
         probatio.Required(CONF_AUTHORITY_ID): str,
         probatio.Required(CONF_USE_QUEUED_CLIENT, default=False): BooleanSelector(),
     }

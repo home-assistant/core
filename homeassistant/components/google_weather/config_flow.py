@@ -11,7 +11,6 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -31,12 +30,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
+from .coordinator import GoogleWeatherConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(SECTION_API_KEY_OPTIONS): section(
             probatio.Schema({probatio.Optional(CONF_REFERRER): str}),
             {"collapsed": True},
@@ -221,7 +221,7 @@ class GoogleWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: GoogleWeatherConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"location": LocationSubentryFlowHandler}

@@ -6,6 +6,7 @@ import pathlib
 import re
 from typing import Any
 
+from hassfest.model import Config, Integration
 import probatio
 from probatio.humanize import humanize_error
 
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv, selector
 from homeassistant.util.yaml import load_yaml_dict
-
-from .model import Config, Integration
 
 
 def exists(value: Any) -> Any:

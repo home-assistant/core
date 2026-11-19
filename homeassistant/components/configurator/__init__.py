@@ -57,6 +57,10 @@ type ConfiguratorCallback = Callable[[list[dict[str, str]]], None]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 def _report_deprecation() -> None:
     """Report use of the deprecated configurator integration."""
@@ -198,6 +202,8 @@ class Configurator:
         self._requests: dict[
             str, tuple[str, list[dict[str, str]], ConfiguratorCallback | None]
         ] = {}
+        # Deprecated integration, to be removed in 2027.10
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_admin_service(
             hass,
             DOMAIN,

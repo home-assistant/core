@@ -4,6 +4,9 @@
       "infrared_brightness": {
         "default": "mdi:lightbulb-night"
       },
+      "mood": {
+        "default": "mdi:palette-swatch"
+      },
       "theme": {
         "default": "mdi:palette"
       }
@@ -12,6 +15,9 @@
   "services": {
     "effect_colorloop": {
       "service": "mdi:looks"
+    },
+    "effect_colorsweep": {
+      "service": "mdi:gradient-horizontal"
     },
     "effect_flame": {
       "service": "mdi:fire"
@@ -36,6 +42,9 @@
     },
     "set_hev_cycle_state": {
       "service": "mdi:led-on"
+    },
+    "set_mood": {
+      "service": "mdi:palette-swatch"
     },
     "set_state": {
       "service": "mdi:led-on"

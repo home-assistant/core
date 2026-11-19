@@ -7,11 +7,12 @@ from typing import Any, override
 from aioaquarite import AquariteAuth, AquariteClient, AquariteError, AuthenticationError
 import probatio
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
+from . import VistapoolConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,11 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 AUTH_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
-PASSWORD_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): cv.string})
+PASSWORD_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string}
+)
 
 
 class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -107,7 +110,7 @@ class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_update_password(
         self,
-        entry: ConfigEntry,
+        entry: VistapoolConfigEntry,
         step_id: str,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:

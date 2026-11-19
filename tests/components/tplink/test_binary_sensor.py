@@ -2,6 +2,7 @@
 
 from kasa import Feature
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tplink.binary_sensor import BINARY_SENSOR_DESCRIPTIONS
@@ -21,8 +22,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

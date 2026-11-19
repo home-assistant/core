@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "id_missing": "This Samsung device doesn't have a serial number to identify it.",
@@ -85,14 +84,20 @@
     "media_id_invalid": {
       "message": "Media ID must be a positive integer."
     },
+    "send_command_failed": {
+      "message": "Unable to send command to {host}."
+    },
     "service_unsupported": {
-      "message": "Entity {entity} does not support this action."
+      "message": "Unable to turn on {entity}, as it does not have an automation configured."
     },
     "source_unsupported": {
       "message": "Entity {entity} does not support source {source}."
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type {trigger_type}."
+    },
+    "upnp_not_available": {
+      "message": "Unable to set volume level on {host}, as UPnP services are not available."
     }
   }
 }

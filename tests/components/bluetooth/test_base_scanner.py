@@ -8,6 +8,19 @@ from unittest.mock import patch
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner as FakeScanner,
+    MockBleakClient,
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -28,21 +41,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import (
-    FakeRemoteScanner as FakeScanner,
-    MockBleakClient,
-    _get_manager,
-    generate_advertisement_data,
-    generate_ble_device,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])

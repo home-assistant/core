@@ -3,8 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    Mock,
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from pythonxbox.api.provider.smartglass.models import CommandResponse, InputKeyType
 from syrupy.assertion import SnapshotAssertion
 
@@ -17,21 +23,14 @@ from homeassistant.components.xbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
-    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    Mock,
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -97,7 +96,7 @@ async def test_send_button_command(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_COMMAND: button, ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -141,7 +140,7 @@ async def test_send_command(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -169,7 +168,7 @@ async def test_send_text(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,
         {ATTR_COMMAND: text, ATTR_DELAY_SECS: 0},
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -192,7 +191,7 @@ async def test_turn_on(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_TURN_ON,
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -215,7 +214,7 @@ async def test_turn_off(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_TURN_OFF,
-        target={ATTR_ENTITY_ID: "remote.xone"},
+        target={TargetKey.ENTITY_ID: "remote.xone"},
         blocking=True,
     )
 
@@ -261,7 +260,7 @@ async def test_send_command_exceptions(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
             {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
@@ -310,7 +309,7 @@ async def test_send_command_failed(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,
             {ATTR_COMMAND: command, ATTR_DELAY_SECS: 0},
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == "command_failed"
@@ -345,7 +344,7 @@ async def test_turn_on_exceptions(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_ON,
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key
@@ -373,7 +372,7 @@ async def test_turn_on_failed(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_ON,
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == "turn_on_failed"
@@ -407,7 +406,7 @@ async def test_turn_off_exceptions(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_OFF,
-            target={ATTR_ENTITY_ID: "remote.xone"},
+            target={TargetKey.ENTITY_ID: "remote.xone"},
             blocking=True,
         )
     assert e.value.translation_key == translation_key

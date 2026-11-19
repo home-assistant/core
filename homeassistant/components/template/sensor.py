@@ -22,7 +22,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -32,7 +37,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
+from .const import DEFAULT_NAMES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -47,7 +54,7 @@ from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 CONF_LAST_RESET = "last_reset"
-DEFAULT_NAME = "Template Sensor"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.SENSOR]
 
 
 def validate_last_reset(val):

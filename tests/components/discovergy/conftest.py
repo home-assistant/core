@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pydiscovergy.models import Reading
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.discovergy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import GET_METERS, LAST_READING, LAST_READING_GAS
-
-from tests.common import MockConfigEntry
 
 
 def _meter_last_reading(meter_id: str) -> Reading:

@@ -1,6 +1,9 @@
 """Test the ibeacon init."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.ibeacon.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -8,10 +11,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import BLUECHARM_BEACON_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

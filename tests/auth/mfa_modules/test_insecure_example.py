@@ -1,11 +1,11 @@
 """Test the example module auth module."""
 
+from pytest_homeassistant.common import MockUser
+
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockUser
 
 
 async def test_validate(hass: HomeAssistant) -> None:

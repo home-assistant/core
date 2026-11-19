@@ -9,7 +9,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -104,7 +103,7 @@ DOMAIN_DATA_SCENE: VolDictType = {
         probatio.Coerce(int), probatio.Range(0, 9)
     ),
     probatio.Optional(CONF_OUTPUTS, default=[]): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [probatio.All(probatio.Upper, probatio.In(OUTPUT_PORTS + RELAY_PORTS))],
     ),
     probatio.Optional(CONF_TRANSITION, default=0): probatio.Any(

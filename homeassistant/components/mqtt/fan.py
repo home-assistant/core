@@ -146,7 +146,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         ): valid_publish_topic,
         probatio.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
-        ): cv.ensure_list,
+        ): probatio.EnsureList(),
         probatio.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
         probatio.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         probatio.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,

@@ -117,6 +117,7 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
                 ) from exc
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Error communicating with InComfort gateway")
             raise UpdateFailed(
                 translation_domain=DOMAIN,

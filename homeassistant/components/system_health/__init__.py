@@ -32,6 +32,13 @@ DATA_SYSTEM_HEALTH_PLATFORMS: HassKey[
     LazyIntegrationPlatforms[SystemHealthRegistration]
 ] = HassKey("system_health_platforms")
 
+__all__ = [
+    "DOMAIN",
+    "SystemHealthRegistration",
+    "async_check_can_reach_url",
+    "get_info",
+]
+
 
 class SystemHealthProtocol(Protocol):
     """Define the format of system_health platforms."""
@@ -283,10 +290,15 @@ class SystemHealthRegistration:
 
 
 async def async_check_can_reach_url(
-    hass: HomeAssistant, url: str, more_info: str | None = None
+    hass: HomeAssistant,
+    url: str,
+    more_info: str | None = None,
+    *,
+    session: aiohttp.ClientSession | None = None,
 ) -> str | dict[str, str]:
     """Test if the url can be reached."""
-    session = aiohttp_client.async_get_clientsession(hass)
+    if session is None:
+        session = aiohttp_client.async_get_clientsession(hass)
 
     try:
         await session.get(url, timeout=aiohttp.ClientTimeout(total=5))

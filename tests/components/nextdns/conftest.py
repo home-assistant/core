@@ -14,6 +14,11 @@ from nextdns import (
     Settings,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.nextdns.const import (
     CONF_PROFILE_ID,
@@ -22,12 +27,6 @@ from homeassistant.components.nextdns.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 ANALYTICS = load_json_object_fixture("analytics.json", DOMAIN)
 ANALYTICS_DNSSEC = AnalyticsDnssec(**ANALYTICS["dnssec"])
@@ -46,7 +45,7 @@ SETTINGS = Settings(**load_json_object_fixture("settings.json", DOMAIN))
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.nextdns.async_setup_entry", return_value=True
+        "homeassistant.components.nextdns.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

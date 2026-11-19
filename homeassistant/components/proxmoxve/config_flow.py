@@ -10,7 +10,7 @@ from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -49,6 +49,7 @@ from .const import (
     DOMAIN,
     NODE_ONLINE,
 )
+from .coordinator import ProxmoxConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 BASE_SCHEMA = probatio.Schema(
@@ -64,7 +65,7 @@ BASE_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
         ),
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_TOKEN, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
@@ -72,7 +73,7 @@ BASE_SCHEMA = probatio.Schema(
 
 PASSWORD_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -83,7 +84,7 @@ PASSWORD_SCHEMA = probatio.Schema(
 TOKEN_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_TOKEN_ID): cv.string,
-        probatio.Required(CONF_TOKEN_SECRET): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN_SECRET)): cv.string,
     }
 )
 
@@ -151,6 +152,12 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             vms = client.nodes(node["node"]).qemu.get()
             containers = client.nodes(node["node"]).lxc.get()
         except ResourceException as err:
+            if err.status_code in {595, 596}:
+                _LOGGER.warning(
+                    "Unable to fetch VMs/LXC for node %s, skipping node",
+                    node["node"],
+                )
+                continue
             _LOGGER.debug(
                 "Error fetching VMs/LXC for node %s", node["node"], exc_info=True
             )
@@ -175,7 +182,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
     _data: dict[str, Any] = {}
-    _entry: ConfigEntry
+    _entry: ProxmoxConfigEntry
 
     @override
     async def async_step_user(

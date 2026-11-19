@@ -4,6 +4,7 @@ import socket
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import (
     SenseAPIException,
     SenseAPITimeoutException,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DEVICE_1_ID, MONITOR_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_sense")
@@ -133,6 +132,8 @@ async def test_setup_get_monitor_data_retry_exceptions(
         socket.gaierror(),
         SenseWebsocketException("ws error"),
         SenseAPIException(),
+        # Returned for a 404 while the monitor reconnects, after authenticating
+        SenseAuthenticationException("API Return Code: 404"),
     ],
 )
 async def test_setup_get_realtime_retry_exceptions(

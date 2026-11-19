@@ -5,9 +5,11 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 from openai import RateLimitError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
@@ -15,14 +17,13 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +63,7 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
             ATTR_ENTITY_ID: "tts.openai_tts",
             tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
             tts.ATTR_MESSAGE: "There is a person at the front door.",
-            tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+            tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice2"},
         },
     ],
 )
@@ -107,7 +108,9 @@ async def test_tts(
         await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
         == HTTPStatus.OK
     )
-    voice_id = service_data[tts.ATTR_OPTIONS].get(tts.ATTR_VOICE, "marin")
+    voice_id = service_data[tts.ATTR_OPTIONS].get(
+        TextToSpeechCommonOption.VOICE, "marin"
+    )
     mock_create_speech.assert_called_once_with(
         model="gpt-4o-mini-tts",
         voice=voice_id,
@@ -145,7 +148,9 @@ async def test_tts_preferred_format(
             ATTR_ENTITY_ID: "tts.openai_tts",
             tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
             tts.ATTR_MESSAGE: "There is a person at the front door.",
-            tts.ATTR_OPTIONS: {tts.ATTR_PREFERRED_FORMAT: preferred_format},
+            tts.ATTR_OPTIONS: {
+                TextToSpeechCommonOption.PREFERRED_FORMAT: preferred_format
+            },
         },
         blocking=True,
     )
@@ -177,7 +182,10 @@ async def test_tts_raw_preferred_format_returns_pcm(
     result = await tts_entity.async_get_tts_audio(
         "There is a person at the front door.",
         "en-US",
-        {tts.ATTR_PREFERRED_FORMAT: "raw", tts.ATTR_VOICE: "marin"},
+        {
+            TextToSpeechCommonOption.PREFERRED_FORMAT: "raw",
+            TextToSpeechCommonOption.VOICE: "marin",
+        },
     )
 
     assert result == ("pcm", b"mock audio data")
@@ -203,7 +211,7 @@ async def test_tts_error(
     """Test exception handling during text to speech generation."""
     # Mock the OpenAI response stream
     mock_create_speech.side_effect = RateLimitError(
-        response=httpx.Response(status_code=429, request=""),
+        response=httpx2.Response(status_code=429, request=""),
         body=None,
         message=None,
     )
@@ -212,7 +220,7 @@ async def test_tts_error(
         ATTR_ENTITY_ID: "tts.openai_tts",
         tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
         tts.ATTR_MESSAGE: "There is a person at the front door.",
-        tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice1"},
+        tts.ATTR_OPTIONS: {TextToSpeechCommonOption.VOICE: "voice1"},
     }
 
     await hass.services.async_call(

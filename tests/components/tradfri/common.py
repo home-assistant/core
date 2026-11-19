@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
 from pytradfri.command import Command
 from pytradfri.const import ATTR_ID
 from pytradfri.device import Device
@@ -12,8 +13,6 @@ from homeassistant.components import tradfri
 from homeassistant.core import HomeAssistant
 
 from . import GATEWAY_ID
-
-from tests.common import MockConfigEntry
 
 
 @dataclass

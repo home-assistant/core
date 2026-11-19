@@ -3,14 +3,13 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_calendar(

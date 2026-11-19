@@ -1,9 +1,13 @@
 """Constants for Google Travel Time."""
 
-from google.maps.routing_v2 import (
-    RouteTravelMode,
+from enum import StrEnum
+
+from google_maps_routing_api import (
+    RoutingPreference,
     TrafficModel,
-    TransitPreferences,
+    TransitRoutingPreference,
+    TransitTravelMode,
+    TravelMode,
     Units,
 )
 
@@ -20,6 +24,7 @@ CONF_DEPARTURE_TIME = "departure_time"
 CONF_TRAFFIC_MODEL = "traffic_model"
 CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
+CONF_TRAVEL_ROUTING_PREFERENCE = "travel_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
 
@@ -84,28 +89,34 @@ ALL_LANGUAGES = [
 
 AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM = {
-    "less_walking": TransitPreferences.TransitRoutingPreference.LESS_WALKING,
-    "fewer_transfers": TransitPreferences.TransitRoutingPreference.FEWER_TRANSFERS,
+TRANSIT_PREFS_TO_API_ENUM = {
+    "less_walking": TransitRoutingPreference.LESS_WALKING,
+    "fewer_transfers": TransitRoutingPreference.FEWER_TRANSFERS,
 }
 TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
-TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM = {
-    "bus": TransitPreferences.TransitTravelMode.BUS,
-    "subway": TransitPreferences.TransitTravelMode.SUBWAY,
-    "train": TransitPreferences.TransitTravelMode.TRAIN,
-    "tram": TransitPreferences.TransitTravelMode.LIGHT_RAIL,
-    "rail": TransitPreferences.TransitTravelMode.RAIL,
+TRANSPORT_TYPES_TO_API_ENUM = {
+    "bus": TransitTravelMode.BUS,
+    "subway": TransitTravelMode.SUBWAY,
+    "train": TransitTravelMode.TRAIN,
+    "tram": TransitTravelMode.LIGHT_RAIL,
+    "rail": TransitTravelMode.RAIL,
+}
+TRAVEL_PREFS = ["traffic_aware", "traffic_aware_optimal", "traffic_unaware"]
+TRAVEL_PREFS_TO_API_ENUM = {
+    "traffic_aware_optimal": RoutingPreference.TRAFFIC_AWARE_OPTIMAL,
+    "traffic_aware": RoutingPreference.TRAFFIC_AWARE,
+    "traffic_unaware": RoutingPreference.TRAFFIC_UNAWARE,
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
-TRAVEL_MODES_TO_GOOGLE_SDK_ENUM = {
-    "driving": RouteTravelMode.DRIVE,
-    "walking": RouteTravelMode.WALK,
-    "bicycling": RouteTravelMode.BICYCLE,
-    "transit": RouteTravelMode.TRANSIT,
+TRAVEL_MODES_TO_API_ENUM = {
+    "driving": TravelMode.DRIVE,
+    "walking": TravelMode.WALK,
+    "bicycling": TravelMode.BICYCLE,
+    "transit": TravelMode.TRANSIT,
 }
 TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
-TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
+TRAFFIC_MODELS_TO_API_ENUM = {
     "best_guess": TrafficModel.BEST_GUESS,
     "pessimistic": TrafficModel.PESSIMISTIC,
     "optimistic": TrafficModel.OPTIMISTIC,
@@ -115,7 +126,31 @@ TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
 UNITS_METRIC = "metric"
 UNITS_IMPERIAL = "imperial"
 UNITS = [UNITS_METRIC, UNITS_IMPERIAL]
-UNITS_TO_GOOGLE_SDK_ENUM = {
+UNITS_TO_API_ENUM = {
     UNITS_METRIC: Units.METRIC,
     UNITS_IMPERIAL: Units.IMPERIAL,
 }
+
+
+class GoogleTravelTimeService(StrEnum):
+    """Store keys for Google Travel Time services."""
+
+    GET_TRAVEL_TIMES = "get_travel_times"
+    GET_TRANSIT_TIMES = "get_transit_times"
+
+
+class GoogleTravelTimeServiceArgument(StrEnum):
+    """Store keys for Google Travel Time service arguments."""
+
+    ORIGIN = "origin"
+    DESTINATION = "destination"
+    MODE = "mode"
+    UNITS = "units"
+    LANGUAGE = "language"
+    AVOID = "avoid"
+    TRAFFIC_MODEL = "traffic_model"
+    DEPARTURE_TIME = "departure_time"
+    TRANSIT_MODE = "transit_mode"
+    TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
+    ARRIVAL_TIME = "arrival_time"
+    TRAVEL_ROUTING_PREFERENCE = "travel_routing_preference"

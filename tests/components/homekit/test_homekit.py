@@ -8,6 +8,7 @@ from uuid import uuid1
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components import homekit as homekit_base, zeroconf
@@ -31,10 +32,10 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
-    SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_UNPAIR,
+    SIGNAL_RELOAD_ENTITIES,
 )
 from homeassistant.components.homekit.models import HomeKitEntryData
+from homeassistant.components.homekit.services import HomeKitService
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
 from homeassistant.components.light import (
@@ -47,14 +48,12 @@ from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STARTED,
-    SERVICE_RELOAD,
     STATE_ON,
+    CommonServiceArgument,
     EntityCategory,
     UnitOfDensity,
     UnitOfRatio,
@@ -67,6 +66,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     instance_id,
 )
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
     CONF_EXCLUDE_ENTITIES,
@@ -80,8 +80,6 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
-
-from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -184,6 +182,7 @@ async def test_setup_min(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -229,6 +228,7 @@ async def test_removing_entry(port_mock, hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1003,8 +1003,8 @@ async def test_homekit_reset_accessories(hass: HomeAssistant, mock_hap) -> None:
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1174,8 +1174,8 @@ async def test_homekit_unpair(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_UNPAIR,
-            {ATTR_DEVICE_ID: hk_bridge_dev.id},
+            HomeKitService.UNPAIR,
+            {CommonServiceArgument.DEVICE_ID: hk_bridge_dev.id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1232,8 +1232,8 @@ async def test_homekit_unpair_device_with_children(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_UNPAIR,
-            {ATTR_DEVICE_ID: hk_bridge_dev.id},
+            HomeKitService.UNPAIR,
+            {CommonServiceArgument.DEVICE_ID: hk_bridge_dev.id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1277,8 +1277,8 @@ async def test_homekit_unpair_missing_device_id(hass: HomeAssistant) -> None:
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_HOMEKIT_UNPAIR,
-                {ATTR_DEVICE_ID: "notvalid"},
+                HomeKitService.UNPAIR,
+                {CommonServiceArgument.DEVICE_ID: "notvalid"},
                 blocking=True,
             )
         await hass.async_block_till_done()
@@ -1331,8 +1331,8 @@ async def test_homekit_unpair_not_homekit_device(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_HOMEKIT_UNPAIR,
-                {ATTR_DEVICE_ID: device_entry.id},
+                HomeKitService.UNPAIR,
+                {CommonServiceArgument.DEVICE_ID: device_entry.id},
                 blocking=True,
             )
         await hass.async_block_till_done()
@@ -1373,8 +1373,8 @@ async def test_homekit_reset_accessories_not_supported(hass: HomeAssistant) -> N
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1417,8 +1417,8 @@ async def test_homekit_reset_accessories_state_missing(hass: HomeAssistant) -> N
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1463,8 +1463,8 @@ async def test_homekit_reset_accessories_not_bridged(hass: HomeAssistant) -> Non
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: "light.not_bridged"},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: "light.not_bridged"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1501,8 +1501,8 @@ async def test_homekit_reset_single_accessory(hass: HomeAssistant, mock_hap) -> 
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1542,8 +1542,8 @@ async def test_homekit_reset_single_accessory_unsupported(hass: HomeAssistant) -
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1583,8 +1583,8 @@ async def test_homekit_reset_single_accessory_state_missing(
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: entity_id},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: entity_id},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1622,8 +1622,8 @@ async def test_homekit_reset_single_accessory_no_match(hass: HomeAssistant) -> N
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_HOMEKIT_RESET_ACCESSORY,
-            {ATTR_ENTITY_ID: "light.no_match"},
+            HomeKitService.RESET_ACCESSORY,
+            {CommonServiceArgument.ENTITY_ID: "light.no_match"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -1849,6 +1849,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass: HomeAssistant) ->
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass, DOMAIN, {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
         )
@@ -1897,6 +1898,7 @@ async def test_yaml_can_link_with_default_name(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -1943,6 +1945,7 @@ async def test_yaml_can_link_with_port(hass: HomeAssistant) -> None:
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass,
             DOMAIN,
@@ -2432,11 +2435,13 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
     ):
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(
             hass, DOMAIN, {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
         )
         await hass.async_block_till_done()
 
+    old_homekit = homekit
     mock_homekit.assert_any_call(
         hass,
         "reloadable",
@@ -2469,14 +2474,16 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
     ):
         mock_homekit2.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         await hass.services.async_call(
             "homekit",
-            SERVICE_RELOAD,
+            HomeKitService.RELOAD,
             {},
             blocking=True,
         )
         await hass.async_block_till_done()
 
+    old_homekit.async_stop.assert_awaited_once()
     mock_homekit2.assert_any_call(
         hass,
         "reloadable",
@@ -2603,6 +2610,11 @@ async def test_homekit_start_in_accessory_mode_missing_entity(
     assert homekit.status == STATUS_WAIT
 
     assert "entity not available" in caplog.text
+
+    signal = SIGNAL_RELOAD_ENTITIES.format(entry.entry_id)
+    assert hass.data[DATA_DISPATCHER][signal]
+    await homekit.async_stop()
+    assert not hass.data[DATA_DISPATCHER][signal]
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_STATION_ID): cv.positive_int,
         probatio.Optional(
             CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES
-        ): probatio.All(cv.ensure_list, [probatio.In(CONF_ALLOWED_FUEL_TYPES)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(CONF_ALLOWED_FUEL_TYPES)]),
     }
 )
 

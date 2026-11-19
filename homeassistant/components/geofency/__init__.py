@@ -7,14 +7,7 @@ import probatio
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_NAME,
-    CONF_WEBHOOK_ID,
-    STATE_NOT_HOME,
-    Platform,
-)
+from homeassistant.const import ATTR_NAME, CONF_WEBHOOK_ID, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -35,7 +28,7 @@ CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(DOMAIN): probatio.Schema(
             {
                 probatio.Optional(CONF_MOBILE_BEACONS, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 )
             }
         )
@@ -45,6 +38,8 @@ CONFIG_SCHEMA = probatio.Schema(
 
 ATTR_ADDRESS = "address"
 ATTR_BEACON_ID = "beaconUUID"
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 ATTR_CURRENT_LATITUDE = "currentLatitude"
 ATTR_CURRENT_LONGITUDE = "currentLongitude"
 ATTR_DEVICE = "device"
@@ -140,7 +135,7 @@ def _set_location(hass, data, location_name):
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> None:
     """Configure based on config entry."""
     entry.runtime_data = set()
     webhook.async_register(
@@ -148,13 +143,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> None:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry
