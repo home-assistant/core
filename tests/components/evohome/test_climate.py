@@ -200,7 +200,11 @@ async def test_ctl_invalid_system_mode(
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.InvalidModeRequestError("Unsupported mode: xxx"),
+            side_effect=evo_exc.InvalidSetModeError(
+                "Unsupported mode: heating_off",
+                reason=evo_exc.RequestErrorReason.MODE_UNSUPPORTED,
+                mode="heating_off",
+            ),
         ),
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -213,7 +217,8 @@ async def test_ctl_invalid_system_mode(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "invalid_system_mode"
+    assert exc_info.value.translation_key == "mode_not_supported"
+    assert exc_info.value.translation_placeholders == {"mode": "heating_off"}
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -221,15 +226,14 @@ async def test_ctl_authentication_failed(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test an authentication failure is raised, rather than only logged."""
+    """Test an authentication failure is raised as a translated error."""
 
-    # AuthenticationFailedError is a subclass of ApiCallFailedError, which is only logged
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.AuthenticationFailedError("Authentication failed"),
+            side_effect=evo_exc.BadUserCredentialsError("Authentication failed"),
         ),
-        pytest.raises(evo_exc.AuthenticationFailedError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -239,6 +243,8 @@ async def test_ctl_authentication_failed(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "api_credentials_invalid"
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
