@@ -14,12 +14,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_TEMPERATURE,
     STATE_GAS,
     STATE_HEAT_PUMP,
     STATE_OFF,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -51,10 +52,10 @@ async def test_adam_water_heater_setpoint_change(
     """Test Adam water_heater setpoint-change."""
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        WaterHeaterService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-            ATTR_TEMPERATURE: 55,
+            TargetKey.ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+            WaterHeaterServiceArgument.TEMPERATURE: 55,
         },
         blocking=True,
     )
@@ -68,10 +69,10 @@ async def test_adam_water_heater_setpoint_change(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-                ATTR_TEMPERATURE: 65,
+                TargetKey.ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+                WaterHeaterServiceArgument.TEMPERATURE: 65,
             },
             blocking=True,
         )
@@ -80,10 +81,10 @@ async def test_adam_water_heater_setpoint_change(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-                ATTR_TEMPERATURE: 15,
+                TargetKey.ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+                WaterHeaterServiceArgument.TEMPERATURE: 15,
             },
             blocking=True,
         )
@@ -178,10 +179,10 @@ async def test_adam_water_heater_setpoint_error_uses_configured_unit(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            WaterHeaterService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
-                ATTR_TEMPERATURE: 145,
+                TargetKey.ENTITY_ID: "water_heater.opentherm_domestic_hot_water",
+                WaterHeaterServiceArgument.TEMPERATURE: 145,
             },
             blocking=True,
         )

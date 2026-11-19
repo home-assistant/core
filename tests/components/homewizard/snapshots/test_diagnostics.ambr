@@ -76,7 +76,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': False,
+        'power_on': None,
         'status_led_brightness_pct': 100,
+        'switch_lock': None,
         'uptime_s': 356,
         'wifi_rssi_db': -77,
         'wifi_ssid': '**REDACTED**',
@@ -168,7 +170,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -260,7 +264,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -399,7 +405,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -495,7 +503,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': True,
         'status_led_brightness_pct': 100.0,
+        'switch_lock': False,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -591,7 +601,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': True,
         'status_led_brightness_pct': 100.0,
+        'switch_lock': False,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -683,7 +695,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -775,7 +789,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
@@ -867,7 +883,9 @@
       'system': dict({
         'api_v1_enabled': None,
         'cloud_enabled': True,
+        'power_on': None,
         'status_led_brightness_pct': None,
+        'switch_lock': None,
         'uptime_s': None,
         'wifi_rssi_db': None,
         'wifi_ssid': '**REDACTED**',
