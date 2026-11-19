@@ -25,6 +25,7 @@ SATELLITE_PLATFORMS = [
     Platform.SELECT,
     Platform.SWITCH,
     Platform.NUMBER,
+    Platform.TIMER_LIST,
 ]
 
 __all__ = [
