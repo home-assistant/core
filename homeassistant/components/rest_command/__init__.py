@@ -1,7 +1,10 @@
 """Support for exposing regular REST commands as services."""
 
+import logging
+
 import probatio
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
@@ -26,6 +29,8 @@ from .const import (
     DOMAIN,
 )
 from .services import async_register_rest_command, async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
@@ -65,9 +70,33 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
-    for name, command_config in config[DOMAIN].items():
+    for name, command_config in config.get(DOMAIN, {}).items():
         async_register_rest_command(hass, name, command_config)
 
     async_setup_services(hass)
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the REST commands configured in the UI."""
+    for subentry in entry.subentries.values():
+        name = str(subentry.unique_id)
+        try:
+            validated = COMMAND_SCHEMA(dict(subentry.data))
+        except probatio.Invalid as err:
+            # One broken command must not take the other commands down with it
+            _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
+            continue
+        entry.async_on_unload(async_register_rest_command(hass, name, validated))
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unload the REST commands configured in the UI."""
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when a command is added, changed or removed."""
+    hass.config_entries.async_schedule_reload(entry.entry_id)

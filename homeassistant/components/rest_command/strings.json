@@ -1,4 +1,78 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up RESTful Command. After this step you add your first command."
+      }
+    }
+  },
+  "config_subentries": {
+    "command": {
+      "entry_type": "Command",
+      "error": {
+        "action_exists": "The action {action} already exists. Choose another name.",
+        "invalid_action": "Enter a name with at least one letter or number. The name Reload is reserved.",
+        "invalid_command": "The command is not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates."
+      },
+      "initiate_flow": {
+        "user": "Add command"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "action": "Action name",
+            "method": "Method",
+            "payload": "Payload",
+            "url": "[%key:common::config_flow::data::url%]"
+          },
+          "data_description": {
+            "action": "Name of the command, for example Open garage door. You can use spaces and capitals. The action gets a name made from it, like rest_command.open_garage_door, which you use in automations. It cannot be changed later.",
+            "method": "HTTP method of the request. GET reads data, POST sends data. PUT, PATCH and DELETE are used by some APIs to change or remove something.",
+            "payload": "Body of the request, usually used with POST, PUT or PATCH. Can be a template, for example `{example_payload}`. Leave empty to send no body.",
+            "url": "Address to send the request to, including http:// or https://. Can be a template, for example `{example_url}`."
+          },
+          "description": "A command sends one HTTP request when it is run. It becomes an action that you can use in automations, scripts and dashboards.\n\nURL, payload and header values can be templates. Values that you pass in the action data are available as variables: with the URL `{example_url}` and the action data `{example_data}`, the request goes to the front door.",
+          "sections": {
+            "advanced": {
+              "data": {
+                "content_type": "Content type",
+                "headers": "Headers",
+                "insecure_cipher": "Allow insecure ciphers",
+                "skip_url_encoding": "Skip URL encoding",
+                "timeout": "Timeout",
+                "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+              },
+              "data_description": {
+                "content_type": "Sets the Content-Type header, for example application/json when the payload is JSON.",
+                "headers": "Extra headers to send, one per line as name: value. Values can be templates, for example `{example_headers}`.",
+                "insecure_cipher": "Allow older, less secure encryption. Only needed for old devices that do not work otherwise.",
+                "skip_url_encoding": "Send the URL exactly as written, without encoding special characters. Only needed for APIs that expect raw characters in the URL.",
+                "timeout": "How long to wait for the server before the action fails.",
+                "verify_ssl": "Check the server's SSL/TLS certificate. Turn off only for devices with a self-signed certificate."
+              },
+              "description": "Headers, timeout and SSL settings. Most commands work without changing these.",
+              "name": "Advanced settings"
+            },
+            "auth": {
+              "data": {
+                "authentication": "Authentication method",
+                "password": "[%key:common::config_flow::data::password%]",
+                "username": "[%key:common::config_flow::data::username%]"
+              },
+              "data_description": {
+                "authentication": "Basic sends the credentials with every request and is the default. Digest is used by some cameras and routers.",
+                "password": "Password for the server. It is stored in Home Assistant and not shown in logs.",
+                "username": "Username for the server. It cannot contain a colon."
+              },
+              "description": "Only needed when the server asks for a username and password.",
+              "name": "Authentication"
+            }
+          },
+          "title": "Add command"
+        }
+      }
+    }
+  },
   "exceptions": {
     "client_error": {
       "message": "Client error occurred when calling resource \"{request_url}\""
@@ -8,6 +82,23 @@
     },
     "timeout": {
       "message": "Timeout when calling resource \"{request_url}\""
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest"
+      }
+    },
+    "method": {
+      "options": {
+        "delete": "DELETE",
+        "get": "GET",
+        "patch": "PATCH",
+        "post": "POST",
+        "put": "PUT"
+      }
     }
   },
   "services": {
