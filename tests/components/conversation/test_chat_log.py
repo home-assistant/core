@@ -1718,6 +1718,10 @@ async def test_chat_log_late_transcript(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test a transcript added after the answer goes to the start of the turn."""
+    events: list[tuple[ChatLogEventType, dict[str, Any]]] = []
+    async_subscribe_chat_logs(
+        hass, lambda _conversation_id, event, data: events.append((event, data))
+    )
     audio_input = replace(
         mock_conversation_input,
         text="",
@@ -1742,3 +1746,14 @@ async def test_chat_log_late_transcript(
         ("assistant", "Which light?"),
     ]
     assert chat_log.continue_conversation
+    # Subscribers get the whole log, since they append added content
+    assert [event for event, _data in events] == [
+        ChatLogEventType.CREATED,
+        ChatLogEventType.CONTENT_ADDED,
+        ChatLogEventType.UPDATED,
+    ]
+    assert [content["role"] for content in events[-1][1]["chat_log"]["content"]] == [
+        "system",
+        "user",
+        "assistant",
+    ]

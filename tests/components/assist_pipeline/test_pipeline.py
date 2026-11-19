@@ -3563,7 +3563,7 @@ async def test_pipeline_audio_agent_listening_end_stops_audio(
 async def test_pipeline_audio_agent_transcript_after_answer(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
-    """Test a transcript that comes after the answer started is a chat log delta."""
+    """Test a transcript that comes after the answer started is no delta."""
 
     async def transcript_after_answer(
         user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
@@ -3607,11 +3607,12 @@ async def test_pipeline_audio_agent_transcript_after_answer(
 
     stt_end = next(event for event in events if event.type is PipelineEventType.STT_END)
     assert stt_end.data == {"stt_output": {"text": ""}}
-    assert [
-        event.data["chat_log_delta"]["content"]
+    # Listeners that follow the role of deltas would lose the rest of the answer
+    assert not [
+        event
         for event in events
         if event.data and event.data.get("chat_log_delta", {}).get("role") == "user"
-    ] == ["late transcript"]
+    ]
 
 
 @pytest.mark.usefixtures("init_audio_agent")

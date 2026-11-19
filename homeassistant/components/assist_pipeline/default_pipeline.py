@@ -994,14 +994,8 @@ class _DefaultPipelineProcessor:
                         return
                     if self._pending_intent_start is not None:
                         self._async_end_agent_listening(delta["content"])
-                        return
-                    # A late transcript is not part of the spoken response
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.INTENT_PROGRESS,
-                            {"chat_log_delta": delta},
-                        )
-                    )
+                    # A late transcript would split the streamed response for
+                    # listeners that follow the role of the deltas
                     return
 
                 self._async_end_agent_listening()

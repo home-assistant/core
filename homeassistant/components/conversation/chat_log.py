@@ -439,18 +439,21 @@ class ChatLog:
         the agent only has it after it started to answer.
         """
         LOGGER.debug("Adding user content: %s", content)
-        if (index := self.transcript_index) is not None:
-            self.transcript_index = None
-            self.content.insert(index, content)
-        else:
+        index = self.transcript_index
+        self.transcript_index = None
+        if (index is None) or (index == len(self.content)):
             self.content.append(content)
+            event_type = ChatLogEventType.CONTENT_ADDED
+            event_data: dict[str, Any] = {"content": content.as_dict()}
+        else:
+            self.content.insert(index, content)
+            # Subscribers only append added content
+            event_type = ChatLogEventType.UPDATED
+            event_data = {"chat_log": self.as_dict()}
         if self.delta_listener:
             self.delta_listener(self, content.as_dict())
         _async_notify_subscribers(
-            self.hass,
-            self.conversation_id,
-            ChatLogEventType.CONTENT_ADDED,
-            {"content": content.as_dict()},
+            self.hass, self.conversation_id, event_type, event_data
         )
 
     @callback
