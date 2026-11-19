@@ -260,7 +260,6 @@ class DaikinEntity(DaikinOnectaEntity):
     @callback
     def _publish_write_update(self) -> None:
         """Publish the locally updated model to every entity for this device."""
-        self.update_state()
         self.coordinator.async_update_listeners()
 
 

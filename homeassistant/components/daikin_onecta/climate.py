@@ -210,10 +210,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
     @override
     def available(self) -> bool:
         """Return whether the source device is available."""
-        device = self._device
         return (
             super().available
-            and device.available
             and (climate_control := self._climate_control()) is not None
             and self._setpoint in climate_control.setpoint_types
         )

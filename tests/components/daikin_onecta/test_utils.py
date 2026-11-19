@@ -46,3 +46,8 @@ def test_round_temperature_to_step_uses_zero_when_minimum_is_missing() -> None:
         )
         == 8.0
     )
+
+
+def test_round_temperature_to_step_uses_caller_default() -> None:
+    """Allow water heaters to default to whole-degree temperature steps."""
+    assert round_temperature_to_step(48.6, default_step=1) == 49

@@ -20,6 +20,7 @@ def round_temperature_to_step(
     minimum: float | None = None,
     maximum: float | None = None,
     *,
+    default_step: float = 0.5,
     fallback_minimum: float | None = None,
     fallback_maximum: float | None = None,
 ) -> float:
@@ -29,9 +30,7 @@ def round_temperature_to_step(
     expected for user supplied temperature targets.
     """
     value_decimal = Decimal(str(value))
-    step_decimal = (
-        Decimal(str(step)) if step is not None and step > 0 else Decimal("0.5")
-    )
+    step_decimal = Decimal(str(step if step is not None and step > 0 else default_step))
     lower_bound = minimum if minimum is not None else fallback_minimum
     upper_bound = maximum if maximum is not None else fallback_maximum
     step_origin = Decimal(str(minimum)) if minimum is not None else Decimal(0)

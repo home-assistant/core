@@ -1,5 +1,6 @@
 """Tests for Daikin Onecta diagnostics."""
 
+from hashlib import sha256
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -58,10 +59,12 @@ async def test_diagnostics(
     assert gateway["characteristics"]["ipAddress"] == REDACTED
     assert diagnostics["sites"]["data"][0]["id"] == REDACTED
     assert diagnostics["sites"]["data"][0]["name"] == REDACTED
+    gateway_id = next(iter(coordinator.data))
     assert diagnostics["sites"]["gateway_membership"][0] == {
-        "gateway_device_id": next(iter(coordinator.data)),
+        "gateway_id_hash": sha256(gateway_id.encode()).hexdigest()[:8],
         "linked_to_site": True,
     }
+    assert gateway_id not in repr(diagnostics["sites"])
     coordinator.client.get_sites.assert_awaited_once_with()
     coordinator.client.get_gateway_devices.assert_not_awaited()
 

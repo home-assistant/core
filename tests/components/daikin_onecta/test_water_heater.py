@@ -348,6 +348,47 @@ async def test_water_heater_temperature_updates_typed_cache(
     remove_listener()
 
 
+async def test_water_heater_set_temperature_applies_operation_mode_first(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Apply an optional mode before a combined temperature write."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.powerful_mode is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.on_off_mode.value = "on"
+    point.domestic_hot_water.powerful_mode.value = "on"
+    point.domestic_hot_water.temperature.value = 45
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_HEAT_PUMP,
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+        },
+        blocking=True,
+    )
+
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        call(gateway.id, point.embedded_id, "powerfulMode", "off", path=None),
+        call(
+            gateway.id,
+            point.embedded_id,
+            "temperatureControl",
+            50,
+            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+        ),
+    ]
+
+
 async def test_water_heater_temperature_writes_without_power_characteristic(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -393,7 +434,8 @@ async def test_water_heater_temperature_writes_without_power_characteristic(
         (METRIC_SYSTEM, 48.6, 0.5, 48.5),
         (METRIC_SYSTEM, 49.2, 2, 50),
         (METRIC_SYSTEM, 45.3, 0.1, 45.3),
-        (METRIC_SYSTEM, 44.25, None, 44.5),
+        (METRIC_SYSTEM, 48.6, None, 49),
+        (METRIC_SYSTEM, 44.25, None, 44),
     ],
 )
 async def test_water_heater_temperature_rounds_to_native_step(

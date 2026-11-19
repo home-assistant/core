@@ -315,12 +315,14 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._datatype = details.datatype
         self.entity_description = description
         self._sensor_type = details.sensor_type
+        self._aggregate: EnergyAggregate | None = None
         self._attr_unique_id = _energy_sensor_unique_id(self._device_id, details)
         self.update_state()
 
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
+        self._aggregate = self._find_energy_aggregate()
         self._attr_native_value = self.sensor_value()
         point = self._management_point
         energy_data = None
@@ -337,8 +339,8 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
             source.unit if source is not None else None, self.entity_description
         )
 
-    def _energy_aggregate(self) -> EnergyAggregate | None:
-        """Return the matching energy aggregate from the current model."""
+    def _find_energy_aggregate(self) -> EnergyAggregate | None:
+        """Find the matching energy aggregate in the current model."""
         point = self._management_point
         if point is None:
             return None
@@ -359,7 +361,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return whether the matching energy aggregate is still available."""
-        return super().available and self._energy_aggregate() is not None
+        return super().available and self._aggregate is not None
 
     def sensor_value(self) -> float | None:
         """Return energy aggregated for the current day, week, month, or year.
@@ -376,7 +378,7 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         until a later update supplies its value.
         """
         period = self._period
-        aggregate = self._energy_aggregate()
+        aggregate = self._aggregate
         if aggregate is None:
             return None
         return aggregate.current_total(

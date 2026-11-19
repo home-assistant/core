@@ -235,6 +235,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             step_value,
             dht.min_value,
             dht.max_value,
+            default_step=1,
             fallback_minimum=self.min_temp,
             fallback_maximum=self.max_temp,
         )
@@ -251,6 +252,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        if (
+            operation_mode := kwargs.get(WaterHeaterServiceArgument.OPERATION_MODE)
+        ) is not None:
+            await self.async_set_operation_mode(operation_mode)
         if (
             temperature := kwargs.get(WaterHeaterServiceArgument.TEMPERATURE)
         ) is not None:

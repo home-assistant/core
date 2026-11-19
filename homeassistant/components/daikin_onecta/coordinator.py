@@ -188,7 +188,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_get_cloud_devices(
         self,
         *,
-        cooldown: timedelta | None = None,
+        respect_post_write_cooldown: bool = True,
         bypass_polling_backoff: bool = False,
     ) -> list[GatewayDevice] | None:
         """Get typed device data from the Daikin cloud, respecting cooldown."""
@@ -199,7 +199,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             ):
                 return None
             if (
-                cooldown is not None
+                respect_post_write_cooldown
                 and self._post_write_cooldown_remaining() is not None
             ):
                 return None
@@ -215,10 +215,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         Diagnostics may reuse a recent result because the Sites request also
         consumes the account's cloud quota. Device-removal checks stay fresh.
         """
-        if use_cache and self._sites_cache is not None:
-            cached_at, sites = self._sites_cache
-            if dt_util.utcnow() - cached_at < _SITES_DIAGNOSTICS_CACHE_DURATION:
-                return sites
         async with self._cloud_lock:
             if use_cache and self._sites_cache is not None:
                 cached_at, sites = self._sites_cache
@@ -444,7 +440,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self.update_interval = self._determine_update_interval()
             try:
                 cloud_devices = await self._async_get_cloud_devices(
-                    cooldown=_POST_WRITE_COOLDOWN,
+                    respect_post_write_cooldown=True,
                     bypass_polling_backoff=bypass_polling_backoff,
                 )
             except OAuth2TokenRequestReauthError as err:
