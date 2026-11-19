@@ -314,10 +314,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self._polling_backoff_until = None
             self._last_patch_call = dt_util.utcnow()
             if had_polling_backoff or self._unsub_post_write_refresh is not None:
-                self._schedule_post_write_refresh()
+                self.schedule_post_write_refresh()
             return True
 
-    def _schedule_post_write_refresh(self) -> None:
+    def schedule_post_write_refresh(self) -> None:
         """Request cloud state after a successful write's cooldown."""
         self._cancel_post_write_refresh()
         self._unsub_post_write_refresh = async_track_point_in_utc_time(
@@ -325,10 +325,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             self._async_post_write_refresh,
             dt_util.utcnow() + _POST_WRITE_COOLDOWN,
         )
-
-    def schedule_post_write_refresh(self) -> None:
-        """Request cloud state after a successful non-characteristic command."""
-        self._schedule_post_write_refresh()
 
     def _set_polling_backoff(self, retry_after: float | None) -> None:
         """Retain Daikin's Retry-After deadline for every later refresh."""

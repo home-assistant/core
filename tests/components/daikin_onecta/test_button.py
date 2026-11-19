@@ -1,13 +1,12 @@
 """Tests for Daikin Onecta refresh button entities."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from daikin_onecta.exceptions import OnectaConnectionError, OnectaRateLimitError
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
@@ -68,13 +67,22 @@ async def test_refresh_button_reports_failed_refresh(
 async def test_refresh_button_respects_polling_backoff(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
     """Button presses are deferred while Daikin's Retry-After is active."""
     await _async_setup_fixture(hass, config_entry, "dry")
     coordinator = config_entry.runtime_data
-    coordinator._polling_backoff_until = dt_util.utcnow() + timedelta(minutes=5)
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+        RateLimit(retry_after=300), method="GET", path="/v1/gateway-devices"
+    )
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
     mock_onecta_client.get_gateway_devices.reset_mock()
+    mock_onecta_client.get_gateway_devices.side_effect = None
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(

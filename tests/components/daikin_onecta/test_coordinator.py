@@ -672,14 +672,22 @@ class TestOnectaDataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
+        freezer: FrozenDateTimeFactory,
         mock_onecta_client: MockOnectaClient,
     ) -> None:
         """Manual entity refreshes keep cached state during a polling backoff."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
         coordinator = config_entry.runtime_data
-        coordinator._polling_backoff_until = (
-            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        mock_onecta_client.get_gateway_devices.side_effect = OnectaRateLimitError(
+            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
         )
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
+        mock_onecta_client.get_gateway_devices.reset_mock()
+        mock_onecta_client.get_gateway_devices.side_effect = None
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         state_before = hass.states.get(entity_id)
         assert state_before is not None
@@ -687,7 +695,7 @@ class TestOnectaDataUpdateCoordinator:
         await async_update_entity(hass, entity_id)
 
         mock_onecta_client.get_gateway_devices.assert_not_awaited()
-        assert coordinator._polling_backoff_until is not None
+        assert coordinator._polling_backoff_remaining() == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
 
     async def test_manual_update_rate_limit_keeps_cached_state_available(
@@ -725,9 +733,14 @@ class TestOnectaDataUpdateCoordinator:
         """Manual entity refreshes keep cached state during write backoff."""
         await _async_setup_fixture(hass, config_entry, "minimal_data")
         coordinator = config_entry.runtime_data
-        coordinator._polling_backoff_until = (
-            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        command = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            )
         )
+        assert not await coordinator.async_execute_command(lambda _client: command())
         entity_id = hass.states.async_entity_ids(CLIMATE_DOMAIN)[0]
         state_before = hass.states.get(entity_id)
         assert state_before is not None
@@ -735,7 +748,7 @@ class TestOnectaDataUpdateCoordinator:
         await async_update_entity(hass, entity_id)
 
         mock_onecta_client.get_gateway_devices.assert_not_awaited()
-        assert coordinator._polling_backoff_until is not None
+        assert coordinator._polling_backoff_remaining() == timedelta(seconds=60)
         assert hass.states.get(entity_id) == state_before
 
     async def test_manual_updates_for_multiple_entities_are_debounced(
@@ -776,9 +789,14 @@ class TestOnectaDataUpdateCoordinator:
         self, coordinator: OnectaDataUpdateCoordinator
     ) -> None:
         """Scheduled polls keep using cached state during write backoff."""
-        coordinator._polling_backoff_until = (
-            coordinator_module.dt_util.utcnow() + timedelta(minutes=1)
+        command = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            )
         )
+        assert not await coordinator.async_execute_command(lambda _client: command())
         coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
 
         assert await coordinator._async_update_data_from_cloud() == {}
@@ -822,14 +840,25 @@ class TestOnectaDataUpdateCoordinator:
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         mock_utcnow.return_value = now
         coordinator.last_update_success = False
-        coordinator._polling_backoff_until = now + timedelta(seconds=60)
-        coordinator._async_get_cloud_devices = AsyncMock()
+        coordinator.client.get_gateway_devices = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        )
 
         with pytest.raises(UpdateFailed) as exc_info:
             await coordinator._async_update_data_from_cloud()
 
         assert exc_info.value.retry_after == 60
-        coordinator._async_get_cloud_devices.assert_not_awaited()
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
+
+        with pytest.raises(UpdateFailed) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.retry_after == 60
+        coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
     @patch("homeassistant.components.daikin_onecta.coordinator.dt_util.utcnow")
     async def test_write_cooldown_skipped_poll_preserves_failed_state(
@@ -857,13 +886,26 @@ class TestOnectaDataUpdateCoordinator:
         mock_utcnow.return_value = now
         coordinator.last_update_success = False
         coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
-        await coordinator._cloud_lock.acquire()
-        poll_task = hass.async_create_task(coordinator._async_update_data_from_cloud())
+        command_started = asyncio.Event()
+        finish_command = asyncio.Event()
 
-        # Let the poll pass its initial check and wait to acquire the lock.
+        async def rate_limited_command(_client: object) -> None:
+            command_started.set()
+            await finish_command.wait()
+            raise OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            )
+
+        command_task = hass.async_create_task(
+            coordinator.async_execute_command(rate_limited_command)
+        )
+        await command_started.wait()
+        poll_task = hass.async_create_task(coordinator._async_update_data_from_cloud())
         await asyncio.sleep(0)
-        coordinator._polling_backoff_until = now + timedelta(seconds=60)
-        coordinator._cloud_lock.release()
+        finish_command.set()
+        assert not await command_task
 
         with pytest.raises(UpdateFailed) as exc_info:
             await poll_task
@@ -878,7 +920,16 @@ class TestOnectaDataUpdateCoordinator:
         """Allow commands through during polling backoff and clear it on success."""
         now = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
         mock_utcnow.return_value = now
-        coordinator._polling_backoff_until = now + timedelta(minutes=1)
+        rate_limited_command = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=60),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            )
+        )
+        assert not await coordinator.async_execute_command(
+            lambda _client: rate_limited_command()
+        )
         command = AsyncMock()
 
         assert await coordinator.async_execute_command(lambda _client: command())
@@ -893,11 +944,19 @@ class TestOnectaDataUpdateCoordinator:
         coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Poll 30 seconds after a successful write clears the backoff."""
-        now = coordinator_module.dt_util.utcnow()
-        coordinator._polling_backoff_until = now + timedelta(minutes=5)
         coordinator.update_interval = timedelta(minutes=5)
         coordinator.client.get_gateway_devices = AsyncMock(return_value=[])
 
+        rate_limited_command = AsyncMock(
+            side_effect=OnectaRateLimitError(
+                RateLimit(retry_after=300),
+                method="PATCH",
+                path="/v1/management-points/point/characteristics/power",
+            )
+        )
+        assert not await coordinator.async_execute_command(
+            lambda _client: rate_limited_command()
+        )
         command = AsyncMock()
         assert await coordinator.async_execute_command(lambda _client: command())
 
