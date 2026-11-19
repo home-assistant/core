@@ -213,15 +213,14 @@ async def test_ctl_authentication_failed(
     hass: HomeAssistant,
     ctl_id: str,
 ) -> None:
-    """Test an authentication failure is raised, rather than only logged."""
+    """Test an authentication failure is raised as a translated error."""
 
-    # AuthenticationFailedError is a subclass of ApiCallFailedError, which is only logged
     with (
         patch(
             "evohomeasync2.control_system.ControlSystem.set_mode",
-            side_effect=evo_exc.AuthenticationFailedError("Authentication failed"),
+            side_effect=evo_exc.BadUserCredentialsError("Authentication failed"),
         ),
-        pytest.raises(evo_exc.AuthenticationFailedError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -231,6 +230,8 @@ async def test_ctl_authentication_failed(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "api_credentials_invalid"
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
