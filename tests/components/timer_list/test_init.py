@@ -1,25 +1,17 @@
 """Tests for the Timer list integration."""
 
-import asyncio
 from typing import Any
 
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    MockPlatform,
-    MockUser,
-    mock_platform,
-)
+from pytest_homeassistant.common import MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.timer_list.const import DOMAIN, TimerListEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
+from . import MockTimerListEntity, create_mock_platform
 
 TEST_ENTITY_ID = "timer_list.timers"
 
@@ -312,59 +304,27 @@ async def test_websocket_requires_read_permission(
     assert msg["error"]["code"] == "unauthorized"
 
 
-async def test_websocket_subscribe_survives_config_entry_reload(
+async def test_websocket_subscribe_unavailable_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test a subscription rebinds to the entity object a reload replaces.
-
-    The reload leaves the registry entry alone, so without rebinding the
-    connection stays attached to the discarded object and goes silent.
-    """
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
-    ) -> None:
-        """Build a fresh entity per setup, as a real integration does."""
-        entity = MockTimerListEntity()
-        entity._attr_unique_id = "reloaded"
-        async_add_entities([entity])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test an unavailable timer list rejects subscriptions."""
+    entity = MockTimerListEntity()
+    entity.entity_id = TEST_ENTITY_ID
+    entity._attr_available = False
+    await create_mock_platform(hass, [entity])
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "timer_list/item/subscribe", "entity_id": TEST_ENTITY_ID}
     )
-    assert (await client.receive_json())["success"]
-    assert (await client.receive_json())["event"]["type"] == "timers"
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["message"] == (
+        f"Timer list entity is unavailable: {TEST_ENTITY_ID}"
+    )
 
-    await _create_timer(hass, name="Before reload")
-
-    # Bounded: a subscription left on the old object never sends anything.
-    async with asyncio.timeout(5):
-        assert (await client.receive_json())["event"]["event_type"] == "created"
-
-    assert await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # The replacement holds no timers, so a stale snapshot would still show one.
-    async with asyncio.timeout(5):
-        msg = await client.receive_json()
-    assert msg["event"] == {"type": "timers", "timers": []}
-
-    timer_id = await _create_timer(hass, name="Pasta")
-
-    async with asyncio.timeout(5):
-        msg = await client.receive_json()
-    assert msg["event"]["event_type"] == "created"
-    assert msg["event"]["timer"]["timer_id"] == timer_id
+    await client.send_json_auto_id({"type": "unsubscribe_events", "subscription": 1})
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"

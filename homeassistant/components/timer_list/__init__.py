@@ -8,32 +8,22 @@ scheduling their completion is left to concrete implementations.
 """
 
 import logging
-from typing import Any
 
-import probatio
-
-from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import (
-    CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     EventStateChangedData,
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import ConfigEntryError, Unauthorized
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_DELTA,
-    ATTR_TIMERS,
     DATA_COMPONENT,
     DOMAIN,
     TimerListEntityFeature,
@@ -41,8 +31,9 @@ from .const import (
     TimerListServices,
     TimerStatus,
 )
-from .entity import TimerItem, TimerListEntity, TimerListEvent, timer_to_dict
+from .entity import TimerItem, TimerListEntity, TimerListEvent
 from .services import async_setup_services
+from .websocket_api import async_setup as async_setup_websocket_api
 
 __all__ = [
     "DOMAIN",
@@ -86,8 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
 
-    websocket_api.async_register_command(hass, websocket_handle_subscribe)
-    websocket_api.async_register_command(hass, websocket_handle_list)
+    async_setup_websocket_api(hass)
 
     async_setup_services(hass)
 
@@ -108,117 +98,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
     await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "timer_list/item/subscribe",
-        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
-    }
-)
-@websocket_api.async_response
-async def websocket_handle_subscribe(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Subscribe to timer changes for a timer list, with an initial snapshot."""
-    entity_id: str = msg["entity_id"]
-    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
-        raise Unauthorized(entity_id=entity_id)
-
-    if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            f"Timer list entity not found: {entity_id}",
-        )
-        return
-
-    @callback
-    def forward_event(event: TimerListEvent) -> None:
-        """Forward a timer change event to the websocket connection."""
-        message: dict[str, Any] = {
-            "type": "change",
-            "event_type": event.event_type.value,
-            "timer": timer_to_dict(event.item, dt_util.utcnow()),
-        }
-        if event.delta is not None:
-            message[ATTR_DELTA] = event.delta.total_seconds()
-        connection.send_message(websocket_api.event_message(msg["id"], message))
-
-    @callback
-    def send_snapshot(current: TimerListEntity) -> None:
-        """Send the full current set of timers."""
-        now = dt_util.utcnow()
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"],
-                {
-                    "type": "timers",
-                    ATTR_TIMERS: [
-                        timer_to_dict(timer, now) for timer in current.timers
-                    ],
-                },
-            )
-        )
-
-    unsub_entity: CALLBACK_TYPE | None = entity.async_subscribe_updates(forward_event)
-
-    @callback
-    def resubscribe(event: Event[EventStateChangedData]) -> None:
-        """Rebind to the entity object a config entry reload replaced."""
-        nonlocal unsub_entity
-        if not entity_became_available(event):
-            return
-        if unsub_entity is not None:
-            unsub_entity()
-            unsub_entity = None
-        if (new_entity := hass.data[DATA_COMPONENT].get_entity(entity_id)) is not None:
-            unsub_entity = new_entity.async_subscribe_updates(forward_event)
-            # The replacement may hold a different set of timers, and anything
-            # that changed while the entry was unloaded went unreported, so the
-            # client's pre-reload snapshot is no longer trustworthy.
-            send_snapshot(new_entity)
-
-    unsub_state = async_track_state_change_event(hass, [entity_id], resubscribe)
-
-    @callback
-    def unsubscribe() -> None:
-        """Drop both the entity subscription and the reload watch."""
-        unsub_state()
-        if unsub_entity is not None:
-            unsub_entity()
-
-    connection.subscriptions[msg["id"]] = unsubscribe
-    connection.send_result(msg["id"])
-
-    send_snapshot(entity)
-
-
-@websocket_api.websocket_command(
-    {
-        probatio.Required("type"): "timer_list/item/list",
-        probatio.Required("entity_id"): cv.entity_domain(DOMAIN),
-    }
-)
-@websocket_api.async_response
-async def websocket_handle_list(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Return the current timers for a timer list."""
-    entity_id: str = msg["entity_id"]
-    if not connection.user.permissions.check_entity(entity_id, POLICY_READ):
-        raise Unauthorized(entity_id=entity_id)
-
-    if not (entity := hass.data[DATA_COMPONENT].get_entity(entity_id)):
-        connection.send_error(
-            msg["id"],
-            websocket_api.ERR_NOT_FOUND,
-            f"Timer list entity not found: {entity_id}",
-        )
-        return
-
-    now = dt_util.utcnow()
-    connection.send_result(
-        msg["id"],
-        {ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers]},
-    )
