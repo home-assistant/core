@@ -16,7 +16,6 @@ async def test_setup(hass: HomeAssistant) -> None:
 def test_smart_plug() -> None:
     """Test the smart plug is in the vocabulary."""
     assert get_device_type_class("smart_plug") is SmartPlug
-    assert SmartPlug.ancestor_ids == ("smart_plug", "generic")
     assert {
         slot_id: slot.required for slot_id, slot in SmartPlug.declared_slots.items()
     } == {"outlet": True, "power": False, "energy": False}

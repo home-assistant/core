@@ -56,7 +56,6 @@ def device(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> dr.Device
 def test_generic() -> None:
     """Test the base class is the generic type."""
     assert DeviceType.type_id == "generic"
-    assert DeviceType.ancestor_ids == ("generic",)
     assert DeviceType.declared_slots == {}
     assert get_device_type_class("generic") is DeviceType
     assert get_device_type_classes()["generic"] is DeviceType
@@ -79,7 +78,6 @@ def test_type_id_from_class_name(class_name: str, type_id: str) -> None:
     """Test the type id comes from the class name."""
     cls = type(class_name, (DeviceType,), {})
     assert cls.type_id == type_id
-    assert cls.ancestor_ids == (type_id, "generic")
     assert get_device_type_class(type_id) is cls
     assert get_device_type_classes()[type_id] is cls
 
@@ -149,7 +147,7 @@ def test_slot_collection() -> None:
     assert list(TestPowerStrip.declared_slots) == ["outlet", "power", "energy"]
     assert TestPowerStrip.declared_slots["outlet"] is TestPlug.outlet
     assert TestPowerStrip.declared_slots["power"] is TestPowerStrip.power
-    assert TestPowerStrip.ancestor_ids == ("test_power_strip", "test_plug", "generic")
+    assert issubclass(TestPowerStrip, TestPlug)
 
     assert TestPlug.outlet.slot_id == "outlet"
     assert TestPlug.outlet.defined_by is TestPlug
@@ -324,7 +322,7 @@ def test_missing_required(
 
 @pytest.mark.parametrize(
     "name",
-    ["references", "type_id", "ancestor_ids", "declared_slots"],
+    ["references", "type_id", "declared_slots"],
 )
 def test_reserved_slot_name(name: str) -> None:
     """Test a slot cannot use a name the instance uses itself."""
@@ -501,16 +499,17 @@ def test_entity_domains(
     assert DeviceSlot(*accepts).entity_domains == entity_domains
 
 
-def test_slot_outside_device_type() -> None:
-    """Test a slot can only be declared on a device type."""
-    with pytest.raises(
-        TypeError, match="Entity.outlet must be declared on a DeviceType"
-    ):
+def test_slot_of_other_type() -> None:
+    """Test one slot declaration cannot be used on two unrelated types."""
 
-        class Entity:
-            """Not a device type."""
+    class TestPlug(DeviceType):
+        """A plug."""
 
-            outlet = DeviceSlot(Platform.SWITCH)
+        outlet = DeviceSlot(Platform.SWITCH)
+
+    with pytest.raises(TypeError, match=r"TestPlug.outlet cannot also be TestLight"):
+        type("TestLight", (DeviceType,), {"outlet": TestPlug.outlet})
+    assert get_device_type_class("test_light") is None
 
 
 @pytest.fixture

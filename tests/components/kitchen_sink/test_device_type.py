@@ -61,7 +61,7 @@ async def test_device_type(
     assert bound.device == device
     assert bound.missing_required == frozenset()
     assert {
-        "ancestor_ids": bound.device_type.ancestor_ids,
+        "type_id": bound.device_type.type_id,
         "slots": dict(bound.entity_ids),
     } == snapshot(name="device_type")
     assert device == snapshot(name="device")

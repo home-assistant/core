@@ -95,7 +95,7 @@ class DeviceSlot:
     """A named role an entity plays on a device type, declared in the class body."""
 
     slot_id: str
-    defined_by: type[DeviceType]
+    defined_by: type
 
     def __init__(self, *accepts: Accepts, required: bool = False) -> None:
         """Initialize the slot with what it accepts."""
@@ -111,20 +111,6 @@ class DeviceSlot:
         self.required = required
         self._matches = frozenset(matches)
         self._entity_domains = tuple(dict.fromkeys(domain for domain, _ in matches))
-
-    def __set_name__(self, owner: type, name: str) -> None:
-        """Take the slot id from the attribute name."""
-        if not issubclass(owner, DeviceType):
-            raise TypeError(
-                f"DeviceSlot {owner.__name__}.{name} must be declared on a DeviceType"
-            )
-        if hasattr(self, "slot_id"):
-            raise TypeError(
-                f"DeviceSlot {self.defined_by.__name__}.{self.slot_id} cannot also be"
-                f" {owner.__name__}.{name}"
-            )
-        self.slot_id = name
-        self.defined_by = owner
 
     @overload
     def __get__(
@@ -208,12 +194,11 @@ class DeviceType:
     """
 
     type_id: ClassVar[str] = GENERIC_TYPE_ID
-    ancestor_ids: ClassVar[tuple[str, ...]] = (GENERIC_TYPE_ID,)
     declared_slots: ClassVar[Mapping[str, DeviceSlot]] = MappingProxyType({})
 
     @override
     def __init_subclass__(cls, *, type_id: str | None = None, **kwargs: Any) -> None:
-        """Collect the slots, check the declaration and register the type."""
+        """Name and collect the slots, check the declaration and register the type."""
         super().__init_subclass__(**kwargs)
         if type_id is None:
             type_id = _snake_case(cls.__name__)
@@ -235,6 +220,14 @@ class DeviceType:
                         f"DeviceSlot {klass.__name__}.{name} uses a name reserved by"
                         " DeviceType"
                     )
+                if not hasattr(value, "slot_id"):
+                    value.slot_id = name
+                    value.defined_by = klass
+                elif value.slot_id != name or value.defined_by is not klass:
+                    raise TypeError(
+                        f"DeviceSlot {value.defined_by.__name__}.{value.slot_id}"
+                        f" cannot also be {klass.__name__}.{name}"
+                    )
                 if (inherited := slots.get(name)) is not None:
                     _check_redeclaration(inherited, value)
                 slots[name] = value
@@ -247,9 +240,6 @@ class DeviceType:
 
         cls.type_id = type_id
         cls.declared_slots = MappingProxyType(slots)
-        cls.ancestor_ids = tuple(
-            klass.type_id for klass in cls.__mro__ if issubclass(klass, DeviceType)
-        )
         _VOCABULARY[type_id] = cls
 
     def __init__(

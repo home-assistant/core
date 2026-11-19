@@ -21,11 +21,9 @@
 # ---
 # name: test_device_type[sensor_first-child_device][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'generic',
-    ),
     'slots': dict({
     }),
+    'type_id': 'generic',
   })
 # ---
 # name: test_device_type[sensor_first-smart_plug][device]
@@ -81,10 +79,6 @@
 # ---
 # name: test_device_type[sensor_first-smart_plug][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'smart_plug',
-      'generic',
-    ),
     'slots': dict({
       'energy': tuple(
         'sensor.smart_plug_energy',
@@ -96,6 +90,7 @@
         'sensor.smart_plug_power',
       ),
     }),
+    'type_id': 'smart_plug',
   })
 # ---
 # name: test_device_type[sensor_first-untyped_device][device]
@@ -130,11 +125,9 @@
 # ---
 # name: test_device_type[sensor_first-untyped_device][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'generic',
-    ),
     'slots': dict({
     }),
+    'type_id': 'generic',
   })
 # ---
 # name: test_device_type[switch_first-child_device][device]
@@ -159,11 +152,9 @@
 # ---
 # name: test_device_type[switch_first-child_device][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'generic',
-    ),
     'slots': dict({
     }),
+    'type_id': 'generic',
   })
 # ---
 # name: test_device_type[switch_first-smart_plug][device]
@@ -219,10 +210,6 @@
 # ---
 # name: test_device_type[switch_first-smart_plug][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'smart_plug',
-      'generic',
-    ),
     'slots': dict({
       'energy': tuple(
         'sensor.smart_plug_energy',
@@ -234,6 +221,7 @@
         'sensor.smart_plug_power',
       ),
     }),
+    'type_id': 'smart_plug',
   })
 # ---
 # name: test_device_type[switch_first-untyped_device][device]
@@ -268,10 +256,8 @@
 # ---
 # name: test_device_type[switch_first-untyped_device][device_type]
   dict({
-    'ancestor_ids': tuple(
-      'generic',
-    ),
     'slots': dict({
     }),
+    'type_id': 'generic',
   })
 # ---
