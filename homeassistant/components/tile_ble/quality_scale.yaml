@@ -34,9 +34,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: This integration does not provide actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -81,15 +79,9 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: All entities are useful for every Tile.
-  entity-translations:
-    status: exempt
-    comment: The device tracker uses the device name.
-  exception-translations:
-    status: exempt
-    comment: This integration does not raise exceptions.
-  icon-translations:
-    status: exempt
-    comment: The device tracker has no custom icon.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: There is nothing to reconfigure.
