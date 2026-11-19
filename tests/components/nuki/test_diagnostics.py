@@ -22,3 +22,8 @@ async def test_diagnostics(
     assert entry.state is ConfigEntryState.LOADED
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+
+    # Unload while the requests are mocked, as removing the webhook on stop
+    # calls the bridge
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
