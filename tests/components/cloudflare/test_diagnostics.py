@@ -18,25 +18,26 @@ from . import init_integration
 
 @pytest.mark.usefixtures("location_info")
 @pytest.mark.parametrize(
-    "update_fails", [False, True], ids=["success", "update_failed"]
+    "list_dns_records_side_effect",
+    [
+        pytest.param(None, id="success"),
+        pytest.param(pycfdns.ComunicationException(), id="update_failed"),
+    ],
 )
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     cfupdate: MagicMock,
     snapshot: SnapshotAssertion,
-    update_fails: bool,
+    list_dns_records_side_effect: Exception | None,
 ) -> None:
     """Test diagnostics."""
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    if update_fails:
-        cfupdate.return_value.list_dns_records.side_effect = (
-            pycfdns.ComunicationException()
-        )
-        await hass.services.async_call(
-            DOMAIN, CloudflareService.UPDATE_RECORDS, {}, blocking=True
-        )
+    cfupdate.return_value.list_dns_records.side_effect = list_dns_records_side_effect
+    await hass.services.async_call(
+        DOMAIN, CloudflareService.UPDATE_RECORDS, {}, blocking=True
+    )
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
