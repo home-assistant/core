@@ -1,5 +1,7 @@
 """The WATERCryst integration."""
 
+import asyncio
+
 from pyocat import AsyncApiClient, AsyncAuth
 
 from homeassistant.const import CONF_API_KEY, Platform
@@ -27,9 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     measurements = WatercrystMeasurementsCoordinator(hass, entry, client)
     coordinator = WatercrystUpdateCoordinator(hass, entry, client, state, measurements)
 
-    await coordinator.async_config_entry_first_refresh()
-    await state.async_config_entry_first_refresh()
-    await measurements.async_config_entry_first_refresh()
+    await asyncio.gather(
+        coordinator.async_config_entry_first_refresh(),
+        state.async_config_entry_first_refresh(),
+        measurements.async_config_entry_first_refresh(),
+    )
 
     entry.runtime_data = coordinator
 
