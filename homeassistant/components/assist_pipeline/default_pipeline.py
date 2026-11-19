@@ -721,6 +721,7 @@ class _DefaultPipelineProcessor:
                 command_timeout_ms=command_timeout_ms,
             ):
                 yield chunk
+            self._async_end_agent_speech()
             # The run ends with the command
             await self._async_close_audio_run()
 
@@ -744,12 +745,23 @@ class _DefaultPipelineProcessor:
             return
 
         self._pending_intent_start = None
+        self._async_end_agent_speech()
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": transcript}}
             )
         )
         self.host.process_event(intent_start)
+
+    @callback
+    def _async_end_agent_speech(self) -> None:
+        """Send the end of speech once, also when nothing detected it.
+
+        Satellites stop listening at the end of speech. It comes before the
+        response, since ESPHome satellites wait for the response again after it.
+        """
+        if not self._sent_stt_vad_end:
+            self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
 
     @callback
     def async_set_audio_stream(

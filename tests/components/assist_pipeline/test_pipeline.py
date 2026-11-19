@@ -3339,6 +3339,7 @@ async def test_pipeline_audio_agent_vad_ends_audio(
     assert len(mock_audio_agent.received_audio) == 3
     assert chunks_read < 20
     event_types = [event.type for event in events]
+    assert event_types.count(PipelineEventType.STT_VAD_END) == 1
     assert event_types.index(PipelineEventType.STT_VAD_START) < event_types.index(
         PipelineEventType.STT_VAD_END
     )
@@ -3424,6 +3425,7 @@ async def test_pipeline_audio_agent_answer_ends_audio(
         PipelineEventType.RUN_START,
         PipelineEventType.STT_START,
         PipelineEventType.STT_VAD_START,
+        PipelineEventType.STT_VAD_END,
         PipelineEventType.STT_END,
         PipelineEventType.INTENT_START,
         PipelineEventType.INTENT_PROGRESS,
@@ -3623,6 +3625,7 @@ async def test_pipeline_audio_agent_reply_without_chat_log(
     assert [event.type for event in events] == [
         PipelineEventType.RUN_START,
         PipelineEventType.STT_START,
+        PipelineEventType.STT_VAD_END,
         PipelineEventType.STT_END,
         PipelineEventType.INTENT_START,
         PipelineEventType.INTENT_END,

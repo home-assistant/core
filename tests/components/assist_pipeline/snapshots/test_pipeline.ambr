@@ -1018,6 +1018,12 @@
     }),
     dict({
       'data': dict({
+        'timestamp': 10,
+      }),
+      'type': <PipelineEventType.STT_VAD_END: 'stt-vad-end'>,
+    }),
+    dict({
+      'data': dict({
         'stt_output': dict({
           'text': 'agent transcript',
         }),
@@ -1129,6 +1135,12 @@
         }),
       }),
       'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'timestamp': 10,
+      }),
+      'type': <PipelineEventType.STT_VAD_END: 'stt-vad-end'>,
     }),
     dict({
       'data': dict({
@@ -1249,6 +1261,12 @@
         }),
       }),
       'type': <PipelineEventType.STT_START: 'stt-start'>,
+    }),
+    dict({
+      'data': dict({
+        'timestamp': 10,
+      }),
+      'type': <PipelineEventType.STT_VAD_END: 'stt-vad-end'>,
     }),
     dict({
       'data': dict({
