@@ -689,3 +689,37 @@ async def test_overlapping_public_refreshes_share_reads(
     await asyncio.gather(first, second)
     mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+
+
+async def test_reconnect_after_synchronously_completed_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    connection_state: Callable[[bool], None],
+) -> None:
+    """Reconnection starts fresh reads before the old completion callback runs."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
+    release = asyncio.Event()
+
+    async def read() -> float:
+        await release.wait()
+        return 20.0
+
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    connection_state(False)
+    await async_update_entity(hass, ENTITY_ID)
+    mock_climate_api.async_get_current_temperature.assert_not_awaited()
+    connection_state(True)
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    await asyncio.sleep(0)
+    coordinator = mock_config_entry.runtime_data.coordinator
+    # Exercise coalescing after the previous refresh's deferred completion callback.
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+    refresh = hass.async_create_task(coordinator.async_refresh())
+    release.set()
+    await refresh
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0

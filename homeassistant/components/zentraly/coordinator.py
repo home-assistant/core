@@ -56,7 +56,7 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
     @override
     async def async_refresh(self) -> None:
         """Share the complete refresh before HA acquires its refresh lock."""
-        if self._refresh_task is None:
+        if self._refresh_task is None or self._refresh_task.done():
             self._refresh_task = self._entry.async_create_background_task(
                 self.hass,
                 super().async_refresh(),
@@ -68,7 +68,8 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
     @callback
     def _async_refresh_done(self, task: asyncio.Task[None]) -> None:
         """Release the refresh after HA has published its result."""
-        self._refresh_task = None
+        if self._refresh_task is task:
+            self._refresh_task = None
 
     @override
     async def _async_update_data(self) -> dict[object, Any]:
