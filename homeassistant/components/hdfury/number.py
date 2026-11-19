@@ -82,6 +82,16 @@ NUMBERS: tuple[HDFuryNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=lambda client, value: client.set_reboot_timer(value),
     ),
+    HDFuryNumberEntityDescription(
+        key="tcpport",
+        translation_key="tcp_port",
+        mode=NumberMode.BOX,
+        native_min_value=0,
+        native_max_value=65535,
+        native_step=1,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_tcp_port(value),
+    ),
 )
 
 

@@ -48,10 +48,28 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         if user_input is not None:
             return await self.async_step_authorize()
 
+        placeholders = {"title": self.entry.title}
+        if not self._can_identify():
+            return self.async_show_form(
+                step_id="confirm", description_placeholders=placeholders
+            )
+
         if self._identify_task is None:
             self._async_start_identify()
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"title": self.entry.title}
+            step_id="confirm_identify", description_placeholders=placeholders
+        )
+
+    async def async_step_confirm_identify(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step while the device is identifying itself."""
+        return await self.async_step_confirm(user_input)
+
+    def _can_identify(self) -> bool:
+        return (
+            self.entry.state is ConfigEntryState.LOADED
+            and self.entry.runtime_data.data.device.supports_identify()
         )
 
     @callback
@@ -62,7 +80,8 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
     @callback
     def _async_start_identify(self) -> None:
-        self._identify_task = self.hass.async_create_background_task(
+        self._identify_task = self.entry.async_create_background_task(
+            self.hass,
             self._async_identify_device(),
             f"homewizard identify {self.entry.entry_id}",
         )
@@ -75,11 +94,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
     async def _async_identify_device(self) -> None:
         """Keep blinking the status light so the user can find the device."""
-        if self.entry.state is not ConfigEntryState.LOADED:
-            return
         coordinator = self.entry.runtime_data
-        if not coordinator.data.device.supports_identify():
-            return
         try:
             async with asyncio.timeout(IDENTIFY_DURATION):
                 while True:
@@ -97,7 +112,8 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         if self._token_task is None:
             # Restart identifying so it lasts as long as the token polling
             self._async_stop_identify()
-            self._async_start_identify()
+            if self._can_identify():
+                self._async_start_identify()
             self._token_task = self.hass.async_create_task(
                 async_wait_for_token(self.hass, self.entry.data[CONF_IP_ADDRESS])
             )
