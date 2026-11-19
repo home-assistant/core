@@ -1016,6 +1016,10 @@ async def test_volume_relative_media_player_intent(
     await hass.async_block_till_done()
 
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Idle Media Player"
+    assert response.success_results[0].id == idle_entity.entity_id
     idle_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
 
@@ -1047,6 +1051,10 @@ async def test_volume_relative_media_player_intent(
     await hass.async_block_till_done()
 
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(response.success_results) == 1
+    assert response.success_results[0].type is intent.IntentResponseTargetType.ENTITY
+    assert response.success_results[0].name == "Playing Media Player"
+    assert response.success_results[0].id == playing_entity.entity_id
     playing_expected_volume += volume_change
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
