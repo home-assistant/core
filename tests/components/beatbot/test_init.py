@@ -801,3 +801,59 @@ async def test_event_stream_restarts_after_auth_recovery(
         property_change(INTERFACE_BATTERY, 42)
     )
     assert hass.states.get(BATTERY_ENTITY_ID).state == "42"
+
+
+@pytest.mark.parametrize(
+    ("status", "error"),
+    [
+        pytest.param(400, BeatbotAuthenticationError, id="rejected"),
+        pytest.param(500, BeatbotConnectionError, id="unavailable"),
+    ],
+)
+@pytest.mark.usefixtures("mock_client")
+async def test_stale_rejection_with_expired_current_token_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    status: int,
+    error: type[Exception],
+) -> None:
+    """Validate an expired replacement and preserve refresh failure semantics."""
+    await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "token": {**mock_config_entry.data["token"], "expires_at": 0},
+        },
+    )
+    aioclient_mock.post(TOKEN_URL, status=status)
+    refresh = library_callback(mock_event_client, "token_refresh_callback")
+    with pytest.raises(error):
+        await refresh("superseded-token")
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_concurrent_stale_rejections_refresh_expired_current_token_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_event_client: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Concurrent stale rejections share validation and refresh of the current token."""
+    await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            "token": {**mock_config_entry.data["token"], "expires_at": 0},
+        },
+    )
+    aioclient_mock.post(TOKEN_URL, json=REFRESHED_TOKEN)
+    refresh = library_callback(mock_event_client, "token_refresh_callback")
+    assert await asyncio.gather(
+        refresh("superseded-token"), refresh("superseded-token")
+    ) == ["new-access-token", "new-access-token"]
+    assert len(aioclient_mock.mock_calls) == 1

@@ -107,13 +107,15 @@ class BeatbotEventClient:
                     "token": {**current_token, "expires_at": 0},
                 },
             )
-            try:
-                await self._oauth_session.async_ensure_token_valid()
-            except ConfigEntryAuthFailed as err:
-                raise BeatbotAuthenticationError from err
-            except OAuth2TokenRequestBaseError as err:
-                # Transient token-endpoint failures have to stay retryable.
-                raise BeatbotConnectionError("OAuth token refresh failed") from err
+
+        # A replacement token may have expired since another request rotated it.
+        try:
+            await self._oauth_session.async_ensure_token_valid()
+        except ConfigEntryAuthFailed as err:
+            raise BeatbotAuthenticationError from err
+        except OAuth2TokenRequestBaseError as err:
+            # Transient token-endpoint failures have to stay retryable.
+            raise BeatbotConnectionError("OAuth token refresh failed") from err
 
         access_token = self._oauth_session.token.get("access_token")
         if not isinstance(access_token, str) or not access_token:
