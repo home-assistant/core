@@ -104,18 +104,12 @@ def add_energy_sensors(
     is_known: EntityIdChecker,
 ) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
-    supported_aggregates = []
-    for aggregate in management_point.energy_aggregates:
-        if aggregate.period not in ENERGY_AGGREGATE_PERIODS:
-            _LOGGER.debug(
-                "Skipping unsupported Daikin energy period '%s'", aggregate.period
-            )
-            continue
-        supported_aggregates.append(aggregate)
-
+    period_order = {
+        period: index for index, period in enumerate(ENERGY_AGGREGATE_PERIODS)
+    }
     for aggregate in sorted(
-        supported_aggregates,
-        key=lambda aggregate: tuple(ENERGY_AGGREGATE_PERIODS).index(aggregate.period),
+        management_point.energy_aggregates,
+        key=lambda aggregate: period_order.get(aggregate.period, len(period_order)),
     ):
         description_key = energy_description_key(aggregate)
         if description_key is None:

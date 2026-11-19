@@ -108,12 +108,11 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
 ) -> None:
     """Check full flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})
@@ -180,12 +179,11 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_zeroconf_flow_uses_oauth_discovery(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
 ) -> None:
     """Test zeroconf flow uses the OAuth discovery confirmation step."""
     assert await async_setup_component(hass, "daikin_onecta", {})
@@ -257,13 +255,12 @@ async def test_reauth_confirm_form(
     assert result["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_reauth_oauth_create_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
 ) -> None:
     """Update the existing entry after successful reauthentication."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -311,13 +308,12 @@ async def test_reauth_oauth_create_entry(
         ),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_reauth_requires_gateway_api_access(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     api_error: OnectaAuthenticationError | OnectaConnectionError,
     reason: str,
 ) -> None:
@@ -352,13 +348,12 @@ async def test_reauth_requires_gateway_api_access(
     get_gateway_devices.assert_awaited_once_with()
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_reauth_invalid_token_aborts_without_changing_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
 ) -> None:
     """Abort reauthentication when the OAuth response has an invalid token."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -388,13 +383,12 @@ async def test_reauth_invalid_token_aborts_without_changing_entry(
     assert hass.config_entries.async_entries(DOMAIN) == [config_entry]
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_reauth_rejects_different_account(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
 ) -> None:
     """Reject reauthentication with a different Daikin account."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -470,12 +464,11 @@ async def test_reauth_rejects_different_account(
         ),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_oauth_errors_can_be_retried_from_supported_sources(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials: None,
     reason: str,
     failed_access_token: str,
     gateway_side_effect: list[Exception | list[GatewayDevice]],

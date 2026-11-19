@@ -259,11 +259,11 @@ async def test_remove_present_gateway_is_rejected_without_cloud_call(
     coordinator.async_get_sites.assert_not_awaited()
 
 
+@pytest.mark.usefixtures("missing_gateway")
 async def test_remove_account_device_is_rejected(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    missing_gateway: dr.DeviceEntry,
 ) -> None:
     """The account device is removed only with its config entry."""
     config_entry.runtime_data.async_get_sites = AsyncMock()

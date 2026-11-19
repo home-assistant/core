@@ -147,12 +147,10 @@ def management_point_device_info(
         name = None
 
     if device.ha_device_id is None:
-        _LOGGER.warning(
-            "Gateway %s is not registered before creating management point %s",
-            device.id,
-            embedded_id,
+        raise RuntimeError(
+            f"Gateway {device.id} is not registered before creating management "
+            f"point {embedded_id}"
         )
-        return _gateway_device_info(device)
     return ChildDeviceInfo(
         identifiers={(DOMAIN, management_point_unique_id(device.id, embedded_id))},
         parent_device_id=device.ha_device_id,

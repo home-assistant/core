@@ -346,6 +346,25 @@ async def test_failed_firmware_install_clears_pending_state(
     assert state.attributes["supported_features"] == UpdateEntityFeature.INSTALL
 
 
+async def test_cancelled_firmware_install_clears_pending_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Clear optimistic install state when its command is cancelled."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = AsyncMock(side_effect=asyncio.CancelledError)
+    entity = hass.data[UPDATE_DOMAIN].get_entity("update.living_room_firmware_update")
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+
+    with pytest.raises(asyncio.CancelledError):
+        await entity.async_install(None, backup=False)
+
+    assert entity._pending_install is None
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is False
+
+
 async def test_failed_firmware_install_preserves_reported_progress(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

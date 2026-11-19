@@ -1,5 +1,6 @@
 """Support for Daikin firmware update entities."""
 
+import asyncio
 from typing import Any, override
 
 from daikin_onecta.models import ManagementPoint
@@ -132,7 +133,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
                 requested_sequence + _INSTALL_CONFIRMATION_POLLS,
             )
             self.coordinator.schedule_post_write_refresh()
-        except HomeAssistantError:
+        except HomeAssistantError, asyncio.CancelledError:
             self._pending_install = None
             management_point = self._management_point
             if management_point is not None:

@@ -2,9 +2,11 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.entity import (
     _gateway_device_info,
     management_point_device_info,
@@ -13,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .test_climate_snapshots import _async_setup_fixture
+from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
 async def test_gateway_device_registry_uses_cloud_metadata(
@@ -86,3 +88,13 @@ def test_gateway_device_info_only_returns_its_identifier() -> None:
     assert _gateway_device_info(device) == DeviceInfo(
         identifiers={(DOMAIN, "gateway-id")}
     )
+
+
+def test_management_point_device_info_requires_registered_gateway() -> None:
+    """Do not attach a management point to the wrong gateway device."""
+    device = DaikinOnectaDevice(_load_gateway_devices("dry")[0])
+    device.ha_device_id = None
+    point = device.device.management_points_by_type("indoorUnit")[0]
+
+    with pytest.raises(RuntimeError, match="is not registered"):
+        management_point_device_info(device, point.embedded_id)

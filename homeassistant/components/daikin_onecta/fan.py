@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any, override
 
 from daikin_onecta.air_purification import AirPurificationClient
-from daikin_onecta.models import AirPurification
+from daikin_onecta.models import AirPurification, FanSpeedMode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import Platform
@@ -120,15 +120,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
 
     def _fixed_speeds(self, mode: str | None = None) -> list[int]:
         """Return the current mode's ordered writable fixed speeds."""
-        purification = self._air_purification()
-        operation = (
-            purification.fan_operation(mode) if purification is not None else None
-        )
-        fixed = (
-            operation.fan_speed.modes.get(FANMODE_FIXED)
-            if operation and operation.fan_speed and operation.fan_speed.modes
-            else None
-        )
+        fixed = self._fixed_speed_characteristic(mode)
         if (
             fixed is None
             or not fixed.settable
@@ -146,6 +138,20 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         ):
             return []
         return list(range(int(fixed.min_value), int(fixed.max_value) + 1, int(step)))
+
+    def _fixed_speed_characteristic(
+        self, mode: str | None = None
+    ) -> FanSpeedMode | None:
+        """Return the current mode's fixed-speed characteristic."""
+        purification = self._air_purification()
+        operation = (
+            purification.fan_operation(mode) if purification is not None else None
+        )
+        return (
+            operation.fan_speed.modes.get(FANMODE_FIXED)
+            if operation and operation.fan_speed and operation.fan_speed.modes
+            else None
+        )
 
     def _fixed_speed_count(self, mode: str | None = None) -> int | None:
         """Return the number of discrete writable fixed speeds."""
@@ -218,14 +224,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             and mode.value == "manualFan"
             and (speeds := self._fixed_speeds())
         ):
-            operation = purification.fan_operation()
-            fixed = (
-                operation.fan_speed.modes.get(FANMODE_FIXED)
-                if operation is not None
-                and operation.fan_speed is not None
-                and operation.fan_speed.modes is not None
-                else None
-            )
+            fixed = self._fixed_speed_characteristic()
             fixed_speed = fixed.value if fixed is not None else None
             if fixed_speed is not None:
                 try:
@@ -389,17 +388,6 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             lambda purifier: purifier.set_fixed_fan_speed("manualFan", speed),
             "air_purifier_set_percentage_failed",
         )
-        purification = self._air_purification()
-        operation = (
-            purification.fan_operation("manualFan")
-            if purification is not None
-            else None
-        )
-        if (
-            operation is not None
-            and operation.fan_speed is not None
-            and operation.fan_speed.modes is not None
-            and (fixed := operation.fan_speed.modes.get(FANMODE_FIXED)) is not None
-        ):
+        if (fixed := self._fixed_speed_characteristic("manualFan")) is not None:
             fixed.value = speed
         self._publish_write_update()

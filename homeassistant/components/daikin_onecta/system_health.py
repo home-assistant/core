@@ -63,9 +63,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         return {}
 
     info: dict[str, Any] = {
-        "api_status": system_health.async_check_can_reach_url(
-            hass, f"{DAIKIN_API_URL}/v1/gateway-devices"
-        ),
+        "api_status": system_health.async_check_can_reach_url(hass, DAIKIN_API_URL),
         "oauth2_status": system_health.async_check_can_reach_url(
             hass, OAUTH2_AUTHORIZE
         ),
