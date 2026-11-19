@@ -19,10 +19,11 @@ from homeassistant.components.weather import (
 from homeassistant.const import Platform, __version__
 
 DOMAIN: Final = "irm_kmi"
-PLATFORMS: Final = [Platform.IMAGE, Platform.WEATHER]
-
+PLATFORMS: Final = [Platform.IMAGE, Platform.SENSOR, Platform.WEATHER]
+  
 # The provider timestamps everything in Belgian local time, whatever the country
 TIMEZONE: Final = "Europe/Brussels"
+=======
 
 OUT_OF_BENELUX: Final = [
     "außerhalb der Benelux (Brussels)",

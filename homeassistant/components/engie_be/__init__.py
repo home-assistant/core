@@ -15,12 +15,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePeaksCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
+    invalid_auth_error,
     mask_identifier,
 )
 
@@ -55,9 +56,7 @@ async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:
     try:
         contracts = await client.async_get_energy_contracts(ban)
     except EngieBeAuthenticationError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="invalid_auth"
-        ) from err
+        raise invalid_auth_error() from err
     except EngieBeError as err:
         LOGGER.debug(
             "Fetching energy contracts for %s failed: %s",

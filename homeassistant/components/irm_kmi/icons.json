@@ -4,6 +4,11 @@
       "radar": {
         "default": "mdi:radar"
       }
+    },
+    "sensor": {
+      "uv_index": {
+        "default": "mdi:sun-wireless"
+      }
     }
   }
 }

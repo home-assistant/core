@@ -7,6 +7,10 @@ from irm_kmi_api import AnimationFrameData, CurrentWeatherData, RadarAnimationDa
 WEATHER_ENTITY_ID = "weather.brussels"
 RADAR_ENTITY_ID = "image.brussels_radar"
 
+TEMPERATURE_ENTITY_ID = "sensor.brussels_temperature"
+WIND_DIRECTION_ENTITY_ID = "sensor.brussels_wind_direction"
+WIND_GUST_SPEED_ENTITY_ID = "sensor.brussels_wind_gust_speed"
+
 CURRENT_WEATHER = CurrentWeatherData(
     condition="cloudy",
     temperature=7.2,

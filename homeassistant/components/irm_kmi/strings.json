@@ -32,6 +32,14 @@
           }
         }
       }
+    },
+    "sensor": {
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_gust_speed": {
+        "name": "Wind gust speed"
+      }
     }
   },
   "exceptions": {

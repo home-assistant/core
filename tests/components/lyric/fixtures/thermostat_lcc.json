@@ -7,7 +7,7 @@
   "deviceModel": "T9-T10",
   "units": "Celsius",
   "indoorTemperature": 21.5,
-  "allowedModes": ["Heat", "Off", "Cool", "Auto"],
+  "allowedModes": ["EmergencyHeat", "Heat", "Off", "Cool", "Auto"],
   "minHeatSetpoint": 4.5,
   "maxHeatSetpoint": 32,
   "minCoolSetpoint": 10,
