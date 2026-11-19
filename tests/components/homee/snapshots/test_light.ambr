@@ -89,6 +89,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -125,7 +126,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
-      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.XY: 'xy'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Light Light 1',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
@@ -142,6 +143,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
@@ -169,6 +171,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -215,6 +218,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
+        <ColorMode.XY: 'xy'>,
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
