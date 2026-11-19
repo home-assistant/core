@@ -8917,7 +8917,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_lock',
-    'unique_id': '123456789ABC-cover:0-cover_in_locked',
+    'unique_id': '123456789ABC-cover:0-in_locked',
     'unit_of_measurement': None,
   })
 # ---
@@ -11068,7 +11068,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_lock',
-    'unique_id': '123456789ABC-switch:0-switch_in_locked',
+    'unique_id': '123456789ABC-switch:0-in_locked',
     'unit_of_measurement': None,
   })
 # ---
@@ -11168,7 +11168,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_lock',
-    'unique_id': '123456789ABC-switch:1-switch_in_locked',
+    'unique_id': '123456789ABC-switch:1-in_locked',
     'unit_of_measurement': None,
   })
 # ---
