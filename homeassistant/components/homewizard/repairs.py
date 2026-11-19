@@ -1,22 +1,31 @@
 """Repairs for HomeWizard integration."""
 
-from homewizard_energy.errors import RequestError
+import asyncio
+from typing import override
+
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
     RepairsFlowResult,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
-from .config_flow import async_request_token
-from .const import ISSUE_BATTERY_MODE_CLOUD_DISABLED
+from .config_flow import RecoverableError, async_request_token
+from .const import ISSUE_BATTERY_MODE_CLOUD_DISABLED, LOGGER
 from .coordinator import HomeWizardConfigEntry
+
+IDENTIFY_INTERVAL = 2
+IDENTIFY_DURATION = 300
 
 
 class MigrateToV2ApiRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
+
+    _identify_task: asyncio.Task[None] | None = None
 
     def __init__(self, entry: HomeWizardConfigEntry) -> None:
         """Create flow."""
@@ -35,11 +44,61 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         """Handle the confirm step of a fix flow."""
 
         if user_input is not None:
+            self._async_stop_identify()
             return await self.async_step_authorize()
 
+        placeholders = {"title": self.entry.title}
+        if not self._can_identify():
+            return self.async_show_form(
+                step_id="confirm", description_placeholders=placeholders
+            )
+
+        if self._identify_task is None:
+            self._identify_task = self.entry.async_create_background_task(
+                self.hass,
+                self._async_identify_device(),
+                f"homewizard identify {self.entry.entry_id}",
+            )
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"title": self.entry.title}
+            step_id="confirm_identify", description_placeholders=placeholders
         )
+
+    async def async_step_confirm_identify(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step while the device is identifying itself."""
+        return await self.async_step_confirm(user_input)
+
+    def _can_identify(self) -> bool:
+        return (
+            self.entry.state is ConfigEntryState.LOADED
+            and self.entry.runtime_data.data.device.supports_identify()
+        )
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Stop identifying the device when the flow is closed."""
+        self._async_stop_identify()
+
+    @callback
+    def _async_stop_identify(self) -> None:
+        if self._identify_task is not None:
+            self._identify_task.cancel()
+            self._identify_task = None
+
+    async def _async_identify_device(self) -> None:
+        """Keep blinking the status light so the user can find the device."""
+        coordinator = self.entry.runtime_data
+        try:
+            async with asyncio.timeout(IDENTIFY_DURATION):
+                while True:
+                    await coordinator.api.identify()
+                    await asyncio.sleep(IDENTIFY_INTERVAL)
+        except TimeoutError:
+            pass
+        except DisabledError, RequestError, UnsupportedError:
+            LOGGER.debug("Could not identify %s", self.entry.title)
 
     async def async_step_authorize(
         self, user_input: dict[str, str] | None = None
@@ -51,7 +110,13 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         # Tell device we want a token, user must now press the
         # button within 30 seconds. The first attempt will always
         # fail, but this opens the window to press the button.
-        token = await async_request_token(self.hass, ip_address)
+        try:
+            token = await async_request_token(self.hass, ip_address)
+        except RecoverableError as ex:
+            return self.async_show_form(
+                step_id="authorize", errors={"base": ex.error_code}
+            )
+
         errors: dict[str, str] | None = None
 
         if token is None:

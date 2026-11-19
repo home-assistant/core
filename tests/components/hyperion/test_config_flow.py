@@ -16,15 +16,9 @@ from homeassistant.components.hyperion.const import (
     CONF_PRIORITY,
     DOMAIN,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -798,8 +792,8 @@ async def test_options_priority(hass: HomeAssistant) -> None:
         client.async_send_set_color = AsyncMock(return_value=True)
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority

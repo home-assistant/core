@@ -1,7 +1,8 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from itertools import pairwise
@@ -52,6 +53,29 @@ BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
 def mask_identifier(identifier: str) -> str:
     """Mask an account/meter identifier down to its last four characters."""
     return f"…{identifier[-4:]}"
+
+
+def invalid_auth_error() -> ConfigEntryAuthFailed:
+    """Return the error that asks the user to sign in again."""
+    return ConfigEntryAuthFailed(
+        translation_domain=DOMAIN, translation_key="invalid_auth"
+    )
+
+
+def _cannot_connect() -> UpdateFailed:
+    """Return the error for a failed fetch from ENGIE."""
+    return UpdateFailed(translation_domain=DOMAIN, translation_key="cannot_connect")
+
+
+@contextmanager
+def _raise_update_errors() -> Iterator[None]:
+    """Turn client errors into the matching coordinator update errors."""
+    try:
+        yield
+    except EngieBeAuthenticationError as err:
+        raise invalid_auth_error() from err
+    except EngieBeError as err:
+        raise _cannot_connect() from err
 
 
 def normalize_slot_code(raw_code: str) -> str:
@@ -118,17 +142,8 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
     @override
     async def _async_update_data(self) -> dict[str, BusinessAgreement]:
         """Fetch the account's active business agreements."""
-        try:
+        with _raise_update_errors():
             relations = await self.client.async_get_customer_account_relations()
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
         agreements = {
             agreement.business_agreement_number: agreement
@@ -193,39 +208,27 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
     @override
     async def _async_update_data(self) -> EngieBePricesData:
         """Fetch this household's prices and pre-process them into a slot lookup."""
-        try:
+        with _raise_update_errors():
             prices = await self.client.async_get_prices(self.ban)
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
 
         now = dt_util.utcnow()
-        fetch_eans = list(
-            dict.fromkeys(
-                ean_prices.ean
-                for ean_prices in prices.items
-                if self._service_point_due(bare_ean(ean_prices.ean), now)
-            )
-        )
-        if fetch_eans:
+        raw_ean_by_bare: dict[str, str] = {}
+        for ean_prices in prices.items:
+            if self._service_point_due(bare := bare_ean(ean_prices.ean), now):
+                raw_ean_by_bare.setdefault(bare, ean_prices.ean)
+        if raw_ean_by_bare:
             service_points = await asyncio.gather(
-                *(self.client.async_get_service_point(ean) for ean in fetch_eans),
+                *(
+                    self.client.async_get_service_point(ean)
+                    for ean in raw_ean_by_bare.values()
+                ),
                 return_exceptions=True,
             )
-            for ean, service_point_result in zip(
-                fetch_eans, service_points, strict=True
+            for bare, service_point_result in zip(
+                raw_ean_by_bare, service_points, strict=True
             ):
-                bare = bare_ean(ean)
                 if isinstance(service_point_result, EngieBeAuthenticationError):
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN, translation_key="invalid_auth"
-                    ) from service_point_result
+                    raise invalid_auth_error() from service_point_result
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
@@ -390,7 +393,7 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
     async def _async_update_data(self) -> EngieBePeaksData:
         """Fetch this month's peaks, plus last month's when this month has no peak yet."""
         today = dt_util.now(BRUSSELS_TIME_ZONE).date()
-        try:
+        with _raise_update_errors():
             monthly = await self.client.async_get_monthly_peaks(
                 self.ban, today.year, today.month
             )
@@ -404,15 +407,6 @@ class EngieBePeaksCoordinator(DataUpdateCoordinator[EngieBePeaksData]):
                 previous_month = await self.client.async_get_monthly_peaks(
                     self.ban, prev_year, prev_month
                 )
-        except EngieBeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="invalid_auth"
-            ) from err
-        except EngieBeError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            ) from err
         return EngieBePeaksData(monthly=monthly, previous_month=previous_month)
 
 
@@ -489,15 +483,10 @@ class EngieBeEpexCoordinator(DataUpdateCoordinator[EngieBeEpexData]):
                         *epex_window(day), granularity=granularity
                     )
                 except EngieBeAuthenticationError as err:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN, translation_key="invalid_auth"
-                    ) from err
+                    raise invalid_auth_error() from err
                 except EngieBeError as err:
                     if required:
-                        raise UpdateFailed(
-                            translation_domain=DOMAIN,
-                            translation_key="cannot_connect",
-                        ) from err
+                        raise _cannot_connect() from err
                     LOGGER.debug("Fetching EPEX prices for %s failed: %s", day, err)
                     continue
                 slots[granularity] = [
