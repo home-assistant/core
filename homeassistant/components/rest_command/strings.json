@@ -57,7 +57,7 @@
       "entry_type": "Command",
       "error": {
         "action_exists": "The action {action} already exists. Choose another name.",
-        "invalid_action": "Enter a name with at least one letter or number. The name Reload is reserved.",
+        "invalid_action": "Use only lowercase letters, numbers and underscores. The names reload and unknown are reserved.",
         "invalid_command": "The command is not valid. Check that the header values are text or valid templates."
       },
       "initiate_flow": {
@@ -72,7 +72,7 @@
             "payload": "Payload"
           },
           "data_description": {
-            "action": "Name of the command, for example Open garage door. You can use spaces and capitals. The action gets a name made from it, like rest_command.open_garage_door, which you use in automations. It cannot be changed later.",
+            "action": "Name of the action, in lowercase letters, numbers and underscores, for example open_garage_door. You use it in automations as rest_command.open_garage_door. It cannot be changed later.",
             "method": "HTTP method of the request. GET reads data, POST sends data. PUT, PATCH and DELETE are used by some APIs to change or remove something.",
             "path": "Added to the server address {url}, for example `{example_path}`. A leading / is added when it is missing. Can be a template. Leave empty to use the server address as it is.",
             "payload": "Body of the request, usually used with POST, PUT or PATCH. Can be a template, for example `{example_payload}`. Leave empty to send no body."

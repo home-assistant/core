@@ -27,16 +27,17 @@ SERVER_INPUT = {
 
 SERVER_DATA = {
     "url": SERVER_URL,
-    "username": "user",
-    "password": "secret",
-    "headers": {"X-Api-Version": "2"},
-    "timeout": 5,
-    "verify_ssl": False,
-    "insecure_cipher": False,
+    "auth": {"username": "user", "password": "secret"},
+    "additional": {
+        "headers": {"X-Api-Version": "2"},
+        "timeout": 5.0,
+        "verify_ssl": False,
+        "insecure_cipher": False,
+    },
 }
 
 COMMAND_INPUT = {
-    "action": "Open door",
+    "action": "open_door",
     "path": "door/{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
@@ -48,11 +49,10 @@ COMMAND_DATA = {
     "path": "/door/{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
-    "content_type": "application/json",
-    "skip_url_encoding": False,
+    "additional": {"content_type": "application/json", "skip_url_encoding": False},
 }
 
-NEW_COMMAND_INPUT = {"action": "New command", "method": "get", "additional": {}}
+NEW_COMMAND_INPUT = {"action": "new_command", "method": "get", "additional": {}}
 
 
 @pytest.fixture
@@ -66,7 +66,7 @@ def entry(hass: HomeAssistant) -> MockConfigEntry:
             ConfigSubentryData(
                 data=COMMAND_DATA,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
-                title="Open door",
+                title="open_door",
             )
         ],
     )
@@ -109,7 +109,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Open door"
+    assert result["title"] == "open_door"
     assert result["data"] == COMMAND_DATA
     assert result["unique_id"] is None
     assert hass.services.has_service(DOMAIN, "open_door")
@@ -119,6 +119,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("user_input", "errors"),
     [
+        ({"url": ""}, {"url": "invalid_url"}),
         ({"url": "example.com"}, {"url": "invalid_url"}),
         ({"url": "ftp://example.com"}, {"url": "invalid_url"}),
         ({"url": "https://"}, {"url": "invalid_url"}),
@@ -164,8 +165,10 @@ async def test_server_already_configured(
     ("user_input", "errors"),
     [
         ({"action": " "}, {"action": "invalid_action"}),
-        ({"action": "Reload"}, {"action": "invalid_action"}),
-        ({"action": "Open door"}, {"action": "action_exists"}),
+        ({"action": "reload"}, {"action": "invalid_action"}),
+        ({"action": "Open door"}, {"action": "invalid_action"}),
+        ({"action": "open_door"}, {"action": "action_exists"}),
+        ({"additional": {"headers": ["X-Door"]}}, {"base": "invalid_command"}),
         (
             {"additional": {"headers": {"X-Door": "{{ door"}}},
             {"base": "invalid_command"},
@@ -212,7 +215,7 @@ async def test_empty_credential_is_kept(
         result["flow_id"], {"url": SERVER_URL, "auth": auth, "additional": {}}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert {key: result["data"][key] for key in auth} == auth
+    assert result["data"]["auth"] == auth
 
 
 async def test_action_from_yaml_exists(
@@ -224,7 +227,7 @@ async def test_action_from_yaml_exists(
     )
     result = await _start_subentry_flow(hass, entry)
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {**NEW_COMMAND_INPUT, "action": "From YAML"}
+        result["flow_id"], {**NEW_COMMAND_INPUT, "action": "from_yaml"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"action": "action_exists"}

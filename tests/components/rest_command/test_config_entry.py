@@ -43,13 +43,19 @@ async def test_call_command_from_entry(
 ) -> None:
     """Test a command from the UI renders its templates with the action data."""
     entry = _entry(
-        {"headers": {"Authorization": "Bearer token", "X-Api-Version": "1"}},
+        {
+            "additional": {
+                "headers": {"Authorization": "Bearer token", "X-Api-Version": "1"}
+            }
+        },
         open_door={
             "path": "/{{ door }}",
             "method": "post",
             "payload": '{"door": "{{ door }}"}',
-            "headers": {"X-Door": "{{ door }}", "x-api-version": "2"},
-            "content_type": "application/json",
+            "additional": {
+                "headers": {"X-Door": "{{ door }}", "x-api-version": "2"},
+                "content_type": "application/json",
+            },
         },
     )
     entry.add_to_hass(hass)

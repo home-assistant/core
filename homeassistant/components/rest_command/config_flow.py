@@ -55,6 +55,7 @@ from . import (
     DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     SUPPORT_REST_METHODS,
+    flatten,
     merge_command_config,
 )
 from .const import (
@@ -166,22 +167,6 @@ DESCRIPTION_PLACEHOLDERS = {
 }
 
 
-def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Move the values out of the form sections and drop empty values."""
-    data = dict(user_input)
-    for key in (SECTION_AUTH, SECTION_ADDITIONAL):
-        data.update(data.pop(key, {}))
-    data.pop(CONF_ACTION, None)
-    # An empty username or password is valid, like in YAML: some servers
-    # expect only a username, others only a token as the password
-    return {
-        key: value
-        for key, value in data.items()
-        if value not in (None, "", {})
-        or (key in (CONF_USERNAME, CONF_PASSWORD) and value == "")
-    }
-
-
 def _is_server_url(url: str) -> bool:
     """Return if the URL is an http(s) address that a path can be added to."""
     try:
@@ -192,8 +177,17 @@ def _is_server_url(url: str) -> bool:
     return not (parsed.query or parsed.fragment)
 
 
-def _validate(config: dict[str, Any]) -> dict[str, str]:
-    """Validate a complete command and return the form errors."""
+def _validate(
+    server: dict[str, Any], command: dict[str, Any] | None = None
+) -> dict[str, str]:
+    """Validate a server, or one of its commands, and return the form errors."""
+    if not all(
+        isinstance(flatten(data).get(CONF_HEADERS, {}), dict)
+        for data in (server, command or {})
+    ):
+        return {"base": "invalid_command"}
+    config = merge_command_config(server, command or {})
+    config.pop(CONF_ACTION, None)
     try:
         COMMAND_SCHEMA(config)
     except probatio.Invalid:
@@ -222,16 +216,15 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
         """Add a server that commands are sent to."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            data = _flatten(user_input)
             # The path of each command starts with a slash
-            data[CONF_URL] = data[CONF_URL].strip().rstrip("/")
-            self._async_abort_entries_match({CONF_URL: data[CONF_URL]})
-            if not _is_server_url(data[CONF_URL]):
+            url = user_input[CONF_URL] = user_input[CONF_URL].strip().rstrip("/")
+            self._async_abort_entries_match({CONF_URL: url})
+            if not _is_server_url(url):
                 errors[CONF_URL] = "invalid_url"
             else:
-                errors = _validate(data)
+                errors = _validate(user_input)
             if not errors:
-                return self.async_create_entry(title=data[CONF_URL], data=data)
+                return self.async_create_entry(title=url, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -271,13 +264,13 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             "url": entry.data[CONF_URL],
         }
         if user_input is not None:
-            data = _flatten(user_input)
-            if CONF_PATH in data and not data[CONF_PATH].startswith("/"):
-                data[CONF_PATH] = f"/{data[CONF_PATH]}"
-            name: str = user_input[CONF_ACTION].strip()
-            action = slugify(name)
+            path = user_input.get(CONF_PATH, "")
+            if path and not path.startswith("/"):
+                user_input[CONF_PATH] = f"/{path}"
+            action = user_input[CONF_ACTION] = user_input[CONF_ACTION].strip()
             placeholders["action"] = f"{DOMAIN}.{action}"
-            if action in ("", "unknown", SERVICE_RELOAD):
+            # The action name is used as written, so it must already be a slug
+            if action in ("", "unknown", SERVICE_RELOAD) or action != slugify(action):
                 errors[CONF_ACTION] = "invalid_action"
             elif self.hass.services.has_service(DOMAIN, action) or any(
                 subentry.data[CONF_ACTION] == action
@@ -286,12 +279,9 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             ):
                 errors[CONF_ACTION] = "action_exists"
             else:
-                errors = _validate(merge_command_config(entry.data, data))
+                errors = _validate(dict(entry.data), user_input)
             if not errors:
-                return self.async_create_entry(
-                    title=name,
-                    data={CONF_ACTION: action, **data},
-                )
+                return self.async_create_entry(title=action, data=user_input)
 
         return self.async_show_form(
             step_id="user",
