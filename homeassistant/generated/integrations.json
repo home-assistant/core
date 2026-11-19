@@ -4645,6 +4645,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fonte_flamme": {
+      "name": "Fonte Flamme",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "foobot": {
       "name": "Foobot",
       "integration_type": "hub",
