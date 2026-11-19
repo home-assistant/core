@@ -1,1 +1,1 @@
-"""Shared helpers for pylint_home_assistant checkers."""
+"""Shared helpers for pylint_homeassistant checkers."""

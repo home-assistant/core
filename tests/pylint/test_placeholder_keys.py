@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.placeholder_keys import PlaceholderKeysChecker
+from pylint_homeassistant.checkers.placeholder_keys import PlaceholderKeysChecker
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

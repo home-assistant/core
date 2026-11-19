@@ -37,4 +37,4 @@ Repository = "https://github.com/home-assistant/core"
 "Bug Tracker" = "https://github.com/home-assistant/core/issues"
 
 [tool.setuptools.packages.find]
-include = ["pylint_home_assistant*"]
+include = ["pylint_homeassistant*"]

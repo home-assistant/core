@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.log_and_raise import LogAndRaiseChecker
+from pylint_homeassistant.checkers.log_and_raise import LogAndRaiseChecker
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

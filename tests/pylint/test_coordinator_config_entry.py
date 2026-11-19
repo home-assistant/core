@@ -6,7 +6,7 @@ import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
 from pylint.utils.ast_walker import ASTWalker
-from pylint_home_assistant.checkers.coordinator_config_entry import (
+from pylint_homeassistant.checkers.coordinator_config_entry import (
     CoordinatorConfigEntryChecker,
 )
 import pytest

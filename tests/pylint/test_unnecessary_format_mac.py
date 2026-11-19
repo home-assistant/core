@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.unnecessary_format_mac import (
+from pylint_homeassistant.checkers.unnecessary_format_mac import (
     UnnecessaryFormatMacChecker,
 )
 import pytest

@@ -6,10 +6,10 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.entity_unique_id_format import (
+from pylint_homeassistant.checkers.entity_unique_id_format import (
     EntityUniqueIdFormatChecker,
 )
-from pylint_home_assistant.helpers.integration import clear_caches
+from pylint_homeassistant.helpers.integration import clear_caches
 import pytest
 
 from . import assert_adds_messages, assert_no_messages, walk_checker

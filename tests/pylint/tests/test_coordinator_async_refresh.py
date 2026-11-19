@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.tests.coordinator_async_refresh import (
+from pylint_homeassistant.checkers.tests.coordinator_async_refresh import (
     CoordinatorAsyncRefresh,
 )
 import pytest

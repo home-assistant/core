@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.tests.snapshot_enable_entities import (
+from pylint_homeassistant.checkers.tests.snapshot_enable_entities import (
     SnapshotEnableEntitiesChecker,
 )
 import pytest

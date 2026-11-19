@@ -6,10 +6,10 @@ from pathlib import Path
 import astroid
 from pylint.testutils import UnittestLinter
 from pylint.utils.ast_walker import ASTWalker
-from pylint_home_assistant.checkers.flow_translations import (
+from pylint_homeassistant.checkers.flow_translations import (
     ConfigFlowTranslationsChecker,
 )
-from pylint_home_assistant.helpers.translations import clear_translations_cache
+from pylint_homeassistant.helpers.translations import clear_translations_cache
 import pytest
 
 from . import assert_no_messages

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.test_determinism import HassTestDeterminismChecker
+from pylint_homeassistant.checkers.test_determinism import HassTestDeterminismChecker
 import pytest
 
 from . import assert_no_messages, walk_checker

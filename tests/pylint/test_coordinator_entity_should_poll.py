@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.coordinator_entity_should_poll import (
+from pylint_homeassistant.checkers.coordinator_entity_should_poll import (
     CoordinatorEntityShouldPollChecker,
 )
 import pytest

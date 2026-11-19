@@ -2,40 +2,40 @@
 
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint_home_assistant.checkers.class_module import HassEnforceClassModule
-from pylint_home_assistant.checkers.config_flow.no_connection_class import (
+from pylint_homeassistant.checkers.class_module import HassEnforceClassModule
+from pylint_homeassistant.checkers.config_flow.no_connection_class import (
     HassEnforceConfigFlowNoConnectionClassChecker,
 )
-from pylint_home_assistant.checkers.config_flow.no_name import (
+from pylint_homeassistant.checkers.config_flow.no_name import (
     HassEnforceConfigFlowNoNameChecker,
 )
-from pylint_home_assistant.checkers.config_flow.no_polling import (
+from pylint_homeassistant.checkers.config_flow.no_polling import (
     HassEnforceConfigFlowNoPollingChecker,
 )
-from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
+from pylint_homeassistant.checkers.config_flow.serial_port_usb_dependency import (
     HassEnforceSerialPortSelectorUsbChecker,
 )
-from pylint_home_assistant.checkers.config_flow.step_id_match_method import (
+from pylint_homeassistant.checkers.config_flow.step_id_match_method import (
     HassEnforceConfigEntryStepIdMatchMethodChecker,
 )
-from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
+from pylint_homeassistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
 )
-from pylint_home_assistant.checkers.decorator import HassDecoratorChecker
-from pylint_home_assistant.checkers.greek_micro_char import (
+from pylint_homeassistant.checkers.decorator import HassDecoratorChecker
+from pylint_homeassistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
-from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
-from pylint_home_assistant.checkers.naive_now import HassEnforceNaiveNowChecker
-from pylint_home_assistant.checkers.now import HassEnforceNowChecker
-from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
-from pylint_home_assistant.checkers.sorted_platforms import (
+from pylint_homeassistant.checkers.imports import HassImportsFormatChecker
+from pylint_homeassistant.checkers.naive_now import HassEnforceNaiveNowChecker
+from pylint_homeassistant.checkers.now import HassEnforceNowChecker
+from pylint_homeassistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
+from pylint_homeassistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
 )
-from pylint_home_assistant.checkers.super_call import HassEnforceSuperCallChecker
-from pylint_home_assistant.checkers.type_hints import HassTypeHintChecker
-from pylint_home_assistant.checkers.utcnow import HassEnforceUtcnowChecker
-from pylint_home_assistant.helpers.integration import clear_caches
+from pylint_homeassistant.checkers.super_call import HassEnforceSuperCallChecker
+from pylint_homeassistant.checkers.type_hints import HassTypeHintChecker
+from pylint_homeassistant.checkers.utcnow import HassEnforceUtcnowChecker
+from pylint_homeassistant.helpers.integration import clear_caches
 import pytest
 
 

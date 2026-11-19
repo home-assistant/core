@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.config_flow.flow_call_in_try import (
+from pylint_homeassistant.checkers.config_flow.flow_call_in_try import (
     FlowCallInTryChecker,
 )
 import pytest

@@ -1,4 +1,4 @@
-"""Constants for the pylint_home_assistant plugin package."""
+"""Constants for the pylint_homeassistant plugin package."""
 
 from enum import IntEnum, StrEnum
 

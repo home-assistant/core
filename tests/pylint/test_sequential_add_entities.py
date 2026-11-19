@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.sequential_add_entities import (
+from pylint_homeassistant.checkers.sequential_add_entities import (
     SequentialAddEntitiesChecker,
 )
 import pytest

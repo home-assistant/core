@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.actions.services_module import ServicesModuleChecker
+from pylint_homeassistant.checkers.actions.services_module import ServicesModuleChecker
 import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker

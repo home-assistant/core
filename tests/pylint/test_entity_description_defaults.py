@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.entity_description_defaults import (
+from pylint_homeassistant.checkers.entity_description_defaults import (
     EntityDescriptionDefaultsChecker,
 )
 import pytest

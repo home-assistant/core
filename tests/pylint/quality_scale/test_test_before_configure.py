@@ -6,11 +6,11 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.quality_scale.test_before_configure import (
+from pylint_homeassistant.checkers.quality_scale.test_before_configure import (
     TestBeforeConfigureChecker as BeforeConfigureChecker,
 )
-from pylint_home_assistant.helpers.integration import clear_caches
-from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cache
+from pylint_homeassistant.helpers.integration import clear_caches
+from pylint_homeassistant.helpers.quality_scale import clear_quality_scale_cache
 import pytest
 import yaml
 

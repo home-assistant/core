@@ -5,7 +5,7 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.tests.registry_fixtures import (
+from pylint_homeassistant.checkers.tests.registry_fixtures import (
     RegistryFixturesChecker,
 )
 import pytest

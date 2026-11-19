@@ -4,8 +4,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.ast_utils import extended_ancestors
-from pylint_home_assistant.helpers.module_info import is_integration_module
+from pylint_homeassistant.helpers.ast_utils import extended_ancestors
+from pylint_homeassistant.helpers.module_info import is_integration_module
 
 _CALLBACK = "homeassistant.core.callback"
 

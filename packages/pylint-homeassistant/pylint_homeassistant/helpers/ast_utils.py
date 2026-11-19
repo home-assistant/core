@@ -1,4 +1,4 @@
-"""Shared AST traversal utilities for pylint_home_assistant checkers."""
+"""Shared AST traversal utilities for pylint_homeassistant checkers."""
 
 from collections.abc import Iterator
 

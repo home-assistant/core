@@ -123,7 +123,7 @@ init-hook = """\
 load-plugins = [
   "pylint.extensions.code_style",
   "pylint.extensions.typing",
-  "pylint_home_assistant",
+  "pylint_homeassistant",
   "pylint_per_file_ignores",
 ]
 persistent = false

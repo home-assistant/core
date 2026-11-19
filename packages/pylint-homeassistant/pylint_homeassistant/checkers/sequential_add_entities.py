@@ -12,7 +12,7 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.module_info import is_integration_module
+from pylint_homeassistant.helpers.module_info import is_integration_module
 
 ADD_ENTITIES_CALLBACK_NAMES = {"async_add_entities", "add_entities"}
 PLATFORM_SETUP_FUNCTIONS = {

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.unused_test_fixture_args import (
+from pylint_homeassistant.checkers.unused_test_fixture_args import (
     UnusedTestFixtureArgsChecker,
 )
 import pytest

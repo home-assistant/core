@@ -3,7 +3,7 @@
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.type_checking_block import (
+from pylint_homeassistant.checkers.type_checking_block import (
     HassTypeCheckingBlockChecker,
 )
 import pytest

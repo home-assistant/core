@@ -5,9 +5,7 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint_home_assistant.checkers.tests.config_flow_unique_id import (
-    ConfigFlowUniqueId,
-)
+from pylint_homeassistant.checkers.tests.config_flow_unique_id import ConfigFlowUniqueId
 import pytest
 
 from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker

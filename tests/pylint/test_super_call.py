@@ -211,7 +211,7 @@ def test_enforce_super_call(
 
     with (
         patch(
-            "pylint_home_assistant.checkers.super_call.METHODS",
+            "pylint_homeassistant.checkers.super_call.METHODS",
             new={
                 "added_to_hass",
                 "async_added_to_hass",
@@ -353,7 +353,7 @@ def test_enforce_super_call_bad(
 
     with (
         patch(
-            "pylint_home_assistant.checkers.super_call.METHODS",
+            "pylint_homeassistant.checkers.super_call.METHODS",
             new={
                 "added_to_hass",
                 "async_added_to_hass",

@@ -2,7 +2,7 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint_home_assistant.checkers.domain_constant import DomainConstantChecker
+from pylint_homeassistant.checkers.domain_constant import DomainConstantChecker
 import pytest
 
 from . import assert_no_messages, walk_checker

@@ -18,7 +18,7 @@ Install the package from a Home Assistant Core checkout:
 uv pip install ./packages/pylint-homeassistant
 ```
 
-Load it using `pylint --load-plugins=pylint_home_assistant` or the
+Load it using `pylint --load-plugins=pylint_homeassistant` or the
 `load-plugins` setting in your Pylint configuration.
 
 The checkers currently target Home Assistant Core's module names and repository

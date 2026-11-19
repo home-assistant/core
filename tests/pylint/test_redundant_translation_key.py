@@ -7,11 +7,11 @@ from typing import Any
 import astroid
 from pylint.testutils import UnittestLinter
 from pylint.utils.ast_walker import ASTWalker
-from pylint_home_assistant.checkers.redundant_translation_key import (
+from pylint_homeassistant.checkers.redundant_translation_key import (
     RedundantTranslationKeyChecker,
 )
-from pylint_home_assistant.helpers.icons import clear_icons_cache
-from pylint_home_assistant.helpers.translations import clear_translations_cache
+from pylint_homeassistant.helpers.icons import clear_icons_cache
+from pylint_homeassistant.helpers.translations import clear_translations_cache
 import pytest
 
 from . import assert_no_messages

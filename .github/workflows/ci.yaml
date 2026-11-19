@@ -476,7 +476,7 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           "${RUNNER_TEMP}/package-venv/bin/pylint" \
-            --rcfile=/dev/null --load-plugins=pylint_home_assistant --list-msgs > /dev/null
+            --rcfile=/dev/null --load-plugins=pylint_homeassistant --list-msgs > /dev/null
 
   gen-recorder-db-versions:
     name: Check recorder database versions
