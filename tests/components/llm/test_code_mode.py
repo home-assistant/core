@@ -49,6 +49,8 @@ class GetStateTool(llm.Tool):
         entity_id = tool_input.tool_args["entity_id"]
         if entity_id == "light.broken":
             raise HomeAssistantError("Light is broken")
+        if entity_id == "light.failed":
+            return llm.ToolResult(data={"reason": "No power"}, error=True)
         if entity_id == "light.slow":
             await asyncio.sleep(10)
         self.calls.append(entity_id)
@@ -248,6 +250,18 @@ print("checked", len(states))
         "output": "checked 10\n",
     }
     assert len(state_tool.calls) == 10
+
+
+async def test_tool_error_result_is_marked(api_instance: llm.APIInstance) -> None:
+    """Test a tool result with the error flag gives the code an error dict."""
+    result = await _execute(
+        api_instance, 'await test__get_state(entity_id="light.failed")'
+    )
+
+    assert result.data["result"] == {
+        "error": "ToolError",
+        "data": {"reason": "No power"},
+    }
 
 
 async def test_modules_without_import(api_instance: llm.APIInstance) -> None:

@@ -69,6 +69,7 @@ PROMPT = (
     "Do not guess the name or the parameters of a function.\n"
     "- Every function is async and takes keyword arguments: "
     "`result = await name(param=value)`. The result is a dict.\n"
+    "- A call that fails does not raise. Its result has the key `error`.\n"
     '- A parameter type like `{"key": str, "other"?: int}` is a dict with '
     "those keys. A key with `?` is optional.\n"
     "- The modules `asyncio`, `datetime`, `json`, `math` and `re` are already "
@@ -184,6 +185,8 @@ class ToolFunction:
                 return {"error": type(err).__name__, "error_text": str(err)}
             finally:
                 tasks.discard(task)
+            if result.error:
+                return {"error": "ToolError", "data": result.data}
             return result.data
 
         return call_tool
