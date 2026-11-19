@@ -1779,24 +1779,64 @@ async def test_climate_platform_services_and_management_points(
         "unit_system",
         "service_temperature",
         "step_value",
+        "minimum_temperature",
         "initial_temperature",
         "expected_temperature",
         "should_write",
     ),
     [
         pytest.param(
-            US_CUSTOMARY_SYSTEM, 76, 0.5, 20, 24.5, True, id="fahrenheit-conversion"
+            US_CUSTOMARY_SYSTEM,
+            76,
+            0.5,
+            None,
+            20,
+            24.5,
+            True,
+            id="fahrenheit-conversion",
         ),
-        pytest.param(METRIC_SYSTEM, 24.4, 1, 20, 24, True, id="whole-step-rounding"),
         pytest.param(
-            METRIC_SYSTEM, 20.1, 0.1, 20, 20.1, True, id="decimal-step-rounding"
+            METRIC_SYSTEM, 24.4, 1, None, 20, 24, True, id="whole-step-rounding"
         ),
-        pytest.param(METRIC_SYSTEM, 24.4, None, 20, 24.5, True, id="default-step"),
-        pytest.param(METRIC_SYSTEM, 10.4, 3, 20, 10, True, id="clamp-to-minimum"),
+        pytest.param(
+            METRIC_SYSTEM,
+            20.1,
+            0.1,
+            None,
+            20,
+            20.1,
+            True,
+            id="decimal-step-rounding",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            24.25,
+            0.5,
+            None,
+            20,
+            24.5,
+            True,
+            id="halfway-rounds-up",
+        ),
+        pytest.param(
+            METRIC_SYSTEM,
+            10.45,
+            0.5,
+            10.2,
+            20,
+            10.7,
+            True,
+            id="step-anchored-to-native-minimum",
+        ),
+        pytest.param(
+            METRIC_SYSTEM, 24.4, None, None, 20, 24.5, True, id="default-step"
+        ),
+        pytest.param(METRIC_SYSTEM, 10.4, 3, None, 20, 10, True, id="clamp-to-minimum"),
         pytest.param(
             US_CUSTOMARY_SYSTEM,
             76,
             0.5,
+            None,
             24.5,
             24.5,
             False,
@@ -1812,6 +1852,7 @@ async def test_climate_temperature_rounds_to_native_step(
     unit_system: UnitSystem,
     service_temperature: float,
     step_value: float | None,
+    minimum_temperature: float | None,
     initial_temperature: float,
     expected_temperature: float,
     should_write: bool,
@@ -1828,6 +1869,7 @@ async def test_climate_temperature_rounds_to_native_step(
     setpoint = point.climate_control.setpoint("roomTemperature", "heating")
     assert setpoint is not None
     setpoint.step_value = step_value
+    setpoint.min_value = minimum_temperature
     setpoint.value = initial_temperature
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
