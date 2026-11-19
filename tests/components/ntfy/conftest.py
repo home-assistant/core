@@ -118,11 +118,11 @@ def mock_update_checker() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True)
 def mock_random() -> Generator[MagicMock]:
-    """Mock random."""
+    """Mock the generated topic name."""
 
     with patch(
-        "homeassistant.components.ntfy.config_flow.random.choices",
-        return_value=["randomtopic"],
+        "homeassistant.components.ntfy.config_flow._generate_topic",
+        return_value="randomtopic",
     ) as mock_client:
         yield mock_client
 

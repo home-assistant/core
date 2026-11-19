@@ -2,8 +2,8 @@
 
 from collections.abc import Mapping
 import logging
-import random
 import re
+import secrets
 import string
 from typing import TYPE_CHECKING, Any, override
 
@@ -161,6 +161,13 @@ STEP_USER_TOPIC_SCHEMA = probatio.Schema(
 )
 
 RE_TOPIC = re.compile("^[-_a-zA-Z0-9]{1,64}$")
+
+
+def _generate_topic() -> str:
+    """Generate an unpredictable topic name."""
+    return "".join(
+        secrets.choice(string.ascii_letters + string.digits) for _ in range(16)
+    )
 
 
 class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -438,12 +445,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
-        topic = "".join(
-            random.choices(
-                string.ascii_lowercase + string.ascii_uppercase + string.digits,
-                k=16,
-            )
-        )
+        topic = _generate_topic()
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="add_topic",
