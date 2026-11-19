@@ -16,7 +16,7 @@ from .conftest import TEST_URL
 SERVER_URL = "https://example.com"
 
 SERVER_INPUT = {
-    "url": SERVER_URL,
+    "url": SERVER_URL + "/",
     "auth": {"username": "user", "password": "secret"},
     "additional": {
         "headers": {"X-Api-Version": "2"},
@@ -37,7 +37,7 @@ SERVER_DATA = {
 
 COMMAND_INPUT = {
     "action": "Open door",
-    "path": "/door/{{ door }}",
+    "path": "door/{{ door }}",
     "method": "post",
     "payload": '{"open": true}',
     "additional": {"content_type": "application/json"},
@@ -116,17 +116,29 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert len(entry.subentries) == 1
 
 
-async def test_server_errors(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("user_input", "errors"),
+    [
+        ({"url": "example.com"}, {"url": "invalid_url"}),
+        ({"url": "ftp://example.com"}, {"url": "invalid_url"}),
+        ({"url": "https://"}, {"url": "invalid_url"}),
+        ({"url": SERVER_URL + "/?key=1"}, {"url": "invalid_url"}),
+        ({"auth": {"username": "user"}}, {"base": "invalid_command"}),
+    ],
+)
+async def test_server_errors(
+    hass: HomeAssistant, user_input: dict[str, Any], errors: dict[str, str]
+) -> None:
     """Test invalid server settings, and recovering from them."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"url": SERVER_URL, "auth": {"username": "user"}, "additional": {}},
+        {"url": SERVER_URL, "auth": {}, "additional": {}, **user_input},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_command"}
+    assert result["errors"] == errors
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"url": SERVER_URL, "auth": {}, "additional": {}}
@@ -142,7 +154,7 @@ async def test_server_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"url": SERVER_URL, "auth": {}, "additional": {}}
+        result["flow_id"], {"url": SERVER_URL + "/", "auth": {}, "additional": {}}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

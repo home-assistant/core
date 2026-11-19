@@ -1,6 +1,7 @@
 """Config flow for the REST command integration."""
 
 from typing import Any, override
+from urllib.parse import urlparse
 
 import probatio
 
@@ -31,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     BooleanSelector,
     NumberSelector,
@@ -180,6 +182,16 @@ def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _is_server_url(url: str) -> bool:
+    """Return if the URL is an http(s) address that a path can be added to."""
+    try:
+        cv.url(url)
+    except probatio.Invalid:
+        return False
+    parsed = urlparse(url)
+    return not (parsed.query or parsed.fragment)
+
+
 def _validate(config: dict[str, Any]) -> dict[str, str]:
     """Validate a complete command and return the form errors."""
     try:
@@ -211,8 +223,13 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = _flatten(user_input)
+            # The path of each command starts with a slash
+            data[CONF_URL] = data[CONF_URL].strip().rstrip("/")
             self._async_abort_entries_match({CONF_URL: data[CONF_URL]})
-            errors = _validate(data)
+            if not _is_server_url(data[CONF_URL]):
+                errors[CONF_URL] = "invalid_url"
+            else:
+                errors = _validate(data)
             if not errors:
                 return self.async_create_entry(title=data[CONF_URL], data=data)
 
@@ -255,6 +272,8 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
         }
         if user_input is not None:
             data = _flatten(user_input)
+            if CONF_PATH in data and not data[CONF_PATH].startswith("/"):
+                data[CONF_PATH] = f"/{data[CONF_PATH]}"
             name: str = user_input[CONF_ACTION].strip()
             action = slugify(name)
             placeholders["action"] = f"{DOMAIN}.{action}"

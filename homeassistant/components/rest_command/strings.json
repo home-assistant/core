@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "invalid_command": "The settings are not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates."
+      "invalid_command": "The settings are not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates.",
+      "invalid_url": "Enter an address that starts with http:// or https:// and has no query (?) or fragment (#)."
     },
     "step": {
       "user": {
@@ -73,7 +74,7 @@
           "data_description": {
             "action": "Name of the command, for example Open garage door. You can use spaces and capitals. The action gets a name made from it, like rest_command.open_garage_door, which you use in automations. It cannot be changed later.",
             "method": "HTTP method of the request. GET reads data, POST sends data. PUT, PATCH and DELETE are used by some APIs to change or remove something.",
-            "path": "Added to the server address {url}, for example `{example_path}`. Can be a template. Leave empty to use the server address as it is.",
+            "path": "Added to the server address {url}, for example `{example_path}`. A leading / is added when it is missing. Can be a template. Leave empty to use the server address as it is.",
             "payload": "Body of the request, usually used with POST, PUT or PATCH. Can be a template, for example `{example_payload}`. Leave empty to send no body."
           },
           "description": "A command sends one HTTP request to {url} when it is run. It becomes an action that you can use in automations, scripts and dashboards.\n\nPath, payload and header values can be templates. Values that you pass in the action data are available as variables: with the path `{example_path}` and the action data `{example_data}`, the request goes to the front door.",
