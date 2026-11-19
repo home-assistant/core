@@ -1,8 +1,6 @@
 {
   "response": {
     "solar_power": 1185,
-    "energy_left": 38896.47368421053,
-    "total_pack_energy": 40727,
     "percentage_charged": 95.50537403739663,
     "backup_capable": true,
     "battery_power": 5060,

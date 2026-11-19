@@ -10,25 +10,21 @@ from iottycloud.verbs import (
     STATUS_OPENING,
     STATUS_STATIONATRY,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.components.iotty.coordinator import UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import test_sh_one_added
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_open_ok(
@@ -60,8 +56,8 @@ async def test_open_ok(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -101,8 +97,8 @@ async def test_close_ok(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -142,8 +138,8 @@ async def test_stop_ok(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -183,8 +179,8 @@ async def test_set_position_ok(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 10},
         blocking=True,
     )
 

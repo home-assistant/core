@@ -1,14 +1,13 @@
 """Tests for the Arcam FMJ config entry setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MOCK_UUID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("player_setup")

@@ -24,7 +24,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 
 STEP_CREDENTIALS_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -197,7 +197,6 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                     description_placeholders={"host": self._host},
                 )
-            self._set_confirm_only()
             return self.async_show_form(
                 step_id="zeroconf_confirm",
                 description_placeholders={"host": self._host},

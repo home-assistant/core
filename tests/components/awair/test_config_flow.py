@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientConnectorError
+from pytest_homeassistant.common import MockConfigEntry
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.components.awair.const import DOMAIN
@@ -20,8 +21,6 @@ from .const import (
     ZEROCONF_DISCOVERY,
 )
 
-from tests.common import MockConfigEntry
-
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
@@ -33,7 +32,9 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_invalid_access_token(hass: HomeAssistant) -> None:
+async def test_invalid_access_token(
+    hass: HomeAssistant, user: dict[str, Any], cloud_devices: dict[str, Any]
+) -> None:
     """Test that errors are shown when the access token is invalid."""
 
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
@@ -52,6 +53,23 @@ async def test_invalid_access_token(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+
+    with (
+        patch(
+            "python_awair.AwairClient.query",
+            side_effect=[user, cloud_devices],
+        ),
+        patch(
+            "homeassistant.components.awair.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CLOUD_CONFIG,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_unexpected_api_error(hass: HomeAssistant) -> None:
@@ -157,7 +175,7 @@ async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
             side_effect=[user, cloud_devices],
         ),
         patch(
-            "homeassistant.components.awair.async_setup_entry", return_value=True
+            "homeassistant.components.awair.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -206,7 +224,7 @@ async def test_create_cloud_entry(hass: HomeAssistant, user, cloud_devices) -> N
         ),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
@@ -236,7 +254,7 @@ async def test_create_local_entry(hass: HomeAssistant, local_devices) -> None:
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         menu_step = await hass.config_entries.flow.async_init(
@@ -297,7 +315,7 @@ async def test_create_local_entry_from_discovery(
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -350,7 +368,7 @@ async def test_create_zeroconf_entry(hass: HomeAssistant, local_devices) -> None
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         confirm_step = await hass.config_entries.flow.async_init(
@@ -397,7 +415,7 @@ async def test_zeroconf_discovery_update_configuration(
     with (
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
     ):
@@ -421,7 +439,7 @@ async def test_zeroconf_during_onboarding(
     with (
         patch(
             "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
         patch(

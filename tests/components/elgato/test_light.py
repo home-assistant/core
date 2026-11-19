@@ -7,12 +7,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.components.elgato.services import SERVICE_IDENTIFY
+from homeassistant.components.elgato.services import ElgatoService
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -71,11 +71,11 @@ async def test_light_change_state_temperature(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
-            ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_TEMP_KELVIN: 10000,
+            TargetKey.ENTITY_ID: "light.frenck",
+            LightServiceArgument.BRIGHTNESS: 255,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 10000,
         },
         blocking=True,
     )
@@ -86,10 +86,10 @@ async def test_light_change_state_temperature(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
-            ATTR_BRIGHTNESS: 255,
+            TargetKey.ENTITY_ID: "light.frenck",
+            LightServiceArgument.BRIGHTNESS: 255,
         },
         blocking=True,
     )
@@ -100,8 +100,8 @@ async def test_light_change_state_temperature(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.frenck"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.frenck"},
         blocking=True,
     )
     assert len(mock_elgato.light.mock_calls) == 3
@@ -109,11 +109,11 @@ async def test_light_change_state_temperature(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
-            ATTR_BRIGHTNESS: 255,
-            ATTR_HS_COLOR: (10.1, 20.2),
+            TargetKey.ENTITY_ID: "light.frenck",
+            LightServiceArgument.BRIGHTNESS: 255,
+            LightServiceArgument.HS_COLOR: (10.1, 20.2),
         },
         blocking=True,
     )
@@ -149,9 +149,9 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
     """Test identifying an Elgato Light."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_IDENTIFY,
+        ElgatoService.IDENTIFY,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            TargetKey.ENTITY_ID: "light.frenck",
         },
         blocking=True,
     )
@@ -166,9 +166,9 @@ async def test_light_identify(hass: HomeAssistant, mock_elgato: MagicMock) -> No
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_IDENTIFY,
+            ElgatoService.IDENTIFY,
             {
-                ATTR_ENTITY_ID: "light.frenck",
+                TargetKey.ENTITY_ID: "light.frenck",
             },
             blocking=True,
         )

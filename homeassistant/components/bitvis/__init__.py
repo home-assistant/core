@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> None:
     """Set up Bitvis Power Hub from a config entry."""
     async_get_listener_registry(hass)
     if TYPE_CHECKING:
@@ -43,14 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BitvisConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.async_stop()
-        if not hass.config_entries.async_loaded_entries(DOMAIN):
-            hass.data.pop(DATA_LISTENER_REGISTRY, None)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    await entry.runtime_data.async_stop()
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        hass.data.pop(DATA_LISTENER_REGISTRY, None)

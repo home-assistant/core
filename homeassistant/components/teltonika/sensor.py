@@ -24,7 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TeltonikaConfigEntry, TeltonikaDataUpdateCoordinator
+from . import TeltonikaConfigEntry
+from .coordinator import TeltonikaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

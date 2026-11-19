@@ -3,17 +3,16 @@
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_picnic_api2.models import Cart, SearchResult, SearchResultItem
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import ATTR_ITEM, DOMAIN as TODO_DOMAIN, TodoServices
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_cart_list_with_items(
@@ -87,7 +86,7 @@ async def test_create_todo_list_item(
         TODO_DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "Melk"},
-        target={ATTR_ENTITY_ID: ENTITY_ID},
+        target={TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -115,6 +114,6 @@ async def test_create_todo_list_item_not_found(
             TODO_DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "Melk"},
-            target={ATTR_ENTITY_ID: ENTITY_ID},
+            target={TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

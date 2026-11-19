@@ -4,6 +4,7 @@ import dataclasses
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SFRConfigEntry
@@ -11,7 +12,15 @@ from .coordinator import SFRConfigEntry
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-TO_REDACT = {"mac_addr", "serial_number", "ip_addr", "ipv6_addr"}
+TO_REDACT = {
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    "mac_addr",
+    "serial_number",
+    "ip_addr",
+    "ipv6_addr",
+}
 
 
 def _async_redact_data(obj: DataclassInstance | None) -> dict[str, Any] | None:
@@ -29,7 +38,7 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry": {
             "title": entry.title,
-            "data": dict(entry.data),
+            "data": async_redact_data(entry.data, TO_REDACT),
         },
         "data": {
             "dsl": _async_redact_data(await data.system.box.dsl_get_info()),

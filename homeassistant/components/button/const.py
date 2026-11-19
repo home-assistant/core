@@ -1,5 +1,6 @@
 """Provides the constants needed for the component."""
 
+from datetime import timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
@@ -10,12 +11,14 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import ButtonEntity
+    from .entity import ButtonEntity
 
 DOMAIN: Final = "button"
 DATA_COMPONENT: HassKey[EntityComponent[ButtonEntity]] = HassKey(DOMAIN)
 
 SERVICE_PRESS = "press"
+
+HOLD_TIMEOUT: Final = timedelta(seconds=30)
 
 
 class ButtonDeviceClass(StrEnum):
@@ -27,3 +30,9 @@ class ButtonDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ButtonDeviceClass))
+
+
+class ButtonService(StrEnum):
+    """Store keys for button services."""
+
+    PRESS = "press"

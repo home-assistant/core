@@ -48,7 +48,7 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Required(CONF_DOMAIN): cv.string,
                 probatio.Required(CONF_USERNAME): cv.string,
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(
                     CONF_TIMEOUT, default=DEFAULT_TIMEOUT
                 ): cv.positive_int,

@@ -1,12 +1,12 @@
 """Test report state."""
 
 import json
-import logging
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
@@ -20,8 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import TEST_URL, get_default_config
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_report_state(
@@ -684,21 +682,20 @@ async def test_doorbell_event_for_event_entity(
     assert call_json["event"]["endpoint"]["endpointId"] == "event#test_doorbell"
 
     # Same event after being unavailable
-    with caplog.at_level(logging.DEBUG):
-        hass.states.async_set(
-            "event.test_doorbell",
-            "11 may 2026 19:50:30",
-            {
-                "friendly_name": "Test Doorbell Sensor",
-                "device_class": "doorbell",
-                "event_types": ["ring"],
-            },
-        )
-        await hass.async_block_till_done()
-        assert (
-            "Unable to parse ISO timestamp from state for "
-            "event.test_doorbell. Got 11 may 2026 19:50:30" in caplog.text
-        )
+    hass.states.async_set(
+        "event.test_doorbell",
+        "11 may 2026 19:50:30",
+        {
+            "friendly_name": "Test Doorbell Sensor",
+            "device_class": "doorbell",
+            "event_types": ["ring"],
+        },
+    )
+    await hass.async_block_till_done()
+    assert (
+        "Unable to parse ISO timestamp from state for "
+        "event.test_doorbell. Got 11 may 2026 19:50:30" in caplog.text
+    )
 
     # Later event
     freezer.tick(35000)

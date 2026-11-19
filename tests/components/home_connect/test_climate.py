@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfPrograms,
     ArrayOfSettings,
@@ -32,11 +33,11 @@ from aiohomeconnect.model.program import (
     ProgramDefinitionOption,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -47,11 +48,9 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.home_connect.const import (
@@ -61,7 +60,6 @@ from homeassistant.components.home_connect.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -69,12 +67,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -83,7 +80,7 @@ def platforms() -> list[Platform]:
     return [Platform.CLIMATE]
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_paired_depaired_devices_flow(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -152,7 +149,7 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_connected_devices(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -219,7 +216,7 @@ async def test_connected_devices(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_climate_entity_availability(
     hass: HomeAssistant,
     client: MagicMock,
@@ -270,7 +267,7 @@ async def test_climate_entity_availability(
         assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     "program_keys",
     [
@@ -306,7 +303,7 @@ async def test_entity_not_added_if_no_air_conditioner_programs(
     assert not entity_registry.async_get("climate.air_conditioner")
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_turn_on_off(
     hass: HomeAssistant,
     client: MagicMock,
@@ -346,7 +343,7 @@ async def test_turn_on_off(
         assert hass.states.is_state(entity_id, expected_state)
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     ("service", "expected_error"),
     [
@@ -374,7 +371,7 @@ async def test_turn_on_off_exception(
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     ("program_keys", "expected_hvac_modes"),
     [
@@ -461,8 +458,11 @@ async def test_hvac_modes_programs_mapping_and_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_HVAC_MODE: expected_hvac_modes[0]},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity.entity_id,
+            ClimateServiceArgument.HVAC_MODE: expected_hvac_modes[0],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -473,7 +473,7 @@ async def test_hvac_modes_programs_mapping_and_functionality(
     assert hass.states.is_state(entity.entity_id, expected_hvac_modes[0])
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_set_hvac_mode_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
@@ -489,13 +489,16 @@ async def test_set_hvac_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_hvac_mode_off_functionality(
     hass: HomeAssistant,
     client: MagicMock,
@@ -509,8 +512,11 @@ async def test_hvac_mode_off_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.air_conditioner",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -521,7 +527,7 @@ async def test_hvac_mode_off_functionality(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_hvac_mode_off_exception(
     hass: HomeAssistant,
     client: MagicMock,
@@ -537,13 +543,16 @@ async def test_hvac_mode_off_exception(
     with pytest.raises(HomeAssistantError, match=r"Error.*turn.*off.*"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_state_when_appliance_is_in_standby(
     hass: HomeAssistant,
     client: MagicMock,
@@ -569,7 +578,7 @@ async def test_state_when_appliance_is_in_standby(
     assert hass.states.is_state("climate.air_conditioner", HVACMode.OFF)
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_not_supported_functionality_if_not_power_setting(
     entity_registry: er.EntityRegistry,
     client: MagicMock,
@@ -592,7 +601,7 @@ async def test_not_supported_functionality_if_not_power_setting(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     ("program_keys", "expected_preset_modes"),
     [
@@ -658,8 +667,11 @@ async def test_preset_modes_programs_mapping_and_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_PRESET_MODE: expected_preset_modes[0]},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity.entity_id,
+            ClimateServiceArgument.PRESET_MODE: expected_preset_modes[0],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -672,7 +684,7 @@ async def test_preset_modes_programs_mapping_and_functionality(
     assert entity_state.attributes[ATTR_PRESET_MODE] == expected_preset_modes[0]
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
@@ -688,16 +700,16 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.air_conditioner",
-                ATTR_PRESET_MODE: "active_clean",
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.PRESET_MODE: "active_clean",
             },
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -796,10 +808,10 @@ async def test_set_temperature_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: target_temperature,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: target_temperature,
         },
     )
     await hass.async_block_till_done()
@@ -812,7 +824,7 @@ async def test_set_temperature_functionality(
     assert entity_state.attributes[ATTR_TEMPERATURE] == target_temperature
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_set_temperature_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
@@ -846,16 +858,16 @@ async def test_set_temperature_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TEMPERATURE: 20.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 20.0,
             },
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_temperature_feature_supported(
     hass: HomeAssistant,
     client: MagicMock,
@@ -930,7 +942,7 @@ async def test_temperature_feature_supported(
     )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_no_issue_with_null_temperature(
     hass: HomeAssistant,
     client: MagicMock,
@@ -968,7 +980,7 @@ async def test_no_issue_with_null_temperature(
     assert state.attributes[ATTR_TEMPERATURE] is None
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     (
         "set_active_program_options_side_effect",
@@ -1067,10 +1079,10 @@ async def test_fan_mode_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: expected_fan_modes[0],
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: expected_fan_modes[0],
         },
     )
     await hass.async_block_till_done()
@@ -1090,7 +1102,7 @@ async def test_fan_mode_functionality(
     assert entity_state.attributes[ATTR_FAN_MODE] == expected_fan_modes[0]
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1124,16 +1136,16 @@ async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_FAN_MODE: FAN_AUTO,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.FAN_MODE: FAN_AUTO,
             },
             blocking=True,
         )
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 async def test_fan_mode_feature_supported(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1202,7 +1214,7 @@ async def test_fan_mode_feature_supported(
     assert not state.attributes[ATTR_SUPPORTED_FEATURES] & ClimateEntityFeature.FAN_MODE
 
 
-@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
 @pytest.mark.parametrize(
     "program_keys",
     [

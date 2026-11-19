@@ -3,14 +3,13 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components import no_ip
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DOMAIN = "test.example.com"
 

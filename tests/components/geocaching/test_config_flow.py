@@ -4,6 +4,9 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -22,10 +25,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
@@ -162,8 +161,8 @@ async def test_oauth_error(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == HTTPStatus.OK
 
-    # No user information is returned from API
-    mock_geocaching_config_flow.update.return_value.user = None
+    # No username is returned from API
+    mock_geocaching_config_flow.update.return_value.user.username = None
 
     aioclient_mock.post(
         CURRENT_ENVIRONMENT_URLS["token_url"],

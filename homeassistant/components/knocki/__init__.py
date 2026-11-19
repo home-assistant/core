@@ -11,7 +11,7 @@ from .coordinator import KnockiConfigEntry, KnockiCoordinator
 PLATFORMS: list[Platform] = [Platform.EVENT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> None:
     """Set up Knocki from a config entry."""
     client = KnockiClient(
         session=async_get_clientsession(hass), token=entry.data[CONF_TOKEN]
@@ -38,10 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
 
     await client.start_websocket()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.client.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

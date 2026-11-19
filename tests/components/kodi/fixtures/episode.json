@@ -1,0 +1,52 @@
+{
+  "album": "",
+  "artist": [],
+  "episode": 7,
+  "file": "/media/tv/Show title/s03/Show.title.S03E07.2160p.mkv",
+  "id": 2,
+  "label": "Episode title",
+  "season": 3,
+  "showtitle": "Show title",
+  "streamdetails": {
+    "audio": [
+      {
+        "channels": 6,
+        "codec": "eac3",
+        "language": "hun"
+      },
+      {
+        "channels": 6,
+        "codec": "eac3",
+        "language": "eng"
+      }
+    ],
+    "subtitle": [
+      {
+        "language": "hun"
+      },
+      {
+        "language": "eng"
+      }
+    ],
+    "video": [
+      {
+        "aspect": 1.7777780294418335,
+        "codec": "hevc",
+        "duration": 2456,
+        "hdrtype": "dolbyvision",
+        "height": 2160,
+        "language": "",
+        "stereomode": "",
+        "width": 3840
+      }
+    ]
+  },
+  "thumbnail": "image://https%3a%2f%2fimage.example.com%2fepisode.jpg/",
+  "title": "Episode title",
+  "type": "episode",
+  "uniqueid": {
+    "imdb": "tt0000002",
+    "tmdb": "1000002",
+    "tvdb": "1000003"
+  }
+}

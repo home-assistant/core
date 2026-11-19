@@ -2,7 +2,7 @@
 
 from typing import override
 
-from enocean_async import ERP1Telegram
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
 import probatio
 
 from homeassistant.components.binary_sensor import (
@@ -26,7 +26,7 @@ EVENT_BUTTON_PRESSED = "button_pressed"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -111,7 +111,7 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
             {
-                "id": self.address.to_bytelist(),
+                "id": self.address.bytelist,
                 "pushed": pushed,
                 "which": self.which,
                 "onoff": self.onoff,

@@ -5,9 +5,14 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from huum.const import SaunaStatus
-from huum.exceptions import SafetyException
+from huum.exceptions import RequestError, SafetyException
 from huum.schemas import SaunaConfig
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -15,18 +20,18 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.huum.const import (
     CONFIG_DEFAULT_MAX_TEMP,
     CONFIG_DEFAULT_MIN_TEMP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.huum_sauna"
 
@@ -57,8 +62,11 @@ async def test_set_hvac_mode(
     mock_huum_client.status.return_value.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -77,10 +85,10 @@ async def test_set_temperature(
     mock_huum_client.status.return_value.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 60,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 60,
         },
         blocking=True,
     )
@@ -96,8 +104,11 @@ async def test_set_hvac_mode_off(
     """Test setting HVAC mode to off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -112,10 +123,10 @@ async def test_set_temperature_not_heating(
     """Test setting temperature is ignored when not heating."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TEMPERATURE: 60,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 60,
         },
         blocking=True,
     )
@@ -135,11 +146,52 @@ async def test_turn_on_safety_exception(
     with pytest.raises(HomeAssistantError, match="Unable to turn on the sauna"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_TEMPERATURE: 60,
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 60,
             },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "client_method"),
+    [
+        pytest.param(
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 60},
+            "turn_on",
+            id="set_temperature",
+        ),
+        pytest.param(
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.OFF},
+            "turn_off",
+            id="turn_off",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_action_communication_error(
+    hass: HomeAssistant,
+    mock_huum_client: AsyncMock,
+    service: str,
+    service_data: dict[str, int | HVACMode],
+    client_method: str,
+) -> None:
+    """Test that API errors during actions are raised as HomeAssistantError."""
+    getattr(mock_huum_client, client_method).side_effect = RequestError()
+    mock_huum_client.status.return_value.status = SaunaStatus.ONLINE_HEATING
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Huum sauna",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
             blocking=True,
         )
 

@@ -6,6 +6,7 @@ from unittest.mock import patch
 from asyncssh.misc import ChannelOpenError, ConnectionLost, PermissionDenied
 from asyncssh.sftp import SFTPConnectionLost, SFTPPermissionDenied
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import DOMAIN
@@ -22,8 +23,6 @@ from .conftest import (
     ComponentSetup,
     create_private_key_file,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -95,7 +94,7 @@ async def test_setup_connection_error_is_retried(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to establish SSH connection to" in caplog.text
+    assert "Cannot connect to the SSH server 127.0.0.1" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -117,7 +116,7 @@ async def test_setup_sftp_session_error_is_retried(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to open SFTP session on" in caplog.text
+    assert "Cannot open an SFTP session on 127.0.0.1" in caplog.text
 
 
 async def test_setup_invalid_credentials(
@@ -136,15 +135,15 @@ async def test_setup_invalid_credentials(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
     assert (
-        "Failure while attempting to establish SSH connection."
-        " Please check SSH credentials and if changed,"
-        " re-install the integration" in caplog.text
+        "Authentication failed for username@127.0.0.1."
+        " Check the password or private key" in caplog.text
     )
 
 
 async def test_async_remove_entry(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_remove_entry."""
     # Setup default config entry
@@ -194,6 +193,10 @@ async def test_async_remove_entry(
     assert await hass.config_entries.async_remove(new_config_entry.entry_id)
     assert not new_private_key.exists()
     assert not new_private_key.parent.exists()
+    assert (
+        f"Removed storage directory for {DOMAIN} integration for host another@127.0.0.1"
+        in caplog.text
+    )
 
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert config_entry.state is ConfigEntryState.NOT_LOADED

@@ -1,8 +1,10 @@
 {
   "domain": "emonitor",
   "name": "SiteSage Emonitor",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "hostname": "emonitor*",

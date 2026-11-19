@@ -1,5 +1,7 @@
 """Constants for WebDAV tests."""
 
+from aiowebdav2 import ResourceInfo
+
 BACKUP_METADATA = {
     "addons": [],
     "backup_id": "23e64aec",
@@ -15,6 +17,14 @@ BACKUP_METADATA = {
 }
 
 MOCK_LIST_FILES = [
-    "/Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.tar",
-    "/Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.metadata.json",
+    ResourceInfo(
+        path="/Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.tar",
+        name="Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.tar",
+        is_dir=False,
+    ),
+    ResourceInfo(
+        path="/Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.metadata.json",
+        name="Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.metadata.json",
+        is_dir=False,
+    ),
 ]

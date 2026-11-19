@@ -33,7 +33,7 @@ type AzureStorageConfigEntry = ConfigEntry[ContainerClient]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
-) -> bool:
+) -> None:
     """Set up Azure Storage integration."""
     # set increase aiohttp timeout for long running operations (up/download)
     session = async_create_clientsession(
@@ -62,19 +62,19 @@ async def async_setup_entry(
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="account_not_found",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except ClientAuthenticationError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except AzureError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+            translation_placeholders={"account_name": entry.data[CONF_ACCOUNT_NAME]},
         ) from err
 
     entry.runtime_data = container_client
@@ -85,11 +85,8 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
-) -> bool:
+) -> None:
     """Unload an Azure Storage config entry."""
-    return True

@@ -28,7 +28,7 @@ type CambridgeAudioConfigEntry = ConfigEntry[StreamMagicClient]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: CambridgeAudioConfigEntry
-) -> bool:
+) -> None:
     """Set up Cambridge Audio integration from a config entry."""
 
     client = StreamMagicClient(
@@ -62,13 +62,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: CambridgeAudioConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()

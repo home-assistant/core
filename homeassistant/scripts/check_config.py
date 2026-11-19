@@ -28,7 +28,7 @@ from homeassistant.helpers.check_config import async_check_ha_config_file
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.10.1",)
+REQUIREMENTS = ("colorlog==6.12.0",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
@@ -147,7 +147,7 @@ def run(script_args: list) -> int:
         yaml_files = [
             f
             for f in glob(os.path.join(config_dir, "**/*.yaml"), recursive=True)
-            if not f.startswith(deps)
+            if not f.startswith(deps)  # Avoid scanning legacy deps folder
         ]
 
         for yfn in sorted(yaml_files):

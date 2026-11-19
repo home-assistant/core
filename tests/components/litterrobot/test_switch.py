@@ -4,12 +4,14 @@ from unittest.mock import MagicMock, patch
 
 from pylitterbot import FeederRobot, Robot
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SwitchService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,14 +19,13 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
-
-from tests.common import snapshot_platform
 
 NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
@@ -111,8 +112,8 @@ async def test_switch_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
             blocking=True,
         )
 
@@ -195,7 +196,7 @@ async def test_litter_robot_5_sleep_mode_switch_failed(
     with pytest.raises(HomeAssistantError, match="Unable to update"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test_friday_sleep_mode"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test_friday_sleep_mode"},
             blocking=True,
         )

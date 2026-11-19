@@ -18,6 +18,11 @@
       'address': 'AA:BB:CC:DD:EE:EE',
       'available': True,
       'discoverable': True,
+      'low_energy': dict({
+        'active': True,
+        'advertising': True,
+        'connectable': True,
+      }),
       'name': '**REDACTED**',
       'pairable': True,
     }),
@@ -42,8 +47,8 @@
           'screen_off': None,
           'time_based': dict({
             'enabled': True,
-            'end_time': None,
-            'local_end_time': None,
+            'end_time': '06:30:00',
+            'local_end_time': '07:30:00',
             'local_start_time': '01:00:39',
             'start_time': '00:00:39',
           }),

@@ -1,8 +1,10 @@
 {
   "domain": "goalzero",
   "name": "Goal Zero Yeti",
+  "categories": ["energy.backup_power"],
   "codeowners": ["@tkdrob"],
   "config_flow": true,
+  "connectivity": ["network"],
   "dhcp": [
     {
       "registered_devices": true

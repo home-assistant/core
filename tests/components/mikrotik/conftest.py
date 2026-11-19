@@ -1,13 +1,12 @@
 """Mikrotik test configuration."""
 
 from collections.abc import Callable, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from . import create_mock_config_entry
-
-from tests.common import MockConfigEntry
 
 type MockConfigEntryFactory = Callable[..., MockConfigEntry]
 
@@ -16,6 +15,15 @@ type MockConfigEntryFactory = Callable[..., MockConfigEntry]
 def mock_config_entry() -> MockConfigEntryFactory:
     """Create Mikrotik config entries with optional overrides."""
     return create_mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.mikrotik.async_setup_entry", return_value=None
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture(autouse=True)

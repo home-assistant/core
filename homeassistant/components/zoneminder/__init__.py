@@ -3,7 +3,10 @@
 import logging
 
 import probatio
-from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    Timeout as RequestsTimeout,
+)
 from zoneminder.zm import ZoneMinder
 
 from homeassistant.const import (
@@ -36,7 +39,7 @@ DEFAULT_VERIFY_SSL = True
 HOST_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         probatio.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -46,9 +49,24 @@ HOST_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [HOST_CONFIG_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
+
+
+def _login(clients: list[tuple[str, ZoneMinder]]) -> bool:
+    """Log in to each ZoneMinder server."""
+    success = True
+    for host_name, zm_client in clients:
+        try:
+            success = zm_client.login() and success
+        except (RequestsConnectionError, RequestsTimeout) as ex:
+            _LOGGER.error(
+                "ZoneMinder connection failure to %s: %s",
+                host_name,
+                ex,
+            )
+    return success
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -56,7 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = {}
 
-    success = True
+    clients: list[tuple[str, ZoneMinder]] = []
 
     for conf in config[DOMAIN]:
         protocol = "https" if conf[CONF_SSL] else "http"
@@ -72,15 +90,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             conf.get(CONF_VERIFY_SSL),
         )
         hass.data[DOMAIN][host_name] = zm_client
+        clients.append((host_name, zm_client))
 
-        try:
-            success = await hass.async_add_executor_job(zm_client.login) and success
-        except RequestsConnectionError as ex:
-            _LOGGER.error(
-                "ZoneMinder connection failure to %s: %s",
-                host_name,
-                ex,
-            )
+    success = await hass.async_add_executor_job(_login, clients)
 
     async_setup_services(hass)
 

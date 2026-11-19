@@ -3,15 +3,13 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMockResponse
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import (
-    DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,9 +19,6 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
 async def test_entity(
@@ -87,8 +82,8 @@ async def test_camera_light_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: light_entity},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -100,8 +95,8 @@ async def test_camera_light_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: light_entity},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -174,8 +169,8 @@ async def test_light_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: light_entity},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -195,8 +190,8 @@ async def test_light_setup_and_services(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: light_entity},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -232,8 +227,8 @@ async def test_dimmable_light_turn_on_updates_brightness_optimistically(
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: light_entity, "brightness": 128},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: light_entity, "brightness": 128},
             blocking=True,
         )
         await hass.async_block_till_done()

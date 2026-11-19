@@ -1,8 +1,10 @@
 {
   "domain": "honeywell_string_lights",
   "name": "Honeywell String Lights",
+  "categories": ["lighting"],
   "codeowners": ["@balloob"],
   "config_flow": true,
+  "connectivity": ["rf"],
   "dependencies": ["radio_frequency"],
   "documentation": "https://www.home-assistant.io/integrations/honeywell_string_lights",
   "integration_type": "device",

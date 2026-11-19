@@ -2,6 +2,7 @@
 
 from datetime import time as dt_time
 
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_victron_time(

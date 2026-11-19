@@ -5,28 +5,19 @@ from unittest.mock import MagicMock
 
 from compit_inext_api.consts import CompitParameter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
-
-from tests.common import MockConfigEntry
 
 
 async def test_fan_entities_snapshot(
@@ -55,7 +46,10 @@ async def test_fan_turn_on(
     )
 
     await hass.services.async_call(
-        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "fan.nano_color_2"}, blocking=True
+        FAN_DOMAIN,
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.nano_color_2"},
+        blocking=True,
     )
 
     state = hass.states.get("fan.nano_color_2")
@@ -77,8 +71,8 @@ async def test_fan_turn_on_with_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "fan.nano_color_2", ATTR_PERCENTAGE: 100},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: "fan.nano_color_2", FanServiceArgument.PERCENTAGE: 100},
         blocking=True,
     )
 
@@ -102,8 +96,8 @@ async def test_fan_turn_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "fan.nano_color_2"},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "fan.nano_color_2"},
         blocking=True,
     )
 
@@ -126,10 +120,10 @@ async def test_fan_set_speed(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
+        FanService.SET_PERCENTAGE,
         {
-            ATTR_ENTITY_ID: "fan.nano_color_2",
-            ATTR_PERCENTAGE: 80,
+            TargetKey.ENTITY_ID: "fan.nano_color_2",
+            FanServiceArgument.PERCENTAGE: 80,
         },
         blocking=True,
     )
@@ -153,10 +147,10 @@ async def test_fan_set_speed_while_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
+        FanService.SET_PERCENTAGE,
         {
-            ATTR_ENTITY_ID: "fan.nano_color_2",
-            ATTR_PERCENTAGE: 80,
+            TargetKey.ENTITY_ID: "fan.nano_color_2",
+            FanServiceArgument.PERCENTAGE: 80,
         },
         blocking=True,
     )
@@ -181,8 +175,8 @@ async def test_fan_set_speed_to_not_in_step_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.nano_color_2", ATTR_PERCENTAGE: 65},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: "fan.nano_color_2", FanServiceArgument.PERCENTAGE: 65},
     )
 
     state = hass.states.get("fan.nano_color_2")
@@ -205,10 +199,10 @@ async def test_fan_set_speed_to_0(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
+        FanService.SET_PERCENTAGE,
         {
-            ATTR_ENTITY_ID: "fan.nano_color_2",
-            ATTR_PERCENTAGE: 0,
+            TargetKey.ENTITY_ID: "fan.nano_color_2",
+            FanServiceArgument.PERCENTAGE: 0,
         },
         blocking=True,
     )

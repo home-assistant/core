@@ -1,0 +1,10 @@
+{
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Failed to send the Sinch SMS."
+    },
+    "unauthorized": {
+      "message": "Sinch rejected the API key or service plan ID."
+    }
+  }
+}

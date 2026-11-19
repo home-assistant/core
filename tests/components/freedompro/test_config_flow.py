@@ -37,7 +37,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             "state": False,
             "code": -201,
         },
-    ):
+    ) as mock_get_list:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -52,6 +52,13 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
 
         assert result["errors"] == {"base": "invalid_auth"}
 
+        mock_get_list.return_value = {"state": True, "devices": DEVICES}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=VALID_CONFIG,
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test that errors are shown when API key is invalid."""
@@ -61,7 +68,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             "state": False,
             "code": -200,
         },
-    ):
+    ) as mock_get_list:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -75,6 +82,13 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
+
+        mock_get_list.return_value = {"state": True, "devices": DEVICES}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=VALID_CONFIG,
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:

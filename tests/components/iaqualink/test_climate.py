@@ -6,7 +6,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -20,6 +20,7 @@ from iaqualink.systems.iaqua.device import (
 )
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -27,10 +28,12 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -42,8 +45,6 @@ from .conftest import (
     get_aqualink_system,
     setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -209,8 +210,8 @@ async def test_thermostat_set_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
 
@@ -238,8 +239,8 @@ async def test_thermostat_set_temperature(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 84.9},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 84.9},
         blocking=True,
     )
 
@@ -281,7 +282,7 @@ async def test_thermostat_set_temperature(
             id="timeout",
         ),
         pytest.param(
-            httpx.HTTPError("boom"),
+            httpx2.HTTPError("boom"),
             HomeAssistantError,
             "Aqualink error: boom",
             id="http",

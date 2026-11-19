@@ -8,6 +8,7 @@ from aiohttp import ClientSession, ClientWebSocketResponse
 from freezegun.api import FrozenDateTimeFactory
 from PIL import Image
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.image_upload import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
@@ -16,8 +17,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import TEST_IMAGE
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_upload_image(

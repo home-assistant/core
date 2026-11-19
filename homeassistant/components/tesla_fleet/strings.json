@@ -180,7 +180,7 @@
           "preset_mode": {
             "state": {
               "camp": "Camp mode",
-              "dog": "Dog mode",
+              "dog": "Pet mode",
               "keep": "Keep mode",
               "off": "[%key:common::state::normal%]"
             }
@@ -634,6 +634,9 @@
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
     },
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data for device ID: {device_id}"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },
@@ -650,6 +653,50 @@
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    }
+  },
+  "services": {
+    "navigate_to_coordinates": {
+      "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        },
+        "gps": {
+          "description": "Location to navigate to.",
+          "name": "Location"
+        }
+      },
+      "name": "Navigate to coordinates"
+    },
+    "navigate_to_destination": {
+      "description": "Sets vehicle navigation to the provided destination, which can be an address, a place name or a map link.",
+      "fields": {
+        "destination": {
+          "description": "Address, place name or map link to navigate to.",
+          "name": "Destination"
+        },
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Navigate to destination"
+    },
+    "navigate_to_waypoints": {
+      "description": "Sets vehicle navigation to an ordered list of Google Place IDs. The last place is the final destination.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to send the trip to.",
+          "name": "Vehicle"
+        },
+        "place_ids": {
+          "description": "Google Place IDs in travel order, without the refId: prefix. The last ID is the final destination.",
+          "name": "Place IDs"
+        }
+      },
+      "name": "Navigate to waypoints"
     }
   }
 }

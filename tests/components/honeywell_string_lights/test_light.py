@@ -1,24 +1,21 @@
 """Tests for the Honeywell String Lights light platform."""
 
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyEntity,
+)
 from rf_protocols.codes.honeywell.string_lights import CODES
 
-from homeassistant.components.light import (
-    DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, State
-
-from tests.common import MockConfigEntry, mock_restore_cache
-from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 
 ENTITY_ID = "light.honeywell_string_lights"
 
@@ -38,8 +35,8 @@ async def test_turn_on_off_sends_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         context=context,
         blocking=True,
     )
@@ -55,8 +52,8 @@ async def test_turn_on_off_sends_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         context=context,
         blocking=True,
     )

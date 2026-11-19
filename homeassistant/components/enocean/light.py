@@ -3,8 +3,8 @@
 import math
 from typing import Any, override
 
-from enocean_async import ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3PacketType
 import probatio
 
 from homeassistant.components.light import (
@@ -28,10 +28,10 @@ DEFAULT_NAME = "EnOcean Light"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_ID, default=[]): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Required(CONF_SENDER_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }

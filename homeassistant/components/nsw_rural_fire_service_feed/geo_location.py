@@ -63,7 +63,7 @@ VALID_CATEGORIES = ["Advice", "Emergency Warning", "Not Applicable", "Watch and 
 PLATFORM_SCHEMA = GEO_LOCATION_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_CATEGORIES, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In(VALID_CATEGORIES)]
+            probatio.EnsureList(), [probatio.In(VALID_CATEGORIES)]
         ),
         probatio.Optional(CONF_LATITUDE): cv.latitude,
         probatio.Optional(CONF_LONGITUDE): cv.longitude,

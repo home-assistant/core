@@ -7,10 +7,8 @@ import pyvera as veraApi
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from .common import ControllerData, VeraConfigEntry
-from .const import VERA_ID_FORMAT
 
 
 async def async_setup_entry(
@@ -36,9 +34,8 @@ class VeraScene(Scene):
         self.controller = controller_data.controller
 
         self._attr_name = self.vera_scene.name
-        # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_scene.name), vera_scene.scene_id
+        self._attr_unique_id = (
+            f"{controller_data.config_entry.unique_id}_{vera_scene.scene_id}"
         )
 
     def update(self) -> None:

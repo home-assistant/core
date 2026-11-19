@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry
 
 TO_REDACT = {CONF_HOST}
 
@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "model": coordinator.device_info["model"],
+        "model": coordinator.device_info.model,
         "data": {
             "current_temp": coordinator.api_client.get_current_temp(),
             "target_temp": coordinator.api_client.get_target_temp(),

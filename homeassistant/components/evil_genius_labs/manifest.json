@@ -1,8 +1,10 @@
 {
   "domain": "evil_genius_labs",
   "name": "Evil Genius Labs",
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": [],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/evil_genius_labs",
   "integration_type": "device",
   "iot_class": "local_polling",

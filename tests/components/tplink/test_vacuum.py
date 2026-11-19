@@ -2,6 +2,7 @@
 
 from kasa import Device, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import (
@@ -23,8 +24,6 @@ from homeassistant.helpers import (
 )
 
 from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.my_vacuum"
 

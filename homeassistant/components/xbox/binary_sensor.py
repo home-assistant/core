@@ -44,7 +44,9 @@ class XboxBinarySensorEntityDescription(
     is_on_fn: Callable[[Person], bool | None]
 
 
-def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
+def profile_attributes(
+    person: Person, _: Title | None, _total: int | None
+) -> dict[str, Any]:
     """Attributes for the profile."""
     attributes: dict[str, Any] = {}
     attributes["display_name"] = person.display_name

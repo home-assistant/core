@@ -1,8 +1,10 @@
 {
   "domain": "essent",
   "name": "Essent",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@jaapp"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/essent",
   "integration_type": "service",
   "iot_class": "cloud_polling",

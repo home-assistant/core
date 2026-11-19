@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 AUTO_SETUP_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_BINARY_SENSOR, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.All(
                     {
@@ -44,7 +44,7 @@ AUTO_SETUP_SCHEMA = probatio.Schema(
             ],
         ),
         probatio.Optional(CONF_LIGHT, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.All(
                     {
@@ -56,7 +56,7 @@ AUTO_SETUP_SCHEMA = probatio.Schema(
             ],
         ),
         probatio.Optional(CONF_SENSOR, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.All(
                     {
@@ -70,7 +70,7 @@ AUTO_SETUP_SCHEMA = probatio.Schema(
             ],
         ),
         probatio.Optional(CONF_SWITCH, default=[]): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.All(
                     {

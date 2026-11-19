@@ -5,15 +5,18 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from py_rejseplan import enums
+from py_rejseplan.exceptions import (
+    APIError as RejseplanenAPIError,
+    ConnectionError as RejseplanenConnectionError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.rejseplanen.const import CONF_STOP_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,16 +58,27 @@ async def test_form_user_step(
 
 
 @pytest.mark.parametrize(
-    ("return_value", "expected_errors"),
+    ("side_effect", "return_value", "expected_errors"),
     [
-        # Invalid authentication
-        (False, {"base": "invalid_auth"}),
+        pytest.param(
+            None,
+            False,
+            {"base": "invalid_auth"},
+            id="invalid_auth",
+        ),
+        pytest.param(
+            RejseplanenConnectionError("Connection refused"),
+            None,
+            {"base": "cannot_connect"},
+            id="cannot_connect",
+        ),
     ],
 )
 async def test_config_flow_error_cases(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    return_value: bool,
+    side_effect: Exception | None,
+    return_value: bool | None,
     expected_errors: dict[str, str],
 ) -> None:
     """Test invalid authentication handling."""
@@ -77,7 +91,7 @@ async def test_config_flow_error_cases(
         "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
     ) as mock_client:
         mock_client.return_value.validate_auth_key_async = AsyncMock(
-            return_value=return_value
+            side_effect=side_effect, return_value=return_value
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -101,6 +115,89 @@ async def test_config_flow_error_cases(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
+    ) as mock_client:
+        mock_client.return_value.validate_auth_key_async = AsyncMock(return_value=True)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: "new-api-key"}
+
+
+@pytest.mark.parametrize(
+    ("validate_kwargs", "expected_error"),
+    [
+        pytest.param({"return_value": False}, "invalid_auth", id="invalid_auth"),
+        pytest.param(
+            {"side_effect": RejseplanenConnectionError("error")},
+            "cannot_connect",
+            id="connection_error",
+        ),
+        pytest.param(
+            {"side_effect": RejseplanenAPIError("error")},
+            "cannot_connect",
+            id="api_error",
+        ),
+        pytest.param({"side_effect": OSError}, "cannot_connect", id="os_error"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    validate_kwargs: dict[str, Any],
+    expected_error: str,
+) -> None:
+    """Test reauthentication errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
+    ) as mock_client:
+        mock_client.return_value.validate_auth_key_async = AsyncMock(**validate_kwargs)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    with patch(
+        "homeassistant.components.rejseplanen.config_flow.Rejseplanen"
+    ) as mock_client:
+        mock_client.return_value.validate_auth_key_async = AsyncMock(return_value=True)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {CONF_API_KEY: "new-api-key"}
 
 
 async def test_form_singleton_prevention(

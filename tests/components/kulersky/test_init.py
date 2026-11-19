@@ -1,12 +1,12 @@
 """Tests for init methods."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.kulersky.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry(
@@ -62,4 +62,8 @@ async def test_migrate_entry_no_devices_found(
     await hass.async_block_till_done()
 
     assert mock_config_entry_v1.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        mock_config_entry_v1.reason
+        == "Cannot migrate the configuration because no devices are registered"
+    )
     assert mock_config_entry_v1.version == 1

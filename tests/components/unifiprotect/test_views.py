@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponse
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from uiprotect.data import Camera, Event, EventType, ModelType
 from uiprotect.exceptions import ClientError
 
@@ -20,8 +21,6 @@ from homeassistant.components.unifiprotect.views import (
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_thumbnail_bad_nvr_id(

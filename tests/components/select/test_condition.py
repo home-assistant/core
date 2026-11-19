@@ -5,13 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
-
-from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -24,6 +18,11 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.select.condition import CONDITIONS, CONF_OPTION
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, TargetKey
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 
 @pytest.fixture
@@ -232,7 +231,7 @@ async def test_select_condition_evaluates_both_domains(
     cond = await create_target_condition(
         hass,
         condition="select.is_option_selected",
-        target={CONF_ENTITY_ID: [entity_id_select, entity_id_input_select]},
+        target={TargetKey.ENTITY_ID: [entity_id_select, entity_id_input_select]},
         behavior="any",
         condition_options={CONF_OPTION: ["option_a", "option_b"]},
     )
@@ -296,7 +295,7 @@ async def test_select_is_option_selected_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "select.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "select.test"},
                 CONF_OPTIONS: condition_options,
             },
         )

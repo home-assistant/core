@@ -6,14 +6,14 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component
 import requests_mock
 
 from homeassistant.components import notify
 from homeassistant.components.clicksend_tts import notify as cs_tts
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component
+from homeassistant.util.yaml import parse_yaml
 
 # Infos from https://developers.clicksend.com/docs/rest/v3/#testing
 TEST_USERNAME = "nocredit"
@@ -124,3 +124,20 @@ async def test_send_simple_message(hass: HomeAssistant) -> None:
             "Authorization" in mock.last_request.headers
             and mock.last_request.headers["Authorization"] == expected_auth
         )
+
+
+@pytest.mark.parametrize(
+    "recipient",
+    [
+        pytest.param(TEST_VOICE_NUMBER, id="quoted"),
+        # YAML reads an unquoted +61411111111 as the int 61411111111
+        pytest.param(parse_yaml(f"n: {TEST_VOICE_NUMBER}")["n"], id="unquoted"),
+    ],
+)
+def test_recipient_accepts_e164(recipient: str | int) -> None:
+    """Test the recipient is accepted whether or not it is quoted in YAML."""
+    config = cs_tts.PLATFORM_SCHEMA(
+        {**CONFIG[notify.DOMAIN], cs_tts.CONF_RECIPIENT: recipient}
+    )
+
+    assert config[cs_tts.CONF_RECIPIENT] == TEST_VOICE_NUMBER

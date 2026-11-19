@@ -13,13 +13,7 @@
     }
   },
   "services": {
-    "clear_zone_override": {
-      "service": "mdi:motion-sensor-off"
-    },
     "refresh_system": {
-      "service": "mdi:refresh"
-    },
-    "reset_system": {
       "service": "mdi:refresh"
     },
     "set_dhw_override": {

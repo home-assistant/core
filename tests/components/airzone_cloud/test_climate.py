@@ -5,36 +5,24 @@ from unittest.mock import patch
 
 from aioairzone_cloud.exceptions import AirzoneCloudError
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_LOW,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
-
-from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -68,9 +56,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
+            ClimateService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "climate.bron",
+                TargetKey.ENTITY_ID: "climate.bron",
             },
             blocking=True,
         )
@@ -85,9 +73,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
+            ClimateService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "climate.group",
+                TargetKey.ENTITY_ID: "climate.group",
             },
             blocking=True,
         )
@@ -101,9 +89,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
+            ClimateService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "climate.group",
+                TargetKey.ENTITY_ID: "climate.group",
             },
             blocking=True,
         )
@@ -118,9 +106,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
+            ClimateService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "climate.house",
+                TargetKey.ENTITY_ID: "climate.house",
             },
             blocking=True,
         )
@@ -134,9 +122,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
+            ClimateService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "climate.house",
+                TargetKey.ENTITY_ID: "climate.house",
             },
             blocking=True,
         )
@@ -151,9 +139,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
+            ClimateService.TURN_ON,
             {
-                ATTR_ENTITY_ID: "climate.dormitorio",
+                TargetKey.ENTITY_ID: "climate.dormitorio",
             },
             blocking=True,
         )
@@ -167,9 +155,9 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
+            ClimateService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: "climate.salon",
+                TargetKey.ENTITY_ID: "climate.salon",
             },
             blocking=True,
         )
@@ -190,10 +178,10 @@ async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: "climate.bron",
-                ATTR_FAN_MODE: FAN_LOW,
+                TargetKey.ENTITY_ID: "climate.bron",
+                ClimateServiceArgument.FAN_MODE: FAN_LOW,
             },
             blocking=True,
         )
@@ -207,10 +195,10 @@ async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: "climate.bron_pro",
-                ATTR_FAN_MODE: FAN_AUTO,
+                TargetKey.ENTITY_ID: "climate.bron_pro",
+                ClimateServiceArgument.FAN_MODE: FAN_AUTO,
             },
             blocking=True,
         )
@@ -231,10 +219,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.bron",
-                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+                TargetKey.ENTITY_ID: "climate.bron",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
             },
             blocking=True,
         )
@@ -248,10 +236,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.bron",
-                ATTR_HVAC_MODE: HVACMode.OFF,
+                TargetKey.ENTITY_ID: "climate.bron",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )
@@ -266,10 +254,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.group",
-                ATTR_HVAC_MODE: HVACMode.DRY,
+                TargetKey.ENTITY_ID: "climate.group",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -283,10 +271,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.group",
-                ATTR_HVAC_MODE: HVACMode.OFF,
+                TargetKey.ENTITY_ID: "climate.group",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )
@@ -301,10 +289,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.house",
-                ATTR_HVAC_MODE: HVACMode.DRY,
+                TargetKey.ENTITY_ID: "climate.house",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -318,10 +306,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.house",
-                ATTR_HVAC_MODE: HVACMode.OFF,
+                TargetKey.ENTITY_ID: "climate.house",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )
@@ -336,10 +324,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.salon",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
+                TargetKey.ENTITY_ID: "climate.salon",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
             },
             blocking=True,
         )
@@ -353,10 +341,10 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.salon",
-                ATTR_HVAC_MODE: HVACMode.OFF,
+                TargetKey.ENTITY_ID: "climate.salon",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
             },
             blocking=True,
         )
@@ -379,10 +367,10 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
+            ClimateService.SET_HVAC_MODE,
             {
-                ATTR_ENTITY_ID: "climate.dormitorio",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
+                TargetKey.ENTITY_ID: "climate.dormitorio",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
             },
             blocking=True,
         )
@@ -403,10 +391,10 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.group",
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.group",
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -421,11 +409,11 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.house",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.house",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -441,11 +429,11 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.salon",
-                ATTR_HVAC_MODE: HVACMode.HEAT,
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.salon",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -461,12 +449,12 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.bron_pro",
-                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
-                ATTR_TARGET_TEMP_HIGH: 25.0,
-                ATTR_TARGET_TEMP_LOW: 20.0,
+                TargetKey.ENTITY_ID: "climate.bron_pro",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 25.0,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 20.0,
             },
             blocking=True,
         )
@@ -492,10 +480,10 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.bron",
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.bron",
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -513,10 +501,10 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.group",
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.group",
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -534,10 +522,10 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.house",
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.house",
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )
@@ -555,10 +543,10 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: "climate.salon",
-                ATTR_TEMPERATURE: 20.5,
+                TargetKey.ENTITY_ID: "climate.salon",
+                ClimateServiceArgument.TEMPERATURE: 20.5,
             },
             blocking=True,
         )

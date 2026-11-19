@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.components.sensor import (
@@ -22,8 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
-
 
 async def test_sensors(
     hass: HomeAssistant,
@@ -34,8 +33,12 @@ async def test_sensors(
     """Test the Forecast.Solar sensors."""
     entry_id = init_integration.entry_id
 
-    state = hass.states.get("sensor.energy_production_today")
-    entry = entity_registry.async_get("sensor.energy_production_today")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_energy_production_today"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_energy_production_today"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_today"
@@ -49,8 +52,12 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.energy_production_today_remaining")
-    entry = entity_registry.async_get("sensor.energy_production_today_remaining")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_energy_production_remaining_today"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_energy_production_remaining_today"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_today_remaining"
@@ -64,8 +71,12 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.energy_production_tomorrow")
-    entry = entity_registry.async_get("sensor.energy_production_tomorrow")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_energy_production_tomorrow"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_energy_production_tomorrow"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_production_tomorrow"
@@ -79,8 +90,12 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.power_highest_peak_time_today")
-    entry = entity_registry.async_get("sensor.power_highest_peak_time_today")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_highest_power_peak_time_today"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_highest_power_peak_time_today"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_today"
@@ -94,8 +109,12 @@ async def test_sensors(
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.power_highest_peak_time_tomorrow")
-    entry = entity_registry.async_get("sensor.power_highest_peak_time_tomorrow")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_highest_power_peak_time_tomorrow"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_highest_power_peak_time_tomorrow"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_highest_peak_time_tomorrow"
@@ -109,8 +128,12 @@ async def test_sensors(
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.power_production_now")
-    entry = entity_registry.async_get("sensor.power_production_now")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_power_production_now"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_power_production_now"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_power_production_now"
@@ -124,8 +147,12 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.energy_current_hour")
-    entry = entity_registry.async_get("sensor.energy_current_hour")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_energy_production_this_hour"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_energy_production_this_hour"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_current_hour"
@@ -139,8 +166,12 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.energy_next_hour")
-    entry = entity_registry.async_get("sensor.energy_next_hour")
+    state = hass.states.get(
+        "sensor.solar_production_forecast_estimated_energy_production_next_hour"
+    )
+    entry = entity_registry.async_get(
+        "sensor.solar_production_forecast_estimated_energy_production_next_hour"
+    )
     assert entry
     assert state
     assert entry.unique_id == f"{entry_id}_energy_next_hour"
@@ -168,9 +199,9 @@ async def test_sensors(
 @pytest.mark.parametrize(
     "entity_id",
     [
-        "sensor.power_production_next_12hours",
-        "sensor.power_production_next_24hours",
-        "sensor.power_production_next_hour",
+        "sensor.solar_production_forecast_estimated_power_production_in_12_hours",
+        "sensor.solar_production_forecast_estimated_power_production_in_24_hours",
+        "sensor.solar_production_forecast_estimated_power_production_in_1_hour",
     ],
 )
 async def test_disabled_by_default(

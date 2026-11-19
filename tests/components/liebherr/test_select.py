@@ -20,26 +20,20 @@ from pyliebherrhomeapi import (
 )
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -131,12 +125,35 @@ async def test_select_service_calls(
     """Test select option service calls."""
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test select state updates before an SSE event arrives."""
+    entity_id = "select.test_fridge_bottom_zone_icemaker"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: IceMakerMode.ON.value,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == IceMakerMode.ON.value
 
 
 @pytest.mark.parametrize(
@@ -170,8 +187,11 @@ async def test_select_failure(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                SelectServiceArgument.OPTION: option,
+            },
             blocking=True,
         )
 

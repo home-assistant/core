@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
@@ -60,6 +60,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="status_code",
         translation_key="status_code",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             endpoint.results[-1].status if endpoint.results else None
         ),
@@ -70,6 +71,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["start", "healthy", "unhealthy", "resolved"],
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             endpoint.events[-1].type.lower() if endpoint.events else None
         ),
@@ -79,6 +81,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         translation_key="certificate_expiration",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             coordinator.last_update_time
             + timedelta(
@@ -93,6 +96,7 @@ SENSOR_TYPES: tuple[GatusSensorEntityDescription, ...] = (
         key="dns_rcode",
         translation_key="dns_rcode",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=lambda coordinator, endpoint: (
             DNS_RCODE_MAP.get(
                 endpoint.results[-1].dns_rcode,
@@ -113,22 +117,47 @@ async def async_setup_entry(
     """Set up the Gatus sensor platform."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        GatusEndpointSensor(coordinator, entry, endpoint_key, description)
-        for endpoint_key, endpoint in coordinator.data.items()
-        for description in SENSOR_TYPES
-        if (
-            description.key != "certificate_expiration"
-            or (
-                endpoint.results
-                and endpoint.results[-1].certificate_expiration is not None
-            )
-        )
-        and (
-            description.key != "dns_rcode"
-            or (endpoint.results and endpoint.results[-1].dns_rcode is not None)
-        )
-    )
+    known_entities: set[tuple[str, str]] = set()
+
+    @callback
+    def _check_entities() -> None:
+        current_endpoints = set(coordinator.data)
+        new_entities: list[GatusEndpointSensor] = []
+
+        for endpoint_key, endpoint in coordinator.data.items():
+            for description in SENSOR_TYPES:
+                entity_key = (endpoint_key, description.key)
+                if entity_key in known_entities:
+                    continue
+
+                if description.key == "certificate_expiration" and (
+                    not endpoint.results
+                    or endpoint.results[-1].certificate_expiration is None
+                ):
+                    continue
+
+                if description.key == "dns_rcode" and (
+                    not endpoint.results or endpoint.results[-1].dns_rcode is None
+                ):
+                    continue
+
+                known_entities.add(entity_key)
+                new_entities.append(
+                    GatusEndpointSensor(coordinator, entry, endpoint_key, description)
+                )
+
+        if new_entities:
+            async_add_entities(new_entities)
+
+        stale_entities = {
+            entity_key
+            for entity_key in known_entities
+            if entity_key[0] not in current_endpoints
+        }
+        known_entities.difference_update(stale_entities)
+
+    _check_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_check_entities))
 
 
 class GatusEndpointSensor(GatusEndpointEntity, SensorEntity):

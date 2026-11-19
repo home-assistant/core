@@ -4,12 +4,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
@@ -26,6 +21,7 @@ from homeassistant.helpers.selector import (
     LocationSelectorConfig,
 )
 
+from . import OpenweathermapConfigEntry
 from .const import (
     CONFIG_FLOW_VERSION,
     DEFAULT_LANGUAGE,
@@ -45,7 +41,7 @@ USER_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
@@ -69,7 +65,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OpenweathermapConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow()

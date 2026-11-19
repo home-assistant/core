@@ -161,7 +161,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={CONF_NAME: self.connection_data[CONF_NAME]},
+                description_placeholders={"name": self.connection_data[CONF_NAME]},
                 errors={},
             )
 
@@ -202,7 +202,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="auth",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PIN): probatio.All(
+                    probatio.Required(probatio.Secret(CONF_PIN)): probatio.All(
                         int, probatio.Range(min=1, max=9999)
                     ),
                 }

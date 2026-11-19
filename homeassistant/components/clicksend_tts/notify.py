@@ -40,13 +40,21 @@ DEFAULT_LANGUAGE = "en-us"
 DEFAULT_VOICE = FEMALE_VOICE
 TIMEOUT = 5
 
+
+def _restore_yaml_plus(value: Any) -> Any:
+    """Restore the plus YAML drops when it reads an unquoted +<digits> as an int."""
+    if isinstance(value, int) and not isinstance(value, bool):
+        return f"+{value}"
+    return value
+
+
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_RECIPIENT): probatio.All(
-            cv.string, probatio.Match(r"^\+?[1-9]\d{1,14}$")
+            _restore_yaml_plus, cv.string, probatio.E164(normalize=False)
         ),
         probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): cv.string,
         probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): probatio.In(

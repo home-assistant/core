@@ -5,14 +5,13 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from . import load_workout_fixture, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 async def test_api_calendar(

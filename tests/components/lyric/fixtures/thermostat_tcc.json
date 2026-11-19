@@ -1,0 +1,26 @@
+{
+  "deviceClass": "Thermostat",
+  "deviceType": "Thermostat",
+  "deviceID": "TCC-AABBCC000012",
+  "macID": "AABBCC000012",
+  "name": "Landing",
+  "deviceModel": "Round",
+  "units": "Fahrenheit",
+  "indoorTemperature": 70,
+  "allowedModes": ["Heat", "Off", "Cool"],
+  "minHeatSetpoint": 40,
+  "maxHeatSetpoint": 90,
+  "minCoolSetpoint": 50,
+  "maxCoolSetpoint": 99,
+  "changeableValues": {
+    "mode": "Off",
+    "autoChangeoverActive": false,
+    "heatSetpoint": 68,
+    "coolSetpoint": 76,
+    "heatCoolMode": "Heat"
+  },
+  "operationStatus": {
+    "mode": "EquipmentOff"
+  },
+  "settings": {}
+}

@@ -139,7 +139,6 @@ class FritzBoxCallSensor(SensorEntity):
         """Stop callmonitor thread."""
         if (
             self._monitor
-            and self._monitor.stopped
             and not self._monitor.stopped.is_set()
             and self._monitor.connection
             and self._monitor.connection.is_alive

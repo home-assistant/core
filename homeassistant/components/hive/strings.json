@@ -21,10 +21,7 @@
         "title": "Hive two-factor authentication"
       },
       "configuration": {
-        "data": {
-          "device_name": "Device name"
-        },
-        "description": "Enter your Hive configuration.",
+        "description": "Home Assistant will be registered as a trusted device on your Hive account.",
         "title": "Hive configuration"
       },
       "reauth": {
@@ -61,17 +58,6 @@
           "on": "[%key:common::state::on%]",
           "schedule": "[%key:component::hive::entity::sensor::heating::state::schedule%]"
         }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "scan_interval": "Scan interval (seconds)"
-        },
-        "description": "Update the scan interval to poll for data more often.",
-        "title": "Options for Hive"
       }
     }
   },

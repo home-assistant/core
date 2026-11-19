@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pypalazzetti.temperature import TemperatureDefinition, TemperatureDescriptionKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.palazzetti.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -18,7 +17,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.palazzetti.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -64,7 +63,7 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.has_fan_high = True
         mock_client.has_fan_auto = True
         mock_client.has_on_off_switch = True
-        mock_client.has_pellet_level = False
+        mock_client.has_pellet_level = True
         mock_client.host = "XXXXXXXXXX"
         mock_client.connected = True
         mock_client.status = 6

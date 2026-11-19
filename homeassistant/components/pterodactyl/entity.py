@@ -4,14 +4,13 @@ from typing import override
 
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import PterodactylGameServer, PterodactylGameServerData
 from .const import DOMAIN
-from .coordinator import PterodactylCoordinator
+from .coordinator import PterodactylConfigEntry, PterodactylCoordinator
 
 MANUFACTURER = "Pterodactyl"
 
@@ -25,7 +24,7 @@ class PterodactylEntity(CoordinatorEntity[PterodactylCoordinator]):
         self,
         coordinator: PterodactylCoordinator,
         game_server: PterodactylGameServer,
-        config_entry: ConfigEntry,
+        config_entry: PterodactylConfigEntry,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)

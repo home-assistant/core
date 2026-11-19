@@ -4,18 +4,18 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from goalzero import exceptions
+import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import CONF_NAME, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from . import CONF_DATA, async_init_integration, create_entry
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_config_and_unload(
@@ -83,13 +83,22 @@ async def test_update_failed(
         assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("data", "name"),
+    [
+        pytest.param(CONF_DATA, DEFAULT_NAME, id="default"),
+        pytest.param({**CONF_DATA, CONF_NAME: "garage"}, "Garage", id="stored_name"),
+    ],
+)
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
+    data: dict[str, str],
+    name: str,
 ) -> None:
     """Test device info."""
-    entry = await async_init_integration(hass, aioclient_mock)
+    entry = await async_init_integration(hass, aioclient_mock, data=data)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, entry.entry_id), entry.entry_id
@@ -99,5 +108,5 @@ async def test_device_info(
     assert device.identifiers == {(DOMAIN, entry.entry_id)}
     assert device.manufacturer == MANUFACTURER
     assert device.model == "Yeti 1400"
-    assert device.name == DEFAULT_NAME
+    assert device.name == name
     assert device.sw_version == "1.5.7"

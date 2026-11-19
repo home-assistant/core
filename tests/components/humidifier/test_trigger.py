@@ -5,27 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
-
-from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    HumidifierAction,
-    HumidifierEntityFeature,
-)
-from homeassistant.components.humidifier.trigger import TRIGGERS
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITY_ID,
-    CONF_MODE,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import async_validate_trigger_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -37,6 +17,25 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.humidifier.const import (
+    ATTR_ACTION,
+    HumidifierAction,
+    HumidifierEntityFeature,
+)
+from homeassistant.components.humidifier.trigger import TRIGGERS
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_MODE,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
+    TargetKey,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.trigger import async_validate_trigger_config
 
 
 @pytest.fixture
@@ -425,7 +424,7 @@ async def test_humidifier_mode_changed_trigger_validation(
             [
                 {
                     "platform": trigger,
-                    CONF_TARGET: {CONF_ENTITY_ID: "humidifier.test"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "humidifier.test"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],

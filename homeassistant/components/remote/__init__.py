@@ -1,13 +1,7 @@
 """Support to interface with universal remote control devices."""
 
-from collections.abc import Iterable
 from datetime import timedelta
-import functools as ft
 import logging
-from typing import Any, final, override
-
-import probatio
-from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,51 +9,87 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, RemoteEntityFeature, RemoteEntityStateAttribute
+from .const import (
+    ATTR_ACTIVITY,
+    ATTR_ACTIVITY_LIST,
+    ATTR_ALTERNATIVE,
+    ATTR_COMMAND_TYPE,
+    ATTR_CURRENT_ACTIVITY,
+    ATTR_DELAY_SECS,
+    ATTR_DEVICE,
+    ATTR_HOLD_SECS,
+    ATTR_NUM_REPEATS,
+    ATTR_TIMEOUT,
+    DATA_COMPONENT,
+    DEFAULT_DELAY_SECS,
+    DEFAULT_HOLD_SECS,
+    DEFAULT_NUM_REPEATS,
+    DOMAIN,
+    SERVICE_DELETE_COMMAND,
+    SERVICE_LEARN_COMMAND,
+    SERVICE_SEND_COMMAND,
+    SERVICE_SYNC,
+    RemoteEntityFeature,
+    RemoteEntityStateAttribute,
+    RemoteService,
+    RemoteServiceArgument,
+)
+from .entity import RemoteEntity, RemoteEntityDescription
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[RemoteEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ATTR_ACTIVITY = "activity"
-ATTR_ACTIVITY_LIST = "activity_list"
-ATTR_CURRENT_ACTIVITY = "current_activity"
-ATTR_COMMAND_TYPE = "command_type"
-ATTR_DEVICE = "device"
-ATTR_NUM_REPEATS = "num_repeats"
-ATTR_DELAY_SECS = "delay_secs"
-ATTR_HOLD_SECS = "hold_secs"
-ATTR_ALTERNATIVE = "alternative"
-ATTR_TIMEOUT = "timeout"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SERVICE_SEND_COMMAND = "send_command"
-SERVICE_LEARN_COMMAND = "learn_command"
-SERVICE_DELETE_COMMAND = "delete_command"
-SERVICE_SYNC = "sync"
-
-DEFAULT_NUM_REPEATS = 1
-DEFAULT_DELAY_SECS = 0.4
-DEFAULT_HOLD_SECS = 0
-
-
-REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
-    {probatio.Optional(ATTR_ACTIVITY): cv.string}
-)
+__all__ = [
+    "ATTR_ACTIVITY",
+    "ATTR_ACTIVITY_LIST",
+    "ATTR_ALTERNATIVE",
+    "ATTR_COMMAND",
+    "ATTR_COMMAND_TYPE",
+    "ATTR_CURRENT_ACTIVITY",
+    "ATTR_DELAY_SECS",
+    "ATTR_DEVICE",
+    "ATTR_HOLD_SECS",
+    "ATTR_NUM_REPEATS",
+    "ATTR_TIMEOUT",
+    "DEFAULT_DELAY_SECS",
+    "DEFAULT_HOLD_SECS",
+    "DEFAULT_NUM_REPEATS",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_DELETE_COMMAND",
+    "SERVICE_LEARN_COMMAND",
+    "SERVICE_SEND_COMMAND",
+    "SERVICE_SYNC",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STATE_OFF",
+    "STATE_ON",
+    "RemoteEntity",
+    "RemoteEntityDescription",
+    "RemoteEntityFeature",
+    "RemoteEntityStateAttribute",
+    "RemoteService",
+    "RemoteServiceArgument",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -74,140 +104,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_turn_off"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_turn_on"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_TOGGLE, REMOTE_SERVICE_ACTIVITY_SCHEMA, "async_toggle"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SEND_COMMAND,
-        {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_DEVICE): cv.string,
-            probatio.Optional(
-                ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
-            ): cv.positive_int,
-            probatio.Optional(ATTR_DELAY_SECS): probatio.Coerce(float),
-            probatio.Optional(
-                ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS
-            ): probatio.Coerce(float),
-        },
-        "async_send_command",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_LEARN_COMMAND,
-        {
-            probatio.Optional(ATTR_DEVICE): cv.string,
-            probatio.Optional(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_COMMAND_TYPE): cv.string,
-            probatio.Optional(ATTR_ALTERNATIVE): cv.boolean,
-            probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
-        },
-        "async_learn_command",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_DELETE_COMMAND,
-        {
-            probatio.Required(ATTR_COMMAND): probatio.All(cv.ensure_list, [cv.string]),
-            probatio.Optional(ATTR_DEVICE): cv.string,
-        },
-        "async_delete_command",
-    )
+    async_setup_services(hass)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
-    """A class that describes remote entities."""
-
-
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "supported_features",
-    "current_activity",
-    "activity_list",
-}
-
-
-class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
-    """Base class for remote entities."""
-
-    entity_description: RemoteEntityDescription
-    _attr_activity_list: list[str] | None = None
-    _attr_current_activity: str | None = None
-    _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
-
-    @cached_property
-    @override
-    def supported_features(self) -> RemoteEntityFeature:
-        """Flag supported features."""
-        return self._attr_supported_features
-
-    @cached_property
-    def current_activity(self) -> str | None:
-        """Active activity."""
-        return self._attr_current_activity
-
-    @cached_property
-    def activity_list(self) -> list[str] | None:
-        """List of available activities."""
-        return self._attr_activity_list
-
-    @final
-    @property
-    @override
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return optional state attributes."""
-        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
-            return None
-
-        return {
-            RemoteEntityStateAttribute.ACTIVITY_LIST: self.activity_list,
-            RemoteEntityStateAttribute.CURRENT_ACTIVITY: self.current_activity,
-        }
-
-    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
-        """Send commands to a device."""
-        raise NotImplementedError
-
-    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
-        """Send commands to a device."""
-        await self.hass.async_add_executor_job(
-            ft.partial(self.send_command, command, **kwargs)
-        )
-
-    def learn_command(self, **kwargs: Any) -> None:
-        """Learn a command from a device."""
-        raise NotImplementedError
-
-    async def async_learn_command(self, **kwargs: Any) -> None:
-        """Learn a command from a device."""
-        await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))
-
-    def delete_command(self, **kwargs: Any) -> None:
-        """Delete commands from the database."""
-        raise NotImplementedError
-
-    async def async_delete_command(self, **kwargs: Any) -> None:
-        """Delete commands from the database."""
-        await self.hass.async_add_executor_job(
-            ft.partial(self.delete_command, **kwargs)
-        )
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
