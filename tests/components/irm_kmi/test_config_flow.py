@@ -225,6 +225,71 @@ async def test_reconfigure_flow_other_municipality(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("side_effect", "errors"),
+    [
+        pytest.param(IrmKmiApiError, {"base": "cannot_connect"}, id="cannot_connect"),
+        pytest.param(
+            [{"cityName": "Outside the Benelux (Brussels)", "country": "BE"}],
+            {CONF_LOCATION: "out_of_benelux"},
+            id="out_of_benelux",
+        ),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_config_flow_forecast: AsyncMock,
+    side_effect: type[Exception] | list[dict[str, str]],
+    errors: dict[str, str],
+) -> None:
+    """Test the reconfigure flow leaves the entry untouched on errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    sensor = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "brussels be-temperature", config_entry=mock_config_entry
+    )
+    data = dict(mock_config_entry.data)
+    mock_config_flow_forecast.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 51.05, CONF_LONGITUDE: 3.72}},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == errors
+    assert mock_config_entry.data == data
+    assert mock_config_entry.title == "Brussels"
+    assert mock_config_entry.unique_id == "brussels be"
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id
+        == "brussels be-temperature"
+    )
+
+    mock_config_flow_forecast.side_effect = None
+    mock_config_flow_forecast.return_value = {"cityName": "Ghent", "country": "BE"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 51.05, CONF_LONGITUDE: 3.72}},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.unique_id == "ghent be"
+    assert mock_config_entry.title == "Ghent"
+    assert mock_config_entry.data == {
+        CONF_LOCATION: {CONF_LATITUDE: 51.05, CONF_LONGITUDE: 3.72},
+        CONF_UNIQUE_ID: "ghent be",
+    }
+    assert (
+        entity_registry.async_get(sensor.entity_id).unique_id == "ghent be-temperature"
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
