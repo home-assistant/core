@@ -51,6 +51,7 @@ from .utils import (
     get_device_entry_gen,
     get_virtual_component_ids,
     get_virtual_component_unit,
+    get_virtual_component_view,
     is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
@@ -243,7 +244,7 @@ RPC_NUMBERS: Final = {
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
-            config["meta"]["ui"]["view"], NumberMode.BOX
+            get_virtual_component_view(config), NumberMode.BOX
         ),
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
