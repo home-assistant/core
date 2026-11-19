@@ -13,6 +13,7 @@ from pytest_homeassistant.components.infrared.common import (
 
 from homeassistant.components.ceiling_fan_infrared.const import (
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_ENTITY_UUID,
     DOMAIN,
 )
 from homeassistant.components.infrared import DATA_COMPONENT
@@ -22,8 +23,22 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 
+def _expected_data(
+    entity_registry: er.EntityRegistry, entity_id: str
+) -> dict[str, str]:
+    """Return the expected entry data for a registered emitter."""
+    registry_entry = entity_registry.async_get(entity_id)
+    assert registry_entry is not None
+    return {
+        CONF_INFRARED_ENTITY_ID: entity_id,
+        CONF_INFRARED_ENTITY_UUID: registry_entry.id,
+    }
+
+
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
-async def test_user_flow(hass: HomeAssistant) -> None:
+async def test_user_flow(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the full user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -41,7 +56,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ceiling fan via Test IR emitter"
-    assert result["data"] == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
+    assert result["data"] == _expected_data(entity_registry, EMITTER_ENTITY_ID)
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
@@ -87,7 +102,7 @@ async def test_user_flow_stores_the_entity_id_for_a_registry_uuid(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ceiling fan via Test IR emitter"
-    assert result["data"] == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
+    assert result["data"] == _expected_data(entity_registry, EMITTER_ENTITY_ID)
 
 
 @pytest.mark.usefixtures(
@@ -177,7 +192,9 @@ async def test_user_flow_already_configured(
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
 async def test_reconfigure_flow(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the reconfigure flow."""
     config_entry.add_to_hass(hass)
@@ -195,12 +212,14 @@ async def test_reconfigure_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
+    assert config_entry.data == _expected_data(entity_registry, EMITTER_ENTITY_ID)
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
 async def test_reconfigure_flow_missing_emitter(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the reconfigure flow shows an error when no emitter is selected."""
     config_entry.add_to_hass(hass)
@@ -222,13 +241,14 @@ async def test_reconfigure_flow_missing_emitter(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
+    assert config_entry.data == _expected_data(entity_registry, EMITTER_ENTITY_ID)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_emitter_used_by_another_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
     """Test the reconfigure flow aborts when another entry uses the emitter."""

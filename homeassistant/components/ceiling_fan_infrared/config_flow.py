@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, CONF_INFRARED_ENTITY_UUID, DOMAIN
 
 DOCS_URL = "https://www.home-assistant.io/integrations/ceiling_fan_infrared"
 
@@ -38,7 +38,7 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
                 return self.async_create_entry(
                     title=f"Ceiling fan via {self._emitter_name(emitter_id)}",
-                    data={CONF_INFRARED_ENTITY_ID: emitter_id},
+                    data=self._entry_data(emitter_id),
                 )
             errors["base"] = "missing_infrared_entity"
 
@@ -75,7 +75,7 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
                 return self.async_update_reload_and_abort(
-                    entry, data={CONF_INFRARED_ENTITY_ID: emitter_id}
+                    entry, data=self._entry_data(emitter_id)
                 )
             errors["base"] = "missing_infrared_entity"
 
@@ -113,6 +113,19 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
         if entity_id is None or entity_id not in emitter_entity_ids:
             return None
         return entity_id
+
+    @callback
+    def _entry_data(self, entity_id: str) -> dict[str, Any]:
+        """Return the config entry data for an emitter.
+
+        The registry UUID is stored alongside the entity ID, so the emitter is
+        still found after a rename that happens while the entry is unloaded.
+        Emitters without a registry entry only have an entity ID to store.
+        """
+        data: dict[str, Any] = {CONF_INFRARED_ENTITY_ID: entity_id}
+        if (registry_entry := er.async_get(self.hass).async_get(entity_id)) is not None:
+            data[CONF_INFRARED_ENTITY_UUID] = registry_entry.id
+        return data
 
     @callback
     def _emitter_name(self, entity_id: str) -> str:

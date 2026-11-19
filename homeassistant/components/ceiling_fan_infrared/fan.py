@@ -5,11 +5,17 @@ from typing import Any, override
 
 from infrared_protocols.codes.generic.e27_fan_light import E27FanLightCode
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -41,7 +47,7 @@ async def async_setup_entry(
 
 
 class CeilingFanIrFanEntity(
-    CeilingFanIrBaseEntity, InfraredEmitterConsumerEntity, FanEntity
+    CeilingFanIrBaseEntity, InfraredEmitterConsumerEntity, FanEntity, RestoreEntity
 ):
     """Represents a ceiling fan controlled through an infrared emitter.
 
@@ -64,6 +70,27 @@ class CeilingFanIrFanEntity(
         super().__init__(entry)
         self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = entry.entry_id
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last known state.
+
+        The remote has no feedback, so the assumed state is what keeps
+        ``turn_on`` from sending a second toggle. It is restored across a
+        reload, which happens when the emitter is renamed, and across a
+        restart.
+        """
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is None:
+            return
+        if last_state.state not in (STATE_ON, STATE_OFF):
+            return
+        self._attr_is_on = last_state.state == STATE_ON
+        if isinstance(
+            percentage := last_state.attributes.get(FanEntityStateAttribute.PERCENTAGE),
+            int,
+        ):
+            self._attr_percentage = percentage
 
     @property
     @override
