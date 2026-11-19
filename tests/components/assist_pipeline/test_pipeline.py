@@ -2908,6 +2908,7 @@ async def test_pipeline_from_audio_agent(
     ],
 )
 @pytest.mark.usefixtures("init_audio_agent")
+@freeze_time("2025-10-31 12:00:00")
 async def test_pipeline_audio_agent(
     hass: HomeAssistant,
     mock_audio_agent: MockAudioConversationEntity,
@@ -2939,11 +2940,21 @@ async def test_pipeline_audio_agent(
     ]
 
 
+@pytest.mark.parametrize(
+    "tts_streams_text",
+    [pytest.param(False, id="tts"), pytest.param(True, id="streaming_tts")],
+)
 @pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_response_audio(
-    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+    hass: HomeAssistant,
+    mock_audio_agent: MockAudioConversationEntity,
+    mock_tts_entity: MockTTSEntity,
+    tts_streams_text: bool,
 ) -> None:
-    """Test the spoken response of the agent is played by the satellite."""
+    """Test the spoken response of the agent is played instead of its text."""
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=tts_streams_text)
+    # Long enough to start streaming the text into TTS
+    mock_audio_agent.response_text = "agent response " * 10
     events: list[assist_pipeline.PipelineEvent] = []
 
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -3085,7 +3096,7 @@ async def test_pipeline_audio_agent_transcript_only(
 async def test_pipeline_audio_agent_unsupported_audio_output(
     hass: HomeAssistant, mock_chat_session: chat_session.ChatSession
 ) -> None:
-    """Test the response audio of an agent only takes preferred format options."""
+    """Test response audio without a TTS engine only takes preferred format options."""
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="hello",
         session=mock_chat_session,
@@ -3100,10 +3111,38 @@ async def test_pipeline_audio_agent_unsupported_audio_output(
         ),
     )
 
-    with pytest.raises(TextToSpeechError) as exc_info:
+    with (
+        patch("homeassistant.components.tts.async_default_engine", return_value=None),
+        pytest.raises(TextToSpeechError) as exc_info,
+    ):
         await pipeline_input.validate()
 
     assert exc_info.value.code == "tts-not-supported"
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_reply_without_tts_engine(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test a reply without audio is not spoken when there is no TTS engine."""
+    mock_audio_agent.response_audio = None
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch("homeassistant.components.tts.async_default_engine", return_value=None):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+        )
+
+    event_types = [event.type for event in events]
+    assert PipelineEventType.INTENT_END in event_types
+    assert PipelineEventType.TTS_START not in event_types
+    assert event_types[-1] == PipelineEventType.RUN_END
 
 
 @pytest.mark.usefixtures("init_audio_agent")
@@ -3231,10 +3270,11 @@ async def test_pipeline_audio_agent_reply_without_chat_log(
     ):
         await pipeline_input.execute()
 
-    # Intent recognition still starts when the agent does not read the audio
+    # Listening still ends when the agent does not read the audio
     assert [event.type for event in events] == [
         PipelineEventType.RUN_START,
         PipelineEventType.STT_START,
+        PipelineEventType.STT_END,
         PipelineEventType.INTENT_START,
         PipelineEventType.INTENT_END,
         PipelineEventType.RUN_END,

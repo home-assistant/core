@@ -1018,6 +1018,14 @@
     }),
     dict({
       'data': dict({
+        'stt_output': dict({
+          'text': '',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
         'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.audio_agent',
@@ -1030,11 +1038,22 @@
     }),
     dict({
       'data': dict({
-        'stt_output': dict({
-          'text': 'agent transcript',
+        'chat_log_delta': dict({
+          'content': 'agent transcript',
+          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'role': 'user',
         }),
       }),
-      'type': <PipelineEventType.STT_END: 'stt-end'>,
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'agent response',
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({
@@ -1063,6 +1082,27 @@
         'processed_locally': False,
       }),
       'type': <PipelineEventType.INTENT_END: 'intent-end'>,
+    }),
+    dict({
+      'data': dict({
+        'acknowledge_override': False,
+        'engine': 'tts.test',
+        'language': None,
+        'tts_input': 'agent response',
+        'voice': None,
+      }),
+      'type': <PipelineEventType.TTS_START: 'tts-start'>,
+    }),
+    dict({
+      'data': dict({
+        'tts_output': dict({
+          'media_id': 'media-source://tts/-stream-/mocked-token.wav',
+          'mime_type': 'audio/x-wav',
+          'token': 'mocked-token.wav',
+          'url': '/api/tts_proxy/mocked-token.wav',
+        }),
+      }),
+      'type': <PipelineEventType.TTS_END: 'tts-end'>,
     }),
     dict({
       'data': None,
@@ -1102,6 +1142,14 @@
     }),
     dict({
       'data': dict({
+        'stt_output': dict({
+          'text': '',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
         'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.audio_agent',
@@ -1114,11 +1162,22 @@
     }),
     dict({
       'data': dict({
-        'stt_output': dict({
-          'text': 'agent transcript',
+        'chat_log_delta': dict({
+          'content': 'agent transcript',
+          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'role': 'user',
         }),
       }),
-      'type': <PipelineEventType.STT_END: 'stt-end'>,
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'agent response',
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({
@@ -1157,7 +1216,7 @@
     dict({
       'data': dict({
         'acknowledge_override': False,
-        'engine': None,
+        'engine': 'conversation.audio_agent',
         'language': None,
         'tts_input': 'agent response',
         'voice': None,
@@ -1213,6 +1272,14 @@
     }),
     dict({
       'data': dict({
+        'stt_output': dict({
+          'text': '',
+        }),
+      }),
+      'type': <PipelineEventType.STT_END: 'stt-end'>,
+    }),
+    dict({
+      'data': dict({
         'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.audio_agent',
@@ -1225,11 +1292,22 @@
     }),
     dict({
       'data': dict({
-        'stt_output': dict({
-          'text': 'agent transcript',
+        'chat_log_delta': dict({
+          'content': 'agent transcript',
+          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+          'role': 'user',
         }),
       }),
-      'type': <PipelineEventType.STT_END: 'stt-end'>,
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
+        'chat_log_delta': dict({
+          'content': 'agent response',
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({
@@ -1316,6 +1394,15 @@
     }),
     dict({
       'data': dict({
+        'chat_log_delta': dict({
+          'content': 'agent response',
+          'role': 'assistant',
+        }),
+      }),
+      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
+    }),
+    dict({
+      'data': dict({
         'tts_start_streaming': True,
       }),
       'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
@@ -1351,7 +1438,7 @@
     dict({
       'data': dict({
         'acknowledge_override': False,
-        'engine': None,
+        'engine': 'conversation.audio_agent',
         'language': None,
         'tts_input': 'agent response',
         'voice': None,

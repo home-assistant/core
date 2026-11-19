@@ -203,6 +203,7 @@ class MockAudioConversationEntity(conversation.ConversationEntity):
         """Initialize the agent."""
         self.received_audio: list[bytes] = []
         self.response_audio: bytes | None = b"\x01\x02\x03\x04"
+        self.response_text = _AGENT_RESPONSE
 
     @property
     def supported_languages(self) -> Literal["*"]:
@@ -223,11 +224,13 @@ class MockAudioConversationEntity(conversation.ConversationEntity):
                 conversation.UserContent(content=_AGENT_TRANSCRIPT)
             )
 
-        chat_log.async_add_assistant_content_without_tools(
-            conversation.AssistantContent(
-                agent_id=user_input.agent_id, content=_AGENT_RESPONSE
-            )
-        )
+        async def reply() -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+            yield {"role": "assistant", "content": self.response_text}
+
+        async for _content in chat_log.async_add_delta_content_stream(
+            user_input.agent_id, reply()
+        ):
+            pass
 
         if user_input.audio_output is not None and self.response_audio is not None:
             response_audio = self.response_audio
@@ -241,7 +244,7 @@ class MockAudioConversationEntity(conversation.ConversationEntity):
             )
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(_AGENT_RESPONSE)
+        intent_response.async_set_speech(self.response_text)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=chat_log.conversation_id
         )

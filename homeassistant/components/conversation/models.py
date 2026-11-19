@@ -33,7 +33,10 @@ class ConversationAudioInput:
     """Format of the raw PCM audio."""
 
     stream: AsyncIterable[bytes]
-    """Audio chunks until the end of the voice command."""
+    """Audio chunks until the end of the voice command.
+
+    Read it to its end: satellites stop listening when it ends.
+    """
 
 
 class ConversationAudioOutput(Protocol):

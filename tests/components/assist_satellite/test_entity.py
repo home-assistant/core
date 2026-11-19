@@ -142,7 +142,7 @@ async def test_entity_state(
 async def test_streamed_response_finished_before_tts(
     hass: HomeAssistant, init_components: ConfigEntry, entity: MockAssistSatellite
 ) -> None:
-    """Test a streamed response that finished playing early does not respond again."""
+    """Test a streamed response responds when it starts, and not again at TTS."""
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
     ) as mock_start_pipeline:
@@ -153,6 +153,10 @@ async def test_streamed_response_finished_before_tts(
     event_callback(
         PipelineEvent(PipelineEventType.INTENT_PROGRESS, {"tts_start_streaming": True})
     )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == AssistSatelliteState.RESPONDING
 
     # Like an agent that is still busy after its spoken response has played
     entity.tts_response_finished()
