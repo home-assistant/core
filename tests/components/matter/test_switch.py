@@ -130,6 +130,13 @@ async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> Non
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        pytest.param({"0/40/2": 4874}, id="eve"),
+        pytest.param({"0/40/2": 5415}, id="habi"),
+    ],
+)
 async def test_numeric_switch(
     hass: HomeAssistant,
     matter_client: MagicMock,
