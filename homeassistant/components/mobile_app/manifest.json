@@ -7,9 +7,9 @@
   "config_flow": true,
   "dependencies": [
     "http",
-    "intent",
     "person",
     "tag",
+    "timer_list",
     "webhook",
     "websocket_api"
   ],
