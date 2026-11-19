@@ -4645,6 +4645,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fonte_flamme": {
+      "name": "Fonte Flamme",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "foobot": {
       "name": "Foobot",
       "integration_type": "hub",
@@ -5333,6 +5344,17 @@
       ],
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "godin": {
+      "name": "Godin",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "gogogate2": {
       "name": "Gogogate2 and ismartgate",
@@ -7393,6 +7415,17 @@
       ],
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "jotul": {
+      "name": "J\u00f8tul",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "justnimbus": {
       "name": "JustNimbus",
