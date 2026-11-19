@@ -353,6 +353,31 @@ async def test_update_system_generated(
     assert user.name == "Test user"
 
 
+async def test_update_invalid_group(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update command with a group that does not exist."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_user("Test user")
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "group_ids": ["does-not-exist"],
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "invalid_format"
+    assert user.name == "Test user"
+    assert user.groups == []
+
+
 async def test_deactivate(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:

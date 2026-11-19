@@ -15,7 +15,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -127,7 +127,7 @@ async def test_number_set_value(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: device.entity_id,
+            TargetKey.ENTITY_ID: device.entity_id,
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,
@@ -153,7 +153,7 @@ async def test_number_inverted_memorized_position_set(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id,
+            TargetKey.ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id,
             NumberServiceArgument.VALUE: 15,
         },
         blocking=True,

@@ -9,17 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -105,8 +100,8 @@ async def test_light_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_whiteled.assert_called_with(0, state=False, brightness=None)
@@ -115,8 +110,8 @@ async def test_light_turn_off(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -139,8 +134,12 @@ async def test_light_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51, ATTR_COLOR_TEMP_KELVIN: 4000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            LightServiceArgument.BRIGHTNESS: 51,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
+        },
         blocking=True,
     )
     reolink_host.set_whiteled.assert_called_once_with(0, state=True, brightness=20)
@@ -174,8 +173,8 @@ async def test_light_turn_on_errors(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id, **service_data},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id, **service_data},
             blocking=True,
         )
 
@@ -222,8 +221,8 @@ async def test_host_light_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_state_light.assert_called_with(False)
@@ -232,8 +231,8 @@ async def test_host_light_turn_off(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -261,8 +260,8 @@ async def test_host_light_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.set_state_light.assert_called_with(True)
@@ -271,7 +270,7 @@ async def test_host_light_turn_on(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )

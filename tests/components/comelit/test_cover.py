@@ -23,15 +23,12 @@ from homeassistant.components.comelit.const import (
 )
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -94,8 +91,8 @@ async def test_cover_open(
     # Open cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_called()
@@ -135,8 +132,8 @@ async def test_cover_close(
     # Close cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_called()
@@ -150,8 +147,8 @@ async def test_cover_close(
     # Stop cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_called()
@@ -177,8 +174,8 @@ async def test_cover_stop_if_stopped(
     # Stop cover while not opening/closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_not_called()
@@ -229,8 +226,8 @@ async def test_cover_open_stop(
     # Open cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -243,8 +240,8 @@ async def test_cover_open_stop(
     # Stop cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -267,8 +264,8 @@ async def test_cover_position_estimation(
     # Open cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -300,8 +297,8 @@ async def test_cover_position_estimation(
     # Close cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -351,8 +348,11 @@ async def test_cover_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: target_position},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            CoverServiceArgument.POSITION: target_position,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_called()
@@ -388,8 +388,8 @@ async def test_cover_set_position_noop(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 40},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 40},
         blocking=True,
     )
     mock_serial_bridge.set_device_status.assert_not_called()
@@ -424,8 +424,11 @@ async def test_cover_set_position_full_travel(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: target_position},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            CoverServiceArgument.POSITION: target_position,
+        },
         blocking=True,
     )
 
@@ -454,8 +457,8 @@ async def test_cover_set_position_already_stopped(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 10},
         blocking=True,
     )
 
@@ -490,8 +493,8 @@ async def test_cover_set_position_current_while_moving(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -499,8 +502,8 @@ async def test_cover_set_position_current_while_moving(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 40},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 40},
         blocking=True,
     )
 
@@ -525,8 +528,8 @@ async def test_cover_set_position_refresh_failure(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 10},
         blocking=True,
     )
 
@@ -554,8 +557,8 @@ async def test_cover_set_position_superseded_during_refresh(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 10},
         blocking=True,
     )
 
@@ -565,8 +568,8 @@ async def test_cover_set_position_superseded_during_refresh(
         mock_serial_bridge.get_all_devices.side_effect = None
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
         return devices
@@ -597,16 +600,16 @@ async def test_cover_set_position_cancels_previous_timer(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
     # Fully open before the scheduled stop for the 30% target would fire
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     calls_after_open = mock_serial_bridge.set_device_status.call_count
@@ -675,8 +678,8 @@ async def test_cover_external_reversal(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 60},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: ENTITY_ID, CoverServiceArgument.POSITION: 60},
         blocking=True,
     )
 
@@ -723,8 +726,8 @@ async def test_cover_command_failure(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -753,8 +756,8 @@ async def test_cover_configured_travel_time(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 

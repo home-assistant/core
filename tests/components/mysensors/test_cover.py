@@ -9,20 +9,12 @@ import pytest
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -44,8 +36,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -66,8 +58,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -88,8 +80,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -121,8 +113,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -153,8 +145,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 25},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 25},
         blocking=True,
     )
 
@@ -187,8 +179,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -208,8 +200,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -228,8 +220,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -258,8 +250,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -303,8 +295,8 @@ async def test_cover_node_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 25},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.TILT_POSITION: 25},
         blocking=True,
     )
 
@@ -322,8 +314,8 @@ async def test_cover_node_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -342,8 +334,8 @@ async def test_cover_node_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -362,8 +354,8 @@ async def test_cover_node_tilt(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 

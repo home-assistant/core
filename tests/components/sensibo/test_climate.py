@@ -10,18 +10,9 @@ from pytest_homeassistant.common import async_fire_time_changed, snapshot_platfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_HORIZONTAL_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.sensibo.climate import _find_valid_target_temp
@@ -34,14 +25,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -118,8 +106,11 @@ async def test_climate_fan(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "not_in_ha"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.FAN_MODE: "not_in_ha",
+            },
             blocking=True,
         )
 
@@ -129,8 +120,8 @@ async def test_climate_fan(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.FAN_MODE: "low"},
         blocking=True,
     )
 
@@ -156,8 +147,11 @@ async def test_climate_fan(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.FAN_MODE: "low",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "service_not_supported"
@@ -202,8 +196,11 @@ async def test_climate_swing(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_MODE: "not_in_ha"},
+            ClimateService.SET_SWING_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.SWING_MODE: "not_in_ha",
+            },
             blocking=True,
         )
 
@@ -213,8 +210,11 @@ async def test_climate_swing(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_MODE: "fixedtop"},
+        ClimateService.SET_SWING_MODE,
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.SWING_MODE: "fixedtop",
+        },
         blocking=True,
     )
 
@@ -238,8 +238,11 @@ async def test_climate_swing(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_MODE: "fixedtop"},
+            ClimateService.SET_SWING_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.SWING_MODE: "fixedtop",
+            },
             blocking=True,
         )
     assert err.value.translation_key == "service_not_supported"
@@ -289,8 +292,11 @@ async def test_climate_horizontal_swing(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "not_in_ha"},
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.SWING_HORIZONTAL_MODE: "not_in_ha",
+            },
             blocking=True,
         )
 
@@ -300,8 +306,11 @@ async def test_climate_horizontal_swing(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_HORIZONTAL_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "fixedleft"},
+        ClimateService.SET_SWING_HORIZONTAL_MODE,
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.SWING_HORIZONTAL_MODE: "fixedleft",
+        },
         blocking=True,
     )
 
@@ -326,10 +335,10 @@ async def test_climate_horizontal_swing(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            ClimateService.SET_SWING_HORIZONTAL_MODE,
             {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_SWING_HORIZONTAL_MODE: "fixedcenter",
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.SWING_HORIZONTAL_MODE: "fixedcenter",
             },
             blocking=True,
         )
@@ -356,8 +365,8 @@ async def test_climate_temperatures(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.TEMPERATURE: 20},
         blocking=True,
     )
 
@@ -368,8 +377,8 @@ async def test_climate_temperatures(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.TEMPERATURE: 20},
         blocking=True,
     )
     assert not mock_client.async_set_ac_state_property.called
@@ -380,8 +389,8 @@ async def test_climate_temperatures(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 15},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.TEMPERATURE: 15},
         blocking=True,
     )
 
@@ -390,8 +399,11 @@ async def test_climate_temperatures(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 18.5},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.TEMPERATURE: 18.5,
+        },
         blocking=True,
     )
 
@@ -404,8 +416,11 @@ async def test_climate_temperatures(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 24},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.TEMPERATURE: 24,
+            },
             blocking=True,
         )
 
@@ -414,8 +429,8 @@ async def test_climate_temperatures(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 20},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.TEMPERATURE: 20},
         blocking=True,
     )
 
@@ -425,8 +440,8 @@ async def test_climate_temperatures(
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: state.entity_id},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -451,8 +466,11 @@ async def test_climate_temperatures(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_TEMPERATURE: 20},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.TEMPERATURE: 20,
+            },
             blocking=True,
         )
     assert err.value.translation_key == "service_not_supported"
@@ -493,11 +511,11 @@ async def test_climate_temperature_is_none(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: state.entity_id,
-                ATTR_TARGET_TEMP_HIGH: 30,
-                ATTR_TARGET_TEMP_LOW: 20,
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 30,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 20,
             },
             blocking=True,
         )
@@ -540,8 +558,8 @@ async def test_climate_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_HVAC_MODE: "off"},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: state.entity_id, ClimateServiceArgument.HVAC_MODE: "off"},
         blocking=True,
     )
 
@@ -558,8 +576,11 @@ async def test_climate_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_HVAC_MODE: "heat"},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            ClimateServiceArgument.HVAC_MODE: "heat",
+        },
         blocking=True,
     )
 
@@ -593,8 +614,8 @@ async def test_climate_on_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: state.entity_id},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
@@ -603,8 +624,8 @@ async def test_climate_on_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: state.entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
@@ -639,8 +660,8 @@ async def test_climate_service_failed(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: state.entity_id},
+            ClimateService.TURN_OFF,
+            {TargetKey.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 
@@ -676,7 +697,7 @@ async def test_climate_assumed_state(
         DOMAIN,
         SensiboService.ASSUME_STATE,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.STATE: "off",
         },
         blocking=True,
@@ -743,7 +764,7 @@ async def test_climate_set_timer(
             DOMAIN,
             SensiboService.ENABLE_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
@@ -753,7 +774,7 @@ async def test_climate_set_timer(
             DOMAIN,
             SensiboService.ENABLE_TIMER,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.MINUTES: 30,
             },
             blocking=True,
@@ -768,7 +789,7 @@ async def test_climate_set_timer(
         DOMAIN,
         SensiboService.ENABLE_TIMER,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.MINUTES: 30,
         },
         blocking=True,
@@ -819,7 +840,7 @@ async def test_climate_pure_boost(
             DOMAIN,
             SensiboService.ENABLE_PURE_BOOST,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.INDOOR_INTEGRATION: True,
                 SensiboServiceArgument.OUTDOOR_INTEGRATION: True,
                 SensiboServiceArgument.SENSITIVITY: "sensitive",
@@ -843,7 +864,7 @@ async def test_climate_pure_boost(
         DOMAIN,
         SensiboService.ENABLE_PURE_BOOST,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.AC_INTEGRATION: False,
             SensiboServiceArgument.GEO_INTEGRATION: False,
             SensiboServiceArgument.INDOOR_INTEGRATION: True,
@@ -908,7 +929,7 @@ async def test_climate_climate_react(
             DOMAIN,
             SensiboService.ENABLE_PURE_BOOST,
             {
-                CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+                TargetKey.ENTITY_ID: state_climate.entity_id,
                 SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 0.2,
                 SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.3,
                 SensiboServiceArgument.SMART_TYPE: "temperature",
@@ -951,7 +972,7 @@ async def test_climate_climate_react(
         DOMAIN,
         SensiboService.ENABLE_CLIMATE_REACT,
         {
-            CommonServiceArgument.ENTITY_ID: state_climate.entity_id,
+            TargetKey.ENTITY_ID: state_climate.entity_id,
             SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 5.5,
             SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 30.5,
             SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
@@ -1087,7 +1108,7 @@ async def test_climate_climate_react_fahrenheit(
         DOMAIN,
         SensiboService.ENABLE_CLIMATE_REACT,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.LOW_TEMPERATURE_THRESHOLD: 32.0,
             SensiboServiceArgument.HIGH_TEMPERATURE_THRESHOLD: 77.0,
             SensiboServiceArgument.LOW_TEMPERATURE_STATE: {
@@ -1196,7 +1217,7 @@ async def test_climate_full_ac_state(
             DOMAIN,
             SensiboService.FULL_STATE,
             {
-                CommonServiceArgument.ENTITY_ID: state.entity_id,
+                TargetKey.ENTITY_ID: state.entity_id,
                 SensiboServiceArgument.TARGET_TEMPERATURE: 22,
             },
             blocking=True,
@@ -1208,7 +1229,7 @@ async def test_climate_full_ac_state(
         DOMAIN,
         SensiboService.FULL_STATE,
         {
-            CommonServiceArgument.ENTITY_ID: state.entity_id,
+            TargetKey.ENTITY_ID: state.entity_id,
             SensiboServiceArgument.MODE: "cool",
             SensiboServiceArgument.TARGET_TEMPERATURE: 22,
             SensiboServiceArgument.FAN_MODE: "high",
@@ -1309,16 +1330,22 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_MODE: "faulty_swing_mode"},
+            ClimateService.SET_SWING_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.SWING_MODE: "faulty_swing_mode",
+            },
             blocking=True,
         )
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "faulty_fan_mode"},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                ClimateServiceArgument.FAN_MODE: "faulty_fan_mode",
+            },
             blocking=True,
         )
 
@@ -1344,7 +1371,7 @@ async def test_climate_get_device_capabilities(
         DOMAIN,
         SensiboService.GET_DEVICE_CAPABILITIES,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+            TargetKey.ENTITY_ID: "climate.hallway_hallway",
             SensiboServiceArgument.HVAC_MODE: "heat",
         },
         blocking=True,
@@ -1359,7 +1386,7 @@ async def test_climate_get_device_capabilities(
             DOMAIN,
             SensiboService.GET_DEVICE_CAPABILITIES,
             {
-                CommonServiceArgument.ENTITY_ID: "climate.hallway_hallway",
+                TargetKey.ENTITY_ID: "climate.hallway_hallway",
                 SensiboServiceArgument.HVAC_MODE: "heat_cool",
             },
             blocking=True,

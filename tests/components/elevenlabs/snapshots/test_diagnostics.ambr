@@ -1,0 +1,91 @@
+# serializer version: 1
+# name: test_diagnostics[cloned]
+  dict({
+    'config_entry': dict({
+      'stt_auto_language': False,
+      'voice_settings': dict({
+        'similarity_boost': 0.75,
+        'stability': 0.5,
+        'style': 0.0,
+        'use_speaker_boost': True,
+      }),
+    }),
+    'stt_model': 'stt_model1',
+    'tts_model': dict({
+      'can_do_text_to_speech': True,
+      'languages': 4,
+      'model_id': 'model1',
+    }),
+    'voices': dict({
+      'categories': dict({
+        'cloned': 1,
+        'premade': 1,
+        'unknown': 1,
+      }),
+      'count': 3,
+      'selected_voice_category': 'cloned',
+      'selected_voice_found': True,
+      'selected_voice_id': None,
+    }),
+  })
+# ---
+# name: test_diagnostics[missing]
+  dict({
+    'config_entry': dict({
+      'stt_auto_language': False,
+      'voice_settings': dict({
+        'similarity_boost': 0.75,
+        'stability': 0.5,
+        'style': 0.0,
+        'use_speaker_boost': True,
+      }),
+    }),
+    'stt_model': 'stt_model1',
+    'tts_model': dict({
+      'can_do_text_to_speech': True,
+      'languages': 4,
+      'model_id': 'model1',
+    }),
+    'voices': dict({
+      'categories': dict({
+        'cloned': 1,
+        'premade': 1,
+        'unknown': 1,
+      }),
+      'count': 3,
+      'selected_voice_category': None,
+      'selected_voice_found': False,
+      'selected_voice_id': None,
+    }),
+  })
+# ---
+# name: test_diagnostics[premade]
+  dict({
+    'config_entry': dict({
+      'stt_auto_language': False,
+      'voice_settings': dict({
+        'similarity_boost': 0.75,
+        'stability': 0.5,
+        'style': 0.0,
+        'use_speaker_boost': True,
+      }),
+    }),
+    'stt_model': 'stt_model1',
+    'tts_model': dict({
+      'can_do_text_to_speech': True,
+      'languages': 4,
+      'model_id': 'model1',
+    }),
+    'voices': dict({
+      'categories': dict({
+        'cloned': 1,
+        'premade': 1,
+        'unknown': 1,
+      }),
+      'count': 3,
+      'selected_voice_category': 'premade',
+      'selected_voice_found': True,
+      'selected_voice_id': 'premade_voice_id',
+    }),
+  })
+# ---

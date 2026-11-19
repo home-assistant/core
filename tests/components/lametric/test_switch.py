@@ -13,8 +13,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     EntityCategory,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -62,7 +62,7 @@ async def test_bluetooth(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+            TargetKey.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
         },
         blocking=True,
     )
@@ -74,7 +74,7 @@ async def test_bluetooth(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
         {
-            CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+            TargetKey.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
         },
         blocking=True,
     )
@@ -109,7 +109,7 @@ async def test_switch_error(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+                TargetKey.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
             },
             blocking=True,
         )
@@ -137,7 +137,7 @@ async def test_switch_connection_error(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
             {
-                CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
+                TargetKey.ENTITY_ID: "switch.frenck_s_lametric_bluetooth",
             },
             blocking=True,
         )
@@ -178,7 +178,7 @@ async def test_screensaver(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        {TargetKey.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
         blocking=True,
     )
 
@@ -187,7 +187,7 @@ async def test_screensaver(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
+        {TargetKey.ENTITY_ID: "switch.frenck_s_lametric_screensaver"},
         blocking=True,
     )
 

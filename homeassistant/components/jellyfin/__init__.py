@@ -4,7 +4,11 @@ from typing import Any
 
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -83,10 +87,18 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data
+    identifiers = device_entry.identifiers
 
-    return not device_entry.identifiers.intersection(
-        (
-            (DOMAIN, coordinator.server_id),
-            *((DOMAIN, device_id) for device_id in coordinator.device_ids),
+    if (DOMAIN, coordinator.server_id) in identifiers:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_remove_server_device",
         )
-    )
+
+    if any((DOMAIN, device_id) in identifiers for device_id in coordinator.device_ids):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_remove_active_device",
+        )
+
+    return True
