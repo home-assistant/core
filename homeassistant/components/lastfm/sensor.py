@@ -5,40 +5,26 @@ from functools import partial
 import hashlib
 from typing import Any, override
 
-import probatio
 from pylast import PyLastError
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_ALBUM,
-    ATTR_ARTIST,
     ATTR_LAST_PLAYED,
     ATTR_PLAY_COUNT,
-    ATTR_TIMESTAMP,
-    ATTR_TITLE,
     ATTR_TOP_PLAYED,
     CONF_USERS,
     DEFAULT_NAME,
     DOMAIN,
-    SERVICE_SCROBBLE,
     STATE_NOT_SCROBBLING,
 )
 from .coordinator import LastFMConfigEntry, LastFMDataUpdateCoordinator, LastFMUserData
-
-SCROBBLE_SCHEMA: dict[Any, Any] = {
-    probatio.Required(ATTR_ARTIST): cv.string,
-    probatio.Required(ATTR_TITLE): cv.string,
-    probatio.Optional(ATTR_ALBUM): cv.string,
-    probatio.Optional(ATTR_TIMESTAMP): cv.datetime,
-}
 
 
 async def async_setup_entry(
@@ -54,11 +40,6 @@ async def async_setup_entry(
             LastFmSensor(coordinator, username, entry.entry_id)
             for username in entry.options[CONF_USERS]
         ),
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SCROBBLE, SCROBBLE_SCHEMA, "async_scrobble"
     )
 
 
