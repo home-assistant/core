@@ -1712,3 +1712,33 @@ async def test_chat_log_audio_input(
             agent_chat_log.async_add_user_content(UserContent(content="transcript"))
 
     assert deltas == [{"role": "user", "content": "transcript", "created": ANY}]
+
+
+async def test_chat_log_late_transcript(
+    hass: HomeAssistant, mock_conversation_input: ConversationInput
+) -> None:
+    """Test a transcript added after the answer goes to the start of the turn."""
+    audio_input = replace(
+        mock_conversation_input,
+        text="",
+        audio=ConversationAudioInput(
+            pcm_format=tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            stream=_audio_stream(),
+        ),
+    )
+
+    with (
+        chat_session.async_get_chat_session(hass, context=None) as session,
+        async_get_chat_log(hass, session, audio_input) as chat_log,
+    ):
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(agent_id="mock-agent-id", content="Which light?")
+        )
+        chat_log.async_add_user_content(UserContent(content="turn on the light"))
+
+    assert [(content.role, content.content) for content in chat_log.content] == [
+        ("system", ""),
+        ("user", "turn on the light"),
+        ("assistant", "Which light?"),
+    ]
+    assert chat_log.continue_conversation
