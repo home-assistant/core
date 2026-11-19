@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import MockConfigEntry, MockPlatform, mock_platform
+
 from homeassistant.components.timer_list import DOMAIN, TimerItem, TimerListEntity
 from homeassistant.components.timer_list.const import (
     TimerListEntityFeature,
@@ -13,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, ulid as ulid_util
-
-from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
 TEST_DOMAIN = "test"
 

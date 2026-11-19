@@ -28,8 +28,9 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import TimerListEvent, entity_became_available, timer_to_dict
+from . import entity_became_available
 from .const import ATTR_DELTA, ATTR_TIMER, DATA_COMPONENT, DOMAIN, TimerListEventType
+from .entity import TimerListEvent, timer_to_dict
 
 TRIGGER_SCHEMA = probatio.Schema(
     {

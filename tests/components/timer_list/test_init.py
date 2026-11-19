@@ -4,18 +4,22 @@ import asyncio
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockPlatform,
+    MockUser,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.timer_list.const import DOMAIN, TimerListEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.const import ATTR_NAME, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
-
-from tests.common import MockConfigEntry, MockPlatform, MockUser, mock_platform
-from tests.typing import WebSocketGenerator
 
 TEST_ENTITY_ID = "timer_list.timers"
 
@@ -34,7 +38,7 @@ async def _create_timer(
         DOMAIN,
         "create_timer",
         data,
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -52,7 +56,7 @@ async def _get_timers(
         DOMAIN,
         "get_timers",
         data,
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -65,7 +69,7 @@ async def _call(hass: HomeAssistant, service: str, **fields: Any) -> None:
         DOMAIN,
         service,
         fields,
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 

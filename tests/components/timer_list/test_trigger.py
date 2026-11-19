@@ -1,6 +1,13 @@
 """Tests for the Timer list triggers."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockPlatform,
+    async_mock_service,
+    mock_platform,
+)
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation
 from homeassistant.components.timer_list.const import DOMAIN
@@ -11,20 +18,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TARGET,
     SERVICE_TURN_OFF,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from . import TEST_DOMAIN, MockTimerListEntity, create_mock_platform
-
-from tests.common import (
-    MockConfigEntry,
-    MockPlatform,
-    async_mock_service,
-    mock_platform,
-)
-from tests.components.common import assert_trigger_options_supported
 
 TEST_ENTITY_ID = "timer_list.timers"
 
@@ -83,7 +83,7 @@ async def _create_timer(hass: HomeAssistant) -> str:
         DOMAIN,
         "create_timer",
         {"duration": {"seconds": 60}},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -96,7 +96,7 @@ async def _call_timer_service(hass: HomeAssistant, service: str, timer_id: str) 
         DOMAIN,
         service,
         {"timer_id": timer_id},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
@@ -157,7 +157,7 @@ async def test_timer_cancelled_trigger(
         DOMAIN,
         "cancel_timer",
         {"timer_id": timer_id},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
@@ -230,7 +230,7 @@ async def test_timer_time_changed_trigger_reports_delta(
         DOMAIN,
         service,
         {"timer_id": timer_id, "duration": {"seconds": 30}},
-        target={ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: TEST_ENTITY_ID},
         blocking=True,
     )
 
@@ -254,7 +254,7 @@ async def test_trigger_picks_up_entity_added_after_setup(
         DOMAIN,
         "create_timer",
         {"duration": {"seconds": 60}},
-        target={ATTR_ENTITY_ID: late_entity_id},
+        target={TargetKey.ENTITY_ID: late_entity_id},
         blocking=True,
     )
 
@@ -364,7 +364,7 @@ async def test_trigger_follows_entity_replaced_by_reload(
         DOMAIN,
         "create_timer",
         {"duration": {"seconds": 60}},
-        target={ATTR_ENTITY_ID: reloaded_entity_id},
+        target={TargetKey.ENTITY_ID: reloaded_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

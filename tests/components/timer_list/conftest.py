@@ -3,6 +3,12 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.timer_list import TimerListEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,8 +16,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import TEST_DOMAIN, MockFlow, MockTimerListEntity, create_mock_platform
-
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 
 
 @pytest.fixture(autouse=True)
@@ -29,20 +33,18 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.TIMER_LIST]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         await hass.config_entries.async_unload_platforms(
             config_entry, [Platform.TIMER_LIST]
         )
-        return True
 
     mock_integration(
         hass,

@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import TimerListEntity
+    from .entity import TimerListEntity
 
 DOMAIN = "timer_list"
 DATA_COMPONENT: HassKey[EntityComponent[TimerListEntity]] = HassKey(DOMAIN)
