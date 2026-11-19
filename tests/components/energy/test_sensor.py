@@ -16,6 +16,7 @@ from pytest_homeassistant.components.recorder.common import async_wait_recording
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.energy import DOMAIN, async_get_manager, data
+from homeassistant.components.energy.data import HEAT_SOURCE_SCHEMA
 from homeassistant.components.energy.sensor import (
     EnergyCostSensor,
     EnergyPowerSensor,
@@ -1171,13 +1172,13 @@ async def test_cost_sensor_handle_heat(
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
-        {
-            "type": "heat",
-            "stat_energy_from": "sensor.heat_consumption",
-            "stat_cost": None,
-            "entity_energy_price": None,
-            "number_energy_price": 0.5,
-        }
+        HEAT_SOURCE_SCHEMA(
+            {
+                "type": "heat",
+                "stat_energy_from": "sensor.heat_consumption",
+                "number_energy_price": 0.5,
+            }
+        )
     )
 
     hass_storage[data.STORAGE_KEY] = {

@@ -1312,6 +1312,36 @@ async def test_heat_allows_price_with_stat_cost_for_external_stat() -> None:
     assert result["entity_energy_price"] == "sensor.heat_price"
 
 
+async def test_heat_schema_defaults_omitted_price_fields() -> None:
+    """Test that omitted heat price fields default to None."""
+    result = HEAT_SOURCE_SCHEMA(
+        {
+            "type": "heat",
+            "stat_energy_from": "sensor.heat_consumption",
+            "number_energy_price": 0.5,
+        }
+    )
+    assert result["stat_cost"] is None
+    assert result["entity_energy_price"] is None
+    assert result["number_energy_price"] == 0.5
+
+
+async def test_heat_energy_source_schema_round_trip_price_defaults() -> None:
+    """Test heat price field defaults survive ENERGY_SOURCE_SCHEMA validation."""
+    result = ENERGY_SOURCE_SCHEMA(
+        [
+            {
+                "type": "heat",
+                "stat_energy_from": "sensor.heat_consumption",
+                "number_energy_price": 0.5,
+            }
+        ]
+    )
+    assert result[0]["stat_cost"] is None
+    assert result[0]["entity_energy_price"] is None
+    assert result[0]["number_energy_price"] == 0.5
+
+
 BATTERY_DIRECTIONS_ENERGY = {
     "stat_energy_from_grid": "sensor.battery_from_grid",
     "stat_energy_from_solar": "sensor.battery_from_solar",

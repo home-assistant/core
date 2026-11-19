@@ -817,6 +817,21 @@ def _validate_heat_source(
             )
         )
 
+    if stat_rate := source.get("stat_rate"):
+        wanted_statistics_metadata.add(stat_rate)
+        validate_calls.append(
+            functools.partial(
+                _async_validate_power_stat,
+                hass,
+                statistics_metadata,
+                stat_rate,
+                POWER_USAGE_DEVICE_CLASSES,
+                POWER_USAGE_UNITS,
+                POWER_UNIT_ERROR,
+                source_result,
+            )
+        )
+
 
 def _validate_battery_source(
     hass: HomeAssistant,
