@@ -1457,6 +1457,11 @@ async def test_validation_heat(
                     "stat_energy_from": "sensor.heat_consumption_2",
                     "entity_energy_price": "sensor.heat_price_1",
                 },
+                {
+                    "type": "heat",
+                    "stat_energy_from": "sensor.heat_consumption_3",
+                    "entity_energy_price": "sensor.heat_price_bad",
+                },
             ]
         }
     )
@@ -1484,14 +1489,28 @@ async def test_validation_heat(
         "0.12",
         {"unit_of_measurement": "EUR/kWh", "state_class": "measurement"},
     )
+    hass.states.async_set(
+        "sensor.heat_consumption_3",
+        "10.10",
+        {
+            "device_class": "energy",
+            "unit_of_measurement": "kWh",
+            "state_class": "total_increasing",
+        },
+    )
+    hass.states.async_set(
+        "sensor.heat_price_bad",
+        "0.12",
+        {"unit_of_measurement": "EUR/m³", "state_class": "measurement"},
+    )
 
     assert (await validate.async_validate(hass)).as_dict() == {
         "energy_sources": [
             [
                 {
-                    "type": "entity_unexpected_unit_heat",
+                    "type": "entity_unexpected_unit_energy",
                     "affected_entities": {("sensor.heat_consumption_1", "beers")},
-                    "translation_placeholders": {"heat_units": ENERGY_UNITS_STRING},
+                    "translation_placeholders": {"energy_units": ENERGY_UNITS_STRING},
                 },
                 {
                     "type": "recorder_untracked",
@@ -1505,6 +1524,15 @@ async def test_validation_heat(
                 },
             ],
             [],
+            [
+                {
+                    "type": "entity_unexpected_unit_energy_price",
+                    "affected_entities": {("sensor.heat_price_bad", "EUR/m³")},
+                    "translation_placeholders": {
+                        "price_units": ENERGY_PRICE_UNITS_STRING
+                    },
+                },
+            ],
         ],
         "device_consumption": [],
         "device_consumption_gas": [],

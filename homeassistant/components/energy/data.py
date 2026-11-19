@@ -251,7 +251,7 @@ class HeatSourceType(TypedDict):
 
     stat_energy_from: str
 
-    # Instantaneous flow or power rate (optional, not validated yet).
+    # Instantaneous heat power
     stat_rate: NotRequired[str]
 
     # statistic_id of costs ($) incurred from the heat meter

@@ -77,11 +77,6 @@ WATER_PRICE_UNITS = tuple(
 )
 WATER_UNIT_ERROR = "entity_unexpected_unit_water"
 WATER_PRICE_UNIT_ERROR = "entity_unexpected_unit_water_price"
-HEAT_USAGE_DEVICE_CLASSES = ENERGY_USAGE_DEVICE_CLASSES
-HEAT_USAGE_UNITS = ENERGY_USAGE_UNITS
-HEAT_UNIT_ERROR = "entity_unexpected_unit_heat"
-HEAT_PRICE_UNITS = ENERGY_PRICE_UNITS
-HEAT_PRICE_UNIT_ERROR = "entity_unexpected_unit_heat_price"
 
 
 def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | None:
@@ -118,14 +113,6 @@ def _get_placeholders(hass: HomeAssistant, issue_type: str) -> dict[str, str] | 
     if issue_type == WATER_PRICE_UNIT_ERROR:
         return {
             "price_units": ", ".join(f"{currency}{unit}" for unit in WATER_PRICE_UNITS),
-        }
-    if issue_type == HEAT_UNIT_ERROR:
-        return {
-            "heat_units": ", ".join(HEAT_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]),
-        }
-    if issue_type == HEAT_PRICE_UNIT_ERROR:
-        return {
-            "price_units": ", ".join(f"{currency}{unit}" for unit in HEAT_PRICE_UNITS),
         }
     if issue_type == VOLUME_FLOW_RATE_UNIT_ERROR:
         return {
@@ -774,9 +761,9 @@ def _validate_heat_source(
             hass,
             statistics_metadata,
             source["stat_energy_from"],
-            HEAT_USAGE_DEVICE_CLASSES,
-            HEAT_USAGE_UNITS,
-            HEAT_UNIT_ERROR,
+            ENERGY_USAGE_DEVICE_CLASSES,
+            ENERGY_USAGE_UNITS,
+            ENERGY_UNIT_ERROR,
             source_result,
         )
     )
@@ -799,8 +786,8 @@ def _validate_heat_source(
                 hass,
                 entity_energy_price,
                 source_result,
-                HEAT_PRICE_UNITS,
-                HEAT_PRICE_UNIT_ERROR,
+                ENERGY_PRICE_UNITS,
+                ENERGY_PRICE_UNIT_ERROR,
             )
         )
 
