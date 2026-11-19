@@ -1,11 +1,12 @@
 """Test Lastfm config flow."""
 
-from unittest.mock import patch
+from unittest.mock import create_autospec, patch
 
-from pylast import PyLastError, WSError
+from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components.lastfm.config_flow import get_auth_url, get_session_key
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
     CONF_MAIN_USER,
@@ -35,6 +36,14 @@ from . import (
 from .conftest import ComponentSetup
 
 CONFIG_FLOW = "homeassistant.components.lastfm.config_flow"
+
+
+def patch_generator(session: tuple[str, str] | None = None):
+    """Patch pylast's SessionKeyGenerator, keeping the integration helpers real."""
+    generator = create_autospec(SessionKeyGenerator, instance=True)
+    generator.get_web_auth_url.return_value = AUTH_URL
+    generator.get_web_auth_session_key_username.return_value = session
+    return patch(f"{CONFIG_FLOW}.SessionKeyGenerator", return_value=generator)
 
 
 async def _select_step(
@@ -183,6 +192,23 @@ async def test_flow_fails(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["options"] == CONF_DATA
+
+
+def test_authorization_helpers() -> None:
+    """Test the helpers pass credentials and the token to pylast."""
+    session = (SESSION_KEYS[USERNAME_1], USERNAME_1)
+    with patch_generator(session) as mock_generator:
+        assert get_auth_url(API_KEY, API_SECRET) == AUTH_URL
+        assert get_session_key(API_KEY, API_SECRET, AUTH_URL) == session
+
+    for call in mock_generator.call_args_list:
+        network = call.args[0]
+        assert isinstance(network, LastFMNetwork)
+        assert (network.api_key, network.api_secret) == (API_KEY, API_SECRET)
+    generator = mock_generator.return_value
+    generator.get_web_auth_session_key_username.assert_called_once_with(
+        AUTH_URL, "token"
+    )
 
 
 async def test_flow_hidden_recent_tracks(
