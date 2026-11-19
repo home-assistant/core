@@ -423,6 +423,56 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            user_input[CONF_HOST] = normalize_host(user_input[CONF_HOST])
+            user_input[CONF_PORT] = int(user_input[CONF_PORT])
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
+
+            try:
+                await validate_input(self.hass, user_input)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                port = user_input[CONF_PORT]
+                default_port = 443 if user_input.get(CONF_SSL, True) else 80
+                host_str = (
+                    f"{user_input[CONF_HOST]}:{port}"
+                    if port != default_port
+                    else user_input[CONF_HOST]
+                )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=f"INDI Allsky ({host_str})",
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
 
 class MissingCredentials(HomeAssistantError):
     """Error to indicate one credential field was provided without the other."""
