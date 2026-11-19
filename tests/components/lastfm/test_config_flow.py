@@ -304,8 +304,8 @@ async def test_flow_scrobbling_two_users(
         result = await _select_step(hass, menu, "scrobble_user")
         assert CONF_API_SECRET in result["data_schema"].schema
         assert result["data_schema"].schema[CONF_USERNAME].config["options"] == [
-            USERNAME_1,
-            USERNAME_2,
+            {"value": USERNAME_1, "label": USERNAME_1},
+            {"value": USERNAME_2, "label": USERNAME_2},
         ]
 
         menu = await _authorize_from_form(hass, result, USERNAME_1, secret=API_SECRET)
@@ -320,8 +320,8 @@ async def test_flow_scrobbling_two_users(
         result = await _select_step(hass, menu, "scrobble_user")
         assert CONF_API_SECRET not in result["data_schema"].schema
         assert result["data_schema"].schema[CONF_USERNAME].config["options"] == [
-            USERNAME_1,
-            USERNAME_2,
+            {"value": USERNAME_1, "label": f"{USERNAME_1} ✓"},
+            {"value": USERNAME_2, "label": USERNAME_2},
         ]
 
         menu = await _authorize_from_form(hass, result, USERNAME_2)

@@ -16,7 +16,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
 from .const import (
     CONF_API_SECRET,
@@ -228,7 +232,19 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         schema: dict[Any, Any] = {
             probatio.Required(CONF_USERNAME): SelectSelector(
-                SelectSelectorConfig(options=self.data[CONF_USERS])
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(
+                            value=user,
+                            label=(
+                                f"{user} ✓"
+                                if user in self.data[CONF_SESSION_KEYS]
+                                else user
+                            ),
+                        )
+                        for user in self.data[CONF_USERS]
+                    ]
+                )
             )
         }
         if stored_secret is None:
