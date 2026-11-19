@@ -11,6 +11,7 @@ from typing import Any, override
 from propcache.api import cached_property
 from zha.application.platforms import EntityStateChangedEvent, ZclPlatformEntity
 from zha.mixins import LogMixin
+from zigpy.zcl import ClusterType
 
 from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import Context, State, callback
@@ -153,7 +154,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _update_capability_attrs(self) -> None:
         """Re-derive capability `_attr_*` attributes from the cached state."""
 
-    def _iter_group_member_entities(self) -> Iterator[ZHAEntity]:
+    def _iter_group_member_entities(
+        self, target_cluster_ids: frozenset[int]
+    ) -> Iterator[ZHAEntity]:
         """Yield registered HA entities for members controlled by this group entity."""
         group_proxy = self.entity_data.group_proxy
         assert group_proxy is not None
@@ -166,8 +169,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                     zha_entity.unique_id in member_unique_ids
                     and isinstance(zha_entity, ZclPlatformEntity)
                     and any(
-                        zha_entity.targets_cluster(cluster_id)
-                        for cluster_id in self._group_target_cluster_ids
+                        zha_entity.targets_cluster(cluster_id, ClusterType.Server)
+                        and cluster_id in zha_entity.endpoint.zigpy_endpoint.in_clusters
+                        for cluster_id in target_cluster_ids
                     )
                 ):
                     yield entity_ref.ha_entity
@@ -186,22 +190,24 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         self._context_expected_state_matched = False
 
     @callback
-    def _set_group_context_expected_state(
+    def _propagate_group_context(
         self,
         expected_state: StateType,
-        context: Context | None = None,
+        target_cluster_ids: frozenset[int] | None = None,
     ) -> None:
         """Propagate the active group context and its expected target state to members."""
-        target_context = context if context is not None else self._context
-        if (
-            not self.entity_data.is_group_entity
-            or target_context is None
-            or self._context is not target_context
-        ):
+        if not self.entity_data.is_group_entity or self._context is None:
             return
-        for member_entity in self._iter_group_member_entities():
+        cluster_ids = (
+            self._group_target_cluster_ids
+            if target_cluster_ids is None
+            else target_cluster_ids
+        )
+        if not cluster_ids:
+            return
+        for member_entity in self._iter_group_member_entities(cluster_ids):
             member_entity.async_set_group_context(
-                target_context,
+                self._context,
                 self._context_set,
                 expected_state,
             )
