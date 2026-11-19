@@ -99,6 +99,12 @@ def test_string_mode_sensors_use_enum_options(key: str, options: list[str]) -> N
     assert description.options == options
 
 
+@pytest.mark.parametrize("key", ["leavingWaterOffset", "deltaD"])
+def test_temperature_differences_use_delta_device_class(key: str) -> None:
+    """Treat Daikin offsets and differences as temperature deltas."""
+    assert SENSOR_DESCRIPTIONS[key].device_class is SensorDeviceClass.TEMPERATURE_DELTA
+
+
 async def test_unknown_enum_value_keeps_sensor_updating(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -143,6 +149,7 @@ async def test_unknown_enum_value_keeps_sensor_updating(
 async def test_boolean_value_is_not_exposed_as_numeric_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Boolean characteristics are not rendered as numeric sensor values."""
     await _async_setup_fixture(hass, config_entry, "altherma")
@@ -155,14 +162,14 @@ async def test_boolean_value_is_not_exposed_as_numeric_sensor(
     characteristic = point.scalar_characteristic("controlMode")
     assert characteristic is not None
     characteristic.value = True
-    sensor = DaikinValueSensor(
-        device,
-        config_entry.runtime_data,
-        SENSOR_DESCRIPTIONS["controlMode"],
-        ValueSensorDetails(point.embedded_id, None, "controlMode"),
-    )
+    unique_id = f"{device.id}_{point.embedded_id}_controlMode"
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
 
-    assert sensor.sensor_value() is None
+    state = hass.states.get(entity_id)
+    assert state is not None and state.state == "unknown"
 
 
 @pytest.mark.parametrize(

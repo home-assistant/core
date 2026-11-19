@@ -164,6 +164,8 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     point = gateways[0].management_point(gateways[0].gateway_embedded_id)
     assert point is not None
     point.firmware_update_status = Characteristic(value="idle")
+    poll_started = asyncio.Event()
+    finish_poll = asyncio.Event()
     install_started = asyncio.Event()
     finish_install = asyncio.Event()
     pending_during_install: list[tuple[int, str | None, int] | None] = []
@@ -178,6 +180,8 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
 
     async def read_gateways() -> list[GatewayDevice]:
         pending_at_poll.append(entity._pending_install)
+        poll_started.set()
+        await finish_poll.wait()
         return gateways
 
     with (
@@ -191,6 +195,10 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
             timedelta(0),
         ),
     ):
+        assert coordinator.update_interval is not None
+        freezer.tick(coordinator.update_interval)
+        async_fire_time_changed(hass)
+        await poll_started.wait()
         install_task = hass.async_create_task(
             hass.services.async_call(
                 UPDATE_DOMAIN,
@@ -199,6 +207,14 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
                 blocking=True,
             )
         )
+        await asyncio.sleep(0)
+        assert entity._pending_install == (
+            requested_sequence,
+            installed_version,
+            requested_sequence + 3,
+        )
+        assert not install_started.is_set()
+        finish_poll.set()
         await install_started.wait()
         assert pending_during_install == [
             (requested_sequence, installed_version, requested_sequence + 3)
@@ -212,13 +228,18 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
         await hass.async_block_till_done()
 
     assert pending_at_poll == [
-        (requested_sequence, installed_version, requested_sequence + 3)
+        None,
+        (
+            requested_sequence + 1,
+            installed_version,
+            requested_sequence + 1 + 3,
+        ),
     ]
-    assert coordinator.cloud_update_sequence == requested_sequence + 1
+    assert coordinator.cloud_update_sequence == requested_sequence + 2
     assert entity._pending_install == (
-        requested_sequence,
+        requested_sequence + 1,
         installed_version,
-        requested_sequence + 3,
+        requested_sequence + 1 + 3,
     )
     state = hass.states.get(entity_id)
     assert state is not None

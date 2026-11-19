@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import override
+from typing import cast, override
 
 from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoint
 
@@ -49,7 +49,7 @@ SENSORY_DATA_SENSOR_TYPES = (
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     metadata.key: SensorEntityDescription(
         key=metadata.key,
-        device_class=metadata.device_class,
+        device_class=cast("SensorDeviceClass | None", metadata.device_class),
         options=list(metadata.options) if metadata.options is not None else None,
         native_unit_of_measurement=metadata.native_unit_of_measurement,
         state_class=metadata.state_class,
@@ -423,10 +423,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             else self._characteristic(self._value)
         )
         return point, characteristic
-
-    def sensor_value(self) -> str | int | float | None:
-        """Return a typed characteristic or sensory value."""
-        return self._sensor_value(self._current_characteristic)
 
     def _sensor_value(
         self, characteristic: Characteristic | None

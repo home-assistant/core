@@ -125,6 +125,12 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
                 ).install(firmware_id),
                 "firmware_install_failed",
             )
+            requested_sequence = self.coordinator.cloud_update_sequence
+            self._pending_install = (
+                requested_sequence,
+                self._attr_installed_version,
+                requested_sequence + _INSTALL_CONFIRMATION_POLLS,
+            )
             self.coordinator.schedule_post_write_refresh()
         except HomeAssistantError:
             self._pending_install = None

@@ -138,64 +138,101 @@ async def _async_fire_coordinator_update(
     await hass.async_block_till_done()
 
 
-async def test_missing_values_do_not_change_entity_topology(
+@pytest.mark.parametrize(
+    ("platform", "device_index", "management_point_type", "characteristic_name"),
+    [
+        pytest.param(
+            Platform.SWITCH,
+            1,
+            "climateControl",
+            "econoMode",
+            id="switch-econoMode",
+        ),
+        pytest.param(
+            Platform.BINARY_SENSOR,
+            1,
+            "gateway",
+            "ledEnabled",
+            id="binary-sensor-ledEnabled",
+        ),
+        pytest.param(
+            Platform.SENSOR,
+            0,
+            "gateway",
+            "ipAddress",
+            id="sensor-ipAddress",
+        ),
+    ],
+)
+async def test_missing_scalar_value_does_not_change_entity_topology(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    platform: Platform,
+    device_index: int,
+    management_point_type: str,
+    characteristic_name: str,
+) -> None:
+    """Keep scalar entities registered when their current value is omitted."""
+    cloud_devices = _load_gateway_devices("altherma")
+    initial_devices = deepcopy(cloud_devices)
+    device = initial_devices[device_index]
+    point = device.management_points_by_type(management_point_type)[0]
+    characteristic = point.scalar_characteristic(characteristic_name)
+    assert characteristic is not None
+    characteristic.value = None
+    unique_id = f"{device.id}_{point.embedded_id}_{characteristic_name}"
+
+    await _async_test_missing_value_does_not_schedule_reload(
+        hass,
+        config_entry,
+        entity_registry,
+        freezer,
+        cloud_devices,
+        initial_devices,
+        platform,
+        unique_id,
+    )
+
+
+async def test_missing_firmware_version_does_not_change_entity_topology(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Create advertised entities even when their current value is omitted."""
+    """Keep firmware entities registered when their current version is omitted."""
     cloud_devices = _load_gateway_devices("altherma")
     initial_devices = deepcopy(cloud_devices)
-    expected_entities: dict[str, str] = {}
+    device = initial_devices[0]
+    point = device.management_points_by_type("indoorUnitHydro")[0]
+    assert point.software_version is not None
+    point.software_version.value = None
 
-    for device in initial_devices:
-        for point in device.management_points:
-            for name, characteristic in point.scalar_characteristics().items():
-                values = characteristic.values or []
-                if (
-                    "switch" not in expected_entities
-                    and name in SWITCH_KEYS
-                    and characteristic.settable
-                    and {"on", "off"}.issubset(values)
-                ):
-                    characteristic.value = None
-                    expected_entities["switch"] = (
-                        f"{device.id}_{point.embedded_id}_{name}"
-                    )
-                elif (
-                    "binary_sensor" not in expected_entities
-                    and name in BINARY_SENSOR_KEYS
-                    and characteristic.values is None
-                ):
-                    characteristic.value = None
-                    expected_entities["binary_sensor"] = (
-                        f"{device.id}_{point.embedded_id}_{name}"
-                    )
-                elif (
-                    "sensor" not in expected_entities
-                    and name in SENSOR_KEYS
-                    and name not in BINARY_SENSOR_KEYS
-                    and name not in SWITCH_KEYS
-                    and name != "operationMode"
-                ):
-                    characteristic.value = None
-                    expected_entities["sensor"] = (
-                        f"{device.id}_{point.embedded_id}_{name}"
-                    )
+    await _async_test_missing_value_does_not_schedule_reload(
+        hass,
+        config_entry,
+        entity_registry,
+        freezer,
+        cloud_devices,
+        initial_devices,
+        Platform.UPDATE,
+        f"{device.id}_{point.embedded_id}_firmware",
+    )
 
-            if "update" not in expected_entities and point.software_version is not None:
-                point.software_version.value = None
-                expected_entities["update"] = (
-                    f"{device.id}_{point.embedded_id}_firmware"
-                )
 
-    assert expected_entities.keys() == {
-        "binary_sensor",
-        "sensor",
-        "switch",
-        "update",
-    }
+async def _async_test_missing_value_does_not_schedule_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    cloud_devices: list[GatewayDevice],
+    initial_devices: list[GatewayDevice],
+    platform: Platform,
+    unique_id: str,
+) -> None:
+    """Set up missing current data, then confirm a full response adds no topology."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow."
@@ -216,10 +253,7 @@ async def test_missing_values_do_not_change_entity_topology(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    for domain, unique_id in expected_entities.items():
-        assert (
-            entity_registry.async_get_entity_id(domain, DOMAIN, unique_id) is not None
-        )
+    assert entity_registry.async_get_entity_id(platform.value, DOMAIN, unique_id)
 
     coordinator = config_entry.runtime_data
     coordinator.client.get_gateway_devices = AsyncMock(return_value=cloud_devices)

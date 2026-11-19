@@ -306,7 +306,7 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
     ),
     DaikinEntityMetadata(
         key="leavingWaterOffset",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=True,
@@ -351,7 +351,7 @@ ENTITY_METADATA: tuple[DaikinEntityMetadata, ...] = (
     ),
     DaikinEntityMetadata(
         key="deltaD",
-        device_class=SensorDeviceClass.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE_DELTA,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=True,

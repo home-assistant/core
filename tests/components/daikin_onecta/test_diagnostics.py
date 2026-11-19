@@ -1,6 +1,7 @@
 """Tests for Daikin Onecta diagnostics."""
 
 from hashlib import sha256
+from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -17,6 +18,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 from .test_climate_snapshots import _async_setup_fixture
 
@@ -28,6 +30,21 @@ async def test_diagnostics(
 ) -> None:
     """Test cached cloud data is provided with identifying data redacted."""
     await _async_setup_fixture(hass, config_entry, "minimal_data")
+    hass.config_entries.async_update_entry(
+        config_entry,
+        title="Private account name",
+        discovery_keys=MappingProxyType(
+            {
+                "_https._tcp.local.": (
+                    DiscoveryKey(
+                        domain="_https._tcp.local.",
+                        key="altherma4-private-serial._https._tcp.local.",
+                        version=1,
+                    ),
+                ),
+            }
+        ),
+    )
     coordinator = config_entry.runtime_data
     coordinator.client.get_gateway_devices = AsyncMock()
     coordinator.client.get_sites = AsyncMock(
@@ -49,6 +66,8 @@ async def test_diagnostics(
     await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert diagnostics["config_entry"]["data"]["token"] == REDACTED
+    assert diagnostics["config_entry"]["title"] == REDACTED
+    assert diagnostics["config_entry"]["discovery_keys"] == REDACTED
     assert diagnostics["devices"]
     assert diagnostics["devices"][0]["id"] == REDACTED
     gateway = next(

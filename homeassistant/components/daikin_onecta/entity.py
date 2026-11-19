@@ -180,11 +180,6 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
             raise RuntimeError("Daikin coordinator has no device data")
         return data[self._device_id]
 
-    @property
-    def device_present_in_cloud(self) -> bool:
-        """Return whether the entity's gateway is present in the latest response."""
-        return self._device.present_in_cloud
-
     def _raise_service_validation_error(self, translation_key: str) -> Never:
         """Raise a translated error for an unavailable device control."""
         raise ServiceValidationError(
@@ -200,12 +195,6 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
             translation_key=translation_key,
             translation_placeholders={"device": self._device.name},
         )
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo | ChildDeviceInfo:
-        """Return the gateway device registry information."""
-        return _gateway_device_info(self._device)
 
 
 class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
@@ -231,12 +220,13 @@ class DaikinEntity(DaikinOnectaEntity):
     """Base entity backed by a Daikin gateway or management point."""
 
     _attr_has_entity_name = True
+    _embedded_id: str
 
     def __init__(
         self,
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
-        embedded_id: str | None = None,
+        embedded_id: str,
     ) -> None:
         """Initialize shared coordinator and device state."""
         super().__init__(coordinator, device)
@@ -249,9 +239,7 @@ class DaikinEntity(DaikinOnectaEntity):
         device = self._device
         if not super().available or not device.available:
             return False
-        return self._embedded_id is None or (
-            device.management_point(self._embedded_id) is not None
-        )
+        return device.management_point(self._embedded_id) is not None
 
     async def _async_execute_command(
         self,
