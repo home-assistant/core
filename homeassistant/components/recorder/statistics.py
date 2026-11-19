@@ -1969,7 +1969,9 @@ def statistic_during_period(
                 types,
             )
 
-        if "change" in types:
+        if "change" in types and not metadata[1]["has_sum"]:
+            result["change"] = None
+        elif "change" in types:
             oldest_sum: float | None
             if start_time is None:
                 oldest_sum = 0.0
