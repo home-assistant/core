@@ -40,6 +40,11 @@ async def test_diagnostics_active_job(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics while a job is running."""
+    # The status message is free text, so the snapshot shows it is left out
+    mock_get_status_printing["printer"]["status_printer"] = {
+        "ok": True,
+        "message": "Ready",
+    }
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED

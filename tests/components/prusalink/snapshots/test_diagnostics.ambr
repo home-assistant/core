@@ -49,6 +49,7 @@
         'speed': 100,
         'state': 'PRINTING',
         'status_connect_ok': True,
+        'status_printer_ok': True,
         'target_bed': 85.0,
         'target_nozzle': 0.0,
         'temp_bed': 53.9,
