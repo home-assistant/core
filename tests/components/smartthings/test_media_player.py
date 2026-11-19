@@ -10,39 +10,25 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     RepeatMode,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -120,8 +106,11 @@ async def test_mute_unmute(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.soundbar", ATTR_MEDIA_VOLUME_MUTED: muted},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.soundbar",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: muted,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -144,8 +133,11 @@ async def test_set_volume_level(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.soundbar", ATTR_MEDIA_VOLUME_LEVEL: 0.31},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.soundbar",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.31,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -168,8 +160,8 @@ async def test_volume_up(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -191,8 +183,8 @@ async def test_volume_down(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -214,8 +206,8 @@ async def test_media_play(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -237,8 +229,8 @@ async def test_media_pause(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -260,8 +252,8 @@ async def test_media_stop(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -286,8 +278,8 @@ async def test_media_previous_track(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -312,8 +304,8 @@ async def test_media_next_track(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: "media_player.soundbar"},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.soundbar"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -335,8 +327,11 @@ async def test_select_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.soundbar", ATTR_INPUT_SOURCE: "digital"},
+        MediaPlayerService.SELECT_SOURCE,
+        {
+            TargetKey.ENTITY_ID: "media_player.soundbar",
+            MediaPlayerServiceArgument.SOURCE: "digital",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -365,10 +360,10 @@ async def test_vd_capability_select_source(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
-            ATTR_INPUT_SOURCE: "hdmi1",
+            TargetKey.ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            MediaPlayerServiceArgument.SOURCE: "hdmi1",
         },
         blocking=True,
     )
@@ -396,10 +391,10 @@ async def test_select_source_legacy_raw_id(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
-            ATTR_INPUT_SOURCE: "HDMI1",
+            TargetKey.ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            MediaPlayerServiceArgument.SOURCE: "HDMI1",
         },
         blocking=True,
     )
@@ -466,8 +461,11 @@ async def test_media_shuffle_on_off(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: "media_player.soundbar", ATTR_MEDIA_SHUFFLE: shuffle},
+        MediaPlayerService.SHUFFLE_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.soundbar",
+            MediaPlayerServiceArgument.SHUFFLE: shuffle,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -503,8 +501,11 @@ async def test_media_repeat_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: "media_player.soundbar", ATTR_MEDIA_REPEAT: repeat},
+        MediaPlayerService.REPEAT_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.soundbar",
+            MediaPlayerServiceArgument.REPEAT: repeat,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -527,10 +528,10 @@ async def test_select_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
+        MediaPlayerService.SELECT_SOUND_MODE,
         {
-            ATTR_ENTITY_ID: "media_player.theater_soundbar_living",
-            ATTR_SOUND_MODE: "adaptive_sound",
+            TargetKey.ENTITY_ID: "media_player.theater_soundbar_living",
+            MediaPlayerServiceArgument.SOUND_MODE: "adaptive_sound",
         },
         blocking=True,
     )
@@ -581,10 +582,10 @@ async def test_tv_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
+        MediaPlayerService.SELECT_SOUND_MODE,
         {
-            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
-            ATTR_SOUND_MODE: "standard",
+            TargetKey.ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            MediaPlayerServiceArgument.SOUND_MODE: "standard",
         },
         blocking=True,
     )

@@ -12,25 +12,19 @@ from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerat
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_FILTER_CLASSES,
-    ATTR_MEDIA_SEARCH_QUERY,
     DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     SearchMedia,
     SearchMediaQuery,
 )
-from homeassistant.components.media_player.const import (
-    DATA_COMPONENT,
-    SERVICE_BROWSE_MEDIA,
-    SERVICE_SEARCH_MEDIA,
-)
+from homeassistant.components.media_player.const import DATA_COMPONENT
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, TargetKey
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -538,11 +532,11 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
     ) as mock_browse_media:
         result = await hass.services.async_call(
             "media_player",
-            SERVICE_BROWSE_MEDIA,
+            MediaPlayerService.BROWSE_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.browse",
-                ATTR_MEDIA_CONTENT_TYPE: "album",
-                ATTR_MEDIA_CONTENT_ID: "title=Album*",
+                TargetKey.ENTITY_ID: "media_player.browse",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "title=Album*",
             },
             blocking=True,
             return_response=True,
@@ -662,13 +656,13 @@ async def test_media_search_service(hass: HomeAssistant) -> None:
     ) as mock_search_media:
         result = await hass.services.async_call(
             "media_player",
-            SERVICE_SEARCH_MEDIA,
+            MediaPlayerService.SEARCH_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.search",
-                ATTR_MEDIA_CONTENT_TYPE: "album",
-                ATTR_MEDIA_CONTENT_ID: "title=Album*",
-                ATTR_MEDIA_SEARCH_QUERY: "query",
-                ATTR_MEDIA_FILTER_CLASSES: ["album"],
+                TargetKey.ENTITY_ID: "media_player.search",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "album",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "title=Album*",
+                MediaPlayerServiceArgument.SEARCH_QUERY: "query",
+                MediaPlayerServiceArgument.MEDIA_FILTER_CLASSES: ["album"],
             },
             blocking=True,
             return_response=True,
