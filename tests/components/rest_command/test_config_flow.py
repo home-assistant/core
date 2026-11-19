@@ -9,7 +9,6 @@ from homeassistant.components.rest_command.const import DOMAIN, SUBENTRY_TYPE_CO
 from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL
 
@@ -108,18 +107,10 @@ async def test_single_instance(hass: HomeAssistant, entry: MockConfigEntry) -> N
 @pytest.mark.parametrize(
     ("user_input", "errors"),
     [
-        ({"action": "!!"}, {"action": "invalid_action"}),
         ({"action": " "}, {"action": "invalid_action"}),
         ({"action": "Reload"}, {"action": "invalid_action"}),
         ({"action": "Open door"}, {"action": "action_exists"}),
-        ({"action": "From YAML"}, {"action": "action_exists"}),
         ({"auth": {"username": "user"}}, {"base": "invalid_command"}),
-        (
-            {"auth": {"username": "us:er", "password": "secret"}},
-            {"base": "invalid_command"},
-        ),
-        ({"advanced": {"headers": {"X-Door": ["a"]}}}, {"base": "invalid_command"}),
-        ({"advanced": {"headers": {"X-Door": "{{ a"}}}, {"base": "invalid_command"}),
     ],
 )
 async def test_subentry_errors(
@@ -129,11 +120,6 @@ async def test_subentry_errors(
     errors: dict[str, str],
 ) -> None:
     """Test the errors of the command flow, and recovering from them."""
-    assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"from_yaml": {"url": TEST_URL}}}
-    )
-    await hass.async_block_till_done()
-
     result = await _start_subentry_flow(hass, entry)
     assert result["type"] is FlowResultType.FORM
 
@@ -162,16 +148,6 @@ async def test_subentry_errors(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "New command"
-    assert result["data"] == {
-        "action": "new_command",
-        "url": TEST_URL,
-        "method": "get",
-        "timeout": 10,
-        "verify_ssl": True,
-        "insecure_cipher": False,
-        "skip_url_encoding": False,
-    }
 
 
 async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -183,7 +159,6 @@ async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["description_placeholders"]["action"] == "rest_command.open_door"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],

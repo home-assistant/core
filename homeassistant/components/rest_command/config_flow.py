@@ -240,8 +240,8 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             placeholders["action"] = f"{DOMAIN}.{action}"
             if action in ("", "unknown", SERVICE_RELOAD):
                 errors[CONF_ACTION] = "invalid_action"
-            elif self.hass.services.has_service(DOMAIN, action) or any(
-                subentry.data.get(CONF_ACTION) == action
+            elif any(
+                subentry.unique_id == action
                 for subentry in self._get_entry().subentries.values()
             ):
                 errors[CONF_ACTION] = "action_exists"
