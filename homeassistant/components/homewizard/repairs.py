@@ -10,7 +10,7 @@ from homeassistant.components.repairs import (
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .config_flow import async_request_token
+from .config_flow import RecoverableError, async_request_token
 from .const import ISSUE_BATTERY_MODE_CLOUD_DISABLED
 from .coordinator import HomeWizardConfigEntry
 
@@ -51,7 +51,13 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         # Tell device we want a token, user must now press the
         # button within 30 seconds. The first attempt will always
         # fail, but this opens the window to press the button.
-        token = await async_request_token(self.hass, ip_address)
+        try:
+            token = await async_request_token(self.hass, ip_address)
+        except RecoverableError as ex:
+            return self.async_show_form(
+                step_id="authorize", errors={"base": ex.error_code}
+            )
+
         errors: dict[str, str] | None = None
 
         if token is None:
