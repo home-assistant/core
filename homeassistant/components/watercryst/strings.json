@@ -89,9 +89,6 @@
     "update_failed_api_disabled": {
       "message": "WATERCryst API disabled"
     },
-    "update_failed_device_offline": {
-      "message": "WATERCryst device is offline"
-    },
     "update_failed_unauthorized": {
       "message": "WATERCryst API authorization failed"
     }
