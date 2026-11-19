@@ -14,6 +14,7 @@ from .const import (
     CONF_TIME_FIXED,
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
+    CONF_TRANSPORTATIONS,
     CONF_VIA,
     DEFAULT_TIME_STATION,
 )
@@ -43,6 +44,11 @@ def unique_id_from_config(config: Mapping[str, Any]) -> str:
         + (
             " via " + ", ".join(config[CONF_VIA])
             if CONF_VIA in config and len(config[CONF_VIA]) > 0
+            else ""
+        )
+        + (
+            " by " + ", ".join(sorted(config[CONF_TRANSPORTATIONS]))
+            if config.get(CONF_TRANSPORTATIONS)
             else ""
         )
         + (
