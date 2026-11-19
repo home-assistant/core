@@ -72,12 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
     except (OSError, DeviceError) as err:
         raise ConfigEntryNotReady from err
     finally:
-        # Covers every exit that isn't full success, including
-        # asyncio.CancelledError (a BaseException, so it isn't caught by
-        # the except clauses above) — e.g. the setup task getting cancelled
-        # while awaiting wait_for_device_initialised() after avr already
-        # connected. Without this, that connection is never closed since
-        # runtime_data was never set for async_unload_entry to find it.
+        # Also runs on cancellation. runtime_data isn't set yet, so
+        # async_unload_entry would never close this connection.
         if not setup_ok and avr is not None:
             avr.close()
 

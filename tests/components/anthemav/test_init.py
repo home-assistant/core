@@ -10,7 +10,6 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.anthemav import async_setup_entry
 from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -151,7 +150,9 @@ async def test_setup_entry_cancelled_closes_connection(
             side_effect=_hang_after_reached,
         ),
     ):
-        task = hass.async_create_task(async_setup_entry(hass, mock_config_entry))
+        task = hass.async_create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
         await reached_device_init.wait()
         task.cancel()
         with pytest.raises(asyncio.CancelledError):

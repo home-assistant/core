@@ -51,12 +51,8 @@ async def connect_device(user_input: dict[str, Any]) -> Connection:
         await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
         connected = True
     finally:
-        # avr was created but something after that failed (reconnect timed
-        # out, device info timed out or raised DeviceError, or the task got
-        # cancelled) — the caller never gets a reference back when this
-        # raises, so it can't close this itself. `finally` (rather than
-        # `except Exception`) also covers asyncio.CancelledError, a
-        # BaseException that a plain `except Exception` would miss.
+        # If this raises or is cancelled, the caller never gets avr back to
+        # close it.
         if not connected and avr is not None:
             avr.close()
     return avr
