@@ -5,20 +5,40 @@ from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aioonkyo import Code, Instruction, Kind, Zone, command, query, status
+from aioonkyo import (
+    Code,
+    Instruction,
+    Kind,
+    NetPlaybackState,
+    NetRepeatMode,
+    NetShuffleMode,
+    Status,
+    Zone,
+    command,
+    query,
+    status,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
+    async_fire_time_changed_exact,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
@@ -26,9 +46,12 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
+    MediaType,
 )
 from homeassistant.components.onkyo.media_player import (
     QUERY_AV_INFO_DELAY,
+    QUERY_NET_DELAY,
     QUERY_STATE_DELAY,
 )
 from homeassistant.components.onkyo.services import (
@@ -37,12 +60,22 @@ from homeassistant.components.onkyo.services import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_IDLE,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -338,3 +371,286 @@ async def test_query_av_info_delayed(
 
     queries = [w for w in writes if isinstance(w, query.AudioInformation)]
     assert len(queries) == 1
+
+
+NET_FEATURES = (
+    MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+)
+
+
+def _input_source(source: str) -> status.InputSource:
+    return status.InputSource(
+        Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
+        None,
+        status.InputSource.Param(source),
+    )
+
+
+def _net_play_status(playback: NetPlaybackState) -> status.NetPlayStatus:
+    return status.NetPlayStatus(
+        Code.from_kind_zone(Kind.NET_PLAY_STATUS, Zone.MAIN),
+        None,
+        playback,
+        NetRepeatMode.OFF,
+        NetShuffleMode.OFF,
+    )
+
+
+def _net_time(position: int | None, duration: int | None) -> status.NetTime:
+    return status.NetTime(
+        Code.from_kind_zone(Kind.NET_TIME, Zone.MAIN), None, position, duration
+    )
+
+
+NET_TRACK_MESSAGES: list[Status] = [
+    _net_play_status(NetPlaybackState.PLAYING),
+    status.NetTitle(Code.from_kind_zone(Kind.NET_TITLE, Zone.MAIN), None, "Title"),
+    status.NetArtist(Code.from_kind_zone(Kind.NET_ARTIST, Zone.MAIN), None, "Artist"),
+    status.NetAlbum(Code.from_kind_zone(Kind.NET_ALBUM, Zone.MAIN), None, "Album"),
+    status.NetTrack(Code.from_kind_zone(Kind.NET_TRACK, Zone.MAIN), None, 3, 12),
+    _net_time(10, 200),
+]
+
+
+async def _select_net_source(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, read_queue: asyncio.Queue
+) -> None:
+    await receive_messages(read_queue, _input_source("2B"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+async def test_net_playback(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test the NET/USB player state on the main zone."""
+    await _select_net_source(hass, freezer, read_queue)
+
+    assert [w for w in writes if w.kind.name.startswith("NET_")] == [
+        query.NetPlayStatus(),
+        query.NetTitle(),
+        query.NetArtist(),
+        query.NetAlbum(),
+        query.NetTrack(),
+        query.NetTime(),
+    ]
+
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_PLAYING
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & NET_FEATURES == NET_FEATURES
+    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Title"
+    assert state.attributes[ATTR_MEDIA_ARTIST] == "Artist"
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Album"
+    assert state.attributes[ATTR_MEDIA_TRACK] == 3
+    assert state.attributes[ATTR_MEDIA_DURATION] == 200
+    assert state.attributes[ATTR_MEDIA_POSITION] == 10
+
+    await receive_messages(read_queue, _net_play_status(NetPlaybackState.PAUSED))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_PAUSED
+
+    await receive_messages(read_queue, _net_play_status(NetPlaybackState.STOPPED))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_IDLE
+
+
+async def test_net_position(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+) -> None:
+    """Test only a jump in the reported position is written."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # The receiver reports every second while playing
+    freezer.tick(timedelta(seconds=1))
+    await receive_messages(read_queue, _net_time(11, 200))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_POSITION] == 10
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
+
+    # A seek on the receiver moves the position
+    freezer.tick(timedelta(seconds=1))
+    await receive_messages(read_queue, _net_time(100, 200))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_POSITION] == 100
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] != updated_at
+
+    # Pausing anchors the position where playback stopped
+    freezer.tick(timedelta(seconds=5))
+    await receive_messages(read_queue, _net_play_status(NetPlaybackState.PAUSED))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_POSITION] == 105
+
+    freezer.tick(timedelta(seconds=5))
+    await receive_messages(read_queue, _net_time(105, 200))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.attributes[ATTR_MEDIA_POSITION] == 105
+
+
+@pytest.mark.parametrize(
+    ("action", "param"),
+    [
+        (SERVICE_MEDIA_PLAY, command.NetOperation.Param.PLAY),
+        (SERVICE_MEDIA_PAUSE, command.NetOperation.Param.PAUSE),
+        (SERVICE_MEDIA_STOP, command.NetOperation.Param.STOP),
+        (SERVICE_MEDIA_NEXT_TRACK, command.NetOperation.Param.NEXT),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, command.NetOperation.Param.PREVIOUS),
+    ],
+)
+async def test_net_actions(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+    action: str,
+    param: command.NetOperation.Param,
+) -> None:
+    """Test the transport actions."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+    writes.clear()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN, action, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    assert writes == [command.NetOperation(param)]
+
+
+@pytest.mark.parametrize(
+    "messages",
+    [
+        pytest.param([_input_source("24")], id="source_change"),
+        pytest.param(
+            [
+                status.Power(
+                    Code.from_kind_zone(Kind.POWER, Zone.MAIN),
+                    None,
+                    status.Power.Param.STANDBY,
+                ),
+                status.Power(
+                    Code.from_kind_zone(Kind.POWER, Zone.MAIN),
+                    None,
+                    status.Power.Param.ON,
+                ),
+            ],
+            id="standby",
+        ),
+    ],
+)
+async def test_net_playback_cleared(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    messages: list[Status],
+) -> None:
+    """Test leaving the NET source or standby clears the player state."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, *messages)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_ON
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & NET_FEATURES
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert ATTR_MEDIA_POSITION not in state.attributes
+
+
+async def test_net_input_switch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test switching between NET/USB inputs clears and queries again."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+    writes.clear()
+
+    # A repeated report of the same input keeps the state
+    await receive_messages(read_queue, _input_source("2B"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() not in writes
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_PLAYING
+    assert state.attributes[ATTR_MEDIA_TITLE] == "Title"
+
+    # Switching from NETWORK to USB drops the old track
+    await receive_messages(read_queue, _input_source("29"))
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_ON
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert not state.attributes[ATTR_SUPPORTED_FEATURES] & NET_FEATURES
+
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() in writes
+
+
+async def test_net_input_switch_restarts_query_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test a second input change before the query restarts its delay."""
+    await receive_messages(read_queue, _input_source("2B"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+
+    await receive_messages(read_queue, _input_source("29"))
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert query.NetPlayStatus() not in writes
+
+    freezer.tick(timedelta(seconds=QUERY_NET_DELAY / 2))
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert writes.count(query.NetPlayStatus()) == 1
+
+
+async def test_net_status_ignored_on_other_source(
+    hass: HomeAssistant, read_queue: asyncio.Queue
+) -> None:
+    """Test NET reports do not change the state on another input."""
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES)
+
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert state.state == STATE_ON
+    assert ATTR_MEDIA_TITLE not in state.attributes
+
+
+async def test_net_playback_cleared_on_disconnect(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    read_queue: asyncio.Queue,
+    writes: list[Instruction],
+) -> None:
+    """Test a reconnect queries the NET player again."""
+    await _select_net_source(hass, freezer, read_queue)
+    await receive_messages(read_queue, *NET_TRACK_MESSAGES, DISCONNECT)
+    writes.clear()
+
+    await _select_net_source(hass, freezer, read_queue)
+    assert query.NetPlayStatus() in writes
+    assert (state := hass.states.get(ENTITY_ID)) is not None
+    assert ATTR_MEDIA_TITLE not in state.attributes
