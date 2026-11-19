@@ -75,7 +75,7 @@ async def async_setup_entry(
             async_add_entities(
                 AmazonClimateEntity(coordinator, serial_num, THERMOSTAT_DESCRIPTION)
                 for serial_num in new_devices
-                if "" in coordinator.data[serial_num].features.get("thermostat", {})
+                if "thermostatMode" in coordinator.supported_sensor_keys(serial_num)
             )
 
     _check_device()
@@ -93,10 +93,12 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
     ) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator, serial_num, description)
+        thermostat = self.device.features.get("thermostat", {}).get("")
+        supported_modes = thermostat.supported_modes if thermostat else {}
         self._attr_hvac_modes = list(
             dict.fromkeys(
                 AMAZON_TO_HVAC_MODE[mode]
-                for mode in self.device.features["thermostat"][""].supported_modes
+                for mode in supported_modes
                 if mode in AMAZON_TO_HVAC_MODE
             )
         )
@@ -106,11 +108,12 @@ class AmazonClimateEntity(AmazonEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        # the fan mode is a generic mode feature, keyed as fan_mode by the library
+        # the fan mode is a generic mode feature, keyed as thermostat_fan_mode
+        # by the library
         self._fan_instance: str | None = None
         self._fan_modes: dict[str, str] = {}
         for instance, feature in self.device.features.get("mode", {}).items():
-            if feature.sensor_keys.get("mode") == "fan_mode":
+            if feature.sensor_keys.get("mode") == "thermostat_fan_mode":
                 self._fan_instance = instance
                 self._fan_modes = {
                     slugify(name): value

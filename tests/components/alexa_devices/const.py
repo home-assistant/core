@@ -498,7 +498,7 @@ TEST_DEVICE_THERMOSTAT = AmazonDevice(
                         },
                     ],
                 },
-                sensor_keys={"mode": "fan_mode"},
+                sensor_keys={"mode": "thermostat_fan_mode"},
             )
         },
         "thermostatConfiguration": {
@@ -847,8 +847,8 @@ TEST_DEVICE_THERMOSTAT_SENSORS: dict[str, AmazonDeviceSensor] = {
         property_name="allowedTemperatureRange",
         instance="",
     ),
-    "fan_mode": AmazonDeviceSensor(
-        name="fan_mode",
+    "thermostat_fan_mode": AmazonDeviceSensor(
+        name="thermostat_fan_mode",
         value="2",
         error=False,
         error_msg=None,

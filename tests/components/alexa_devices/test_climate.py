@@ -408,7 +408,14 @@ async def test_thermostat_with_instance_not_added(
 ) -> None:
     """Test a thermostat feature reported with an instance creates no entity."""
     device = deepcopy(TEST_DEVICE_THERMOSTAT)
-    device.features["thermostat"] = {"1": device.features["thermostat"][""]}
+    thermostat = device.features["thermostat"][""]
+    # the library suffixes the sensor keys of a feature with an instance
+    device.features["thermostat"] = {
+        "1": replace(
+            thermostat,
+            sensor_keys={key: f"{key}-1" for key in thermostat.sensor_keys},
+        )
+    }
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_THERMOSTAT_SN: device
     }
