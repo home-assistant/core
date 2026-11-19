@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from tis_smartbus import DiscoveredDevice, Telegram, lookup
+from tis_smartbus import DiscoveredDevice, OpCode, Telegram, lookup
 
 from homeassistant.components.tis_control.const import DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PORT
@@ -65,14 +65,22 @@ def mock_gateway() -> Generator[MagicMock]:
         levels: dict[tuple[int, int], list[int]] = {(1, 5): [100, 0, 40, 0, 0, 0]}
         gateway.levels = levels
 
+        listeners: list[Callable[[Telegram], None]] = []
+
         async def read_channels(
             subnet: int, device: int, timeout: float = 2.0
         ) -> list[int] | None:
-            return levels.get((subnet, device))
+            # Like the library: the status reply goes to the bus listeners as well as to the reader.
+            current = levels.get((subnet, device))
+            if current is not None:
+                push(
+                    (subnet, device),
+                    OpCode.CHANNEL_STATUS_REPLY,
+                    bytes([len(current), *current]),
+                )
+            return current
 
         gateway.read_channels.side_effect = read_channels
-
-        listeners: list[Callable[[Telegram], None]] = []
 
         def add_listener(listener: Callable[[Telegram], None]) -> Callable[[], None]:
             listeners.append(listener)

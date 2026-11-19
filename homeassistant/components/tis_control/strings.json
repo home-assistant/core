@@ -32,6 +32,9 @@
   "exceptions": {
     "cannot_connect": {
       "message": "Could not open the TIS bus connection to {host}"
+    },
+    "cannot_send": {
+      "message": "Could not send the command to the TIS bus"
     }
   }
 }

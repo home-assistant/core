@@ -11,7 +11,7 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
-from tis_smartbus import OpCode
+from tis_smartbus import OpCode, TISConnectionError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -23,7 +23,9 @@ from homeassistant.components.light import (
 from homeassistant.components.tis_control.const import POLL_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.color import value_to_brightness
 
 CHANNEL_1 = "light.living_dimmer_channel_1"
 CHANNEL_2 = "light.living_dimmer_channel_2"
@@ -184,3 +186,52 @@ async def test_channel_unavailable_until_its_level_is_known(
     assert hass.states.get(CHANNEL_1).state == STATE_ON
     assert hass.states.get(CHANNEL_2).state == STATE_UNAVAILABLE
     mock_gateway.levels[(1, 5)] = levels
+
+
+async def test_poll_does_not_replay_an_older_reading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_gateway: MagicMock,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """A module announces a new level while the poll is still waiting: the announcement wins."""
+    read = mock_gateway.read_channels.side_effect
+
+    async def read_then_announce(
+        subnet: int, device: int, timeout: float = 2.0
+    ) -> list[int] | None:
+        stale = await read(subnet, device, timeout)  # the reply: channel 1 at 100 %
+        # Before the poll looks at that reply, a wall panel dims channel 1 to 40 %.
+        mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f828"))
+        return stale
+
+    mock_gateway.read_channels.side_effect = read_then_announce
+    freezer.tick(POLL_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(CHANNEL_1)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == value_to_brightness((1, 100), 40)
+
+    # The remembered level is the announced one too.
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f800"))
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: CHANNEL_1}, blocking=True
+    )
+    mock_gateway.set_channel.assert_called_with(1, 5, 1, 40, 0)
+
+
+@pytest.mark.usefixtures("setup_entry")
+async def test_send_failure_raises(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """A command that cannot be sent is reported, and the state does not change."""
+    mock_gateway.set_channel.side_effect = TISConnectionError("not connected")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: CHANNEL_1}, blocking=True
+        )
+    assert err.value.translation_key == "cannot_send"
+    assert hass.states.get(CHANNEL_1).state == STATE_ON

@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+from tis_smartbus import TISConnectionError
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
@@ -10,10 +12,12 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import TISConfigEntry
+from .const import DOMAIN
 from .entity import TISEntity
 from .hub import TISHub
 
@@ -77,9 +81,14 @@ class TISLight(TISEntity, LightEntity):
         self._set(0, kwargs.get(ATTR_TRANSITION))
 
     def _set(self, level: int, transition: float | None) -> None:
-        self.hub.gateway.set_channel(
-            *self.address, self.channel, level, round(transition or 0)
-        )
+        try:
+            self.hub.gateway.set_channel(
+                *self.address, self.channel, level, round(transition or 0)
+            )
+        except TISConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cannot_send"
+            ) from err
         # The module confirms on the bus within ~0.1 s; show the new state right away.
         self.hub.set_level((*self.address, self.channel), level)
         self.async_write_ha_state()

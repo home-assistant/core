@@ -82,6 +82,13 @@ class TISHub:
         return self.online.get(address, False)
 
     async def _async_poll(self, _now: datetime | None = None) -> None:
+        """Read every module to learn which ones answer.
+
+        The library hands each status reply to the bus listeners as it arrives, so _on_telegram has
+        already stored the levels, in bus order. The poll must not store them again: gather() returns
+        only when the slowest module has answered, and a module may have announced a newer level in
+        the meantime.
+        """
         targets = sorted(self._modules)
         results = await asyncio.gather(
             *(self.gateway.read_channels(*address) for address in targets)
@@ -96,8 +103,6 @@ class TISHub:
                 continue
             if was_online is False:
                 _LOGGER.info("TIS module %s.%s is answering again", *address)
-            for channel, level in enumerate(levels, start=1):
-                self.set_level((*address, channel), level)
             self._notify(address)
 
     @callback
