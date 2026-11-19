@@ -55,7 +55,7 @@ def _api_call_error_key(err: ec2.ApiCallFailedError) -> str:
 
 # a request that the client rejected, before any API call (i.e. invalid arguments)
 _REQUEST_ERROR_TRANSLATION_KEYS: Final[dict[ec2.RequestErrorReason, str]] = {
-    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_not_supported",
+    ec2.RequestErrorReason.MODE_UNKNOWN: "mode_unknown",
     ec2.RequestErrorReason.MODE_UNSUPPORTED: "mode_not_supported",
     ec2.RequestErrorReason.TIMESPAN_NOT_ALLOWED: "mode_cant_be_temporary",
     ec2.RequestErrorReason.TIMESPAN_REQUIRED: "mode_timespan_required",
