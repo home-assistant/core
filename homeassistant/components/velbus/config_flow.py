@@ -3,10 +3,11 @@
 from pathlib import Path
 import shutil
 from typing import Any, Final, override
+from urllib.parse import urlparse
 
 import probatio
 import velbusaio.controller
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 from velbusaio.vlp_reader import VlpFile
 
 from homeassistant.components.file_upload import process_uploaded_file
@@ -15,13 +16,15 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import CONF_TLS, CONF_VLP_FILE, DOMAIN
+from .const import CONF_TLS, CONF_VLP_FILE, DOMAIN, MANAGER_DEFAULT_PORT
 
 STORAGE_PATH: Final = ".storage/velbus.{key}.vlp"
 
@@ -41,23 +44,34 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: str = ""
         self._vlp_file: str | None = None
         self._title: str = ""
+        self._access_token: str | None = None
 
     def _create_device(self) -> ConfigFlowResult:
         """Create an entry async."""
+        data: dict[str, Any] = {CONF_PORT: self._device, CONF_VLP_FILE: self._vlp_file}
+        if self._access_token:
+            data[CONF_ACCESS_TOKEN] = self._access_token
         return self.async_create_entry(
             title=self._title,
-            data={CONF_PORT: self._device, CONF_VLP_FILE: self._vlp_file},
+            data=data,
         )
 
-    async def _test_connection(self) -> bool:
+    async def _test_connection(self, *, error_field: str = CONF_HOST) -> str | None:
         """Try to connect to the velbus with the port specified."""
+        use_manager = self._device.startswith("manager://")
         try:
-            controller = velbusaio.controller.Velbus(self._device)
+            controller = velbusaio.controller.Velbus(
+                self._device,
+                session=async_get_clientsession(self.hass) if use_manager else None,
+                access_token=self._access_token,
+            )
             await controller.connect()
             await controller.stop()
+        except VelbusAuthenticationFailed:
+            return CONF_ACCESS_TOKEN
         except VelbusConnectionFailed:
-            return False
-        return True
+            return error_field
+        return None
 
     @override
     async def async_step_user(
@@ -65,7 +79,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         return self.async_show_menu(
-            step_id="user", menu_options=["network", "usbselect"]
+            step_id="user", menu_options=["network", "manager", "usbselect"]
         )
 
     async def async_step_network(
@@ -75,6 +89,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         step_errors: dict[str, str] = {}
         if user_input is not None:
             self._title = "Velbus Network"
+            self._access_token = None
             if user_input[CONF_TLS]:
                 self._device = "tls://"
             else:
@@ -84,9 +99,14 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
             if self.source != SOURCE_RECONFIGURE:
                 self._async_abort_entries_match({CONF_PORT: self._device})
-            if await self._test_connection():
+            if connect_error := await self._test_connection():
+                step_errors[connect_error] = (
+                    "invalid_access_token"
+                    if connect_error == CONF_ACCESS_TOKEN
+                    else "cannot_connect"
+                )
+            else:
                 return await self.async_step_vlp()
-            step_errors[CONF_HOST] = "cannot_connect"
         elif self.source == SOURCE_RECONFIGURE:
             current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
             tls = current.startswith("tls://")
@@ -126,6 +146,68 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=step_errors,
         )
 
+    async def async_step_manager(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Velbus Manager connection."""
+        step_errors: dict[str, str] = {}
+        if user_input is not None:
+            self._title = "Velbus Manager"
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+            self._device = f"manager://{host}:{port}"
+            token = user_input.get(CONF_ACCESS_TOKEN)
+            self._access_token = token or None
+            if self.source != SOURCE_RECONFIGURE:
+                self._async_abort_entries_match({CONF_PORT: self._device})
+            if connect_error := await self._test_connection():
+                step_errors[connect_error] = (
+                    "invalid_access_token"
+                    if connect_error == CONF_ACCESS_TOKEN
+                    else "cannot_connect"
+                )
+            else:
+                self._vlp_file = None
+                if self.source == SOURCE_RECONFIGURE:
+                    old_entry = self._get_reconfigure_entry()
+                    data: dict[str, Any] = {
+                        CONF_PORT: self._device,
+                        CONF_VLP_FILE: None,
+                    }
+                    if self._access_token:
+                        data[CONF_ACCESS_TOKEN] = self._access_token
+                    return self.async_update_reload_and_abort(old_entry, data=data)
+                return self._create_device()
+        elif self.source == SOURCE_RECONFIGURE:
+            current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
+            parts = urlparse(current)
+            user_input = {
+                CONF_HOST: parts.hostname or "",
+                CONF_PORT: parts.port or MANAGER_DEFAULT_PORT,
+            }
+            if token := self._get_reconfigure_entry().data.get(CONF_ACCESS_TOKEN):
+                user_input[CONF_ACCESS_TOKEN] = token
+        else:
+            user_input = {
+                CONF_HOST: "manager" if is_hassio(self.hass) else "127.0.0.1",
+                CONF_PORT: MANAGER_DEFAULT_PORT,
+            }
+
+        return self.async_show_form(
+            step_id="manager",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(probatio.Secret(CONF_ACCESS_TOKEN)): str,
+                    }
+                ),
+                suggested_values=user_input,
+            ),
+            errors=step_errors,
+        )
+
     async def async_step_usbselect(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -134,11 +216,13 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._title = "Velbus USB"
+            self._access_token = None
             self._device = user_input[CONF_PORT]
             self._async_abort_entries_match({CONF_PORT: self._device})
-            if await self._test_connection():
+            if connect_error := await self._test_connection(error_field=CONF_PORT):
+                step_errors[connect_error] = "cannot_connect"
+            else:
                 return await self.async_step_vlp()
-            step_errors[CONF_PORT] = "cannot_connect"
         else:
             user_input = {}
             user_input[CONF_PORT] = ""
@@ -161,7 +245,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device = discovery_info.device
         self._title = "Velbus USB"
         self._async_abort_entries_match({CONF_PORT: self._device})
-        if not await self._test_connection():
+        if await self._test_connection(error_field=CONF_PORT):
             return self.async_abort(reason="cannot_connect")
         # call the config step
         return await self.async_step_discovery_confirm()
@@ -239,7 +323,13 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_network()
+        if (
+            self._get_reconfigure_entry()
+            .data.get(CONF_PORT, "")
+            .startswith("manager://")
+        ):
+            return await self.async_step_manager(user_input)
+        return await self.async_step_network(user_input)
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:

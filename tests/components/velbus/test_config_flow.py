@@ -12,7 +12,13 @@ from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SOURCE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -79,6 +85,61 @@ def mock_controller_connection_failed():
 
 
 @pytest.mark.usefixtures("controller")
+async def test_user_manager_success(hass: HomeAssistant) -> None:
+    """Test user Velbus Manager config."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+    assert result.get("title") == "Velbus Manager"
+    data = result.get("data")
+    assert data
+    assert data[CONF_PORT] == "manager://127.0.0.1:4201"
+    assert data[CONF_ACCESS_TOKEN] == "token"
+    assert data[CONF_VLP_FILE] is None
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+async def test_user_manager_connect_failure(hass: HomeAssistant) -> None:
+    """Test Velbus Manager connection failure."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+    )
+    assert result.get("errors") == {CONF_HOST: "cannot_connect"}
+
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+        )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
+
+
+@pytest.mark.usefixtures("controller")
 @pytest.mark.parametrize(
     ("inputParams", "expected"),
     [
@@ -112,7 +173,7 @@ async def test_user_network_succes(
     assert result.get("flow_id")
     assert result.get("type") is FlowResultType.MENU
     assert result.get("step_id") == "user"
-    assert result.get("menu_options") == ["network", "usbselect"]
+    assert result.get("menu_options") == ["network", "manager", "usbselect"]
     # select the network option
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
@@ -156,7 +217,7 @@ async def test_user_network_connect_failure(
     assert result.get("flow_id")
     assert result.get("type") is FlowResultType.MENU
     assert result.get("step_id") == "user"
-    assert result.get("menu_options") == ["network", "usbselect"]
+    assert result.get("menu_options") == ["network", "manager", "usbselect"]
     # select the network option
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
