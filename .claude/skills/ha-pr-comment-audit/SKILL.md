@@ -13,8 +13,7 @@ description: Audits the review comment threads on a Home Assistant GitHub pull r
 - Flag comments for which the author has asked for clarification.
 - Flag resolved threads that have not been addressed (resolved prematurely), and say who resolved them.
 - Flag unresolved threads that have been addressed (addressed but not resolved), citing the change that addresses them (file and line).
-- Generate a summary of the flagged comments, grouped by the categories above, including a link for each comment. Don't include threads that have been addressed and are resolved.
-- For the two resolved-state categories, also list one line per thread: `<comment URL> <resolve|unresolve> <one-line rationale citing the evidence>`.
+- Generate a summary of the flagged comments, grouped by the categories above, including a link for each comment; for the two resolved-state categories, give each thread as `<comment URL> <resolve|unresolve> <one-line rationale citing the evidence>`. Don't include threads that have been addressed and are resolved.
 
 
 ## IMPORTANT:
