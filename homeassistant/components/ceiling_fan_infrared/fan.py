@@ -70,6 +70,10 @@ class CeilingFanIrFanEntity(
         super().__init__(entry)
         self._infrared_emitter_entity_id = infrared_entity_id
         self._attr_unique_id = entry.entry_id
+        # The speed is unknown until a speed key is pressed. FanEntity defaults
+        # the percentage to 0, which would report an unknown speed as off when
+        # a scene is restored, so override the default with unknown.
+        self._attr_percentage = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -86,6 +90,8 @@ class CeilingFanIrFanEntity(
         if last_state.state not in (STATE_ON, STATE_OFF):
             return
         self._attr_is_on = last_state.state == STATE_ON
+        # The percentage stays unknown when the stored state has none, which is
+        # the case after a bare turn-on.
         if isinstance(
             percentage := last_state.attributes.get(FanEntityStateAttribute.PERCENTAGE),
             int,
