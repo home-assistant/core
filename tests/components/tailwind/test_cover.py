@@ -12,13 +12,9 @@ from gotailwind import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import (
-    DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-)
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
 from homeassistant.components.tailwind.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -60,9 +56,9 @@ async def test_cover_operations(
     assert len(mock_tailwind.operate.mock_calls) == 0
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        CoverService.OPEN,
         {
-            ATTR_ENTITY_ID: "cover.door_1",
+            TargetKey.ENTITY_ID: "cover.door_1",
         },
         blocking=True,
     )
@@ -73,9 +69,9 @@ async def test_cover_operations(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
+        CoverService.CLOSE,
         {
-            ATTR_ENTITY_ID: "cover.door_1",
+            TargetKey.ENTITY_ID: "cover.door_1",
         },
         blocking=True,
     )
@@ -90,9 +86,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
+            CoverService.OPEN,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -104,9 +100,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -121,9 +117,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
+            CoverService.OPEN,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -135,9 +131,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -152,9 +148,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
+            CoverService.OPEN,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -169,9 +165,9 @@ async def test_cover_operations(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE,
             {
-                ATTR_ENTITY_ID: "cover.door_1",
+                TargetKey.ENTITY_ID: "cover.door_1",
             },
             blocking=True,
         )
@@ -191,9 +187,9 @@ async def test_cover_operations(
     # This call should not raise an exception
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        CoverService.OPEN,
         {
-            ATTR_ENTITY_ID: "cover.door_1",
+            TargetKey.ENTITY_ID: "cover.door_1",
         },
         blocking=True,
     )
@@ -201,9 +197,9 @@ async def test_cover_operations(
     # This call should not raise an exception
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
+        CoverService.CLOSE,
         {
-            ATTR_ENTITY_ID: "cover.door_1",
+            TargetKey.ENTITY_ID: "cover.door_1",
         },
         blocking=True,
     )

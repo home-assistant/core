@@ -31,9 +31,8 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_MEDIUM,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.gree_infrared.const import DOMAIN
@@ -220,20 +219,23 @@ async def test_switch_frame_carries_the_climate_state(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 25,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_MEDIUM},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_MEDIUM},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -271,14 +273,17 @@ async def test_switch_frame_carries_changes_made_while_off(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 27},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 27,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_MEDIUM},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_MEDIUM},
         blocking=True,
     )
     assert not mock_infrared_emitter_entity.send_command_calls
@@ -388,8 +393,8 @@ async def test_climate_frame_carries_the_switch_state(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
 
@@ -421,8 +426,8 @@ async def test_overlapping_sends_keep_both_changes(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -453,8 +458,11 @@ async def test_overlapping_sends_keep_both_changes(
         temperature_call = hass.async_create_task(
             hass.services.async_call(
                 CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+                ClimateService.SET_TEMPERATURE,
+                {
+                    TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+                    ClimateServiceArgument.TEMPERATURE: 25,
+                },
                 blocking=True,
             )
         )
@@ -769,8 +777,8 @@ async def test_unconfigured_mode_frame_reaches_neither_entity(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_receiver_entity._handle_received_signal(

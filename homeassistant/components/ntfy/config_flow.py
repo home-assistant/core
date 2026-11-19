@@ -2,8 +2,8 @@
 
 from collections.abc import Mapping
 import logging
-import random
 import re
+import secrets
 import string
 from typing import TYPE_CHECKING, Any, override
 
@@ -439,10 +439,7 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """User flow to add a new topic."""
         topic = "".join(
-            random.choices(
-                string.ascii_lowercase + string.ascii_uppercase + string.digits,
-                k=16,
-            )
+            secrets.choice(string.ascii_letters + string.digits) for _ in range(16)
         )
         # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(

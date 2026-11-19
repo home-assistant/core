@@ -148,8 +148,22 @@ async def test_save_preferences(
                 "entity_capacity": "sensor.my_battery_capacity",
                 "name": "Battery",
             },
-            {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
-            {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},
+            {
+                "type": "gas",
+                "stat_energy_from": "sensor.gas",
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "name": "My gas",
+            },
+            {
+                "type": "water",
+                "stat_energy_from": "sensor.water",
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "name": "My water",
+            },
         ],
         "device_consumption": [
             {
@@ -273,6 +287,42 @@ async def test_save_preferences_drops_cost_adjustment_day(
             "entity_energy_price_export": None,
             "number_energy_price_export": None,
         }
+    ]
+
+
+async def test_save_preferences_meter_cost_defaults(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test gas and water meters store the cost keys they leave out as None."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "energy/save_prefs",
+            "energy_sources": [
+                {
+                    "type": source_type,
+                    "stat_energy_from": f"sensor.{source_type}",
+                    "number_energy_price": 0.5,
+                }
+                for source_type in ("gas", "water")
+            ],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["energy_sources"] == [
+        {
+            "type": source_type,
+            "stat_energy_from": f"sensor.{source_type}",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+        for source_type in ("gas", "water")
     ]
 
 
