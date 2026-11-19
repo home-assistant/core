@@ -13,6 +13,7 @@ from homeassistant.components.update import (
 from homeassistant.const import STATE_ON, __version__
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.loader import Integration, async_get_integrations
 
 from .const import DOMAIN
 from .feed import DATA_FEED, ReleaseNotesUnavailable
@@ -57,6 +58,25 @@ def _installed_domains(hass: HomeAssistant) -> set[str]:
     return domains
 
 
+async def _integration_types(
+    hass: HomeAssistant, indexes: list[dict[str, Any]]
+) -> dict[str, str]:
+    """Return the integration type of each domain in the releases."""
+    domains = {
+        domain
+        for index in indexes
+        for key in CATEGORIES
+        for entry in index[key]
+        for domain in entry["domains"]
+    }
+    return {
+        domain: integration.integration_type
+        for domain, integration in (await async_get_integrations(hass, domains)).items()
+        # Removed integrations are not found; they were set up like any other.
+        if isinstance(integration, Integration)
+    }
+
+
 def _pr(pr: str) -> dict[str, str]:
     """Return the label and link of a pull request, such as frontend#123."""
     repo, _, number = pr.rpartition("#")
@@ -83,6 +103,7 @@ def _item(entry: dict[str, Any], index: dict[str, Any], **scope: Any) -> dict[st
 def build_digest(
     indexes: list[dict[str, Any]],
     installed: set[str],
+    general: set[str],
     running: str,
     target: str | None,
     entity_id: str | None,
@@ -94,10 +115,13 @@ def build_digest(
         related: list[dict[str, Any]] = []
         for index in indexes:
             for entry in index[key]:
-                if direct := sorted(set(entry["domains"]) & installed):
-                    items.append(_item(entry, index, domains=direct, scope="domains"))
-                elif entry.get("global"):
-                    items.append(_item(entry, index, domains=[], scope="global"))
+                matched = set(entry["domains"]) & installed
+                if own := sorted(matched - general):
+                    items.append(_item(entry, index, domains=own, scope="domains"))
+                elif matched or entry.get("global"):
+                    items.append(
+                        _item(entry, index, domains=sorted(matched), scope="global")
+                    )
                 elif mentioned := sorted(set(entry.get("mentions", [])) & installed):
                     related.append(
                         _item(entry, index, domains=mentioned, scope="mentions")
@@ -146,6 +170,17 @@ async def websocket_digest(
         return
     # Mock: drop MOCK_DOMAINS to match only what is installed.
     installed = _installed_domains(hass) | MOCK_DOMAINS
+    types = await _integration_types(hass, indexes)
+    # An entity type, like calendar, is loaded everywhere; it is yours once you
+    # have such entities, and does not concern you otherwise.
+    installed = {
+        domain
+        for domain in installed
+        if types.get(domain) != "entity" or hass.states.async_entity_ids(domain)
+    }
+    # System parts, like auth, are part of every installation: general changes.
+    general = {domain for domain, kind in types.items() if kind == "system"}
     connection.send_result(
-        msg["id"], build_digest(indexes, installed, running, target, entity_id)
+        msg["id"],
+        build_digest(indexes, installed, general, running, target, entity_id),
     )

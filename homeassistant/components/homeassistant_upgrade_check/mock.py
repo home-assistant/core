@@ -6,7 +6,7 @@ the check is tried and tested.
 """
 
 MOCK_CORE_UPDATE_ID = "mock_core"
-MOCK_RUNNING = "2026.7.0"
+MOCK_RUNNING = "2026.9.0"
 MOCK_TARGET = "2026.11.0"
 MOCK_RELEASE_URL = "https://www.home-assistant.io/blog/2026/11/04/release-202611/"
 

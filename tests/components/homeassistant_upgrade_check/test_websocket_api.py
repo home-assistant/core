@@ -10,10 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant_upgrade_check.const import DOMAIN
 from homeassistant.components.homeassistant_upgrade_check.feed import POSTS_URL
-from homeassistant.components.homeassistant_upgrade_check.mock import (
-    MOCK_RUNNING,
-    MOCK_TARGET,
-)
 from homeassistant.components.homeassistant_upgrade_check.release_notes import (
     INDEX_FORMAT,
 )
@@ -27,8 +23,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MOCK_CORE_UPDATE, RUNNING, TARGET
+
 DIGEST = f"{DOMAIN}/digest"
-MOCK_CORE_UPDATE = "update.home_assistant_core_mock"
 
 
 @pytest.mark.usefixtures("installed_integrations", "setup_integration")
@@ -215,7 +212,7 @@ async def test_digest_from_cache(
         "version": 1,
         "key": DOMAIN,
         "data": {
-            "key": f"{MOCK_RUNNING}..{MOCK_TARGET}@{INDEX_FORMAT}",
+            "key": f"{RUNNING}..{TARGET}@{INDEX_FORMAT}",
             "indexes": [
                 {
                     "version": "2026.9",
@@ -250,7 +247,7 @@ async def test_digest_rebuilds_outdated_cache(
         "version": 1,
         "key": DOMAIN,
         "data": {
-            "key": f"{MOCK_RUNNING}..{MOCK_TARGET}@{INDEX_FORMAT - 1}",
+            "key": f"{RUNNING}..{TARGET}@{INDEX_FORMAT - 1}",
             "indexes": [{"version": "2026.9"}],
         },
     }

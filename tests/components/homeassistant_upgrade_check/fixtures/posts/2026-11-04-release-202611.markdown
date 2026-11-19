@@ -7,6 +7,7 @@ title: "2026.11: Target release"
 ### Noteworthy improvements to existing integrations
 
 - **[Philips Hue]** now shows the bridge firmware. Thanks, [@dave]!
+- **[MQTT](/integrations/mqtt/)** keeps retained messages for [Philips Hue] lights. Thanks, [@bob]!
 
 ### Integration quality scale achievements
 
@@ -26,6 +27,36 @@ Scenes are now {% term entities %} of their own.
 
 {% enddetails %}
 
+{% details "Calendar" %}
+
+Calendar entities now report all-day events in your time zone.
+
+([@frank] - [#5100]) ([calendar docs])
+
+[#5100]: https://github.com/home-assistant/core/pull/5100
+
+{% enddetails %}
+
+{% details "Vacuum" %}
+
+Vacuum entities now report the cleaned area.
+
+([@grace] - [#5200]) ([vacuum docs])
+
+[#5200]: https://github.com/home-assistant/core/pull/5200
+
+{% enddetails %}
+
+{% details "Authentication" %}
+
+Refresh tokens that were not used for a year are removed.
+
+([@frenck] - [#5300]) ([auth docs])
+
+[#5300]: https://github.com/home-assistant/core/pull/5300
+
+{% enddetails %}
+
 {% details "Gardena Bluetooth" %}
 
 The valve's sensor now reports a fixed set of values.
@@ -36,6 +67,9 @@ The valve's sensor now reports a fixed set of values.
 
 {% enddetails %}
 
+[calendar docs]: /integrations/calendar/
+[auth docs]: /integrations/auth/
+[vacuum docs]: /integrations/vacuum/
 [Gardena Bluetooth]: /integrations/gardena_bluetooth
 [Philips Hue]: /integrations/hue
 [Shelly]: /integrations/shelly

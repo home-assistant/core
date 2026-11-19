@@ -17,13 +17,15 @@ POST_FILE = re.compile(
 LINKDEF = re.compile(
     r"^\[([^\]]+)\]:\s*/integrations/(?:[a-z0-9_]+\.)?([a-z0-9_]+)", re.MULTILINE
 )
+# A reference-style link in the text, such as [Philips Hue].
+REFERENCE = re.compile(r"\[([^\]@#]+)\](?![:(])")
 INLINE = re.compile(r"\]\(/integrations/(?:[a-z0-9_]+\.)?([a-z0-9_]+)")
 # Pre-2026 posts link the docs inline: ([documentation](/integrations/x))
 INLINE_DOC = re.compile(r"\(\[documentation\]\(/integrations/([a-z0-9_]+)")
 ANY_LINKDEF = re.compile(r"^\[([^\]]+)\]:\s*(\S+)\s*$", re.MULTILINE)
 SITE = "https://www.home-assistant.io"
 # Bump when the shape of an index changes, so cached indexes are rebuilt.
-INDEX_FORMAT = 6
+INDEX_FORMAT = 7
 LIQUID = re.compile(r"{%\s*(\w+)\s*(.*?)\s*%}")
 QUOTED_OR_WORD = re.compile(r'"([^"]*)"|(\S+)')
 
@@ -111,11 +113,14 @@ def index_post(post: str, version: str, url: str) -> dict[str, Any]:
 
     def refs(text: str) -> list[str]:
         """Domains referenced as [Name] or inline links, in order, de-duplicated."""
+        # Both kinds of link can be mixed; the first one is the subject.
         found = [
-            names[n] for n in re.findall(r"\[([^\]@#]+)\](?![:(])", text) if n in names
+            (m.start(), names[m.group(1)])
+            for m in REFERENCE.finditer(text)
+            if m.group(1) in names
         ]
-        found += INLINE.findall(text)
-        return list(dict.fromkeys(found))
+        found += [(m.start(), m.group(1)) for m in INLINE.finditer(text)]
+        return list(dict.fromkeys(domain for _, domain in sorted(found)))
 
     def title(bullet: str) -> str:
         """The bold name a list item starts with, such as **[MQTT]**."""

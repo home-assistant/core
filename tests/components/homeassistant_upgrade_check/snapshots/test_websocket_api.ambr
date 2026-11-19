@@ -3,7 +3,7 @@
   dict({
     'categories': list([
       dict({
-        'count': 5,
+        'count': 7,
         'items': list([
           dict({
             'credits': list([
@@ -84,6 +84,44 @@
             'credits': list([
             ]),
             'domains': list([
+              'calendar',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#5100',
+                'url': 'https://github.com/home-assistant/core/pull/5100',
+              }),
+            ]),
+            'scope': 'domains',
+            'text': 'Calendar entities now report all-day events in your time zone.',
+            'tier': None,
+            'title': 'Calendar',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'auth',
+            ]),
+            'prs': list([
+              dict({
+                'label': '#5300',
+                'url': 'https://github.com/home-assistant/core/pull/5300',
+              }),
+            ]),
+            'scope': 'global',
+            'text': 'Refresh tokens that were not used for a year are removed.',
+            'tier': None,
+            'title': 'Authentication',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
               'gardena_bluetooth',
             ]),
             'prs': list([
@@ -124,7 +162,7 @@
         ]),
       }),
       dict({
-        'count': 2,
+        'count': 3,
         'items': list([
           dict({
             'credits': list([
@@ -153,6 +191,21 @@
             'text': '**[Philips Hue](https://www.home-assistant.io/integrations/hue)** now shows the bridge firmware.',
             'tier': None,
             'title': 'Philips Hue',
+            'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
+            'version': '2026.11',
+          }),
+          dict({
+            'credits': list([
+            ]),
+            'domains': list([
+              'mqtt',
+            ]),
+            'prs': list([
+            ]),
+            'scope': 'domains',
+            'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt/)** keeps retained messages for [Philips Hue](https://www.home-assistant.io/integrations/hue) lights.',
+            'tier': None,
+            'title': 'MQTT',
             'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
             'version': '2026.11',
           }),
@@ -348,6 +401,45 @@
           }),
           dict({
             'domains': list([
+              'calendar',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '5100',
+            ]),
+            'text': 'Calendar entities now report all-day events in your time zone.',
+            'title': 'Calendar',
+          }),
+          dict({
+            'domains': list([
+              'vacuum',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '5200',
+            ]),
+            'text': 'Vacuum entities now report the cleaned area.',
+            'title': 'Vacuum',
+          }),
+          dict({
+            'domains': list([
+              'auth',
+            ]),
+            'global': False,
+            'mentions': list([
+            ]),
+            'prs': list([
+              '5300',
+            ]),
+            'text': 'Refresh tokens that were not used for a year are removed.',
+            'title': 'Authentication',
+          }),
+          dict({
+            'domains': list([
               'gardena_bluetooth',
             ]),
             'global': False,
@@ -369,6 +461,16 @@
             ]),
             'text': '**[Philips Hue](https://www.home-assistant.io/integrations/hue)** now shows the bridge firmware.',
             'title': 'Philips Hue',
+          }),
+          dict({
+            'domains': list([
+              'mqtt',
+            ]),
+            'mentions': list([
+              'hue',
+            ]),
+            'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt/)** keeps retained messages for [Philips Hue](https://www.home-assistant.io/integrations/hue) lights.',
+            'title': 'MQTT',
           }),
         ]),
         'quality_scale': list([
@@ -400,6 +502,6 @@
         'version': '2026.11',
       }),
     ]),
-    'key': '2026.7.0..2026.11.0@6',
+    'key': '2026.7.0..2026.11.0@7',
   })
 # ---
