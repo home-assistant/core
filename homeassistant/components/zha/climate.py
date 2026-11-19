@@ -157,6 +157,12 @@ class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
 
     @property
     @override
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._zha_state.current_humidity
+
+    @property
+    @override
     def fan_mode(self) -> str | None:
         """Return current FAN mode."""
         return self._zha_state.fan_mode
