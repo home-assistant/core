@@ -387,7 +387,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
-        self._characteristic: Characteristic | None = None
+        self._current_characteristic: Characteristic | None = None
         self._management_point_type: str | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
@@ -403,7 +403,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
         point, characteristic = self._get_current_characteristic()
-        self._characteristic = characteristic
+        self._current_characteristic = characteristic
         self._management_point_type = (
             point.management_point_type if point is not None else None
         )
@@ -423,13 +423,13 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         characteristic = (
             point.sensory_characteristic(self._value)
             if self._sub_type == "sensoryData"
-            else point.characteristic(self._value)
+            else self._characteristic(self._value)
         )
         return point, characteristic
 
     def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
-        return self._sensor_value(self._characteristic)
+        return self._sensor_value(self._current_characteristic)
 
     def _sensor_value(
         self, characteristic: Characteristic | None
@@ -463,7 +463,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
-        characteristic = self._characteristic
+        characteristic = self._current_characteristic
         return characteristic is not None and (
             self._sub_type is not None
             or scalar_platform(

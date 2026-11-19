@@ -5,7 +5,7 @@ import logging
 from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
-from daikin_onecta.models import ManagementPoint
+from daikin_onecta.models import Characteristic, ManagementPoint
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -287,10 +287,15 @@ class DaikinManagementPointEntity(DaikinEntity):
         """Return the current source management point."""
         return self._device.management_point(self._embedded_id)
 
+    def _characteristic(self, name: str) -> Characteristic | None:
+        """Return a scalar characteristic from the current management point."""
+        point = self._management_point
+        return point.characteristic(name) if point is not None else None
+
     def _characteristic_exposed_on(self, name: str, platform: Platform) -> bool:
         """Return whether a scalar characteristic is still exposed on a platform."""
         point = self._management_point
-        characteristic = point.characteristic(name) if point is not None else None
+        characteristic = self._characteristic(name)
         return (
             point is not None
             and characteristic is not None

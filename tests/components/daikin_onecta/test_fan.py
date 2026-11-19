@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from daikin_onecta.client import OnectaClient
 import pytest
@@ -506,6 +506,55 @@ async def test_air_purifier_percentage_powers_on_before_mode_and_speed(
             (device.id, point.embedded_id, "fanControl", 2),
             {"path": "/airPurificationModes/manualFan/fanSpeed/modes/fixed"},
         ),
+    ]
+
+
+async def test_air_purifier_percentage_uses_replaced_model_after_turn_on(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Re-read purifier state after turning it on replaces the cached model."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    entity = hass.data[FAN_DOMAIN].get_entity("fan.air_purifier")
+    assert isinstance(entity, DaikinAirPurifier)
+    old_purification = _air_purification(config_entry)
+    assert old_purification.power is not None and old_purification.mode is not None
+    old_purification.power.value = "off"
+    old_purification.mode.value = "autoFan"
+    replacement = deepcopy(device.device)
+    replacement_point = replacement.management_points_by_type("climateControl")[0]
+    assert replacement_point.air_purification is not None
+    assert replacement_point.air_purification.power is not None
+    assert replacement_point.air_purification.mode is not None
+    replacement_point.air_purification.power.value = "on"
+    replacement_point.air_purification.mode.value = "manualFan"
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+
+    async def replace_model() -> None:
+        device.set_device_data(replacement)
+
+    with patch.object(entity, "async_turn_on", side_effect=replace_model):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {
+                ATTR_ENTITY_ID: "fan.air_purifier",
+                FanServiceArgument.PERCENTAGE: 50,
+            },
+            blocking=True,
+        )
+
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        (
+            (
+                device.id,
+                replacement_point.embedded_id,
+                "fanControl",
+                2,
+            ),
+            {"path": "/airPurificationModes/manualFan/fanSpeed/modes/fixed"},
+        )
     ]
 
 

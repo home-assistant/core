@@ -428,6 +428,45 @@ async def test_water_heater_set_temperature_applies_temperature_before_off(
     ]
 
 
+async def test_water_heater_combined_off_and_temperature_while_already_off(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Allow a setpoint write with target mode off from either current state."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.on_off_mode.value = "off"
+    point.domestic_hot_water.temperature.value = 45
+    point.domestic_hot_water.temperature.settable = True
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+        },
+        blocking=True,
+    )
+
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        call(
+            gateway.id,
+            point.embedded_id,
+            "temperatureControl",
+            50,
+            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+        )
+    ]
+
+
 async def test_water_heater_rejects_invalid_combined_mode_before_temperature_write(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

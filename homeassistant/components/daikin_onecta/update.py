@@ -94,6 +94,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         """Initialise the update entity."""
         super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._pending_install: tuple[int, str | None, int] | None = None
+        self._firmware_reports_progress = False
 
         self._attr_unique_id = management_point_unique_id(
             device.id, self._embedded_id, "firmware"
@@ -145,6 +146,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         """Pull the latest values out of a typed management point."""
         firmware = management_point.firmware
         if firmware is None:
+            self._firmware_reports_progress = False
             self._pending_install = None
             self._attr_installed_version = None
             self._attr_latest_version = None
@@ -158,6 +160,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             return
         self._attr_installed_version = firmware.installed_version
         self._is_update_supported = firmware.update_supported
+        self._firmware_reports_progress = firmware.has_update_status
         self._attr_latest_version = self._attr_installed_version
         self._attr_release_url = None
         self._attr_release_summary = None
@@ -201,6 +204,15 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
     @override
     def update_state(self) -> None:
         """Refresh firmware update state from the current management point."""
+        if (
+            not self.coordinator.last_update_success
+            and self._pending_install is not None
+        ):
+            self._pending_install = None
+            if not self._firmware_reports_progress:
+                self._attr_supported_features &= ~UpdateEntityFeature.PROGRESS
+                self._attr_in_progress = False
+            return
         mp = self._management_point
         if mp is not None:
             self._update_from_management_point(mp)

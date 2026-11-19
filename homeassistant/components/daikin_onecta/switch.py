@@ -118,10 +118,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
 
     def sensor_value(self) -> str | None:
         """Return the state of the switch."""
-        point = self._management_point
-        characteristic = (
-            point.characteristic(self._value) if point is not None else None
-        )
+        characteristic = self._characteristic(self._value)
         result = characteristic.value if characteristic is not None else None
         return result if isinstance(result, str) else None
 
@@ -158,10 +155,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             ).set_characteristic(self._value, state),
             translation_key,
         )
-        point = self._management_point
-        characteristic = (
-            point.characteristic(self._value) if point is not None else None
-        )
+        characteristic = self._characteristic(self._value)
         if characteristic is not None:
             characteristic.value = state
         self._publish_write_update()

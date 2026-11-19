@@ -273,7 +273,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         if temperature is not None:
             target_temperature = self._validated_target_temperature(
                 float(temperature),
-                allow_when_off=operation_mode not in (None, STATE_OFF),
+                allow_when_off=operation_mode is not None,
             )
 
         if operation_mode == STATE_OFF:

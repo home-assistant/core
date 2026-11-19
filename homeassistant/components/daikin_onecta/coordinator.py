@@ -165,15 +165,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
         Return whether a fresh cloud response was received.
         """
-        if remaining := self._polling_backoff_remaining():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="manual_refresh_deferred",
-                translation_placeholders={
-                    "seconds": str(ceil(remaining.total_seconds()))
-                },
-            )
-        if remaining := self._post_write_cooldown_remaining():
+        if remaining := (
+            self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
+        ):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="manual_refresh_deferred",
@@ -245,11 +239,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return sites
 
     async def async_get_site_lookup(
-        self, *, use_cache: bool = False
+        self, *, use_cache: bool = False, start_reauth: bool = False
     ) -> SiteLookupResult:
         """Get Sites and normalize expected lookup failures for callers."""
         try:
             sites = await self.async_get_sites(use_cache=use_cache)
+        except OAuth2TokenRequestReauthError as err:
+            if start_reauth:
+                self.config_entry.async_start_reauth(self.hass)
+            return SiteLookupResult([], err)
         except (
             OAuth2TokenRequestError,
             OnectaError,

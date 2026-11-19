@@ -117,10 +117,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        point = self._management_point
-        characteristic = (
-            point.characteristic(self._value) if point is not None else None
-        )
+        characteristic = self._characteristic(self._value)
         result = characteristic.value if characteristic is not None else None
         if isinstance(result, bool):
             return result

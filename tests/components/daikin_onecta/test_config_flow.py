@@ -77,7 +77,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Check full flow."""
     assert await async_setup_component(hass, "daikin_onecta", {})

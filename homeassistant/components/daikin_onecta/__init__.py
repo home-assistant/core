@@ -126,7 +126,7 @@ async def async_remove_config_entry_device(
             if current_device.management_point(embedded_id) is not None:
                 return False
         else:
-            site_lookup = await coordinator.async_get_site_lookup()
+            site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
             if site_lookup.gateway_membership(parent_gateway_id) is not False:
                 return False
             # A newer successful poll may have restored the gateway while the
@@ -145,7 +145,7 @@ async def async_remove_config_entry_device(
         device is not None and device.present_in_cloud
     ):
         return False
-    site_lookup = await coordinator.async_get_site_lookup()
+    site_lookup = await coordinator.async_get_site_lookup(start_reauth=True)
 
     # Polling may have restored the gateway while the on-demand lookup awaited.
     device = (coordinator.data or {}).get(gateway_id)

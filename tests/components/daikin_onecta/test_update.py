@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from daikin_onecta import OnectaConnectionError
 from daikin_onecta.models import Characteristic, GatewayDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -246,6 +247,39 @@ async def test_firmware_install_records_pending_state_before_waiting_poll(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes[UpdateEntityStateAttribute.IN_PROGRESS] is True
+
+
+async def test_firmware_pending_install_clears_after_failed_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Do not leave an optimistic install pending when polling fails."""
+    await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
+    coordinator = config_entry.runtime_data
+    entity_id = "update.living_room_firmware_update"
+    entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinFirmwareUpdateEntity)
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert entity._pending_install is not None
+
+    mock_onecta_client.get_gateway_devices.side_effect = OnectaConnectionError(
+        "network unavailable", method="GET", path="/v1/gateway-devices"
+    )
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert entity._pending_install is None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_failed_firmware_install_clears_pending_state(

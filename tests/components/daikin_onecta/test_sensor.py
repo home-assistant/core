@@ -25,7 +25,11 @@ from homeassistant.components.daikin_onecta.sensor import (
     _native_unit,
     add_energy_sensors,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
+    SensorDeviceClass,
+    SensorEntityDescription,
+)
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -368,7 +372,7 @@ def test_energy_sensor_uses_daikin_unit(
     ],
 )
 def test_sensor_preserves_unknown_native_unit(
-    unit: str, description, expected: str
+    unit: str, description: SensorEntityDescription, expected: str
 ) -> None:
     """Pass through Daikin unit strings that HA does not recognize."""
     assert _native_unit(unit, description) == expected

@@ -365,7 +365,9 @@ async def coordinator(
 class TestOnectaDataUpdateCoordinator:
     """Test OnectaDataUpdateCoordinator class."""
 
-    def test_in_between_normal_range(self, coordinator):
+    def test_in_between_normal_range(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Time within a simple range not crossing midnight."""
         start = time(8, 0, 0)
         end = time(10, 0, 0)
@@ -375,7 +377,9 @@ class TestOnectaDataUpdateCoordinator:
         assert not coordinator._in_between(time(10, 0, 0), start, end)
         assert not coordinator._in_between(time(11, 0, 0), start, end)
 
-    def test_in_between_overnight_range(self, coordinator):
+    def test_in_between_overnight_range(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Time within a range that crosses midnight."""
         start = time(22, 0, 0)
         end = time(7, 0, 0)
@@ -404,7 +408,9 @@ class TestOnectaDataUpdateCoordinator:
             result = coordinator._determine_update_interval()
             assert result == expected
 
-    def test_polling_intervals_use_default_daily_limit(self, coordinator):
+    def test_polling_intervals_use_default_daily_limit(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Use no more than 55% of the conservative default daily limit."""
         coordinator.client.rate_limit = RateLimit(day_limit=None)
 
@@ -492,7 +498,9 @@ class TestOnectaDataUpdateCoordinator:
         assert coordinator.hass.config_entries.flow.async_progress() == []
         assert coordinator.last_patch_call is None
 
-    def test_polling_intervals_use_reported_daily_limit(self, coordinator):
+    def test_polling_intervals_use_reported_daily_limit(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Adapt the polling budget when Daikin reports a different limit."""
         coordinator.client.rate_limit = RateLimit(day_limit=400)
 
@@ -501,7 +509,9 @@ class TestOnectaDataUpdateCoordinator:
             timedelta(seconds=888),
         )
 
-    def test_polling_intervals_cap_a_1000_daily_limit(self, coordinator):
+    def test_polling_intervals_cap_a_1000_daily_limit(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Keep a 1000-call daily limit at the three-minute polling floor."""
         coordinator.client.rate_limit = RateLimit(day_limit=1000)
 
@@ -903,7 +913,9 @@ class TestOnectaDataUpdateCoordinator:
         await hass.async_block_till_done(wait_background_tasks=True)
         coordinator.client.get_gateway_devices.assert_awaited_once_with()
 
-    async def test_api_error_uses_update_failed_with_http_status(self, coordinator):
+    async def test_api_error_uses_update_failed_with_http_status(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Turn a Daikin HTTP error into a translatable polling failure."""
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(
@@ -921,7 +933,9 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.translation_key == "api_error"
         assert exc_info.value.translation_placeholders == {"status": "500"}
 
-    async def test_response_error_uses_invalid_response_message(self, coordinator):
+    async def test_response_error_uses_invalid_response_message(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Explain malformed successful API responses without an HTTP error status."""
         coordinator._last_patch_call = None
         response_error = OnectaResponseError(
@@ -976,7 +990,9 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.translation_key == "authentication_failed"
         assert exc_info.value.__cause__ is token_error
 
-    async def test_transient_token_refresh_error_is_retried(self, coordinator):
+    async def test_transient_token_refresh_error_is_retried(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Preserve transient OAuth token errors so the coordinator retries."""
         coordinator._last_patch_call = None
         token_error = OAuth2TokenRequestError(
@@ -992,7 +1008,9 @@ class TestOnectaDataUpdateCoordinator:
 
         assert exc_info.value is token_error
 
-    async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
+    async def test_post_write_cooldown_is_checked_under_cloud_lock(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Keep cached data when a write completes while polling waits for the lock."""
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(return_value=None)
@@ -1029,7 +1047,9 @@ class TestOnectaDataUpdateCoordinator:
             bypass_polling_backoff=False
         )
 
-    async def test_connection_error_uses_update_failed(self, coordinator):
+    async def test_connection_error_uses_update_failed(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """A connection error should mark the coordinator update as failed."""
         coordinator._last_patch_call = None
         coordinator._async_get_cloud_devices = AsyncMock(
@@ -1046,7 +1066,9 @@ class TestOnectaDataUpdateCoordinator:
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
         assert exc_info.value.translation_key == "connection_failed"
 
-    async def test_cooldown_fetch_failure_restores_regular_interval(self, coordinator):
+    async def test_cooldown_fetch_failure_restores_regular_interval(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Do not retain the cooldown polling interval after a failed fetch."""
         coordinator._last_patch_call = None
         coordinator.update_interval = timedelta(seconds=30)
@@ -1064,7 +1086,9 @@ class TestOnectaDataUpdateCoordinator:
 
         assert coordinator.update_interval == expected_interval
 
-    async def test_missing_cloud_device_is_marked_unavailable(self, coordinator):
+    async def test_missing_cloud_device_is_marked_unavailable(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Mark cached gateways unavailable when the cloud no longer returns them."""
         missing_device = MagicMock()
         missing_device.device = MagicMock(id="missing", management_points=[])
@@ -1077,7 +1101,9 @@ class TestOnectaDataUpdateCoordinator:
         missing_device.mark_unavailable.assert_called_once_with()
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_new_cloud_gateway_does_not_reload_entry(self, coordinator):
+    async def test_new_cloud_gateway_does_not_reload_entry(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Platform listeners handle newly reported gateways without a reload."""
         existing_device = MagicMock()
         existing_device.device = MagicMock(id="existing", management_points=[])
@@ -1101,7 +1127,9 @@ class TestOnectaDataUpdateCoordinator:
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_new_management_point_does_not_reload_entry(self, coordinator):
+    async def test_new_management_point_does_not_reload_entry(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Platform listeners handle new points without a config-entry reload."""
         existing_device = MagicMock()
         existing_device.device = MagicMock(
@@ -1135,7 +1163,9 @@ class TestOnectaDataUpdateCoordinator:
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_cloud_state_update_does_not_reload_entry(self, coordinator):
+    async def test_cloud_state_update_does_not_reload_entry(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Do not reload platforms for ordinary state updates."""
         existing_device = MagicMock()
         cloud_device = MagicMock(id="gateway", management_points=[])
@@ -1149,7 +1179,9 @@ class TestOnectaDataUpdateCoordinator:
 
         coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
-    async def test_updated_cloud_device_replaces_cached_model(self, coordinator):
+    async def test_updated_cloud_device_replaces_cached_model(
+        self, coordinator: OnectaDataUpdateCoordinator
+    ) -> None:
         """Replace the cached gateway model with cloud data."""
         existing_device = MagicMock()
         existing_device.set_device_data.return_value = False

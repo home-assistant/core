@@ -380,8 +380,14 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             self._raise_service_validation_error("air_purifier_speed_unavailable")
         if not self.is_on:
             await self.async_turn_on()
+        purification = self._air_purification()
+        if purification is None or purification.mode is None:
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         if purification.mode.value != "manualFan":
             await self._async_set_mode("manualFan")
+        purification = self._air_purification()
+        if purification is None or purification.mode is None:
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         speeds = self._fixed_speeds("manualFan")
         if not speeds:
             self._raise_service_validation_error("air_purifier_speed_unavailable")
