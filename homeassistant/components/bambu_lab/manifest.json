@@ -2,7 +2,7 @@
   "domain": "bambu_lab",
   "name": "Bambu Lab",
   "categories": ["computers_network.printers"],
-  "codeowners": ["@joostlek"],
+  "codeowners": ["@joostlek", "@piitaya"],
   "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/bambu_lab",
