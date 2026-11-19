@@ -114,7 +114,13 @@ class WatercrystStateCoordinator(WatercrystBaseCoordinator[StateResponse]):
 
     @override
     async def _async_fetch_data(self) -> StateResponse:
-        return await self._client.get_state(locale="en")
+        data = await self._client.get_state(locale="en")
+        if data.online is not True:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_device_offline",
+            )
+        return data
 
 
 class WatercrystMeasurementsCoordinator(WatercrystBaseCoordinator[MeasurementResponse]):
