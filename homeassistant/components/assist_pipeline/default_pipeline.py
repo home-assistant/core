@@ -90,6 +90,32 @@ async def _skip_audio(
             yield chunk
 
 
+async def _async_until[T](
+    stream: AsyncIterable[T], stop: asyncio.Event
+) -> AsyncGenerator[T]:
+    """Yield from the stream until it ends or stop is set, also while it waits."""
+    items = aiter(stream)
+    stopped = asyncio.ensure_future(stop.wait())
+    next_item: asyncio.Future[T | None] | None = None
+    try:
+        while True:
+            next_item = asyncio.ensure_future(anext(items, None))
+            await asyncio.wait(
+                (next_item, stopped), return_when=asyncio.FIRST_COMPLETED
+            )
+            if stopped.done():
+                next_item.cancel()
+                await asyncio.wait((next_item,))
+                return
+            if (item := next_item.result()) is None:
+                return
+            yield item
+    finally:
+        stopped.cancel()
+        if next_item is not None:
+            next_item.cancel()
+
+
 @callback
 def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
     """Filter out intents that are not local fallback."""
@@ -238,6 +264,8 @@ class _DefaultPipelineProcessor:
     _agent_listening_ended: asyncio.Event = field(
         init=False, default_factory=asyncio.Event
     )
+    _stopped_early: asyncio.Event = field(init=False, default_factory=asyncio.Event)
+    """Set when the run stops early, which also ends the audio of the agent."""
     _invalidated: bool = field(init=False, default=False)
     _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     _audio_run: voice_support.AudioRun | None = field(
@@ -281,6 +309,7 @@ class _DefaultPipelineProcessor:
     @callback
     def cleanup(self) -> None:
         """Clean up resources when a run stops early."""
+        self._stopped_early.set()
         if self.tts_stream is not None:
             self.tts_stream.delete()
             self.tts_stream = None
@@ -706,34 +735,11 @@ class _DefaultPipelineProcessor:
             requires_external_vad=True
         )
 
-        async def command_stream() -> AsyncGenerator[EnhancedAudioChunk]:
-            # Satellites stop sending audio when listening ends, so a read
-            # that waits for more must end with it
-            chunks = aiter(stream)
-            listening_ended = asyncio.ensure_future(self._agent_listening_ended.wait())
-            next_chunk: asyncio.Future[EnhancedAudioChunk | None] | None = None
-            try:
-                while True:
-                    next_chunk = asyncio.ensure_future(anext(chunks, None))
-                    await asyncio.wait(
-                        (next_chunk, listening_ended),
-                        return_when=asyncio.FIRST_COMPLETED,
-                    )
-                    if listening_ended.done():
-                        next_chunk.cancel()
-                        await asyncio.wait((next_chunk,))
-                        return
-                    if (chunk := next_chunk.result()) is None:
-                        return
-                    yield chunk
-            finally:
-                listening_ended.cancel()
-                if next_chunk is not None:
-                    next_chunk.cancel()
-
         async def agent_audio_stream() -> AsyncGenerator[bytes]:
             async for chunk in self._speech_to_text_stream(
-                audio_stream=command_stream(),
+                # Satellites stop sending audio when listening ends, so a read
+                # that waits for more must end with it
+                audio_stream=_async_until(stream, self._agent_listening_ended),
                 stt_vad=stt_vad,
                 run=run,
                 command_timeout_ms=command_timeout_ms,
@@ -804,7 +810,10 @@ class _DefaultPipelineProcessor:
             raise RuntimeError("The response audio of this turn is already set")
 
         self._streamed_response = True
-        self.tts_stream.async_set_audio_stream(pcm_format, audio_stream)
+        # Its audio would otherwise outlive a cancelled run
+        self.tts_stream.async_set_audio_stream(
+            pcm_format, _async_until(audio_stream, self._stopped_early)
+        )
 
         self._async_end_agent_listening()
         self.host.process_event(

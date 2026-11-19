@@ -3701,6 +3701,58 @@ async def test_pipeline_audio_agent_transcript_during_streamed_tts(
 
 
 @pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_cancelled_run_ends_response_audio(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test cancelling the run while the agent speaks ends its audio."""
+    audio_set = asyncio.Event()
+    audio_closed = asyncio.Event()
+
+    async def response_audio() -> AsyncGenerator[bytes]:
+        try:
+            yield b"\x01\x02"
+            # Like a relay whose producer went away with the cancelled agent
+            await asyncio.Event().wait()
+        finally:
+            audio_closed.set()
+
+    async def speak_then_work(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio_output is not None
+        user_input.audio_output.async_set_audio_stream(
+            tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            response_audio(),
+        )
+        audio_set.set()
+        await asyncio.Event().wait()
+        raise AssertionError("The run was not cancelled")
+
+    with patch.object(
+        mock_audio_agent, "_async_handle_message", side_effect=speak_then_work
+    ):
+        run_task = hass.async_create_task(
+            assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=Mock(),
+                stt_metadata=_stt_metadata(),
+                stt_stream=_audio_agent_input(),
+                pipeline_id=AUDIO_AGENT_ID,
+                tts_audio_output="wav",
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            )
+        )
+        await audio_set.wait()
+        run_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await run_task
+
+    async with asyncio.timeout(1):
+        await audio_closed.wait()
+
+
+@pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_response_audio_set_twice(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
