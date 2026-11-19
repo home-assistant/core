@@ -3615,6 +3615,91 @@ async def test_pipeline_audio_agent_transcript_after_answer(
 
 
 @pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_transcript_during_streamed_tts(
+    hass: HomeAssistant,
+    mock_audio_agent: MockAudioConversationEntity,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test a transcript in the middle of the answer does not cut its speech."""
+    mock_audio_agent._attr_supported_features = (
+        conversation.ConversationEntityFeature.AUDIO_INPUT
+    )
+    # Long enough to stream the text into TTS
+    first_part = (
+        "The kitchen light is on, the living room light is off, "
+        "and the bedroom light is dimmed to half. "
+    )
+    second_part = "Anything else?"
+
+    received_tts: list[str] = []
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        async def data_gen() -> AsyncGenerator[bytes]:
+            async for message in request.message_gen:
+                received_tts.append(message)
+                yield message.encode()
+
+        return tts.TTSAudioResponse(extension="mp3", data_gen=data_gen())
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def transcript_during_answer(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        async for _chunk in user_input.audio.stream:
+            pass
+
+        async def answer() -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+            yield {"role": "assistant"}
+            yield {"content": first_part}
+            chat_log.async_add_user_content(
+                conversation.UserContent(content="late transcript")
+            )
+            yield {"content": second_part}
+
+        async for _content in chat_log.async_add_delta_content_stream(
+            user_input.agent_id, answer()
+        ):
+            pass
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(first_part + second_part)
+        return conversation.ConversationResult(
+            response=intent_response, conversation_id=chat_log.conversation_id
+        )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch.object(
+        mock_audio_agent, "_async_handle_message", side_effect=transcript_during_answer
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="mp3",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert any(event.data and event.data.get("tts_start_streaming") for event in events)
+    tts_end = next(event for event in events if event.type is PipelineEventType.TTS_END)
+    assert tts_end.data is not None
+    stream = tts.async_get_stream(hass, tts_end.data["tts_output"]["token"])
+    assert stream is not None
+    async for _chunk in stream.async_stream_result():
+        pass
+
+    assert "".join(received_tts) == first_part + second_part
+
+
+@pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_response_audio_set_twice(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
