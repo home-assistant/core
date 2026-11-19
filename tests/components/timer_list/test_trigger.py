@@ -106,7 +106,11 @@ async def test_timer_finished_trigger(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test the timer_finished trigger fires when a timer finishes."""
-    await _setup_automation(hass, "timer_finished")
+    await _setup_automation(
+        hass,
+        "timer_finished",
+        extra_data={"active_count": "{{ states('timer_list.timers') | int }}"},
+    )
     timer_id = await _create_timer(hass)
 
     assert len(service_calls) == 0
@@ -118,6 +122,7 @@ async def test_timer_finished_trigger(
         "entity_id": TEST_ENTITY_ID,
         "timer_id": timer_id,
         "status": "finished",
+        "active_count": 0,
     }
 
 
@@ -125,13 +130,18 @@ async def test_timer_created_trigger(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the timer_created trigger fires when a timer is created."""
-    await _setup_automation(hass, "timer_created")
+    await _setup_automation(
+        hass,
+        "timer_created",
+        extra_data={"active_count": "{{ states('timer_list.timers') | int }}"},
+    )
     timer_id = await _create_timer(hass)
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
     assert service_calls[0].data["timer_id"] == timer_id
     assert service_calls[0].data["status"] == "active"
+    assert service_calls[0].data["active_count"] == 1
 
 
 async def test_timer_cancelled_trigger(
@@ -159,7 +169,14 @@ async def test_timer_paused_trigger(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test pausing a timer fires the paused trigger."""
-    await _setup_automation(hass, "timer_paused")
+    await _setup_automation(
+        hass,
+        "timer_paused",
+        extra_data={
+            "paused_remaining": "{{ trigger.timer.paused_remaining }}",
+            "remaining": "{{ trigger.timer.remaining }}",
+        },
+    )
     timer_id = await _create_timer(hass)
 
     await _call_timer_service(hass, "pause_timer", timer_id)
@@ -167,6 +184,10 @@ async def test_timer_paused_trigger(
     assert len(service_calls) == 1
     assert service_calls[0].data["timer_id"] == timer_id
     assert service_calls[0].data["status"] == "paused"
+    assert service_calls[0].data["paused_remaining"] > 0
+    assert (
+        service_calls[0].data["paused_remaining"] == service_calls[0].data["remaining"]
+    )
 
 
 async def test_timer_unpaused_trigger(

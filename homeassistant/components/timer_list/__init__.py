@@ -44,6 +44,7 @@ from .const import (
     ATTR_DURATION,
     ATTR_ENDED_AT,
     ATTR_FINISHES_AT,
+    ATTR_PAUSED_REMAINING,
     ATTR_REMAINING,
     ATTR_STATUS,
     ATTR_TIMER_ID,
@@ -137,6 +138,11 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
         ATTR_TOTAL_DURATION: item.total_duration.total_seconds(),
         ATTR_CREATED_AT: item.created_at.isoformat(),
         ATTR_FINISHES_AT: item.finishes_at.isoformat() if item.finishes_at else None,
+        ATTR_PAUSED_REMAINING: (
+            item.paused_remaining.total_seconds()
+            if item.paused_remaining is not None
+            else None
+        ),
         ATTR_ENDED_AT: item.ended_at.isoformat() if item.ended_at else None,
         ATTR_REMAINING: item.remaining_at(now).total_seconds(),
     }
@@ -388,9 +394,9 @@ class TimerListEntity(Entity):
         event = TimerListEvent(
             event_type=event_type, item=copy.copy(timer), delta=delta
         )
+        self.async_write_ha_state()
         for listener in list(self._update_listeners):
             listener(event)
-        self.async_write_ha_state()
 
 
 async def _async_create_timer(

@@ -110,8 +110,18 @@ class MockTimerListEntity(TimerListEntity):
     async def async_add_time(self, timer_id: str, duration: timedelta) -> None:
         """Add (or, with a negative duration, subtract) time on a timer."""
         timer = self._get_timer(timer_id)
+        if timer.status not in (TimerStatus.ACTIVE, TimerStatus.PAUSED) or not duration:
+            return
         now = dt_util.utcnow()
-        timer.finishes_at = now + timer.remaining_at(now) + duration
+        remaining = timer.remaining_at(now) + duration
+        if remaining <= timedelta(0):
+            self._archive(timer, TimerStatus.FINISHED)
+            return
+        if timer.status == TimerStatus.PAUSED:
+            timer.paused_remaining = remaining
+        else:
+            timer.finishes_at = now + remaining
+        timer.total_duration = max(timer.total_duration, remaining)
         self._notify(TimerListEventType.TIME_CHANGED, timer, delta=duration)
 
     async def async_remove_timer(self, timer_id: str) -> None:

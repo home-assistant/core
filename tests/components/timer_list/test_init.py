@@ -113,12 +113,15 @@ async def test_pause_and_unpause(hass: HomeAssistant) -> None:
     timers = await _get_timers(hass)
     assert timers[0]["status"] == "paused"
     assert timers[0]["finishes_at"] is None
+    assert timers[0]["paused_remaining"] == timers[0]["remaining"]
+    assert timers[0]["paused_remaining"] > 0
 
     await _call(hass, "unpause_timer", timer_id=timer_id)
     assert hass.states.get(TEST_ENTITY_ID).state == "1"
     timers = await _get_timers(hass)
     assert timers[0]["status"] == "active"
     assert timers[0]["finishes_at"] is not None
+    assert timers[0]["paused_remaining"] is None
 
 
 @pytest.mark.usefixtures("test_entity")
@@ -186,6 +189,7 @@ async def test_unsupported_service_raises(hass: HomeAssistant, service: str) -> 
 
 
 @pytest.mark.usefixtures("test_entity")
+@pytest.mark.freeze_time
 async def test_websocket_subscribe(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -212,11 +216,26 @@ async def test_websocket_subscribe(
     msg = await client.receive_json()
     assert msg["event"]["event_type"] == "paused"
     assert "delta" not in msg["event"]
+    paused_remaining = msg["event"]["timer"]["paused_remaining"]
+    assert paused_remaining == msg["event"]["timer"]["remaining"]
 
     await _call(hass, "subtract_time", timer_id=timer_id, duration={"seconds": 5})
     msg = await client.receive_json()
     assert msg["event"]["event_type"] == "time_changed"
     assert msg["event"]["delta"] == -5.0
+    assert msg["event"]["timer"]["finishes_at"] is None
+    assert msg["event"]["timer"]["paused_remaining"] == paused_remaining - 5
+    assert msg["event"]["timer"]["remaining"] == paused_remaining - 5
+
+    await _call(hass, "add_time", timer_id=timer_id, duration={"seconds": 30})
+    msg = await client.receive_json()
+    assert msg["event"]["event_type"] == "time_changed"
+    assert msg["event"]["delta"] == 30.0
+    assert msg["event"]["timer"]["finishes_at"] is None
+    assert msg["event"]["timer"]["paused_remaining"] == paused_remaining + 25
+    assert msg["event"]["timer"]["remaining"] == paused_remaining + 25
+    assert msg["event"]["timer"]["created_duration"] == 60
+    assert msg["event"]["timer"]["total_duration"] == paused_remaining + 25
 
     await _call(hass, "cancel_timer", timer_id=timer_id)
     msg = await client.receive_json()
@@ -239,6 +258,7 @@ async def test_websocket_list(
     assert msg["success"]
     assert len(msg["result"]["timers"]) == 1
     assert msg["result"]["timers"][0]["name"] == "Pasta"
+    assert msg["result"]["timers"][0]["paused_remaining"] is None
 
 
 @pytest.mark.usefixtures("test_entity")
