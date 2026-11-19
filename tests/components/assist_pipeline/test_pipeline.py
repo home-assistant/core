@@ -10,6 +10,7 @@ from unittest.mock import ANY, AsyncMock, Mock, _Call, call, patch
 import wave
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from hassil.recognize import Intent, IntentData, RecognizeResult
 import probatio
 import pytest
@@ -3770,6 +3771,51 @@ async def test_stop_closes_audio_with_a_buffered_chunk() -> None:
 
     assert [chunk async for chunk in _async_until(audio(), stop)] == [b"first"]
     assert closed.is_set()
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_intent_start_time(
+    hass: HomeAssistant,
+    mock_audio_agent: MockAudioConversationEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the held-back start of intent recognition has the time it is sent."""
+
+    async def listen_then_answer(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        async for _chunk in user_input.audio.stream:
+            pass
+        # The agent takes a while to hear the user
+        freezer.tick(2)
+        chat_log.async_add_user_content(conversation.UserContent(content="hello"))
+        return conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=chat_log.conversation_id,
+        )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch.object(
+        mock_audio_agent, "_async_handle_message", side_effect=listen_then_answer
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    stt_end = next(event for event in events if event.type is PipelineEventType.STT_END)
+    intent_start = next(
+        event for event in events if event.type is PipelineEventType.INTENT_START
+    )
+    assert intent_start.timestamp == stt_end.timestamp
 
 
 @pytest.mark.usefixtures("init_audio_agent")

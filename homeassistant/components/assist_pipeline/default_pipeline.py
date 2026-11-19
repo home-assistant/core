@@ -262,8 +262,8 @@ class _DefaultPipelineProcessor:
     """True if the conversation agent receives the spoken audio instead of STT."""
     _agent_audio_output: bool = field(init=False, default=False)
     """True if the conversation agent provides the response audio instead of TTS."""
-    _pending_intent_start: PipelineEvent | None = field(init=False, default=None)
-    """Start of intent recognition, held back while the agent listens."""
+    _pending_intent_start: dict[str, Any] | None = field(init=False, default=None)
+    """Data of the start of intent recognition, held back while the agent listens."""
     _agent_listening_ended: asyncio.Event = field(
         init=False, default_factory=asyncio.Event
     )
@@ -783,7 +783,9 @@ class _DefaultPipelineProcessor:
                 PipelineEventType.STT_END, {"stt_output": {"text": transcript}}
             )
         )
-        self.host.process_event(intent_start)
+        self.host.process_event(
+            PipelineEvent(PipelineEventType.INTENT_START, intent_start)
+        )
 
     @callback
     def _async_end_agent_speech(self) -> None:
@@ -963,20 +965,19 @@ class _DefaultPipelineProcessor:
 
         input_language = self._intent_input_language()
 
-        intent_start = PipelineEvent(
-            PipelineEventType.INTENT_START,
-            {
-                "engine": self.intent_agent.id,
-                "language": input_language,
-                "intent_input": intent_input,
-                "conversation_id": conversation_id,
-                "device_id": self.host.device_id,
-                "satellite_id": self.host.satellite_id,
-                "prefer_local_intents": self.host.pipeline.prefer_local_intents,
-            },
-        )
+        intent_start = {
+            "engine": self.intent_agent.id,
+            "language": input_language,
+            "intent_input": intent_input,
+            "conversation_id": conversation_id,
+            "device_id": self.host.device_id,
+            "satellite_id": self.host.satellite_id,
+            "prefer_local_intents": self.host.pipeline.prefer_local_intents,
+        }
         if audio is None:
-            self.host.process_event(intent_start)
+            self.host.process_event(
+                PipelineEvent(PipelineEventType.INTENT_START, intent_start)
+            )
         else:
             # Satellites keep listening until the agent has heard the user
             self._pending_intent_start = intent_start
