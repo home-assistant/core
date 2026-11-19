@@ -14,21 +14,15 @@ from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
     PRESET_AWAY,
     PRESET_NONE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.honeywell.climate import (
@@ -43,14 +37,7 @@ from homeassistant.components.honeywell.services import (
     HoneywellService,
     HoneywellServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-    TargetKey,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -164,8 +151,8 @@ async def test_mode_service_calls(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("off")
@@ -173,8 +160,8 @@ async def test_mode_service_calls(
     device.set_system_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("auto")
@@ -182,8 +169,11 @@ async def test_mode_service_calls(
     device.set_system_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("cool")
@@ -191,8 +181,11 @@ async def test_mode_service_calls(
     device.set_system_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("heat")
@@ -200,8 +193,11 @@ async def test_mode_service_calls(
     device.set_system_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+        },
         blocking=True,
     )
     device.set_system_mode.assert_called_once_with("auto")
@@ -211,8 +207,11 @@ async def test_mode_service_calls(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
     device.set_system_mode.assert_called_once_with("auto")
@@ -222,8 +221,11 @@ async def test_mode_service_calls(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
 
@@ -237,8 +239,8 @@ async def test_fan_modes_service_calls(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_AUTO},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_AUTO},
         blocking=True,
     )
 
@@ -247,8 +249,8 @@ async def test_fan_modes_service_calls(
     device.set_fan_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_ON},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_ON},
         blocking=True,
     )
 
@@ -257,8 +259,8 @@ async def test_fan_modes_service_calls(
     device.set_fan_mode.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_DIFFUSE},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_DIFFUSE},
         blocking=True,
     )
 
@@ -270,8 +272,11 @@ async def test_fan_modes_service_calls(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_DIFFUSE},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.FAN_MODE: FAN_DIFFUSE,
+            },
             blocking=True,
         )
 
@@ -279,8 +284,11 @@ async def test_fan_modes_service_calls(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_DIFFUSE},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.FAN_MODE: FAN_DIFFUSE,
+            },
             blocking=True,
         )
 
@@ -305,18 +313,18 @@ async def test_service_calls_off_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 35},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 35},
         blocking=True,
     )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 25.0,
-            ATTR_TARGET_TEMP_HIGH: 35.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
         },
         blocking=True,
     )
@@ -329,11 +337,11 @@ async def test_service_calls_off_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TARGET_TEMP_LOW: 24.0,
-                ATTR_TARGET_TEMP_HIGH: 34.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 24.0,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 34.0,
             },
             blocking=True,
         )
@@ -347,11 +355,11 @@ async def test_service_calls_off_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TARGET_TEMP_LOW: 25.0,
-                ATTR_TARGET_TEMP_HIGH: 35.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
             },
             blocking=True,
         )
@@ -361,8 +369,8 @@ async def test_service_calls_off_mode(
     reset_mock(device)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 35},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 35},
         blocking=True,
     )
     device.set_setpoint_heat.assert_not_called()
@@ -374,8 +382,11 @@ async def test_service_calls_off_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+        },
         blocking=True,
     )
 
@@ -386,8 +397,11 @@ async def test_service_calls_off_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
 
@@ -404,8 +418,11 @@ async def test_service_calls_off_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+        },
         blocking=True,
     )
 
@@ -425,8 +442,11 @@ async def test_service_calls_off_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+        },
         blocking=True,
     )
 
@@ -439,8 +459,11 @@ async def test_service_calls_off_mode(
     device.raw_ui_data["StatusCool"] = 2
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+        },
         blocking=True,
     )
 
@@ -468,8 +491,8 @@ async def test_service_calls_cool_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 15},
         blocking=True,
     )
     device.set_hold_cool.assert_called_once_with(dt.time(2, 30), 15)
@@ -477,11 +500,11 @@ async def test_service_calls_cool_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 15.0,
-            ATTR_TARGET_TEMP_HIGH: 20.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 15.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 20.0,
         },
         blocking=True,
     )
@@ -494,11 +517,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TARGET_TEMP_LOW: 15.0,
-                ATTR_TARGET_TEMP_HIGH: 20.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 15.0,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 20.0,
             },
             blocking=True,
         )
@@ -509,8 +532,11 @@ async def test_service_calls_cool_mode(
     reset_mock(device)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
 
@@ -525,8 +551,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
 
@@ -543,8 +572,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -557,8 +589,8 @@ async def test_service_calls_cool_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: "20"},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: "20"},
             blocking=True,
         )
 
@@ -572,8 +604,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
     device.set_hold_cool.assert_called_once_with(True)
@@ -584,8 +619,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -598,8 +636,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -615,8 +656,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -632,8 +676,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -650,8 +697,11 @@ async def test_service_calls_cool_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -680,8 +730,8 @@ async def test_service_calls_heat_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
         blocking=True,
     )
     device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
@@ -691,8 +741,8 @@ async def test_service_calls_heat_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
             blocking=True,
         )
     device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
@@ -703,8 +753,8 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 25},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 25},
             blocking=True,
         )
     device.set_hold_heat.assert_called_once_with(dt.time(2, 30), 25)
@@ -712,11 +762,11 @@ async def test_service_calls_heat_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 25.0,
-            ATTR_TARGET_TEMP_HIGH: 35.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
         },
         blocking=True,
     )
@@ -728,11 +778,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TARGET_TEMP_LOW: 25.0,
-                ATTR_TARGET_TEMP_HIGH: 35.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
             },
             blocking=True,
         )
@@ -747,8 +797,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -761,8 +814,8 @@ async def test_service_calls_heat_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: "20"},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: "20"},
             blocking=True,
         )
 
@@ -778,8 +831,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
     device.set_hold_heat.assert_called_once_with(True)
@@ -791,8 +847,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
 
@@ -807,8 +866,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
 
@@ -822,8 +884,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
 
@@ -831,8 +896,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -845,8 +913,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -860,8 +931,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -877,8 +951,11 @@ async def test_service_calls_heat_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -908,8 +985,8 @@ async def test_service_calls_auto_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 15},
         blocking=True,
     )
     device.set_setpoint_cool.assert_not_called()
@@ -919,11 +996,11 @@ async def test_service_calls_auto_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 25.0,
-            ATTR_TARGET_TEMP_HIGH: 35.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
         },
         blocking=True,
     )
@@ -937,8 +1014,8 @@ async def test_service_calls_auto_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.TEMPERATURE: 15},
             blocking=True,
         )
     device.set_setpoint_heat.assert_not_called()
@@ -951,11 +1028,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TARGET_TEMP_LOW: 25.0,
-                ATTR_TARGET_TEMP_HIGH: 35.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TARGET_TEMP_LOW: 25.0,
+                ClimateServiceArgument.TARGET_TEMP_HIGH: 35.0,
             },
             blocking=True,
         )
@@ -972,8 +1049,11 @@ async def test_service_calls_auto_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+        },
         blocking=True,
     )
 
@@ -989,8 +1069,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
     device.set_hold_cool.assert_called_once_with(True)
@@ -1004,8 +1087,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+            },
             blocking=True,
         )
 
@@ -1017,8 +1103,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -1030,8 +1119,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_NONE},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_NONE,
+            },
             blocking=True,
         )
 
@@ -1047,8 +1139,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -1064,8 +1159,11 @@ async def test_service_calls_auto_mode(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_HOLD},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.PRESET_MODE: PRESET_HOLD,
+            },
             blocking=True,
         )
 
@@ -1239,8 +1337,11 @@ async def test_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
 
@@ -1602,8 +1703,11 @@ async def test_set_hold_until_away_preset(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_AWAY},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_AWAY,
+        },
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).attributes[ATTR_PRESET_MODE] == PRESET_AWAY

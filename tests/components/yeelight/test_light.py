@@ -30,13 +30,8 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     FLASH_LONG,
     FLASH_SHORT,
@@ -44,6 +39,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     ColorMode,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.yeelight.const import (
     ATTR_COUNT,
@@ -199,14 +196,14 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     mocked_bulb.last_properties["power"] = "off"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS: brightness,
-            ATTR_RGB_COLOR: rgb_color,
-            ATTR_FLASH: FLASH_LONG,
-            ATTR_EFFECT: EFFECT_STOP,
-            ATTR_TRANSITION: transition,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: brightness,
+            LightServiceArgument.RGB_COLOR: rgb_color,
+            LightServiceArgument.FLASH: FLASH_LONG,
+            LightServiceArgument.EFFECT: EFFECT_STOP,
+            LightServiceArgument.TRANSITION: transition,
         },
         blocking=True,
     )
@@ -241,14 +238,14 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     transition = 2
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS: brightness,
-            ATTR_HS_COLOR: hs_color,
-            ATTR_FLASH: FLASH_LONG,
-            ATTR_EFFECT: EFFECT_STOP,
-            ATTR_TRANSITION: transition,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: brightness,
+            LightServiceArgument.HS_COLOR: hs_color,
+            LightServiceArgument.FLASH: FLASH_LONG,
+            LightServiceArgument.EFFECT: EFFECT_STOP,
+            LightServiceArgument.TRANSITION: transition,
         },
         blocking=True,
     )
@@ -284,14 +281,14 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     mocked_bulb.last_properties["power"] = "off"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS: brightness,
-            ATTR_COLOR_TEMP_KELVIN: color_temp,
-            ATTR_FLASH: FLASH_LONG,
-            ATTR_EFFECT: EFFECT_STOP,
-            ATTR_TRANSITION: transition,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: brightness,
+            LightServiceArgument.COLOR_TEMP_KELVIN: color_temp,
+            LightServiceArgument.FLASH: FLASH_LONG,
+            LightServiceArgument.EFFECT: EFFECT_STOP,
+            LightServiceArgument.TRANSITION: transition,
         },
         blocking=True,
     )
@@ -328,14 +325,14 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     mocked_bulb.last_properties["power"] = "off"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS: brightness,
-            ATTR_COLOR_TEMP_KELVIN: color_temp,
-            ATTR_FLASH: FLASH_SHORT,
-            ATTR_EFFECT: EFFECT_STOP,
-            ATTR_TRANSITION: transition,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS: brightness,
+            LightServiceArgument.COLOR_TEMP_KELVIN: color_temp,
+            LightServiceArgument.FLASH: FLASH_SHORT,
+            LightServiceArgument.EFFECT: EFFECT_STOP,
+            LightServiceArgument.TRANSITION: transition,
         },
         blocking=True,
     )
@@ -520,8 +517,8 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 50},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.BRIGHTNESS: 50},
             blocking=True,
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
@@ -530,8 +527,8 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.BRIGHTNESS: 55},
             blocking=True,
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
@@ -540,8 +537,8 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.BRIGHTNESS: 55},
             blocking=True,
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
@@ -581,8 +578,8 @@ async def test_update_errors(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT},
             blocking=True,
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
@@ -594,8 +591,8 @@ async def test_update_errors(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT},
             blocking=True,
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
@@ -627,10 +624,10 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_HS_COLOR: (PROPERTIES["hue"], PROPERTIES["sat"]),
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.HS_COLOR: (PROPERTIES["hue"], PROPERTIES["sat"]),
         },
         blocking=True,
     )
@@ -647,8 +644,11 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGB_COLOR: (red, green, blue)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.RGB_COLOR: (red, green, blue),
+        },
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -660,8 +660,11 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.last_properties["flowing"] = "1"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_RGB_COLOR: (red, green, blue)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.RGB_COLOR: (red, green, blue),
+        },
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -677,10 +680,10 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.model = "color"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS_PCT: PROPERTIES["bright"],
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS_PCT: PROPERTIES["bright"],
         },
         blocking=True,
     )
@@ -695,10 +698,10 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.model = "colora"  # colora does not need a workaround
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS_PCT: PROPERTIES["bright"],
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS_PCT: PROPERTIES["bright"],
         },
         blocking=True,
     )
@@ -709,8 +712,11 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
+        },
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -725,8 +731,11 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.last_properties["color_mode"] = 2
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
+        },
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -738,8 +747,11 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 4000,
+        },
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -756,8 +768,8 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     # the color mode is the same since the HSV has changed
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (5, 5)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.HS_COLOR: (5, 5)},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == [
@@ -770,8 +782,8 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (100, 35)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.HS_COLOR: (100, 35)},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -782,8 +794,8 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.last_properties["flowing"] = "1"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_HS_COLOR: (100, 35)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.HS_COLOR: (100, 35)},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == [
@@ -1113,8 +1125,8 @@ async def test_effects(hass: HomeAssistant) -> None:
         mocked_bulb.async_start_flow = async_mocked_start_flow
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_EFFECT: name},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_LIGHT, LightServiceArgument.EFFECT: name},
             blocking=True,
         )
         if not called:
@@ -1309,8 +1321,11 @@ async def test_ambilight_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_DISCO},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ambilight_entity_id,
+            LightServiceArgument.EFFECT: EFFECT_DISCO,
+        },
         blocking=True,
     )
 
@@ -1326,8 +1341,11 @@ async def test_ambilight_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_WHATSAPP},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ambilight_entity_id,
+            LightServiceArgument.EFFECT: EFFECT_WHATSAPP,
+        },
         blocking=True,
     )
 
@@ -1344,8 +1362,11 @@ async def test_ambilight_effect(hass: HomeAssistant) -> None:
     mocked_bulb.async_get_properties.side_effect = _async_get_stopped_properties
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_STOP},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ambilight_entity_id,
+            LightServiceArgument.EFFECT: EFFECT_STOP,
+        },
         blocking=True,
     )
 
@@ -1389,8 +1410,11 @@ async def test_ambilight_without_color_mode(
     # flash needs the mode, so it is refused instead of raising
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_FLASH: FLASH_LONG},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ambilight_entity_id,
+            LightServiceArgument.FLASH: FLASH_LONG,
+        },
         blocking=True,
     )
     mocked_bulb.async_start_flow.assert_not_called()
@@ -1436,9 +1460,9 @@ async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> Non
     mocked_bulb.last_properties["power"] = "off"
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
         },
         blocking=True,
     )
@@ -1451,9 +1475,9 @@ async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> Non
     for _ in range(5):
         await hass.services.async_call(
             "light",
-            SERVICE_TURN_OFF,
+            LightService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: ENTITY_LIGHT,
+                TargetKey.ENTITY_ID: ENTITY_LIGHT,
             },
             blocking=True,
         )
@@ -1468,9 +1492,9 @@ async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> Non
     # But if the state is correct no calls
     await hass.services.async_call(
         "light",
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
         },
         blocking=True,
     )

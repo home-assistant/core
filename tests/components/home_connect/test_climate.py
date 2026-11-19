@@ -38,7 +38,6 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
@@ -49,11 +48,9 @@ from homeassistant.components.climate import (
     DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.home_connect.const import (
@@ -63,7 +60,6 @@ from homeassistant.components.home_connect.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -71,6 +67,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -461,8 +458,11 @@ async def test_hvac_modes_programs_mapping_and_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_HVAC_MODE: expected_hvac_modes[0]},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity.entity_id,
+            ClimateServiceArgument.HVAC_MODE: expected_hvac_modes[0],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -489,8 +489,11 @@ async def test_set_hvac_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+            },
             blocking=True,
         )
 
@@ -509,8 +512,11 @@ async def test_hvac_mode_off_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.air_conditioner",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -537,8 +543,11 @@ async def test_hvac_mode_off_exception(
     with pytest.raises(HomeAssistantError, match=r"Error.*turn.*off.*"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
 
@@ -658,8 +667,11 @@ async def test_preset_modes_programs_mapping_and_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity.entity_id, ATTR_PRESET_MODE: expected_preset_modes[0]},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: entity.entity_id,
+            ClimateServiceArgument.PRESET_MODE: expected_preset_modes[0],
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -688,10 +700,10 @@ async def test_set_preset_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: "climate.air_conditioner",
-                ATTR_PRESET_MODE: "active_clean",
+                TargetKey.ENTITY_ID: "climate.air_conditioner",
+                ClimateServiceArgument.PRESET_MODE: "active_clean",
             },
             blocking=True,
         )
@@ -796,10 +808,10 @@ async def test_set_temperature_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: target_temperature,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: target_temperature,
         },
     )
     await hass.async_block_till_done()
@@ -846,10 +858,10 @@ async def test_set_temperature_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_TEMPERATURE: 20.0,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.TEMPERATURE: 20.0,
             },
             blocking=True,
         )
@@ -1067,10 +1079,10 @@ async def test_fan_mode_functionality(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: expected_fan_modes[0],
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: expected_fan_modes[0],
         },
     )
     await hass.async_block_till_done()
@@ -1124,10 +1136,10 @@ async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
     with pytest.raises(HomeAssistantError, match="Test error"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
+            ClimateService.SET_FAN_MODE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_FAN_MODE: FAN_AUTO,
+                TargetKey.ENTITY_ID: entity_id,
+                ClimateServiceArgument.FAN_MODE: FAN_AUTO,
             },
             blocking=True,
         )

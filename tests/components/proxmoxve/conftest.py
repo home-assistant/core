@@ -114,6 +114,10 @@ def mock_proxmox_client():
         # Default privileges as defined
         mock_instance.access.permissions.get.return_value = MERGED_PERMISSIONS
 
+        mock_instance.cluster.resources.get.return_value = load_json_array_fixture(
+            "cluster/resources.json", DOMAIN
+        )
+
         # Make a separate mock for the qemu and lxc endpoints
         node_mock = MagicMock()
         qemu_list = load_json_array_fixture("nodes/qemu.json", DOMAIN)
