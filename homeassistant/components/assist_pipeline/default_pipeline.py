@@ -234,10 +234,10 @@ class _DefaultPipelineProcessor:
     _agent_audio_output: bool = field(init=False, default=False)
     """True if the conversation agent provides the response audio instead of TTS."""
     _pending_intent_start: PipelineEvent | None = field(init=False, default=None)
-    """Start of intent recognition, held back while the agent listens.
-
-    It is set before the agent gets the spoken audio.
-    """
+    """Start of intent recognition, held back while the agent listens."""
+    _agent_listening_ended: asyncio.Event = field(
+        init=False, default_factory=asyncio.Event
+    )
     _invalidated: bool = field(init=False, default=False)
     _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     _audio_run: voice_support.AudioRun | None = field(
@@ -707,11 +707,29 @@ class _DefaultPipelineProcessor:
         )
 
         async def command_stream() -> AsyncGenerator[EnhancedAudioChunk]:
-            async for chunk in stream:
-                # The voice command is over once the agent answers
-                if self._pending_intent_start is None:
-                    break
-                yield chunk
+            # Satellites stop sending audio when listening ends, so a read
+            # that waits for more must end with it
+            chunks = aiter(stream)
+            listening_ended = asyncio.ensure_future(self._agent_listening_ended.wait())
+            next_chunk: asyncio.Future[EnhancedAudioChunk | None] | None = None
+            try:
+                while True:
+                    next_chunk = asyncio.ensure_future(anext(chunks, None))
+                    await asyncio.wait(
+                        (next_chunk, listening_ended),
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    if listening_ended.done():
+                        next_chunk.cancel()
+                        await asyncio.wait((next_chunk,))
+                        return
+                    if (chunk := next_chunk.result()) is None:
+                        return
+                    yield chunk
+            finally:
+                listening_ended.cancel()
+                if next_chunk is not None:
+                    next_chunk.cancel()
 
         async def agent_audio_stream() -> AsyncGenerator[bytes]:
             async for chunk in self._speech_to_text_stream(
@@ -745,6 +763,11 @@ class _DefaultPipelineProcessor:
             return
 
         self._pending_intent_start = None
+        self._agent_listening_ended.set()
+        # Even if the agent never reads its audio again
+        self.host.hass.async_create_task(
+            self._async_close_audio_run(), "close the audio run of the agent"
+        )
         self._async_end_agent_speech()
         self.host.process_event(
             PipelineEvent(

@@ -1,5 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from dataclasses import FrozenInstanceError, replace
 import io
@@ -23,6 +24,7 @@ from homeassistant.components import (
     media_source,
     stt,
     tts,
+    voice_support,
 )
 from homeassistant.components.assist_pipeline.const import (
     ACKNOWLEDGE_PATH,
@@ -3434,6 +3436,87 @@ async def test_pipeline_audio_agent_answer_ends_audio(
         PipelineEventType.TTS_END,
         PipelineEventType.RUN_END,
     ]
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_listening_end_stops_audio(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test the end of listening ends the audio while the agent waits for more."""
+
+    async def satellite_audio() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"audio")
+        # Like a satellite that stops sending audio when listening ends
+        await asyncio.Event().wait()
+
+    audio_run = Mock(spec=voice_support.AudioRun)
+    audio_run.listening = False
+    audio_run.speech_ended_ms = None
+    audio_run.async_wake_word = AsyncMock(return_value=None)
+    audio_run.async_close = AsyncMock()
+
+    async def start_run(
+        hass: HomeAssistant,
+        request: voice_support.AudioRunRequest,
+        audio: AsyncIterable[bytes],
+    ) -> voice_support.AudioRun:
+        audio_run.async_stream = Mock(return_value=audio)
+        return audio_run
+
+    received_audio: list[bytes] = []
+    closed_at_listening_end = False
+
+    async def transcript_while_reading(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        audio = aiter(user_input.audio.stream)
+        received_audio.append(await anext(audio))
+
+        async def read_rest() -> None:
+            received_audio.extend([chunk async for chunk in audio])
+
+        reader = hass.async_create_task(read_rest())
+        chat_log.async_add_user_content(
+            conversation.UserContent(content="agent transcript")
+        )
+        # Before the reader reads again
+        nonlocal closed_at_listening_end
+        closed_at_listening_end = audio_run.async_close.await_count == 1
+        # An agent that reads to the end of the audio before it returns
+        await reader
+        return conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=chat_log.conversation_id,
+        )
+
+    with (
+        patch(
+            "homeassistant.components.voice_support.async_start_run",
+            side_effect=start_run,
+        ),
+        patch.object(
+            mock_audio_agent,
+            "_async_handle_message",
+            side_effect=transcript_while_reading,
+        ),
+    ):
+        async with asyncio.timeout(5):
+            await assist_pipeline.async_pipeline_from_audio_stream(
+                hass,
+                context=Context(),
+                event_callback=Mock(),
+                stt_metadata=_stt_metadata(),
+                stt_stream=satellite_audio(),
+                pipeline_id=AUDIO_AGENT_ID,
+                tts_audio_output="wav",
+                audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+            )
+
+    assert len(received_audio) == 1
+    # The run stops relaying audio as soon as listening ends
+    assert closed_at_listening_end
+    audio_run.async_close.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("init_audio_agent")
