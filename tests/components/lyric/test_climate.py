@@ -240,6 +240,22 @@ async def test_set_hvac_mode_lcc(
     mock_lyric.update_thermostat.assert_awaited_once_with(ANY, ANY, **expected)
 
 
+async def test_set_hvac_mode_heat_keeps_emergency_heat(
+    hass: HomeAssistant, mock_lyric: MagicMock
+) -> None:
+    """Test setting heat while in emergency heat leaves emergency heat on."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    mock_lyric.update_thermostat.assert_not_awaited()
+
+
 async def test_set_hvac_mode_tcc(hass: HomeAssistant, mock_lyric: MagicMock) -> None:
     """Test setting the HVAC mode on a TCC thermostat."""
     await hass.services.async_call(

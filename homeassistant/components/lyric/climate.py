@@ -349,6 +349,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
+        if (
+            hvac_mode == HVACMode.HEAT
+            and self.device.changeable_values.mode == LYRIC_HVAC_MODE_EMERGENCY_HEAT
+        ):
+            return
         match self._attr_thermostat_type:
             case LyricThermostatType.TCC:
                 update = self._async_set_hvac_mode_tcc(hvac_mode)
