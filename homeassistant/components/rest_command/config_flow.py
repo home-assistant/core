@@ -137,6 +137,14 @@ COMMAND_FIELDS_SCHEMA = {
 USER_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_ACTION): TextSelector(), **COMMAND_FIELDS_SCHEMA}
 )
+
+# Shown in the form texts; braces cannot be used in translations directly
+DESCRIPTION_PLACEHOLDERS = {
+    "example_url": "http://192.168.1.10/api/door/{{ door }}",
+    "example_payload": '{"state": "{{ state }}"}',
+    "example_data": "door: front",
+    "example_headers": 'Authorization: "Bearer {{ token }}"',
+}
 RECONFIGURE_SCHEMA = probatio.Schema(COMMAND_FIELDS_SCHEMA)
 
 
@@ -235,10 +243,13 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add a REST command."""
         errors: dict[str, str] = {}
+        placeholders = {**DESCRIPTION_PLACEHOLDERS, "action": ""}
         if user_input is not None:
             data = _flatten(user_input)
-            action = data.pop(CONF_ACTION)
-            if action != slugify(action) or action == SERVICE_RELOAD:
+            name: str = data.pop(CONF_ACTION).strip()
+            action = slugify(name)
+            placeholders["action"] = f"{DOMAIN}.{action}"
+            if action in ("", "unknown", SERVICE_RELOAD):
                 errors[CONF_ACTION] = "invalid_action"
             elif self.hass.services.has_service(DOMAIN, action) or any(
                 subentry.data.get(CONF_ACTION) == action
@@ -249,7 +260,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
                 errors = _validate_command(data)
             if not errors:
                 return self.async_create_entry(
-                    title=action,
+                    title=name,
                     data={CONF_ACTION: action, **data},
                     unique_id=action,
                 )
@@ -259,6 +270,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 USER_SCHEMA, user_input or {}
             ),
+            description_placeholders=placeholders,
             errors=errors,
         )
 
@@ -284,7 +296,8 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
                 RECONFIGURE_SCHEMA, user_input or _to_sections(dict(subentry.data))
             ),
             description_placeholders={
-                "action": f"{DOMAIN}.{subentry.data[CONF_ACTION]}"
+                **DESCRIPTION_PLACEHOLDERS,
+                "action": f"{DOMAIN}.{subentry.data[CONF_ACTION]}",
             },
             errors=errors,
         )
