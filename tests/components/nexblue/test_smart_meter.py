@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nexblue_api import (
     EnergyUsage,
     LoadBalancer,
@@ -10,8 +11,9 @@ from nexblue_api import (
     NexBlueStatisticsNotSupportedError,
 )
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.nexblue.const import SMART_METER_UPDATE_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -122,3 +124,71 @@ async def test_failed_meter_does_not_hide_other_meter(
         )
         is not None
     )
+
+
+async def test_meter_recovers_and_updates_without_duplicate_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Create meter sensors after recovery and update them on later polls."""
+    mock_client.async_list_chargers.return_value = []
+    mock_client.async_list_load_balancers.return_value = [
+        LoadBalancer("MX123", "Meter", "meter")
+    ]
+    mock_client.async_get_energy_usage.side_effect = [
+        NexBlueError("failed"),
+        *[
+            EnergyUsage("MX123", "daily", "UTC", value, "kWh", [])
+            for value in (1.0, 2.0, 3.0)
+        ],
+        *[
+            EnergyUsage("MX123", "daily", "UTC", value, "kWh", [])
+            for value in (4.0, 5.0, 6.0)
+        ],
+    ]
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    keys = (
+        "household_consumption_today",
+        "household_consumption_month",
+        "household_consumption_year",
+    )
+    assert all(
+        entity_registry.async_get_entity_id("sensor", "nexblue", f"MX123_{key}") is None
+        for key in keys
+    )
+
+    freezer.tick(SMART_METER_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    entity_ids = []
+    for key in keys:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", "nexblue", f"MX123_{key}"
+        )
+        assert entity_id is not None
+        entity_ids.append(entity_id)
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
+        "1.0",
+        "2.0",
+        "3.0",
+    ]
+
+    freezer.tick(SMART_METER_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert [hass.states.get(entity_id).state for entity_id in entity_ids] == [
+        "4.0",
+        "5.0",
+        "6.0",
+    ]
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entries) == 3
+    assert {entry.entity_id for entry in entries} == set(entity_ids)

@@ -26,8 +26,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from nexblue_api.models import ChargerStatus
-from .entity import charger_device_info
 from .const import DOMAIN
 from .coordinator import (
     NexBlueConfigEntry,
@@ -35,6 +33,7 @@ from .coordinator import (
     NexBlueSmartMeterCoordinator,
     SmartMeterData,
 )
+from .entity import charger_device_info
 
 CHARGING_STATE_MAP = {
     0: "idle",
