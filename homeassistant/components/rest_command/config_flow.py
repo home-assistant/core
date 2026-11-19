@@ -152,11 +152,13 @@ def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADVANCED]}
     del data[SECTION_AUTH], data[SECTION_ADVANCED]
     data.pop(CONF_ACTION, None)
-    # An empty password is valid, servers may expect only a username
+    # An empty username or password is valid, like in YAML: some servers
+    # expect only a username, others only a token as the password
     return {
         key: value
         for key, value in data.items()
-        if value not in (None, "", {}) or (key == CONF_PASSWORD and value == "")
+        if value not in (None, "", {})
+        or (key in (CONF_USERNAME, CONF_PASSWORD) and value == "")
     }
 
 

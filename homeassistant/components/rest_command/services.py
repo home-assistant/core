@@ -245,9 +245,9 @@ async def _async_reload_service_handler(service: ServiceCall) -> None:
 
     # Commands from the UI are set up by their config entry and win over YAML
     ui_actions = {
-        subentry.unique_id
+        name
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-        for subentry in entry.subentries.values()
+        for name in entry.runtime_data
     }
 
     existing = hass.services.async_services_for_domain(DOMAIN)

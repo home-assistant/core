@@ -116,3 +116,25 @@ async def test_reload_keeps_ui_commands(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert not hass.services.has_service(DOMAIN, "from_ui")
+
+
+async def test_reload_replaces_yaml_command_over_invalid_ui_command(
+    hass: HomeAssistant,
+) -> None:
+    """Test a YAML command is reloaded when the UI command with its name is invalid."""
+    entry = _entry(shared={"url": "{{ door"})
+    entry.add_to_hass(hass)
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"shared": {"url": TEST_URL}}}
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "shared")
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={DOMAIN: {}},
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert not hass.services.has_service(DOMAIN, "shared")

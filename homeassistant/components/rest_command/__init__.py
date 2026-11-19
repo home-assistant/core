@@ -78,8 +78,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+type RestCommandConfigEntry = ConfigEntry[set[str]]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) -> None:
     """Set up the REST commands configured in the UI."""
+    # The actions this entry registered, so reloading YAML leaves them alone
+    entry.runtime_data = set()
     for subentry in entry.subentries.values():
         name = str(subentry.unique_id)
         try:
@@ -89,14 +94,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
             continue
         entry.async_on_unload(async_register_rest_command(hass, name, validated))
+        entry.runtime_data.add(name)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RestCommandConfigEntry
+) -> None:
     """Unload the REST commands configured in the UI."""
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: RestCommandConfigEntry
+) -> None:
     """Reload the entry when a command is added, changed or removed."""
     hass.config_entries.async_schedule_reload(entry.entry_id)
