@@ -66,6 +66,7 @@ from .repairs.wrong_silabs_firmware import (
     warn_on_wrong_silabs_firmware,
 )
 from .services import async_setup_services
+from .weekly_schedule import WeeklyScheduleSyncManager
 
 DEVICE_CONFIG_SCHEMA_ENTRY = probatio.Schema({probatio.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -301,6 +302,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
 
+    weekly_schedule_sync = WeeklyScheduleSyncManager(
+        hass, config_entry, ha_zha_data.gateway_proxy
+    )
+    ha_zha_data.weekly_schedule_sync = weekly_schedule_sync
+    config_entry.async_on_unload(weekly_schedule_sync.async_shutdown)
+    weekly_schedule_sync.async_start()
+
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload ZHA config entry."""
@@ -310,6 +318,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     ha_zha_data.config_entry = None
     ha_zha_data.gateway_proxy = None
     ha_zha_data.update_coordinator = None
+    ha_zha_data.weekly_schedule_sync = None
 
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)

@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -39,6 +39,7 @@ from .helpers import (
     exclude_none_values,
     get_zha_data,
 )
+from .weekly_schedule import SIGNAL_WEEKLY_SCHEDULE_UPDATED
 
 ZHA_TO_HA_HVAC_MODE = {
     ZHAHVACMode.OFF: HVACMode.OFF,
@@ -126,6 +127,61 @@ class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
         self._attr_preset_modes = state.preset_modes
         self._attr_min_temp = state.min_temp
         self._attr_max_temp = state.max_temp
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Refresh the offered HVAC modes when a weekly schedule link changes."""
+        await super().async_added_to_hass()
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_WEEKLY_SCHEDULE_UPDATED,
+                self._async_weekly_schedule_updated,
+            )
+        )
+        provider = getattr(self.entity_data.entity, "weekly_schedule", None)
+        if (
+            provider is not None
+            and (event_name := getattr(provider, "EVENT_VERIFIED_CHANGED", None))
+            and (subscribe := getattr(provider, "on_event", None))
+        ):
+            self._unsubs.append(
+                subscribe(event_name, self._async_weekly_schedule_verification_updated)
+            )
+
+    @callback
+    def _async_weekly_schedule_updated(self) -> None:
+        self.async_write_ha_state()
+
+    @callback
+    def _async_weekly_schedule_verification_updated(self, verified: bool) -> None:
+        if (
+            not verified
+            and (manager := get_zha_data(self.hass).weekly_schedule_sync) is not None
+        ):
+            manager.async_schedule_invalidated(self.entity_id)
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the HVAC modes.
+
+        Auto runs the thermostat's own weekly schedule, so it is only offered
+        after a verified upload or successful linked sync. If the thermostat
+        already is in Auto, Auto stays available.
+        """
+        modes = self._attr_hvac_modes
+        if (
+            HVACMode.AUTO not in modes
+            or self.hvac_mode == HVACMode.AUTO
+            or getattr(self.entity_data.entity, "weekly_schedule", None) is None
+        ):
+            return modes
+        manager = get_zha_data(self.hass).weekly_schedule_sync
+        if manager is not None and manager.async_schedule_active(self.entity_id):
+            return modes
+        return [mode for mode in modes if mode != HVACMode.AUTO]
 
     @property
     @override

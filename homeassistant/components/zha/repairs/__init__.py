@@ -11,6 +11,7 @@ from .network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
     NetworkSettingsInconsistentFlow,
 )
+from .weekly_schedule import WeeklyScheduleRepairFlow
 from .wrong_silabs_firmware import ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED
 
 
@@ -28,5 +29,7 @@ async def async_create_fix_flow(
     """Create flow."""
     if issue_id == ISSUE_INCONSISTENT_NETWORK_SETTINGS:
         return NetworkSettingsInconsistentFlow(hass, cast(dict[str, Any], data))
+    if data and isinstance(link_id := data.get("link_id"), str):
+        return WeeklyScheduleRepairFlow(link_id)
 
     return ConfirmRepairFlow()

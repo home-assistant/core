@@ -257,11 +257,17 @@
     "clear_lock_user_code": {
       "service": "mdi:lock-remove"
     },
+    "clear_weekly_schedule": {
+      "service": "mdi:calendar-remove"
+    },
     "disable_lock_user_code": {
       "service": "mdi:lock-off"
     },
     "enable_lock_user_code": {
       "service": "mdi:lock"
+    },
+    "get_weekly_schedule": {
+      "service": "mdi:calendar-search"
     },
     "issue_zigbee_cluster_command": {
       "service": "mdi:console"
@@ -277,6 +283,9 @@
     },
     "set_lock_user_code": {
       "service": "mdi:lock"
+    },
+    "set_weekly_schedule": {
+      "service": "mdi:calendar-edit"
     },
     "set_zigbee_cluster_attribute": {
       "service": "mdi:cog"

@@ -179,6 +179,7 @@ if TYPE_CHECKING:
 
     from .entity import ZHAEntity
     from .update import ZHAFirmwareUpdateCoordinator
+    from .weekly_schedule import WeeklyScheduleSyncManager
 
     type _LogFilterType = Filter | Callable[[LogRecord], bool]
 
@@ -774,6 +775,16 @@ class ZHAGatewayProxy(EventBase):
                 remove_future=remove_future,
             )
         )
+        self._notify_weekly_schedule_entity_change(entity_data)
+
+    @callback
+    def _notify_weekly_schedule_entity_change(self, entity_data: EntityData) -> None:
+        if (
+            entity_data.entity.PLATFORM == ZhaPlatform.CLIMATE
+            and getattr(entity_data.entity, "weekly_schedule", None) is not None
+            and (manager := get_zha_data(self.hass).weekly_schedule_sync) is not None
+        ):
+            manager.async_notify()
 
     async def _handle_entity_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
@@ -1067,21 +1078,27 @@ class ZHAGatewayProxy(EventBase):
         key = _entity_reference_key(entity.entity_data)
         if (entity_refs := self._ha_entity_refs.get(key)) is None:
             return
+        if not any(e.ha_entity_id == old_entity_id for e in entity_refs):
+            return
         self._ha_entity_refs[key] = [
             e._replace(ha_entity_id=entity.entity_id)
             if e.ha_entity_id == old_entity_id
             else e
             for e in entity_refs
         ]
+        self._notify_weekly_schedule_entity_change(entity.entity_data)
 
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
         key = _entity_reference_key(entity.entity_data)
         if (entity_refs := self._ha_entity_refs.get(key)) is None:
             return
+        if not any(e.ha_entity_id == entity.entity_id for e in entity_refs):
+            return
         self._ha_entity_refs[key] = [
             e for e in entity_refs if e.ha_entity_id != entity.entity_id
         ]
+        self._notify_weekly_schedule_entity_change(entity.entity_data)
 
     def _async_get_or_create_device_proxy(
         self, zha_device: BaseDevice
@@ -1471,6 +1488,9 @@ class HAZHAData:
         default_factory=lambda: collections.defaultdict(list)
     )
     update_coordinator: ZHAFirmwareUpdateCoordinator | None = dataclasses.field(
+        default=None
+    )
+    weekly_schedule_sync: WeeklyScheduleSyncManager | None = dataclasses.field(
         default=None
     )
 

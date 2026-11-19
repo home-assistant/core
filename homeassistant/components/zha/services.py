@@ -1,7 +1,11 @@
 """Support for Zigbee Home Automation services."""
 
+from collections.abc import Mapping
+import dataclasses
+from enum import Enum
 import logging
-from typing import Any, cast
+import math
+from typing import TYPE_CHECKING, Any, cast
 
 import probatio
 from zha.application.const import (
@@ -26,22 +30,32 @@ from zha.application.platforms.siren import (
     WarningMode,
 )
 from zha.zigbee.device import ZigbeeDevice
+import zigpy.types as t
 from zigpy.types.named import EUI64, KeyData
 from zigpy.typing import (
     UNDEFINED as ZIGPY_UNDEFINED,
     UndefinedType as ZigpyUndefinedType,
 )
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.schedule.const import DOMAIN as SCHEDULE_DOMAIN
 from homeassistant.const import ATTR_COMMAND, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
     async_register_admin_service,
     async_register_platform_entity_service,
 )
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import (
     DOMAIN,
@@ -50,7 +64,22 @@ from .const import (
     ZHAService,
     ZHAServiceArgument,
 )
-from .helpers import IEEE_SCHEMA, SERVICE_PERMIT_PARAMS, get_zha_data
+from .helpers import (
+    IEEE_SCHEMA,
+    SERVICE_PERMIT_PARAMS,
+    convert_zha_error_to_ha_error,
+    get_zha_data,
+)
+from .weekly_schedule import (
+    ScheduleConversionError,
+    Transitions,
+    schedule_to_transitions,
+)
+
+if TYPE_CHECKING:
+    from zha.zigbee.weekly_schedule import WeeklyScheduleProvider
+
+    from .climate import Thermostat
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -287,7 +316,52 @@ async def _set_zigbee_cluster_attributes(service: ServiceCall) -> None:
     )
 
 
-async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
+def _json_safe_response(value: Any) -> JsonValueType:
+    """Convert supported Zigpy response values into JSON-compatible values."""
+    if isinstance(value, t.Struct):
+        return {key: _json_safe_response(item) for key, item in value.as_dict().items()}
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return {
+            field.name: _json_safe_response(getattr(value, field.name))
+            for field in dataclasses.fields(value)
+        }
+    if isinstance(value, Enum):
+        return _json_safe_response(value.value)
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return int(value)
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise HomeAssistantError("Zigbee response contains a non-finite number")
+        return float(value)
+    if isinstance(value, str):
+        return str(value)
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return list(value)
+    if isinstance(value, (list, tuple)):
+        return [_json_safe_response(item) for item in value]
+    if isinstance(value, Mapping):
+        result: JsonObjectType = {}
+        for key, item in value.items():
+            if isinstance(key, str):
+                name = key
+            elif isinstance(key, int) and not isinstance(key, bool):
+                name = str(key)
+            else:
+                raise HomeAssistantError(
+                    f"Unsupported Zigbee response mapping key type: {type(key).__name__}"
+                )
+            if name in result:
+                raise HomeAssistantError("Zigbee response has duplicate JSON keys")
+            result[name] = _json_safe_response(item)
+        return result
+    raise HomeAssistantError(
+        f"Unsupported Zigbee response value type: {type(value).__name__}"
+    )
+
+
+async def _issue_zigbee_cluster_command(service: ServiceCall) -> ServiceResponse:
     """Issue command on zigbee cluster on ZHA entity."""
     zha_gateway = _get_gateway(service)
     ieee: EUI64 = service.data[ZHAServiceArgument.IEEE]
@@ -305,7 +379,15 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
     if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
         manufacturer = zha_device.manufacturer_code
 
-    await zha_device.issue_cluster_command(
+    if service.return_response and not getattr(
+        zha_device, "supports_cluster_command_response", False
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="cluster_command_response_unsupported",
+        )
+    response_options = {"return_response": True} if service.return_response else {}
+    response = await zha_device.issue_cluster_command(
         endpoint_id,
         cluster_id,
         command,
@@ -314,6 +396,7 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
         params,
         cluster_type=cluster_type,
         manufacturer=manufacturer,
+        **response_options,
     )
     _LOGGER.debug(
         (
@@ -337,6 +420,80 @@ async def _issue_zigbee_cluster_command(service: ServiceCall) -> None:
         ATTR_MANUFACTURER,
         manufacturer,
     )
+    if service.return_response:
+        return {RESPONSE: _json_safe_response(response)}
+    return None
+
+
+def _schedule_helper_transitions(schedule: Any) -> Transitions:
+    """Convert a complete HA schedule helper into heat transitions."""
+    try:
+        return schedule_to_transitions(schedule)
+    except ScheduleConversionError as exc:
+        raise ServiceValidationError(str(exc)) from exc
+
+
+def _weekly_schedule_provider(entity: Thermostat) -> WeeklyScheduleProvider:
+    provider = getattr(entity.entity_data.entity, "weekly_schedule", None)
+    if provider is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="weekly_schedule_unsupported",
+        )
+    return provider
+
+
+async def _get_weekly_schedule(
+    entity: Thermostat, service: ServiceCall
+) -> ServiceResponse:
+    """Read the schedule or return only cached values."""
+    provider = _weekly_schedule_provider(entity)
+    async with convert_zha_error_to_ha_error():
+        return cast(
+            JsonObjectType,
+            await provider.async_get(
+                refresh=not service.data[ZHAServiceArgument.CACHE_ONLY]
+            ),
+        )
+
+
+async def _set_weekly_schedule(
+    entity: Thermostat, service: ServiceCall
+) -> ServiceResponse:
+    """Upload a complete schedule helper to a thermostat."""
+    provider = _weekly_schedule_provider(entity)
+    schedule_entity: str = service.data[ZHAServiceArgument.SCHEDULE_ENTITY]
+    response = await service.hass.services.async_call(
+        SCHEDULE_DOMAIN,
+        "get_schedule",
+        {"entity_id": schedule_entity},
+        context=service.context,
+        blocking=True,
+        return_response=True,
+    )
+    if not isinstance(response, dict) or schedule_entity not in response:
+        raise ServiceValidationError(
+            f"Schedule helper {schedule_entity} did not return its configuration"
+        )
+    transitions = _schedule_helper_transitions(response[schedule_entity])
+    async with convert_zha_error_to_ha_error():
+        result = await provider.async_set(transitions)
+    return cast(JsonObjectType, result) if service.return_response else None
+
+
+async def _clear_weekly_schedule(
+    entity: Thermostat, service: ServiceCall
+) -> ServiceResponse:
+    """Clear the thermostat's schedule and verify its heat days."""
+    provider = _weekly_schedule_provider(entity)
+    if not provider.capabilities.supports_clear:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="weekly_schedule_clear_unsupported",
+        )
+    async with convert_zha_error_to_ha_error():
+        result = await provider.async_clear()
+    return cast(JsonObjectType, result) if service.return_response else None
 
 
 async def _issue_zigbee_group_command(service: ServiceCall) -> None:
@@ -447,6 +604,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND,
         _issue_zigbee_cluster_command,
         schema=SERVICE_SCHEMAS[ZHAService.ISSUE_ZIGBEE_CLUSTER_COMMAND],
+        supports_response=SupportsResponse.OPTIONAL,
     )
     async_register_admin_service(
         hass,
@@ -468,6 +626,40 @@ def async_setup_services(hass: HomeAssistant) -> None:
         ZHAService.WARNING_DEVICE_WARN,
         _warning_device_warn,
         schema=SERVICE_SCHEMAS[ZHAService.WARNING_DEVICE_WARN],
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ZHAService.GET_WEEKLY_SCHEDULE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Optional(ZHAServiceArgument.CACHE_ONLY, default=False): cv.boolean
+        },
+        supports_response=SupportsResponse.ONLY,
+        func=_get_weekly_schedule,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ZHAService.SET_WEEKLY_SCHEDULE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={
+            probatio.Required(ZHAServiceArgument.SCHEDULE_ENTITY): cv.entity_domain(
+                SCHEDULE_DOMAIN
+            )
+        },
+        supports_response=SupportsResponse.OPTIONAL,
+        func=_set_weekly_schedule,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        ZHAService.CLEAR_WEEKLY_SCHEDULE,
+        entity_domain=CLIMATE_DOMAIN,
+        schema={},
+        supports_response=SupportsResponse.OPTIONAL,
+        func=_clear_weekly_schedule,
     )
 
     for service_name, func in (
