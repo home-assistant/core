@@ -92,6 +92,13 @@ async def async_setup_entry(
                 assumed=False,
                 parent_device_id=power_strip_via_hub.id,
             ),
+            DemoSwitch(
+                unique_id="smart_plug",
+                device_name="Smart plug",
+                entity_name=None,
+                state=True,
+                assumed=False,
+            ),
         ]
     )
 

@@ -729,3 +729,52 @@ def test_homeassistant_schema_invalid_integration_connectivity(
 
     with pytest.raises(probatio.Invalid):
         schema({"integration_connectivity": integration_connectivity})
+
+
+DEVICE_TYPES_STRINGS = {
+    "device_types": {
+        "generic": {"name": "Device"},
+        "smart_plug": {
+            "name": "Smart plug",
+            "slots": {"outlet": {"name": "Outlet"}},
+        },
+    },
+}
+
+
+def test_device_type_schema_device_types(config: Config) -> None:
+    """Test the device_type integration accepts device type names."""
+    integration = get_integration("device_type", config)
+    schema = translations.gen_device_type_schema(config, integration)
+
+    assert schema(DEVICE_TYPES_STRINGS) == DEVICE_TYPES_STRINGS
+
+
+def test_device_types_only_for_device_type(config: Config) -> None:
+    """Test other integrations can't define device type names."""
+    integration = get_integration("test_integration", config)
+    schema = translations.gen_strings_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid, match="not a valid option"):
+        schema(DEVICE_TYPES_STRINGS)
+
+
+@pytest.mark.parametrize(
+    "device_types",
+    [
+        {"SmartPlug": {"name": "Smart plug"}},
+        {"smart_plug": {}},
+        {"smart_plug": {"name": "Smart plug", "slots": {"Outlet": {"name": "O"}}}},
+        {"smart_plug": {"name": "Smart plug", "slots": {"outlet": {}}}},
+        {"smart_plug": {"name": "Smart plug", "description": "A plug."}},
+    ],
+)
+def test_device_type_schema_invalid_device_types(
+    config: Config, device_types: dict
+) -> None:
+    """Test invalid device type names are rejected."""
+    integration = get_integration("device_type", config)
+    schema = translations.gen_device_type_schema(config, integration)
+
+    with pytest.raises(probatio.Invalid):
+        schema({"device_types": device_types})

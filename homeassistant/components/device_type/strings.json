@@ -1,0 +1,13 @@
+{
+  "device_types": {
+    "generic": { "name": "Device" },
+    "smart_plug": {
+      "name": "Smart plug",
+      "slots": {
+        "energy": { "name": "Energy" },
+        "outlet": { "name": "Outlet" },
+        "power": { "name": "Power" }
+      }
+    }
+  }
+}

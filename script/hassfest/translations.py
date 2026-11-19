@@ -753,6 +753,27 @@ def gen_homeassistant_schema(
     return _with_integration(schema, config, integration)
 
 
+def gen_device_type_schema(
+    config: Config, integration: Integration
+) -> Callable[[Any], Any]:
+    """Generate the strings schema for the device_type integration."""
+    schema = _gen_strings_schema(False, _frontend_issues(integration)).extend(
+        {
+            probatio.Optional("device_types"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Optional("slots"): cv.schema_with_slug_keys(
+                        {probatio.Required("name"): translation_value_validator},
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+        }
+    )
+    return _with_integration(schema, config, integration)
+
+
 ONBOARDING_SCHEMA = probatio.Schema(
     {
         probatio.Required("area"): {str: translation_value_validator},
@@ -787,6 +808,8 @@ def validate_translation_file(
         strings_schema = gen_ha_hardware_schema(config, integration)
     elif integration.domain == "homeassistant":
         strings_schema = gen_homeassistant_schema(config, integration)
+    elif integration.domain == "device_type":
+        strings_schema = gen_device_type_schema(config, integration)
     else:
         strings_schema = gen_strings_schema(config, integration)
 
