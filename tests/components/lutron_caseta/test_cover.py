@@ -8,12 +8,10 @@ import pytest
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_STOP_COVER,
     CoverEntityFeature,
+    CoverService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -64,8 +62,8 @@ async def test_cover_open_close_using_set_value(
     # Test opening the cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -79,8 +77,8 @@ async def test_cover_open_close_using_set_value(
     # Test closing the cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -108,8 +106,8 @@ async def test_cover_stop_with_direction_tracking(
     # Now stop while opening
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -134,8 +132,8 @@ async def test_cover_stop_with_direction_tracking(
     # Now stop while closing
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -159,8 +157,8 @@ async def test_cover_stop_at_endpoints(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -179,8 +177,8 @@ async def test_cover_stop_at_endpoints(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -204,8 +202,8 @@ async def test_cover_position_heuristic_fallback(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -224,8 +222,8 @@ async def test_cover_position_heuristic_fallback(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -254,8 +252,8 @@ async def test_cover_stopped_movement_detection(
     # Now stop command should use position heuristic (>= 50)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -275,8 +273,8 @@ async def test_cover_startup_with_shade_in_motion(
     # First stop without seeing movement should use position heuristic
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -296,8 +294,8 @@ async def test_cover_startup_with_shade_in_motion(
     # Now we've detected downward movement
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
 
@@ -353,8 +351,8 @@ async def test_open_close_stop_cover_uses_raise_lower(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
     mock_instance.lower_cover.assert_called_once_with("805")
@@ -362,8 +360,8 @@ async def test_open_close_stop_cover_uses_raise_lower(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
     mock_instance.raise_cover.assert_called_once_with("805")
@@ -371,8 +369,8 @@ async def test_open_close_stop_cover_uses_raise_lower(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: cover_entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: cover_entity_id},
         blocking=True,
     )
     mock_instance.stop_cover.assert_called_once_with("805")

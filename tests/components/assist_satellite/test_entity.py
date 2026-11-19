@@ -46,7 +46,7 @@ from tests.components.tts.common import MockResultStream
 @pytest.fixture
 def mock_chat_session_conversation_id() -> Generator[Mock]:
     """Mock the ulid library."""
-    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+    with patch("homeassistant.helpers.chat_session.secure_ulid_now") as mock_ulid_now:
         mock_ulid_now.return_value = "mock-conversation-id"
         yield mock_ulid_now
 

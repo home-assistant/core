@@ -189,10 +189,14 @@ async def make_device_data(
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
-            if coordinator.data.get("deviceMode") == "pressMode":
-                devices_data.buttons.append((device, coordinator))
-            else:
-                devices_data.switches.append((device, coordinator))
+            device_mode = coordinator.data.get("deviceMode")
+            match device_mode:
+                case "pressMode":
+                    devices_data.buttons.append((device, coordinator))
+                case "switchMode":
+                    devices_data.switches.append((device, coordinator))
+                case _:
+                    pass
     if isinstance(device, Device) and device.device_type == "Relay Switch 2PM":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id

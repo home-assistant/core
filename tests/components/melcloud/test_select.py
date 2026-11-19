@@ -11,7 +11,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,7 +59,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: OPERATION_MODE_ENTITY,
+            TargetKey.ENTITY_ID: OPERATION_MODE_ENTITY,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,

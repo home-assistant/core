@@ -58,6 +58,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -1085,7 +1086,7 @@ async def test_integration_services(
     await hass.services.async_call(
         DOMAIN,
         RokuService.SEARCH,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, RokuServiceArgument.KEYWORD: "Space Jam"},
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID, RokuServiceArgument.KEYWORD: "Space Jam"},
         blocking=True,
     )
     mock_roku.search.assert_called_once_with("Space Jam")

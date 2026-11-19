@@ -17,11 +17,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-pytestmark = [
-    pytest.mark.usefixtures("init_integration"),
-]
 
-
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 async def test_number_entities(
     hass: HomeAssistant,
@@ -100,9 +97,35 @@ async def test_number_entities(
         )
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"]
 )
 async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
     """Does not load number when device has no support for it."""
     assert not hass.states.get("number.device_status_light_brightness")
+
+
+@pytest.mark.usefixtures("init_integration_v2")
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+async def test_number_entities_v2(
+    hass: HomeAssistant,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test status light brightness is controlled via the v2 system endpoint."""
+    assert (state := hass.states.get("number.device_status_light_brightness"))
+    assert state.state == "100"
+
+    await hass.services.async_call(
+        number.DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            ATTR_VALUE: 50,
+        },
+        blocking=True,
+    )
+
+    mock_homewizardenergy_v2.system.assert_called_once_with(
+        status_led_brightness_pct=50
+    )

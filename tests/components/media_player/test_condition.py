@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.condition import CONDITIONS
 from homeassistant.components.media_player.const import MediaPlayerState
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.const import CONF_OPTIONS, CONF_TARGET, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import async_validate_condition_config
 
@@ -388,7 +388,7 @@ async def test_media_player_is_current_source_condition_validation(
             hass,
             {
                 "condition": condition,
-                CONF_TARGET: {CONF_ENTITY_ID: "media_player.test"},
+                CONF_TARGET: {TargetKey.ENTITY_ID: "media_player.test"},
                 CONF_OPTIONS: condition_options,
             },
         )
