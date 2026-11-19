@@ -575,7 +575,7 @@ def _validate_device_info_fields(
 def _device_type_storage(
     device_type: DeviceType | Undefined | None,
 ) -> tuple[
-    str | Undefined | None, Mapping[str, tuple[tuple[str, str], ...]] | Undefined
+    str | Undefined | None, Mapping[str, tuple[tuple[str, str, str], ...]] | Undefined
 ]:
     """Return the type id and slots a device type is stored as."""
     if device_type is Undefined:
@@ -591,18 +591,31 @@ def _device_type_storage(
     if type(device_type) is DeviceType:
         return None, {}
     return device_type.type_id, {
-        slot_id: tuple((platform.value, unique_id) for platform, unique_id in slot)
+        slot_id: tuple(
+            (
+                reference.platform.value,
+                reference.integration_domain,
+                reference.unique_id,
+            )
+            for reference in slot
+        )
         for slot_id, slot in device_type.references.items()
     }
 
 
 def _protect_device_slots(
     data: Mapping[str, Iterable[Iterable[str]]],
-) -> ReadOnlyDict[str, tuple[tuple[str, str], ...]]:
-    """Return the slots as a read only dict of (entity domain, unique id) tuples."""
+) -> ReadOnlyDict[str, tuple[tuple[str, str, str], ...]]:
+    """Return the slots as a read only dict of entity reference tuples.
+
+    A reference is the entity domain, the integration domain and the unique id.
+    """
     return ReadOnlyDict(
         {
-            slot_id: tuple((domain, unique_id) for domain, unique_id in references)
+            slot_id: tuple(
+                (domain, integration_domain, unique_id)
+                for domain, integration_domain, unique_id in references
+            )
             for slot_id, references in data.items()
         }
     )
@@ -795,8 +808,8 @@ class DeviceEntry(BaseDeviceEntry):
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     model_id: str | None = attr.ib(default=None)
-    original_device_slots: ReadOnlyDict[str, tuple[tuple[str, str], ...]] = attr.ib(
-        converter=_protect_device_slots, factory=dict
+    original_device_slots: ReadOnlyDict[str, tuple[tuple[str, str, str], ...]] = (
+        attr.ib(converter=_protect_device_slots, factory=dict)
     )
     original_device_type: str | None = attr.ib(default=None)
     # Set on devices created by splitting a pre-migration composite device: the
@@ -3416,7 +3429,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_config_subentry_id: str | Undefined | None = Undefined,
         new_connections: set[tuple[str, str]] | Undefined = Undefined,
         new_identifiers: set[tuple[str, str]] | Undefined = Undefined,
-        original_device_slots: Mapping[str, Iterable[tuple[str, str]]]
+        original_device_slots: Mapping[str, Iterable[tuple[str, str, str]]]
         | Undefined = Undefined,
         original_device_type: str | Undefined | None = Undefined,
         remove_config_entry_id: str | Undefined = Undefined,

@@ -40,7 +40,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     frame,
 )
-from homeassistant.helpers.device_type import DeviceSlot, DeviceType
+from homeassistant.helpers.device_type import DeviceSlot, DeviceType, EntityReference
 from homeassistant.helpers.typing import Undefined
 from homeassistant.util.dt import utcnow
 
@@ -438,7 +438,7 @@ async def test_loading_from_storage(
                     "model": "model",
                     "model_id": "model_id",
                     "original_device_slots": {
-                        "outlet": [["switch", "outlet_unique_id"]]
+                        "outlet": [["switch", "hue", "outlet_unique_id"]]
                     },
                     "original_device_type": "smart_plug",
                     "modified_at": modified_at,
@@ -526,7 +526,7 @@ async def test_loading_from_storage(
         modified_at=datetime.fromisoformat(modified_at),
         name_by_user="Test Friendly Name",
         name="name",
-        original_device_slots={"outlet": (("switch", "outlet_unique_id"),)},
+        original_device_slots={"outlet": (("switch", "hue", "outlet_unique_id"),)},
         original_device_type="smart_plug",
         serial_number="serial_no",
         sw_version="version",
@@ -5441,8 +5441,11 @@ async def test_loading_saving_data(
         manufacturer="manufacturer",
         model="via",
         device_type=SmartPlug(
-            outlet=(Platform.SWITCH, "outlet"),
-            power=[(Platform.SENSOR, "power"), (Platform.SENSOR, "power_2")],
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
         ),
         name="Original Name",
         sw_version="Orig SW 1",
@@ -5539,8 +5542,8 @@ async def test_loading_saving_data(
     assert orig_via == new_via
     assert new_via.original_device_type == "smart_plug"
     assert new_via.original_device_slots == {
-        "outlet": (("switch", "outlet"),),
-        "power": (("sensor", "power"), ("sensor", "power_2")),
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
     }
     assert orig_light == new_light
     assert new_light.original_device_type is None
@@ -5592,24 +5595,30 @@ async def test_get_or_create_device_type(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
         device_type=SmartPlug(
-            outlet=(Platform.SWITCH, "outlet"),
-            power=[(Platform.SENSOR, "power"), (Platform.SENSOR, "power_2")],
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
         ),
     )
     assert entry.original_device_type == "smart_plug"
     assert entry.original_device_slots == {
-        "outlet": (("switch", "outlet"),),
-        "power": (("sensor", "power"), ("sensor", "power_2")),
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
     }
     with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
-        entry.original_device_slots["outlet"] = (("switch", "other"),)
+        entry.original_device_slots["outlet"] = (("switch", "hue", "other"),)
 
     # An equal device type and not passing device_type leave the device untouched
     with patch.object(device_registry, "async_schedule_save") as mock_save:
         for device_type in (
             SmartPlug(
-                outlet=[(Platform.SWITCH, "outlet")],
-                power=[(Platform.SENSOR, "power"), (Platform.SENSOR, "power_2")],
+                outlet=[EntityReference(Platform.SWITCH, "hue", "outlet")],
+                power=[
+                    EntityReference(Platform.SENSOR, "hue", "power"),
+                    EntityReference(Platform.SENSOR, "hue", "power_2"),
+                ],
                 energy=(),
             ),
             Undefined,
@@ -5625,31 +5634,35 @@ async def test_get_or_create_device_type(
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
-        device_type=SmartPlug(outlet=(Platform.SWITCH, "new_outlet")),
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "new_outlet")
+        ),
     )
     assert entry.original_device_type == "smart_plug"
-    assert entry.original_device_slots == {"outlet": (("switch", "new_outlet"),)}
+    assert entry.original_device_slots == {"outlet": (("switch", "hue", "new_outlet"),)}
 
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
-        device_type=_TestLight(relay=(Platform.SWITCH, "relay")),
+        device_type=_TestLight(relay=EntityReference(Platform.SWITCH, "hue", "relay")),
     )
     assert entry.original_device_type == "device_registry_test_light"
-    assert entry.original_device_slots == {"relay": (("switch", "relay"),)}
+    assert entry.original_device_slots == {"relay": (("switch", "hue", "relay"),)}
 
     # A device info cannot declare a device type, registering with one keeps it
     with pytest.raises(TypeError, match="device_type"):
         dr.DeviceInfo(  # type: ignore[call-arg]
             identifiers={("hue", "456")},
-            device_type=SmartPlug(outlet=(Platform.SWITCH, "outlet")),
+            device_type=SmartPlug(
+                outlet=EntityReference(Platform.SWITCH, "hue", "outlet")
+            ),
         )
     entry = device_registry.async_get_or_create_from_info(
         config_entry_id=mock_config_entry.entry_id,
         device_info=dr.DeviceInfo(identifiers={("hue", "456")}, name="Light"),
     )
     assert entry.original_device_type == "device_registry_test_light"
-    assert entry.original_device_slots == {"relay": (("switch", "relay"),)}
+    assert entry.original_device_slots == {"relay": (("switch", "hue", "relay"),)}
 
     await hass.async_block_till_done()
     assert [event.data for event in update_events] == [
@@ -5659,8 +5672,8 @@ async def test_get_or_create_device_type(
             "device_id": entry.id,
             "changes": {
                 "original_device_slots": {
-                    "outlet": (("switch", "outlet"),),
-                    "power": (("sensor", "power"), ("sensor", "power_2")),
+                    "outlet": (("switch", "hue", "outlet"),),
+                    "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
                 }
             },
         },
@@ -5668,7 +5681,7 @@ async def test_get_or_create_device_type(
             "action": "update",
             "device_id": entry.id,
             "changes": {
-                "original_device_slots": {"outlet": (("switch", "new_outlet"),)},
+                "original_device_slots": {"outlet": (("switch", "hue", "new_outlet"),)},
                 "original_device_type": "smart_plug",
             },
         },
@@ -5687,7 +5700,7 @@ async def test_get_or_create_device_type(
             None,
             None,
             {
-                "original_device_slots": {"outlet": (("switch", "outlet"),)},
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet"),)},
                 "original_device_type": "smart_plug",
             },
             id="none",
@@ -5696,7 +5709,7 @@ async def test_get_or_create_device_type(
             DeviceType(),
             None,
             {
-                "original_device_slots": {"outlet": (("switch", "outlet"),)},
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet"),)},
                 "original_device_type": "smart_plug",
             },
             id="generic",
@@ -5704,7 +5717,7 @@ async def test_get_or_create_device_type(
         pytest.param(
             SmartPlug(),
             "smart_plug",
-            {"original_device_slots": {"outlet": (("switch", "outlet"),)}},
+            {"original_device_slots": {"outlet": (("switch", "hue", "outlet"),)}},
             id="no_slots",
         ),
     ],
@@ -5721,7 +5734,7 @@ async def test_get_or_create_device_type_cleared(
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
-        device_type=SmartPlug(outlet=(Platform.SWITCH, "outlet")),
+        device_type=SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
     )
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
 
@@ -5748,17 +5761,20 @@ async def test_get_or_create_device_type_of_subtype(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
         device_type=_TestPowerStrip(
-            outlet=(Platform.SWITCH, "outlet"),
-            power=[(Platform.SENSOR, "power"), (Platform.SENSOR, "power_2")],
-            relay=(Platform.SWITCH, "relay"),
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet"),
+            power=[
+                EntityReference(Platform.SENSOR, "hue", "power"),
+                EntityReference(Platform.SENSOR, "hue", "power_2"),
+            ],
+            relay=EntityReference(Platform.SWITCH, "hue", "relay"),
         ),
     )
 
     assert entry.original_device_type == "device_registry_test_power_strip"
     assert entry.original_device_slots == {
-        "outlet": (("switch", "outlet"),),
-        "power": (("sensor", "power"), ("sensor", "power_2")),
-        "relay": (("switch", "relay"),),
+        "outlet": (("switch", "hue", "outlet"),),
+        "power": (("sensor", "hue", "power"), ("sensor", "hue", "power_2")),
+        "relay": (("switch", "hue", "relay"),),
     }
 
 
@@ -5780,7 +5796,7 @@ async def test_get_or_create_invalid_device_type(
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("hue", "456")},
-        device_type=SmartPlug(outlet=(Platform.SWITCH, "outlet")),
+        device_type=SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
     )
 
     for identifier in ("456", "789"):
@@ -11082,7 +11098,13 @@ async def test_dict_repr_dual_writes_deprecated_keys(
 
 @pytest.mark.parametrize(
     ("device_type", "original_device_type"),
-    [(None, None), (SmartPlug(outlet=(Platform.SWITCH, "outlet")), "smart_plug")],
+    [
+        (None, None),
+        (
+            SmartPlug(outlet=EntityReference(Platform.SWITCH, "hue", "outlet")),
+            "smart_plug",
+        ),
+    ],
 )
 async def test_dict_repr_original_device_type(
     device_registry: dr.DeviceRegistry,
@@ -12146,7 +12168,9 @@ async def test_convert_device_to_child_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
         identifiers={("test", "strip_outlet_1")},
         manufacturer="acme",
-        device_type=SmartPlug(outlet=(Platform.SWITCH, "outlet_1")),
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "hue", "outlet_1")
+        ),
         name="Outlet 1",
         via_device_id=parent.id,
     )
@@ -12181,7 +12205,7 @@ async def test_convert_device_to_child_device(
             "changes": {
                 "connections": {(dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")},
                 "manufacturer": "acme",
-                "original_device_slots": {"outlet": (("switch", "outlet_1"),)},
+                "original_device_slots": {"outlet": (("switch", "hue", "outlet_1"),)},
                 "original_device_type": "smart_plug",
                 "parent_device_id": None,
                 "via_device_id": parent.id,

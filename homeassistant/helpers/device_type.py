@@ -55,7 +55,6 @@ type DeviceClass = (
     | ValveDeviceClass
 )
 type Accepts = Platform | DeviceClass
-type EntityReference = tuple[Platform, str]
 
 _WORD_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 _TYPE_ID = re.compile(r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*")
@@ -154,34 +153,44 @@ class DeviceSlot:
         )
 
 
-def _is_reference(value: object) -> bool:
-    return (
-        isinstance(value, tuple)
-        and len(value) == 2
-        and isinstance(value[0], Platform)
-        and isinstance(value[1], str)
-    )
+@dataclass(frozen=True, slots=True)
+class EntityReference:
+    """An entity, referenced the way its integration registers it."""
+
+    platform: Platform
+    integration_domain: str
+    unique_id: str
+
+    def __post_init__(self) -> None:
+        """Check the reference, as the device registry stores it."""
+        if (
+            not isinstance(self.platform, Platform)
+            or not isinstance(self.integration_domain, str)
+            or not isinstance(self.unique_id, str)
+        ):
+            raise TypeError(
+                "An entity reference takes a platform, the domain of the integration"
+                f" and a unique id, not {self!r}"
+            )
 
 
 def _slot_references(slot: DeviceSlot, value: object) -> tuple[EntityReference, ...]:
     """Return the entities a slot is filled with as references without duplicates."""
     references: tuple[Any, ...]
-    if _is_reference(value):
-        references = (value,)
-    elif isinstance(value, Iterable) and not isinstance(value, str):
+    if isinstance(value, Iterable) and not isinstance(value, str):
         references = tuple(value)
     else:
         references = (value,)
-    if not all(_is_reference(reference) for reference in references):
-        raise TypeError(
-            f"Slot {slot.slot_id} takes a (platform, unique id) pair or several of"
-            f" them, not {value!r}"
-        )
-    for platform, _ in references:
-        if platform not in slot.entity_domains:
+    for reference in references:
+        if not isinstance(reference, EntityReference):
+            raise TypeError(
+                f"Slot {slot.slot_id} takes an entity reference or several of them,"
+                f" not {value!r}"
+            )
+        if reference.platform not in slot.entity_domains:
             raise TypeError(
                 f"Slot {slot.slot_id} takes entities of"
-                f" {', '.join(slot.entity_domains)}, not {platform}"
+                f" {', '.join(slot.entity_domains)}, not {reference.platform}"
             )
     return tuple(dict.fromkeys(references))
 
@@ -190,7 +199,7 @@ class DeviceType:
     """What a device is. The base class is the generic type of every device.
 
     An instance is the type of one device: it holds references to the entities
-    filling its slots, each the platform and the unique id of an entity.
+    filling its slots.
     """
 
     type_id: ClassVar[str] = GENERIC_TYPE_ID
@@ -279,8 +288,7 @@ class DeviceType:
     def __repr__(self) -> str:
         """Return the representation."""
         slots = ", ".join(
-            f"{slot_id}={[(platform.value, unique_id) for platform, unique_id in slot]}"
-            for slot_id, slot in self.references.items()
+            f"{slot_id}={slot!r}" for slot_id, slot in self.references.items()
         )
         return f"{type(self).__name__}({slots})"
 
@@ -338,7 +346,7 @@ class _DeviceTypesData:
     """The cached bound device types and the slot fits already warned about."""
 
     bound: dict[str, BoundDeviceType]
-    warned: set[tuple[str, str, str, str]]
+    warned: set[tuple[str, str, EntityReference]]
 
 
 @callback
@@ -370,26 +378,22 @@ def async_get_bound_device_type(
     device_type = type_class(
         **{
             slot_id: [
-                (Platform(domain), unique_id)
-                for domain, unique_id in references
+                EntityReference(Platform(domain), integration_domain, unique_id)
+                for domain, integration_domain, unique_id in references
                 if domain in slot.entity_domains
             ]
             for slot_id, references in device.original_device_slots.items()
             if (slot := type_class.declared_slots.get(slot_id)) is not None
         }
     )
-    config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
     bound = data.bound[device_id] = BoundDeviceType(
         device,
         device_type,
         {
-            slot_id: ()
-            if config_entry is None
-            else _async_resolve_slot(
+            slot_id: _async_resolve_slot(
                 hass,
                 data.warned,
                 device,
-                config_entry.domain,
                 slot,
                 device_type.references.get(slot_id, ()),
             )
@@ -402,36 +406,35 @@ def async_get_bound_device_type(
 @callback
 def _async_resolve_slot(
     hass: HomeAssistant,
-    warned: set[tuple[str, str, str, str]],
+    warned: set[tuple[str, str, EntityReference]],
     device: dr.DeviceEntry,
-    integration: str,
     slot: DeviceSlot,
     references: tuple[EntityReference, ...],
 ) -> tuple[str, ...]:
     """Return the ids of the referenced entities that fit the slot."""
     entity_registry = er.async_get(hass)
     entity_ids: dict[str, None] = {}
-    for domain, unique_id in references:
+    for reference in references:
         if (
             entity_id := entity_registry.async_get_entity_id(
-                domain, integration, unique_id
+                reference.platform, reference.integration_domain, reference.unique_id
             )
         ) is None:
             continue
         entry = entity_registry.entities[entity_id]
         if slot.accepts_entity(
-            domain, entry.device_class or entry.original_device_class
+            reference.platform, entry.device_class or entry.original_device_class
         ):
             entity_ids[entity_id] = None
             continue
-        if (key := (device.id, slot.slot_id, domain, unique_id)) in warned:
+        if (key := (device.id, slot.slot_id, reference)) in warned:
             continue
         warned.add(key)
         _LOGGER.warning(
             "Entity %s with unique ID %s does not fit slot %s of device type %s"
             " of device %s, which accepts %s",
             entity_id,
-            unique_id,
+            reference.unique_id,
             slot.slot_id,
             device.original_device_type,
             device.id,
@@ -456,8 +459,7 @@ def _async_setup_invalidation(
     def _async_entity_updated(
         event: Event[er.EventEntityRegistryUpdatedData],
     ) -> None:
-        # Slots reference entities by platform and unique id, so a change can affect
-        # any device
+        # A slot can reference any entity, so a change can affect any device
         data = event.data
         if data["action"] != "update" or (
             data["changes"].keys() & _ENTITY_RESOLUTION_CHANGES

@@ -55,18 +55,21 @@
       'energy': tuple(
         tuple(
           'sensor',
+          'kitchen_sink',
           'smart_plug_energy',
         ),
       ),
       'outlet': tuple(
         tuple(
           'switch',
+          'kitchen_sink',
           'smart_plug',
         ),
       ),
       'power': tuple(
         tuple(
           'sensor',
+          'kitchen_sink',
           'smart_plug_power',
         ),
       ),
@@ -186,18 +189,21 @@
       'energy': tuple(
         tuple(
           'sensor',
+          'kitchen_sink',
           'smart_plug_energy',
         ),
       ),
       'outlet': tuple(
         tuple(
           'switch',
+          'kitchen_sink',
           'smart_plug',
         ),
       ),
       'power': tuple(
         tuple(
           'sensor',
+          'kitchen_sink',
           'smart_plug_power',
         ),
       ),

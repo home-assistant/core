@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, label_registry as lr
+from homeassistant.helpers.device_type import EntityReference
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -49,12 +50,16 @@ async def test_list_devices(
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
         model="model",
-        device_type=SmartPlug(outlet=(Platform.SWITCH, "outlet")),
+        device_type=SmartPlug(
+            outlet=EntityReference(Platform.SWITCH, "bridgeid", "outlet")
+        ),
         via_device_id=device1.id,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
     # Stored, but not part of the list
-    assert device2.original_device_slots == {"outlet": (("switch", "outlet"),)}
+    assert device2.original_device_slots == {
+        "outlet": (("switch", "bridgeid", "outlet"),)
+    }
 
     await client.send_json_auto_id({"type": "config/device_registry/list"})
     msg = await client.receive_json()

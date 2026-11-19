@@ -36,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
+from homeassistant.helpers.device_type import EntityReference
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -96,9 +97,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         identifiers={(DOMAIN, "smart_plug")},
         name="Smart plug",
         device_type=SmartPlug(
-            outlet=(Platform.SWITCH, "smart_plug"),
-            power=(Platform.SENSOR, "smart_plug_power"),
-            energy=(Platform.SENSOR, "smart_plug_energy"),
+            outlet=EntityReference(Platform.SWITCH, DOMAIN, "smart_plug"),
+            power=EntityReference(Platform.SENSOR, DOMAIN, "smart_plug_power"),
+            energy=EntityReference(Platform.SENSOR, DOMAIN, "smart_plug_energy"),
         ),
     )
 

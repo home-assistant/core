@@ -24,6 +24,7 @@ from homeassistant.helpers.device_type import (
     BoundDeviceType,
     DeviceSlot,
     DeviceType,
+    EntityReference,
     async_get_bound_device_type,
     get_device_type_class,
     get_device_type_classes,
@@ -166,17 +167,19 @@ def test_slot_descriptor() -> None:
         outlet = DeviceSlot(Platform.SWITCH, required=True)
         power = DeviceSlot(SensorDeviceClass.POWER)
 
-    plug = TestPlug(outlet=(Platform.SWITCH, "outlet"))
+    plug = TestPlug(outlet=EntityReference(Platform.SWITCH, "test", "outlet"))
     assert isinstance(TestPlug.outlet, DeviceSlot)
-    assert plug.outlet == ((Platform.SWITCH, "outlet"),)
+    assert plug.outlet == (EntityReference(Platform.SWITCH, "test", "outlet"),)
     assert plug.power == ()
-    assert plug.references == {"outlet": ((Platform.SWITCH, "outlet"),)}
+    assert plug.references == {
+        "outlet": (EntityReference(Platform.SWITCH, "test", "outlet"),)
+    }
 
     with pytest.raises(AttributeError, match="outlet is a slot"):
-        plug.outlet = ((Platform.SWITCH, "other"),)  # type: ignore[misc]
+        plug.outlet = (EntityReference(Platform.SWITCH, "test", "other"),)  # type: ignore[misc]
     with pytest.raises(TypeError):
-        plug.references["outlet"] = ((Platform.SWITCH, "other"),)  # type: ignore[index]
-    assert plug.outlet == ((Platform.SWITCH, "outlet"),)
+        plug.references["outlet"] = (EntityReference(Platform.SWITCH, "test", "other"),)  # type: ignore[index]
+    assert plug.outlet == (EntityReference(Platform.SWITCH, "test", "outlet"),)
 
 
 @pytest.mark.parametrize(
@@ -184,35 +187,46 @@ def test_slot_descriptor() -> None:
     [
         pytest.param({}, {}, id="nothing"),
         pytest.param(
-            {"outlet": (Platform.SWITCH, "a")},
-            {"outlet": ((Platform.SWITCH, "a"),)},
+            {"outlet": EntityReference(Platform.SWITCH, "test", "a")},
+            {"outlet": (EntityReference(Platform.SWITCH, "test", "a"),)},
             id="reference",
         ),
         pytest.param(
             {
-                "outlet": [(Platform.SWITCH, "a"), (Platform.LIGHT, "a")],
-                "power": ((Platform.SENSOR, "c"),),
+                "outlet": [
+                    EntityReference(Platform.SWITCH, "test", "a"),
+                    EntityReference(Platform.LIGHT, "test", "a"),
+                ],
+                "power": (EntityReference(Platform.SENSOR, "test", "c"),),
             },
             {
-                "outlet": ((Platform.SWITCH, "a"), (Platform.LIGHT, "a")),
-                "power": ((Platform.SENSOR, "c"),),
+                "outlet": (
+                    EntityReference(Platform.SWITCH, "test", "a"),
+                    EntityReference(Platform.LIGHT, "test", "a"),
+                ),
+                "power": (EntityReference(Platform.SENSOR, "test", "c"),),
             },
             id="references",
         ),
         pytest.param(
             {
                 "outlet": (
-                    (Platform.SWITCH, "b"),
-                    (Platform.SWITCH, "a"),
-                    (Platform.SWITCH, "b"),
+                    EntityReference(Platform.SWITCH, "test", "b"),
+                    EntityReference(Platform.SWITCH, "test", "a"),
+                    EntityReference(Platform.SWITCH, "test", "b"),
                 )
             },
-            {"outlet": ((Platform.SWITCH, "b"), (Platform.SWITCH, "a"))},
+            {
+                "outlet": (
+                    EntityReference(Platform.SWITCH, "test", "b"),
+                    EntityReference(Platform.SWITCH, "test", "a"),
+                )
+            },
             id="duplicates",
         ),
         pytest.param(
-            {"outlet": (), "power": (Platform.SENSOR, "c")},
-            {"power": ((Platform.SENSOR, "c"),)},
+            {"outlet": (), "power": EntityReference(Platform.SENSOR, "test", "c")},
+            {"power": (EntityReference(Platform.SENSOR, "test", "c"),)},
             id="empty",
         ),
     ],
@@ -235,24 +249,29 @@ def test_instance_references(
     ("references", "message"),
     [
         pytest.param(
-            {"relay": (Platform.SWITCH, "a")},
+            {"relay": EntityReference(Platform.SWITCH, "test", "a")},
             "TestPlug has no slot relay",
             id="unknown_slot",
         ),
         pytest.param({"outlet": "a"}, "Slot outlet takes a", id="unique_id"),
-        pytest.param({"outlet": ("switch", "a")}, "Slot outlet takes a", id="domain"),
-        pytest.param({"outlet": (Platform.SWITCH, 1)}, "Slot outlet takes a", id="int"),
+        pytest.param(
+            {"outlet": (Platform.SWITCH, "test", "a")},
+            "Slot outlet takes a",
+            id="tuple",
+        ),
         pytest.param({"outlet": None}, "Slot outlet takes a", id="none"),
         pytest.param(
-            {"outlet": [(Platform.SWITCH, "a"), "b"]}, "Slot outlet takes a", id="mixed"
+            {"outlet": [EntityReference(Platform.SWITCH, "test", "a"), "b"]},
+            "Slot outlet takes a",
+            id="mixed",
         ),
         pytest.param(
-            {"outlet": (Platform.LIGHT, "a")},
+            {"outlet": EntityReference(Platform.LIGHT, "test", "a")},
             "Slot outlet takes entities of switch, not light",
             id="platform_not_accepted",
         ),
         pytest.param(
-            {"power": (Platform.SWITCH, "a")},
+            {"power": EntityReference(Platform.SWITCH, "test", "a")},
             "Slot power takes entities of sensor, not switch",
             id="platform_of_other_slot",
         ),
@@ -271,6 +290,22 @@ def test_invalid_instance(references: dict[str, Any], message: str) -> None:
         TestPlug(**references)
 
 
+@pytest.mark.parametrize(
+    ("platform", "integration_domain", "unique_id"),
+    [
+        pytest.param("switch", "test", "a", id="platform"),
+        pytest.param(Platform.SWITCH, None, "a", id="integration_domain"),
+        pytest.param(Platform.SWITCH, "test", 1, id="unique_id"),
+    ],
+)
+def test_invalid_entity_reference(
+    platform: Any, integration_domain: Any, unique_id: Any
+) -> None:
+    """Test an entity reference checks what it is made of."""
+    with pytest.raises(TypeError, match="An entity reference takes a platform"):
+        EntityReference(platform, integration_domain, unique_id)
+
+
 def test_instance_equality() -> None:
     """Test instances are equal when their type and references are."""
 
@@ -282,13 +317,15 @@ def test_instance_equality() -> None:
     class TestPowerStrip(TestPlug):
         """A power strip."""
 
-    plug = TestPlug(outlet=(Platform.SWITCH, "a"))
-    assert plug == TestPlug(outlet=[(Platform.SWITCH, "a")])
-    assert hash(plug) == hash(TestPlug(outlet=[(Platform.SWITCH, "a")]))
-    assert plug != TestPlug(outlet=(Platform.SWITCH, "b"))
+    plug = TestPlug(outlet=EntityReference(Platform.SWITCH, "test", "a"))
+    assert plug == TestPlug(outlet=[EntityReference(Platform.SWITCH, "test", "a")])
+    assert hash(plug) == hash(
+        TestPlug(outlet=[EntityReference(Platform.SWITCH, "test", "a")])
+    )
+    assert plug != TestPlug(outlet=EntityReference(Platform.SWITCH, "test", "b"))
     assert plug != TestPlug()
-    assert plug != TestPowerStrip(outlet=(Platform.SWITCH, "a"))
-    assert repr(plug) == "TestPlug(outlet=[('switch', 'a')])"
+    assert plug != TestPowerStrip(outlet=EntityReference(Platform.SWITCH, "test", "a"))
+    assert repr(plug) == f"TestPlug(outlet={plug.outlet!r})"
 
 
 @pytest.mark.parametrize(
@@ -568,7 +605,7 @@ def test_async_get_bound_device_type_generic(
     device = device_registry._async_update_device(
         device.id,
         original_device_type=original_device_type,
-        original_device_slots={"outlet": (("switch", "outlet"),)},
+        original_device_slots={"outlet": (("switch", "test", "outlet"),)},
     )
 
     bound = async_get_bound_device_type(hass, device.id)
@@ -587,7 +624,7 @@ def test_async_get_bound_device_type_child_device(
     device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
-        original_device_slots={"outlet": (("switch", "outlet"),)},
+        original_device_slots={"outlet": (("switch", "test", "outlet"),)},
     )
     child_device = device_registry.async_get_or_create_child(
         config_entry_id=device.config_entry_id,
@@ -632,23 +669,24 @@ def test_async_get_bound_device_type_binding(
         original_device_type="test_plug",
         original_device_slots={
             "outlet": (
-                ("switch", "b"),
-                ("switch", "not_registered"),
-                ("switch", "a"),
-                ("switch", "b"),
+                ("switch", "test", "b"),
+                ("switch", "test", "not_registered"),
+                ("switch", "test", "a"),
+                ("switch", "test", "b"),
             ),
             "power": (
-                ("sensor", "user_power"),
-                ("sensor", "other_power"),
-                ("sensor", "power"),
+                ("sensor", "test", "user_power"),
+                ("sensor", "test", "other_power"),
+                ("sensor", "other", "other_power"),
+                ("sensor", "test", "power"),
             ),
             # The switch is not referenced as a platform the slot takes
             "status": (
-                ("binary_sensor", "status_sensor"),
-                ("light", "status"),
-                ("switch", "status"),
+                ("binary_sensor", "test", "status_sensor"),
+                ("light", "test", "status"),
+                ("switch", "test", "status"),
             ),
-            "not_a_slot": (("switch", "b"),),
+            "not_a_slot": (("switch", "test", "b"),),
         },
     )
 
@@ -658,20 +696,24 @@ def test_async_get_bound_device_type_binding(
     assert bound.device is device
     assert bound.device_type == plug_type(
         outlet=[
-            (Platform.SWITCH, "b"),
-            (Platform.SWITCH, "not_registered"),
-            (Platform.SWITCH, "a"),
+            EntityReference(Platform.SWITCH, "test", "b"),
+            EntityReference(Platform.SWITCH, "test", "not_registered"),
+            EntityReference(Platform.SWITCH, "test", "a"),
         ],
         power=[
-            (Platform.SENSOR, "user_power"),
-            (Platform.SENSOR, "other_power"),
-            (Platform.SENSOR, "power"),
+            EntityReference(Platform.SENSOR, "test", "user_power"),
+            EntityReference(Platform.SENSOR, "test", "other_power"),
+            EntityReference(Platform.SENSOR, "other", "other_power"),
+            EntityReference(Platform.SENSOR, "test", "power"),
         ],
-        status=[(Platform.BINARY_SENSOR, "status_sensor"), (Platform.LIGHT, "status")],
+        status=[
+            EntityReference(Platform.BINARY_SENSOR, "test", "status_sensor"),
+            EntityReference(Platform.LIGHT, "test", "status"),
+        ],
     )
     assert bound.entity_ids == {
         "outlet": ("switch.b", "switch.a"),
-        "power": ("sensor.user_power", "sensor.power"),
+        "power": ("sensor.user_power", "sensor.other_power", "sensor.power"),
         "status": ("binary_sensor.status_sensor", "light.status"),
     }
     assert bound.missing_required == frozenset()
@@ -683,10 +725,14 @@ def test_async_get_bound_device_type_binding(
     [
         pytest.param({}, {"outlet"}, id="no_slots"),
         pytest.param(
-            {"outlet": (("switch", "not_registered"),)}, {"outlet"}, id="unresolved"
+            {"outlet": (("switch", "test", "not_registered"),)},
+            {"outlet"},
+            id="unresolved",
         ),
-        pytest.param({"power": (("sensor", "outlet"),)}, {"outlet"}, id="other_slot"),
-        pytest.param({"outlet": (("switch", "outlet"),)}, set(), id="filled"),
+        pytest.param(
+            {"power": (("sensor", "test", "outlet"),)}, {"outlet"}, id="other_slot"
+        ),
+        pytest.param({"outlet": (("switch", "test", "outlet"),)}, set(), id="filled"),
     ],
 )
 @pytest.mark.usefixtures("plug_type")
@@ -713,29 +759,6 @@ def test_async_get_bound_device_type_missing_required(
 
 
 @pytest.mark.usefixtures("plug_type")
-def test_async_get_bound_device_type_config_entry_gone(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    device: dr.DeviceEntry,
-) -> None:
-    """Test nothing resolves when the config entry of the device is gone."""
-    _add_entity(entity_registry, "switch", "outlet")
-    device_registry._async_update_device(
-        device.id,
-        original_device_type="test_plug",
-        original_device_slots={"outlet": (("switch", "outlet"),)},
-    )
-
-    with patch.object(hass.config_entries, "async_get_entry", return_value=None):
-        assert _slot_entity_ids(hass, device.id) == {
-            "outlet": (),
-            "power": (),
-            "status": (),
-        }
-
-
-@pytest.mark.usefixtures("plug_type")
 def test_async_get_bound_device_type_no_fit(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -750,7 +773,9 @@ def test_async_get_bound_device_type_no_fit(
     device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
-        original_device_slots={"power": (("sensor", "energy"), ("sensor", "power"))},
+        original_device_slots={
+            "power": (("sensor", "test", "energy"), ("sensor", "test", "power"))
+        },
     )
 
     assert _slot_entity_ids(hass, device.id) == {
@@ -780,7 +805,7 @@ def _update_device_slots(
     device_id: str,
 ) -> None:
     device_registry._async_update_device(
-        device_id, original_device_slots={"power": (("sensor", "power"),)}
+        device_id, original_device_slots={"power": (("sensor", "test", "power"),)}
     )
 
 
@@ -926,14 +951,16 @@ def test_async_get_bound_device_type_invalidation(
         device.id,
         original_device_type="test_plug",
         original_device_slots={
-            "outlet": (("switch", "outlet"), ("switch", "second")),
-            "power": (("sensor", "power"),),
+            "outlet": (("switch", "test", "outlet"), ("switch", "test", "second")),
+            "power": (("sensor", "test", "power"),),
         },
     )
     other_device = device_registry.async_get_or_create(
         config_entry_id=device.config_entry_id,
         identifiers={("test", "other")},
-        device_type=plug_type(outlet=(Platform.SWITCH, "other_outlet")),
+        device_type=plug_type(
+            outlet=EntityReference(Platform.SWITCH, "test", "other_outlet")
+        ),
     )
     _add_entity(entity_registry, "switch", "outlet", device_id=device.id)
     _add_entity(
@@ -981,7 +1008,7 @@ def test_async_get_bound_device_type_kept(
     device_registry._async_update_device(
         device.id,
         original_device_type="test_plug",
-        original_device_slots={"outlet": (("switch", "outlet"),)},
+        original_device_slots={"outlet": (("switch", "test", "outlet"),)},
     )
     _add_entity(entity_registry, "switch", "outlet", device_id=device.id)
     bound = async_get_bound_device_type(hass, device.id)
