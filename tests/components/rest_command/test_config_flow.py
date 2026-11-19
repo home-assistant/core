@@ -109,6 +109,7 @@ async def test_single_instance(hass: HomeAssistant, entry: MockConfigEntry) -> N
     ("user_input", "errors"),
     [
         ({"action": "!!"}, {"action": "invalid_action"}),
+        ({"action": " "}, {"action": "invalid_action"}),
         ({"action": "Reload"}, {"action": "invalid_action"}),
         ({"action": "Open door"}, {"action": "action_exists"}),
         ({"action": "From YAML"}, {"action": "action_exists"}),
@@ -218,3 +219,23 @@ async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         "skip_url_encoding": False,
     }
     assert hass.services.has_service(DOMAIN, "open_door")
+
+
+async def test_empty_password_is_kept(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test an explicitly empty password is stored, like in YAML."""
+    result = await _start_subentry_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "action": "New command",
+            "url": TEST_URL,
+            "method": "get",
+            "auth": {"username": "user", "password": ""},
+            "advanced": {},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["username"] == "user"
+    assert result["data"]["password"] == ""

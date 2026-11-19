@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
@@ -193,3 +194,20 @@ async def test_no_import_without_yaml(
 
     assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(DOMAIN, "yaml_imported") is None
+
+
+async def test_invalid_stored_command(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a stored command that no longer validates does not block the others."""
+    entry = _entry(
+        {"action": "broken", "url": "{{ door"},
+        {"action": "working", "url": TEST_URL},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(DOMAIN, "broken")
+    assert hass.services.has_service(DOMAIN, "working")
+    assert "Invalid configuration for rest_command.broken" in caplog.text

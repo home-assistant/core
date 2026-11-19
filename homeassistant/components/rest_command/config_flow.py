@@ -152,7 +152,13 @@ def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     """Move the values out of the form sections and drop empty values."""
     data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADVANCED]}
     del data[SECTION_AUTH], data[SECTION_ADVANCED]
-    return {key: value for key, value in data.items() if value not in (None, "", {})}
+    data.pop(CONF_ACTION, None)
+    # An empty password is valid, servers may expect only a username
+    return {
+        key: value
+        for key, value in data.items()
+        if key == CONF_PASSWORD or value not in (None, "", {})
+    }
 
 
 def _to_sections(data: dict[str, Any]) -> dict[str, Any]:
@@ -229,7 +235,7 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
         placeholders = {**DESCRIPTION_PLACEHOLDERS, "action": ""}
         if user_input is not None:
             data = _flatten(user_input)
-            name: str = data.pop(CONF_ACTION).strip()
+            name: str = user_input[CONF_ACTION].strip()
             action = slugify(name)
             placeholders["action"] = f"{DOMAIN}.{action}"
             if action in ("", "unknown", SERVICE_RELOAD):

@@ -44,7 +44,6 @@ from .const import (
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
 )
-from .yaml_import import async_import_yaml_commands
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -243,6 +242,9 @@ async def _async_reload_service_handler(service: ServiceCall) -> None:
     # conf will be None if the configuration can't be parsed
     if conf is None:
         return
+
+    # Imported here because the integration module imports this module
+    from . import async_import_yaml_commands  # noqa: PLC0415
 
     async_import_yaml_commands(hass, conf.get(DOMAIN, {}))
 
