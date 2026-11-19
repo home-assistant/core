@@ -45,6 +45,9 @@ def _coordinator_diagnostics(
         "model_run_date": forecast.data_date.isoformat(),
         "distance_from_requested_location": forecast.distance_from_requested_location,
         "timesteps": len(timesteps),
+        "timestep_data": [
+            {**timestep, "time": timestep["time"].isoformat()} for timestep in timesteps
+        ],
         "first_timestep": timesteps[0]["time"].isoformat() if timesteps else None,
         "last_timestep": timesteps[-1]["time"].isoformat() if timesteps else None,
     }
