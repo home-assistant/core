@@ -424,6 +424,7 @@ FLOWS = {
         "izone",
         "jellyfin",
         "jewish_calendar",
+        "junker",
         "justnimbus",
         "jvc_projector",
         "kaco_modbus",
