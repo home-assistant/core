@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import EVOHOME_DATA, NEXT_SP_FROM
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater
     ) -> None:
         """Initialize an evohome-compatible DHW controller."""
 
@@ -95,7 +95,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
-            PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
+            PRECISION_TENTHS if coordinator.account.client_v1 else PRECISION_WHOLE
         )
 
     async def async_set_dhw_override(
@@ -109,9 +109,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get(NEXT_SP_FROM)
         else:
-            until = dt_util.now() + duration
-
-        until = dt_util.as_utc(until) if until else None
+            until = dt_util.utcnow() + duration
 
         if state:
             await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
@@ -147,7 +145,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         else:
             await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get(NEXT_SP_FROM)
-            until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
                 await self.coordinator.call_client_api(

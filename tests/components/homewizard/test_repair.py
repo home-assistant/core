@@ -92,6 +92,61 @@ async def test_repair_acquires_token(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+async def test_repair_token_request_network_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    mock_homewizardenergy_v2: MagicMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair flow shows a recoverable error if the token request fails."""
+
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="HWE-BAT_5c2fafabcdef"
+    )
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_id = f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Simulate device unreachable when requesting a token
+    mock_homewizardenergy_v2.get_token.side_effect = RequestError
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm"
+
+    result = await process_repair_fix_flow(client, flow_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    result = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    # Simulate device reachable again and user pressing the button
+    mock_homewizardenergy_v2.get_token.side_effect = None
+    mock_homewizardenergy_v2.get_token.return_value = "cool_token"
+    result = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.data[CONF_TOKEN] == "cool_token"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
 async def test_repair_created_for_cloud_disabled_predictive_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -135,6 +190,7 @@ async def test_repair_shown_again_after_restart(
             "issues": [
                 {
                     "config_entry_id": None,
+                    "config_subentry_id": None,
                     "created": "2026-01-01T00:00:00+00:00",
                     "dismissed_version": None,
                     "domain": DOMAIN,

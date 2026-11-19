@@ -4,12 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.debugpy.const import (
-    CONF_START,
-    CONF_WAIT,
-    DOMAIN,
-    SERVICE_START,
-)
+from homeassistant.components.debugpy.const import CONF_START, CONF_WAIT, DOMAIN
+from homeassistant.components.debugpy.services import DebugpyService
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -54,7 +50,7 @@ async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_START,
+        DebugpyService.START,
         blocking=True,
     )
 

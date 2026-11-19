@@ -107,6 +107,6 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
             ),
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )

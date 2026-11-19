@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import NEXT_SP_FROM, THIS_SP_FROM
-from .coordinator import EvoDataUpdateCoordinator
+from .coordinator import EvoLocationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ def unique_zone_id(evo_device: evo.Zone) -> str:
     return evo_device.id
 
 
-class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
+class EvoEntity(CoordinatorEntity[EvoLocationCoordinator]):
     """Base for Evohome's Climate & WaterHeater entities."""
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
@@ -65,7 +65,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: EvoDataUpdateCoordinator,
+        coordinator: EvoLocationCoordinator,
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
         """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
@@ -109,7 +109,7 @@ class EvoChild(EvoEntity):
     _evo_id: str
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater | evo.Zone
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater | evo.Zone
     ) -> None:
         """Initialize an evohome-compatible child entity (DHW, zone)."""
         super().__init__(coordinator, evo_device)
@@ -119,13 +119,21 @@ class EvoChild(EvoEntity):
 
         self._setpoints: dict[str, Any] = {}
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass, also listen for high-precision temps."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.account.async_add_listener(self._handle_coordinator_update)
+        )
+
     @property
     def native_current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if (temp := self.coordinator.temps.get(self._evo_id)) is not None:
+        if (temp := self.coordinator.account.data.get(self._evo_id)) is not None:
             # use high-precision temps if available
             return temp
         return self._evo_device.temperature

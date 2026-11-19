@@ -15,6 +15,7 @@
         "chargingRateInKilometersPerHour": 0.0,
         "chargePowerInKw": 0.0,
         "state": "CONSERVING",
+        "plugConnectionState": "CONNECTED",
         "chargeType": "OFF",
         "battery": {
           "remainingCruisingRangeInMeters": 61000,
@@ -67,6 +68,26 @@
         "bonnet": "CLOSED"
       },
       "carCapturedTimestamp": "2024-01-10T11:55:00Z"
-    }
+    },
+    "operations": [
+      {
+        "name": "startCharging"
+      },
+      {
+        "name": "stopCharging"
+      },
+      {
+        "name": "setChargingLimit"
+      },
+      {
+        "name": "setChargeMode"
+      },
+      {
+        "name": "startAirConditioning"
+      },
+      {
+        "name": "stopAirConditioning"
+      }
+    ]
   }
 }

@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-from .const import ATTR_DURATION, ATTR_ZONE_MODE, DOMAIN, SVC_SET_ZONE_OVERRIDE
+from .const import ATTR_DURATION, DOMAIN, GeniusHubService, GeniusHubServiceArgument
 
 # temperature is repeated here, as it gives access to high-precision temps
 GH_ZONE_ATTRS = ["mode", "temperature", "type", "occupied", "override"]
@@ -106,14 +106,18 @@ class GeniusZone(GeniusEntity):
         if payload["unique_id"] != self._unique_id:
             return
 
-        if payload["service"] == SVC_SET_ZONE_OVERRIDE:
-            temperature = round(payload["data"][ATTR_TEMPERATURE] * 10) / 10
-            duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
+        if payload["service"] == GeniusHubService.SET_ZONE_OVERRIDE:
+            temperature = (
+                round(payload["data"][GeniusHubServiceArgument.TEMPERATURE] * 10) / 10
+            )
+            duration = payload["data"].get(
+                GeniusHubServiceArgument.DURATION, timedelta(hours=1)
+            )
 
             await self._zone.set_override(temperature, int(duration.total_seconds()))
             return
 
-        mode = payload["data"][ATTR_ZONE_MODE]
+        mode = payload["data"][GeniusHubServiceArgument.MODE]
 
         if mode == "footprint" and not self._zone._has_pir:  # noqa: SLF001
             raise TypeError(

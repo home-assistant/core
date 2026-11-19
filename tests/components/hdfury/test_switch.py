@@ -62,6 +62,8 @@ async def test_switch_entities(
         ("switch.hdfury_vrroom_02_tx0_force_5v", "set_tx0_force_5v", SERVICE_TURN_OFF),
         ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_ON),
         ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_OFF),
+        ("switch.hdfury_vrroom_02_ip_interrupt", "set_ip_interrupt", SERVICE_TURN_ON),
+        ("switch.hdfury_vrroom_02_ip_interrupt", "set_ip_interrupt", SERVICE_TURN_OFF),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

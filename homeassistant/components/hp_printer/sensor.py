@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import override
 
 from aiohpprinter import HpConsumable, HpDeviceStatus, HpPrinterData
@@ -27,7 +28,7 @@ PARALLEL_UPDATES = 0
 class HpPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes an HP Printer sensor entity."""
 
-    value_fn: Callable[[HpPrinterData], StateType]
+    value_fn: Callable[[HpPrinterData], StateType | date]
     always_create: bool = False
 
 
@@ -35,7 +36,12 @@ class HpPrinterSensorEntityDescription(SensorEntityDescription):
 class HpPrinterConsumableSensorEntityDescription(SensorEntityDescription):
     """Describes an HP Printer consumable sensor entity."""
 
-    value_fn: Callable[[HpConsumable], StateType]
+    value_fn: Callable[[HpConsumable], StateType | date]
+
+
+def _date(value: datetime | None) -> date | None:
+    """Return the date part of a printer-reported timestamp."""
+    return value.date() if value else None
 
 
 SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
@@ -43,10 +49,20 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.value for status in HpDeviceStatus],
+        # The printer's own "unknown" status maps to Home Assistant's unknown state.
+        options=[
+            status.value
+            for status in HpDeviceStatus
+            if status is not HpDeviceStatus.UNKNOWN
+        ],
         # Unknown statuses are reported as None, which must not hide the sensor.
         always_create=True,
-        value_fn=lambda data: data.status.status if data.status else None,
+        value_fn=lambda data: (
+            status
+            if data.status
+            and (status := data.status.status) is not HpDeviceStatus.UNKNOWN
+            else None
+        ),
     ),
     HpPrinterSensorEntityDescription(
         key="total_pages",
@@ -183,12 +199,86 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         ),
     ),
     HpPrinterSensorEntityDescription(
+        key="copied_adf_pages",
+        translation_key="copied_adf_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.copy_usage.adf_images if data.copy_usage else None,
+    ),
+    HpPrinterSensorEntityDescription(
+        key="copied_flatbed_pages",
+        translation_key="copied_flatbed_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.copy_usage.flatbed_images if data.copy_usage else None
+        ),
+    ),
+    HpPrinterSensorEntityDescription(
+        key="copied_monochrome_pages",
+        translation_key="copied_monochrome_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.copy_usage.monochrome_impressions if data.copy_usage else None
+        ),
+    ),
+    HpPrinterSensorEntityDescription(
+        key="copied_color_pages",
+        translation_key="copied_color_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.copy_usage.color_impressions if data.copy_usage else None
+        ),
+    ),
+    HpPrinterSensorEntityDescription(
         key="faxed_pages",
         translation_key="faxed_pages",
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: (
             data.fax_usage.total_impressions if data.fax_usage else None
+        ),
+    ),
+    HpPrinterSensorEntityDescription(
+        key="faxed_adf_pages",
+        translation_key="faxed_adf_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.fax_usage.adf_images if data.fax_usage else None,
+    ),
+    HpPrinterSensorEntityDescription(
+        key="faxed_flatbed_pages",
+        translation_key="faxed_flatbed_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.fax_usage.flatbed_images if data.fax_usage else None,
+    ),
+    HpPrinterSensorEntityDescription(
+        key="faxed_pc_pages",
+        translation_key="faxed_pc_pages",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            data.fax_usage.images_received_from_pc if data.fax_usage else None
+        ),
+    ),
+    HpPrinterSensorEntityDescription(
+        key="manufacturing_date",
+        translation_key="manufacturing_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: (
+            _date(data.device.manufactured_at) if data.device else None
         ),
     ),
 )
@@ -204,6 +294,46 @@ CONSUMABLE_SENSORS: tuple[HpPrinterConsumableSensorEntityDescription, ...] = (
         key="pages_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda consumable: consumable.estimated_pages_remaining,
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="pages_printed",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda consumable: consumable.total_impressions,
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="genuine_refills",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda consumable: consumable.genuine_refilled_count,
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="counterfeit_refills",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda consumable: consumable.counterfeit_refilled_count,
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="installation_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda consumable: _date(consumable.installed_at),
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="manufacturing_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda consumable: _date(consumable.manufactured_at),
+    ),
+    HpPrinterConsumableSensorEntityDescription(
+        key="warranty_expiration_date",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda consumable: _date(consumable.warranty_expires_at),
     ),
 )
 
@@ -271,7 +401,7 @@ class HpPrinterSensor(HpPrinterEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
@@ -313,6 +443,6 @@ class HpPrinterConsumableSensor(HpPrinterEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.consumable)

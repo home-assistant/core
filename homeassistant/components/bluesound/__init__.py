@@ -3,7 +3,6 @@
 from pyblu import Player
 from pyblu.errors import PlayerUnreachableError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -50,6 +49,8 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: BluesoundConfigEntry
+) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

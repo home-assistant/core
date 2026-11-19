@@ -20,7 +20,10 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -79,12 +82,12 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 translation_key="invalid_auth",
             ) from err
         except FireflyConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
         except FireflyTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
@@ -127,12 +130,12 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 translation_key="invalid_auth",
             ) from err
         except FireflyConnectionError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
         except FireflyTimeoutError as err:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err

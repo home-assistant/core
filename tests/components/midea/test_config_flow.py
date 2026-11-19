@@ -793,6 +793,8 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
     assert result["result"].unique_id == str(TEST_DEVICE_ID)
+    # the key check already proved the connection, entry creation must not probe again
+    assert dm.connect.call_count == 1
 
 
 async def test_auto_flow_v3_preset_phase1_default_key_success(

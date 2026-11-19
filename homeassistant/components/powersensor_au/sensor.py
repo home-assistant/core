@@ -79,7 +79,7 @@ def _volts_to_battery_pct(volts: float) -> float:
 
 
 # States of the device_role ENUM entities.  Wire roles are snake_cased to match.
-_DEVICE_ROLE_OPTIONS = ["appliance", "house_net", "solar", "unknown", "water"]
+_DEVICE_ROLE_OPTIONS = ["appliance", "house_net", "solar", "unsupported", "water"]
 
 _SENSOR_DEVICE_TRANSLATION_KEYS: dict[str | None, str] = {
     ROLE_HOUSENET: "mains_sensor",
@@ -638,7 +638,7 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
             mac,
             f"{DATA_UPDATE_SIGNAL_PREFIX}{mac}_{description.event}",
         )
-        self._unrecognised_role: str | None = None
+        self._unsupported_role: str | None = None
         self._attr_native_value = None
         self.entity_description: PowersensorSensorEntityDescription = description
         self._attr_unique_id = f"{mac}_{description.key}"
@@ -665,24 +665,21 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
                 # State translation keys must be snake_case.  The wire value
                 # "house-net" is normalized to "house_net" so it matches the
                 # key in strings.json.  All other known roles are already valid.
-                # None means the sensor has no role yet; map to "unknown" so the
-                # entity always has a valid translation key rather than a None state.
-                role = "unknown" if raw is None else raw.replace("-", "_")
-                # Firmware may report roles this integration doesn't know yet.
+                # None means the sensor has no role yet, and HA shows it as unknown.
+                role = None if raw is None else raw.replace("-", "_")
+                # Firmware may report roles this integration doesn't support.
                 # Core rejects an ENUM state outside its options on every write,
-                # so show those as unknown.  Only the display is clamped: the
+                # so show those as unsupported.  Only the display is clamped: the
                 # real role is still persisted and passed to VirtualHousehold,
                 # which ignores it.  Clamped any earlier, it would read as a
                 # missing role and fall back to the sensor's saved role.
-                if role not in _DEVICE_ROLE_OPTIONS:
-                    if role != self._unrecognised_role:
+                if role is not None and role not in _DEVICE_ROLE_OPTIONS:
+                    if role != self._unsupported_role:
                         _LOGGER.debug(
-                            "Unrecognised role %r reported by %s; showing as unknown",
-                            raw,
-                            self._mac,
+                            "Unsupported role %r reported by %s", raw, self._mac
                         )
-                        self._unrecognised_role = role
-                    role = "unknown"
+                        self._unsupported_role = role
+                    role = "unsupported"
                 changed = role != self._attr_native_value
                 self._attr_native_value = role
                 return changed
