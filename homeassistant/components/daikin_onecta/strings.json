@@ -14,7 +14,6 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "Failed due to an unexpected error.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
@@ -280,9 +279,6 @@
       "datetime": {
         "name": "Date/time"
       },
-      "daylightsavingtimeenabled": {
-        "name": "Daylight saving time enabled"
-      },
       "deltad": {
         "name": "DeltaD"
       },
@@ -337,32 +333,11 @@
       "ipaddress": {
         "name": "IP address"
       },
-      "iscoolheatmaster": {
-        "name": "Is cool/heat master"
-      },
-      "isfirmwareupdatesupported": {
-        "name": "Is firmware update supported"
-      },
-      "isholidaymodeactive": {
-        "name": "Is holiday mode active"
-      },
-      "isininstallerstate": {
-        "name": "Is in installer state"
-      },
-      "islockfunctionenabled": {
-        "name": "Is lock function enabled"
-      },
-      "ispowerfulmodeactive": {
-        "name": "Is powerful mode active"
-      },
       "leavingwateroffset": {
         "name": "Leaving water offset"
       },
       "leavingwatertemperature": {
         "name": "Leaving water temperature"
-      },
-      "ledenabled": {
-        "name": "LED enabled"
       },
       "operationmode": {
         "name": "Operation mode",

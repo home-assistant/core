@@ -442,7 +442,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'althermaClimateControl0',
+        'state': 'unknown',
       }),
     }),
     'sensor.daikin_onecta_account_rate_limit_remaining_day': dict({

@@ -155,6 +155,4 @@ async def async_remove_config_entry_device(
         or (device is not None and device.present_in_cloud)
     ):
         return False
-    if coordinator.data is not None:
-        coordinator.data.pop(gateway_id, None)
     return True

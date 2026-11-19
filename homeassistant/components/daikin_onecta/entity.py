@@ -165,15 +165,13 @@ class DaikinOnectaEntity(_DaikinOnectaCoordinatorEntity):
         """Initialize the entity with its coordinator and gateway device."""
         super().__init__(coordinator)
         self._device_id = device.id
-        self._initial_device = device
 
     @property
     def _device(self) -> DaikinOnectaDevice:
-        """Return the current gateway wrapper, which may be replaced on reappearance."""
-        data = self.coordinator.data
-        if isinstance(data, dict) and (device := data.get(self._device_id)) is not None:
-            return device
-        return self._initial_device
+        """Return the gateway wrapper retained by the coordinator."""
+        if (data := self.coordinator.data) is None:
+            raise RuntimeError("Daikin coordinator has no device data")
+        return data[self._device_id]
 
     @property
     def device_present_in_cloud(self) -> bool:
@@ -259,7 +257,7 @@ class DaikinEntity(DaikinOnectaEntity):
 
     @callback
     def _publish_write_update(self) -> None:
-        """Publish the locally updated model to every entity for this device."""
+        """Publish the locally updated model to every entity for the account."""
         self.coordinator.async_update_listeners()
 
 

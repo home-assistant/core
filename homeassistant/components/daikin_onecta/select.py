@@ -120,8 +120,8 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         selection = self.selection()
         if selection is None:
             return None
-        if not selection.enabled and selection.enabled_settable:
-            return SCHEDULE_DISABLED
+        if not selection.enabled:
+            return SCHEDULE_DISABLED if selection.enabled_settable else None
         selected_option = next(
             (
                 label

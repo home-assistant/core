@@ -6,7 +6,7 @@ from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoin
 
 from homeassistant.const import Platform
 
-from .const import ENERGY_AGGREGATE_PERIODS, SENSOR_PERIODS
+from .const import ENERGY_AGGREGATE_PERIODS
 from .entity_metadata import BINARY_SENSOR_KEYS, SENSOR_KEYS, SWITCH_KEYS
 from .utils import is_read_only_on_off_value
 
@@ -57,7 +57,7 @@ def energy_description_key(aggregate: EnergyAggregate) -> str | None:
     if (period := ENERGY_AGGREGATE_PERIODS.get(aggregate.period)) is None:
         return None
     description = (
-        f"{aggregate.operation_mode.capitalize()}{SENSOR_PERIODS[period]}"
+        f"{aggregate.operation_mode.capitalize()}{period.label}"
         f"{aggregate.source.capitalize()}{aggregate.data_type.capitalize()}"
     )
     return description if description in SENSOR_KEYS else None

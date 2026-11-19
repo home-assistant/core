@@ -79,7 +79,7 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     coordinator.async_execute_command = _execute_typed_command(config_entry)
     state = hass.states.get("select.my_living_room_schedule")
     assert state is not None
-    assert state.state == "althermaClimateControl0"
+    assert state.state == "unknown"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -99,7 +99,28 @@ async def test_schedule_select_preserves_read_only_disabled_state(
     )
     updated_state = hass.states.get(state.entity_id)
     assert updated_state is not None
-    assert updated_state.state == "althermaClimateControl1"
+    assert updated_state.state == "unknown"
+
+
+async def test_schedule_select_reports_unknown_for_read_only_disabled_schedule(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not show a schedule as active when its read-only enabled flag is off."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
+    device = next(iter(config_entry.runtime_data.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    assert point.schedule is not None
+    assert point.schedule.value.current_mode is not None
+    schedule_mode = point.schedule.value.modes[point.schedule.value.current_mode.value]
+    assert schedule_mode.enabled is not None
+    schedule_mode.enabled.value = False
+    schedule_mode.enabled.settable = False
+    config_entry.runtime_data.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.master_schedule")
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_schedule_select_rejects_missing_selection(

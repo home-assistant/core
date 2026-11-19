@@ -1,7 +1,7 @@
 """Tests for the Daikin Onecta coordinator client adapter."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohttp import RequestInfo
 from daikin_onecta import (
@@ -162,11 +162,19 @@ async def test_write_success(
     assert api.last_patch_call is not None
 
 
-@pytest.mark.parametrize("status", [401, 403])
+@pytest.mark.parametrize(
+    ("status", "expected_reauth_count", "expected_log"),
+    [
+        pytest.param(401, 1, "failed authentication", id="unauthorized"),
+        pytest.param(403, 0, "was not authorized", id="forbidden"),
+    ],
+)
 async def test_write_authentication_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     status: int,
+    expected_reauth_count: int,
+    expected_log: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Only a 401 write authentication failure starts reauthentication."""
@@ -185,13 +193,8 @@ async def test_write_authentication_error(
     ):
         assert not await api.async_execute_command(command)
 
-    if status == 401:
-        start_reauth.assert_called_once_with(hass)
-        expected_log = "failed authentication"
-    else:
-        start_reauth.assert_not_called()
-        assert hass.config_entries.flow.async_progress() == []
-        expected_log = "was not authorized"
+    assert start_reauth.call_args_list == [call(hass)] * expected_reauth_count
+    assert hass.config_entries.flow.async_progress() == []
     assert api.last_patch_call is None
     assert (
         f"Daikin request PATCH /v1/management-points/point {expected_log} "

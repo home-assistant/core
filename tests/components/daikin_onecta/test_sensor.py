@@ -30,7 +30,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .platform_helpers import _async_fire_coordinator_update
+from .platform_helpers import _async_fire_coordinator_update, _mock_coordinator
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
@@ -282,7 +282,7 @@ def test_value_sensor_uses_daikin_unit(
 
     entity = DaikinValueSensor(
         device,
-        MagicMock(),
+        _mock_coordinator(device),
         SENSOR_DESCRIPTIONS["tankTemperature"],
         ValueSensorDetails(point.embedded_id, "sensoryData", "tankTemperature"),
     )
@@ -317,7 +317,7 @@ def test_energy_sensor_uses_daikin_unit(
     )
     entity = DaikinEnergySensor(
         device,
-        MagicMock(),
+        _mock_coordinator(device),
         SENSOR_DESCRIPTIONS[description_key],
         EnergySensorDetails(
             point.embedded_id,

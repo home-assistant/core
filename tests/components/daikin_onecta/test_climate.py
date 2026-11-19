@@ -1064,10 +1064,10 @@ async def test_climate_state_omits_read_only_presets(
     ) = await _async_setup_climate_service_fixture(hass, config_entry, entity_registry)
     climate_control = management_point.climate_control
     assert climate_control is not None
-    for name in ("holidayMode", "powerfulMode", "comfortMode", "econoMode"):
+    for name in ("holidayMode", "powerfulMode"):
         preset = climate_control.mode_characteristic(name)
-        if preset is not None:
-            preset.settable = False
+        assert preset is not None
+        preset.settable = False
     coordinator.async_update_listeners()
 
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)

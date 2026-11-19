@@ -81,7 +81,8 @@ async def test_remove_missing_gateway_requires_complete_sites(
         await async_remove_config_entry_device(hass, config_entry, missing_gateway)
         is expected
     )
-    assert (gateway_id in coordinator.data) is not expected
+    assert gateway_id in coordinator.data
+    assert not coordinator.data[gateway_id].present_in_cloud
     coordinator.async_get_sites.assert_awaited_once_with(use_cache=False)
 
 
@@ -389,7 +390,7 @@ async def test_entities_recover_when_removed_gateway_returns_after_child_removal
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Existing entities follow a replacement gateway wrapper after it returns."""
+    """Existing entities follow the retained gateway wrapper after it returns."""
     coordinator = config_entry.runtime_data
     gateway_id = next(
         identifier
@@ -448,7 +449,8 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
         return_value=[Site(id="site", gateway_device_ids=["other-gateway"])]
     )
     assert await async_remove_config_entry_device(hass, config_entry, missing_gateway)
-    assert gateway_id not in coordinator.data
+    assert coordinator.data[gateway_id] is original_device
+    assert not original_device.present_in_cloud
 
     mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices(
         "minimal_data"
@@ -457,7 +459,7 @@ async def test_removed_gateway_reappearing_does_not_reload_entry(
         await _async_fire_coordinator_update(hass, coordinator, freezer)
 
     assert coordinator.data[gateway_id].present_in_cloud
-    assert coordinator.data[gateway_id] is not original_device
+    assert coordinator.data[gateway_id] is original_device
     assert config_entry.runtime_data is coordinator
     climate_state = hass.states.get("climate.altherma_room_temperature")
     sensor_state = hass.states.get("sensor.altherma_control_mode")

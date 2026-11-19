@@ -99,7 +99,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             device.id, self._embedded_id, "firmware"
         )
 
-        # Populate initial state
         self._update_from_management_point(gateway_mp)
 
     @override

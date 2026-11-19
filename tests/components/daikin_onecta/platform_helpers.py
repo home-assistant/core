@@ -1,11 +1,12 @@
 """Helpers shared by platform tests."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
 
 
@@ -32,3 +33,10 @@ def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
         return True
 
     return AsyncMock(side_effect=execute)
+
+
+def _mock_coordinator(device: DaikinOnectaDevice) -> MagicMock:
+    """Create a coordinator mock containing the supplied gateway wrapper."""
+    coordinator = MagicMock()
+    coordinator.data = {device.id: device}
+    return coordinator

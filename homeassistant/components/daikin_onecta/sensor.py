@@ -16,13 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ENERGY_AGGREGATE_PERIODS,
-    SENSOR_PERIOD_DAILY,
-    SENSOR_PERIOD_MONTHLY,
-    SENSOR_PERIOD_WEEKLY,
-    SENSOR_PERIOD_YEARLY,
-)
+from .const import ENERGY_AGGREGATE_PERIODS
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .discovery import (
@@ -52,13 +46,6 @@ SENSORY_DATA_SENSOR_TYPES = (
     "pm25Concentration",
     "pm10Concentration",
 )
-SENSOR_PERIOD_UNIQUE_IDS = {
-    SENSOR_PERIOD_DAILY: "daily",
-    SENSOR_PERIOD_WEEKLY: "weekly",
-    SENSOR_PERIOD_MONTHLY: "monthly",
-    SENSOR_PERIOD_YEARLY: "yearly",
-}
-
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     metadata.key: SensorEntityDescription(
         key=metadata.key,
@@ -241,7 +228,7 @@ def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> st
         details.embedded_id,
         details.sensor_type,
         details.operation_mode,
-        SENSOR_PERIOD_UNIQUE_IDS[ENERGY_AGGREGATE_PERIODS[details.period]],
+        ENERGY_AGGREGATE_PERIODS[details.period].unique_id_suffix,
         details.datatype,
     )
 

@@ -32,7 +32,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .platform_helpers import _execute_typed_command
+from .platform_helpers import _execute_typed_command, _mock_coordinator
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 
@@ -42,7 +42,7 @@ def test_water_heater_features_follow_power_capability(power_settable: bool) -> 
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
     point.on_off_mode.settable = power_settable
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
     expected = (
         WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
@@ -61,7 +61,7 @@ async def test_water_heater_rejects_read_only_power(method: str) -> None:
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
     point.on_off_mode.value = "off" if method == "async_turn_on" else "on"
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
     entity._async_execute_hot_water_command = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -79,7 +79,7 @@ def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
     point = device.device.management_points_by_type("domesticHotWaterTank")[0]
     point.on_off_mode.settable = False
     point.on_off_mode.value = power
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
     assert not entity.supported_features & WaterHeaterEntityFeature.ON_OFF
     assert bool(
@@ -98,7 +98,7 @@ def test_water_heater_handles_missing_temperature_values() -> None:
     assert point.domestic_hot_water.temperature is not None
     point.domestic_hot_water.temperature.min_value = 45
     point.domestic_hot_water.temperature.max_value = 60
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
     assert entity.min_temp == 45
     assert entity.max_temp == 60
 
@@ -140,7 +140,7 @@ def test_water_heater_uses_daikin_temperature_unit(
     setpoint.unit = setpoint_unit
     tank_temperature.unit = sensory_unit
 
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
     assert entity.native_temperature_unit == expected_unit
 
@@ -152,7 +152,7 @@ def test_water_heater_uses_standard_target_temperature_step() -> None:
     assert point.domestic_hot_water is not None
     assert point.domestic_hot_water.temperature is not None
 
-    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+    entity = DaikinWaterTank(device, _mock_coordinator(device), point.embedded_id)
 
     assert entity.target_temperature_step == float(
         point.domestic_hot_water.temperature.step_value
@@ -351,7 +351,7 @@ async def test_water_heater_temperature_updates_typed_cache(
 async def test_water_heater_set_temperature_applies_operation_mode_first(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Apply an optional mode before a combined temperature write."""
+    """Apply a non-off mode before a combined temperature write."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
     coordinator = config_entry.runtime_data
     coordinator.async_execute_command = _execute_typed_command(config_entry)
@@ -387,6 +387,69 @@ async def test_water_heater_set_temperature_applies_operation_mode_first(
             path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
         ),
     ]
+
+
+async def test_water_heater_set_temperature_applies_temperature_before_off(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Write the target temperature before turning the tank off."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    point.on_off_mode.value = "on"
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.value = 45
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.OPERATION_MODE: STATE_OFF,
+            WaterHeaterServiceArgument.TEMPERATURE: 50,
+        },
+        blocking=True,
+    )
+
+    assert coordinator.client.patch_characteristic.await_args_list == [
+        call(
+            gateway.id,
+            point.embedded_id,
+            "temperatureControl",
+            50,
+            path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+        ),
+        call(gateway.id, point.embedded_id, "onOffMode", "off", path=None),
+    ]
+
+
+async def test_water_heater_rejects_invalid_combined_mode_before_temperature_write(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Validate the requested mode before writing a combined temperature."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.async_execute_command = execute
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+                WaterHeaterServiceArgument.OPERATION_MODE: "unsupported_mode",
+                WaterHeaterServiceArgument.TEMPERATURE: 50,
+            },
+            blocking=True,
+        )
+
+    execute.assert_not_awaited()
 
 
 async def test_water_heater_temperature_writes_without_power_characteristic(
@@ -548,6 +611,44 @@ async def test_water_heater_temperature_is_clamped_to_setpoint_range(
         point.embedded_id,
         "temperatureControl",
         expected,
+        path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
+    )
+
+
+async def test_water_heater_does_not_clamp_to_ha_defaults_without_daikin_limits(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not clamp to Home Assistant defaults when Daikin omits tank limits."""
+    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    coordinator = config_entry.runtime_data
+    coordinator.async_execute_command = _execute_typed_command(config_entry)
+    gateway = next(iter(coordinator.data.values()))
+    point = gateway.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    setpoint = point.domestic_hot_water.temperature
+    assert setpoint is not None
+    setpoint.min_value = None
+    setpoint.max_value = None
+    setpoint.value = 45
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "water_heater.altherma_domestic_hot_water_tank",
+            WaterHeaterServiceArgument.TEMPERATURE: 40,
+        },
+        blocking=True,
+    )
+
+    assert setpoint.value == 40
+    coordinator.client.patch_characteristic.assert_awaited_once_with(
+        gateway.id,
+        point.embedded_id,
+        "temperatureControl",
+        40,
         path="/operationModes/heating/setpoints/domesticHotWaterTemperature",
     )
 
