@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 
-from .config_flow import async_request_token
+from .config_flow import async_wait_for_token
 from .const import ISSUE_BATTERY_MODE_CLOUD_DISABLED, LOGGER
 from .coordinator import HomeWizardConfigEntry
 
@@ -26,6 +26,8 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     _identify_task: asyncio.Task[None] | None = None
+    _token: str | None = None
+    _token_task: asyncio.Task[str] | None = None
 
     def __init__(self, entry: HomeWizardConfigEntry) -> None:
         """Create flow."""
@@ -44,14 +46,10 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         """Handle the confirm step of a fix flow."""
 
         if user_input is not None:
-            self._async_stop_identify()
             return await self.async_step_authorize()
 
         if self._identify_task is None:
-            self._identify_task = self.hass.async_create_background_task(
-                self._async_identify_device(),
-                f"homewizard identify {self.entry.entry_id}",
-            )
+            self._async_start_identify()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"title": self.entry.title}
         )
@@ -61,6 +59,13 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
     def async_remove(self) -> None:
         """Stop identifying the device when the flow is closed."""
         self._async_stop_identify()
+
+    @callback
+    def _async_start_identify(self) -> None:
+        self._identify_task = self.hass.async_create_background_task(
+            self._async_identify_device(),
+            f"homewizard identify {self.entry.entry_id}",
+        )
 
     @callback
     def _async_stop_identify(self) -> None:
@@ -88,23 +93,43 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
     async def async_step_authorize(
         self, user_input: dict[str, str] | None = None
     ) -> RepairsFlowResult:
-        """Handle the authorize step of a fix flow."""
+        """Wait in the background until the user presses the device button."""
+        if self._token_task is None:
+            # Restart identifying so it lasts as long as the token polling
+            self._async_stop_identify()
+            self._async_start_identify()
+            self._token_task = self.hass.async_create_task(
+                async_wait_for_token(self.hass, self.entry.data[CONF_IP_ADDRESS])
+            )
 
-        ip_address = self.entry.data[CONF_IP_ADDRESS]
+        if not self._token_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="wait_for_button",
+                progress_task=self._token_task,
+            )
 
-        # Tell device we want a token, user must now press the
-        # button within 30 seconds. The first attempt will always
-        # fail, but this opens the window to press the button.
-        token = await async_request_token(self.hass, ip_address)
-        errors: dict[str, str] | None = None
+        self._async_stop_identify()
+        token_task, self._token_task = self._token_task, None
+        try:
+            self._token = token_task.result()
+        except TimeoutError:
+            return self.async_show_progress_done(next_step_id="authorize_timeout")
+        return self.async_show_progress_done(next_step_id="finish_authorize")
 
-        if token is None:
-            if user_input is not None:
-                errors = {"base": "authorization_failed"}
+    async def async_step_authorize_timeout(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Let the user retry after the button was not pressed in time."""
+        if user_input is not None:
+            return await self.async_step_authorize()
+        return self.async_show_form(step_id="authorize_timeout")
 
-            return self.async_show_form(step_id="authorize", errors=errors)
-
-        data = {**self.entry.data, CONF_TOKEN: token}
+    async def async_step_finish_authorize(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Store the received token and reload the entry."""
+        data = {**self.entry.data, CONF_TOKEN: self._token}
         self.hass.config_entries.async_update_entry(self.entry, data=data)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
         return self.async_create_entry(data={})
