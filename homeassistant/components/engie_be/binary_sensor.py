@@ -27,32 +27,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up EPEX binary sensors for dynamic-tariff households."""
     runtime_data = entry.runtime_data
-    known_bans: set[str] = set()
 
     @callback
-    def _async_add_tomorrow_available_sensors() -> None:
-        """Add the tomorrow-available binary sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
-            return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_bans
-        ]
-        if not new_bans:
-            return
-        known_bans.update(new_bans)
+    def _async_add_tomorrow_available_sensors(
+        epex: EngieBeEpexCoordinator, bans: list[str]
+    ) -> None:
+        """Add the tomorrow-available binary sensors for the given households."""
         async_add_entities(
             EngieBeEpexTomorrowAvailableSensor(
                 epex,
                 ban=ban,
                 device_info=runtime_data.households[ban].prices.device_info,
             )
-            for ban in new_bans
+            for ban in bans
         )
 
-    runtime_data.epex_ready_callbacks.append(_async_add_tomorrow_available_sensors)
-    _async_add_tomorrow_available_sensors()
+    runtime_data.async_add_epex_entities(_async_add_tomorrow_available_sensors)
 
 
 class EngieBeEpexTomorrowAvailableSensor(

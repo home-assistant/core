@@ -125,21 +125,9 @@ async def async_setup_entry(
         )
     _async_add_new_entities()
 
-    known_epex_bans: set[str] = set()
-
     @callback
-    def _async_add_epex_sensors() -> None:
-        """Add the EPEX price sensors for the dynamic households."""
-        if (epex := runtime_data.epex) is None:
-            return
-        new_bans = [
-            ban
-            for ban, household in runtime_data.households.items()
-            if household.is_dynamic and ban not in known_epex_bans
-        ]
-        if not new_bans:
-            return
-        known_epex_bans.update(new_bans)
+    def _async_add_epex_sensors(epex: EngieBeEpexCoordinator, bans: list[str]) -> None:
+        """Add the EPEX price sensors for the given households."""
         async_add_entities(
             EngieBeEpexPriceSensor(
                 epex,
@@ -147,12 +135,11 @@ async def async_setup_entry(
                 device_info=runtime_data.households[ban].prices.device_info,
                 description=description,
             )
-            for ban in new_bans
+            for ban in bans
             for description in _EPEX_SENSORS
         )
 
-    runtime_data.epex_ready_callbacks.append(_async_add_epex_sensors)
-    _async_add_epex_sensors()
+    runtime_data.async_add_epex_entities(_async_add_epex_sensors)
 
     async_add_entities(
         EngieBePeaksSensor(
