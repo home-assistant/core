@@ -13,15 +13,12 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -122,9 +119,9 @@ async def test_open_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
+        CoverService.OPEN,
         {
-            ATTR_ENTITY_ID: "cover.slide_bedroom",
+            TargetKey.ENTITY_ID: "cover.slide_bedroom",
         },
         blocking=True,
     )
@@ -141,9 +138,9 @@ async def test_close_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
+        CoverService.CLOSE,
         {
-            ATTR_ENTITY_ID: "cover.slide_bedroom",
+            TargetKey.ENTITY_ID: "cover.slide_bedroom",
         },
         blocking=True,
     )
@@ -160,9 +157,9 @@ async def test_stop_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
+        CoverService.STOP,
         {
-            ATTR_ENTITY_ID: "cover.slide_bedroom",
+            TargetKey.ENTITY_ID: "cover.slide_bedroom",
         },
         blocking=True,
     )
@@ -187,8 +184,11 @@ async def test_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.slide_bedroom", ATTR_POSITION: 1.0},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.slide_bedroom",
+            CoverServiceArgument.POSITION: 1.0,
+        },
         blocking=True,
     )
 
@@ -206,8 +206,11 @@ async def test_set_position(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.slide_bedroom", ATTR_POSITION: 0.0},
+        CoverService.SET_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.slide_bedroom",
+            CoverServiceArgument.POSITION: 0.0,
+        },
         blocking=True,
     )
 

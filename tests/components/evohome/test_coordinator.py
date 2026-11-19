@@ -12,6 +12,8 @@ from pytest_homeassistant.common import async_fire_time_changed
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
 )
 from homeassistant.components.evohome.const import (
     EVOHOME_DATA,
@@ -26,6 +28,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -380,8 +383,8 @@ async def test_action_api_call_failed_reason(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: zone_id, ATTR_TEMPERATURE: 19.1},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: zone_id, ClimateServiceArgument.TEMPERATURE: 19.1},
             blocking=True,
         )
 

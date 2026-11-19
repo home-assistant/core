@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -16,10 +15,10 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -49,8 +48,12 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     """Test light state attributes."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_XY_COLOR: (0.4, 0.4), ATTR_BRIGHTNESS: 25},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.XY_COLOR: (0.4, 0.4),
+            LightServiceArgument.BRIGHTNESS: 25,
+        },
         blocking=True,
     )
 
@@ -63,10 +66,10 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_RGB_COLOR: (251, 253, 255),
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.RGB_COLOR: (251, 253, 255),
         },
         blocking=True,
     )
@@ -77,11 +80,11 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_EFFECT: "off",
-            ATTR_COLOR_TEMP_KELVIN: 2500,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.EFFECT: "off",
+            LightServiceArgument.COLOR_TEMP_KELVIN: 2500,
         },
         blocking=True,
     )
@@ -94,11 +97,11 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_LIGHT,
-            ATTR_BRIGHTNESS_PCT: 50,
-            ATTR_COLOR_TEMP_KELVIN: 3000,
+            TargetKey.ENTITY_ID: ENTITY_LIGHT,
+            LightServiceArgument.BRIGHTNESS_PCT: 50,
+            LightServiceArgument.COLOR_TEMP_KELVIN: 3000,
         },
         blocking=True,
     )
@@ -111,14 +114,20 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 async def test_turn_off(hass: HomeAssistant) -> None:
     """Test light turn off method."""
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
     )
 
     state = hass.states.get(ENTITY_LIGHT)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_LIGHT},
+        blocking=True,
     )
 
     state = hass.states.get(ENTITY_LIGHT)
@@ -128,14 +137,14 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 async def test_turn_off_without_entity_id(hass: HomeAssistant) -> None:
     """Test light turn off all lights."""
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "all"}, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_ON, {TargetKey.ENTITY_ID: "all"}, blocking=True
     )
 
     state = hass.states.get(ENTITY_LIGHT)
     assert state.state == STATE_ON
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
+        LIGHT_DOMAIN, LightService.TURN_OFF, {TargetKey.ENTITY_ID: "all"}, blocking=True
     )
 
     state = hass.states.get(ENTITY_LIGHT)

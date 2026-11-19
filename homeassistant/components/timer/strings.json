@@ -85,9 +85,6 @@
     }
   },
   "exceptions": {
-    "change_beyond_duration": {
-      "message": "Cannot change timer {entity_id} beyond its duration."
-    },
     "change_negative_remaining": {
       "message": "Cannot change timer {entity_id} to a negative remaining time."
     },

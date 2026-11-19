@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, label_registry as lr
@@ -201,7 +202,7 @@ async def test_button_pressed_trigger_press_count_valid(
         [
             {
                 CONF_PLATFORM: "button.pressed",
-                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_TARGET: {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
                 CONF_OPTIONS: options,
             }
         ],
@@ -220,7 +221,7 @@ async def test_button_pressed_trigger_press_count_invalid(
             [
                 {
                     CONF_PLATFORM: "button.pressed",
-                    CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
                     CONF_OPTIONS: {"press_count": press_count},
                 }
             ],
@@ -247,7 +248,7 @@ async def test_button_held_trigger_interval_valid(
         [
             {
                 CONF_PLATFORM: "button.held",
-                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_TARGET: {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
                 CONF_OPTIONS: {"interval": interval},
             }
         ],
@@ -277,7 +278,7 @@ async def test_button_held_trigger_interval_invalid(
             [
                 {
                     CONF_PLATFORM: "button.held",
-                    CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
                     CONF_OPTIONS: {"interval": interval},
                 }
             ],
@@ -1098,7 +1099,7 @@ async def _assert_not_triggered_reports(
         [
             {
                 CONF_PLATFORM: trigger,
-                CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+                CONF_TARGET: {TargetKey.ENTITY_ID: entity_id},
                 CONF_OPTIONS: options,
             }
         ],

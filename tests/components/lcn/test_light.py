@@ -14,17 +14,16 @@ from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.components.lcn.light import SCAN_INTERVAL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -59,8 +58,8 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
         )
 
@@ -76,8 +75,8 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
         )
 
@@ -99,11 +98,11 @@ async def test_output_turn_on_with_attributes(
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
+            LightService.TURN_ON,
             {
-                ATTR_ENTITY_ID: LIGHT_OUTPUT1,
-                ATTR_BRIGHTNESS: 50,
-                ATTR_TRANSITION: 2,
+                TargetKey.ENTITY_ID: LIGHT_OUTPUT1,
+                LightServiceArgument.BRIGHTNESS: 50,
+                LightServiceArgument.TRANSITION: 2,
             },
             blocking=True,
         )
@@ -122,8 +121,8 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
     with patch.object(MockDeviceConnection, "toggle_output") as toggle_output:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
         )
 
@@ -132,8 +131,8 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
         )
 
@@ -149,8 +148,8 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: LIGHT_OUTPUT1},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: LIGHT_OUTPUT1},
             blocking=True,
         )
 
@@ -174,8 +173,8 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
         )
 
@@ -191,8 +190,8 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
         )
 
@@ -213,8 +212,8 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
         )
 
@@ -223,8 +222,8 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
         )
 
@@ -240,8 +239,8 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: LIGHT_RELAY1},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: LIGHT_RELAY1},
             blocking=True,
         )
 
