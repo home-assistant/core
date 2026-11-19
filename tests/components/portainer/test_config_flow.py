@@ -364,7 +364,7 @@ async def test_environment_subentry_flow(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},
@@ -417,7 +417,7 @@ async def test_environment_subentry_flow_exceptions(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},
@@ -489,7 +489,7 @@ async def test_environment_subentry_flow_race_condition(
         data=MOCK_TEST_CONFIG,
         unique_id=TEST_INSTANCE_ID,
         version=5,
-        minor_version=2,
+        minor_version=3,
         subentries_data=[
             ConfigSubentryData(
                 data={},

@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.velbus import (
     RECONNECT_SCAN_COOLDOWN,
     VelbusConfigEntry,
@@ -17,7 +17,7 @@ from homeassistant.components.velbus import (
 from homeassistant.components.velbus.bus_sync import async_sync_bus_state
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
+from homeassistant.const import CONF_NAME, CONF_PORT, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -206,8 +206,8 @@ async def test_api_call(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.living_room_relayname"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.living_room_relayname"},
             blocking=True,
         )
 

@@ -33,6 +33,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     DOMAIN,
     LYRIC_EXCEPTIONS,
+    LYRIC_HVAC_MODE_EMERGENCY_HEAT,
+    LYRIC_HVAC_MODE_HEAT,
     PRESET_HOLD_UNTIL,
     PRESET_NO_HOLD,
     PRESET_PERMANENT_HOLD,
@@ -60,7 +62,6 @@ LYRIC_HVAC_ACTION_HEAT = "Heat"
 LYRIC_HVAC_ACTION_COOL = "Cool"
 
 LYRIC_HVAC_MODE_OFF = "Off"
-LYRIC_HVAC_MODE_HEAT = "Heat"
 LYRIC_HVAC_MODE_COOL = "Cool"
 LYRIC_HVAC_MODE_HEAT_COOL = "Auto"
 
@@ -78,6 +79,7 @@ LYRIC_HVAC_MODES = {
 HVAC_MODES = {
     LYRIC_HVAC_MODE_OFF: HVACMode.OFF,
     LYRIC_HVAC_MODE_HEAT: HVACMode.HEAT,
+    LYRIC_HVAC_MODE_EMERGENCY_HEAT: HVACMode.HEAT,
     LYRIC_HVAC_MODE_COOL: HVACMode.COOL,
     LYRIC_HVAC_MODE_HEAT_COOL: HVACMode.HEAT_COOL,
 }
@@ -347,6 +349,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
+        if (
+            hvac_mode == HVACMode.HEAT
+            and self.device.changeable_values.mode == LYRIC_HVAC_MODE_EMERGENCY_HEAT
+        ):
+            return
         match self._attr_thermostat_type:
             case LyricThermostatType.TCC:
                 update = self._async_set_hvac_mode_tcc(hvac_mode)

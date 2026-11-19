@@ -21,9 +21,7 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import IndiAllSkyConfigEntry
@@ -165,9 +163,7 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
             return web.Response(status=400)
 
         url = entry.runtime_data.client.get_media_url(media_path)
-        verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
-        session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
-
+        session = entry.runtime_data.session
         headers: dict[str, str] = {}
         if range_header := request.headers.get("Range"):
             headers["Range"] = range_header
@@ -277,8 +273,7 @@ class IndiAllSkyMediaSource(MediaSource):
         # return a 302 redirect with Location header pointing to the actual media asset file.
         content_type: str | None = None
         if path.startswith("latest"):
-            verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
-            session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
+            session = entry.runtime_data.session
             try:
                 async with session.get(
                     url, allow_redirects=False, timeout=REDIRECT_TIMEOUT

@@ -8,7 +8,7 @@ from pytest_homeassistant.components.bluetooth import (
 )
 
 from homeassistant.components.bthome.const import DOMAIN
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -29,12 +29,12 @@ from . import make_bthome_v2_adv
                 {
                     "entity": "event.test_device_18b2_button_2",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 2",
-                    ATTR_EVENT_TYPE: "press",
+                    EventEntityStateAttribute.EVENT_TYPE: "press",
                 },
                 {
                     "entity": "event.test_device_18b2_button_3",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Button 3",
-                    ATTR_EVENT_TYPE: "triple_press",
+                    EventEntityStateAttribute.EVENT_TYPE: "triple_press",
                 },
             ],
         ),
@@ -49,7 +49,7 @@ from . import make_bthome_v2_adv
                 {
                     "entity": "event.test_device_18b2_button",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
-                    ATTR_EVENT_TYPE: "long_press",
+                    EventEntityStateAttribute.EVENT_TYPE: "long_press",
                 }
             ],
         ),
@@ -64,7 +64,7 @@ from . import make_bthome_v2_adv
                 {
                     "entity": "event.test_device_18b2_button",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Button",
-                    ATTR_EVENT_TYPE: "hold_release",
+                    EventEntityStateAttribute.EVENT_TYPE: "hold_release",
                 }
             ],
         ),
@@ -79,12 +79,12 @@ from . import make_bthome_v2_adv
                 {
                     "entity": "event.test_device_18b2_command_1",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Command 1",
-                    ATTR_EVENT_TYPE: "on",
+                    EventEntityStateAttribute.EVENT_TYPE: "on",
                 },
                 {
                     "entity": "event.test_device_18b2_command_2",
                     ATTR_FRIENDLY_NAME: "Test Device 18B2 Command 2",
-                    ATTR_EVENT_TYPE: "toggle",
+                    EventEntityStateAttribute.EVENT_TYPE: "toggle",
                 },
             ],
         ),
@@ -121,7 +121,10 @@ async def test_v2_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        assert (
+            attributes[EventEntityStateAttribute.EVENT_TYPE]
+            == meas[EventEntityStateAttribute.EVENT_TYPE]
+        )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -145,6 +148,9 @@ async def test_v2_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        assert (
+            attributes[EventEntityStateAttribute.EVENT_TYPE]
+            == meas[EventEntityStateAttribute.EVENT_TYPE]
+        )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

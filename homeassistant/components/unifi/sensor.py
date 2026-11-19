@@ -63,6 +63,7 @@ from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
+    async_client_ssid_allowed_fn,
     async_device_available_fn,
     async_device_device_info_fn,
     async_device_supported_fn,
@@ -96,6 +97,8 @@ class FirewallPolicyScheduleStatus(StrEnum):
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
@@ -111,6 +114,8 @@ def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not async_client_ssid_allowed_fn(hub, obj_id):
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
@@ -1053,11 +1058,13 @@ async def async_setup_entry(
             async_add_entities([UnifiSensorEntity(obj_id, hub, description)])
 
     for description in ENTITY_DESCRIPTIONS:
+        api_handler = description.api_handler_fn(hub.api)
         config_entry.async_on_unload(
-            description.api_handler_fn(hub.api).subscribe(
+            api_handler.subscribe(
                 partial(create_sensor, description),
                 (ItemEvent.ADDED, ItemEvent.CHANGED)
-                if description.discovery_fn is not None
+                if isinstance(api_handler, Clients)
+                or description.discovery_fn is not None
                 else ItemEvent.ADDED,
             )
         )

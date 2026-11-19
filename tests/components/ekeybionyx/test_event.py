@@ -5,7 +5,10 @@ from http import HTTPStatus
 from aiohttp.test_utils import TestClient
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -29,7 +32,7 @@ async def test_event_types_attribute(
     assert state is not None
 
     # Check event_types attribute
-    event_types = state.attributes.get(ATTR_EVENT_TYPES)
+    event_types = state.attributes.get(EventEntityCapabilityAttribute.EVENT_TYPES)
     assert event_types is not None
     assert event_types == ["event happened"]
 
@@ -82,7 +85,9 @@ async def test_webhook_handler_triggers_event(
     state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state not in (STATE_UNKNOWN, None)
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "event happened"
+    assert (
+        state.attributes.get(EventEntityStateAttribute.EVENT_TYPE) == "event happened"
+    )
 
 
 async def test_webhook_handler_rejects_invalid_auth(

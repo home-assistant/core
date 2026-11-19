@@ -31,7 +31,7 @@ from . import setup_integration
 from .conftest import MOCK_PARSE_DATA
 
 
-@pytest.mark.usefixtures("mock_heater")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_heater")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -49,23 +49,6 @@ async def test_all_entities(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    disabled_entries = [
-        entity_entry
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entity_entry.disabled_by is not None
-    ]
-    assert disabled_entries
-    assert all(
-        entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-        for entity_entry in disabled_entries
-    )
-    for entity_entry in disabled_entries:
-        entity_registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
     await snapshot_platform(
         hass,
         entity_registry,
