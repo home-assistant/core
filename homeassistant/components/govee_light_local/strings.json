@@ -17,9 +17,20 @@
         "invalid_ip": "{ip} is not a valid IP address"
       },
       "initiate_flow": {
+        "reconfigure": "Reconfigure device",
         "user": "Add device"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "device_ip": "[%key:common::config_flow::data::ip%]"
+          },
+          "data_description": {
+            "device_ip": "[%key:component::govee_light_local::config_subentries::device::step::user::data_description::device_ip%]"
+          },
+          "description": "Update the device's IP address",
+          "title": "Reconfigure device"
+        },
         "user": {
           "data": {
             "device_ip": "[%key:common::config_flow::data::ip%]"

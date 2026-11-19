@@ -117,6 +117,20 @@ class GoveeConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 class GoveeDeviceSubentryFlowHandler(ConfigSubentryFlow):
     """Handle adding a Govee light by IP address."""
 
+    def _validate_ip(self, user_ip: str, exclude_subentry_id: str | None) -> str | None:
+        """Return an error key if the IP is malformed or already configured."""
+        try:
+            IPv4Address(user_ip)
+        except AddressValueError:
+            return "invalid_ip"
+        if any(
+            subentry.unique_id == user_ip
+            and subentry.subentry_id != exclude_subentry_id
+            for subentry in self._get_entry().subentries.values()
+        ):
+            return "already_configured"
+        return None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -126,28 +140,55 @@ class GoveeDeviceSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             user_ip = user_input[CONF_DEVICE_IP]
-            try:
-                IPv4Address(user_ip)
-            except AddressValueError:
-                errors["base"] = "invalid_ip"
+            if error := self._validate_ip(user_ip, None):
+                errors["base"] = error
                 placeholders["ip"] = user_ip
             else:
-                if any(
-                    subentry.unique_id == user_ip
-                    for subentry in self._get_entry().subentries.values()
-                ):
-                    errors["base"] = "already_configured"
-                    placeholders["ip"] = user_ip
-                else:
-                    return self.async_create_entry(
-                        title=user_ip,
-                        data={CONF_DEVICE_IP: user_ip},
-                        unique_id=user_ip,
-                    )
+                return self.async_create_entry(
+                    title=user_ip,
+                    data={CONF_DEVICE_IP: user_ip},
+                    unique_id=user_ip,
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema({probatio.Required(CONF_DEVICE_IP): cv.string}),
+            errors=errors,
+            description_placeholders=placeholders,
+            last_step=True,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Change the IP address of a configured device."""
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            user_ip = user_input[CONF_DEVICE_IP]
+            if error := self._validate_ip(user_ip, subentry.subentry_id):
+                errors["base"] = error
+                placeholders["ip"] = user_ip
+            else:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subentry,
+                    title=user_ip,
+                    data={CONF_DEVICE_IP: user_ip},
+                    unique_id=user_ip,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_DEVICE_IP, default=subentry.data[CONF_DEVICE_IP]
+                    ): cv.string
+                }
+            ),
             errors=errors,
             description_placeholders=placeholders,
             last_step=True,

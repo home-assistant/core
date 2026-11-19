@@ -332,3 +332,135 @@ async def test_add_device_subentry_duplicate(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(config_entry.subentries) == 2
+
+
+async def test_reconfigure_device_subentry(hass: HomeAssistant) -> None:
+    """Test changing a manual device's IP address in place."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: "192.168.1.100"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="192.168.1.100",
+                unique_id="192.168.1.100",
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+    subentry_id = next(iter(config_entry.subentries))
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.102"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert len(config_entry.subentries) == 1
+    subentry = config_entry.subentries[subentry_id]
+    assert subentry.data == {CONF_DEVICE_IP: "192.168.1.102"}
+    assert subentry.title == "192.168.1.102"
+    assert subentry.unique_id == "192.168.1.102"
+
+
+async def test_reconfigure_device_subentry_invalid_ip(hass: HomeAssistant) -> None:
+    """Test the reconfigure step rejects a malformed IP address."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: "192.168.1.100"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="192.168.1.100",
+                unique_id="192.168.1.100",
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+    subentry_id = next(iter(config_entry.subentries))
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry_id,
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "foo"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_ip"}
+    assert result["description_placeholders"] == {"ip": "foo"}
+
+    # The flow stays open, so a corrected address still completes.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.102"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.subentries[subentry_id].unique_id == "192.168.1.102"
+
+
+async def test_reconfigure_device_subentry_duplicate(hass: HomeAssistant) -> None:
+    """Test the reconfigure step rejects another subentry's IP but allows its own."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: "192.168.1.100"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="192.168.1.100",
+                unique_id="192.168.1.100",
+            ),
+            ConfigSubentryData(
+                data={CONF_DEVICE_IP: "192.168.1.101"},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="192.168.1.101",
+                unique_id="192.168.1.101",
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
+    subentry_id = next(
+        subentry_id
+        for subentry_id, subentry in config_entry.subentries.items()
+        if subentry.unique_id == "192.168.1.100"
+    )
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry_id,
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}
+
+    # The subentry's own IP is not a conflict with itself.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.100"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

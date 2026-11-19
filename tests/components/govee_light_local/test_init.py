@@ -19,6 +19,7 @@ from homeassistant.components.govee_light_local.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -259,6 +260,50 @@ async def test_add_subentry_queues_device(
     mock_govee_api.add_device_to_discovery_queue.assert_called_once_with(
         "192.168.1.100"
     )
+
+
+async def test_reconfigure_subentry_moves_device(
+    hass: HomeAssistant, mock_govee_api: AsyncMock
+) -> None:
+    """Test reconfiguring a device's IP drops the old address and probes the new one."""
+
+    manual_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual_device-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device.is_manual = True
+    set_mocked_devices(mock_govee_api, [manual_device])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries(manual_device.ip),
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(config_entry.subentries))
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_DEVICE),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry_id,
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_DEVICE_IP: "192.168.1.102"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The lamp is forgotten at the old address and probed at the new one.
+    mock_govee_api.remove_device.assert_called_once_with(manual_device)
+    mock_govee_api.add_device_to_discovery_queue.assert_called_with("192.168.1.102")
 
 
 async def test_setup_without_listening_addresses(

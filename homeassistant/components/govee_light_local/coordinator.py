@@ -175,7 +175,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             ):
                 # Removing the device cascades to its entities.
                 device_registry.async_remove_device(entry.id)
-            self.remove_device(device)
+            # The registry removal event may already have made the controller
+            # forget the device, so only remove it if it is still tracked.
+            if self.get_device_by_ip(ip) is not None:
+                self.remove_device(device)
         self.remove_device_from_discovery_queue(ip)
 
     async def async_cleanup(self) -> None:
