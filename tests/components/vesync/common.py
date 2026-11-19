@@ -59,6 +59,13 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Air Purifier Vital 200S": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail-v2.json")
     ],
+    "Air Purifier Sprout": [
+        (
+            "post",
+            "/cloud/v2/deviceManaged/bypassV2",
+            "air-purifier-sprout-detail.json",
+        )
+    ],
     "Dimmable Light": [
         ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmable-light-detail.json")
     ],
@@ -97,6 +104,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
             "/cloud/v1/deviceManaged/bypass",
             "air-fryer-CS158-AF-detail-cooking.json",
         )
+    ],
+    "Dual Air Fryer": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-fryer-CAF-TF101S-detail.json")
     ],
 }
 

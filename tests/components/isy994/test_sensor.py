@@ -20,6 +20,7 @@ def mock_sensor_platform():
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_snapshots(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -122,17 +123,6 @@ async def test_sensor_snapshots(
     mock_isy.nodes.__iter__.return_value = nodes
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Enable disabled entities (like aux sensors)
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    for entry in entity_entries:
-        if entry.disabled_by:
-            entity_registry.async_update_entity(entry.entity_id, disabled_by=None)
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

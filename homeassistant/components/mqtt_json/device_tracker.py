@@ -11,19 +11,15 @@ from homeassistant.components.device_tracker import (
     AsyncSeeCallback,
 )
 from homeassistant.components.mqtt import CONF_QOS
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_DEVICES,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_GPS_ACCURACY, CONF_DEVICES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LATITUDE = "latitude"
+ATTR_LONGITUDE = "longitude"
 GPS_JSON_PAYLOAD_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_LATITUDE): probatio.Coerce(float),

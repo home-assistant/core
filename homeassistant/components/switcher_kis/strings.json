@@ -60,11 +60,17 @@
       }
     },
     "sensor": {
+      "auto_off": {
+        "name": "Auto-off"
+      },
       "auto_shutdown": {
         "name": "Auto shutdown"
       },
       "remaining_time": {
         "name": "Remaining time"
+      },
+      "shutdown_time": {
+        "name": "Shutdown time"
       }
     },
     "switch": {
@@ -74,6 +80,38 @@
       "multi_child_lock": {
         "name": "Child lock {cover_id}"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to {entity}."
+    },
+    "command_failed": {
+      "message": "The command sent to {entity} was not successful."
+    },
+    "device_update_timeout": {
+      "message": "Device {device} did not send an update for {seconds} seconds"
+    },
+    "target_temperature_not_supported": {
+      "message": "The current mode does not support setting the target temperature."
+    }
+  },
+  "issues": {
+    "deprecated_auto_shutdown": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Auto-off** sensor, which reports the configured auto-off as a duration.\n\nUpdate any dashboards, templates, automations or scripts to use the new sensor, then disable `{entity_id}` to have it removed.",
+      "title": "The Switcher auto shutdown sensor is deprecated"
+    },
+    "deprecated_auto_shutdown_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Auto-off** sensor, which reports the configured auto-off as a duration.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new sensor, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::switcher_kis::issues::deprecated_auto_shutdown::title%]"
+    },
+    "deprecated_remaining_time": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Shutdown time** sensor, which reports when the device will turn off.\n\nUpdate any dashboards, templates, automations or scripts to use the new sensor, then disable `{entity_id}` to have it removed.",
+      "title": "The Switcher remaining time sensor is deprecated"
+    },
+    "deprecated_remaining_time_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the **Shutdown time** sensor, which reports when the device will turn off.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new sensor, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::switcher_kis::issues::deprecated_remaining_time::title%]"
     }
   },
   "services": {

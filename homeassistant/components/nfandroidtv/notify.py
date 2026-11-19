@@ -3,7 +3,7 @@
 from datetime import timedelta
 from io import BufferedReader
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
 import probatio
@@ -22,7 +22,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -61,6 +61,15 @@ from .issue import deprecated_notify_action_call
 
 _LOGGER = logging.getLogger(__name__)
 
+_ATTR_ICON = "icon"
+
+_MESSAGE_NEWLINE_TAG: Final = "<br>"
+
+
+def nl2br(message: str) -> str:
+    """Replace newlines with _MESSAGE_NEWLINE_TAG tags."""
+    return message.replace("\n", _MESSAGE_NEWLINE_TAG)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -96,7 +105,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
         try:
-            self.client.send(message=message, title=title)
+            self.client.send(message=nl2br(message), title=title)
         except ConnectError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -114,7 +123,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.IMAGE)
             )
         if NFAndroidTVServiceArgument.ICON in kwargs:
-            kwargs[ATTR_ICON] = await _resolve_media(
+            kwargs[_ATTR_ICON] = await _resolve_media(
                 self.hass, kwargs.pop(NFAndroidTVServiceArgument.ICON)
             )
         if NFAndroidTVServiceArgument.DURATION in kwargs:
@@ -127,7 +136,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
 
         try:
             sent = await self.hass.async_add_executor_job(
-                lambda: self.client.send(message=message, **kwargs)
+                lambda: self.client.send(message=nl2br(message), **kwargs)
             )
         except (ConnectError, requests.RequestException) as e:
             raise HomeAssistantError(
@@ -290,7 +299,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         translation_key="invalid_notification_image",
                         translation_placeholders={"type": type(imagedata).__name__},
                     )
-            if icondata := data.get(ATTR_ICON):
+            if icondata := data.get(_ATTR_ICON):
                 if isinstance(icondata, str):
                     icondata = (
                         self.load_file(url=icondata)
@@ -314,7 +323,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
 
         try:
             self.notify.send(
-                message,
+                nl2br(message),
                 title=title,
                 duration=duration,
                 fontsize=fontsize,

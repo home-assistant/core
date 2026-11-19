@@ -8,16 +8,11 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PERCENTAGE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -85,8 +80,11 @@ async def test_fan_set_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: device.entity_id, ATTR_PERCENTAGE: percentage},
+        FanService.SET_PERCENTAGE,
+        {
+            TargetKey.ENTITY_ID: device.entity_id,
+            FanServiceArgument.PERCENTAGE: percentage,
+        },
         blocking=True,
     )
 
@@ -108,8 +106,8 @@ async def test_fan_set_percentage_zero_turns_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: AIR_INLET.entity_id, ATTR_PERCENTAGE: 0},
+        FanService.SET_PERCENTAGE,
+        {TargetKey.ENTITY_ID: AIR_INLET.entity_id, FanServiceArgument.PERCENTAGE: 0},
         blocking=True,
     )
 
@@ -131,8 +129,8 @@ async def test_fan_turn_off(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: AIR_INLET.entity_id},
+        FanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: AIR_INLET.entity_id},
         blocking=True,
     )
 
@@ -154,8 +152,8 @@ async def test_fan_turn_on_without_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: AIR_OUTLET.entity_id},
+        FanService.TURN_ON,
+        {TargetKey.ENTITY_ID: AIR_OUTLET.entity_id},
         blocking=True,
     )
 
@@ -177,8 +175,11 @@ async def test_fan_turn_on_with_percentage(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: AIR_TRANSFER.entity_id, ATTR_PERCENTAGE: 50},
+        FanService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: AIR_TRANSFER.entity_id,
+            FanServiceArgument.PERCENTAGE: 50,
+        },
         blocking=True,
     )
 

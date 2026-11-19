@@ -1,9 +1,13 @@
 """Tests for the Marketplace base object."""
 
 from http import HTTPStatus
+import logging
+from pathlib import Path
+import stat
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiogithubapi import GitHubConnectionException, GitHubException
 from aiohttp import ClientError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
@@ -29,7 +33,6 @@ from homeassistant.components.marketplace.enums import (
 from homeassistant.components.marketplace.exceptions import (
     ExecutionInProgressError,
     ExpectedError,
-    MarketplaceError,
 )
 from homeassistant.components.marketplace.repositories.base import Repository
 from homeassistant.components.marketplace.utils.url import github_raw_file
@@ -466,18 +469,41 @@ async def test_rate_limit_decides_how_much_can_update(
     assert marketplace.system.disabled_reason == reason
 
 
+@pytest.mark.parametrize(
+    ("exception", "level", "has_traceback"),
+    [
+        pytest.param(
+            GitHubConnectionException("Timeout while contacting DNS servers"),
+            logging.DEBUG,
+            False,
+            id="connection_error",
+        ),
+        pytest.param(
+            GitHubException("Something broke"),
+            logging.ERROR,
+            True,
+            id="github_error",
+        ),
+    ],
+)
 async def test_rate_limit_that_can_not_be_read_updates_nothing(
     marketplace: MarketplaceManager,
+    caplog: pytest.LogCaptureFixture,
+    exception: GitHubException,
+    level: int,
+    has_traceback: bool,
 ) -> None:
     """Test an unknown rate limit is treated as none left."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.marketplace")
     with patch.object(
-        marketplace,
-        "async_github_api_method",
-        AsyncMock(side_effect=MarketplaceError("no route to host")),
+        marketplace.githubapi, "rate_limit", AsyncMock(side_effect=exception)
     ):
         assert await marketplace.async_can_update() == 0
 
     assert not marketplace.system.disabled
+    [record] = [r for r in caplog.records if "rate limit" in r.getMessage()]
+    assert record.levelno == level
+    assert bool(record.exc_info) is has_traceback
 
 
 @pytest.mark.parametrize(
@@ -682,3 +708,16 @@ async def test_register_refuses_an_unknown_category(
         is None
     )
     assert marketplace.repositories.get_by_full_name("owner/unknown") is None
+
+
+async def test_saved_card_and_its_gzip_share_the_file_mode(
+    marketplace: MarketplaceManager, tmp_path: Path
+) -> None:
+    """Test the gzip next to a dashboard card is as readable as the card."""
+    card = tmp_path / "card.js"
+
+    assert await marketplace.async_save_file(str(card), "console.log('card');")
+
+    card_mode = stat.S_IMODE(card.stat().st_mode)
+    assert card_mode != 0o600
+    assert stat.S_IMODE((tmp_path / "card.js.gz").stat().st_mode) == card_mode
