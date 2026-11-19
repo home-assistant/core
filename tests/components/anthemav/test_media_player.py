@@ -154,6 +154,38 @@ async def test_select_source_x10_cannot_connect(
     assert err.value.translation_key == "cannot_connect"
 
 
+@pytest.mark.parametrize("failing_step", ["write", "drain"])
+@pytest.mark.usefixtures("mock_connection_create")
+async def test_select_source_x10_send_failed(
+    hass: HomeAssistant,
+    mock_anthemav: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    failing_step: str,
+) -> None:
+    """Test an error is raised and the connection closed when sending fails."""
+    await _setup_x10(hass, mock_config_entry, mock_anthemav)
+    writer = MagicMock()
+    writer.drain = AsyncMock()
+    writer.wait_closed = AsyncMock()
+    getattr(writer, failing_step).side_effect = OSError("reset")
+    mock_zone = mock_anthemav.protocol.zones[1]
+    mock_zone.query.reset_mock()
+
+    with (
+        patch("asyncio.open_connection", return_value=(MagicMock(), writer)),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: "media_player.anthem_av", ATTR_INPUT_SOURCE: "SqueezeB"},
+            blocking=True,
+        )
+    assert err.value.translation_key == "send_failed"
+    writer.close.assert_called_once()
+    mock_zone.query.assert_not_called()
+
+
 @pytest.mark.usefixtures("mock_connection_create")
 async def test_select_source_x10_unknown_source(
     hass: HomeAssistant,
