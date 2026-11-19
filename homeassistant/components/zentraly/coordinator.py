@@ -14,6 +14,7 @@ from .const import SCAN_INTERVAL
 from .models import ZentralyConfigEntry, ZentralyDevice
 
 _LOGGER = logging.getLogger(__name__)
+_READ_FAILED = object()
 
 
 class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
@@ -87,8 +88,6 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
         }
         try:
             await asyncio.gather(*tasks.values())
-        except ZentralyApiError as err:
-            _LOGGER.debug("Unable to refresh %s: %s", self.device.device_id, err)
         finally:
             for task in tasks.values():
                 if not task.done():
@@ -98,11 +97,16 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
             if (
                 not task.cancelled()
                 and task.exception() is None
+                and task.result() is not _READ_FAILED
                 and self._versions.get(key, 0) == versions.get(key, 0)
             ):
                 self.data[key] = task.result()
         return self.data
 
     async def _async_read_value(self, reader: Callable[[], Awaitable[Any]]) -> Any:
-        """Adapt a library awaitable to an HA-owned coroutine task."""
-        return await reader()
+        """Isolate recoverable errors in an HA-owned coroutine task."""
+        try:
+            return await reader()
+        except ZentralyApiError as err:
+            _LOGGER.debug("Unable to refresh %s: %s", self.device.device_id, err)
+            return _READ_FAILED

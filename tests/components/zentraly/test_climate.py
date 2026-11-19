@@ -279,21 +279,13 @@ async def test_periodic_refresh_during_reconnect(
     assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
 
 
-@pytest.mark.parametrize(
-    "error",
-    [
-        pytest.param(ZentralyConnectionError, id="failure"),
-        pytest.param(asyncio.CancelledError, id="cancelled"),
-    ],
-)
-async def test_failed_refresh_cleans_up_reads(
+async def test_cancelled_read_cleans_up_siblings(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_climate_api: MagicMock,
-    error: type[BaseException],
     connection_state: Callable[[bool], None],
 ) -> None:
-    """Failed reads clean up siblings and allow recovery through reports or refreshes."""
+    """Cancellation cleans up siblings and allows recovery through reports or reads."""
     hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
     started = asyncio.Event()
     cleaned_up = asyncio.Event()
@@ -301,7 +293,7 @@ async def test_failed_refresh_cleans_up_reads(
 
     async def failing_read() -> float:
         await started.wait()
-        raise error()
+        raise asyncio.CancelledError
 
     async def pending_read() -> float:
         started.set()
@@ -576,9 +568,14 @@ async def test_partial_read_failure_preserves_other_fields(
     mock_climate_api: MagicMock,
     connection_state: Callable[[bool], None],
 ) -> None:
-    """One failed command does not discard successful readings or device availability."""
+    """A failed command lets a delayed independent reading finish."""
+
+    async def read_target_temperature() -> float:
+        await asyncio.sleep(0.01)
+        return 23.0
+
     mock_climate_api.async_get_current_temperature.side_effect = ZentralyConnectionError
-    mock_climate_api.async_get_target_temperature.return_value = 23.0
+    mock_climate_api.async_get_target_temperature.side_effect = read_target_temperature
     connection_state(True)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get(ENTITY_ID)
