@@ -1,6 +1,7 @@
 """Code mode: expose the tools of an LLM API as functions for sandboxed code."""
 
 import asyncio
+import builtins
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
 from datetime import date, time, timedelta
@@ -86,7 +87,14 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
     names: set[str] = set()
     for tool in api_instance.tools:
         base = re.sub(r"\W", "_", tool.name)
-        if not base.isidentifier() or keyword.iskeyword(base):
+        # A name of a builtin, or of the module that the prompt tells the model
+        # to import, would hide the function.
+        if (
+            not base.isidentifier()
+            or keyword.iskeyword(base)
+            or hasattr(builtins, base)
+            or base == "asyncio"
+        ):
             base = f"tool_{base}"
         # Different tool names can give the same Python name.
         name = base

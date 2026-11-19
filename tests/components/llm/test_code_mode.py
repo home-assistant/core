@@ -456,11 +456,21 @@ async def test_python_names_are_unique(
                 NameTool("foo.bar"),
                 NameTool("class"),
                 NameTool("123status"),
+                NameTool("len"),
+                NameTool("asyncio"),
             ],
         )
     )
 
-    names = ("foo_bar", "foo_bar_2", "foo_bar_3", "tool_class", "tool_123status")
+    names = (
+        "foo_bar",
+        "foo_bar_2",
+        "foo_bar_3",
+        "tool_class",
+        "tool_123status",
+        "tool_len",
+        "tool_asyncio",
+    )
     for name in names:
         assert f"async def {name}() -> dict:" in api_instance.api_prompt
     result = await _execute(
@@ -472,6 +482,8 @@ async def test_python_names_are_unique(
         {"name": "foo.bar"},
         {"name": "class"},
         {"name": "123status"},
+        {"name": "len"},
+        {"name": "asyncio"},
     ]
 
 
