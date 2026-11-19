@@ -2815,7 +2815,7 @@ python-google-weather-api==0.0.11
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==10.2.0
+python-homewizard-energy==10.3.0
 
 # homeassistant.components.hotspring
 python-hotspring==5.0.0
