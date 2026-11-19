@@ -1029,6 +1029,17 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "aquarite_neopool": {
+      "name": "AquaRite",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "aquostv": {
       "name": "Sharp Aquos TV",
       "integration_type": "hub",
