@@ -115,9 +115,9 @@ Write a release-note-style PR title summarizing the change. The title becomes th
 | New feature | `Add asyncio-level timeout to Backblaze B2 uploads` |
 | | `Add Nettleie optimization option` |
 | Code quality | `Add exception translations to Teslemetry` |
-| | `Simplify entity init in Proxmox` |
 | | `Improve test coverage of Tesla Fleet` |
 | | `Refactor adguard tests to use proper fixtures for mocking` |
+| | `Simplify entity init in Proxmox` |
 | Developer tooling | `Add pylint checker for flow calls inside a try block` |
 | | `Use all CPUs for full pylint runs in CI` |
 
