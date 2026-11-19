@@ -28,6 +28,7 @@
       'oledfade': '30',
       'reboottimer': '0',
       'relay': '0',
+      'tcpport': '2210',
       'tx0plus5': '1',
       'tx1plus5': '1',
       'unmutecnt': '500',

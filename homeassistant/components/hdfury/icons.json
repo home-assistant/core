@@ -17,6 +17,9 @@
       },
       "reboot_timer": {
         "default": "mdi:timer-refresh"
+      },
+      "tcp_port": {
+        "default": "mdi:console-network"
       }
     },
     "select": {
