@@ -88,6 +88,38 @@ async def test_state_survives_a_reload(
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_unknown_speed_survives_a_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an unknown speed is not restored as 0 %, which would mean off."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    fan_entity_id = entity_registry.async_get_entity_id(
+        FAN_DOMAIN, "ceiling_fan_infrared", config_entry.entry_id
+    )
+    assert fan_entity_id is not None
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    assert (state := hass.states.get(fan_entity_id)) is not None
+    assert state.attributes[ATTR_PERCENTAGE] is None
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(fan_entity_id)) is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_PERCENTAGE] is None
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_entry_follows_the_emitter_when_it_is_renamed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

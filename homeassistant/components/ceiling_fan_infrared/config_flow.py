@@ -35,7 +35,7 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             if emitter_id := self._resolve_emitter_id(
                 emitter_entity_ids, user_input.get(CONF_INFRARED_ENTITY_ID)
             ):
-                self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
+                self._abort_if_emitter_is_configured(emitter_id)
                 return self.async_create_entry(
                     title=f"Ceiling fan via {self._emitter_name(emitter_id)}",
                     data=self._entry_data(emitter_id),
@@ -73,7 +73,7 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
             if emitter_id := self._resolve_emitter_id(
                 emitter_entity_ids, user_input.get(CONF_INFRARED_ENTITY_ID)
             ):
-                self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: emitter_id})
+                self._abort_if_emitter_is_configured(emitter_id)
                 return self.async_update_reload_and_abort(
                     entry, data=self._entry_data(emitter_id)
                 )
@@ -115,6 +115,26 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
         return entity_id
 
     @callback
+    def _abort_if_emitter_is_configured(self, entity_id: str) -> None:
+        """Abort when the emitter is already used by another entry.
+
+        The entity ID is checked for entries that predate the stored UUID and
+        for emitters without a registry entry. The UUID is checked as well,
+        because an entry whose emitter was renamed while it was unloaded still
+        has the old entity ID until it is set up again.
+        """
+        self._async_abort_entries_match({CONF_INFRARED_ENTITY_ID: entity_id})
+        if (uuid := self._emitter_uuid(entity_id)) is not None:
+            self._async_abort_entries_match({CONF_INFRARED_ENTITY_UUID: uuid})
+
+    @callback
+    def _emitter_uuid(self, entity_id: str) -> str | None:
+        """Return the entity registry UUID of an emitter, if it has one."""
+        if (registry_entry := er.async_get(self.hass).async_get(entity_id)) is None:
+            return None
+        return registry_entry.id
+
+    @callback
     def _entry_data(self, entity_id: str) -> dict[str, Any]:
         """Return the config entry data for an emitter.
 
@@ -123,8 +143,8 @@ class CeilingFanIrConfigFlow(ConfigFlow, domain=DOMAIN):
         Emitters without a registry entry only have an entity ID to store.
         """
         data: dict[str, Any] = {CONF_INFRARED_ENTITY_ID: entity_id}
-        if (registry_entry := er.async_get(self.hass).async_get(entity_id)) is not None:
-            data[CONF_INFRARED_ENTITY_UUID] = registry_entry.id
+        if (uuid := self._emitter_uuid(entity_id)) is not None:
+            data[CONF_INFRARED_ENTITY_UUID] = uuid
         return data
 
     @callback

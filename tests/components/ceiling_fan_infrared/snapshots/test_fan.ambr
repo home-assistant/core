@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling fan via Test IR emitter',
-      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,

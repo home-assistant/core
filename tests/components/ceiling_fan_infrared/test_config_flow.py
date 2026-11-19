@@ -191,6 +191,34 @@ async def test_user_flow_already_configured(
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
+async def test_user_flow_already_configured_after_a_rename_while_unloaded(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a stale entity ID does not allow a second entry for the same emitter."""
+    registry_entry = entity_registry.async_get(EMITTER_ENTITY_ID)
+    assert registry_entry is not None
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Ceiling fan via Test IR emitter",
+        data={
+            CONF_INFRARED_ENTITY_ID: "infrared.stale_emitter_id",
+            CONF_INFRARED_ENTITY_UUID: registry_entry.id,
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -268,6 +296,37 @@ async def test_reconfigure_flow_emitter_used_by_another_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_INFRARED_ENTITY_ID: "infrared.other_ir_emitter"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID}
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
+async def test_reconfigure_flow_emitter_used_after_a_rename_while_unloaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale entity ID does not hide an entry that uses the same emitter."""
+    registry_entry = entity_registry.async_get(EMITTER_ENTITY_ID)
+    assert registry_entry is not None
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Ceiling fan via stale entity ID",
+        data={
+            CONF_INFRARED_ENTITY_ID: "infrared.stale_emitter_id",
+            CONF_INFRARED_ENTITY_UUID: registry_entry.id,
+        },
+    ).add_to_hass(hass)
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
     )
 
     assert result["type"] is FlowResultType.ABORT
