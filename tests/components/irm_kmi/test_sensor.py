@@ -194,6 +194,25 @@ async def test_pollen_grace_period(
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_pollen_kept_when_forecasts_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test old weather data keeps pollen within its grace period."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_irm_kmi_api.refresh_forecasts_coord.side_effect = IrmKmiApiError
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
 async def test_pollen_grace_period_when_forecasts_fail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
