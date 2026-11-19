@@ -1,4 +1,126 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up RESTful Command. You add the commands after this step."
+      }
+    }
+  },
+  "config_subentries": {
+    "command": {
+      "entry_type": "Command",
+      "error": {
+        "action_exists": "An action with this name already exists.",
+        "invalid_action": "Use only lowercase letters, numbers and underscores. The name reload is reserved.",
+        "invalid_auth": "Set both a username and a password, and do not use a colon in the username.",
+        "invalid_config": "The command is not valid.",
+        "invalid_headers": "The headers must be names with text or valid template values."
+      },
+      "initiate_flow": {
+        "user": "Add command"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "method": "[%key:component::rest_command::config_subentries::command::step::user::data::method%]",
+            "payload": "[%key:component::rest_command::config_subentries::command::step::user::data::payload%]",
+            "url": "[%key:common::config_flow::data::url%]"
+          },
+          "data_description": {
+            "method": "[%key:component::rest_command::config_subentries::command::step::user::data_description::method%]",
+            "payload": "[%key:component::rest_command::config_subentries::command::step::user::data_description::payload%]",
+            "url": "[%key:component::rest_command::config_subentries::command::step::user::data_description::url%]"
+          },
+          "description": "Change the command behind {action}.",
+          "sections": {
+            "advanced": {
+              "data": {
+                "content_type": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data::content_type%]",
+                "headers": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data::headers%]",
+                "insecure_cipher": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data::insecure_cipher%]",
+                "skip_url_encoding": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data::skip_url_encoding%]",
+                "timeout": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data::timeout%]",
+                "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+              },
+              "data_description": {
+                "content_type": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::content_type%]",
+                "headers": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::headers%]",
+                "insecure_cipher": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::insecure_cipher%]",
+                "skip_url_encoding": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::skip_url_encoding%]",
+                "timeout": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::timeout%]",
+                "verify_ssl": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::data_description::verify_ssl%]"
+              },
+              "description": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::description%]",
+              "name": "[%key:component::rest_command::config_subentries::command::step::user::sections::advanced::name%]"
+            },
+            "auth": {
+              "data": {
+                "authentication": "[%key:component::rest_command::config_subentries::command::step::user::sections::auth::data::authentication%]",
+                "password": "[%key:common::config_flow::data::password%]",
+                "username": "[%key:common::config_flow::data::username%]"
+              },
+              "data_description": {
+                "authentication": "[%key:component::rest_command::config_subentries::command::step::user::sections::auth::data_description::authentication%]"
+              },
+              "description": "[%key:component::rest_command::config_subentries::command::step::user::sections::auth::description%]",
+              "name": "[%key:component::rest_command::config_subentries::command::step::user::sections::auth::name%]"
+            }
+          },
+          "title": "Change command"
+        },
+        "user": {
+          "data": {
+            "action": "Action name",
+            "method": "Method",
+            "payload": "Payload",
+            "url": "[%key:common::config_flow::data::url%]"
+          },
+          "data_description": {
+            "action": "The command becomes the action rest_command.your_name. Use lowercase letters, numbers and underscores. It cannot be changed later.",
+            "method": "HTTP method of the request.",
+            "payload": "Body of the request. Templates can use the data passed to the action.",
+            "url": "URL to call. Templates can use the data passed to the action."
+          },
+          "description": "Each command becomes an action you can use in automations and scripts. Data passed to the action is available as variables in the templates.",
+          "sections": {
+            "advanced": {
+              "data": {
+                "content_type": "Content type",
+                "headers": "Headers",
+                "insecure_cipher": "Allow insecure ciphers",
+                "skip_url_encoding": "Skip URL encoding",
+                "timeout": "Timeout",
+                "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+              },
+              "data_description": {
+                "content_type": "Value of the Content-Type header, for example application/json.",
+                "headers": "Headers to send. Values can be templates.",
+                "insecure_cipher": "Allow a less secure set of ciphers, for old devices.",
+                "skip_url_encoding": "Send the URL exactly as rendered, without encoding it.",
+                "timeout": "Time to wait for a response.",
+                "verify_ssl": "Verify the SSL/TLS certificate of the server."
+              },
+              "description": "Headers, timeouts and SSL settings.",
+              "name": "Advanced settings"
+            },
+            "auth": {
+              "data": {
+                "authentication": "Authentication method",
+                "password": "[%key:common::config_flow::data::password%]",
+                "username": "[%key:common::config_flow::data::username%]"
+              },
+              "data_description": {
+                "authentication": "Type of HTTP authentication. Basic is used when only a username and password are set."
+              },
+              "description": "Credentials for the server.",
+              "name": "Authentication"
+            }
+          },
+          "title": "Add command"
+        }
+      }
+    }
+  },
   "exceptions": {
     "client_error": {
       "message": "Client error occurred when calling resource \"{request_url}\""
@@ -10,9 +132,32 @@
       "message": "Timeout when calling resource \"{request_url}\""
     }
   },
+  "issues": {
+    "action_conflict": {
+      "description": "The command {action} from the UI was not set up, because an action with that name already exists, probably from YAML. Remove one of the two and restart Home Assistant.",
+      "title": "REST command {action} is defined twice"
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "digest": "Digest"
+      }
+    },
+    "method": {
+      "options": {
+        "delete": "DELETE",
+        "get": "GET",
+        "patch": "PATCH",
+        "post": "POST",
+        "put": "PUT"
+      }
+    }
+  },
   "services": {
     "reload": {
-      "description": "Reloads RESTful commands from the YAML-configuration.",
+      "description": "Reloads RESTful commands from the YAML configuration. Commands set up in the UI are not affected.",
       "name": "[%key:common::action::reload%]"
     }
   }

@@ -1,5 +1,6 @@
 """Services for the REST command integration."""
 
+from collections.abc import Callable
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -34,6 +35,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import (
@@ -45,12 +47,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__package__)
 
+YAML_COMMANDS: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_commands")
+
 
 @callback
 def async_register_rest_command(
     hass: HomeAssistant, name: str, command_config: dict[str, Any]
-) -> None:
-    """Create service for rest command."""
+) -> Callable[[], None]:
+    """Create service for rest command and return a callback that removes it."""
     websession = async_get_clientsession(
         hass,
         command_config[CONF_VERIFY_SSL],
@@ -229,9 +233,33 @@ def async_register_rest_command(
         supports_response=SupportsResponse.OPTIONAL,
     )
 
+    @callback
+    def _async_unregister() -> None:
+        hass.services.async_remove(DOMAIN, name)
+
+    return _async_unregister
+
+
+@callback
+def async_register_yaml_commands(
+    hass: HomeAssistant, commands: dict[str, dict[str, Any]]
+) -> None:
+    """Register the commands from YAML, skipping names already in use."""
+    yaml_commands = hass.data.setdefault(YAML_COMMANDS, set())
+    for name, command_config in commands.items():
+        if hass.services.has_service(DOMAIN, name):
+            _LOGGER.warning(
+                "Not registering %s.%s from YAML, the action already exists",
+                DOMAIN,
+                name,
+            )
+            continue
+        async_register_rest_command(hass, name, command_config)
+        yaml_commands.add(name)
+
 
 async def _async_reload_service_handler(service: ServiceCall) -> None:
-    """Remove all rest_commands and load new ones from config."""
+    """Remove the rest_commands from YAML and load new ones from config."""
     hass = service.hass
     conf = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -239,14 +267,13 @@ async def _async_reload_service_handler(service: ServiceCall) -> None:
     if conf is None:
         return
 
-    existing = hass.services.async_services_for_domain(DOMAIN)
-    for existing_service in existing:
-        if existing_service == SERVICE_RELOAD:
-            continue
-        hass.services.async_remove(DOMAIN, existing_service)
+    # Only the commands from YAML are reloaded, the ones from the UI stay
+    yaml_commands = hass.data.setdefault(YAML_COMMANDS, set())
+    for name in yaml_commands:
+        hass.services.async_remove(DOMAIN, name)
+    yaml_commands.clear()
 
-    for name, command_config in conf.get(DOMAIN, {}).items():
-        async_register_rest_command(hass, name, command_config)
+    async_register_yaml_commands(hass, conf.get(DOMAIN, {}))
 
 
 @callback

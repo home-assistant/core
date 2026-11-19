@@ -1,7 +1,10 @@
 """Support for exposing regular REST commands as services."""
 
+import logging
+
 import probatio
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
@@ -16,16 +19,23 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_ACTION,
     CONF_CONTENT_TYPE,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
 )
-from .services import async_register_rest_command, async_setup_services
+from .services import (
+    async_register_rest_command,
+    async_register_yaml_commands,
+    async_setup_services,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
@@ -65,9 +75,46 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
-    for name, command_config in config[DOMAIN].items():
-        async_register_rest_command(hass, name, command_config)
-
+    async_register_yaml_commands(hass, config.get(DOMAIN, {}))
     async_setup_services(hass)
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the REST commands configured in the UI."""
+    for subentry in entry.subentries.values():
+        command_config = dict(subentry.data)
+        name: str = command_config.pop(CONF_ACTION)
+        issue_id = f"action_conflict_{subentry.subentry_id}"
+        if hass.services.has_service(DOMAIN, name):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                config_entry_id=entry.entry_id,
+                config_subentry_id=subentry.subentry_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="action_conflict",
+                translation_placeholders={"action": f"{DOMAIN}.{name}"},
+            )
+            continue
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        try:
+            validated = COMMAND_SCHEMA(command_config)
+        except probatio.Invalid as err:
+            _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
+            continue
+        entry.async_on_unload(async_register_rest_command(hass, name, validated))
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Unload the REST commands configured in the UI."""
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when a command is added, changed or removed."""
+    hass.config_entries.async_schedule_reload(entry.entry_id)
