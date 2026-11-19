@@ -150,54 +150,27 @@ RECONFIGURE_SCHEMA = probatio.Schema(COMMAND_FIELDS_SCHEMA)
 
 def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     """Move the values out of the form sections and drop empty values."""
-    data: dict[str, Any] = {}
-    for key, value in user_input.items():
-        if key in (SECTION_AUTH, SECTION_ADVANCED):
-            data.update(value)
-        else:
-            data[key] = value
-    if CONF_TIMEOUT in data:
-        data[CONF_TIMEOUT] = int(data[CONF_TIMEOUT])
+    data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADVANCED]}
+    del data[SECTION_AUTH], data[SECTION_ADVANCED]
     return {key: value for key, value in data.items() if value not in (None, "", {})}
 
 
 def _to_sections(data: dict[str, Any]) -> dict[str, Any]:
     """Put stored values in the form sections, for suggested values."""
-    values: dict[str, Any] = {
-        key: value
-        for key, value in data.items()
-        if key not in AUTH_FIELDS and key not in ADVANCED_FIELDS
+    return {
+        **data,
+        SECTION_AUTH: {key: data[key] for key in AUTH_FIELDS if key in data},
+        SECTION_ADVANCED: {key: data[key] for key in ADVANCED_FIELDS if key in data},
     }
-    values[SECTION_AUTH] = {key: data[key] for key in AUTH_FIELDS if key in data}
-    values[SECTION_ADVANCED] = {
-        key: data[key] for key in ADVANCED_FIELDS if key in data
-    }
-    return values
 
 
 def _validate_command(data: dict[str, Any]) -> dict[str, str]:
     """Validate a command and return the form errors."""
-    errors: dict[str, str] = {}
     try:
         COMMAND_SCHEMA(data)
-    except probatio.MultipleInvalid as err:
-        for error in err.errors:
-            errors.update(_error_for(error))
-    except probatio.Invalid as err:
-        errors.update(_error_for(err))
-    return errors
-
-
-def _error_for(error: probatio.Invalid) -> dict[str, str]:
-    """Map a schema error to a form error."""
-    field = error.path[0] if error.path else None
-    if field == CONF_HEADERS:
-        return {"base": "invalid_headers"}
-    if field in (CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION) or isinstance(
-        error, probatio.InclusiveInvalid
-    ):
-        return {"base": "invalid_auth"}
-    return {"base": "invalid_config"}
+    except probatio.Invalid:
+        return {"base": "invalid_command"}
+    return {}
 
 
 class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):

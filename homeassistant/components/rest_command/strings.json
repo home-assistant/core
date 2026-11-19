@@ -12,9 +12,7 @@
       "error": {
         "action_exists": "The action {action} already exists. Choose another name.",
         "invalid_action": "Enter a name with at least one letter or number. The name Reload is reserved.",
-        "invalid_auth": "Enter both a username and a password, and do not use a colon in the username.",
-        "invalid_config": "The command is not valid.",
-        "invalid_headers": "Each header needs a name and a text value, and templates in the values must be valid."
+        "invalid_command": "The command is not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates."
       },
       "initiate_flow": {
         "user": "Add command"
@@ -31,7 +29,7 @@
             "payload": "[%key:component::rest_command::config_subentries::command::step::user::data_description::payload%]",
             "url": "[%key:component::rest_command::config_subentries::command::step::user::data_description::url%]"
           },
-          "description": "Change the request sent by {action}. The action name stays the same, so your automations keep working.\n\nURL, payload and header values can be templates. Values that you pass in the action data are available as variables: with the URL `{example_url}` and the action data `{example_data}`, the request goes to the front door.",
+          "description": "Change the request sent by {action}. The action name stays the same, so your automations keep working.",
           "sections": {
             "advanced": {
               "data": {

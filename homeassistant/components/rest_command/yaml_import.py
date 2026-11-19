@@ -80,7 +80,6 @@ def async_import_yaml_commands(
         DOMAIN,
         "yaml_imported",
         is_fixable=False,
-        is_persistent=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="yaml_imported",
     )

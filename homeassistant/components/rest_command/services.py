@@ -1,6 +1,7 @@
 """Services for the REST command integration."""
 
 from collections.abc import Callable
+from functools import partial
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -231,11 +232,7 @@ def async_register_rest_command(
         supports_response=SupportsResponse.OPTIONAL,
     )
 
-    @callback
-    def _async_unregister() -> None:
-        hass.services.async_remove(DOMAIN, name)
-
-    return _async_unregister
+    return partial(hass.services.async_remove, DOMAIN, name)
 
 
 async def _async_reload_service_handler(service: ServiceCall) -> None:

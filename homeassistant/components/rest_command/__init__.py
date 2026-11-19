@@ -1,7 +1,5 @@
 """Support for exposing regular REST commands as services."""
 
-import logging
-
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,8 +29,6 @@ from .const import (
 )
 from .services import async_register_rest_command, async_setup_services
 from .yaml_import import async_import_yaml_commands
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_METHOD = "get"
@@ -83,12 +79,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     for subentry in entry.subentries.values():
         command_config = dict(subentry.data)
         name: str = command_config.pop(CONF_ACTION)
-        try:
-            validated = COMMAND_SCHEMA(command_config)
-        except probatio.Invalid as err:
-            _LOGGER.error("Invalid configuration for %s.%s: %s", DOMAIN, name, err)
-            continue
-        entry.async_on_unload(async_register_rest_command(hass, name, validated))
+        entry.async_on_unload(
+            async_register_rest_command(hass, name, COMMAND_SCHEMA(command_config))
+        )
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 

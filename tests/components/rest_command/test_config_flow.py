@@ -1,9 +1,7 @@
 """Tests for the REST command config flow."""
 
 from typing import Any
-from unittest.mock import patch
 
-import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -114,13 +112,13 @@ async def test_single_instance(hass: HomeAssistant, entry: MockConfigEntry) -> N
         ({"action": "Reload"}, {"action": "invalid_action"}),
         ({"action": "Open door"}, {"action": "action_exists"}),
         ({"action": "From YAML"}, {"action": "action_exists"}),
-        ({"auth": {"username": "user"}}, {"base": "invalid_auth"}),
+        ({"auth": {"username": "user"}}, {"base": "invalid_command"}),
         (
             {"auth": {"username": "us:er", "password": "secret"}},
-            {"base": "invalid_auth"},
+            {"base": "invalid_command"},
         ),
-        ({"advanced": {"headers": {"X-Door": ["a"]}}}, {"base": "invalid_headers"}),
-        ({"advanced": {"headers": {"X-Door": "{{ a"}}}, {"base": "invalid_headers"}),
+        ({"advanced": {"headers": {"X-Door": ["a"]}}}, {"base": "invalid_command"}),
+        ({"advanced": {"headers": {"X-Door": "{{ a"}}}, {"base": "invalid_command"}),
     ],
 )
 async def test_subentry_errors(
@@ -175,45 +173,6 @@ async def test_subentry_errors(
     }
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [probatio.Invalid("bad"), probatio.MultipleInvalid([probatio.Invalid("bad")])],
-)
-async def test_subentry_unknown_error(
-    hass: HomeAssistant, entry: MockConfigEntry, side_effect: Exception
-) -> None:
-    """Test a schema error that is not tied to a field."""
-    result = await _start_subentry_flow(hass, entry)
-    with patch(
-        "homeassistant.components.rest_command.config_flow.COMMAND_SCHEMA",
-        side_effect=side_effect,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {
-                "action": "New command",
-                "url": TEST_URL,
-                "method": "get",
-                "auth": {},
-                "advanced": {},
-            },
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_config"}
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "New command",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": {},
-            "advanced": {},
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
 async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test changing a command keeps its action name."""
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -235,7 +194,7 @@ async def test_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "invalid_command"}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
