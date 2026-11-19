@@ -1,10 +1,11 @@
 """The PoolSense integration."""
 
+from aiohttp import ClientError
 from poolsense import PoolSense
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -22,7 +23,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) ->
         entry.data[CONF_PASSWORD],
         None,
     )
-    auth_valid = await poolsense.test_poolsense_credentials()
+    try:
+        auth_valid = await poolsense.test_poolsense_credentials()
+    except (ClientError, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     if not auth_valid:
         raise ConfigEntryError(
