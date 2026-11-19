@@ -881,6 +881,10 @@ test_worker_log_cases = (
         "https://foo.bar/baz?param1=abcd&password=efgh",
         "https://foo.bar/baz?param1=abcd&password=****",
     ),
+    (
+        "homekit://192.168.1.50:51826/?device_id=AA:BB:CC:DD:EE:FF&client_private=efgh",
+        "homekit://192.168.1.50:51826/?device_id=AA:BB:CC:DD:EE:FF&client_private=****",
+    ),
 )
 
 

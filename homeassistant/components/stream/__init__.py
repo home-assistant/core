@@ -139,7 +139,7 @@ def redact_credentials(url: str) -> str:
     if yurl.password is not None:
         yurl = yurl.with_password("****")
     redacted_query_params = dict.fromkeys(
-        {"auth", "user", "password"} & yurl.query.keys(), "****"
+        {"auth", "user", "password", "client_private"} & yurl.query.keys(), "****"
     )
     return str(yurl.update_query(redacted_query_params))
 
