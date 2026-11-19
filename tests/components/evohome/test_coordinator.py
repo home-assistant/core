@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.evohome.const import (
+    EVOHOME_DATA,
     SCAN_INTERVAL_DEFAULT,
     SCHEDULE_MAX_AGE,
 )
@@ -29,6 +30,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
@@ -381,6 +386,71 @@ async def test_action_api_call_failed_reason(
         )
 
     assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    ("exception", "error_type", "translation_key", "retry_after"),
+    [
+        pytest.param(
+            evo_exc.ApiConnectionFailedError("API call failed"),
+            UpdateFailedUnreachable,
+            "api_connection_failed",
+            None,
+            id="connection_failed",
+        ),
+        pytest.param(
+            evo_exc.ApiRateLimitExceededError("Rate limit exceeded", retry_after=900),
+            UpdateFailed,
+            "api_rate_limited",
+            900,
+            id="rate_limited",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            None,
+            id="server_error",
+        ),
+        pytest.param(
+            evo_exc.ApiCallFailedError(
+                "API call failed",
+                status=503,
+                reason=evo_exc.ApiCallErrorReason.SERVER_ERROR,
+                retry_after=120,
+            ),
+            UpdateFailed,
+            "api_server_error",
+            120,
+            id="server_error_retry_after",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("evohome")
+async def test_poll_api_call_failed(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    exception: evo_exc.ApiCallFailedError,
+    error_type: type[UpdateFailed],
+    translation_key: str,
+    retry_after: float | None,
+) -> None:
+    """Test a failed poll of a location raises UpdateFailed, by the error's reason."""
+
+    coordinator = hass.data[EVOHOME_DATA].coordinator
+
+    with patch("evohomeasync2.location.Location.get_status", side_effect=exception):
+        freezer.tick(SCAN_INTERVAL_DEFAULT)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert type(coordinator.last_exception) is error_type
+    assert coordinator.last_exception.translation_key == translation_key
+    assert coordinator.last_exception.retry_after == retry_after
 
 
 async def test_no_schedule_fetch_at_setup(
