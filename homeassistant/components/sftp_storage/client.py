@@ -25,7 +25,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.async_iterator import ResourceChunkIterator
 
-from .const import BUF_SIZE, LOGGER
+from .const import BUF_SIZE, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData
@@ -322,14 +322,20 @@ class BackupAgentClient:
             )
         except PermissionDenied as e:
             raise BackupAgentError(
-                "Failure while attempting to establish SSH"
-                " connection. Please check SSH credentials"
-                " and if changed, re-install the integration"
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={
+                    "username": self.cfg.runtime_data.username,
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
         except (OSError, SSHError) as e:
             raise SFTPConnectionError(
-                f"Failed to establish SSH connection to"
-                f" {self.cfg.runtime_data.host}: {e}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
 
         # Configure SFTP Client Connection
@@ -338,12 +344,20 @@ class BackupAgentClient:
             await self._sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
-                "Failed to create SFTP client."
-                " Re-installing integration might be required"
+                translation_domain=DOMAIN,
+                translation_key="backup_location_unavailable",
+                translation_placeholders={
+                    "backup_location": self.cfg.runtime_data.backup_location,
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
         except (OSError, SSHError) as e:
             raise SFTPConnectionError(
-                f"Failed to open SFTP session on {self.cfg.runtime_data.host}: {e}"
+                translation_domain=DOMAIN,
+                translation_key="sftp_session_failed",
+                translation_placeholders={
+                    "host": self.cfg.runtime_data.host,
+                },
             ) from e
 
         return self

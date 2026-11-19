@@ -36,7 +36,10 @@ from homeassistant.components.engie_be.const import (
     EPEX_SCAN_INTERVAL,
     PRICES_SCAN_INTERVAL,
 )
-from homeassistant.components.engie_be.coordinator import EngieBePricesData
+from homeassistant.components.engie_be.coordinator import (
+    EngieBePricesData,
+    mask_identifier,
+)
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -60,6 +63,7 @@ from .conftest import (
     build_relations,
     build_service_point,
     setup_dynamic_entry,
+    setup_entry,
     without_capacity_tariff,
 )
 
@@ -295,14 +299,14 @@ def _empty_address_relations() -> CustomerAccountRelations:
         pytest.param(_empty_address_relations(), id="empty-address"),
     ],
 )
-async def test_device_name_falls_back_to_ban(
+async def test_device_name_falls_back_to_masked_ban(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     relations: CustomerAccountRelations,
 ) -> None:
-    """Test the device name falls back to the bare BAN without a usable consumption address."""
+    """Test the device name falls back to the masked BAN without a usable consumption address."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         relations
     )
@@ -314,7 +318,7 @@ async def test_device_name_falls_back_to_ban(
         (DOMAIN, BAN), mock_config_entry.entry_id
     )
     assert household_device is not None
-    assert household_device.name == BAN
+    assert household_device.name == f"Business agreement {mask_identifier(BAN)}"
 
 
 @pytest.mark.parametrize(
@@ -1184,6 +1188,37 @@ async def test_gas_coefficient_appearing_later_adds_per_m3_sensor(
     assert _gas_per_m3_state(hass, entity_registry) == str(
         0.123456 * GAS_CONVERSION_COEFFICIENT
     )
+
+
+async def test_service_point_fetched_once_per_meter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test two suffixed EANs of one meter share a single service point fetch."""
+    second_suffix_ean = f"{bare_ean(OFFTAKE_ONLY_EAN)}_ID2"
+    mock_engie_client.return_value.async_get_prices.return_value = PricesResponse(
+        items=(
+            _single_period_prices(OFFTAKE_ONLY_EAN),
+            _single_period_prices(second_suffix_ean),
+        )
+    )
+    await setup_entry(hass, mock_config_entry)
+
+    mock_engie_client.return_value.async_get_service_point.assert_called_once_with(
+        OFFTAKE_ONLY_EAN
+    )
+    expected = str(round(0.2 * GAS_CONVERSION_COEFFICIENT, 6))
+    for unique_id in (
+        GAS_PER_M3_UNIQUE_ID,
+        f"{BAN}_{second_suffix_ean}_offtake_TOTAL_HOURS_per_m3",
+    ):
+        entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
