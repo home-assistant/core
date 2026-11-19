@@ -12,7 +12,6 @@ from typing import Any, Literal, TypedDict, cast
 
 import probatio
 
-from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, frame, intent, llm, template
@@ -778,9 +777,7 @@ class ChatLog:
         )
 
     async def _async_apply_code_mode(self, llm_api: llm.APIInstance) -> llm.APIInstance:
-        """Expose the tools as code when the code mode preview feature is on."""
-        if not async_is_preview_feature_enabled(self.hass, "llm", "code_mode"):
-            return llm_api
+        """Expose the tools of the API as code."""
         # The sandbox library loads only when it is used.
         code_mode = await async_import_module(
             self.hass, "homeassistant.components.llm.code_mode"
@@ -808,7 +805,6 @@ class ChatLog:
             llm_context.context.user_id if llm_context.context else None,
             llm_context.device_id,
             api_ids,
-            async_is_preview_feature_enabled(self.hass, "llm", "code_mode"),
         )
 
         if (
@@ -863,7 +859,9 @@ class ChatLog:
 
         # Code mode replaces the tools, so remember the tools of the API.
         llm_tools: list[llm.Tool] = llm_api.tools if llm_api else []
-        if llm_api is not None:
+        # Assist alone has few tools, so the model calls them directly. With
+        # other APIs, the model writes code that calls the tools.
+        if llm_api is not None and api_ids != (llm.LLM_API_ASSIST,):
             llm_api = await self._async_apply_code_mode(llm_api)
 
         user_name: str | None = None

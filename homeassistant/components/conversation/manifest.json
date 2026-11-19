@@ -1,7 +1,6 @@
 {
   "domain": "conversation",
   "name": "Conversation",
-  "after_dependencies": ["labs"],
   "codeowners": ["@home-assistant/core", "@synesthesiam", "@arturpragacz"],
   "dependencies": ["http", "intent", "llm"],
   "documentation": "https://www.home-assistant.io/integrations/conversation",
