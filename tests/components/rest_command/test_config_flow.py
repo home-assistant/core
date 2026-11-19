@@ -13,45 +13,60 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL
 
-COMMAND_INPUT = {
-    "action": "Open door",
-    "url": TEST_URL + "{{ door }}",
-    "method": "post",
-    "payload": '{"open": true}',
+SERVER_URL = "https://example.com"
+
+SERVER_INPUT = {
+    "url": SERVER_URL,
     "auth": {"username": "user", "password": "secret"},
     "additional": {
-        "headers": {"X-Door": "{{ door }}"},
+        "headers": {"X-Api-Version": "2"},
         "timeout": 5.0,
         "verify_ssl": False,
     },
 }
 
-COMMAND_DATA = {
-    "action": "open_door",
-    "url": TEST_URL + "{{ door }}",
-    "method": "post",
-    "payload": '{"open": true}',
+SERVER_DATA = {
+    "url": SERVER_URL,
     "username": "user",
     "password": "secret",
-    "headers": {"X-Door": "{{ door }}"},
+    "headers": {"X-Api-Version": "2"},
     "timeout": 5,
     "verify_ssl": False,
     "insecure_cipher": False,
+}
+
+COMMAND_INPUT = {
+    "action": "Open door",
+    "path": "/door/{{ door }}",
+    "method": "post",
+    "payload": '{"open": true}',
+    "additional": {"content_type": "application/json"},
+}
+
+COMMAND_DATA = {
+    "action": "open_door",
+    "path": "/door/{{ door }}",
+    "method": "post",
+    "payload": '{"open": true}',
+    "content_type": "application/json",
     "skip_url_encoding": False,
 }
+
+NEW_COMMAND_INPUT = {"action": "New command", "method": "get", "additional": {}}
 
 
 @pytest.fixture
 def entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return a config entry with one command."""
+    """Return a config entry for a server with one command."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="RESTful Command",
+        title=SERVER_URL,
+        data={"url": SERVER_URL},
         subentries_data=[
             ConfigSubentryData(
                 data=COMMAND_DATA,
                 subentry_type=SUBENTRY_TYPE_COMMAND,
-                title="open_door",
+                title="Open door",
             )
         ],
     )
@@ -69,13 +84,19 @@ async def _start_subentry_flow(
 
 
 async def test_full_flow(hass: HomeAssistant) -> None:
-    """Test creating the entry and the first command."""
+    """Test adding a server and its first command."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], SERVER_INPUT
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "RESTful Command"
-    assert result["data"] == {}
+    assert result["title"] == SERVER_URL
+    assert result["data"] == SERVER_DATA
     entry = result["result"]
 
     subentry_flows = hass.config_entries.subentries.async_progress()
@@ -95,13 +116,36 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert len(entry.subentries) == 1
 
 
-async def test_single_instance(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Test only one entry can be created."""
+async def test_server_errors(hass: HomeAssistant) -> None:
+    """Test invalid server settings, and recovering from them."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"url": SERVER_URL, "auth": {"username": "user"}, "additional": {}},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_command"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": SERVER_URL, "auth": {}, "additional": {}}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_server_already_configured(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test a server can only be added once."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": SERVER_URL, "auth": {}, "additional": {}}
+    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -110,10 +154,13 @@ async def test_single_instance(hass: HomeAssistant, entry: MockConfigEntry) -> N
         ({"action": " "}, {"action": "invalid_action"}),
         ({"action": "Reload"}, {"action": "invalid_action"}),
         ({"action": "Open door"}, {"action": "action_exists"}),
-        ({"auth": {"username": "user"}}, {"base": "invalid_command"}),
+        (
+            {"additional": {"headers": {"X-Door": "{{ door"}}},
+            {"base": "invalid_command"},
+        ),
     ],
 )
-async def test_subentry_errors(
+async def test_command_errors(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     user_input: dict[str, Any],
@@ -124,28 +171,13 @@ async def test_subentry_errors(
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "New command",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": {},
-            "additional": {},
-            **user_input,
-        },
+        result["flow_id"], {**NEW_COMMAND_INPUT, **user_input}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "New command",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": {},
-            "additional": {},
-        },
+        result["flow_id"], NEW_COMMAND_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -158,19 +190,14 @@ async def test_subentry_errors(
     ],
 )
 async def test_empty_credential_is_kept(
-    hass: HomeAssistant, entry: MockConfigEntry, auth: dict[str, str]
+    hass: HomeAssistant, auth: dict[str, str]
 ) -> None:
     """Test an explicitly empty username or password is stored, like in YAML."""
-    result = await _start_subentry_flow(hass, entry)
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "New command",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": auth,
-            "additional": {},
-        },
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": SERVER_URL, "auth": auth, "additional": {}}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert {key: result["data"][key] for key in auth} == auth
@@ -185,26 +212,12 @@ async def test_action_from_yaml_exists(
     )
     result = await _start_subentry_flow(hass, entry)
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "From YAML",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": {},
-            "additional": {},
-        },
+        result["flow_id"], {**NEW_COMMAND_INPUT, "action": "From YAML"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"action": "action_exists"}
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {
-            "action": "From UI",
-            "url": TEST_URL,
-            "method": "get",
-            "auth": {},
-            "additional": {},
-        },
+        result["flow_id"], NEW_COMMAND_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

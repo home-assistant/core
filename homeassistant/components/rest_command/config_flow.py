@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PAYLOAD,
     CONF_TIMEOUT,
     CONF_URL,
@@ -52,6 +53,7 @@ from . import (
     DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     SUPPORT_REST_METHODS,
+    merge_command_config,
 )
 from .const import (
     CONF_ACTION,
@@ -64,8 +66,68 @@ from .const import (
     SUBENTRY_TYPE_COMMAND,
 )
 
+SERVER_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.URL)
+        ),
+        probatio.Required(SECTION_AUTH): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_AUTHENTICATION): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                HTTP_BASIC_AUTHENTICATION,
+                                HTTP_DIGEST_AUTHENTICATION,
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key=CONF_AUTHENTICATION,
+                        )
+                    ),
+                    probatio.Optional(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.TEXT, autocomplete="username"
+                        )
+                    ),
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+        probatio.Required(SECTION_ADDITIONAL): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_HEADERS): ObjectSelector(),
+                    probatio.Optional(
+                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1,
+                            step=1,
+                            mode=NumberSelectorMode.BOX,
+                            unit_of_measurement="s",
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                    ): BooleanSelector(),
+                    probatio.Optional(
+                        CONF_INSECURE_CIPHER, default=False
+                    ): BooleanSelector(),
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
+    }
+)
+
 COMMAND_FIELDS_SCHEMA = {
-    probatio.Required(CONF_URL): TemplateSelector(),
+    probatio.Optional(CONF_PATH): TemplateSelector(),
     probatio.Required(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
         SelectSelectorConfig(
             options=SUPPORT_REST_METHODS,
@@ -74,55 +136,11 @@ COMMAND_FIELDS_SCHEMA = {
         )
     ),
     probatio.Optional(CONF_PAYLOAD): TemplateSelector(),
-    probatio.Required(SECTION_AUTH): section(
-        probatio.Schema(
-            {
-                probatio.Optional(CONF_AUTHENTICATION): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            HTTP_BASIC_AUTHENTICATION,
-                            HTTP_DIGEST_AUTHENTICATION,
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key=CONF_AUTHENTICATION,
-                    )
-                ),
-                probatio.Optional(CONF_USERNAME): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.TEXT, autocomplete="username"
-                    )
-                ),
-                probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD,
-                        autocomplete="current-password",
-                    )
-                ),
-            }
-        ),
-        SectionConfig(collapsed=True),
-    ),
     probatio.Required(SECTION_ADDITIONAL): section(
         probatio.Schema(
             {
-                probatio.Optional(CONF_HEADERS): ObjectSelector(),
                 probatio.Optional(CONF_CONTENT_TYPE): TextSelector(),
-                probatio.Optional(
-                    CONF_TIMEOUT, default=DEFAULT_TIMEOUT
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        min=1,
-                        step=1,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="s",
-                    )
-                ),
-                probatio.Optional(
-                    CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
-                ): BooleanSelector(),
-                probatio.Optional(
-                    CONF_INSECURE_CIPHER, default=False
-                ): BooleanSelector(),
+                probatio.Optional(CONF_HEADERS): ObjectSelector(),
                 probatio.Optional(
                     CONF_SKIP_URL_ENCODING, default=False
                 ): BooleanSelector(),
@@ -138,19 +156,19 @@ USER_SCHEMA = probatio.Schema(
 
 # Shown in the form texts; braces cannot be used in translations directly
 DESCRIPTION_PLACEHOLDERS = {
-    "example_url": "http://192.168.1.10/api/door/{{ door }}",
+    "example_url": "http://192.168.1.10",
+    "example_path": "/api/door/{{ door }}",
     "example_payload": '{"state": "{{ state }}"}',
     "example_data": "door: front",
     "example_headers": 'Authorization: "Bearer {{ token }}"',
 }
 
-TITLE = "RESTful Command"
-
 
 def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     """Move the values out of the form sections and drop empty values."""
-    data = {**user_input, **user_input[SECTION_AUTH], **user_input[SECTION_ADDITIONAL]}
-    del data[SECTION_AUTH], data[SECTION_ADDITIONAL]
+    data = dict(user_input)
+    for key in (SECTION_AUTH, SECTION_ADDITIONAL):
+        data.update(data.pop(key, {}))
     data.pop(CONF_ACTION, None)
     # An empty username or password is valid, like in YAML: some servers
     # expect only a username, others only a token as the password
@@ -162,10 +180,10 @@ def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _validate_command(data: dict[str, Any]) -> dict[str, str]:
-    """Validate a command and return the form errors."""
+def _validate(config: dict[str, Any]) -> dict[str, str]:
+    """Validate a complete command and return the form errors."""
     try:
-        COMMAND_SCHEMA(data)
+        COMMAND_SCHEMA(config)
     except probatio.Invalid:
         return {"base": "invalid_command"}
     return {}
@@ -189,8 +207,23 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create the entry that holds the commands."""
-        return self.async_create_entry(title=TITLE, data={})
+        """Add a server that commands are sent to."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = _flatten(user_input)
+            self._async_abort_entries_match({CONF_URL: data[CONF_URL]})
+            errors = _validate(data)
+            if not errors:
+                return self.async_create_entry(title=data[CONF_URL], data=data)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                SERVER_SCHEMA, user_input or {}
+            ),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
+            errors=errors,
+        )
 
     @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
@@ -213,8 +246,13 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a REST command."""
+        entry = self._get_entry()
         errors: dict[str, str] = {}
-        placeholders = {**DESCRIPTION_PLACEHOLDERS, "action": ""}
+        placeholders = {
+            **DESCRIPTION_PLACEHOLDERS,
+            "action": "",
+            "url": entry.data[CONF_URL],
+        }
         if user_input is not None:
             data = _flatten(user_input)
             name: str = user_input[CONF_ACTION].strip()
@@ -224,11 +262,12 @@ class RestCommandSubentryFlowHandler(ConfigSubentryFlow):
                 errors[CONF_ACTION] = "invalid_action"
             elif self.hass.services.has_service(DOMAIN, action) or any(
                 subentry.data[CONF_ACTION] == action
-                for subentry in self._get_entry().subentries.values()
+                for other in self.hass.config_entries.async_entries(DOMAIN)
+                for subentry in other.subentries.values()
             ):
                 errors[CONF_ACTION] = "action_exists"
             else:
-                errors = _validate_command(data)
+                errors = _validate(merge_command_config(entry.data, data))
             if not errors:
                 return self.async_create_entry(
                     title=name,

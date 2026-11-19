@@ -1,6 +1,8 @@
 """Support for exposing regular REST commands as services."""
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 import probatio
 
@@ -10,6 +12,7 @@ from homeassistant.const import (
     CONF_HEADERS,
     CONF_METHOD,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PAYLOAD,
     CONF_TIMEOUT,
     CONF_URL,
@@ -82,12 +85,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 type RestCommandConfigEntry = ConfigEntry[set[str]]
 
 
+def merge_command_config(
+    server: Mapping[str, Any], command: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Combine the settings of a server with those of one of its commands."""
+    config = {**server, **command}
+    config[CONF_URL] = server[CONF_URL] + config.pop(CONF_PATH, "")
+    # Headers of the command are added to those of the server, and win
+    if headers := {**server.get(CONF_HEADERS, {}), **command.get(CONF_HEADERS, {})}:
+        config[CONF_HEADERS] = headers
+    return config
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) -> None:
     """Set up the REST commands configured in the UI."""
     # The actions this entry registered, so reloading YAML leaves them alone
     entry.runtime_data = set()
     for subentry in entry.subentries.values():
-        command_config = dict(subentry.data)
+        command_config = merge_command_config(entry.data, subentry.data)
         name: str = command_config.pop(CONF_ACTION)
         try:
             validated = COMMAND_SCHEMA(command_config)

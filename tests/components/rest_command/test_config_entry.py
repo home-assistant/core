@@ -14,11 +14,16 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL
 
+SERVER_URL = "https://example.com"
 
-def _entry(**commands: dict[str, Any]) -> MockConfigEntry:
+
+def _entry(
+    server: dict[str, Any] | None = None, **commands: dict[str, Any]
+) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
-        title="RESTful Command",
+        title=SERVER_URL,
+        data={"url": SERVER_URL, **(server or {})},
         subentries_data=[
             ConfigSubentryData(
                 data={"action": action, **command},
@@ -36,13 +41,14 @@ async def test_call_command_from_entry(
 ) -> None:
     """Test a command from the UI renders its templates with the action data."""
     entry = _entry(
+        {"headers": {"Authorization": "Bearer token", "X-Api-Version": "1"}},
         open_door={
-            "url": TEST_URL + "{{ door }}",
+            "path": "/{{ door }}",
             "method": "post",
             "payload": '{"door": "{{ door }}"}',
-            "headers": {"X-Door": "{{ door }}"},
+            "headers": {"X-Door": "{{ door }}", "X-Api-Version": "2"},
             "content_type": "application/json",
-        }
+        },
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -64,12 +70,15 @@ async def test_call_command_from_entry(
     assert response["content"] == {"ok": True}
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][2] == b'{"door": "front"}'
-    assert aioclient_mock.mock_calls[0][3]["X-Door"] == "front"
+    headers = aioclient_mock.mock_calls[0][3]
+    assert headers["X-Door"] == "front"
+    assert headers["Authorization"] == "Bearer token"
+    assert headers["X-Api-Version"] == "2"
 
 
 async def test_unload_removes_actions(hass: HomeAssistant) -> None:
     """Test unloading the entry removes its actions and keeps reload."""
-    entry = _entry(from_ui={"url": TEST_URL})
+    entry = _entry(from_ui={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -83,7 +92,7 @@ async def test_unload_removes_actions(hass: HomeAssistant) -> None:
 
 async def test_invalid_stored_command(hass: HomeAssistant) -> None:
     """Test a stored command that no longer validates does not block the others."""
-    entry = _entry(broken={"url": "{{ door"}, working={"url": TEST_URL})
+    entry = _entry(broken={"path": "/{{ door"}, working={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -94,7 +103,7 @@ async def test_invalid_stored_command(hass: HomeAssistant) -> None:
 
 async def test_reload_keeps_ui_commands(hass: HomeAssistant) -> None:
     """Test reloading YAML leaves the commands from the UI alone."""
-    entry = _entry(from_ui={"url": TEST_URL + "ui"})
+    entry = _entry(from_ui={"path": "/ui"})
     entry.add_to_hass(hass)
     assert await async_setup_component(
         hass,
@@ -121,7 +130,7 @@ async def test_reload_replaces_yaml_command_over_invalid_ui_command(
     hass: HomeAssistant,
 ) -> None:
     """Test a YAML command is reloaded when the UI command with its name is invalid."""
-    entry = _entry(shared={"url": "{{ door"})
+    entry = _entry(shared={"path": "/{{ door"})
     entry.add_to_hass(hass)
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"shared": {"url": TEST_URL}}}
