@@ -52,6 +52,15 @@ def ihc_setup(
     password = controller_conf[CONF_PASSWORD]
 
     ihc_controller = IHCController(url, username, password)
+    session = ihc_controller.client.connection.session
+    original_request = session.request
+
+    def request_with_timeout(method, request_url, **kwargs):
+        kwargs.setdefault("timeout", (10, 30))
+        return original_request(method, request_url, **kwargs)
+
+    session.request = request_with_timeout
+
     if not ihc_controller.authenticate():
         _LOGGER.error("Unable to authenticate on IHC controller")
         return False
