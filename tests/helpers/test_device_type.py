@@ -20,6 +20,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_type import (
+    Accepts,
     BoundDeviceType,
     DeviceSlot,
     DeviceType,
@@ -470,7 +471,7 @@ def test_invalid_accepts(accepts: tuple[object, ...], message: str) -> None:
     ],
 )
 def test_accepts_entity(
-    accepts: tuple[Platform | StrEnum, ...],
+    accepts: tuple[Accepts, ...],
     domain: str,
     device_class: str | None,
     expected: bool,
@@ -494,7 +495,7 @@ def test_accepts_entity(
     ],
 )
 def test_entity_domains(
-    accepts: tuple[Platform | StrEnum, ...], entity_domains: tuple[str, ...]
+    accepts: tuple[Accepts, ...], entity_domains: tuple[str, ...]
 ) -> None:
     """Test the entity domains a slot accepts entities of."""
     assert DeviceSlot(*accepts).entity_domains == entity_domains

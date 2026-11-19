@@ -6,13 +6,27 @@ from enum import StrEnum
 import logging
 import re
 from types import MappingProxyType
-from typing import Any, ClassVar, overload, override
+from typing import TYPE_CHECKING, Any, ClassVar, overload, override
 
 from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
 
 from . import device_registry as dr, entity_registry as er
+
+if TYPE_CHECKING:
+    from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+    from homeassistant.components.button import ButtonDeviceClass
+    from homeassistant.components.cover import CoverDeviceClass
+    from homeassistant.components.event import EventDeviceClass
+    from homeassistant.components.humidifier import HumidifierDeviceClass
+    from homeassistant.components.image_processing import ImageProcessingDeviceClass
+    from homeassistant.components.media_player import MediaPlayerDeviceClass
+    from homeassistant.components.number import NumberDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.switch import SwitchDeviceClass
+    from homeassistant.components.update import UpdateDeviceClass
+    from homeassistant.components.valve import ValveDeviceClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +40,21 @@ _ENTITY_RESOLUTION_CHANGES = frozenset(
     {"device_class", "entity_id", "original_device_class", "platform", "unique_id"}
 )
 
-# Device class enums share no base class, so their members are checked at runtime
-type Accepts = Platform | StrEnum
+type DeviceClass = (
+    BinarySensorDeviceClass
+    | ButtonDeviceClass
+    | CoverDeviceClass
+    | EventDeviceClass
+    | HumidifierDeviceClass
+    | ImageProcessingDeviceClass
+    | MediaPlayerDeviceClass
+    | NumberDeviceClass
+    | SensorDeviceClass
+    | SwitchDeviceClass
+    | UpdateDeviceClass
+    | ValveDeviceClass
+)
+type Accepts = Platform | DeviceClass
 type EntityReference = tuple[Platform, str]
 
 _WORD_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
@@ -41,12 +68,16 @@ def _snake_case(name: str) -> str:
     return _WORD_BOUNDARY.sub("_", name).lower()
 
 
-def _device_class_domain(device_class: StrEnum) -> str:
+def _device_class_domain(device_class: DeviceClass) -> str:
     """Return the entity domain a device class enum member belongs to.
 
-    Device class enums live in their entity platform's package, which a helper
-    must not import, so the domain comes from the enum's module path.
+    Device class enums live in their entity platform's package, which this helper
+    only imports for type checking, so the domain comes from the enum's module path.
     """
+    if not isinstance(device_class, StrEnum):
+        raise TypeError(
+            f"A slot accepts platforms and device classes, not {device_class!r}"
+        )
     module = type(device_class).__module__
     if (
         not type(device_class).__name__.endswith("DeviceClass")
@@ -74,12 +105,8 @@ class DeviceSlot:
         for accepted in accepts:
             if isinstance(accepted, Platform):
                 matches[accepted.value, None] = None
-            elif isinstance(accepted, StrEnum):
-                matches[_device_class_domain(accepted), accepted.value] = None
             else:
-                raise TypeError(
-                    f"A slot accepts platforms and device classes, not {accepted!r}"
-                )
+                matches[_device_class_domain(accepted), accepted.value] = None
         self.accepts: tuple[Accepts, ...] = accepts
         self.required = required
         self._matches = frozenset(matches)
