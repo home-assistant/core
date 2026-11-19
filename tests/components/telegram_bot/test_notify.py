@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 from telegram import Chat, Message
 from telegram.constants import ChatType, ParseMode
 
@@ -15,8 +16,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_capture_events
 
 
 @pytest.mark.freeze_time("2025-01-09T12:00:00+00:00")
@@ -60,7 +59,6 @@ async def test_send_message(
             disable_notification=False,
             reply_to_message_id=None,
             reply_markup=None,
-            read_timeout=None,
             message_thread_id=None,
         )
 

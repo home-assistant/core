@@ -1,8 +1,10 @@
 {
   "domain": "nice_go",
   "name": "Nice G.O.",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nice_go",
   "integration_type": "hub",
   "iot_class": "cloud_push",

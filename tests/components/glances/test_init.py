@@ -9,6 +9,7 @@ from glances_api.exceptions import (
     GlancesApiNoDataAvailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.glances.const import (
     DEFAULT_SCAN_INTERVAL,
@@ -20,8 +21,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_successful_config_entry(hass: HomeAssistant) -> None:

@@ -4,12 +4,14 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 import grpc
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from starlink_grpc import GrpcError
 
-from tests.common import load_json_array_fixture, load_json_object_fixture
-
 SETUP_ENTRY_PATCHER = patch(
-    "homeassistant.components.starlink.async_setup_entry", return_value=True
+    "homeassistant.components.starlink.async_setup_entry", return_value=None
 )
 
 

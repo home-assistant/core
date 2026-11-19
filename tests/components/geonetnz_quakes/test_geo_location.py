@@ -1,11 +1,12 @@
 """The tests for the GeoNet NZ Quakes Feed integration."""
 
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
-from homeassistant.components.geo_location import ATTR_SOURCE
+from homeassistant.components.geo_location import GeolocationEntityStateAttribute
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_DEPTH,
@@ -16,15 +17,10 @@ from homeassistant.components.geonetnz_quakes.geo_location import (
     ATTR_QUALITY,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_TIME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
+    EntityStateAttribute,
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
@@ -34,8 +30,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
-
-from tests.common import async_fire_time_changed
 
 CONFIG = {DOMAIN: {CONF_RADIUS: 200}}
 
@@ -54,7 +48,7 @@ async def test_setup(
         (38.0, -3.0),
         locality="Locality 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        time=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         magnitude=5.7,
         mmi=5,
         depth=10.5,
@@ -92,19 +86,19 @@ async def test_setup(
         assert state.name == "Title 1"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
-            ATTR_LATITUDE: 38.0,
-            ATTR_LONGITUDE: -3.0,
-            ATTR_FRIENDLY_NAME: "Title 1",
+            EntityStateAttribute.LATITUDE: 38.0,
+            EntityStateAttribute.LONGITUDE: -3.0,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 1",
             ATTR_LOCALITY: "Locality 1",
-            ATTR_ATTRIBUTION: "Attribution 1",
-            ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+            EntityStateAttribute.ATTRIBUTION: "Attribution 1",
+            ATTR_TIME: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
             ATTR_MAGNITUDE: 5.7,
             ATTR_DEPTH: 10.5,
             ATTR_MMI: 5,
             ATTR_QUALITY: "best",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geonetnz_quakes",
-            ATTR_ICON: "mdi:pulse",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geonetnz_quakes",
+            EntityStateAttribute.ICON: "mdi:pulse",
         }
         assert float(state.state) == 15.5
 
@@ -113,13 +107,13 @@ async def test_setup(
         assert state.name == "Title 2"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "2345",
-            ATTR_LATITUDE: 38.1,
-            ATTR_LONGITUDE: -3.1,
-            ATTR_FRIENDLY_NAME: "Title 2",
+            EntityStateAttribute.LATITUDE: 38.1,
+            EntityStateAttribute.LONGITUDE: -3.1,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 2",
             ATTR_MAGNITUDE: 4.6,
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geonetnz_quakes",
-            ATTR_ICON: "mdi:pulse",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geonetnz_quakes",
+            EntityStateAttribute.ICON: "mdi:pulse",
         }
         assert float(state.state) == 20.5
 
@@ -128,13 +122,13 @@ async def test_setup(
         assert state.name == "Title 3"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "3456",
-            ATTR_LATITUDE: 38.2,
-            ATTR_LONGITUDE: -3.2,
-            ATTR_FRIENDLY_NAME: "Title 3",
+            EntityStateAttribute.LATITUDE: 38.2,
+            EntityStateAttribute.LONGITUDE: -3.2,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 3",
             ATTR_LOCALITY: "Locality 3",
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
-            ATTR_SOURCE: "geonetnz_quakes",
-            ATTR_ICON: "mdi:pulse",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
+            GeolocationEntityStateAttribute.SOURCE: "geonetnz_quakes",
+            EntityStateAttribute.ICON: "mdi:pulse",
         }
         assert float(state.state) == 25.5
 
@@ -209,12 +203,12 @@ async def test_setup_imperial(
         assert state.name == "Title 1"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "1234",
-            ATTR_LATITUDE: 38.0,
-            ATTR_LONGITUDE: -3.0,
-            ATTR_FRIENDLY_NAME: "Title 1",
-            ATTR_UNIT_OF_MEASUREMENT: "mi",
-            ATTR_SOURCE: "geonetnz_quakes",
-            ATTR_ICON: "mdi:pulse",
+            EntityStateAttribute.LATITUDE: 38.0,
+            EntityStateAttribute.LONGITUDE: -3.0,
+            EntityStateAttribute.FRIENDLY_NAME: "Title 1",
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "mi",
+            GeolocationEntityStateAttribute.SOURCE: "geonetnz_quakes",
+            EntityStateAttribute.ICON: "mdi:pulse",
         }
         # 15.5km (as defined in mock entry) has been converted to 9.6mi.
         assert float(state.state) == 9.6

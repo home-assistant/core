@@ -1,0 +1,24 @@
+{
+  "Corrupted": false,
+  "CorruptedSession": [false, false],
+  "Session": [
+    {
+      "AuthToken": null,
+      "Checksum": 3735928559,
+      "SessionNumber": 41,
+      "SessionStartEnergymWh": 84000000,
+      "SessionStartTime": 1756454400,
+      "SessionEndEnergymWh": 96000000,
+      "SessionEndTime": 1756465200
+    },
+    {
+      "AuthToken": "1D0A0B0C0D0E03",
+      "Checksum": 3405691582,
+      "SessionNumber": 42,
+      "SessionStartEnergymWh": 96000000,
+      "SessionStartTime": 1756540800,
+      "SessionEndEnergymWh": null,
+      "SessionEndTime": null
+    }
+  ]
+}

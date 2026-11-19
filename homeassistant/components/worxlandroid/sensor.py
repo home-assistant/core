@@ -27,7 +27,7 @@ DEFAULT_TIMEOUT = 5
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PIN): cv.string,
+        probatio.Required(probatio.Secret(CONF_PIN)): cv.string,
         probatio.Optional(CONF_ALLOW_UNREACHABLE, default=True): cv.boolean,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }

@@ -5,16 +5,10 @@ from unittest.mock import call
 
 from bond_async import Action, DeviceType
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.bond.const import DOMAIN
-from homeassistant.components.bond.services import (
-    ATTR_POWER_STATE,
-    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-    SERVICE_START_DECREASING_BRIGHTNESS,
-    SERVICE_START_INCREASING_BRIGHTNESS,
-    SERVICE_STOP,
-)
+from homeassistant.components.bond.services import BondService, BondServiceArgument
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -29,6 +23,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,8 +37,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def light(name: str):
@@ -324,8 +317,8 @@ async def test_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -351,8 +344,8 @@ async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> Non
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
 
@@ -369,8 +362,8 @@ async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -396,8 +389,8 @@ async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> 
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
 
@@ -416,8 +409,8 @@ async def test_light_set_brightness_belief_brightness_not_supported(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
 
@@ -434,8 +427,8 @@ async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 0},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -457,8 +450,8 @@ async def test_fp_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 0},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 0},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -480,8 +473,8 @@ async def test_light_set_power_belief(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_LIGHT_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -507,8 +500,8 @@ async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_LIGHT_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
 
@@ -525,8 +518,8 @@ async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_LIGHT_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -552,8 +545,8 @@ async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
+            BondService.SET_LIGHT_POWER_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.POWER_STATE: False},
             blocking=True,
         )
 
@@ -572,8 +565,8 @@ async def test_fp_light_set_brightness_belief_brightness_not_supported(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-            {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
+            BondService.SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
+            {ATTR_ENTITY_ID: "light.name_1", BondServiceArgument.BRIGHTNESS: 255},
             blocking=True,
         )
 
@@ -590,8 +583,8 @@ async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_INCREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.START_INCREASING_BRIGHTNESS,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -612,8 +605,8 @@ async def test_light_start_increasing_brightness_missing_service(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_INCREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.START_INCREASING_BRIGHTNESS,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 
@@ -630,8 +623,8 @@ async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_DECREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.START_DECREASING_BRIGHTNESS,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -655,8 +648,8 @@ async def test_light_start_decreasing_brightness_missing_service(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_START_DECREASING_BRIGHTNESS,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.START_DECREASING_BRIGHTNESS,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 
@@ -673,8 +666,8 @@ async def test_light_stop(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_bond_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_STOP,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.STOP,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -696,8 +689,8 @@ async def test_light_stop_missing_service(
     with pytest.raises(HomeAssistantError), patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_STOP,
-            {ATTR_ENTITY_ID: "light.name_1"},
+            BondService.STOP,
+            {TargetKey.ENTITY_ID: "light.name_1"},
             blocking=True,
         )
 

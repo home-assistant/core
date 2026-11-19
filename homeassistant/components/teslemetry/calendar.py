@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity
+from .models import TeslemetryConfigEntry
 
 PARALLEL_UPDATES = 0
 
@@ -65,9 +65,9 @@ def _parse_period_times(
     Returns None if the base_day's weekday doesn't match the period's day range.
     For periods crossing midnight, end_time will be on the following day.
     """
-    # DaysOfWeek are from 0-6 (Monday-Sunday)
+    # DaysOfWeek are from 0-6 (Monday-Sunday); Tesla omits zero values
     from_day = period_def.get("fromDayOfWeek", 0)
-    to_day = period_def.get("toDayOfWeek", 6)
+    to_day = period_def.get("toDayOfWeek", 0)
 
     if not _is_day_in_range(base_day.weekday(), from_day, to_day):
         return None

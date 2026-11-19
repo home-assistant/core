@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import DOMAIN, async_get_agent, default_agent
@@ -13,8 +14,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

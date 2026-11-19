@@ -1,0 +1,88 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your Foreca Weather API key from the My API page"
+        },
+        "description": "To get an API key, sign up for the [Freemium plan]({signup_url}) and create a key on the My API page. Freemium is free for non-commercial use."
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+      },
+      "entry_type": "Location",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "step": {
+        "location": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "location": "The location to get the weather forecast for"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      }
+    }
+  },
+  "exceptions": {
+    "three_hour_forecast_error": {
+      "message": "Error fetching the 3-hour forecast."
+    }
+  },
+  "selector": {
+    "forecast_type": {
+      "options": {
+        "daily": "Daily",
+        "hourly": "Hourly"
+      }
+    }
+  },
+  "services": {
+    "get_3_hour_forecast": {
+      "description": "Retrieves the forecast in 3-hour steps for the next 14 days, in the weather entity's units, with the values weather.get_forecasts has no place for. Every call makes a request to the Foreca Weather API and counts toward the daily limit of your plan.",
+      "name": "Get 3-hour forecast"
+    },
+    "get_forecasts_extra": {
+      "description": "Retrieves the forecast values that weather.get_forecasts has no place for, such as precipitation type, snow, solar radiation, sunshine, sunrise and the ensemble range of the daily forecast. They come from the forecast already fetched, so the action makes no API requests.",
+      "fields": {
+        "type": {
+          "description": "The forecast to return the values for.",
+          "name": "Forecast type"
+        }
+      },
+      "name": "Get extra forecast values"
+    }
+  }
+}

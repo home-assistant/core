@@ -5,14 +5,13 @@ from unittest.mock import MagicMock
 
 from pysma import SmaAuthenticationException, SmaConnectionException, SmaReadException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_DEVICE, MOCK_USER_INPUT, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_entry_minor_version_1_2(

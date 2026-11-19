@@ -1,7 +1,7 @@
 """Tests for calendar platform."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock
@@ -11,6 +11,12 @@ import zoneinfo
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -26,13 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-)
-from tests.typing import ClientSessionGenerator
 
 TEST_ENTITY = "calendar.garden_test_mower_1"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
@@ -56,7 +55,7 @@ def get_events_fixture(
     return _fetch
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 12))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5, 12))
 async def test_calendar_state_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -71,7 +70,7 @@ async def test_calendar_state_off(
     assert state.state == "off"
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 19))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5, 19))
 async def test_calendar_state_on(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -86,7 +85,7 @@ async def test_calendar_state_on(
     assert state.state == "on"
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5))
 async def test_empty_calendar(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -115,7 +114,7 @@ async def test_empty_calendar(
     assert events == []
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5))
+@pytest.mark.freeze_time(dt.datetime(2023, 6, 5))
 @pytest.mark.parametrize(
     (
         "start_date",
@@ -123,8 +122,8 @@ async def test_empty_calendar(
     ),
     [
         (
-            datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC),
-            datetime.datetime(2023, 6, 12, tzinfo=datetime.UTC),
+            dt.datetime(2023, 6, 5, tzinfo=dt.UTC),
+            dt.datetime(2023, 6, 12, tzinfo=dt.UTC),
         ),
     ],
 )
@@ -134,8 +133,8 @@ async def test_calendar_snapshot(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    start_date: datetime,
-    end_date: datetime,
+    start_date: dt,
+    end_date: dt,
 ) -> None:
     """Snapshot test of the calendar entity."""
     await setup_integration(hass, mock_config_entry)

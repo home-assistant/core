@@ -12,6 +12,7 @@ from pypck.inputs import (
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import MotorPositioningMode, MotorReverseTime, MotorStateModifier
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -35,8 +36,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 COVER_OUTPUTS = "cover.testmodule_cover_outputs"
 COVER_RELAYS = "cover.testmodule_cover_relays"

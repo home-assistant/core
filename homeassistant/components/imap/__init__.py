@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> None:
     """Set up imap from a config entry."""
     try:
         imap_client: IMAP4_SSL = await connect_to_server(dict(entry.data))
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> bool
         raise ConfigEntryAuthFailed from err
     except InvalidFolder as err:
         raise ConfigEntryError("Selected mailbox folder is invalid.") from err
-    except (TimeoutError, AioImapException) as err:
+    except (OSError, AioImapException) as err:
         raise ConfigEntryNotReady from err
 
     coordinator_class: type[
@@ -74,12 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ImapConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        await coordinator.shutdown()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.shutdown()

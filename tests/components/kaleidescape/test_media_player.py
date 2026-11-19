@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from kaleidescape import const as kaleidescape_const
 from kaleidescape.device import Movie
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = f"media_player.theater_kaleidescape_device_{MOCK_SERIAL}"
 FRIENDLY_NAME = f"Kaleidescape Device {MOCK_SERIAL}"

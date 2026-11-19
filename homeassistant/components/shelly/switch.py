@@ -46,9 +46,11 @@ from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_rpc_channel_name,
+    get_rpc_key,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
+    is_rpc_ledstrip_control_available,
     is_view_for_platform,
 )
 
@@ -101,7 +103,11 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize switch."""
         super().__init__(coordinator, key, attribute, description)
 
-        if description.key in ("cb", "switch", "script"):
+        if description.translation_key is None and description.key in (
+            "cb",
+            "switch",
+            "script",
+        ):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
@@ -133,6 +139,27 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
         params = self.entity_description.method_params_fn(self._id, False)
         await method(*params)
+
+
+class RpcConfigSwitch(RpcSwitch):
+    """Represent a RPC switch entity for a device config value."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSwitchDescription,
+    ) -> None:
+        """Initialize switch."""
+        super().__init__(coordinator, key, attribute, description)
+        self.configure_translation_attributes()
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """If switch is on."""
+        return self.entity_description.is_on(self.coordinator.device.config[self.key])
 
 
 class RpcCircuitBreakerSwitch(RpcSwitch):
@@ -182,6 +209,34 @@ class RpcRelaySwitch(RpcSwitch):
         """Initialize the switch."""
         super().__init__(coordinator, key, attribute, description)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
+
+
+class RpcFanBoostSwitch(RpcSwitch):
+    """Entity that controls the fan boost on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        # The device rejects boost in manual mode
+        return super().available and self.status["mode"] == "auto"
+
+
+class RpcLedStripSwitch(RpcSwitch):
+    """Entity that controls a LED strip effect option on RPC based Shelly devices."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if TYPE_CHECKING:
+            assert self.entity_description.sub_key is not None
+
+        return super().available and is_rpc_ledstrip_control_available(
+            self.coordinator.config_entry.runtime_data.rpc_ledstrip_effects,
+            self.status,
+            self.entity_description.sub_key,
+        )
 
 
 RPC_SWITCHES = {
@@ -422,6 +477,55 @@ RPC_SWITCHES = {
         method_on="cury_set_away_mode",
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
+    ),
+    "fan_boost": RpcSwitchDescription(
+        key="fan",
+        sub_key="boost",
+        translation_key="boost",
+        is_on=lambda status: status["boost"]["active"],
+        method_on="fan_boost",
+        method_off="fan_stop_boost",
+        method_params_fn=lambda id, _: (id,),
+        entity_class=RpcFanBoostSwitch,
+    ),
+    "ledstrip_reverse": RpcSwitchDescription(
+        key="ledstrip",
+        sub_key="reverse",
+        translation_key="effect_reverse",
+        is_on=lambda status: bool(status["reverse"]),
+        method_on="ledstrip_set",
+        method_off="ledstrip_set",
+        method_params_fn=lambda id, value: (id, {"reverse": value}),
+        supported=lambda _: True,
+        entity_class=RpcLedStripSwitch,
+    ),
+    "switch_in_locked": RpcSwitchDescription(
+        key="switch",
+        translation_key="input_lock",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        # on a device in cover profile the "switch" key resolves to the cover
+        # component, which is handled by "cover_in_locked"
+        removal_condition=lambda config, _status, key: (
+            get_rpc_key(key)[1] != "switch" or "in_locked" not in config[key]
+        ),
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="switch_setconfig",
+        method_off="switch_setconfig",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_class=RpcConfigSwitch,
+    ),
+    "cover_in_locked": RpcSwitchDescription(
+        key="cover",
+        translation_key="input_lock",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: "in_locked" not in config[key],
+        is_on=lambda config: bool(config["in_locked"]),
+        method_on="cover_setconfig",
+        method_off="cover_setconfig",
+        method_params_fn=lambda id, value: (id, {"in_locked": value}),
+        entity_class=RpcConfigSwitch,
     ),
     "camera_privacy": RpcSwitchDescription(
         key="camera",

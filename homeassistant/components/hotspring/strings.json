@@ -41,6 +41,9 @@
       }
     },
     "number": {
+      "salt_output_level": {
+        "name": "Salt output level"
+      },
       "target_temperature": {
         "name": "Target temperature"
       }
@@ -72,6 +75,15 @@
       "current_temperature": {
         "name": "Current temperature"
       },
+      "freshwater_iq_chlorine": {
+        "name": "Chlorine"
+      },
+      "freshwater_iq_orp": {
+        "name": "Oxidation reduction potential"
+      },
+      "freshwater_iq_sensor_life": {
+        "name": "Sensor life"
+      },
       "fwss_version": {
         "name": "FreshWater Salt System version"
       },
@@ -91,10 +103,19 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while communicating with the Hot Spring API."
+      "message": "An error occurred while communicating with the Hot Spring API"
     },
     "invalid_response": {
-      "message": "Invalid response received from the Hot Spring API."
+      "message": "Invalid response received from the Hot Spring API"
+    },
+    "spa_not_connected": {
+      "message": "The spa is not connected to its Hot Spring home network adapter"
+    },
+    "timeout": {
+      "message": "Timed out while communicating with the Hot Spring API"
+    },
+    "wrong_device": {
+      "message": "The device at the configured host has MAC address {found}, not {expected}"
     }
   }
 }

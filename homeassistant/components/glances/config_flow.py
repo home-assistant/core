@@ -26,7 +26,7 @@ DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         probatio.Optional(CONF_SSL, default=False): bool,
         probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
@@ -68,11 +68,11 @@ class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

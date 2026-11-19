@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import async_fire_mqtt_message
 from qbusmqttapi.state import QbusMqttShutterState
 
 from homeassistant.components.cover import (
@@ -24,8 +25,6 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_mqtt_message
 
 _PAYLOAD_UDS_STATE_CLOSED = '{"id":"UL30","properties":{"state":"down"},"type":"state"}'
 _PAYLOAD_UDS_STATE_OPENED = '{"id":"UL30","properties":{"state":"up"},"type":"state"}'

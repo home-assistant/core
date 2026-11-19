@@ -5,12 +5,19 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -26,12 +33,6 @@ from .patchers import (
     STATUS_DATA_SUCCESS_PATCHER,
     STATUS_DATA_TARGET,
     STATUS_DATA_UNAVAILABLE_PATCHER,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
 )
 
 
@@ -104,6 +105,7 @@ async def test_setup_with_unimplemented_location_or_sleep(
 
 async def test_unimplemented_rpcs_are_not_retried_on_later_polls(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test location_data/get_sleep_config aren't called again once found Unimplemented."""
     entry = MockConfigEntry(
@@ -125,8 +127,12 @@ async def test_unimplemented_rpcs_are_not_retried_on_later_polls(
         assert location_mock.call_count == 1
         assert sleep_mock.call_count == 1
 
-        await entry.runtime_data.async_refresh()
-        await entry.runtime_data.async_refresh()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
         assert location_mock.call_count == 1
         assert sleep_mock.call_count == 1
@@ -209,6 +215,7 @@ async def test_device_tracker_only_created_when_location_supported(
 
 async def test_device_tracker_unavailable_when_location_becomes_unsupported(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the tracker goes unavailable if a later poll finds location unsupported.
@@ -246,13 +253,16 @@ async def test_device_tracker_unavailable_when_location_becomes_unsupported(
         # Enabling a previously-disabled entity schedules its own debounced
         # reload (RELOAD_AFTER_UPDATE_DELAY); let it fire instead of racing
         # it with a manual reload, which would leave the timer lingering.
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert _entity_state(hass, entity_id) != "unavailable"
 
         with LOCATION_DATA_UNIMPLEMENTED_PATCHER:
-            await entry.runtime_data.async_refresh()
+            freezer.tick(timedelta(seconds=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
 
         assert entry.runtime_data.last_update_success is True
         assert entry.runtime_data.data.location is None
@@ -285,6 +295,7 @@ async def test_sleep_switch_reports_real_off_when_supported(
 
 async def test_switches_unavailable_when_coordinator_refresh_fails(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switches go unavailable when the coordinator itself fails to refresh.
 
@@ -311,7 +322,9 @@ async def test_switches_unavailable_when_coordinator_refresh_fails(
         assert _entity_state(hass, "switch.starlink_sleep_schedule") in ("on", "off")
 
         with STATUS_DATA_UNAVAILABLE_PATCHER:
-            await entry.runtime_data.async_refresh()
+            freezer.tick(timedelta(seconds=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
 
         assert entry.runtime_data.last_update_success is False
         assert _entity_state(hass, "switch.starlink_stowed") == "unavailable"
@@ -392,7 +405,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
+async def test_restore_cache_with_accumulation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test Starlink accumulation."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -432,12 +447,16 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
-        await entry.runtime_data.async_refresh()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
         with patch.object(entry.runtime_data, "always_update", return_value=True):
-            await entry.runtime_data.async_refresh()
+            freezer.tick(timedelta(seconds=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)
 
@@ -499,3 +518,40 @@ async def test_last_restart_state(hass: HomeAssistant) -> None:
                 await hass.async_block_till_done(wait_background_tasks=True)
 
             assert hass.states.get(entity_id).state == "2025-10-22T13:30:04+00:00"
+
+
+@pytest.mark.parametrize(
+    ("method", "arg"),
+    [
+        ("async_set_sleep_schedule_enabled", True),
+        ("async_set_sleep_start", 60),
+        ("async_set_sleep_duration", 120),
+    ],
+)
+async def test_sleep_setters_raise_when_sleep_unsupported(
+    hass: HomeAssistant, method: str, arg: bool | int
+) -> None:
+    """Test the sleep setters refuse to write when sleep config is unsupported."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
+    )
+
+    with (
+        LOCATION_DATA_SUCCESS_PATCHER,
+        SLEEP_DATA_UNIMPLEMENTED_PATCHER,
+        STATUS_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
+        patch(
+            "homeassistant.components.starlink.coordinator.set_sleep_config"
+        ) as set_sleep_mock,
+    ):
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match="not supported"):
+            await getattr(entry.runtime_data, method)(arg)
+
+        set_sleep_mock.assert_not_called()

@@ -1,18 +1,21 @@
 """Tests for iAquaLink integration."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
+    AqualinkSystemOfflineException,
 )
 from iaqualink.systems.iaqua.device import IaquaLightSwitch
 from iaqualink.systems.iaqua.system import IaquaSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -36,8 +39,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import get_aqualink_device, get_aqualink_system, setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 async def _advance_coordinator_time(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
@@ -55,7 +56,7 @@ async def _advance_coordinator_time(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_system_refresh_failure_marks_entities_unavailable(
@@ -140,6 +141,42 @@ async def test_system_rate_limited_keeps_entities_available(
     assert "Rate limited by iAquaLink" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("exception", "online", "level"),
+    [
+        pytest.param(
+            AqualinkSystemOfflineException, False, logging.INFO, id="offline_error"
+        ),
+        pytest.param(None, False, logging.INFO, id="offline_status"),
+        pytest.param(AqualinkServiceException, None, logging.ERROR, id="service"),
+    ],
+)
+async def test_system_refresh_failure_log_level(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: type[Exception] | None,
+    online: bool | None,
+    level: int,
+) -> None:
+    """Test an offline system is logged at info level."""
+    devices = await setup_integration(hass, config_entry, client)
+
+    devices.system.online = online
+    devices.system.update = AsyncMock(side_effect=exception)
+
+    await _advance_coordinator_time(hass, freezer)
+
+    assert [
+        record.levelno
+        for record in caplog.records
+        if record.name == "homeassistant.components.iaqualink.coordinator"
+        and record.levelno > logging.DEBUG
+    ] == [level]
+
+
 async def test_light_service_calls_update_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -191,7 +228,7 @@ async def test_light_service_calls_update_entity_state(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_login_retry_exceptions(
@@ -237,7 +274,7 @@ async def test_setup_login_unauthorized(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_systems_exception(
@@ -352,7 +389,7 @@ async def test_setup_no_systems_recognized(
     [
         pytest.param(AqualinkServiceException, id="service"),
         pytest.param(TimeoutError, id="timeout"),
-        pytest.param(httpx.HTTPError("boom"), id="http"),
+        pytest.param(httpx2.HTTPError("boom"), id="http"),
     ],
 )
 async def test_setup_devices_exception(

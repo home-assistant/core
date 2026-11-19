@@ -7,6 +7,8 @@ from typing import Any
 
 from pynordpool import API, NordPoolClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture, patch
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nordpool.const import DOMAIN, PLATFORMS
 from homeassistant.config_entries import SOURCE_USER
@@ -14,9 +16,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry, load_fixture, patch
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mock_asyncio_sleep", autouse=True)

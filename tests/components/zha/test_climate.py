@@ -8,7 +8,7 @@ import pytest
 from zha.application.platforms.climate.const import HVAC_MODE_2_SYSTEM, SEQ_OF_OPERATION
 import zhaquirks.sinope.thermostat
 import zhaquirks.tuya.ts0601_trv
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 import zigpy.profiles
 from zigpy.profiles import zha
 import zigpy.types
@@ -152,7 +152,7 @@ def climate_platform_only():
 def device_climate_mock(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ):
     """Test regular thermostat device."""
 

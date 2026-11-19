@@ -6,6 +6,7 @@ from lyngdorf import LyngdorfModel
 from lyngdorf.exceptions import LyngdorfUnsupportedError
 from lyngdorf.remote import RemoteKey, resolve_remote_key
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
@@ -23,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 REMOTE = "remote.mock_lyngdorf"
 

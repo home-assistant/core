@@ -13,6 +13,12 @@ from improv_ble_client import (
     errors as improv_ble_errors,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import improv_ble
@@ -31,13 +37,6 @@ from . import (
     IMPROV_BLE_DISCOVERY_INFO,
     NOT_IMPROV_BLE_DISCOVERY_INFO,
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info_bleak,
 )
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
@@ -877,7 +876,7 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
         ),
     ],
 )
-async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
+async def test_provision_retry(hass: HomeAssistant, exc: Exception, error: str) -> None:
     """Test bluetooth flow with error."""
     flow_id = await _test_provision_error(hass, exc)
 
@@ -885,6 +884,27 @@ async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] == {"base": error}
+
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=None,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.PROVISIONING_TIMEOUT", 0.0000001),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "provision_successful"
 
 
 async def test_provision_fails_invalid_data(

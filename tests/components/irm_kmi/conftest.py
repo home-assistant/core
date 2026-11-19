@@ -4,18 +4,17 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.irm_kmi.const import DOMAIN
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
 
 from .const import CURRENT_WEATHER
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -23,9 +22,10 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="Brussels",
+        entry_id="01JIRMKMI00000000000000000",
         domain=DOMAIN,
         data={
-            CONF_LOCATION: {ATTR_LATITUDE: 50.84, ATTR_LONGITUDE: 4.35},
+            CONF_LOCATION: {CONF_LATITUDE: 50.84, CONF_LONGITUDE: 4.35},
             CONF_UNIQUE_ID: "brussels be",
         },
         unique_id="brussels be",
@@ -35,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.irm_kmi.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.irm_kmi.async_setup_entry", return_value=None):
         yield
 
 

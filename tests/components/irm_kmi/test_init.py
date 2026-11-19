@@ -6,31 +6,87 @@ from unittest.mock import AsyncMock, MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from irm_kmi_api import IrmKmiApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import WEATHER_ENTITY_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_irm_kmi_api")
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the IRM KMI configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert {
+        entity.domain
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    } == {"sensor", "weather"}
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("hass_language", "options", "expected_manufacturer"),
+    [
+        pytest.param(
+            "nl",
+            {},
+            "Koninklijk Meteorologisch Instituut van België",
+            id="home_assistant_language",
+        ),
+        pytest.param(
+            "nl",
+            {CONF_LANGUAGE_OVERRIDE: "fr"},
+            "Institut Royal Météorologique de Belgique",
+            id="language_override",
+        ),
+        pytest.param(
+            "es",
+            {},
+            "Royal Meteorological Institute of Belgium",
+            id="unsupported_language_falls_back_to_english",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_irm_kmi_api")
+async def test_device_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_language: str,
+    options: dict[str, str],
+    expected_manufacturer: str,
+) -> None:
+    """Test the device entry."""
+    hass.config.language = hass_language
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=options)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
+    assert device_entry.manufacturer == expected_manufacturer
 
 
 async def test_config_entry_not_ready(
@@ -46,6 +102,7 @@ async def test_config_entry_not_ready(
 
     assert mock_irm_kmi_api.refresh_forecasts_coord.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "api_error"
     # The first refresh has no last success time to compare the grace period to
     assert "Unexpected error fetching" not in caplog.text
 

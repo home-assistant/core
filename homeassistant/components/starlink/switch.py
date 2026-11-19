@@ -9,6 +9,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -92,4 +93,17 @@ SWITCHES = [
         available_fn=lambda data: True,
     ),
     SLEEP_SCHEDULE_SWITCH,
+    StarlinkSwitchEntityDescription(
+        key="starlink_positioning_exclusive",
+        translation_key="starlink_positioning_exclusive",
+        entity_category=EntityCategory.CONFIG,
+        value_fn=lambda data: (
+            None
+            if (gps_enabled := data.status.get("gps_enabled")) is None
+            else not gps_enabled
+        ),
+        turn_on_fn=lambda coordinator: coordinator.async_set_gps_enabled(False),
+        turn_off_fn=lambda coordinator: coordinator.async_set_gps_enabled(True),
+        available_fn=lambda data: True,
+    ),
 ]

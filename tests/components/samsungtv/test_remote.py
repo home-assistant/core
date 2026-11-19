@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from samsungtvws.encrypted.remote import SamsungTVEncryptedCommand
 
 from homeassistant.components.remote import (
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_samsungtv_entry
 from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET, ENTRYDATA_LEGACY, ENTRYDATA_WEBSOCKET
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = f"{REMOTE_DOMAIN}.mock_title"
 

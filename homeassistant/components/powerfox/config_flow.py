@@ -3,7 +3,12 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from powerfox import Powerfox, PowerfoxAuthenticationError, PowerfoxConnectionError
+from powerfox import (
+    Powerfox,
+    PowerfoxAuthenticationError,
+    PowerfoxConnectionError,
+    PowerfoxNoDataError,
+)
 import probatio
 
 from homeassistant.config_entries import (
@@ -19,13 +24,13 @@ from .const import DOMAIN
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_EMAIL): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
 STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -121,4 +126,6 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             return "invalid_auth"
         except PowerfoxConnectionError:
             return "cannot_connect"
+        except PowerfoxNoDataError:
+            return "no_devices"
         return None

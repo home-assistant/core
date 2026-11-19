@@ -62,5 +62,12 @@ class NextDnsButton(NextDnsEntity, ButtonEntity):
                     "error": repr(err),
                 },
             ) from err
-        except InvalidApiKeyError:
+        except InvalidApiKeyError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "entry": self.coordinator.config_entry.title,
+                },
+            ) from err

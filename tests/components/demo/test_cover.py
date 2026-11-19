@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -12,9 +13,11 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverDeviceClass,
     CoverState,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
@@ -32,8 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {"cover": {"platform": "demo"}}
 ENTITY_COVER = "cover.living_room_window"
@@ -67,6 +68,27 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
     state = hass.states.get("cover.living_room_window")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 511
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "device_class"),
+    [
+        ("cover.kitchen_window", None),
+        ("cover.hall_window", CoverDeviceClass.SHUTTER),
+        ("cover.living_room_window", CoverDeviceClass.BLIND),
+        ("cover.garage_door", CoverDeviceClass.GARAGE),
+        ("cover.pergola_roof", CoverDeviceClass.AWNING),
+        ("cover.bedroom_curtains", CoverDeviceClass.CURTAIN),
+        ("cover.front_gate", CoverDeviceClass.GATE),
+    ],
+)
+async def test_device_class(
+    hass: HomeAssistant, entity_id: str, device_class: CoverDeviceClass | None
+) -> None:
+    """Test cover device classes."""
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == device_class
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:
@@ -230,12 +252,15 @@ async def test_close_cover_tilt(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ENTITY_COVER},
         blocking=True,
     )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.CLOSING
     for _ in range(7):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
 
@@ -249,12 +274,15 @@ async def test_open_cover_tilt(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ENTITY_COVER},
         blocking=True,
     )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
     for _ in range(7):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
 
@@ -314,13 +342,46 @@ async def test_set_cover_tilt_position(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 90},
         blocking=True,
     )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPENING
     for _ in range(7):
         future = dt_util.utcnow() + timedelta(seconds=1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 90
+
+
+async def test_toggle_cover_during_tilt_move(hass: HomeAssistant) -> None:
+    """Test toggling the cover stops a tilt move in progress."""
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
+    )
+    future = dt_util.utcnow() + timedelta(seconds=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: ENTITY_COVER},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+
+    for _ in range(3):
+        future = dt_util.utcnow() + timedelta(seconds=1)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40
 
 
 async def test_stop_cover_tilt(hass: HomeAssistant) -> None:
@@ -345,4 +406,5 @@ async def test_stop_cover_tilt(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_COVER)
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 40

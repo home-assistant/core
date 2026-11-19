@@ -5,12 +5,13 @@ from unittest.mock import call
 
 from bond_async import Action, DeviceType, Direction
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
-from homeassistant.components.bond.services import SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from homeassistant.components.bond.services import BondService
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_PERCENTAGE,
@@ -44,8 +45,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def ceiling_fan_with_breeze(name: str):
@@ -364,7 +363,7 @@ async def test_set_speed_belief_speed_zero(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 0},
             blocking=True,
         )
@@ -388,7 +387,7 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )
@@ -403,7 +402,7 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_SPEED_TRACKED_STATE,
+            BondService.SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
         )

@@ -260,7 +260,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_EMAIL): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -299,7 +299,9 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_WRAPPED_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_WRAPPED_KEY)): str}
+            ),
             errors=errors,
         )
 
@@ -309,8 +311,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Start reauthentication for an encrypted existing entry."""
         del entry_data
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
+        entry = self._get_reauth_entry()
         self._target_entry_id = entry.entry_id
         self._address = entry.data[CONF_ADDRESS]
         self._title = entry.title

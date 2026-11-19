@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from b2sdk.v2 import exception
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2.const import CONF_APPLICATION_KEY
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

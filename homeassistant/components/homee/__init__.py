@@ -36,7 +36,7 @@ PLATFORMS = [
 type HomeeConfigEntry = ConfigEntry[Homee]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user,
     # password & pyHomee instance from the config
@@ -123,10 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Unload a homee config entry."""
     # Unload platforms
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

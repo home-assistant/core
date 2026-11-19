@@ -1,0 +1,164 @@
+# serializer version: 1
+# name: test_diagnostics[all_tools-llm_hass_api0]
+  dict({
+    'active_sse_sessions': 0,
+    'available_llm_apis': list([
+      dict({
+        'id': 'test-api',
+        'name': 'Test API',
+        'requires_admin': True,
+      }),
+      dict({
+        'id': 'assist',
+        'name': 'Device control',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'requires_admin': True,
+      }),
+    ]),
+    'config_entry_data': dict({
+      'all_llm_apis': False,
+      'llm_hass_api': list([
+        'test-api',
+      ]),
+      'read_only': False,
+      'require_admin': False,
+    }),
+    'default_negotiated_protocol_version': '2025-03-26',
+    'latest_protocol_version': '2026-07-28',
+    'llm_api': dict({
+      'id': 'test-api',
+      'name': 'Test API',
+      'tools': list([
+        'read_tool',
+        'write_tool',
+      ]),
+    }),
+    'served_llm_api_ids': list([
+      'test-api',
+    ]),
+  })
+# ---
+# name: test_diagnostics[read_only-llm_hass_api0]
+  dict({
+    'active_sse_sessions': 0,
+    'available_llm_apis': list([
+      dict({
+        'id': 'test-api',
+        'name': 'Test API',
+        'requires_admin': True,
+      }),
+      dict({
+        'id': 'assist',
+        'name': 'Device control',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'requires_admin': True,
+      }),
+    ]),
+    'config_entry_data': dict({
+      'all_llm_apis': False,
+      'llm_hass_api': list([
+        'test-api',
+      ]),
+      'read_only': True,
+      'require_admin': False,
+    }),
+    'default_negotiated_protocol_version': '2025-03-26',
+    'latest_protocol_version': '2026-07-28',
+    'llm_api': dict({
+      'id': 'test-api',
+      'name': 'Test API',
+      'tools': list([
+        'read_tool',
+      ]),
+    }),
+    'served_llm_api_ids': list([
+      'test-api',
+    ]),
+  })
+# ---
+# name: test_diagnostics_missing_llm_api[llm_hass_api0]
+  dict({
+    'active_sse_sessions': 0,
+    'available_llm_apis': list([
+      dict({
+        'id': 'assist',
+        'name': 'Device control',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'requires_admin': True,
+      }),
+    ]),
+    'config_entry_data': dict({
+      'all_llm_apis': False,
+      'llm_hass_api': list([
+        'missing-api',
+      ]),
+      'read_only': False,
+      'require_admin': False,
+    }),
+    'default_negotiated_protocol_version': '2025-03-26',
+    'latest_protocol_version': '2026-07-28',
+    'llm_api': dict({
+      'error': 'API missing-api not found',
+    }),
+    'served_llm_api_ids': list([
+      'missing-api',
+    ]),
+  })
+# ---
+# name: test_diagnostics_tool_name_collision[llm_hass_api0]
+  dict({
+    'active_sse_sessions': 0,
+    'available_llm_apis': list([
+      dict({
+        'id': 'test-api',
+        'name': 'Test API',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'other-api',
+        'name': 'Other API',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'assist',
+        'name': 'Device control',
+        'requires_admin': False,
+      }),
+      dict({
+        'id': 'homeassistant',
+        'name': 'Home Assistant',
+        'requires_admin': True,
+      }),
+    ]),
+    'config_entry_data': dict({
+      'all_llm_apis': False,
+      'llm_hass_api': list([
+        'test-api',
+        'other-api',
+      ]),
+      'read_only': False,
+      'require_admin': False,
+    }),
+    'default_negotiated_protocol_version': '2025-03-26',
+    'latest_protocol_version': '2026-07-28',
+    'llm_api': dict({
+      'error': 'Merged tool names must be unique',
+    }),
+    'served_llm_api_ids': list([
+      'test-api',
+      'other-api',
+    ]),
+  })
+# ---

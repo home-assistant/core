@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -25,13 +26,11 @@ from homeassistant.components.fujitsu_fglair.climate import (
     HA_TO_FUJI_HVAC,
     HA_TO_FUJI_SWING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import entity_id
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -70,7 +69,7 @@ async def test_set_attributes(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         service_data={ATTR_HVAC_MODE: HVACMode.COOL},
-        target={ATTR_ENTITY_ID: entity_id(mock_devices[0])},
+        target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
     mock_devices[0].async_set_op_mode.assert_called_once_with(
@@ -81,7 +80,7 @@ async def test_set_attributes(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         service_data={ATTR_FAN_MODE: FAN_AUTO},
-        target={ATTR_ENTITY_ID: entity_id(mock_devices[0])},
+        target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
     mock_devices[0].async_set_fan_speed.assert_called_once_with(
@@ -92,7 +91,7 @@ async def test_set_attributes(
         CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
         service_data={ATTR_SWING_MODE: SWING_BOTH},
-        target={ATTR_ENTITY_ID: entity_id(mock_devices[0])},
+        target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
     mock_devices[0].async_set_swing_mode.assert_called_once_with(
@@ -103,7 +102,7 @@ async def test_set_attributes(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         service_data={ATTR_TEMPERATURE: 23.0},
-        target={ATTR_ENTITY_ID: entity_id(mock_devices[0])},
+        target={TargetKey.ENTITY_ID: entity_id(mock_devices[0])},
         blocking=True,
     )
     mock_devices[0].async_set_set_temp.assert_called_once_with(23.0)

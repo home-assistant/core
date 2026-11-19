@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tplink_omada_client import OmadaClientSettings
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -12,8 +13,6 @@ from homeassistant.components.tplink_omada.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_reconnect_no_config_entries(

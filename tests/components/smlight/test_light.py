@@ -7,6 +7,7 @@ from pysmlight.const import AmbiEffect
 from pysmlight.exceptions import SmlightConnectionError
 from pysmlight.models import AmbilightPayload
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -29,8 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

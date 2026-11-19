@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pymta import MTAFeedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mta.const import (
     CONF_LINE,
@@ -19,7 +20,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import MOCK_BUS_STOPS
 
 
 async def test_main_entry_flow_without_token(
@@ -241,6 +242,14 @@ async def test_subway_subentry_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_subway_feed.return_value.get_arrivals.side_effect = None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "127N"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_subway_subentry_cannot_get_stops(
     hass: HomeAssistant,
@@ -411,6 +420,21 @@ async def test_bus_subentry_invalid_route(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_route"}
+
+    mock_bus_feed.return_value.get_stops.return_value = MOCK_BUS_STOPS
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ROUTE: "M15"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "stop"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP_ID: "400561"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_bus_subentry_route_fetch_error(

@@ -19,7 +19,11 @@ from . import CONF_PORTS, DATA_GC100, GC100Device
 _SENSORS_SCHEMA = probatio.Schema({cv.string: cv.string})
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_PORTS): probatio.All(cv.ensure_list, [_SENSORS_SCHEMA])}
+    {
+        probatio.Required(CONF_PORTS): probatio.All(
+            probatio.EnsureList(), [_SENSORS_SCHEMA]
+        )
+    }
 )
 
 

@@ -4,7 +4,9 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from pywizlight import BulbType
+from pywizlight.exceptions import WizLightConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -28,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -37,8 +40,6 @@ from . import (
     async_push_update,
     async_setup_integration,
 )
-
-from tests.common import snapshot_platform
 
 ENTITY_ID = "fan.mock_title"
 
@@ -81,6 +82,19 @@ def _update_params(
     if reverse is not None:
         params["fanRevrs"] = reverse
     return params
+
+
+async def test_command_fails(hass: HomeAssistant) -> None:
+    """Test a fan command raises HomeAssistantError when the device does not answer."""
+    device, _ = await async_setup_integration(hass, bulb_type=FAKE_DIMMABLE_FAN)
+
+    device.fan_turn_on.side_effect = WizLightConnectionError("Network is unreachable")
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
 
 
 async def test_turn_on_off(hass: HomeAssistant) -> None:

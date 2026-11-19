@@ -24,14 +24,18 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.9.0"]
+REQUIREMENTS = ["pyotp==2.10.0"]
 
 CONF_MESSAGE = "message"
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     {
-        probatio.Optional(CONF_INCLUDE): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional(CONF_EXCLUDE): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_INCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(CONF_EXCLUDE): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(
             CONF_MESSAGE, default="{} is your Home Assistant login code"
         ): str,
@@ -234,7 +238,6 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         def generate_secret_and_one_time_password() -> str:
             """Generate and send one time password."""
-            assert notify_setting
             # secret and counter are not persistent
             notify_setting.secret = _generate_secret()
             notify_setting.counter = _generate_random()

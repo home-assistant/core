@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 COVER_ENTITY_ID = "cover.shutter_mock_1"
 

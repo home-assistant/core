@@ -41,5 +41,5 @@ Contributions that do not follow this policy will be closed. Repeated violations
 ---
 
 The canonical version of this policy is published at
-<https://developers.home-assistant.io/docs/ai_policy>. In case of differences,
+<https://contributors.home-assistant.io/start/ai-policy/>. In case of differences,
 the published version applies.

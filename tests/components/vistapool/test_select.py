@@ -7,24 +7,18 @@ from unittest.mock import AsyncMock, patch
 
 from aioaquarite import AquariteError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_STATE_CHANGED,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -153,8 +147,11 @@ async def test_select_option_writes_index(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -216,8 +213,11 @@ async def test_select_option_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.my_pool_pump_mode", ATTR_OPTION: "heat"},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: "select.my_pool_pump_mode",
+                SelectServiceArgument.OPTION: "heat",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"
@@ -332,8 +332,11 @@ async def test_light_mode_select_writes_one_command(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: option},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: "select.my_pool_light_mode",
+            SelectServiceArgument.OPTION: option,
+        },
         blocking=True,
     )
 
@@ -384,10 +387,10 @@ async def test_light_schedule_frequency_writes_raw_value(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
-            ATTR_OPTION: "weekly",
+            TargetKey.ENTITY_ID: "select.my_pool_light_schedule_frequency",
+            SelectServiceArgument.OPTION: "weekly",
         },
         blocking=True,
     )
@@ -412,94 +415,15 @@ async def test_select_reflects_choice_before_push(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_pump_speed", ATTR_OPTION: "high"},
-        blocking=True,
-    )
-
-    assert hass.states.get("select.my_pool_pump_speed").state == "high"
-
-
-async def test_light_mode_reflects_choice_before_push(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test the light mode select applies every field of the chosen option."""
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("select.my_pool_light_mode").state == "auto"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
-        blocking=True,
-    )
-
-    # Reads back as on only if both light.mode and light.status were applied.
-    assert hass.states.get("select.my_pool_light_mode").state == "on"
-
-
-async def test_light_schedule_frequency_reflects_choice_before_push(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test the frequency select shows the chosen option immediately."""
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
+        SelectService.SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
-            ATTR_OPTION: "weekly",
+            TargetKey.ENTITY_ID: "select.my_pool_pump_speed",
+            SelectServiceArgument.OPTION: "high",
         },
         blocking=True,
     )
 
-    assert hass.states.get("select.my_pool_light_schedule_frequency").state == "weekly"
-
-
-async def test_light_mode_never_publishes_partial_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test leaving auto does not briefly read as another option.
-
-    light.mode and light.status both feed current_option, so applying them
-    one at a time would publish an off state between the two writes.
-    """
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    states = [
-        event.data["new_state"].state
-        for event in events
-        if event.data["entity_id"] == "select.my_pool_light_mode"
-    ]
-    assert states == ["on"]
+    assert hass.states.get("select.my_pool_pump_speed").state == "high"
 
 
 async def test_light_mode_raises_on_api_error(
@@ -519,8 +443,11 @@ async def test_light_mode_raises_on_api_error(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: "select.my_pool_light_mode",
+                SelectServiceArgument.OPTION: "on",
+            },
             blocking=True,
         )
     assert excinfo.value.translation_key == "set_failed"

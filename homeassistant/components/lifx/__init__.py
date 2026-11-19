@@ -7,7 +7,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SERIAL, DATA_LIFX_MANAGER, DOMAIN, LOGGER
@@ -26,7 +26,7 @@ CONF_BROADCAST = "broadcast"
 INTERFACE_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_SERVER): cv.string,
-        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_PORT): probatio.Port(),
         probatio.Optional(CONF_BROADCAST): cv.string,
     }
 )
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = probatio.All(
         {
             DOMAIN: {
                 LIGHT_DOMAIN: probatio.Schema(
-                    probatio.All(cv.ensure_list, [INTERFACE_SCHEMA])
+                    probatio.All(probatio.EnsureList(), [INTERFACE_SCHEMA])
                 )
             }
         },
@@ -55,6 +55,11 @@ PLATFORMS = [
 ]
 
 
+def invalid_serial_issue_id(entry_id: str) -> str:
+    """Return the repair issue ID for an entry whose serial cannot be migrated."""
+    return f"invalid_serial_{entry_id}"
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     async_setup_services(hass)
@@ -63,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
     """Migrate a LIFX config entry to version 2."""
     if entry.unique_id is None or entry.unique_id == DOMAIN:
         # The shared entry that predates one entry per device holds no host for
@@ -72,7 +77,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bo
         # found in the first place
         LOGGER.debug("Removing the legacy LIFX config entry %s", entry.entry_id)
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        return
 
     await async_migrate_serials(hass, entry)
     try:
@@ -80,6 +85,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bo
     except ValueError as err:
         # Nothing can make the entry usable, so it is left for the user to
         # remove rather than retried
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            invalid_serial_issue_id(entry.entry_id),
+            config_entry_id=entry.entry_id,
+            data={"entry_id": entry.entry_id},
+            is_fixable=True,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="invalid_serial",
+            translation_placeholders={
+                "title": entry.title,
+                "unique_id": entry.unique_id,
+            },
+        )
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_serial",
@@ -94,12 +113,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bo
         },
         version=2,
     )
-    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
     """Set up LIFX from a config entry."""
-    assert entry.unique_id is not None
+    # The legacy shared entry is being removed by the migration
+    if entry.unique_id is None or entry.unique_id == DOMAIN:
+        return
     host = entry.data[CONF_HOST]
     try:
         # An entry created before the migration to lifx-async can hold a
@@ -123,11 +143,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
     async_repair_device_registry(hass, entry, coordinator.data)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> None:
     """Unload a config entry."""
+    # The legacy shared entry was never set up
+    if entry.unique_id is None or entry.unique_id == DOMAIN:
+        return
     manager = hass.data[DATA_LIFX_MANAGER]
     try:
         # The device is about to be closed out from under any running effect
@@ -136,4 +158,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> boo
         # Restoring the pre-effect state is best effort: an unreachable device
         # is the usual reason an entry is being unloaded in the first place
         LOGGER.debug("Could not stop the effects running on %s: %s", entry.title, err)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

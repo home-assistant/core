@@ -47,11 +47,15 @@
       ]),
       'freshwater_iq': dict({
         'chlorine': 0.0,
+        'cl_calibration_factor': None,
         'conductivity': 0,
         'installed': False,
         'orp': 0,
         'ph': 7.2,
+        'ph_calibration_factor': None,
+        'regional_cl_selection': '',
         'sensor_life_percentage': 100.0,
+        'system_enabled': False,
       }),
       'heater': dict({
         'current_temperature': 102.0,
@@ -235,11 +239,15 @@
       ]),
       'freshwater_iq': dict({
         'chlorine': 0.0,
+        'cl_calibration_factor': None,
         'conductivity': 0,
         'installed': False,
         'orp': 0,
         'ph': 7.2,
+        'ph_calibration_factor': None,
+        'regional_cl_selection': '',
         'sensor_life_percentage': 100.0,
+        'system_enabled': False,
       }),
       'heater': dict({
         'current_temperature': 102.0,

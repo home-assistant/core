@@ -4,20 +4,15 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.hive.const import (
-    DOMAIN,
-    SERVICE_BOOST_HEATING_OFF,
-    SERVICE_BOOST_HEATING_ON,
-    SERVICE_BOOST_HOT_WATER,
-)
+from homeassistant.components.hive.const import DOMAIN
+from homeassistant.components.hive.services import HiveService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 _ENTRY_DATA = {
     CONF_USERNAME: "user@example.com",
@@ -273,9 +268,9 @@ async def test_all_platforms_forwarded_without_devices(
 
         assert entry.state is ConfigEntryState.LOADED
         # Entity services must not depend on device discovery.
-        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HOT_WATER)
-        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_ON)
-        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_OFF)
+        assert hass.services.has_service(DOMAIN, HiveService.BOOST_HOT_WATER)
+        assert hass.services.has_service(DOMAIN, HiveService.BOOST_HEATING_ON)
+        assert hass.services.has_service(DOMAIN, HiveService.BOOST_HEATING_OFF)
 
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()

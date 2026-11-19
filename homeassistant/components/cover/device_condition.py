@@ -35,14 +35,14 @@ POSITION_CONDITION_SCHEMA = probatio.All(
             probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             probatio.Required(CONF_TYPE): probatio.In(POSITION_CONDITION_TYPES),
             probatio.Optional(CONF_ABOVE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(CONF_BELOW): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
@@ -52,7 +52,17 @@ STATE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     }
 )
 
-CONDITION_SCHEMA = probatio.Any(POSITION_CONDITION_SCHEMA, STATE_CONDITION_SCHEMA)
+CONDITION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "is_position": POSITION_CONDITION_SCHEMA,
+        "is_tilt_position": POSITION_CONDITION_SCHEMA,
+        "is_open": STATE_CONDITION_SCHEMA,
+        "is_closed": STATE_CONDITION_SCHEMA,
+        "is_opening": STATE_CONDITION_SCHEMA,
+        "is_closing": STATE_CONDITION_SCHEMA,
+    },
+)
 
 
 async def async_get_conditions(
@@ -103,10 +113,10 @@ async def async_get_condition_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(CONF_ABOVE, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
                 probatio.Optional(CONF_BELOW, default=100): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
             }
         )

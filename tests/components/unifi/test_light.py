@@ -6,6 +6,8 @@ from unittest.mock import patch
 import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -33,9 +35,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_WITH_LED = {
     "board_rev": 3,
