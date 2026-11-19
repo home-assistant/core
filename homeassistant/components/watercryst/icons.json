@@ -19,7 +19,7 @@
       "mode_id": {
         "default": "mdi:circle-double"
       },
-      "pause_leakage_protection_until_utc": {
+      "pause_leakage_protection_until": {
         "default": "mdi:pause-circle-outline"
       }
     }
