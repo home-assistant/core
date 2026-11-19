@@ -174,7 +174,8 @@ def _is_server_url(url: str) -> bool:
     except probatio.Invalid:
         return False
     parsed = urlparse(url)
-    return not (parsed.query or parsed.fragment)
+    # Credentials belong in the authentication section, not in the entry title
+    return not (parsed.query or parsed.fragment or parsed.username)
 
 
 def _validate(

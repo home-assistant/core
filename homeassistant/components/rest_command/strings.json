@@ -5,7 +5,7 @@
     },
     "error": {
       "invalid_command": "The settings are not valid. Check that a username and password are both set, that the username has no colon, and that the header values are text or valid templates.",
-      "invalid_url": "Enter an address that starts with http:// or https:// and has no query (?) or fragment (#)."
+      "invalid_url": "Enter an address that starts with http:// or https://, without a username or password, query (?) or fragment (#). Use the authentication section for credentials."
     },
     "step": {
       "user": {

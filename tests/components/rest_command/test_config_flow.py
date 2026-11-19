@@ -124,6 +124,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         ({"url": "ftp://example.com"}, {"url": "invalid_url"}),
         ({"url": "https://"}, {"url": "invalid_url"}),
         ({"url": SERVER_URL + "/?key=1"}, {"url": "invalid_url"}),
+        ({"url": "https://user:secret@example.com"}, {"url": "invalid_url"}),
         ({"auth": {"username": "user"}}, {"base": "invalid_command"}),
     ],
 )
