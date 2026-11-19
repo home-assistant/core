@@ -204,7 +204,7 @@ async def async_setup_entry(
 
     parent_device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        **device.device_info,
+        **device.device_info.as_dict(),
     )
 
     # Connection failures are retried inside the library's background task.

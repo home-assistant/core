@@ -288,11 +288,13 @@ async def test_periodic_refresh_during_reconnect(
 )
 async def test_failed_refresh_cleans_up_reads(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_climate_api: MagicMock,
     error: type[BaseException],
     connection_state: Callable[[bool], None],
 ) -> None:
-    """Failed or cancelled reads clean up their siblings and allow a later refresh."""
+    """Failed reads clean up siblings and allow recovery through reports or refreshes."""
+    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
     started = asyncio.Event()
     cleaned_up = asyncio.Event()
     release = asyncio.Event()
@@ -319,6 +321,11 @@ async def test_failed_refresh_cleans_up_reads(
     finally:
         release.set()
         await hass.async_block_till_done()
+    mock_climate_api.add_state_listener.call_args.args[0](
+        {ClimateCapability.LOCAL_TEMPERATURE: 22.0}
+    )
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 22.0
     mock_climate_api.async_get_current_temperature.side_effect = None
     mock_climate_api.async_get_target_temperature.side_effect = None
     connection_state(True)
@@ -623,10 +630,17 @@ async def test_unload_cancels_pending_state_reads(
     assert cancelled.is_set()
 
 
+@pytest.mark.parametrize("disable_polling", [False, True])
 async def test_cancelled_refresh_does_not_reuse_a_completed_read(
-    hass: HomeAssistant, mock_climate_api: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+    disable_polling: bool,
 ) -> None:
-    """Cancelling a refresh caller does not leave its finished read cached as pending."""
+    """A surviving refresh publishes recovery even with periodic polling disabled."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, pref_disable_polling=disable_polling
+    )
     started = asyncio.Event()
     release = asyncio.Event()
 
@@ -644,6 +658,37 @@ async def test_cancelled_refresh_does_not_reuse_a_completed_read(
         await refresh
     release.set()
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(ENTITY_ID).state == HVACMode.HEAT
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
     await async_update_entity(hass, ENTITY_ID)
     assert mock_climate_api.async_get_current_temperature.await_count == 2
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+
+
+async def test_overlapping_public_refreshes_share_reads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_climate_api: MagicMock,
+) -> None:
+    """Concurrent public refresh callers share the entire HA refresh cycle."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def read() -> float:
+        started.set()
+        await release.wait()
+        return 20.0
+
+    mock_climate_api.async_get_current_temperature.reset_mock()
+    mock_climate_api.async_get_current_temperature.side_effect = read
+    coordinator = mock_config_entry.runtime_data.coordinator
+    # This regression requires concurrent public calls rather than timer polling.
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+    first = hass.async_create_task(coordinator.async_refresh())
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+    second = hass.async_create_task(coordinator.async_refresh())
+    await started.wait()
+    release.set()
+    await asyncio.gather(first, second)
+    mock_climate_api.async_get_current_temperature.assert_awaited_once_with()
     assert hass.states.get(ENTITY_ID).attributes[ATTR_CURRENT_TEMPERATURE] == 20.0

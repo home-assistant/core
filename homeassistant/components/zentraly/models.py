@@ -45,10 +45,10 @@ class ZentralyDevice(LibraryDevice):
         )
 
         if self.firmware_version is not None:
-            device_info["sw_version"] = self.firmware_version
+            device_info.sw_version = self.firmware_version
 
         if self.hardware_version is not None:
-            device_info["hw_version"] = self.hardware_version
+            device_info.hw_version = self.hardware_version
 
         return device_info
 

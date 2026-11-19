@@ -40,7 +40,7 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
         self.data = {}
         self.readers: dict[object, Callable[[], Awaitable[Any]]] = {}
         self._versions: dict[object, int] = {}
-        self._read_task: asyncio.Task[dict[object, Any]] | None = None
+        self._refresh_task: asyncio.Task[None] | None = None
 
     @callback
     def async_update_partial[KeyT](self, updates: dict[KeyT, Any]) -> None:
@@ -48,26 +48,33 @@ class ZentralyUpdateCoordinator(DataUpdateCoordinator[dict[object, Any]]):
         for key, value in updates.items():
             self.data[key] = value
             self._versions[key] = self._versions.get(key, 0) + 1
+        self.last_update_success = True
+        self.last_exception = None
         self.async_update_listeners()
 
     @override
-    async def _async_update_data(self) -> dict[object, Any]:
-        """Coalesce refreshes requested while a device read is in progress."""
-        if not self.device.connected:
-            return self.data
-        if self._read_task is None:
-            self._read_task = self._entry.async_create_background_task(
+    async def async_refresh(self) -> None:
+        """Share the complete refresh before HA acquires its refresh lock."""
+        if self._refresh_task is None:
+            self._refresh_task = self._entry.async_create_background_task(
                 self.hass,
-                self._async_read(),
-                f"Read Zentraly state: {self.device.device_id}",
+                super().async_refresh(),
+                f"Refresh Zentraly state: {self.device.device_id}",
             )
-            self._read_task.add_done_callback(self._async_read_finished)
-        return await asyncio.shield(self._read_task)
+            self._refresh_task.add_done_callback(self._async_refresh_done)
+        await asyncio.shield(self._refresh_task)
 
     @callback
-    def _async_read_finished(self, task: asyncio.Task[dict[object, Any]]) -> None:
-        """Release a completed read even if its refresh caller was cancelled."""
-        self._read_task = None
+    def _async_refresh_done(self, task: asyncio.Task[None]) -> None:
+        """Release the refresh after HA has published its result."""
+        self._refresh_task = None
+
+    @override
+    async def _async_update_data(self) -> dict[object, Any]:
+        """Read the state without treating a missing connection as a data loss."""
+        if not self.device.connected:
+            return self.data
+        return await self._async_read()
 
     async def _async_read(self) -> dict[object, Any]:
         """Preserve newer reports and successful readings after a partial failure."""
