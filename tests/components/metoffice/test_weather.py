@@ -18,10 +18,7 @@ from requests_mock.adapter import _Matcher
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.metoffice.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.components.weather import (
-    DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
-)
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN, WeatherService
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -41,30 +38,6 @@ def no_sensor():
         "homeassistant.components.metoffice.sensor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
-
-
-@pytest.fixture
-async def wavertree_data(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
-) -> dict[str, _Matcher]:
-    """Mock data for the Wavertree location."""
-    # all metoffice test data encapsulated in here
-    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
-    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
-    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
-
-    wavertree_hourly_mock = requests_mock.get(
-        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
-        text=wavertree_hourly,
-    )
-    wavertree_daily_mock = requests_mock.get(
-        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
-        text=wavertree_daily,
-    )
-    return {
-        "wavertree_hourly_mock": wavertree_hourly_mock,
-        "wavertree_daily_mock": wavertree_daily_mock,
-    }
 
 
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
@@ -268,7 +241,7 @@ async def test_new_config_entry(
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("service"),
-    [SERVICE_GET_FORECASTS],
+    [WeatherService.GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

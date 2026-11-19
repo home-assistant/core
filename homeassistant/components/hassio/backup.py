@@ -202,13 +202,13 @@ class SupervisorBackupAgent(BackupAgent):
         The upload will be skipped if the backup already exists in the agent's location.
         """
         with suppress(BackupNotFound):
-            if await self.async_get_backup(backup.backup_id):
-                _LOGGER.debug(
-                    "Backup %s already exists in location %s",
-                    backup.backup_id,
-                    self.location,
-                )
-                return
+            await self.async_get_backup(backup.backup_id)
+            _LOGGER.debug(
+                "Backup %s already exists in location %s",
+                backup.backup_id,
+                self.location,
+            )
+            return
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
             location={self.location},
@@ -575,13 +575,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # The backup manager has already checked that the backup exists so we don't
         # need to catch BackupNotFound here.
         backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
-        if (
-            # Check for None to be backwards compatible with the old BackupAgent API,
-            # this can be removed in HA Core 2025.10
-            backup
-            and restore_homeassistant
-            and restore_database != backup.database_included
-        ):
+        if restore_homeassistant and restore_database != backup.database_included:
             raise HomeAssistantError("Restore database must match backup")
         if not restore_homeassistant and restore_database:
             raise HomeAssistantError("Cannot restore database without Home Assistant")

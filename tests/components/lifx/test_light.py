@@ -2,6 +2,8 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import json
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -14,6 +16,7 @@ from lifx import (
     LifxError,
     Light,
     MultiZoneEffect,
+    Theme,
     ThemeLibrary,
     TileEffectSkyType,
 )
@@ -29,6 +32,7 @@ from homeassistant.components.lifx.const import (
     LIFXServiceArgument,
 )
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
+from homeassistant.components.lifx.util import THEME_OPTIONS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
@@ -48,6 +52,8 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -56,6 +62,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -69,6 +77,7 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import (
     SERIAL,
+    async_enable_components,
     async_setup_lifx_entries,
     async_setup_lifx_entry,
     async_trigger_update,
@@ -87,6 +96,7 @@ from .helpers import (
     create_mock_matrix_light,
     create_mock_mirror_light,
     create_mock_multizone_light,
+    record_paint,
 )
 
 ENTITY_ID = "light.my_group_my_bulb"
@@ -287,8 +297,8 @@ async def test_running_software_effect_is_reported(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -308,7 +318,7 @@ async def test_effect_pulse_uses_public_effect(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.POWER_ON: False,
             ATTR_MODE: "breathe",
             LIFXServiceArgument.PERIOD: 2.5,
@@ -346,7 +356,7 @@ async def test_effect_service_follows_renamed_entity_id(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: RENAMED_ENTITY_ID},
+        {TargetKey.ENTITY_ID: RENAMED_ENTITY_ID},
         blocking=True,
     )
     _, participants = mock_effect_conductor.start.await_args.args
@@ -356,7 +366,7 @@ async def test_effect_service_follows_renamed_entity_id(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -376,7 +386,7 @@ async def test_effect_pulse_reads_color_before_merging(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -404,7 +414,7 @@ async def test_effect_pulse_clamps_brightness_above_zero(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_PULSE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0), **brightness},
         blocking=True,
     )
 
@@ -423,7 +433,7 @@ async def test_effect_colorloop_uses_public_effect_defaults(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             ATTR_BRIGHTNESS_PCT: 50,
             LIFXServiceArgument.SATURATION_MIN: 90,
         },
@@ -452,7 +462,7 @@ async def test_effect_colorloop_orders_saturation_bounds(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SATURATION_MAX: 50},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SATURATION_MAX: 50},
         blocking=True,
     )
 
@@ -471,7 +481,7 @@ async def test_effect_colorloop_clamps_saturation_above_zero(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SATURATION_MIN: 0,
             LIFXServiceArgument.SATURATION_MAX: 0,
         },
@@ -503,7 +513,7 @@ async def test_effect_colorloop_change_is_clamped_to_what_the_library_accepts(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.CHANGE: change},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.CHANGE: change},
         blocking=True,
     )
 
@@ -520,7 +530,7 @@ async def test_effect_colorloop_accepts_absolute_brightness(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORLOOP,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        {TargetKey.ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -539,7 +549,7 @@ async def test_software_effect_errors_become_home_assistant_errors(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -554,8 +564,8 @@ async def test_stopping_an_effect_to_set_state_can_fail(
     with pytest.raises(HomeAssistantError, match="restore boom"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -597,13 +607,6 @@ async def test_undocumented_firmware_effect_is_not_reported(
             {"speed": 4},
             id="flame",
         ),
-        pytest.param(
-            LIFXService.EFFECT_MORPH,
-            {LIFXServiceArgument.SPEED: 6, LIFXServiceArgument.THEME: "autumn"},
-            FirmwareEffect.MORPH,
-            {"speed": 6, "palette": ThemeLibrary.get("autumn").colors},
-            id="morph",
-        ),
     ],
 )
 async def test_matrix_effects_use_public_firmware_api(
@@ -641,30 +644,79 @@ async def test_firmware_effect_errors_become_home_assistant_errors(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_FLAME,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
 
-async def test_effect_theme_schema_offers_every_library_theme(
-    hass: HomeAssistant,
+@pytest.mark.parametrize(
+    ("service_data", "slug"),
+    [
+        pytest.param({}, "exciting", id="default"),
+        pytest.param({LIFXServiceArgument.THEME: "arctic"}, "arctic", id="library"),
+        pytest.param(
+            {LIFXServiceArgument.THEME: "aurora_borealis"}, "aurora", id="renamed"
+        ),
+    ],
+)
+async def test_morph_theme_is_sent_by_slug(
+    hass: HomeAssistant, service_data: dict[str, Any], slug: str
 ) -> None:
-    """Test effect services accept the themes the library currently ships."""
+    """Test a theme Morph starts from a library theme, so the library can report it."""
     device = create_mock_matrix_light()
     await async_setup_lifx_entry(hass, device)
 
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_MORPH,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.THEME: "arctic"},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 6, **service_data},
         blocking=True,
     )
 
-    device.set_effect.assert_awaited_once()
-    assert (
-        device.set_effect.await_args.kwargs["palette"]
-        == ThemeLibrary.get("arctic").colors
+    device.set_morph_effect.assert_awaited_once()
+    assert device.set_morph_effect.await_args.args[0].slug == slug
+    assert device.set_morph_effect.await_args.kwargs == {"speed": 6}
+    device.set_effect.assert_not_awaited()
+
+
+async def test_morph_palette_keeps_the_firmware_path(hass: HomeAssistant) -> None:
+    """Test a custom palette Morph is sent as a palette, with nothing to record."""
+    device = create_mock_matrix_light()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.EFFECT_MORPH,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.SPEED: 6,
+            LIFXServiceArgument.PALETTE: [(0, 100, 100, 3500), (240, 50, 25, 6500)],
+        },
+        blocking=True,
     )
+
+    device.set_effect.assert_awaited_once_with(
+        FirmwareEffect.MORPH,
+        speed=6,
+        palette=[HSBK(0, 1.0, 1.0, 3500), HSBK(240, 0.5, 0.25, 6500)],
+    )
+    device.set_morph_effect.assert_not_awaited()
+
+
+async def test_morph_theme_powers_on_an_off_light(hass: HomeAssistant) -> None:
+    """Test a theme Morph turns an off light on first, as before."""
+    device = create_mock_matrix_light()
+    device.state.power = 0
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.EFFECT_MORPH,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.THEME: "arctic"},
+        blocking=True,
+    )
+
+    device.set_power.assert_awaited_once_with(True, duration=0.0)
 
 
 async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
@@ -676,7 +728,7 @@ async def test_sky_effect_uses_public_firmware_api(hass: HomeAssistant) -> None:
         DOMAIN,
         LIFXService.EFFECT_SKY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SPEED: 50,
             LIFXServiceArgument.SKY_TYPE: "Clouds",
             LIFXServiceArgument.CLOUD_SATURATION_MIN: 50,
@@ -708,7 +760,7 @@ async def test_sky_effect_plays_once_across_a_duration(
         DOMAIN,
         LIFXService.EFFECT_SKY,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SKY_TYPE: "Sunrise",
             LIFXServiceArgument.SPEED: 0,
             LIFXServiceArgument.DURATION: 1800,
@@ -732,7 +784,7 @@ async def test_sky_effect_speed_zero_needs_a_duration(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_SKY,
-            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 0},
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.SPEED: 0},
             blocking=True,
         )
 
@@ -750,7 +802,7 @@ async def test_sky_effect_without_a_palette_omits_it(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_SKY,
-        {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER_ON: False},
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.POWER_ON: False},
         blocking=True,
     )
 
@@ -800,7 +852,7 @@ async def test_color_sweep_effect_uses_public_firmware_api(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORSWEEP,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -821,7 +873,7 @@ async def test_color_sweep_speed_zero_needs_a_duration(
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_COLORSWEEP,
-            {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.DURATION: 0},
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.DURATION: 0},
             blocking=True,
         )
 
@@ -844,7 +896,7 @@ async def test_color_sweep_effect_skips_other_matrix_lights(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_COLORSWEEP,
-        {ATTR_ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
+        {TargetKey.ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID]},
         blocking=True,
     )
 
@@ -862,7 +914,7 @@ async def test_move_effect_uses_public_firmware_api(hass: HomeAssistant) -> None
         DOMAIN,
         LIFXService.EFFECT_MOVE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.SPEED: 4.5,
             LIFXServiceArgument.DIRECTION: "left",
             LIFXServiceArgument.THEME: "sports",
@@ -908,12 +960,127 @@ async def test_effect_stop_uses_compatible_public_firmware_api(
     await hass.services.async_call(
         DOMAIN,
         LIFXService.EFFECT_STOP,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
     mock_effect_conductor.stop.assert_awaited_once_with([device])
     getattr(device, method).assert_awaited_once_with(*args)
+
+
+@pytest.mark.parametrize(
+    ("factory", "running_effect", "method", "args"),
+    [
+        pytest.param(
+            create_mock_matrix_light,
+            FirmwareEffect.MORPH,
+            "set_effect",
+            (FirmwareEffect.OFF,),
+            id="matrix",
+        ),
+        pytest.param(
+            create_mock_multizone_light,
+            FirmwareEffect.MOVE,
+            "stop_effect",
+            (),
+            id="multizone",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("domain", "service", "data"),
+    [
+        pytest.param(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 178}, id="brightness"
+        ),
+        pytest.param(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 3500},
+            id="kelvin",
+        ),
+        pytest.param(
+            DOMAIN,
+            LIFXService.SET_STATE,
+            {ATTR_HS_COLOR: (120, 100)},
+            id="set_state",
+        ),
+    ],
+)
+async def test_color_change_stops_a_firmware_effect(
+    hass: HomeAssistant,
+    factory: Callable[[], MockDevice],
+    running_effect: FirmwareEffect,
+    method: str,
+    args: tuple[object, ...],
+    domain: str,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test a color change stops the firmware effect that would draw over it."""
+    device = factory()
+    device.state.effect = running_effect
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        domain, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+    )
+
+    getattr(device, method).assert_awaited_once_with(*args)
+
+
+@pytest.mark.parametrize(
+    ("running_effect", "service", "data"),
+    [
+        pytest.param(FirmwareEffect.MORPH, SERVICE_TURN_ON, {}, id="turn_on"),
+        pytest.param(FirmwareEffect.MORPH, SERVICE_TURN_OFF, {}, id="turn_off"),
+        pytest.param(
+            FirmwareEffect.MORPH,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: LIFXService.EFFECT_PULSE},
+            id="new_effect",
+        ),
+        pytest.param(
+            FirmwareEffect.OFF,
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 178},
+            id="no_effect_running",
+        ),
+    ],
+)
+async def test_firmware_effect_not_stopped(
+    hass: HomeAssistant,
+    running_effect: FirmwareEffect,
+    service: str,
+    data: dict[str, Any],
+) -> None:
+    """Test the firmware effect is only stopped by a color change."""
+    device = create_mock_matrix_light()
+    device.state.effect = running_effect
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID, **data}, blocking=True
+    )
+
+    device.set_effect.assert_not_awaited()
+
+
+async def test_stopping_a_firmware_effect_can_fail(hass: HomeAssistant) -> None:
+    """Test a failure to stop a firmware effect is reported and no color is set."""
+    device = create_mock_matrix_light()
+    device.state.effect = FirmwareEffect.MORPH
+    device.set_effect.side_effect = LifxError("stop boom")
+    await async_setup_lifx_entry(hass, device)
+
+    with pytest.raises(HomeAssistantError, match="stop boom"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 178},
+            blocking=True,
+        )
+    device.set_matrix_colors.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -949,7 +1116,7 @@ async def test_paint_theme_uses_public_device_api(
         DOMAIN,
         LIFXService.PAINT_THEME,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            TargetKey.ENTITY_ID: ENTITY_ID,
             LIFXServiceArgument.POWER_ON: False,
             ATTR_TRANSITION: 4,
             **service_data,
@@ -971,11 +1138,11 @@ async def test_typed_light_sets_public_hsbk(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_BRIGHTNESS: 128,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.BRIGHTNESS: 128,
         },
         blocking=True,
     )
@@ -1150,11 +1317,11 @@ async def test_color_is_set_before_fading_on(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_TRANSITION: 5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.TRANSITION: 5,
         },
         blocking=True,
     )
@@ -1176,8 +1343,8 @@ async def test_transition_requests_one_postponed_refresh(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TRANSITION: 5},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.TRANSITION: 5},
         blocking=True,
     )
     device.refresh_state.assert_awaited_once()
@@ -1204,11 +1371,11 @@ async def test_superseding_transition_cancels_old_refresh(
         for brightness in (100, 200):
             await hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
+                LightService.TURN_ON,
                 {
-                    ATTR_ENTITY_ID: ENTITY_ID,
-                    ATTR_BRIGHTNESS: brightness,
-                    ATTR_TRANSITION: 5,
+                    TargetKey.ENTITY_ID: ENTITY_ID,
+                    LightServiceArgument.BRIGHTNESS: brightness,
+                    LightServiceArgument.TRANSITION: 5,
                 },
                 blocking=True,
             )
@@ -1253,8 +1420,8 @@ async def test_multizone_brightness_preserves_zone_colors(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
 
@@ -1302,8 +1469,8 @@ async def test_multizone_full_overwrite_skips_reading_the_strip(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -1395,8 +1562,8 @@ async def test_matrix_reads_the_tiles_before_merging_over_them(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -1413,8 +1580,8 @@ async def test_matrix_without_tile_colors_sets_the_whole_device(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1431,8 +1598,11 @@ async def test_turn_on_with_effect_delegates_to_the_effect_service(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_EFFECT: LIFXService.EFFECT_PULSE},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.EFFECT: LIFXService.EFFECT_PULSE,
+        },
         blocking=True,
     )
     # The effect service is called without waiting for it to finish
@@ -1452,8 +1622,8 @@ async def test_multizone_color_preserves_zone_brightness(hass: HomeAssistant) ->
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1477,8 +1647,8 @@ async def test_multizone_color_keeps_the_brightness_of_a_dark_strip(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1505,11 +1675,11 @@ async def test_matrix_color_uses_public_convenience_api(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HS_COLOR: (120.0, 50.0),
-            ATTR_TRANSITION: 1.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            LightServiceArgument.TRANSITION: 1.5,
         },
         blocking=True,
     )
@@ -1548,8 +1718,8 @@ async def test_matrix_color_preserves_tile_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1594,8 +1764,11 @@ async def test_partial_write_is_refused_when_the_state_cannot_be_read(
     with pytest.raises(HomeAssistantError, match="could not be read"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+            LightService.TURN_ON,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                LightServiceArgument.HS_COLOR: (120.0, 50.0),
+            },
             blocking=True,
         )
 
@@ -1611,8 +1784,8 @@ async def test_matrix_color_writes_each_tile_in_the_chain(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1631,8 +1804,8 @@ async def test_matrix_color_stops_at_a_short_color_list(hass: HomeAssistant) -> 
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HS_COLOR: (120.0, 50.0)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LightServiceArgument.HS_COLOR: (120.0, 50.0)},
         blocking=True,
     )
 
@@ -1662,11 +1835,11 @@ async def test_matrix_brightness_preserves_tile_colors(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 128,
-            ATTR_TRANSITION: 1.5,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 128,
+            LightServiceArgument.TRANSITION: 1.5,
         },
         blocking=True,
     )
@@ -1787,7 +1960,7 @@ async def test_effect_without_a_lifx_target_is_rejected(hass: HomeAssistant) -> 
         await hass.services.async_call(
             DOMAIN,
             LIFXService.EFFECT_PULSE,
-            {ATTR_ENTITY_ID: "light.does_not_exist"},
+            {TargetKey.ENTITY_ID: "light.does_not_exist"},
             blocking=True,
         )
 
@@ -2043,22 +2216,76 @@ async def test_light_starts_off(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
+def _theme_label(slug: str) -> str:
+    """Return the label the app shows for a theme."""
+    theme = ThemeLibrary.get(slug)
+    return f"{theme.category} > {theme.unicode_name}"
+
+
+def _theme_sort_key(slug: str) -> tuple[str, str]:
+    """Order themes as the app does: by category, then by name."""
+    theme = ThemeLibrary.get(slug)
+    return theme.category, theme.unicode_name.casefold()
+
+
+def _load_strings() -> dict[str, Any]:
+    """Return the integration's source strings."""
+    return json.loads(
+        Path(lifx.__path__[0], "strings.json").read_text(encoding="utf-8")
+    )
+
+
+def test_theme_options_list_each_library_theme_once() -> None:
+    """Test the dropdowns offer every theme once, grouped by category.
+
+    Rename aliases would repeat their successor's label, so they are left out
+    of the dropdowns while the schemas keep accepting them.
+    """
+    canonical = [
+        slug
+        for slug in ThemeLibrary.get_available_themes()
+        if ThemeLibrary.get(slug).disposition != "renamed"
+    ]
+
+    assert sorted(THEME_OPTIONS) == sorted(canonical)
+    assert len(THEME_OPTIONS) == 378
+    assert sorted(THEME_OPTIONS, key=_theme_sort_key) == THEME_OPTIONS
+
+
 @pytest.mark.parametrize(
     "service",
     [LIFXService.EFFECT_MOVE, LIFXService.EFFECT_MORPH, LIFXService.PAINT_THEME],
 )
-def test_theme_selector_options_match_the_library(service: str) -> None:
-    """Test the action selectors offer every theme the library accepts.
-
-    The action schemas validate against the library, so a selector left behind
-    by a library bump would hide themes the action would have accepted.
-    """
+def test_theme_selectors_use_the_labelled_options(service: str) -> None:
+    """Test every theme field offers the labelled theme dropdown."""
     services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
-    options = services[service]["fields"][LIFXServiceArgument.THEME]["selector"][
+    selector = services[service]["fields"][LIFXServiceArgument.THEME]["selector"][
         "select"
-    ]["options"]
+    ]
 
-    assert options == sorted(ThemeLibrary.get_available_themes())
+    assert selector["options"] == THEME_OPTIONS
+    assert selector["translation_key"] == "theme"
+
+
+def test_theme_labels_name_category_and_theme() -> None:
+    """Test each dropdown label is the app's category and name.
+
+    Only the Theme select offers rename aliases, so only it labels them.
+    """
+    strings = _load_strings()
+
+    assert strings["selector"]["theme"]["options"] == {
+        slug: _theme_label(slug) for slug in THEME_OPTIONS
+    }
+    assert strings["entity"]["select"]["theme"]["state"] == {
+        **{
+            slug: f"[%key:component::lifx::selector::theme::options::{slug}%]"
+            for slug in THEME_OPTIONS
+        },
+        "aurora_borealis": "Nature > Aurora Borealis (renamed to Aurora)",
+        "energising": "Moods > Energising (renamed to Energizing)",
+        "forest": "Nature > Forest (renamed to Forrest)",
+    }
 
 
 @pytest.mark.parametrize(
@@ -2147,3 +2374,196 @@ async def test_palette_bounds_match_the_documented_action(
             {ATTR_ENTITY_ID: ENTITY_ID, LIFXServiceArgument.PALETTE: palette},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "factory"),
+    [
+        pytest.param(LIFXService.PAINT_THEME, {}, create_mock_light, id="paint_theme"),
+        pytest.param(
+            LIFXService.EFFECT_MOVE,
+            {LIFXServiceArgument.SPEED: 3},
+            create_mock_multizone_light,
+            id="move",
+        ),
+    ],
+)
+async def test_renamed_theme_paints_its_successor(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, Any],
+    factory: Callable[[], MockDevice],
+) -> None:
+    """Test a renamed theme paints, and is recorded as, the theme it became.
+
+    The library records the slug it is given, and the selects only offer the
+    successor, so painting the alias itself would leave them blank.
+    """
+    device = factory()
+    await async_setup_lifx_entry(hass, device)
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            LIFXServiceArgument.THEME: "forest",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    assert device.apply_theme.await_args.args[0].slug == "forrest"
+
+
+async def test_set_mood_applies_one_group_across_the_targets(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test one call applies the Mood to every target together.
+
+    Bulbs in one group share the Mood's colours out, as in the LIFX app.
+    """
+    first = create_mock_light()
+    second = create_mock_light(ip=OTHER_IP_ADDRESS, serial=OTHER_SERIAL)
+    second.state.label = OTHER_LABEL
+    await async_setup_lifx_entries(hass, [first, second])
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {
+            TargetKey.ENTITY_ID: [ENTITY_ID, OTHER_ENTITY_ID],
+            LIFXServiceArgument.MOOD: "dream",
+        },
+        blocking=True,
+    )
+
+    mock_device_group.assert_called_once()
+    assert set(mock_device_group.call_args.args[0]) == {first, second}
+    group = mock_device_group.return_value
+    group.apply_mood.assert_awaited_once()
+    assert group.apply_mood.await_args.args[0].slug == "dream"
+
+
+async def test_set_mood_follows_a_rename(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test a renamed Mood is applied as the Mood it became."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "energising"},
+        blocking=True,
+    )
+
+    group = mock_device_group.return_value
+    assert group.apply_mood.await_args.args[0].slug == "energizing"
+
+
+async def test_set_mood_updates_each_target_mood_select(
+    hass: HomeAssistant, mock_device_group: MagicMock
+) -> None:
+    """Test each target's Mood select shows the Mood once the action applies it."""
+    device = create_mock_multizone_light()
+    await async_setup_lifx_entry(hass, device)
+
+    async def apply_mood(theme: Theme) -> None:
+        record_paint(device, "mood", theme.slug)
+
+    mock_device_group.return_value.apply_mood.side_effect = apply_mood
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "dream"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.my_group_my_bulb_mood")
+    assert state
+    assert state.state == "dream"
+
+
+async def test_set_mood_rejects_a_component_only_target(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device_group: MagicMock,
+) -> None:
+    """Test a Mood cannot be applied to one component of a Ceiling.
+
+    Moods paint whole devices, so naming only a component must not paint the light.
+    """
+    device = create_mock_ceiling_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    await async_enable_components(hass, entry, entity_registry, device, ("downlight",))
+    downlight = entity_registry.async_get_entity_id(
+        Platform.LIGHT, DOMAIN, f"{SERIAL}_downlight"
+    )
+    assert downlight
+    assert hass.states.get(downlight)
+
+    with pytest.raises(ServiceValidationError, match="include no LIFX light"):
+        await hass.services.async_call(
+            DOMAIN,
+            LIFXService.SET_MOOD,
+            {TargetKey.ENTITY_ID: downlight, LIFXServiceArgument.MOOD: "dream"},
+            blocking=True,
+        )
+
+    mock_device_group.return_value.apply_mood.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_device_group")
+async def test_set_mood_requires_a_known_mood(hass: HomeAssistant) -> None:
+    """Test the action rejects a Mood the library does not have."""
+    await async_setup_lifx_entry(hass, create_mock_light())
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            LIFXService.SET_MOOD,
+            {TargetKey.ENTITY_ID: ENTITY_ID, LIFXServiceArgument.MOOD: "no_such_mood"},
+            blocking=True,
+        )
+
+
+def test_set_mood_selector_uses_the_labelled_options() -> None:
+    """Test the Mood field offers the labelled theme dropdown."""
+    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
+    field = services[LIFXService.SET_MOOD]["fields"][LIFXServiceArgument.MOOD]
+
+    assert field["required"] is True
+    assert field["selector"]["select"]["options"] == THEME_OPTIONS
+    assert field["selector"]["select"]["translation_key"] == "theme"
+
+
+async def test_set_mood_on_an_area_applies_each_whole_light_once(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_device_group: MagicMock,
+) -> None:
+    """Test an area holding a Ceiling and its components applies the Ceiling once."""
+    device = create_mock_ceiling_light()
+    entry = await async_setup_lifx_entry(hass, device)
+    await async_enable_components(
+        hass, entry, entity_registry, device, ("uplight", "downlight")
+    )
+    area = area_registry.async_create("Living Room")
+    registered = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    assert registered is not None
+    device_registry.async_update_device(registered.id, area_id=area.id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LIFXService.SET_MOOD,
+        {ATTR_AREA_ID: area.id, LIFXServiceArgument.MOOD: "dream"},
+        blocking=True,
+    )
+
+    mock_device_group.assert_called_once_with([device])

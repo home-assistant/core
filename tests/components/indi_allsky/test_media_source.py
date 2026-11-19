@@ -25,7 +25,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.setup import async_setup_component
 
 
@@ -265,8 +265,13 @@ async def test_async_resolve_media_redirect_resolution(
         data={**mock_config_entry.data, CONF_VERIFY_SSL: False},
     )
     entry_no_verify.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry_no_verify.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.indi_allsky.coordinator.async_create_clientsession",
+        wraps=async_create_clientsession,
+    ) as mock_create_session:
+        await hass.config_entries.async_setup(entry_no_verify.entry_id)
+        await hass.async_block_till_done()
+    assert mock_create_session.call_args.kwargs["verify_ssl"] is False
 
     mock_indi_allsky_client.get_media_url.return_value = (
         "https://127.0.0.1:443/indi-allsky/lateststartrail"
@@ -276,16 +281,11 @@ async def test_async_resolve_media_redirect_resolution(
         status=302,
         headers={"Location": "/indi-allsky/images/startrail_1234.jpg"},
     )
-    with patch(
-        "homeassistant.components.indi_allsky.media_source.async_get_clientsession",
-        wraps=async_get_clientsession,
-    ) as mock_get_session:
-        resolved_no_verify = await async_resolve_media(
-            hass,
-            f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
-            None,
-        )
-        assert mock_get_session.call_args.kwargs["verify_ssl"] is False
+    resolved_no_verify = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
+        None,
+    )
 
     assert resolved_no_verify == PlayMedia(
         f"/api/indi_allsky/media/{entry_no_verify.entry_id}/bGF0ZXN0c3RhcnRyYWls",
@@ -1035,13 +1035,10 @@ async def test_proxy_view_streaming_error_mid_stream(
     upstream_url = "https://127.0.0.1:443/indi-allsky/images/failing.jpg"
     mock_indi_allsky_client.get_media_url.return_value = upstream_url
 
-    with patch(
-        "homeassistant.components.indi_allsky.media_source.async_get_clientsession"
-    ) as mock_session_getter:
-        mock_session = MagicMock()
-        mock_session.get = MagicMock(side_effect=mock_get)
-        mock_session_getter.return_value = mock_session
+    mock_session = MagicMock()
+    mock_session.get = MagicMock(side_effect=mock_get)
 
+    with patch.object(mock_config_entry.runtime_data, "session", mock_session):
         # b64 for "images/failing.jpg" is "aW1hZ2VzL2ZhaWxpbmcuanBn"
         resp = await client.get(
             f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL2ZhaWxpbmcuanBn"

@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'clients': dict({
+      'per_interface': dict({
+        'Home': 2,
+        'VPS0': 1,
+      }),
+      'total': 3,
+    }),
+    'config_entry': dict({
+      'consider_home': 150,
+      'include_arp': True,
+      'include_associated': True,
+      'interfaces': list([
+        'Home',
+        'VPS0',
+      ]),
+      'try_hotspot': False,
+    }),
+    'router': dict({
+      'available': True,
+      'fw_channel': 'stable',
+      'fw_version': '3.0.4',
+      'hw_version': '0000',
+      'manufacturer': 'pytest',
+      'model': 'mock',
+      'vendor': 'foxel',
+    }),
+  })
+# ---

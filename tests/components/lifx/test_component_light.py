@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
-from lifx import HSBK, CeilingLight, Device, LifxError
+from lifx import HSBK, CeilingLight, Device, FirmwareEffect, LifxError
 import pytest
 from pytest_homeassistant.common import (
     async_mock_restore_state_shutdown_restart,
@@ -28,8 +28,9 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ColorMode,
+    LightService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -181,7 +182,10 @@ async def test_component_entity_id_changes_in_place(
     assert state
     assert state.state == STATE_OFF
     await hass.services.async_call(
-        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: new_entity_id}, blocking=True
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: new_entity_id},
+        blocking=True,
     )
     device.turn_uplight_on.assert_awaited_once()
 
@@ -564,6 +568,43 @@ async def test_write_stops_a_software_effect(
     device.turn_front_off.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("service", "data", "stop_calls"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 255},
+            [call(FirmwareEffect.OFF)],
+            id="brightness",
+        ),
+        pytest.param(
+            SERVICE_TURN_ON,
+            {ATTR_COLOR_TEMP_KELVIN: 3500},
+            [call(FirmwareEffect.OFF)],
+            id="kelvin",
+        ),
+        pytest.param(SERVICE_TURN_ON, {}, [], id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, {}, [], id="turn_off"),
+    ],
+)
+async def test_color_change_stops_a_firmware_effect(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service: str,
+    data: dict[str, Any],
+    stop_calls: list[Any],
+) -> None:
+    """Test only a color change on a component stops the firmware effect."""
+    device = await _setup_components(
+        hass, entity_registry, create_mock_ceiling_light, CEILING_KEYS
+    )
+    device.state.effect = FirmwareEffect.MORPH
+
+    await _call(hass, LIGHT_DOMAIN, service, "uplight", **data)
+
+    assert device.set_effect.await_args_list == stop_calls
+
+
 async def test_stopping_a_software_effect_can_fail(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -786,8 +827,8 @@ async def test_main_entity_writes_every_zone(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: MAIN_ENTITY_ID, "brightness": 255},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: MAIN_ENTITY_ID, "brightness": 255},
         blocking=True,
     )
 
@@ -835,8 +876,8 @@ async def test_restored_colors_used_after_restart(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id_for("uplight")},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id_for("uplight")},
         blocking=True,
     )
 
@@ -870,8 +911,8 @@ async def test_restored_colors_ignored(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id_for("uplight")},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id_for("uplight")},
         blocking=True,
     )
 
@@ -886,8 +927,8 @@ async def test_restored_colors_used_only_once(
     for _ in range(2):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id_for("uplight")},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id_for("uplight")},
             blocking=True,
         )
 

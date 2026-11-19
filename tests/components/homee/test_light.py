@@ -13,11 +13,9 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -81,8 +79,8 @@ async def test_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_light_light_1"} | data,
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_light_light_1"} | data,
         blocking=True,
     )
     assert mock_homee.set_value.call_args_list == calls
@@ -98,9 +96,9 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "light.test_light_light_1",
+            TargetKey.ENTITY_ID: "light.test_light_light_1",
         },
         blocking=True,
     )
@@ -117,9 +115,9 @@ async def test_toggle(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TOGGLE,
+        LightService.TOGGLE,
         {
-            ATTR_ENTITY_ID: "light.test_light_light_1",
+            TargetKey.ENTITY_ID: "light.test_light_light_1",
         },
         blocking=True,
     )
@@ -134,9 +132,9 @@ async def test_toggle(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TOGGLE,
+        LightService.TOGGLE,
         {
-            ATTR_ENTITY_ID: "light.test_light_light_1",
+            TargetKey.ENTITY_ID: "light.test_light_light_1",
         },
         blocking=True,
     )

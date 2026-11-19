@@ -37,12 +37,11 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredCommand, InfraredReceivedSignal
@@ -51,6 +50,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -152,8 +152,8 @@ async def test_set_hvac_mode_off(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -183,8 +183,8 @@ async def test_failed_send_does_not_become_the_last_active_mode(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -199,15 +199,15 @@ async def test_failed_send_does_not_become_the_last_active_mode(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
             blocking=True,
         )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -237,16 +237,16 @@ async def test_set_hvac_mode_off_keeps_the_last_active_mode(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -295,8 +295,8 @@ async def test_turn_on_off_uses_the_last_active_mode(
     for hvac_mode in prior_modes:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+            ClimateService.SET_HVAC_MODE,
+            {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
             blocking=True,
         )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -375,22 +375,25 @@ async def test_set_hvac_mode_encodes_correctly(
     """Test that set_hvac_mode sends correctly encoded timings."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: temp},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: temp,
+        },
         blocking=True,
     )
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": fan},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": fan},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
@@ -441,8 +444,8 @@ async def test_set_hvac_mode_from_off_uses_defaults(
     """Test modes not reachable via the cool/dry default encode from entity defaults."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": hvac_mode},
         blocking=True,
     )
 
@@ -459,16 +462,19 @@ async def test_set_temperature_sends_command_when_active(
     """Test set_temperature sends IR when AC is on."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 26,
+        },
         blocking=True,
     )
 
@@ -499,16 +505,19 @@ async def test_set_temperature_sends_command_in_dry_mode(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 25,
+        },
         blocking=True,
     )
 
@@ -530,8 +539,11 @@ async def test_set_temperature_no_command_when_off(
     """Test set_temperature updates state but sends no IR when AC is off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 22},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 22,
+        },
         blocking=True,
     )
 
@@ -550,16 +562,16 @@ async def test_set_fan_mode_sends_command_when_active(
     """Test set_fan_mode sends IR when AC is on."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
         blocking=True,
     )
 
@@ -581,8 +593,8 @@ async def test_set_fan_mode_no_command_when_off(
     """Test set_fan_mode updates state but sends no IR when AC is off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "fan_mode": FAN_HIGH},
         blocking=True,
     )
 
@@ -680,8 +692,8 @@ async def test_set_hvac_mode_off_keeps_the_mode_seen_by_the_receiver(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -720,8 +732,8 @@ async def test_receiver_off_signal_records_the_mode_it_carries(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -752,8 +764,8 @@ async def test_receiver_off_signal_in_unconfigured_mode_keeps_the_last_active_mo
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
         blocking=True,
     )
     mock_infrared_receiver_entity._handle_received_signal(
@@ -775,8 +787,8 @@ async def test_receiver_off_signal_in_unconfigured_mode_keeps_the_last_active_mo
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -839,8 +851,8 @@ async def test_last_active_mode_restored_on_restart_while_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -886,8 +898,8 @@ async def test_last_active_mode_restored_from_unavailable_state(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -956,8 +968,11 @@ async def test_next_frame_keeps_what_the_remote_set(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 26,
+        },
         blocking=True,
     )
 
@@ -992,8 +1007,8 @@ async def test_remote_frame_during_send_is_kept(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -1014,8 +1029,11 @@ async def test_remote_frame_during_send_is_kept(
         temperature_call = hass.async_create_task(
             hass.services.async_call(
                 CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+                ClimateService.SET_TEMPERATURE,
+                {
+                    TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+                    ClimateServiceArgument.TEMPERATURE: 25,
+                },
                 blocking=True,
             )
         )
@@ -1042,8 +1060,8 @@ async def test_remote_frame_during_send_is_kept(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -1075,8 +1093,8 @@ async def test_unconfigured_mode_frame_is_not_carried(
     """
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_receiver_entity._handle_received_signal(
@@ -1095,8 +1113,11 @@ async def test_unconfigured_mode_frame_is_not_carried(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 26},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 26,
+        },
         blocking=True,
     )
 
@@ -1266,8 +1287,8 @@ async def test_restore_temperature_unit(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
 
@@ -1288,10 +1309,10 @@ async def test_restore_data_saved(
     """Test the native temperatures are stored along with the last active mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 25,
             "hvac_mode": HVACMode.DRY,
         },
         blocking=True,
@@ -1341,10 +1362,10 @@ async def test_set_temperature_with_hvac_mode(
     """Test set_temperature applies a given mode, off included, while off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: 24,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 24,
             "hvac_mode": hvac_mode,
         },
         blocking=True,
@@ -1391,8 +1412,11 @@ async def test_fahrenheit_temperatures_round_trip(
     mock_infrared_emitter_entity.send_command_calls.clear()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 75},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 75,
+        },
         blocking=True,
     )
 
@@ -1414,18 +1438,18 @@ async def test_set_temperature_with_hvac_mode_off_while_active(
     """Test requesting off alongside a temperature turns an active AC off."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: 26,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: 26,
             "hvac_mode": HVACMode.OFF,
         },
         blocking=True,
@@ -1458,10 +1482,10 @@ async def test_set_temperature_with_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-                ATTR_TEMPERATURE: 24,
+                TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+                ClimateServiceArgument.TEMPERATURE: 24,
                 "hvac_mode": HVACMode.HEAT,
             },
             blocking=True,

@@ -122,6 +122,29 @@ async def test_damper_position_enabled_when_any_zone_reports_feedback(
 
 
 @pytest.mark.parametrize(
+    ("entity_id", "disabled_by"),
+    [
+        pytest.param(
+            LIVING_ROOM_RF_SIGNAL_ENTITY,
+            er.RegistryEntryDisabler.INTEGRATION,
+            id="rf_signal",
+        ),
+        pytest.param(LIVING_ROOM_BATTERY_ENTITY, None, id="battery"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_wireless_sensors_enabled_default(
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """RF signal is disabled by default; battery is enabled."""
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is disabled_by
+
+
+@pytest.mark.parametrize(
     ("rf_signal", "battery_level", "rf_percent", "battery_percent"),
     [
         pytest.param(
@@ -134,7 +157,7 @@ async def test_damper_position_enabled_when_any_zone_reports_feedback(
         pytest.param(Zone.RfSignal.NONE, Zone.BatteryLevel.EMPTY, "0", "0", id="none"),
     ],
 )
-@pytest.mark.usefixtures("mock_create_discovery")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_create_discovery")
 async def test_wireless_sensor_levels(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

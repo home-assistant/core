@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "is_being_held": {
+      "condition": "mdi:gesture-tap-hold"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:button-pointer"

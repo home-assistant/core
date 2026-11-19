@@ -9,6 +9,7 @@ from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -43,6 +44,55 @@ def _update_communication_state(
 ) -> None:
     """Update the local communication settings state."""
     coordinator.data[serial_num].communication_settings[entity_description_key] = (
+        "ON" if state else "OFF"
+    )
+
+
+def _feature_is_on(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return the feature sensor state."""
+    return coordinator.sensors[serial_num][entity_description_key].value == "ON"
+
+
+def _feature_is_available(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+) -> bool:
+    """Return if the feature sensor has a valid value."""
+    return (
+        sensor := coordinator.device_sensor(serial_num, entity_description_key)
+    ) is not None and sensor.error is False
+
+
+async def _set_feature_state(
+    coordinator: AmazonDevicesCoordinator,
+    device: AmazonDevice,
+    entity_description_key: str,
+    state: bool,
+) -> None:
+    """Turn the feature on or off."""
+    sensor = coordinator.sensors[device.serial_number][entity_description_key]
+    await coordinator.api.call_feature_operation(
+        device,
+        sensor.feature_name,
+        "turnOn" if state else "turnOff",
+        command_payload=None,
+        instance=sensor.instance or None,
+    )
+
+
+def _update_feature_state(
+    coordinator: AmazonDevicesCoordinator,
+    serial_num: str,
+    entity_description_key: str,
+    state: bool,
+) -> None:
+    """Optimistically update the feature sensor state until Amazon pushes it."""
+    coordinator.sensors[serial_num][entity_description_key].value = (
         "ON" if state else "OFF"
     )
 
@@ -119,26 +169,19 @@ FEATURE_SWITCHES: Final = (
         key="aqm_led",
         translation_key="aqm_led",
         entity_category=EntityCategory.CONFIG,
-        is_on_fn=lambda coordinator, serial_num, key: (
-            coordinator.sensors[serial_num][key].value == "ON"
-        ),
-        is_available_fn=lambda coordinator, serial_num, key: (
-            (sensor := coordinator.device_sensor(serial_num, key)) is not None
-            and sensor.error is False
-        ),
-        method=lambda coordinator, device, key, state: (
-            coordinator.api.call_feature_operation(
-                device,
-                (sensor := coordinator.sensors[device.serial_number][key]).feature_name,
-                "turnOn" if state else "turnOff",
-                command_payload=None,
-                instance=sensor.instance or None,
-            )
-        ),
-        # Optimistic until Amazon pushes the new state
-        update_state_fn=lambda coordinator, serial_num, key, state: setattr(
-            coordinator.sensors[serial_num][key], "value", "ON" if state else "OFF"
-        ),
+        is_on_fn=_feature_is_on,
+        is_available_fn=_feature_is_available,
+        method=_set_feature_state,
+        update_state_fn=_update_feature_state,
+    ),
+    AmazonSwitchEntityDescription(
+        key="plug_power",
+        name=None,
+        device_class=SwitchDeviceClass.OUTLET,
+        is_on_fn=_feature_is_on,
+        is_available_fn=_feature_is_available,
+        method=_set_feature_state,
+        update_state_fn=_update_feature_state,
     ),
 )
 
