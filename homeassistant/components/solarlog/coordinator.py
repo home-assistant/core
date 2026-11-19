@@ -157,6 +157,12 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
             inverter_data = await self.solarlog.update_inverter_data()
             battery_data = await self.solarlog.update_battery_data()
         except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -254,6 +260,12 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         try:
             await self.solarlog.update_energy_data(timeout=self.connection_timeout)
         except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -290,6 +302,12 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 timeout=self.connection_timeout
             )
         except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",

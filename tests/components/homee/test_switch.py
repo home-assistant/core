@@ -21,7 +21,7 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchService,
 )
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +68,7 @@ async def test_switch_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_switch_switch_1"},
+        {TargetKey.ENTITY_ID: "switch.test_switch_switch_1"},
         blocking=True,
     )
 
@@ -89,7 +89,7 @@ async def test_switch_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.test_switch_watchdog"},
+        {TargetKey.ENTITY_ID: "switch.test_switch_watchdog"},
         blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 5, 0)
@@ -166,7 +166,7 @@ async def test_send_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: "switch.test_switch_switch_1"},
+            {TargetKey.ENTITY_ID: "switch.test_switch_switch_1"},
             blocking=True,
         )
 
@@ -189,7 +189,7 @@ async def test_homeegram_button_press(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.homeegrams_test_hg_2"},
+        {TargetKey.ENTITY_ID: "switch.homeegrams_test_hg_2"},
         blocking=True,
     )
 
@@ -211,7 +211,7 @@ async def test_homeegram_turn_off_not_supported(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: "switch.homeegrams_test_hg_2"},
+            {TargetKey.ENTITY_ID: "switch.homeegrams_test_hg_2"},
             blocking=True,
         )
 

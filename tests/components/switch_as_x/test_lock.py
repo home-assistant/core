@@ -10,13 +10,7 @@ from homeassistant.components.switch_as_x.const import (
     CONF_TARGET_DOMAIN,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -69,7 +63,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
+        {TargetKey.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -80,7 +74,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
+        {TargetKey.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -91,7 +85,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -102,7 +96,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -113,7 +107,7 @@ async def test_service_calls(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -147,7 +141,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.LOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
+        {TargetKey.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -158,7 +152,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LOCK_DOMAIN,
         LockService.UNLOCK,
-        {CommonServiceArgument.ENTITY_ID: "lock.decorative_lights"},
+        {TargetKey.ENTITY_ID: "lock.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -169,7 +163,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -180,7 +174,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -191,7 +185,7 @@ async def test_service_calls_inverted(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TOGGLE,
-        {CommonServiceArgument.ENTITY_ID: "switch.decorative_lights"},
+        {TargetKey.ENTITY_ID: "switch.decorative_lights"},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -15,12 +15,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -167,7 +162,7 @@ async def test_number_set_value(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 20},
+        {TargetKey.ENTITY_ID: ENTITY_ID, NumberServiceArgument.VALUE: 20},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -196,7 +191,7 @@ async def test_number_command_failure(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_ID,
+                TargetKey.ENTITY_ID: ENTITY_ID,
                 NumberServiceArgument.VALUE: 20,
             },
             blocking=True,

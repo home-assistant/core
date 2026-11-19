@@ -38,7 +38,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -353,14 +353,14 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -370,7 +370,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
@@ -378,7 +378,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
@@ -387,7 +387,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_ON
@@ -395,7 +395,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_OFF
@@ -405,7 +405,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID4},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID4},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID4).state == STATE_ON
@@ -413,7 +413,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID4},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID4},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID4).state == STATE_OFF
@@ -422,7 +422,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID2},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID2},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
@@ -430,7 +430,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
@@ -438,7 +438,7 @@ async def test_switch_service_turn(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID3},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID3},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID3).state == STATE_UNAVAILABLE
@@ -567,7 +567,7 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        service_data={CommonServiceArgument.ENTITY_ID: ENTITY_ID},
+        service_data={TargetKey.ENTITY_ID: ENTITY_ID},
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF

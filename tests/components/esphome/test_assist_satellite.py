@@ -56,7 +56,7 @@ from homeassistant.components.esphome.assist_satellite import (
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectService
 from homeassistant.components.tts import TextToSpeechCommonOption
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, intent as intent_helper
 from homeassistant.helpers.network import get_url
@@ -2012,7 +2012,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2040,7 +2040,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2066,7 +2066,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": NO_WAKE_WORD,
         },
         blocking=True,
@@ -2084,7 +2084,7 @@ async def test_wake_word_select(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": NO_WAKE_WORD,
         },
         blocking=True,
@@ -2163,7 +2163,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2172,7 +2172,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            TargetKey.ENTITY_ID: "select.test_assistant",
             "option": "Primary Pipeline",
         },
         blocking=True,
@@ -2181,7 +2181,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2190,7 +2190,7 @@ async def test_secondary_pipeline(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
+            TargetKey.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,
@@ -2317,7 +2317,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word",
+            TargetKey.ENTITY_ID: "select.test_wake_word",
             "option": "Okay Nabu",
         },
         blocking=True,
@@ -2326,7 +2326,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant",
+            TargetKey.ENTITY_ID: "select.test_assistant",
             "option": "Primary Pipeline",
         },
         blocking=True,
@@ -2335,7 +2335,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_wake_word_2",
+            TargetKey.ENTITY_ID: "select.test_wake_word_2",
             "option": "Hey Jarvis",
         },
         blocking=True,
@@ -2344,7 +2344,7 @@ async def test_pipeline_start_missing_wake_word_entity_state(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: "select.test_assistant_2",
+            TargetKey.ENTITY_ID: "select.test_assistant_2",
             "option": "Secondary Pipeline",
         },
         blocking=True,

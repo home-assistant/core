@@ -15,11 +15,11 @@ from homeassistant.components.input_boolean.const import (
     InputBooleanService,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_NAME,
     STATE_OFF,
     STATE_ON,
     EntityStateAttribute,
+    TargetKey,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -70,19 +70,28 @@ async def test_methods(hass: HomeAssistant) -> None:
     assert not is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, InputBooleanService.TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN,
+        InputBooleanService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, InputBooleanService.TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN,
+        InputBooleanService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert not is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, InputBooleanService.TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        DOMAIN,
+        InputBooleanService.TOGGLE,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     assert is_on(hass, entity_id)

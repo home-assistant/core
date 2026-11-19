@@ -226,7 +226,11 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
                 translation_key="update_failed_timeout",
             ) from err
 
-        previous_lock_rules = self.data.door_lock_rules.copy() if self.data else {}
+        previous_lock_rules = (
+            data.door_lock_rules.copy()
+            if (data := self.data_or_none) is not None
+            else {}
+        )
         door_lock_rules: dict[str, DoorLockRuleStatus] = {}
         unconfirmed_lock_rule_doors: set[str] = set()
         lock_rule_support_complete = True
@@ -462,9 +466,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             )
             return
         door_name = remote_view.data.door_name
-        if self.data and door_name:
+        if (data := self.data_or_none) is not None and door_name:
             normalized = unicodedata.normalize("NFC", door_name.strip())
-            for door in self.data.doors.values():
+            for door in data.doors.values():
                 if unicodedata.normalize("NFC", door.name.strip()) == normalized:
                     self._dispatch_door_event(door.id, "doorbell", "ring", {})
                     return
