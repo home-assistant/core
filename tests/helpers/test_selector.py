@@ -2185,7 +2185,7 @@ def test_attribute_selector_schema(
             (None, {}),
         ),
         (
-            {"mode": "offset", "enable_day": True},
+            {"mode": "offset", "enable_day": True, "label": "Time offset"},
             (
                 {"seconds": 10},
                 {"hours": -1, "minutes": -30},
@@ -2208,13 +2208,14 @@ def test_duration_selector_schema(
     "schema",
     [
         {"mode": "sideways"},
+        {"label": 123},
         {"mode": "positive", "allow_negative": True},
         {"mode": "signed", "allow_negative": False},
         {"mode": "offset", "allow_negative": False},
     ],
 )
 def test_duration_selector_invalid_config(schema: dict[str, Any]) -> None:
-    """Test duration selector rejects an unknown mode or a conflicting alias."""
+    """Test duration selector rejects invalid configuration."""
     with pytest.raises(probatio.Invalid):
         selector.validate_selector({"duration": schema})
 
