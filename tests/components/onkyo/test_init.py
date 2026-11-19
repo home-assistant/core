@@ -117,6 +117,7 @@ async def test_reconnect_after_failed_power_query(
     mock_receiver: AsyncMock,
     writes: list[Instruction],
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Recover when the receiver disconnects during the initial zone query."""
     disconnected_receiver = AsyncMock(spec=Receiver)
@@ -137,6 +138,10 @@ async def test_reconnect_after_failed_power_query(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_connect.await_count == attempts
+
+    # Failed retries log one outage, not one per attempt.
+    assert caplog.text.count("Disconnected:") == 1
+    assert caplog.text.count("Reconnected:") == 1
 
     entity_id = "media_player.tx_nr7100"
     assert hass.states.get(entity_id).state == STATE_ON

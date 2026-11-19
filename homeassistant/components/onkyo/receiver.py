@@ -85,19 +85,22 @@ class ReceiverManager:
         """Run the connection to the receiver."""
         reconnect = False
         retry_delay = 0
+        unavailable_logged = False
         while True:
             try:
                 async with connect(self.info, retry=reconnect) as self.receiver:
                     self.connected = True
                     if not reconnect:
                         self._started.set()
-                    else:
-                        _LOGGER.info("Reconnected: %s", self.info)
 
                     try:
                         await self.on_connect(reconnect=reconnect)
                         while message := await self.receiver.read():
                             retry_delay = 0
+                            if unavailable_logged:
+                                # Only a status proves the receiver is back.
+                                _LOGGER.info("Reconnected: %s", self.info)
+                                unavailable_logged = False
                             await self.on_update(message)
                     except OnkyoConnectionError:
                         # A receiver can repeatedly accept TCP and drop the first query.
@@ -106,7 +109,9 @@ class ReceiverManager:
                         retry_delay = 0
             finally:
                 self.connected = False
-                _LOGGER.info("Disconnected: %s", self.info)
+                if not unavailable_logged:
+                    _LOGGER.info("Disconnected: %s", self.info)
+                    unavailable_logged = True
                 await self.on_disconnect()
 
             reconnect = True
