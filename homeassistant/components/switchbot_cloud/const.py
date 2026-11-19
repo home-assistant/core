@@ -54,6 +54,17 @@ BATTERY_CIRCULATOR_FAN_2_PRO_NIGHT_LIGHT_PARAMETERS_MAP = {
 }
 
 
+CURTAIN_MODE_NORMAL = "normal"
+CURTAIN_MODE_SILENT = "silent"
+CURTAIN_MODE_DEFAULT = "default"
+
+CURTAIN_MODE_MAP = {
+    CURTAIN_MODE_NORMAL: "0",
+    CURTAIN_MODE_SILENT: "1",
+    CURTAIN_MODE_DEFAULT: "ff",
+}
+
+
 @dataclass(frozen=True)
 class SwitchbotCloudDeviceConfig:
     """Switchbot Cloud Device Config."""

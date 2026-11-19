@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH
+from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, CURTAIN_MODE_MAP
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -67,19 +67,35 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.SPEED
     )
+    _attr_supported_speeds = list(CURTAIN_MODE_MAP)
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.send_api_command(CommonCommands.ON)
+        mode: str | None = kwargs.get("speed")
+        if mode is not None:
+            await self.send_api_command(
+                CurtainCommands.SET_POSITION,
+                parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{0}",
+            )
+        else:
+            await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.send_api_command(CommonCommands.OFF)
+        mode: str | None = kwargs.get("speed")
+        if mode is not None:
+            await self.send_api_command(
+                CurtainCommands.SET_POSITION,
+                parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100}",
+            )
+        else:
+            await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
@@ -87,11 +103,18 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int | None = kwargs.get("position")
+        mode: str | None = kwargs.get("speed")
         if position is not None:
-            await self.send_api_command(
-                CurtainCommands.SET_POSITION,
-                parameters=f"{0},ff,{100 - position}",
-            )
+            if mode is not None:
+                await self.send_api_command(
+                    CurtainCommands.SET_POSITION,
+                    parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100 - position}",
+                )
+            else:
+                await self.send_api_command(
+                    CurtainCommands.SET_POSITION,
+                    parameters=f"0,ff,{100 - position}",
+                )
             await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
