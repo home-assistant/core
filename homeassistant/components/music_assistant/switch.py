@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
 
@@ -56,11 +56,22 @@ PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
     "clear_voice": False,
     "enhancer": True,
     "extra_bass": False,
+    "ir_repeater": False,
+    "ir_signal_light": False,
+    "loudness": True,
+    "night_mode": True,
     "party_mode": False,
     "pure_direct": True,
     "speaker_a": True,
     "speaker_b": True,
+    "speech_enhancement": True,
+    "status_light": False,
+    "sub_enabled": False,
     "surround_3d": False,
+    "surround_enabled": False,
+    "surround_mode": False,
+    "touch_controls": False,
+    "trueplay": False,
 }
 
 
@@ -71,30 +82,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant Switch Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
+    # player_id -> keys of the player options that got an entity
+    added_option_keys_by_player: dict[str, set[str]] = {}
 
     def add_player(player_id: str) -> None:
         """Handle add player."""
-        player = mass.players.get(player_id)
-        if player is None:
+        if mass.players.get(player_id) is None:
             return
-        entities: list[SwitchEntity] = []
         if TYPE_CHECKING:
             assert mass.server_info is not None
         # older servers lack the commands, so their players keep only the option switches;
         # the queue itself may still be missing, the server adds it after the player
         if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
-            entities.extend(
+            async_add_entities(
                 MusicAssistantQueueSwitch(mass, player_id, description)
                 for description in QUEUE_SWITCHES
             )
+        add_player_options(player_id)
+
+    def add_player_options(player_id: str) -> None:
+        """Add entities for the player options that do not have one yet."""
+        player = mass.players.get(player_id)
+        if player is None:
+            return
+        entities: list[MusicAssistantPlayerConfigSwitch] = []
+        added_option_keys = added_option_keys_by_player.setdefault(player_id, set())
         for player_option in player.options:
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.BOOLEAN
             ):
                 # we ignore entities with unknown translation keys.
-                if player_option.translation_key not in PLAYER_OPTIONS_SWITCH:
+                if (
+                    player_option.translation_key not in PLAYER_OPTIONS_SWITCH
+                    or player_option.key in added_option_keys
+                ):
                     continue
+                added_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigSwitch(
@@ -112,8 +136,18 @@ async def async_setup_entry(
                 )
         async_add_entities(entities)
 
-    # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.SWITCH, add_player)
+    def remove_player(player_id: str) -> None:
+        """Forget the option keys of a removed player."""
+        added_option_keys_by_player.pop(player_id, None)
+
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.SWITCH,
+        PlatformHandlers(
+            add_player=add_player,
+            remove_player=remove_player,
+            update_player_options=add_player_options,
+        ),
+    )
 
 
 class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchEntity):

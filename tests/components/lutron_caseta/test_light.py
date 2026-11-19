@@ -5,12 +5,9 @@ from unittest.mock import patch
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
@@ -51,8 +48,8 @@ async def test_previous_brightness(
     # 1. Turn on with explicit brightness 25
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 25},
+        LightService.TURN_ON,
+        {LightServiceArgument.BRIGHTNESS: 25},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
@@ -67,7 +64,7 @@ async def test_previous_brightness(
     # 2. Turn off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
@@ -78,7 +75,7 @@ async def test_previous_brightness(
     # 3. Turn on again without brightness → expect 25
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
@@ -108,7 +105,7 @@ async def test_previous_brightness_physical_switch(
     # Turn off via HA.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
@@ -117,7 +114,7 @@ async def test_previous_brightness_physical_switch(
     # Turn on via HA without an explicit brightness → expect the physical level.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
@@ -141,8 +138,8 @@ async def test_previous_brightness_zero_not_remembered(
     # 1. Establish a non-zero previous brightness of 25
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 25},
+        LightService.TURN_ON,
+        {LightServiceArgument.BRIGHTNESS: 25},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
@@ -151,8 +148,8 @@ async def test_previous_brightness_zero_not_remembered(
     # 2. Turn on with an explicit brightness of 0 (effectively off)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 0},
+        LightService.TURN_ON,
+        {LightServiceArgument.BRIGHTNESS: 0},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
@@ -161,7 +158,7 @@ async def test_previous_brightness_zero_not_remembered(
     # 3. Turn on without brightness → the 0 is ignored and 25 is restored
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {},
         target={TargetKey.ENTITY_ID: caseta_entity_id},
         blocking=True,
@@ -186,8 +183,8 @@ async def test_color_only_turn_on_preserves_brightness(
     with patch.object(bridge, "set_value", wraps=bridge.set_value) as mock_set_value:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_COLOR_TEMP_KELVIN: 3000},
+            LightService.TURN_ON,
+            {LightServiceArgument.COLOR_TEMP_KELVIN: 3000},
             target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -208,8 +205,8 @@ async def test_white_mode_turn_on_remembers_brightness(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_WHITE: 100},
+        LightService.TURN_ON,
+        {LightServiceArgument.WHITE: 100},
         target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -234,8 +231,8 @@ async def test_white_mode_turn_on_sends_level(
     ) as mock_set_warm_dim:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_WHITE: 100},
+            LightService.TURN_ON,
+            {LightServiceArgument.WHITE: 100},
             target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -264,8 +261,8 @@ async def test_white_mode_turn_on_with_transition(
     ) as mock_set_warm_dim:
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_WHITE: 255, ATTR_TRANSITION: 2},
+            LightService.TURN_ON,
+            {LightServiceArgument.WHITE: 255, LightServiceArgument.TRANSITION: 2},
             target={TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -293,13 +290,13 @@ async def test_async_update_syncs_previous_brightness(
     # Turn off, then on without brightness → the synced level is restored.
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {},
         target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,

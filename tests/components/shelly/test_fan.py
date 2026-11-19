@@ -16,8 +16,10 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -187,8 +189,8 @@ async def test_rpc_fan_set_preset_manual(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "manual"},
+        FanService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, FanServiceArgument.PRESET_MODE: "manual"},
         blocking=True,
     )
 
@@ -222,8 +224,8 @@ async def test_rpc_fan_exc(
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            FanService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 

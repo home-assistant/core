@@ -12,7 +12,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -96,7 +96,7 @@ async def test_button_press(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: entity_entry.entity_id},
+        {TargetKey.ENTITY_ID: entity_entry.entity_id},
         blocking=True,
     )
     assert len(device.calls) == 1
@@ -123,7 +123,7 @@ async def test_button_press_raises_when_device_off(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_entry.entity_id},
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )
     assert device.calls == []
@@ -205,6 +205,6 @@ async def test_button_press_raises_on_device_communication_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: entity_entry.entity_id},
+            {TargetKey.ENTITY_ID: entity_entry.entity_id},
             blocking=True,
         )

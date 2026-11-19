@@ -8,13 +8,10 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -146,8 +143,8 @@ async def test_light_turn_off(
         # Act
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.test_light_room_1_test_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.test_light_room_1_test_light"},
             blocking=True,
         )
         # Assert
@@ -171,8 +168,11 @@ async def test_light_set_brightness(
         # Act
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_BRIGHTNESS: 98, ATTR_ENTITY_ID: "light.test_light_room_1_test_light"},
+            LightService.TURN_ON,
+            {
+                LightServiceArgument.BRIGHTNESS: 98,
+                TargetKey.ENTITY_ID: "light.test_light_room_1_test_light",
+            },
             blocking=True,
         )
         # Assert

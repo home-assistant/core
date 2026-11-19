@@ -42,7 +42,7 @@ from .conftest import (
 def mock_chat_session_id() -> Generator[Mock]:
     """Mock the conversation ID of chat sessions."""
     with patch(
-        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+        "homeassistant.helpers.chat_session.secure_ulid_now", return_value="mock-ulid"
     ) as mock_ulid_now:
         yield mock_ulid_now
 

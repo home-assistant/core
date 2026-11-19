@@ -6,7 +6,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -48,7 +48,7 @@ async def test_switch_setup_and_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_OFF,
-            {CommonServiceArgument.ENTITY_ID: switch_entity},
+            {TargetKey.ENTITY_ID: switch_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -69,7 +69,7 @@ async def test_switch_setup_and_services(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: switch_entity},
+            {TargetKey.ENTITY_ID: switch_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
