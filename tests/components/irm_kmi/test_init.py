@@ -10,7 +10,12 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.irm_kmi.const import CONF_LANGUAGE_OVERRIDE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -87,6 +92,31 @@ async def test_device_entry(
     assert device_entry
     assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.manufacturer == expected_manufacturer
+
+
+@pytest.mark.usefixtures("mock_irm_kmi_api")
+async def test_device_follows_a_move(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_config_flow_forecast: AsyncMock,
+) -> None:
+    """Test the device is renamed when the entry moves to another municipality."""
+    await setup_integration(hass, mock_config_entry)
+    mock_config_flow_forecast.return_value = {"cityName": "Ghent", "country": "BE"}
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LOCATION: {CONF_LATITUDE: 51.05, CONF_LONGITUDE: 3.72}},
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device
+    assert device.name == "Ghent"
 
 
 async def test_config_entry_not_ready(
