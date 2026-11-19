@@ -104,16 +104,19 @@ async def _async_until[T](
                 (next_item, stopped), return_when=asyncio.FIRST_COMPLETED
             )
             if stopped.done():
-                next_item.cancel()
-                await asyncio.wait((next_item,))
                 return
             if (item := next_item.result()) is None:
                 return
             yield item
     finally:
         stopped.cancel()
-        if next_item is not None:
+        if (next_item is not None) and (not next_item.done()):
             next_item.cancel()
+            await asyncio.wait((next_item,))
+        # A source that already gave its next item waits at a yield, holding
+        # what it opened
+        if isinstance(items, AsyncGenerator):
+            await items.aclose()
 
 
 @callback

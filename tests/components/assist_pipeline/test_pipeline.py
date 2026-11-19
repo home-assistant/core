@@ -34,6 +34,7 @@ from homeassistant.components.assist_pipeline.const import (
 )
 from homeassistant.components.assist_pipeline.default_pipeline import (
     _async_local_fallback_intent_filter,
+    _async_until,
     _DefaultPipelineProcessor,
     async_get_pipeline_conversation_data,
 )
@@ -3750,6 +3751,25 @@ async def test_pipeline_audio_agent_cancelled_run_ends_response_audio(
 
     async with asyncio.timeout(1):
         await audio_closed.wait()
+
+
+async def test_stop_closes_audio_with_a_buffered_chunk() -> None:
+    """Test a stop closes audio that already gave its next chunk."""
+    stop = asyncio.Event()
+    closed = asyncio.Event()
+
+    async def audio() -> AsyncGenerator[bytes]:
+        try:
+            yield b"first"
+            # The stop comes while the next chunk is already given
+            stop.set()
+            yield b"buffered"
+            await asyncio.Event().wait()
+        finally:
+            closed.set()
+
+    assert [chunk async for chunk in _async_until(audio(), stop)] == [b"first"]
+    assert closed.is_set()
 
 
 @pytest.mark.usefixtures("init_audio_agent")
