@@ -434,6 +434,7 @@ async def test_setup_failed_update_reauth(
     await time_changed(hass, DEVICE_UPDATE_INTERVAL)
     assert ufp.api.update.call_count == AUTH_RETRIES + 1
     assert len(hass.config_entries.flow._progress) == 1
+    assert ufp.entry.runtime_data.last_public_update_success is False
 
 
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> None:

@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     ENTITY_MATCH_ALL,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -274,7 +275,7 @@ async def test_service_skips_entities_without_the_method(
     await hass.services.async_call(
         DOMAIN,
         XiaomiMiioService.LIGHT_SET_SCENE,
-        {ATTR_ENTITY_ID: AMBIENT_ENTITY_ID, "scene": 2},
+        {TargetKey.ENTITY_ID: AMBIENT_ENTITY_ID, "scene": 2},
         blocking=True,
     )
     mock_light.set_scene.assert_not_called()
@@ -283,7 +284,7 @@ async def test_service_skips_entities_without_the_method(
     await hass.services.async_call(
         DOMAIN,
         XiaomiMiioService.LIGHT_SET_SCENE,
-        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL, "scene": 2},
+        {TargetKey.ENTITY_ID: ENTITY_MATCH_ALL, "scene": 2},
         blocking=True,
     )
     mock_light.set_scene.assert_called_once_with(2)
@@ -352,7 +353,7 @@ async def test_service_forwards_context(
     await hass.services.async_call(
         DOMAIN,
         XiaomiMiioService.LIGHT_SET_SCENE,
-        {ATTR_ENTITY_ID: EYECARE_ENTITY_ID, "scene": 2},
+        {TargetKey.ENTITY_ID: EYECARE_ENTITY_ID, "scene": 2},
         blocking=True,
         context=context,
     )

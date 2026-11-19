@@ -20,7 +20,7 @@ from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_
 from homeassistant.components.reolink.update import POLL_AFTER_INSTALL, POLL_PROGRESS
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -127,14 +127,14 @@ async def test_update_firm(
         }
     )
     result = await client.receive_json()
-    assert TEST_DOWNLOAD_URL in result["result"]
-    assert TEST_RELEASE_NOTES in result["result"]
+    assert TEST_DOWNLOAD_URL in result["result"]["release_notes"]
+    assert TEST_RELEASE_NOTES in result["result"]["release_notes"]
 
     # test install
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     reolink_host.update_firmware.assert_called()
@@ -160,7 +160,7 @@ async def test_update_firm(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -171,7 +171,7 @@ async def test_update_firm(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -220,7 +220,7 @@ async def test_update_firm_keeps_available(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             UpdateService.INSTALL,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

@@ -161,6 +161,9 @@
       "htpcmode3": {
         "name": "HTPC mode RX3"
       },
+      "ipinterrupt": {
+        "name": "IP interrupt"
+      },
       "iractive": {
         "name": "Infrared"
       },

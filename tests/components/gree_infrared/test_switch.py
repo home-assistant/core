@@ -47,8 +47,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -241,7 +241,7 @@ async def test_switch_frame_carries_the_climate_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _TURBO_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _TURBO_ENTITY_ID},
         blocking=True,
     )
 
@@ -286,7 +286,7 @@ async def test_switch_frame_carries_changes_made_while_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -348,7 +348,7 @@ async def test_switch_frame_carries_a_remote_frame_with_climate_disabled(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -375,13 +375,13 @@ async def test_climate_frame_carries_the_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: _LIGHT_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _LIGHT_ENTITY_ID},
         blocking=True,
     )
     mock_infrared_emitter_entity.send_command_calls.clear()
@@ -445,7 +445,7 @@ async def test_overlapping_sends_keep_both_changes(
             hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: _TURBO_ENTITY_ID},
+                {TargetKey.ENTITY_ID: _TURBO_ENTITY_ID},
                 blocking=True,
             )
         )
@@ -508,7 +508,7 @@ async def test_remote_frame_during_send_keeps_what_each_entity_shows(
             hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: _TURBO_ENTITY_ID},
+                {TargetKey.ENTITY_ID: _TURBO_ENTITY_ID},
                 blocking=True,
             )
         )
@@ -539,7 +539,7 @@ async def test_remote_frame_during_send_keeps_what_each_entity_shows(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -579,7 +579,7 @@ async def test_failed_send_leaves_the_flag_unset(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: _TURBO_ENTITY_ID},
+            {TargetKey.ENTITY_ID: _TURBO_ENTITY_ID},
             blocking=True,
         )
 
@@ -591,7 +591,7 @@ async def test_failed_send_leaves_the_flag_unset(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -666,7 +666,7 @@ async def test_state_restored_on_restart(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _XFAN_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _XFAN_ENTITY_ID},
         blocking=True,
     )
 
@@ -735,7 +735,7 @@ async def test_next_frame_keeps_the_louvres_the_remote_set(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: _TURBO_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _TURBO_ENTITY_ID},
         blocking=True,
     )
 
@@ -793,7 +793,7 @@ async def test_unconfigured_mode_frame_reaches_neither_entity(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: _LIGHT_ENTITY_ID},
+        {TargetKey.ENTITY_ID: _LIGHT_ENTITY_ID},
         blocking=True,
     )
 

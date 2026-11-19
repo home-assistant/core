@@ -25,6 +25,8 @@ from .const import (
     TEST_DEVICE_AQM_SN,
     TEST_DEVICE_GLOW_SENSORS,
     TEST_DEVICE_GLOW_SN,
+    TEST_DEVICE_PLUG_SENSORS,
+    TEST_DEVICE_PLUG_SN,
     TEST_PASSWORD,
     TEST_USER_ID,
     TEST_USERNAME,
@@ -69,6 +71,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
             TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2_SENSORS),
             TEST_DEVICE_AQM_SN: deepcopy(TEST_DEVICE_AQM_SENSORS),
             TEST_DEVICE_GLOW_SN: deepcopy(TEST_DEVICE_GLOW_SENSORS),
+            TEST_DEVICE_PLUG_SN: deepcopy(TEST_DEVICE_PLUG_SENSORS),
         }
         client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))
         client.routines = ["Test Routine"]
@@ -87,7 +90,11 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         async def _sync_dnd_state() -> None:
             assert dnd_event_handler, "on_dnd_event handler was not registered"
             await dnd_event_handler[0](
-                dict.fromkeys(client.get_devices_data.return_value, False)
+                {
+                    serial_num: False
+                    for serial_num, device in client.get_devices_data.return_value.items()
+                    if device.voice_control_supported
+                }
             )
 
         client.sync_dnd_state = AsyncMock(side_effect=_sync_dnd_state)
@@ -116,6 +123,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_LOGIN_DATA: {
                 "session": "test-session",
                 CONF_SITE: "https://www.amazon.com",
+                "account_customer_id": "fake_customer_id",
+                "customer_info": {
+                    "given_name": "Fake",
+                    "user_id": TEST_USER_ID,
+                },
+                "device_info": {"device_serial_number": "fake_serial_number"},
             },
         },
         unique_id=TEST_USER_ID,

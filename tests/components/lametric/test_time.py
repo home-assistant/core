@@ -20,12 +20,7 @@ from homeassistant.components.time import (
     TimeService,
     TimeServiceArgument,
 )
-from homeassistant.const import (
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -73,7 +68,7 @@ async def test_set_value(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
@@ -117,7 +112,7 @@ async def test_set_value_around_dst(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+            TargetKey.ENTITY_ID: ENTITY_START_TIME,
             TimeServiceArgument.TIME: value,
         },
         blocking=True,
@@ -170,7 +165,7 @@ async def test_set_values_in_quick_succession(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 TimeServiceArgument.TIME: value,
             },
             blocking=True,
@@ -248,7 +243,7 @@ async def test_set_value_without_both_times(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
@@ -283,7 +278,7 @@ async def test_set_value_keeps_when_dark(
         TIME_DOMAIN,
         TimeService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+            TargetKey.ENTITY_ID: ENTITY_START_TIME,
             TimeServiceArgument.TIME: "20:00:00",
         },
         blocking=True,
@@ -342,7 +337,7 @@ async def test_time_errors(
             TIME_DOMAIN,
             TimeService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_START_TIME,
+                TargetKey.ENTITY_ID: ENTITY_START_TIME,
                 TimeServiceArgument.TIME: "20:00:00",
             },
             blocking=True,
