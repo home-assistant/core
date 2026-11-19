@@ -157,7 +157,7 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 **Track results:**
 - `CHANGE_TYPE`: the selected type (e.g., "Bugfix", "New feature", "Code quality", etc.)
 
-**Important:** All seven type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
+**Important:** All type options from the template must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
 ## Step 8: Determine Checkbox States
 
