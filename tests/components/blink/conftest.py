@@ -1,5 +1,6 @@
 """Fixtures for the Blink integration tests."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 from uuid import uuid4
 
@@ -85,8 +86,13 @@ def blink_auth_api_fixture() -> MagicMock:
     """Set up Blink API fixture."""
     mock_blink_auth_api = create_autospec(blinkpy.auth.Auth, instance=True)
 
+    def auth_factory(login_data: dict[str, Any], **kwargs: Any) -> MagicMock:
+        # The real Auth keeps the dict it is given and returns it as login_attributes
+        mock_blink_auth_api.login_attributes = login_data
+        return mock_blink_auth_api
+
     with patch("homeassistant.components.blink.Auth", autospec=True) as class_mock:
-        class_mock.return_value = mock_blink_auth_api
+        class_mock.side_effect = auth_factory
         yield mock_blink_auth_api
 
 

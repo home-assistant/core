@@ -116,12 +116,11 @@ async def test_every_token_refresh_is_stored(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test each token refresh reaches storage, not only the first one."""
-    # BlinkPy updates its own dict in place and returns that same dict
-    login_attributes = dict(mock_config_entry.data)
-    mock_blink_auth_api.login_attributes = login_attributes
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    # BlinkPy updates its own dict in place and returns that same dict
+    login_attributes = mock_blink_auth_api.login_attributes
     token_refreshed = blink.Auth.call_args.kwargs["callback"]
 
     for token in ("first_token", "second_token"):
@@ -133,6 +132,33 @@ async def test_every_token_refresh_is_stored(
 
         (stored_entry,) = hass_storage["core.config_entries"]["data"]["entries"]
         assert stored_entry["data"]["token"] == token
+
+
+async def test_token_renewed_during_startup_is_stored(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a token renewed by Auth.startup() reaches storage without a callback."""
+
+    async def start() -> None:
+        # BlinkPy renews the token in startup() without invoking the callback
+        mock_blink_auth_api.login_attributes["token"] = "startup_token"
+
+    mock_blink_api.start = AsyncMock(side_effect=start)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    (stored_entry,) = hass_storage["core.config_entries"]["data"]["entries"]
+    assert stored_entry["data"]["token"] == "startup_token"
 
 
 async def test_migrate_V0(

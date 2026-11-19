@@ -101,6 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> Non
 
     await coordinator.async_config_entry_first_refresh()
 
+    # Auth.startup() renews the token without invoking the callback
+    _async_update_entry_data(hass, entry, blink)
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
