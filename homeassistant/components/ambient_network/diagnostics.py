@@ -5,9 +5,8 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import API_STATION_TYPE
+from .const import API_STATION_TYPE, SENSOR_DESCRIPTIONS
 from .coordinator import AmbientNetworkConfigEntry
-from .sensor import SENSOR_DESCRIPTIONS
 
 SENSOR_KEYS = {description.key for description in SENSOR_DESCRIPTIONS}
 
