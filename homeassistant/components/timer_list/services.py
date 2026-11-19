@@ -19,7 +19,7 @@ from .const import (
     TimerListServices,
     TimerStatus,
 )
-from .entity import TimerListEntity, timer_to_dict
+from .entity import TimerListEntity
 
 
 @callback
@@ -126,7 +126,7 @@ async def _async_get_timers(
     statuses: list[TimerStatus] | None = call.data.get(ATTR_STATUS)
     return {
         ATTR_TIMERS: [
-            timer_to_dict(timer, now)
+            timer.as_dict(now)
             for timer in entity.timers
             if not statuses or timer.status in statuses
         ]

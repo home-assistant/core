@@ -30,7 +30,7 @@ from homeassistant.util import dt as dt_util
 
 from . import entity_became_available
 from .const import ATTR_DELTA, ATTR_TIMER, DATA_COMPONENT, DOMAIN, TimerListEventType
-from .entity import TimerListEvent, timer_to_dict
+from .entity import TimerListEvent
 
 TRIGGER_SCHEMA = probatio.Schema(
     {
@@ -150,7 +150,7 @@ class TimerEventTrigger(Trigger):
                 return
             variables: dict[str, Any] = {
                 ATTR_ENTITY_ID: entity_id,
-                ATTR_TIMER: timer_to_dict(event.item, dt_util.utcnow()),
+                ATTR_TIMER: event.item.as_dict(dt_util.utcnow()),
             }
             if event.delta is not None:
                 variables[ATTR_DELTA] = event.delta.total_seconds()

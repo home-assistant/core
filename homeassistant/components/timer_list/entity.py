@@ -75,6 +75,27 @@ class TimerItem:
             return self.paused_remaining
         return timedelta(0)
 
+    def as_dict(self, now: datetime) -> dict[str, Any]:
+        """Serialize the timer at the supplied time."""
+        return {
+            ATTR_TIMER_ID: self.timer_id,
+            ATTR_NAME: self.name,
+            ATTR_STATUS: self.status.value,
+            ATTR_CREATED_DURATION: self.created_duration.total_seconds(),
+            ATTR_TOTAL_DURATION: self.total_duration.total_seconds(),
+            ATTR_CREATED_AT: self.created_at.isoformat(),
+            ATTR_FINISHES_AT: self.finishes_at.isoformat()
+            if self.finishes_at
+            else None,
+            ATTR_PAUSED_REMAINING: (
+                self.paused_remaining.total_seconds()
+                if self.paused_remaining is not None
+                else None
+            ),
+            ATTR_ENDED_AT: self.ended_at.isoformat() if self.ended_at else None,
+            ATTR_REMAINING: self.remaining_at(now).total_seconds(),
+        }
+
 
 @dataclasses.dataclass(frozen=True)
 class TimerListEvent:
@@ -85,27 +106,6 @@ class TimerListEvent:
 
     delta: timedelta | None = None
     """Signed amount of time added, for ``TIME_CHANGED``. ``None`` otherwise."""
-
-
-@callback
-def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
-    """Serialize a timer item for the websocket API and triggers."""
-    return {
-        ATTR_TIMER_ID: item.timer_id,
-        ATTR_NAME: item.name,
-        ATTR_STATUS: item.status.value,
-        ATTR_CREATED_DURATION: item.created_duration.total_seconds(),
-        ATTR_TOTAL_DURATION: item.total_duration.total_seconds(),
-        ATTR_CREATED_AT: item.created_at.isoformat(),
-        ATTR_FINISHES_AT: item.finishes_at.isoformat() if item.finishes_at else None,
-        ATTR_PAUSED_REMAINING: (
-            item.paused_remaining.total_seconds()
-            if item.paused_remaining is not None
-            else None
-        ),
-        ATTR_ENDED_AT: item.ended_at.isoformat() if item.ended_at else None,
-        ATTR_REMAINING: item.remaining_at(now).total_seconds(),
-    }
 
 
 class TimerListEntity(Entity):

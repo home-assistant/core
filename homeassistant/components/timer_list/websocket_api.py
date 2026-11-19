@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DELTA, ATTR_TIMERS, DATA_COMPONENT, DOMAIN
-from .entity import TimerListEvent, timer_to_dict
+from .entity import TimerListEvent
 
 
 @callback
@@ -59,7 +59,7 @@ async def websocket_handle_subscribe(
         message: dict[str, Any] = {
             "type": "change",
             "event_type": event.event_type.value,
-            "timer": timer_to_dict(event.item, dt_util.utcnow()),
+            "timer": event.item.as_dict(dt_util.utcnow()),
         }
         if event.delta is not None:
             message[ATTR_DELTA] = event.delta.total_seconds()
@@ -74,7 +74,7 @@ async def websocket_handle_subscribe(
             msg["id"],
             {
                 "type": "timers",
-                ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers],
+                ATTR_TIMERS: [timer.as_dict(now) for timer in entity.timers],
             },
         )
     )
@@ -106,5 +106,5 @@ async def websocket_handle_list(
     now = dt_util.utcnow()
     connection.send_result(
         msg["id"],
-        {ATTR_TIMERS: [timer_to_dict(timer, now) for timer in entity.timers]},
+        {ATTR_TIMERS: [timer.as_dict(now) for timer in entity.timers]},
     )
