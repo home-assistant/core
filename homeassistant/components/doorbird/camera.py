@@ -43,7 +43,16 @@ async def async_setup_entry(
             "live",
             _LIVE_INTERVAL,
             device.rtsp_live_video_url,
-        )
+        ),
+        # Not every model serves the 1080p stream
+        DoorBirdCamera(
+            door_bird_data,
+            device.live_image_url,
+            "live_1080p",
+            _LIVE_INTERVAL,
+            device.rtsp_live_video_1080p_url,
+            enabled_default=False,
+        ),
     ]
 
     for camera_id, history_type, interval in (
@@ -81,9 +90,12 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         camera_id: str,
         interval: dt.timedelta,
         stream_url: str | None = None,
+        *,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the camera on a DoorBird device."""
         super().__init__(door_bird_data)
+        self._attr_entity_registry_enabled_default = enabled_default
         self._url = url
         self._stream_url = stream_url
         self._attr_translation_key = camera_id

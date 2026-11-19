@@ -12,6 +12,8 @@ from homeassistant.setup import async_setup_component
 
 from .test_http import DUMMY_CONFIG
 
+SYNC_BUTTON_ENTITY_ID = "button.google_home_synchronize_devices"
+
 
 async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> None:
     """Test sync button."""
@@ -24,7 +26,7 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("button.google_assistant_synchronize_devices")
+    state = hass.states.get(SYNC_BUTTON_ENTITY_ID)
     assert state
 
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
@@ -36,7 +38,7 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
         await hass.services.async_call(
             "button",
             "press",
-            {"entity_id": "button.google_assistant_synchronize_devices"},
+            {"entity_id": SYNC_BUTTON_ENTITY_ID},
             blocking=True,
             context=context,
         )
@@ -47,7 +49,7 @@ async def test_sync_button(hass: HomeAssistant, hass_owner_user: MockUser) -> No
             await hass.services.async_call(
                 "button",
                 "press",
-                {"entity_id": "button.google_assistant_synchronize_devices"},
+                {"entity_id": SYNC_BUTTON_ENTITY_ID},
                 blocking=True,
                 context=context,
             )

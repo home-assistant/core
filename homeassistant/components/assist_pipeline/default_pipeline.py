@@ -11,7 +11,15 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 import audioop  # pylint: disable=deprecated-module
 import hass_nabucasa
 
-from homeassistant.components import conversation, media_player, stt, tts, wake_word
+from homeassistant.components import (
+    conversation,
+    media_player,
+    stt,
+    tts,
+    voice_support,
+    wake_word,
+)
+from homeassistant.components.tts import TextToSpeechCommonOption
 from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
@@ -65,6 +73,21 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
     "pipeline_conversation_data"
 )
 STREAM_RESPONSE_CHARS = 60
+RUN_COMMAND_TIMEOUT_MS = 15_000
+"""The segmenter's cap, kept while a run says where the command ends."""
+
+
+async def _skip_audio(
+    audio_stream: AsyncIterable[bytes], num_bytes: int
+) -> AsyncGenerator[bytes]:
+    """Yield the audio after the first num_bytes."""
+    async for chunk in audio_stream:
+        if num_bytes > 0:
+            skipped = min(num_bytes, len(chunk))
+            chunk = chunk[skipped:]
+            num_bytes -= skipped
+        if chunk:
+            yield chunk
 
 
 @callback
@@ -213,6 +236,11 @@ class _DefaultPipelineProcessor:
     _pending_intent_start: PipelineEvent | None = field(init=False, default=None)
     """Start of intent recognition, held back while the agent listens."""
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int | None = field(init=False, default=None)
+    _audio_run: voice_support.AudioRun | None = field(
+        init=False, default=None, repr=False
+    )
+    _sent_stt_vad_end: bool = field(init=False, default=False)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -249,7 +277,7 @@ class _DefaultPipelineProcessor:
 
     @callback
     def cleanup(self) -> None:
-        """Clean up resources after a pipeline error."""
+        """Clean up resources when a run stops early."""
         if self.tts_stream is not None:
             self.tts_stream.delete()
             self.tts_stream = None
@@ -471,30 +499,29 @@ class _DefaultPipelineProcessor:
         else:
             engine = self.stt_provider.entity_id
 
+        audio_processing = self.stt_provider.async_get_audio_processing(metadata)
+        is_vad_enabled = self.host.audio_settings.is_vad_enabled
+        provider_vad = is_vad_enabled and not audio_processing.requires_external_vad
+
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_START,
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
-                    "audio_processing": asdict(self.stt_provider.audio_processing),
+                    "audio_processing": asdict(audio_processing),
                 },
             )
         )
 
         self.host.start_debug_recording(f"01_stt-{engine}")
 
+        run, stt_vad, command_timeout_ms = self._command_end_detection(
+            audio_processing.requires_external_vad
+        )
+
         try:
             # Transcribe audio stream
-            stt_vad: VoiceCommandSegmenter | None = None
-            if (
-                self.host.audio_settings.is_vad_enabled
-                and self.stt_provider.audio_processing.requires_external_vad
-            ):
-                stt_vad = VoiceCommandSegmenter(
-                    silence_seconds=self.host.audio_settings.silence_seconds
-                )
-
             process_audio_stream = (
                 self.stt_provider.async_process_audio_stream
                 if isinstance(self.stt_provider, stt.Provider)
@@ -502,7 +529,12 @@ class _DefaultPipelineProcessor:
             )
             result = await process_audio_stream(
                 metadata,
-                self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
+                self._speech_to_text_stream(
+                    audio_stream=stream,
+                    stt_vad=stt_vad,
+                    run=run,
+                    command_timeout_ms=command_timeout_ms,
+                ),
             )
         except asyncio.CancelledError, TimeoutError:
             raise  # expected
@@ -519,6 +551,15 @@ class _DefaultPipelineProcessor:
             ) from src_error
 
         _LOGGER.debug("speech-to-text result %s", result)
+
+        # The provider found the end of speech by returning the transcript --
+        # unless something already said where the command ended, or the run
+        # did so at or past the end of the audio.
+        if not self._sent_stt_vad_end:
+            if (run is not None) and (run.speech_ended_ms is not None):
+                self._async_stt_vad_end(run.speech_ended_ms)
+            elif provider_vad:
+                self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
 
         if result.result != stt.SpeechResultState.SUCCESS:
             raise SpeechToTextError(
@@ -544,40 +585,100 @@ class _DefaultPipelineProcessor:
 
         return result.text
 
+    @callback
+    def _command_end_detection(
+        self, requires_external_vad: bool
+    ) -> tuple[voice_support.AudioRun | None, VoiceCommandSegmenter | None, int | None]:
+        """Return the run, voice activity detector and timeout that end the command."""
+        if not self.host.audio_settings.is_vad_enabled:
+            return (None, None, None)
+
+        # While the run listens, it alone says where the command ends,
+        # and what it said stands once it is done
+        run = self._audio_run
+        if (run is not None) and not (
+            run.listening or (run.speech_ended_ms is not None)
+        ):
+            run = None
+
+        if not requires_external_vad:
+            return (run, None, None)
+        if run is None:
+            return (
+                None,
+                VoiceCommandSegmenter(
+                    silence_seconds=self.host.audio_settings.silence_seconds
+                ),
+                None,
+            )
+        return (run, None, RUN_COMMAND_TIMEOUT_MS)
+
     async def _speech_to_text_stream(
         self,
         audio_stream: AsyncIterable[EnhancedAudioChunk],
         stt_vad: VoiceCommandSegmenter | None,
+        run: voice_support.AudioRun | None = None,
+        command_timeout_ms: int | None = None,
         sample_rate: int = SAMPLE_RATE,
         sample_width: int = SAMPLE_WIDTH,
     ) -> AsyncGenerator[bytes]:
-        """Yield audio chunks until VAD detects silence or speech-to-text completes."""
+        """Yield audio chunks until the command ends or speech-to-text completes.
+
+        While the run listens it alone says where the command ends; a run
+        that goes away mid-command ends it there.
+        """
         sent_vad_start = False
+        first_timestamp_ms: int | None = None
+
         async for chunk in audio_stream:
             self.host.capture_audio(chunk.audio)
+
+            if run is not None:
+                if first_timestamp_ms is None:
+                    first_timestamp_ms = chunk.timestamp_ms
+
+                if (not sent_vad_start) and (run.speech_started_ms is not None):
+                    self._async_stt_vad_start(run.speech_started_ms)
+                    sent_vad_start = True
+
+                # The run hears the audio ahead of speech-to-text
+                if (run.speech_ended_ms is not None) and (
+                    chunk.timestamp_ms >= run.speech_ended_ms
+                ):
+                    self._async_stt_vad_end(run.speech_ended_ms)
+                    break
+
+                if (not run.listening) and (run.speech_ended_ms is None):
+                    _LOGGER.debug(
+                        "The run stopped listening at %s ms",
+                        chunk.timestamp_ms,
+                    )
+                    self._async_stt_vad_end(chunk.timestamp_ms)
+                    break
+
+                if (command_timeout_ms is not None) and (
+                    chunk.timestamp_ms - first_timestamp_ms >= command_timeout_ms
+                ):
+                    _LOGGER.debug(
+                        "The run did not end the command within %s ms",
+                        command_timeout_ms,
+                    )
+                    self._async_stt_vad_end(chunk.timestamp_ms)
+                    break
 
             if stt_vad is not None:
                 chunk_seconds = (len(chunk.audio) // sample_width) / sample_rate
                 if not stt_vad.process(chunk_seconds, chunk.speech_probability):
                     # Silence detected at the end of voice command
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_END,
-                            {"timestamp": chunk.timestamp_ms},
-                        )
-                    )
+                    self._async_stt_vad_end(chunk.timestamp_ms)
                     break
 
                 if stt_vad.in_command and (not sent_vad_start):
                     # Speech detected at start of voice command
-                    self.host.process_event(
-                        PipelineEvent(
-                            PipelineEventType.STT_VAD_START,
-                            {"timestamp": chunk.timestamp_ms},
-                        )
-                    )
+                    self._async_stt_vad_start(chunk.timestamp_ms)
                     sent_vad_start = True
 
+            self._stt_last_timestamp_ms = chunk.timestamp_ms
             yield chunk.audio
 
     @callback
@@ -597,17 +698,21 @@ class _DefaultPipelineProcessor:
         )
         self.host.start_debug_recording(f"01_stt-{self.intent_agent.id}")
 
-        stt_vad: VoiceCommandSegmenter | None = None
-        if self.host.audio_settings.is_vad_enabled:
-            stt_vad = VoiceCommandSegmenter(
-                silence_seconds=self.host.audio_settings.silence_seconds
-            )
+        # The agent hears everything it gets, so the pipeline ends the command
+        run, stt_vad, command_timeout_ms = self._command_end_detection(
+            requires_external_vad=True
+        )
 
         async def agent_audio_stream() -> AsyncGenerator[bytes]:
             async for chunk in self._speech_to_text_stream(
-                audio_stream=stream, stt_vad=stt_vad
+                audio_stream=stream,
+                stt_vad=stt_vad,
+                run=run,
+                command_timeout_ms=command_timeout_ms,
             ):
                 yield chunk
+            # The run ends with the command
+            await self._async_close_audio_run()
             self._async_end_agent_listening()
 
         return conversation.ConversationAudioInput(
@@ -655,6 +760,54 @@ class _DefaultPipelineProcessor:
                 {"tts_start_streaming": True},
             )
         )
+
+    @callback
+    def _async_stt_vad_start(self, timestamp_ms: int) -> None:
+        """Send STT_VAD_START."""
+        self.host.process_event(
+            PipelineEvent(PipelineEventType.STT_VAD_START, {"timestamp": timestamp_ms})
+        )
+
+    @callback
+    def _async_stt_vad_end(self, timestamp_ms: int) -> None:
+        """Send STT_VAD_END and record that it was sent."""
+        self._sent_stt_vad_end = True
+        self.host.process_event(
+            PipelineEvent(PipelineEventType.STT_VAD_END, {"timestamp": timestamp_ms})
+        )
+
+    @callback
+    def _accept_wake_word_audio(
+        self,
+        wake_word_phrase: str,
+        wake_word_audio_ms: int,
+        verdict: voice_support.WakeWordAccepted | voice_support.WakeWordRejected | None,
+    ) -> bool:
+        """Accept the wake word whose audio starts the stream, unless refused.
+
+        Accepting starts the duplicate cooldown, which a refused detection
+        must not do, so the run's verdict comes first.
+        """
+        wake_word_output: dict[str, Any] = {
+            "wake_word_phrase": wake_word_phrase,
+            "wake_word_audio_ms": wake_word_audio_ms,
+        }
+        if isinstance(verdict, voice_support.WakeWordRejected):
+            accepted = False
+            wake_word_output["reason"] = verdict.reason or "unverified"
+        else:
+            self.host.accept_wake_word(wake_word_phrase)
+            accepted = True
+
+        self.host.process_event(
+            PipelineEvent(
+                PipelineEventType.WAKE_WORD_END
+                if accepted
+                else PipelineEventType.WAKE_WORD_REJECTED,
+                {"wake_word_output": wake_word_output},
+            )
+        )
+        return accepted
 
     async def prepare_recognize_intent(self, session: chat_session.ChatSession) -> None:
         """Prepare recognizing an intent."""
@@ -1117,6 +1270,17 @@ class _DefaultPipelineProcessor:
 
         return True
 
+    def _has_spoken_response(
+        self, tts_input: str, all_targets_in_satellite_area: bool
+    ) -> bool:
+        """Return True if the response of intent recognition can be spoken."""
+        if self._streamed_response:
+            return True
+        if (self.tts_stream is not None) and (self.tts_stream.engine is None):
+            # Without an engine, only the agent could speak the response
+            return False
+        return all_targets_in_satellite_area or bool(tts_input.strip())
+
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
         engine = self.host.pipeline.tts_engine
@@ -1130,17 +1294,25 @@ class _DefaultPipelineProcessor:
 
         tts_options: dict[str, Any] = {}
         if voice is not None:
-            tts_options[tts.ATTR_VOICE] = voice
+            tts_options[TextToSpeechCommonOption.VOICE] = voice
 
         if isinstance(self.host.tts_audio_output, dict):
             tts_options.update(self.host.tts_audio_output)
         elif isinstance(self.host.tts_audio_output, str):
-            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.host.tts_audio_output
+            tts_options[TextToSpeechCommonOption.PREFERRED_FORMAT] = (
+                self.host.tts_audio_output
+            )
             if self.host.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_RATE] = (
+                    SAMPLE_RATE
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_CHANNELS] = (
+                    SAMPLE_CHANNELS
+                )
+                tts_options[TextToSpeechCommonOption.PREFERRED_SAMPLE_BYTES] = (
+                    SAMPLE_WIDTH
+                )
 
         if engine is None:
             # Only the agent can speak the response
@@ -1216,13 +1388,13 @@ class _DefaultPipelineProcessor:
         )
 
     async def process_volume_only(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Apply volume transformation only with optional chunking.
 
         No VAD/audio enhancements are applied.
         """
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for chunk in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 chunk = audioop.mul(
@@ -1240,7 +1412,7 @@ class _DefaultPipelineProcessor:
                 timestamp_ms += MS_PER_CHUNK
 
     async def process_enhance_audio(
-        self, audio_stream: AsyncIterable[bytes]
+        self, audio_stream: AsyncIterable[bytes], start_ms: int = 0
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Split audio into chunks and apply audio enhancements.
 
@@ -1249,7 +1421,7 @@ class _DefaultPipelineProcessor:
         """
         assert self.audio_enhancer is not None
 
-        timestamp_ms = 0
+        timestamp_ms = start_ms
         async for dirty_samples in audio_stream:
             if self.host.audio_settings.volume_multiplier != 1.0:
                 # Static gain
@@ -1266,19 +1438,82 @@ class _DefaultPipelineProcessor:
                 yield self.audio_enhancer.enhance_chunk(dirty_chunk, timestamp_ms)
                 timestamp_ms += MS_PER_CHUNK
 
+    async def _async_start_audio_run(
+        self, request: _PipelineProcessorRequest, audio_stream: AsyncIterable[bytes]
+    ) -> voice_support.AudioRun | None:
+        """Open an audio run over the stream, or None to go on without one."""
+        audio_settings = self.host.audio_settings
+        return await voice_support.async_start_run(
+            self.host.hass,
+            voice_support.AudioRunRequest(
+                satellite_id=self.host.satellite_id,
+                wake_word_phrase=request.wake_word_phrase,
+                wake_word_audio_ms=request.wake_word_audio_ms,
+                silence_seconds=(
+                    audio_settings.silence_seconds
+                    if audio_settings.is_vad_enabled
+                    else None
+                ),
+            ),
+            audio_stream,
+        )
+
+    async def _async_close_audio_run(self) -> None:
+        """Let the run go, once the command is over or the pipeline is."""
+        if self._audio_run is None:
+            return
+        run, self._audio_run = self._audio_run, None
+        await run.async_close()
+
     async def async_execute(self, request: _PipelineProcessorRequest) -> None:
         """Run the configured default pipeline stages."""
+        try:
+            await self._async_execute(request)
+        finally:
+            await self._async_close_audio_run()
+
+    async def _async_execute(self, request: _PipelineProcessorRequest) -> None:
+        """Run the stages."""
         current_stage: PipelineStage | None = self.host.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+        stt_stream = request.stt_stream
+        skipped_ms = 0
 
-        if request.stt_stream is not None:
+        wake_word_verdict: (
+            voice_support.WakeWordAccepted | voice_support.WakeWordRejected | None
+        ) = None
+        wake_word_audio_ms = request.wake_word_audio_ms
+
+        if (stt_stream is not None) and (current_stage == PipelineStage.STT):
+            self._audio_run = await self._async_start_audio_run(request, stt_stream)
+
+            if self._audio_run is not None:
+                stt_stream = self._audio_run.async_stream()
+                wake_word_verdict = await self._audio_run.async_wake_word()
+                if isinstance(wake_word_verdict, voice_support.WakeWordAccepted):
+                    # Something that found the wake word knows where it
+                    # ends better than the threshold a device crossed.
+                    wake_word_audio_ms = wake_word_verdict.wake_word_audio_ms
+
+            if wake_word_audio_ms is not None:
+                # Whole chunks only, since the partial chunk at the end is dropped
+                skipped_ms = (wake_word_audio_ms // MS_PER_CHUNK) * MS_PER_CHUNK
+                stt_stream = _skip_audio(
+                    stt_stream, skipped_ms * BYTES_PER_CHUNK // MS_PER_CHUNK
+                )
+
+        if stt_stream is not None:
+            # Timestamps count from the start of the stream, as when the
+            # pipeline detects the wake word itself
             if self.host.audio_settings.needs_processor:
                 # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.process_enhance_audio(request.stt_stream)
+                stt_processed_stream = self.process_enhance_audio(
+                    stt_stream, skipped_ms
+                )
             else:
                 # Volume multiplier only
-                stt_processed_stream = self.process_volume_only(request.stt_stream)
+                stt_processed_stream = self.process_volume_only(stt_stream, skipped_ms)
 
         if current_stage == PipelineStage.WAKE_WORD:
             # wake-word-detection
@@ -1299,8 +1534,20 @@ class _DefaultPipelineProcessor:
             assert request.stt_metadata is not None
             assert stt_processed_stream is not None
 
-            if request.wake_word_phrase is not None:
-                self.host.accept_wake_word(request.wake_word_phrase)
+            # Wake word detection accepts the wake word it detects
+            if (self.host.start_stage == PipelineStage.STT) and (
+                request.wake_word_phrase is not None
+            ):
+                if wake_word_audio_ms is not None:
+                    if not self._accept_wake_word_audio(
+                        request.wake_word_phrase,
+                        wake_word_audio_ms,
+                        wake_word_verdict,
+                    ):
+                        self.cleanup()
+                        return
+                else:
+                    self.host.accept_wake_word(request.wake_word_phrase)
 
             stt_input_stream = stt_processed_stream
 
@@ -1331,6 +1578,8 @@ class _DefaultPipelineProcessor:
                     request.stt_metadata,
                     stt_input_stream,
                 )
+                # The run ends with the command
+                await self._async_close_audio_run()
             current_stage = PipelineStage.INTENT
 
         if self.host.end_stage != PipelineStage.STT:
@@ -1349,12 +1598,7 @@ class _DefaultPipelineProcessor:
                     request.conversation_extra_system_prompt,
                     audio=agent_audio,
                 )
-                if self._streamed_response:
-                    current_stage = PipelineStage.TTS
-                elif self.tts_stream is not None and self.tts_stream.engine is None:
-                    # Without an engine, only the agent could speak the response
-                    current_stage = PipelineStage.END
-                elif all_targets_in_satellite_area or tts_input.strip():
+                if self._has_spoken_response(tts_input, all_targets_in_satellite_area):
                     current_stage = PipelineStage.TTS
                 else:
                     # Skip TTS
@@ -1413,6 +1657,12 @@ class _DefaultPipelineProcessor:
             if request.stt_stream is None:
                 raise PipelineRunValidationError(
                     "stt_stream is required for speech-to-text"
+                )
+            if (request.wake_word_audio_ms is not None) and (
+                request.wake_word_phrase is None
+            ):
+                raise PipelineRunValidationError(
+                    "wake_word_phrase is required with wake_word_audio_ms"
                 )
         elif self.host.start_stage == PipelineStage.INTENT:
             if request.intent_input is None:

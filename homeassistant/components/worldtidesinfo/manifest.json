@@ -3,6 +3,7 @@
   "name": "World Tides",
   "categories": ["weather_alerts.forecasts"],
   "codeowners": [],
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/worldtidesinfo",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy"

@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_name, legacy_device_id
@@ -384,7 +384,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
-            name: str | UndefinedType | None = UNDEFINED
+            name: str | Undefined | None = Undefined
 
             # The state feature gets the device name or the child device
             # name if it's a child device

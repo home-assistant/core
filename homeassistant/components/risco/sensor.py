@@ -8,7 +8,7 @@ from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -93,6 +93,7 @@ class RiscoSensor(CoordinatorEntity[RiscoEventsDataUpdateCoordinator], SensorEnt
         await super().async_added_to_hass()
         self._entity_registry = er.async_get(self.hass)
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         events = self.coordinator.data

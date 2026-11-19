@@ -32,8 +32,8 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.lyric.const import DOMAIN
-from homeassistant.components.lyric.services import SERVICE_HOLD_TIME
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.components.lyric.services import LyricService
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -97,10 +97,25 @@ async def test_hvac_action_idle(
     )
 
 
+async def test_emergency_heat_mode(
+    hass: HomeAssistant, mock_lyric: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test emergency heat shows as heat."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(LCC_ENTITY_ID)
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+
+
 @pytest.mark.parametrize(
     ("mode", "expected"),
     [
         pytest.param("Heat", {"heat_setpoint": 21}, id="heat"),
+        pytest.param("EmergencyHeat", {"heat_setpoint": 21}, id="emergency_heat"),
         pytest.param("Cool", {"cool_setpoint": 21}, id="cool"),
     ],
 )
@@ -225,6 +240,22 @@ async def test_set_hvac_mode_lcc(
     mock_lyric.update_thermostat.assert_awaited_once_with(ANY, ANY, **expected)
 
 
+async def test_set_hvac_mode_heat_keeps_emergency_heat(
+    hass: HomeAssistant, mock_lyric: MagicMock
+) -> None:
+    """Test setting heat while in emergency heat leaves emergency heat on."""
+    set_changeable_values(mock_lyric, LCC_MAC_ID, mode="EmergencyHeat")
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: LCC_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    mock_lyric.update_thermostat.assert_not_awaited()
+
+
 async def test_set_hvac_mode_tcc(hass: HomeAssistant, mock_lyric: MagicMock) -> None:
     """Test setting the HVAC mode on a TCC thermostat."""
     await hass.services.async_call(
@@ -306,8 +337,8 @@ async def test_set_hold_time(hass: HomeAssistant, mock_lyric: MagicMock) -> None
     """Test the set hold time action."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_HOLD_TIME,
-        {ATTR_ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
+        LyricService.SET_HOLD_TIME,
+        {TargetKey.ENTITY_ID: LCC_ENTITY_ID, "time_period": "01:00:00"},
         blocking=True,
     )
 
@@ -349,7 +380,7 @@ async def test_set_hold_time(hass: HomeAssistant, mock_lyric: MagicMock) -> None
         ),
         pytest.param(
             DOMAIN,
-            SERVICE_HOLD_TIME,
+            LyricService.SET_HOLD_TIME,
             {"time_period": "01:00:00"},
             "failed_to_set_hold_time",
             id="hold_time",

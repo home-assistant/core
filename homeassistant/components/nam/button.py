@@ -62,5 +62,12 @@ class NAMButton(NAMEntity, ButtonEntity):
                     "device": self.coordinator.config_entry.title,
                 },
             ) from err
-        except AuthFailedError:
+        except AuthFailedError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={
+                    "device": self.coordinator.config_entry.title,
+                },
+            ) from err

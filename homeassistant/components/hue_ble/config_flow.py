@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth.api import (
     async_scanner_count,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -169,8 +169,8 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema({}),
             errors=errors,
             description_placeholders={
-                CONF_NAME: self._discovery_info.name,
-                CONF_MAC: self._discovery_info.address,
+                "name": self._discovery_info.name,
+                "mac": self._discovery_info.address,
                 "url_pairing_mode": URL_PAIRING_MODE,
                 "url_factory_reset": URL_FACTORY_RESET,
             },

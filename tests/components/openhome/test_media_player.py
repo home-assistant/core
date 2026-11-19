@@ -21,10 +21,10 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaType,
 )
-from homeassistant.components.openhome.const import DOMAIN
-from homeassistant.components.openhome.services import (
-    ATTR_PIN_INDEX,
-    SERVICE_INVOKE_PIN,
+from homeassistant.components.openhome.const import (
+    DOMAIN,
+    OpenhomeService,
+    OpenhomeServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -45,6 +45,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -290,8 +291,8 @@ async def test_invoke_pin_calls_device(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_INVOKE_PIN,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 3},
+        OpenhomeService.INVOKE_PIN,
+        {TargetKey.ENTITY_ID: ENTITY_ID, OpenhomeServiceArgument.PIN: 3},
         blocking=True,
     )
 
@@ -301,7 +302,7 @@ async def test_invoke_pin_calls_device(
 @pytest.mark.parametrize(
     ("pins_enabled", "translation_key", "await_count"),
     [
-        pytest.param(True, SERVICE_INVOKE_PIN, 1, id="pins_supported"),
+        pytest.param(True, "invoke_pin", 1, id="pins_supported"),
         pytest.param(False, "pins_not_supported", 0, id="pins_not_supported"),
     ],
 )
@@ -322,8 +323,11 @@ async def test_invoke_pin(
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_INVOKE_PIN,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PIN_INDEX: 1},
+            OpenhomeService.INVOKE_PIN,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                OpenhomeServiceArgument.PIN: 1,
+            },
             blocking=True,
         )
 
@@ -384,6 +388,7 @@ async def test_becomes_unavailable_and_recovers(
         pytest.param(False, "Playing", STATE_PLAYING, id="playing"),
         pytest.param(False, "Buffering", STATE_PLAYING, id="buffering"),
         pytest.param(False, "Stopped", STATE_IDLE, id="stopped"),
+        pytest.param(False, "Waiting", STATE_IDLE, id="waiting"),
         # An external source with no transport controls still counts as playing.
         pytest.param(False, "Unknown", STATE_PLAYING, id="external_source"),
     ],

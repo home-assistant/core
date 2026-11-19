@@ -179,6 +179,9 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 probatio.Match(r"^[0-9]{6}$")(user_input[CONF_VALIDATION_CODE])
+            except probatio.Invalid:
+                error = {"base": "bad_validation_code_format"}
+            else:
                 if await self.controller.submit_auth_code(
                     user_input[CONF_VALIDATION_CODE]
                 ):
@@ -192,8 +195,6 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=self.config_data[CONF_USERNAME], data=self.config_data
                     )
                 error = {"base": "incorrect_validation_code"}
-            except probatio.Invalid:
-                error = {"base": "bad_validation_code_format"}
 
         data_schema = probatio.Schema({probatio.Required(CONF_VALIDATION_CODE): str})
         return self.async_show_form(
@@ -259,7 +260,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 

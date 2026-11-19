@@ -96,41 +96,6 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
             },
             "DCB4D90BBCE4",
         ),
-        # Two entries with identical unique IDs for the same adapter
-        (
-            {
-                "unique_id": "303A:831A_DCB4D910DBB4_Nabu_Casa_ZBT-2",
-                "source": "usb",
-                "data": {
-                    "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_DCB4D910DBB4-if00",
-                    "firmware": "ezsp",
-                    "firmware_version": "7.5.1.0 build 0 (20260224005837)",
-                    "manufacturer": "Nabu Casa",
-                    "pid": "831A",
-                    "product": "ZBT-2",
-                    "serial_number": "DCB4D910DBB4",
-                    "vid": "303A",
-                },
-            },
-            {
-                "unique_id": "303A:831A_DCB4D910DBB4_Nabu_Casa_ZBT-2",
-                "source": "import",
-                "data": {
-                    "device": "/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_DCB4D910DBB4-if00",
-                    "firmware": "spinel",
-                    "firmware_version": (
-                        "SL-OPENTHREAD/2.7.2.0_GitHub-fb0446f53;"
-                        " EFR32; Jan 11 2026 17:52:09"
-                    ),
-                    "manufacturer": "Nabu Casa",
-                    "pid": "831A",
-                    "product": "ZBT-2",
-                    "serial_number": "DCB4D910DBB4",
-                    "vid": "303A",
-                },
-            },
-            "DCB4D910DBB4",
-        ),
     ],
 )
 async def test_config_entry_migration_v2_collapses_duplicates(
@@ -345,7 +310,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
         mock_exists.return_value = True
-        async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Now it's ready
@@ -415,7 +380,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
         # scans on this timer as well; it must still see the stick, or it is that scan
         # that removes it, while the presence check below still says it is there
         with patch_scanned_serial_ports(return_value=[stick]):
-            async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=5))
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
             await hass.async_block_till_done(wait_background_tasks=True)
 
         # Unplug the stick

@@ -4,6 +4,7 @@
   "categories": ["climate.fans_ventilation", "lighting.bulbs_lamps"],
   "codeowners": ["@wonderslug"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/modern_forms",
   "iot_class": "local_polling",
   "loggers": ["aiomodernforms"],

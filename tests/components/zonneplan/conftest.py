@@ -9,6 +9,8 @@ from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixtur
 from pyzonneplan import (
     Account,
     BatteryControlMode,
+    BatteryDayAheadArbitrage,
+    BatteryHomeOptimization,
     BatteryInstallation,
     ChargePointInstallation,
     ConsumerPrices,
@@ -65,6 +67,11 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
                 "get_consumer_prices_electricity_hourly.json", DOMAIN
             )
         ),
+        PriceChart.ELECTRICITY_QUARTER_HOURLY: ConsumerPrices.from_dict(
+            load_json_object_fixture(
+                "get_consumer_prices_electricity_quarter_hourly.json", DOMAIN
+            )
+        ),
         PriceChart.GAS_DAILY: ConsumerPrices.from_dict(
             load_json_object_fixture("get_consumer_prices_gas_daily.json", DOMAIN)
         ),
@@ -84,6 +91,16 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
     )
     client.async_get_charge_point.return_value = ChargePointInstallation.from_dict(
         load_json_object_fixture("get_charge_point.json", DOMAIN)
+    )
+    client.async_get_battery_home_optimization.return_value = (
+        BatteryHomeOptimization.from_dict(
+            load_json_object_fixture("get_battery_home_optimization.json", DOMAIN)
+        )
+    )
+    client.async_get_battery_day_ahead_arbitrage.return_value = (
+        BatteryDayAheadArbitrage.from_dict(
+            load_json_object_fixture("get_battery_day_ahead_arbitrage.json", DOMAIN)
+        )
     )
 
     with (

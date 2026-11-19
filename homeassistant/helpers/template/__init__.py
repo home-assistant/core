@@ -21,6 +21,7 @@ from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -31,7 +32,7 @@ from homeassistant.helpers.trace import (
     trace_stack_cv,
     trace_stack_top,
 )
-from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType
+from homeassistant.helpers.typing import TemplateVarsType, Undefined
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -86,7 +87,7 @@ if TYPE_CHECKING:
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _ENVIRONMENT: HassKey[TemplateEnvironment] = HassKey("template.environment")
@@ -441,10 +442,9 @@ class Template:
         or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return _parse_result(self.template)
-        assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
@@ -470,7 +470,7 @@ class Template:
         self._renders += 1
 
         if self.is_static:
-            if not parse_result or (self.hass and self.hass.config.legacy_templates):
+            if not parse_result or self.hass.config.legacy_templates:
                 return self.template
             return _parse_result(self.template)
 
@@ -492,7 +492,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if not parse_result or (self.hass and self.hass.config.legacy_templates):
+        if not parse_result or self.hass.config.legacy_templates:
             return render_result
 
         return _parse_result(render_result)
@@ -532,7 +532,6 @@ class Template:
         finish_event = asyncio.Event()
 
         def _render_template() -> None:
-            assert self.hass is not None, "hass variable not set on template"
             try:
                 render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
@@ -567,14 +566,11 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
-        if self.hass and self.hass.config.debug:
+        if self.hass.config.debug:
             self.hass.verify_event_loop_thread("async_render_to_info")
         self._renders += 1
 
         render_info = RenderInfo(self)
-
-        if not self.hass:
-            raise RuntimeError(f"hass not set while rendering {self}")
 
         if (in_flight := render_info_cv.get()) is not None and in_flight.collecting:
             raise RuntimeError(
@@ -630,7 +626,7 @@ class Template:
         """Render template with value exposed.
 
         If valid JSON will expose value_json too. A caller that has parsed the
-        value already passes it as value_json, or UNDEFINED if it is not JSON.
+        value already passes it as value_json, or Undefined if it is not JSON.
 
         This method must be run in the event loop.
         """
@@ -649,7 +645,7 @@ class Template:
                 variables["value_json"] = json_loads(value)
             except JSON_DECODE_EXCEPTIONS:
                 pass
-        elif value_json is not UNDEFINED:
+        elif value_json is not Undefined:
             variables["value_json"] = value_json
 
         try:
@@ -667,7 +663,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-        if not parse_result or (self.hass and self.hass.config.legacy_templates):
+        if not parse_result or self.hass.config.legacy_templates:
             return render_result
 
         return _parse_result(render_result)
@@ -681,7 +677,6 @@ class Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
-        assert self.hass is not None, "hass variable not set on template"
         assert self._limited is None or self._limited == limited, (
             "can't change between limited and non limited template"
         )

@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import Undefined
 
 from .const import DOMAIN
 from .helpers import (
@@ -82,7 +82,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     @cached_property
     @override
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str | Undefined | None:
         """Return the name of the entity.
 
         Built-in quirks have translations in HA, so those are used.
@@ -107,7 +107,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         # If we do not have a translation key, only use fallback_name
         # if device class is also missing
         if meta.translation_key is None:
-            if super().name in (UNDEFINED, None):
+            if super().name in (Undefined, None):
                 self._attr_name = meta.fallback_name
             return super().name
 

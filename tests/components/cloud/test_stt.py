@@ -12,20 +12,32 @@ import pytest
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
-from homeassistant.components.cloud.const import DOMAIN, PREVIEW_FEATURE_STT_V2
+from homeassistant.components.cloud.const import (
+    DOMAIN,
+    PREVIEW_FEATURE_STT_V2,
+    STT_ENTITY_UNIQUE_ID,
+    TTS_ENTITY_UNIQUE_ID,
+)
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.stt import (
     DEFAULT_AUDIO_PROCESSING,
+    AudioBitRates,
+    AudioChannels,
+    AudioCodecs,
+    AudioFormats,
+    AudioSampleRates,
     SpeechAudioProcessing,
+    SpeechMetadata,
     async_get_speech_to_text_entity,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
-ENTITY_ID = "stt.home_assistant_cloud"
+ENTITY_ID = "stt.home_assistant_link"
 
 
 @pytest.fixture(autouse=True)
@@ -61,14 +73,14 @@ async def test_cloud_speech(
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
 
-    state = hass.states.get("stt.home_assistant_cloud")
+    state = hass.states.get("stt.home_assistant_link")
     assert state
     assert state.state == STATE_UNKNOWN
 
     client = await hass_client()
 
     response = await client.post(
-        "/api/stt/stt.home_assistant_cloud",
+        "/api/stt/stt.home_assistant_link",
         headers={
             "X-Speech-Content": (
                 "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
@@ -88,7 +100,7 @@ async def test_cloud_speech(
     assert response.status == HTTPStatus.OK
     assert response_data == expected_response_data
 
-    state = hass.states.get("stt.home_assistant_cloud")
+    state = hass.states.get("stt.home_assistant_link")
     assert state
     assert state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
@@ -100,7 +112,7 @@ async def test_migrating_pipelines(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test migrating pipelines when cloud stt entity is added."""
-    entity_id = "stt.home_assistant_cloud"
+    entity_id = "stt.home_assistant_link"
     cloud.voice.process_stt = AsyncMock(
         return_value=STTResponse(True, "Turn the Kitchen Lights on")
     )
@@ -126,7 +138,7 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_engine"] == entity_id
     assert (
         hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_engine"]
-        == "tts.home_assistant_cloud"
+        == "tts.home_assistant_link"
     )
 
     # The other items should stay the same.
@@ -144,7 +156,7 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["language"] == "language_1"
     assert (
-        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Cloud"
+        hass_storage[STORAGE_KEY]["data"]["items"][0]["name"] == "Home Assistant Link"
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["stt_language"] == "language_1"
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["tts_language"] == "language_1"
@@ -156,6 +168,90 @@ async def test_migrating_pipelines(
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
     assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
+
+    # A cloud pipeline with a custom name gets its engines migrated but keeps its name.
+    assert hass_storage[STORAGE_KEY]["data"]["items"][3] == {
+        **PIPELINE_DATA["items"][3],
+        "stt_engine": entity_id,
+        "tts_engine": "tts.home_assistant_link",
+    }
+
+
+def _pipeline(pipeline_id: str, name: str, stt_engine: str, tts_engine: str) -> dict:
+    """Return stored pipeline data."""
+    return {
+        "conversation_engine": "conversation.home_assistant",
+        "conversation_language": "en",
+        "id": pipeline_id,
+        "language": "en",
+        "name": name,
+        "stt_engine": stt_engine,
+        "stt_language": "en-US",
+        "tts_engine": tts_engine,
+        "tts_language": "en-US",
+        "tts_voice": "JennyNeural",
+        "wake_word_entity": None,
+        "wake_word_id": None,
+        "prefer_local_intents": False,
+    }
+
+
+async def test_renaming_pipelines_with_registered_entity_ids(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test renaming pipelines of an install which already uses the entity ids."""
+    stt_entity_id = entity_registry.async_get_or_create(
+        "stt", DOMAIN, STT_ENTITY_UNIQUE_ID, suggested_object_id="home_assistant_cloud"
+    ).entity_id
+    tts_entity_id = entity_registry.async_get_or_create(
+        "tts", DOMAIN, TTS_ENTITY_UNIQUE_ID, suggested_object_id="home_assistant_cloud"
+    ).entity_id
+    assert stt_entity_id == "stt.home_assistant_cloud"
+    assert tts_entity_id == "tts.home_assistant_cloud"
+    default_pipeline = _pipeline(
+        "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+        "Home Assistant Cloud",
+        stt_entity_id,
+        tts_entity_id,
+    )
+    custom_pipeline = _pipeline(
+        "01GX8ZWBAQTKFQNK4W7Q4CTRCX", "My assistant", stt_entity_id, tts_entity_id
+    )
+    other_pipeline = _pipeline(
+        "01GX8ZWBAQSV1HP3WGJPFWEJ8J",
+        "Home Assistant Cloud",
+        "stt.other",
+        "tts.other",
+    )
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "assist_pipeline.pipelines",
+        "data": {
+            "items": [default_pipeline, custom_pipeline, other_pipeline],
+            "preferred_item": "01GX8ZWBAQYWNB1XV3EXEZ75DY",
+        },
+    }
+
+    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(stt_entity_id)
+    assert hass.states.get(tts_entity_id)
+    # Only the cloud pipeline with the legacy default name is renamed, the
+    # engines keep their registered entity ids.
+    assert hass_storage[STORAGE_KEY]["data"]["items"] == [
+        {**default_pipeline, "name": "Home Assistant Link"},
+        custom_pipeline,
+        other_pipeline,
+    ]
 
 
 @pytest.fixture(name="setup_stt")
@@ -189,6 +285,18 @@ async def _process_audio(
     return await response.json()
 
 
+def _metadata(language: str) -> SpeechMetadata:
+    """Return speech metadata for a language."""
+    return SpeechMetadata(
+        language=language,
+        format=AudioFormats.WAV,
+        codec=AudioCodecs.PCM,
+        bit_rate=AudioBitRates.BITRATE_16,
+        sample_rate=AudioSampleRates.SAMPLERATE_16000,
+        channel=AudioChannels.CHANNEL_MONO,
+    )
+
+
 @pytest.mark.usefixtures("setup_stt")
 async def test_stt_v2_disabled_by_default(
     hass: HomeAssistant,
@@ -208,7 +316,10 @@ async def test_stt_v2_disabled_by_default(
 
     entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
     assert entity
-    assert entity.audio_processing == DEFAULT_AUDIO_PROCESSING
+    assert (
+        entity.async_get_audio_processing(_metadata("de-DE"))
+        == DEFAULT_AUDIO_PROCESSING
+    )
 
 
 @pytest.mark.usefixtures("setup_stt")
@@ -241,8 +352,10 @@ async def test_stt_v2_enabled(
 
     entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
     assert entity
-    assert entity.audio_processing == SpeechAudioProcessing(
-        requires_external_vad=True,
+    assert entity.async_get_audio_processing(
+        _metadata("de-DE")
+    ) == SpeechAudioProcessing(
+        requires_external_vad=False,
         prefers_auto_gain_enabled=False,
         prefers_noise_reduction_enabled=False,
     )
@@ -266,6 +379,14 @@ async def test_stt_v2_falls_back_on_unsupported_language(
     }
     assert cloud.voice.process_stt.call_count == 1
     cloud.stt_v2.process_stt.assert_not_called()
+
+    # The legacy service relies on the pipeline to detect the end of speech
+    entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
+    assert entity
+    assert (
+        entity.async_get_audio_processing(_metadata("hy-AM"))
+        == DEFAULT_AUDIO_PROCESSING
+    )
 
 
 @pytest.mark.parametrize(

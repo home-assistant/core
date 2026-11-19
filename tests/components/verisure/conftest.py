@@ -14,7 +14,10 @@ OVERVIEW = [
         "data": {
             "installation": {
                 "armState": {"status": "DISARMED", "statusType": "DISARMED"},
-                "broadband": [{"status": "ONLINE"}],
+                "broadband": {
+                    "testDate": "2026-01-01T00:00:00.000Z",
+                    "isBroadbandConnected": True,
+                },
                 "cameras": [
                     {"device": {"deviceLabel": "cam-1"}, "status": "AVAILABLE"}
                 ],
@@ -22,10 +25,19 @@ OVERVIEW = [
                     {"device": {"deviceLabel": "climate-1"}, "temperature": 21}
                 ],
                 "doorWindows": [
-                    {"device": {"deviceLabel": "door-1"}, "status": "CLOSED"}
+                    {
+                        "device": {"deviceLabel": "door-1"},
+                        "area": "Hallway",
+                        "state": "CLOSE",
+                        "reportTime": "2026-01-01T00:00:00.000Z",
+                    }
                 ],
                 "smartLocks": [
-                    {"device": {"deviceLabel": "lock-1"}, "status": "LOCKED"}
+                    {
+                        "device": {"deviceLabel": "lock-1", "area": "Front door"},
+                        "lockStatus": "LOCKED",
+                        "lockMethod": "CODE",
+                    }
                 ],
                 "smartplugs": [
                     {

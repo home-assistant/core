@@ -6,6 +6,7 @@ from pyrisco import RiscoCloud
 from pyrisco.cloud.zone import Zone as CloudZone
 from pyrisco.local.zone import Zone as LocalZone
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -27,6 +28,7 @@ class RiscoCloudEntity(CoordinatorEntity[RiscoDataUpdateCoordinator]):
     def _get_data_from_coordinator(self) -> None:
         raise NotImplementedError
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         self._get_data_from_coordinator()

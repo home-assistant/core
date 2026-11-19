@@ -8,7 +8,7 @@ from aioautomower.session import AutomowerSession
 from aioautomower.utils import structure_token
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.util import dt as dt_util
 
@@ -91,7 +91,7 @@ class HusqvarnaConfigFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={CONF_NAME: self._get_reauth_entry().title},
+                description_placeholders={"name": self._get_reauth_entry().title},
             )
         return await self.async_step_user()
 

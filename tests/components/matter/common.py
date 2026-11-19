@@ -53,6 +53,7 @@ FIXTURES = [
     "haojai_switch",
     "heiman_co_sensor",
     "heiman_motion_sensor_m1",
+    "heiman_motion_sensor_m1_m",
     "heiman_smoke_detector",
     "ikea_air_quality_monitor",
     "ikea_bilresa_dual_button",
@@ -63,6 +64,7 @@ FIXTURES = [
     "lifx_switch_89",
     "longan_link_thermostat",
     "mock_air_purifier",
+    "mock_battery_solar_bridge",
     "mock_battery_storage",
     "mock_camera",
     "mock_chime",
@@ -136,6 +138,7 @@ FIXTURES = [
     "wago_home_relay_16a",
     "yandex_smart_socket",
     "zemismart_mt25b",
+    "zemismart_wifi_smart_switch",
 ]
 
 

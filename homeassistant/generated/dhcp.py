@@ -280,6 +280,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "000463*",
     },
     {
+        "domain": "braviatv",
+        "registered_devices": True,
+    },
+    {
         "domain": "broadlink",
         "registered_devices": True,
     },
@@ -453,6 +457,34 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "ismartgate*",
     },
     {
+        "domain": "gree",
+        "macaddress": "0447CA*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "502CC6*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "580D0D*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "7CB8E6*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "9424B8*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "C03937*",
+    },
+    {
+        "domain": "gree",
+        "macaddress": "F4911E*",
+    },
+    {
         "domain": "guardian",
         "hostname": "gvc*",
         "macaddress": "30AEA4*",
@@ -518,23 +550,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "imou",
-        "macaddress": "38AF29*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CE36B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "3CEF8C*",
-    },
-    {
-        "domain": "imou",
         "macaddress": "906A94*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "A0BD1D*",
     },
     {
         "domain": "imou",
@@ -543,14 +559,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "imou",
         "macaddress": "AC3DFA*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "B44C3B*",
-    },
-    {
-        "domain": "imou",
-        "macaddress": "FCB69D*",
     },
     {
         "domain": "incomfort",
