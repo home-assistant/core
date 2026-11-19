@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
-    CommonServiceArgument,
+    TargetKey,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -95,7 +95,7 @@ async def test_firmness(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_firmness"
             ),
@@ -142,7 +142,7 @@ async def test_favorite_firmness(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: FAVORITE_L_ENTITY_ID,
+            TargetKey.ENTITY_ID: FAVORITE_L_ENTITY_ID,
             NumberServiceArgument.VALUE: 45,
         },
         blocking=True,
@@ -258,7 +258,7 @@ async def test_actuators(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}_right_head_position"
             ),
@@ -306,7 +306,7 @@ async def test_foot_warmer_timer(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_foot_warming_timer"
@@ -350,7 +350,7 @@ async def test_core_climate_timer(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"number.{BED_NAME_LOWER}_sleepnumber"
                 f"_{BED_NAME_LOWER}"
                 f"_{SLEEPER_L_NAME_LOWER}_core_climate_timer"

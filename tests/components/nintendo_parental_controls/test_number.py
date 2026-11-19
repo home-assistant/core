@@ -10,7 +10,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,7 +51,7 @@ async def test_set_number(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         service_data={NumberServiceArgument.VALUE: "120"},
-        target={ATTR_ENTITY_ID: "number.home_assistant_test_max_screentime_today"},
+        target={TargetKey.ENTITY_ID: "number.home_assistant_test_max_screentime_today"},
         blocking=True,
     )
     assert len(mock_nintendo_device.update_max_daily_playtime.mock_calls) == 1

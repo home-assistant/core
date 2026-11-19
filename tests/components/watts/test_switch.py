@@ -18,8 +18,8 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -96,7 +96,7 @@ async def test_fast_polling(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: "switch.living_room_living_room_switch"},
+        {TargetKey.ENTITY_ID: "switch.living_room_living_room_switch"},
         blocking=True,
     )
 

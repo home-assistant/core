@@ -8,7 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -38,7 +38,7 @@ async def test_identify(hass: HomeAssistant, mock_identify: AsyncMock) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN,
         ButtonService.PRESS,
-        {CommonServiceArgument.ENTITY_ID: IDENTIFY},
+        {TargetKey.ENTITY_ID: IDENTIFY},
         blocking=True,
     )
     mock_identify.assert_awaited_once()
@@ -52,7 +52,7 @@ async def test_identify_error(hass: HomeAssistant, mock_identify: AsyncMock) -> 
         await hass.services.async_call(
             BUTTON_DOMAIN,
             ButtonService.PRESS,
-            {CommonServiceArgument.ENTITY_ID: IDENTIFY},
+            {TargetKey.ENTITY_ID: IDENTIFY},
             blocking=True,
         )
     assert raised.value.translation_key == "cannot_connect"
