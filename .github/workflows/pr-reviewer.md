@@ -93,12 +93,58 @@ safe-outputs:
   reply-to-pull-request-review-comment:
     max: 10
     target: "${{ needs.prepare.outputs.pr_number }}"
-  add-comment:
-    max: 1
-    target: "${{ needs.prepare.outputs.pr_number }}"
   needs:
     - prepare
   report-failure-as-issue: ["!daily_ai_credits_exceeded"]
+  jobs:
+    # Replaces add-comment, which posts on any issue or pull request number the agent
+    # passes, whatever its target. This one takes only a body and posts on the pull
+    # request from the task, which the agent job uploads before the agent runs. A safe
+    # job can't depend on `prepare`.
+    reply-in-conversation:
+      description: Post one comment in the conversation of the pull request under review.
+      max: 1
+      runs-on: ubuntu-latest
+      # gh-aw's condition for safe jobs runs them even when the detection job failed.
+      if: needs.detection.result == 'success'
+      permissions:
+        pull-requests: write
+      inputs:
+        body:
+          description: The comment, in Markdown.
+          required: true
+          type: string
+      steps:
+        - name: Download the task
+          uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+          with:
+            name: pr-reviewer-task
+            path: task
+        - name: Post the comment
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
+          run: |
+            set -euo pipefail
+            PR_NUMBER=$(jq -r '.pr_number' task/task.json)
+            [[ "${PR_NUMBER}" =~ ^[1-9][0-9]*$ ]] || { echo "::error::No pull request number in the task"; exit 1; }
+            RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            # gh-aw's hidden marker, which collect.sh and the record job look for.
+            MARKER="<!-- gh-aw-agentic-workflow: ${GITHUB_WORKFLOW}, id: ${GITHUB_RUN_ID}, workflow_id: pr-reviewer, run: ${RUN_URL} -->"
+            CAUTION=""
+            if [ "${DETECTION_CONCLUSION}" = "warning" ]; then
+              # In warn mode the safe_outputs job still posts, with this caution.
+              CAUTION="> [!CAUTION]
+            > Threat detection flagged the output of [this run](${RUN_URL})."
+            fi
+            # gh-aw already sanitized the body (mentions, HTML comments outside code). An HTML
+            # comment left in code could still carry a forged marker: escape every opener.
+            jq -e --arg marker "${MARKER}" --arg caution "${CAUTION}" '
+              [.items[] | select(.type == "reply_in_conversation")]
+              | if length == 1 then .[0] else error("Expected 1 reply_in_conversation item, got \(length)") end
+              | {body: ([$caution, (.body | gsub("<!--"; "&lt;!--")), $marker] | map(select(. != "")) | join("\n\n"))}' \
+              "${GH_AW_AGENT_OUTPUT}" > body.json
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --input body.json > /dev/null
 jobs:
   prepare:
     # Resolves the pull request from the trigger run's name (or the dispatch
@@ -205,6 +251,7 @@ jobs:
       - prepare
       - agent
       - safe_outputs
+      - reply_in_conversation
     if: >-
       always() && needs.agent.result != 'skipped'
       && (needs.safe_outputs.result == 'success' || needs.safe_outputs.result == 'failure')
@@ -221,7 +268,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ needs.prepare.outputs.pr_number }}
-          COMPLETE: ${{ needs.agent.result == 'success' && needs.safe_outputs.result == 'success' }}
+          COMPLETE: >-
+            ${{ needs.agent.result == 'success' && needs.safe_outputs.result == 'success'
+            && (needs.reply_in_conversation.result == 'success' || needs.reply_in_conversation.result == 'skipped') }}
         run: |
           set -euo pipefail
           BOT='github-actions[bot]'
@@ -306,7 +355,7 @@ steps:
       HEAD_SHA: ${{ needs.prepare.outputs.head_sha }}
     # Runs the default branch's script, before the pull request is checked out.
     run: script/pr_reviewer/collect.sh "${PR_NUMBER}" /tmp/gh-aw/agent "${HEAD_SHA}"
-  - name: Upload the task for the record job
+  - name: Upload the task for the record and reply-in-conversation jobs
     uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
     with:
       name: pr-reviewer-task
@@ -420,7 +469,7 @@ How to answer:
 Several comments in one thread, or in the conversation, get one combined reply. At most 10 thread replies and 1 conversation reply per run:
 
 - Thread: `reply_to_pull_request_review_comment` with `comment_id` set to the thread's `thread`.
-- Conversation: `add_comment`.
+- Conversation: `reply_in_conversation` with `body`. It always posts on this PR.
 
 ## Nothing to post
 

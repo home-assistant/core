@@ -167,7 +167,7 @@ elif [ -n "${REVIEWED_HEAD}" ]; then
 fi
 
 jq -n --argjson review "${REVIEW}" --arg reviewed_head "${REVIEWED_HEAD}" --argjson replies "${REPLIES}" \
-  --arg collected_at "${COLLECTED_AT}" \
+  --arg collected_at "${COLLECTED_AT}" --argjson pr_number "${PR_NUMBER}" \
   '{review: $review, reviewed_head: (if $reviewed_head == "" then null else $reviewed_head end), replies: $replies,
-    collected_at: $collected_at}' \
+    collected_at: $collected_at, pr_number: $pr_number}' \
   > "${OUT}/task.json"
