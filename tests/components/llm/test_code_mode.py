@@ -389,6 +389,26 @@ async def test_sandbox_lives_with_chat_session(
     assert _sandbox_count() == 0
 
 
+async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test a chat session above the limit gets a sandbox for one call only."""
+    with patch.object(code_mode_api, "MAX_SANDBOXES", 2):
+        for expected in (1, 2, 2):
+            api_instance = await _api_instance(hass, llm_context)
+            with chat_session.async_get_chat_session(hass, context=None):
+                result = await _execute(api_instance, "1")
+            assert result.data["result"] == 1
+            assert _sandbox_count() == expected
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=2),
+    )
+    await hass.async_block_till_done()
+
+    assert _sandbox_count() == 0
+    assert hass.data[code_mode_api.DATA_SANDBOXES] == set()
+
+
 async def test_sandbox_stops_with_home_assistant(
     hass: HomeAssistant, api_instance: llm.APIInstance
 ) -> None:

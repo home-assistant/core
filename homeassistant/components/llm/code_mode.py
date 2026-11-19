@@ -25,6 +25,7 @@ from homeassistant.helpers.llm import (
     ToolInput,
     ToolResult,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from .const import DOMAIN
@@ -55,6 +56,10 @@ IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
 MAX_TYPE_DEPTH = 3
 # Sandbox processes of one chat session, for execute calls that run in parallel.
 MAX_WORKERS = 4
+# Sandboxes that stay for a chat session. Above this, a sandbox runs only for one call.
+MAX_SANDBOXES = 10
+
+DATA_SANDBOXES: HassKey[set[AsyncExitStack]] = HassKey("llm_code_mode_sandboxes")
 
 PROMPT = (
     "The tools of this API are Python functions. "
@@ -310,12 +315,12 @@ class ExecuteTool(Tool):
         # the context of the current turn.
         self._api_instance.llm_context = llm_context
         try:
-            if (session := chat_session.current_session.get()) is None:
-                async with AsyncMonty(max_processes=1) as pool:
-                    return await self._async_run(pool, code)
-            return await self._async_run(
-                await self._async_get_pool(hass, session), code
-            )
+            if (session := chat_session.current_session.get()) is not None and (
+                session_pool := await self._async_get_pool(hass, session)
+            ) is not None:
+                return await self._async_run(session_pool, code)
+            async with AsyncMonty(max_processes=1) as pool:
+                return await self._async_run(pool, code)
         except (MontyError, OSError) as err:
             return ToolResult(
                 data={"error": str(err)[:MAX_ERROR_SIZE], "output": ""}, error=True
@@ -323,17 +328,29 @@ class ExecuteTool(Tool):
 
     async def _async_get_pool(
         self, hass: HomeAssistant, session: chat_session.ChatSession
-    ) -> AsyncMonty:
-        """Return the sandbox of the chat session, which stops with the session."""
+    ) -> AsyncMonty | None:
+        """Return the sandbox of the chat session, which stops with the session.
+
+        Return None when the maximum number of sandboxes is in use.
+        """
+        sandboxes = hass.data.setdefault(DATA_SANDBOXES, set())
         async with self._pool_lock:
             if self._pool is not None:
                 return self._pool
+            if len(sandboxes) >= MAX_SANDBOXES:
+                return None
             stack = AsyncExitStack()
-            self._pool = await stack.enter_async_context(
-                AsyncMonty(max_processes=MAX_WORKERS)
-            )
+            sandboxes.add(stack)
+            try:
+                self._pool = await stack.enter_async_context(
+                    AsyncMonty(max_processes=MAX_WORKERS)
+                )
+            except BaseException:
+                sandboxes.discard(stack)
+                raise
 
         async def _async_stop_on_close(_: Event) -> None:
+            sandboxes.discard(stack)
             await stack.aclose()
 
         unsub = hass.bus.async_listen_once(
@@ -343,6 +360,7 @@ class ExecuteTool(Tool):
         @callback
         def _async_stop() -> None:
             self._pool = None
+            sandboxes.discard(stack)
             unsub()
             hass.async_create_task(stack.aclose(), "code_mode_stop_sandbox")
 
