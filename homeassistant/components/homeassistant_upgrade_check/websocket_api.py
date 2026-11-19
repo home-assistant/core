@@ -18,8 +18,8 @@ from homeassistant.loader import Integration, async_get_integrations
 from .const import DOMAIN
 from .feed import DATA_FEED, ReleaseNotesUnavailable
 from .mock import MOCK_CORE_UPDATE_ID, MOCK_DOMAINS
+from .release_notes import CATEGORIES
 
-CATEGORIES = ("breaking", "noteworthy", "quality_scale", "removed")
 # Update entities that offer a new Home Assistant Core version, as (platform,
 # unique ID).
 CORE_UPDATE_ENTITIES = (
@@ -59,14 +59,13 @@ def _installed_domains(hass: HomeAssistant) -> set[str]:
 
 
 async def _integration_types(
-    hass: HomeAssistant, indexes: list[dict[str, Any]]
+    hass: HomeAssistant, releases: list[dict[str, Any]]
 ) -> dict[str, str]:
     """Return the integration type of each domain in the releases."""
     domains = {
         domain
-        for index in indexes
-        for key in CATEGORIES
-        for entry in index[key]
+        for release in releases
+        for entry in release["items"]
         for domain in entry["domains"]
     }
     return {
@@ -77,31 +76,34 @@ async def _integration_types(
     }
 
 
-def _pr(pr: str) -> dict[str, str]:
+def _pr(pr: dict[str, Any]) -> dict[str, str]:
     """Return the label and link of a pull request, such as frontend#123."""
-    repo, _, number = pr.rpartition("#")
+    repo, number = pr["repo"], pr["number"]
     return {
-        "label": pr if repo else f"#{number}",
-        "url": f"https://github.com/home-assistant/{repo or 'core'}/pull/{number}",
+        "label": f"#{number}" if repo == "core" else f"{repo}#{number}",
+        "url": f"https://github.com/home-assistant/{repo}/pull/{number}",
     }
 
 
-def _item(entry: dict[str, Any], index: dict[str, Any], **scope: Any) -> dict[str, Any]:
+def _item(
+    entry: dict[str, Any], release: dict[str, Any], **scope: Any
+) -> dict[str, Any]:
     """Return a release-note entry as the frontend shows it."""
     return {
+        "id": entry["id"],
         "title": entry["title"],
         "text": entry.get("text"),
         "tier": entry.get("tier"),
-        "credits": entry.get("credits", []),
+        "authors": entry.get("authors", []),
         "prs": [_pr(pr) for pr in entry.get("prs", [])],
-        "version": index["version"],
-        "url": index["url"],
+        "version": release["version"],
+        "url": release["url"],
         **scope,
     }
 
 
 def build_digest(
-    indexes: list[dict[str, Any]],
+    releases: list[dict[str, Any]],
     installed: set[str],
     general: set[str],
     running: str,
@@ -113,18 +115,21 @@ def build_digest(
     for key in CATEGORIES:
         items: list[dict[str, Any]] = []
         related: list[dict[str, Any]] = []
-        for index in indexes:
-            for entry in index[key]:
+        for release in releases:
+            for entry in release["items"]:
+                if entry["category"] != key:
+                    continue
                 matched = set(entry["domains"]) & installed
                 if own := sorted(matched - general):
-                    items.append(_item(entry, index, domains=own, scope="domains"))
-                elif matched or entry.get("global"):
+                    items.append(_item(entry, release, domains=own, scope="domains"))
+                # A system change without a domain concerns every installation.
+                elif matched or (entry["scope"] == "system" and not entry["domains"]):
                     items.append(
-                        _item(entry, index, domains=sorted(matched), scope="global")
+                        _item(entry, release, domains=sorted(matched), scope="global")
                     )
                 elif mentioned := sorted(set(entry.get("mentions", [])) & installed):
                     related.append(
-                        _item(entry, index, domains=mentioned, scope="mentions")
+                        _item(entry, release, domains=mentioned, scope="mentions")
                     )
         if key == "quality_scale":
             # Only the tier an integration ends up with matters, not each step.
@@ -137,7 +142,7 @@ def build_digest(
         "target": target,
         # The core update this is for, so the update dialog can match it.
         "entity_id": entity_id,
-        "releases": [{"version": i["version"], "url": i["url"]} for i in indexes],
+        "releases": [{"version": r["version"], "url": r["url"]} for r in releases],
         "categories": categories,
     }
 
@@ -159,7 +164,7 @@ async def websocket_digest(
         target = core_update.attributes[ATTR_LATEST_VERSION]
         entity_id = core_update.entity_id
     try:
-        indexes = (
+        releases = (
             await hass.data[DATA_FEED].async_get(running, target) if target else []
         )
     except ReleaseNotesUnavailable:
@@ -170,7 +175,7 @@ async def websocket_digest(
         return
     # Mock: drop MOCK_DOMAINS to match only what is installed.
     installed = _installed_domains(hass) | MOCK_DOMAINS
-    types = await _integration_types(hass, indexes)
+    types = await _integration_types(hass, releases)
     # An entity type, like calendar, is loaded everywhere; it is yours once you
     # have such entities, and does not concern you otherwise.
     installed = {
@@ -182,5 +187,5 @@ async def websocket_digest(
     general = {domain for domain, kind in types.items() if kind == "system"}
     connection.send_result(
         msg["id"],
-        build_digest(indexes, installed, general, running, target, entity_id),
+        build_digest(releases, installed, general, running, target, entity_id),
     )

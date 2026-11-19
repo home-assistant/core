@@ -6,11 +6,13 @@
         'count': 7,
         'items': list([
           dict({
-            'credits': list([
+            'authors': list([
+              'frenck',
             ]),
             'domains': list([
               'mqtt',
             ]),
+            'id': 'core-182045',
             'prs': list([
               dict({
                 'label': '#182045',
@@ -25,10 +27,12 @@
             'version': '2026.8',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'erik',
             ]),
             'domains': list([
             ]),
+            'id': 'frontend-4567',
             'prs': list([
               dict({
                 'label': 'frontend#4567',
@@ -43,11 +47,13 @@
             'version': '2026.8',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'frank',
             ]),
             'domains': list([
               'old_thing',
             ]),
+            'id': 'core-1000',
             'prs': list([
               dict({
                 'label': '#1000',
@@ -62,11 +68,13 @@
             'version': '2026.8',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'dave',
             ]),
             'domains': list([
               'hue',
             ]),
+            'id': 'core-3000',
             'prs': list([
               dict({
                 'label': '#3000',
@@ -81,11 +89,13 @@
             'version': '2026.11',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'frank',
             ]),
             'domains': list([
               'calendar',
             ]),
+            'id': 'core-5100',
             'prs': list([
               dict({
                 'label': '#5100',
@@ -100,11 +110,13 @@
             'version': '2026.11',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'frenck',
             ]),
             'domains': list([
               'auth',
             ]),
+            'id': 'core-5300',
             'prs': list([
               dict({
                 'label': '#5300',
@@ -119,11 +131,13 @@
             'version': '2026.11',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'elupus',
             ]),
             'domains': list([
               'gardena_bluetooth',
             ]),
+            'id': 'core-4000',
             'prs': list([
               dict({
                 'label': '#4000',
@@ -141,11 +155,13 @@
         'key': 'breaking',
         'related': list([
           dict({
-            'credits': list([
+            'authors': list([
+              'grace',
             ]),
             'domains': list([
               'hue',
             ]),
+            'id': 'core-2000',
             'prs': list([
               dict({
                 'label': '#2000',
@@ -165,11 +181,13 @@
         'count': 3,
         'items': list([
           dict({
-            'credits': list([
+            'authors': list([
+              'bob',
             ]),
             'domains': list([
               'mqtt',
             ]),
+            'id': 'noteworthy-mqtt',
             'prs': list([
             ]),
             'scope': 'domains',
@@ -180,11 +198,13 @@
             'version': '2026.8',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'dave',
             ]),
             'domains': list([
               'hue',
             ]),
+            'id': 'noteworthy-hue',
             'prs': list([
             ]),
             'scope': 'domains',
@@ -195,11 +215,13 @@
             'version': '2026.11',
           }),
           dict({
-            'credits': list([
+            'authors': list([
+              'bob',
             ]),
             'domains': list([
               'mqtt',
             ]),
+            'id': 'noteworthy-mqtt',
             'prs': list([
             ]),
             'scope': 'domains',
@@ -218,13 +240,14 @@
         'count': 1,
         'items': list([
           dict({
-            'credits': list([
+            'authors': list([
               'dave',
               'erin',
             ]),
             'domains': list([
               'hue',
             ]),
+            'id': 'quality-scale-hue-gold',
             'prs': list([
             ]),
             'scope': 'domains',
@@ -243,11 +266,12 @@
         'count': 1,
         'items': list([
           dict({
-            'credits': list([
+            'authors': list([
             ]),
             'domains': list([
               'old_thing',
             ]),
+            'id': 'removed-old_thing',
             'prs': list([
             ]),
             'scope': 'domains',
@@ -280,228 +304,353 @@
 # ---
 # name: test_digest[cache]
   dict({
-    'indexes': list([
+    'key': '2026.7.0..2026.11.0@8',
+    'releases': list([
       dict({
-        'breaking': list([
+        'format': 1,
+        'items': list([
           dict({
+            'authors': list([
+              'frenck',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'mqtt',
             ]),
-            'global': False,
+            'id': 'core-182045',
             'mentions': list([
             ]),
             'prs': list([
-              '182045',
+              dict({
+                'number': 182045,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': 'The `mqtt.publish` action now requires an admin account.',
             'title': 'MQTT',
           }),
           dict({
+            'authors': list([
+              'erik',
+            ]),
+            'category': 'breaking',
             'domains': list([
             ]),
-            'global': True,
+            'id': 'frontend-4567',
             'mentions': list([
             ]),
             'prs': list([
-              'frontend#4567',
+              dict({
+                'number': 4567,
+                'repo': 'frontend',
+              }),
             ]),
+            'scope': 'system',
+            'since': '2026.8.0',
             'text': 'Every robot vacuum now reports its battery separately. Check Settings > Devices & services.',
             'title': 'Robot vacuums',
           }),
           dict({
+            'authors': list([
+              'grace',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'zha',
             ]),
-            'global': False,
+            'id': 'core-2000',
             'mentions': list([
               'hue',
             ]),
             'prs': list([
-              '2000',
+              dict({
+                'number': 2000,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': 'Groups that include a [Philips Hue](https://www.home-assistant.io/integrations/hue) light are now created differently.',
             'title': 'Zigbee Home Automation',
           }),
           dict({
+            'authors': list([
+              'frank',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'old_thing',
             ]),
-            'global': False,
+            'id': 'core-1000',
             'mentions': list([
             ]),
             'prs': list([
-              '1000',
+              dict({
+                'number': 1000,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': 'Old Thing is gone; see the farewell section.',
             'title': 'Old Thing',
           }),
-        ]),
-        'noteworthy': list([
           dict({
+            'authors': list([
+              'bob',
+            ]),
+            'category': 'noteworthy',
             'domains': list([
               'mqtt',
             ]),
+            'id': 'noteworthy-mqtt',
             'mentions': list([
               'hue',
             ]),
+            'prs': list([
+            ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt)** can now publish to devices behind a [Philips Hue](https://www.home-assistant.io/integrations/hue) bridge.',
             'title': 'MQTT',
           }),
           dict({
+            'authors': list([
+              'carol',
+            ]),
+            'category': 'noteworthy',
             'domains': list([
               'shelly',
             ]),
+            'id': 'noteworthy-shelly',
             'mentions': list([
             ]),
+            'prs': list([
+            ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': '**[Shelly](https://www.home-assistant.io/integrations/shelly)** devices are found faster.',
             'title': 'Shelly',
           }),
-        ]),
-        'quality_scale': list([
           dict({
-            'credits': list([
+            'authors': list([
               'dave',
             ]),
+            'category': 'quality_scale',
             'domains': list([
               'hue',
             ]),
+            'id': 'quality-scale-hue-silver',
+            'scope': 'integration',
+            'since': '2026.8.0',
             'tier': 'silver',
             'title': 'Philips Hue',
           }),
-        ]),
-        'removed': list([
           dict({
+            'category': 'removed',
             'domains': list([
               'old_thing',
             ]),
-            'replacements': list([
+            'id': 'removed-old_thing',
+            'replaced_by': list([
               'rest',
             ]),
+            'scope': 'integration',
+            'since': '2026.8.0',
             'text': '**Old Thing** has been removed. Use the [RESTful sensor](https://www.home-assistant.io/integrations/sensor.rest/) instead.',
             'title': 'Old Thing',
           }),
         ]),
+        'released': '2026-08-05',
         'url': 'https://www.home-assistant.io/blog/2026/08/05/release-20268/',
         'version': '2026.8',
       }),
       dict({
-        'breaking': list([
+        'format': 1,
+        'items': list([
           dict({
+            'authors': list([
+              'dave',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'hue',
             ]),
-            'global': False,
+            'id': 'core-3000',
             'mentions': list([
             ]),
             'prs': list([
-              '3000',
+              dict({
+                'number': 3000,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': 'Scenes are now entities of their own.',
             'title': 'Philips Hue',
           }),
           dict({
+            'authors': list([
+              'frank',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'calendar',
             ]),
-            'global': False,
+            'id': 'core-5100',
             'mentions': list([
             ]),
             'prs': list([
-              '5100',
+              dict({
+                'number': 5100,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': 'Calendar entities now report all-day events in your time zone.',
             'title': 'Calendar',
           }),
           dict({
+            'authors': list([
+              'grace',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'vacuum',
             ]),
-            'global': False,
+            'id': 'core-5200',
             'mentions': list([
             ]),
             'prs': list([
-              '5200',
+              dict({
+                'number': 5200,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': 'Vacuum entities now report the cleaned area.',
             'title': 'Vacuum',
           }),
           dict({
+            'authors': list([
+              'frenck',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'auth',
             ]),
-            'global': False,
+            'id': 'core-5300',
             'mentions': list([
             ]),
             'prs': list([
-              '5300',
+              dict({
+                'number': 5300,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': 'Refresh tokens that were not used for a year are removed.',
             'title': 'Authentication',
           }),
           dict({
+            'authors': list([
+              'elupus',
+            ]),
+            'category': 'breaking',
             'domains': list([
               'gardena_bluetooth',
             ]),
-            'global': False,
+            'id': 'core-4000',
             'mentions': list([
             ]),
             'prs': list([
-              '4000',
+              dict({
+                'number': 4000,
+                'repo': 'core',
+              }),
             ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': "The valve's sensor now reports a fixed set of values.",
             'title': 'Gardena Bluetooth',
           }),
-        ]),
-        'noteworthy': list([
           dict({
+            'authors': list([
+              'dave',
+            ]),
+            'category': 'noteworthy',
             'domains': list([
               'hue',
             ]),
+            'id': 'noteworthy-hue',
             'mentions': list([
             ]),
+            'prs': list([
+            ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': '**[Philips Hue](https://www.home-assistant.io/integrations/hue)** now shows the bridge firmware.',
             'title': 'Philips Hue',
           }),
           dict({
+            'authors': list([
+              'bob',
+            ]),
+            'category': 'noteworthy',
             'domains': list([
               'mqtt',
             ]),
+            'id': 'noteworthy-mqtt',
             'mentions': list([
               'hue',
             ]),
+            'prs': list([
+            ]),
+            'scope': 'integration',
+            'since': '2026.11.0',
             'text': '**[MQTT](https://www.home-assistant.io/integrations/mqtt/)** keeps retained messages for [Philips Hue](https://www.home-assistant.io/integrations/hue) lights.',
             'title': 'MQTT',
           }),
-        ]),
-        'quality_scale': list([
           dict({
-            'credits': list([
+            'authors': list([
               'dave',
               'erin',
             ]),
+            'category': 'quality_scale',
             'domains': list([
               'hue',
             ]),
+            'id': 'quality-scale-hue-gold',
+            'scope': 'integration',
+            'since': '2026.11.0',
             'tier': 'gold',
             'title': 'Philips Hue',
           }),
           dict({
-            'credits': list([
+            'authors': list([
               'carol',
             ]),
+            'category': 'quality_scale',
             'domains': list([
               'shelly',
             ]),
+            'id': 'quality-scale-shelly-gold',
+            'scope': 'integration',
+            'since': '2026.11.0',
             'tier': 'gold',
             'title': 'Shelly',
           }),
         ]),
-        'removed': list([
-        ]),
+        'released': '2026-11-04',
         'url': 'https://www.home-assistant.io/blog/2026/11/04/release-202611/',
         'version': '2026.11',
       }),
     ]),
-    'key': '2026.7.0..2026.11.0@7',
   })
 # ---

@@ -213,16 +213,23 @@ async def test_digest_from_cache(
         "key": DOMAIN,
         "data": {
             "key": f"{RUNNING}..{TARGET}@{INDEX_FORMAT}",
-            "indexes": [
+            "releases": [
                 {
+                    "format": 1,
                     "version": "2026.9",
+                    "released": "2026-09-02",
                     "url": "https://www.home-assistant.io/blog/2026/09/02/release-20269/",
-                    "breaking": [],
-                    "noteworthy": [
-                        {"title": "MQTT", "domains": ["mqtt"], "text": "Cached."}
+                    "items": [
+                        {
+                            "id": "noteworthy-mqtt",
+                            "category": "noteworthy",
+                            "since": "2026.9.0",
+                            "title": "MQTT",
+                            "domains": ["mqtt"],
+                            "scope": "integration",
+                            "text": "Cached.",
+                        }
                     ],
-                    "quality_scale": [],
-                    "removed": [],
                 }
             ],
         },
@@ -248,7 +255,7 @@ async def test_digest_rebuilds_outdated_cache(
         "key": DOMAIN,
         "data": {
             "key": f"{RUNNING}..{TARGET}@{INDEX_FORMAT - 1}",
-            "indexes": [{"version": "2026.9"}],
+            "releases": [{"version": "2026.9"}],
         },
     }
     client = await hass_ws_client(hass)

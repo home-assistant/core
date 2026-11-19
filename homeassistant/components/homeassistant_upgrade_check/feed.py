@@ -12,12 +12,17 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .release_notes import INDEX_FORMAT, index_post, parse_version, release_posts
+from .release_notes import (
+    INDEX_FORMAT,
+    parse_release,
+    parse_version,
+    post_index,
+    releases_between,
+)
 
 # The markdown source of the live site: the "current" branch of home-assistant.io.
-# Both should become static release metadata published on home-assistant.io, like
-# the alerts feed, so core neither lists the repository nor parses html posts.
-# Path of least current resistance choosing blog posts as best source.
+# Until home-assistant.io publishes releases/index.json and releases/<version>.json,
+# the index is built from this listing and each release parsed from its post.
 POSTS_URL = (
     "https://api.github.com/repos/home-assistant/home-assistant.io"
     "/git/trees/current:source/_posts"
@@ -35,7 +40,7 @@ class ReleaseNotesUnavailable(HomeAssistantError):
 
 
 class ReleaseFeed:
-    """Release indexes for one running/target pair, fetched once and cached."""
+    """Release notes for one running/target pair, fetched once and cached."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the feed."""
@@ -45,24 +50,23 @@ class ReleaseFeed:
         self._data: dict[str, Any] | None = None
 
     async def async_get(self, running: str, target: str) -> list[dict[str, Any]]:
-        """Return the indexes of the releases after running up to target."""
+        """Return the release notes of the releases after running up to target."""
         key = f"{running}..{target}@{INDEX_FORMAT}"
         async with self._lock:
             if self._data is None:
                 self._data = await self._store.async_load() or {}
             if self._data.get("key") != key:
-                posts = await self._async_fetch_posts(
+                releases = await self._async_fetch(
                     parse_version(running), parse_version(target)
                 )
-                indexes = await self._hass.async_add_executor_job(_index_posts, posts)
-                self._data = {"key": key, "indexes": indexes}
+                self._data = {"key": key, "releases": releases}
                 await self._store.async_save(self._data)
-            return self._data["indexes"]
+            return self._data["releases"]
 
-    async def _async_fetch_posts(
+    async def _async_fetch(
         self, after: tuple[int, int], upto: tuple[int, int]
-    ) -> list[tuple[str, str, str]]:
-        """Download the release posts after one release up to another."""
+    ) -> list[dict[str, Any]]:
+        """Download the release notes after one release up to another."""
         session = async_get_clientsession(self._hass)
 
         async def fetch(url: str) -> aiohttp.ClientResponse:
@@ -70,26 +74,20 @@ class ReleaseFeed:
             response.raise_for_status()
             return response
 
-        async def fetch_post(name: str) -> str:
-            return await (await fetch(POST_URL.format(name=name))).text()
+        async def fetch_release(release: dict[str, Any]) -> dict[str, Any]:
+            post = await (await fetch(release["notes"])).text()
+            return await self._hass.async_add_executor_job(parse_release, post, release)
 
         try:
             listing = await (await fetch(POSTS_URL)).json()
-            wanted = release_posts(
-                (entry["path"] for entry in listing["tree"]), after, upto
+            index = post_index((entry["path"] for entry in listing["tree"]), POST_URL)
+            return list(
+                await asyncio.gather(
+                    *map(fetch_release, releases_between(index, after, upto))
+                )
             )
-            texts = await asyncio.gather(*(fetch_post(name) for _, name, _ in wanted))
         except (aiohttp.ClientError, TimeoutError, KeyError) as err:
             raise ReleaseNotesUnavailable from err
-        return [
-            (version, url, text)
-            for (version, _, url), text in zip(wanted, texts, strict=True)
-        ]
-
-
-def _index_posts(posts: list[tuple[str, str, str]]) -> list[dict[str, Any]]:
-    """Parse downloaded posts, given as (version, url, markdown)."""
-    return [index_post(text, version, url) for version, url, text in posts]
 
 
 DATA_FEED: HassKey[ReleaseFeed] = HassKey(DOMAIN)
