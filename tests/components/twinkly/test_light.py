@@ -98,23 +98,34 @@ async def test_turn_on_with_brightness(
     mock_twinkly_client.turn_on.assert_called_once_with()
 
 
-async def test_brightness_to_zero(
+@pytest.mark.parametrize(
+    ("brightness", "percentage"),
+    [
+        pytest.param(1, 1, id="lowest"),
+        pytest.param(2, 1, id="rounds_to_one_percent"),
+        pytest.param(128, 50, id="half"),
+        pytest.param(255, 100, id="full"),
+    ],
+)
+async def test_turn_on_with_low_brightness(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
+    brightness: int,
+    percentage: int,
 ) -> None:
-    """Test support of the light.turn_on service with a brightness parameter."""
+    """Test that every brightness above zero sets a percentage instead of turning off."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 1},
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: brightness},
         blocking=True,
     )
 
-    mock_twinkly_client.set_brightness.assert_not_called()
-    mock_twinkly_client.turn_off.assert_called_once_with()
+    mock_twinkly_client.set_brightness.assert_called_once_with(percentage)
+    mock_twinkly_client.turn_off.assert_not_called()
 
 
 async def test_turn_on_with_color_rgbw(
