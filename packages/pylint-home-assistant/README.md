@@ -125,6 +125,7 @@ Every check has a code following the
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
 | `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `R7405` | [`home-assistant-tests-user-flow-no-data`](#r7405-home-assistant-tests-user-flow-no-data) | User config flow init in tests must not pass `data` |
+| `R7406` | [`home-assistant-tests-snapshot-enable-entities`](#r7406-home-assistant-tests-snapshot-enable-entities) | Use the `entity_registry_enabled_by_default` fixture instead of enabling entities before `snapshot_platform` |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -1298,6 +1299,60 @@ dynamic source values (a variable rather than a known user source), and user
 flows without
 `data` are not flagged. The checker is scoped to test modules.
 
+
+## `home_assistant_tests_snapshot_enable_entities` checker
+
+Detects snapshot tests that enable entities by hand. A test that calls
+`snapshot_platform` should snapshot every entity, including the ones that
+are disabled by default. The `entity_registry_enabled_by_default` fixture
+enables them before the integration is set up, so there is no need to
+update the registry and reload the config entry in the test.
+
+### `R7406`: `home-assistant-tests-snapshot-enable-entities`
+
+A `test_*` function calls `snapshot_platform` and also calls
+`<registry>.async_update_entity(..., disabled_by=None)`:
+
+```python
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        entity_registry.async_update_entity(  # <-- flagged
+            entry.entity_id, disabled_by=None
+        )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry.entry_id
+    )
+```
+
+Use the fixture instead:
+
+```python
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry.entry_id
+    )
+```
+
+Calls in nested helpers defined inside the test are checked too. Tests
+that enable an entity without calling `snapshot_platform` (for example,
+to test what happens when a user enables it) are not flagged. The checker
+is scoped to test modules.
 
 ## `home_assistant_test_determinism` checker
 
