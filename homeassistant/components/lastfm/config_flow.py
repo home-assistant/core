@@ -114,18 +114,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     _username: str
     _auth_url: str
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self._authorized_in_flow: set[str] = set()
-
-    def _pending_users(self) -> list[str]:
-        """Return users that have not been authorized in this flow."""
-        return [
-            user
-            for user in self.data[CONF_USERS]
-            if user not in self._authorized_in_flow
-        ]
-
     @staticmethod
     @callback
     @override
@@ -209,12 +197,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let the user authorize users for scrobbling, or finish."""
-        menu_options = ["finish"]
-        if self._pending_users():
-            menu_options.insert(0, "scrobble_user")
         return self.async_show_menu(
             step_id="scrobble_menu",
-            menu_options=menu_options,
+            menu_options=["scrobble_user", "finish"],
             description_placeholders={
                 "authorized_users": ", ".join(
                     f"**{user}**" for user in self.data[CONF_SESSION_KEYS]
@@ -290,7 +275,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 **self.data[CONF_SESSION_KEYS],
                 self._username: session_key,
             }
-            self._authorized_in_flow.add(self._username)
             return await self.async_step_scrobble_menu()
         return self.async_show_form(
             step_id="authorize",
