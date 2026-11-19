@@ -33,10 +33,10 @@ class ConversationAudioInput:
     """Format of the raw PCM audio."""
 
     stream: AsyncIterable[bytes]
-    """Audio chunks until the end of the voice command.
+    """Audio chunks of the voice command, until the agent adds the transcript.
 
-    The command also ends when the agent adds the transcript or starts to
-    answer. Read the stream to its end: satellites stop listening when it ends.
+    The agent finds the end of the command itself: the pipeline doesn't end the
+    audio before.
     """
 
 
@@ -49,7 +49,7 @@ class ConversationAudioOutput(Protocol):
         """Set the raw PCM audio of the spoken response.
 
         Set it once per turn, with all speech of the response, also after
-        tool calls.
+        tool calls. With audio input, it plays once the transcript is added.
         """
 
 
@@ -84,8 +84,9 @@ class ConversationInput:
     audio: ConversationAudioInput | None = None
     """Spoken audio of the user, only for agents that support audio input.
 
-    The agent adds the transcript of the audio to the chat log as user content,
-    if it has one, once it has heard the voice command. Satellites show it.
+    When the voice command is over, the agent adds its transcript to the chat
+    log as user content, before any other content of the response. That ends
+    listening, and satellites show the transcript.
     """
 
     audio_output: ConversationAudioOutput | None = None

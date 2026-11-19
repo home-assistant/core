@@ -114,8 +114,8 @@ async def test_entity_state(
         (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.IDLE),
         (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING),
         (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING),
-        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.PROCESSING),
-        (PipelineEventType.STT_END, {}, AssistSatelliteState.PROCESSING),
+        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING),
+        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING),
         (PipelineEventType.INTENT_START, {}, AssistSatelliteState.PROCESSING),
         (
             PipelineEventType.INTENT_END,

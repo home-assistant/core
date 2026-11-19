@@ -529,41 +529,29 @@ async def test_delayed_boundary_after_audio_end(
     ] == [{"timestamp": 40}]
 
 
-@pytest.mark.parametrize(
-    "commands",
-    [pytest.param(5, id="more_audio"), pytest.param(3, id="boundary_at_end")],
-)
 @pytest.mark.usefixtures("init_audio_agent")
-async def test_an_agent_that_hears_the_command(
-    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity, commands: int
+async def test_an_agent_that_hears_the_user_ends_the_command(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
-    """Test an agent that hears the user gets the command the provider marks."""
-    client = MockClient(
-        [
-            (0, accepted(MS_PER_CHUNK)),
-            (2, speech_started(20)),
-            (4, speech_ended(40)),
-        ]
-    )
+    """Test the app only verifies the wake word for an agent that hears the user."""
+    client = MockClient([(0, accepted(MS_PER_CHUNK))])
     events = await _async_run_pipeline(
         hass,
-        _audio_stream(WAKE, *[COMMAND] * commands),
+        _audio_stream(WAKE, *[COMMAND] * 5),
         is_vad_enabled=True,
         client=client,
         pipeline_id=AUDIO_AGENT_ID,
         end_stage=assist_pipeline.PipelineStage.TTS,
     )
 
+    assert client.requests[0].silence_seconds is None
     assert [
-        (event.type, event.data)
+        event.type
         for event in events
         if event.type
         in (PipelineEventType.STT_VAD_START, PipelineEventType.STT_VAD_END)
-    ] == [
-        (PipelineEventType.STT_VAD_START, {"timestamp": 20}),
-        (PipelineEventType.STT_VAD_END, {"timestamp": 40}),
-    ]
-    # The agent hears up to where the command ended, nothing after
-    assert b"".join(mock_audio_agent.received_audio) == COMMAND * 3
+    ] == [PipelineEventType.STT_VAD_END]
+    # The agent hears all of the command, without the wake word
+    assert b"".join(mock_audio_agent.received_audio) == COMMAND * 5
     assert client.websocket is not None
     assert client.websocket.closed

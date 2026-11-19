@@ -119,10 +119,8 @@ def async_get_chat_log(
         all_chat_logs[session.conversation_id] = chat_log
 
     chat_log.turn_start = len(chat_log.content)
-    if user_input is not None and user_input.audio is not None:
-        # The agent adds the transcript when it has one
-        chat_log.transcript_index = chat_log.turn_start
-    elif user_input is not None:
+    # With audio input, the agent adds the transcript
+    if user_input is not None and user_input.audio is None:
         user_content = UserContent(content=user_input.text)
         if is_new_log:
             chat_log.content.append(user_content)
@@ -153,7 +151,6 @@ def async_get_chat_log(
         chat_log.turn_active = False
         current_chat_log.reset(token)
         chat_log.delta_listener = None
-        chat_log.transcript_index = None
 
         if chat_log.content[-1] is last_message and user_input is not None:
             chat_log.async_add_assistant_content_without_tools(
@@ -394,8 +391,6 @@ class ChatLog:
     created: datetime = field(init=False, default_factory=utcnow)
     turn_active: bool = field(default=False, init=False, repr=False)
     turn_start: int = field(default=0, init=False, repr=False)
-    transcript_index: int | None = field(default=None, init=False, repr=False)
-    """Where the transcript of the spoken audio of this turn goes."""
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -433,27 +428,16 @@ class ChatLog:
 
     @callback
     def async_add_user_content(self, content: UserContent) -> None:
-        """Add user content to the log.
-
-        The transcript of spoken audio goes to the start of its turn, also when
-        the agent only has it after it started to answer.
-        """
+        """Add user content to the log."""
         LOGGER.debug("Adding user content: %s", content)
-        index = self.transcript_index
-        self.transcript_index = None
-        if (index is None) or (index == len(self.content)):
-            self.content.append(content)
-            event_type = ChatLogEventType.CONTENT_ADDED
-            event_data: dict[str, Any] = {"content": content.as_dict()}
-        else:
-            self.content.insert(index, content)
-            # Subscribers only append added content
-            event_type = ChatLogEventType.UPDATED
-            event_data = {"chat_log": self.as_dict()}
+        self.content.append(content)
         if self.delta_listener:
             self.delta_listener(self, content.as_dict())
         _async_notify_subscribers(
-            self.hass, self.conversation_id, event_type, event_data
+            self.hass,
+            self.conversation_id,
+            ChatLogEventType.CONTENT_ADDED,
+            {"content": content.as_dict()},
         )
 
     @callback

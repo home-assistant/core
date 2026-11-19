@@ -577,9 +577,6 @@ class AssistSatelliteEntity(entity.Entity):
                 self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING)
-        elif event.type is PipelineEventType.STT_VAD_END:
-            # The voice command is over, even if its transcript comes later
-            self._set_state(AssistSatelliteState.PROCESSING)
         elif event.type is PipelineEventType.STT_END:
             # Intercepting text for ask question
             if (

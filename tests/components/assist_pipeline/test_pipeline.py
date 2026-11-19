@@ -3347,140 +3347,6 @@ async def test_pipeline_audio_agent_reply_without_tts_engine(
 
 
 @pytest.mark.usefixtures("init_audio_agent")
-async def test_pipeline_audio_agent_vad_ends_audio(
-    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
-) -> None:
-    """Test voice activity detection ends the audio for the agent like for STT."""
-    chunks_read = 0
-
-    async def satellite_audio() -> AsyncGenerator[bytes]:
-        nonlocal chunks_read
-        # More audio than the voice command, like a satellite that keeps streaming
-        for _ in range(20):
-            chunks_read += 1
-            yield make_10ms_chunk(b"audio")
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    with patch(
-        "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
-    ) as mock_vad:
-        # Speech in the first 3 chunks, then the end of the voice command
-        mock_vad.return_value.process.side_effect = [True, True, True, False]
-        mock_vad.return_value.in_command = True
-
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=_stt_metadata(),
-            stt_stream=satellite_audio(),
-            pipeline_id=AUDIO_AGENT_ID,
-            tts_audio_output="wav",
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
-        )
-
-    assert len(mock_audio_agent.received_audio) == 3
-    assert chunks_read < 20
-    event_types = [event.type for event in events]
-    assert event_types.count(PipelineEventType.STT_VAD_END) == 1
-    assert event_types.index(PipelineEventType.STT_VAD_START) < event_types.index(
-        PipelineEventType.STT_VAD_END
-    )
-    # Satellites keep listening until the end of the voice command
-    assert event_types.index(PipelineEventType.STT_VAD_END) < event_types.index(
-        PipelineEventType.INTENT_START
-    )
-    # The transcript of the agent comes after the end of the voice command
-    assert event_types.index(PipelineEventType.STT_VAD_END) < event_types.index(
-        PipelineEventType.STT_END
-    )
-
-
-@pytest.mark.usefixtures("init_audio_agent")
-async def test_pipeline_audio_agent_answer_ends_audio(
-    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
-) -> None:
-    """Test the voice command ends when the agent answers while it listens."""
-    chunks_read = 0
-
-    async def satellite_audio() -> AsyncGenerator[bytes]:
-        nonlocal chunks_read
-        for _ in range(20):
-            chunks_read += 1
-            yield make_10ms_chunk(b"audio")
-
-    received_audio: list[bytes] = []
-
-    async def answer_while_listening(
-        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
-    ) -> conversation.ConversationResult:
-        assert user_input.audio is not None
-        assert user_input.audio_output is not None
-        audio = aiter(user_input.audio.stream)
-        received_audio.append(await anext(audio))
-
-        async def response_audio() -> AsyncGenerator[bytes]:
-            yield b"\x01\x02"
-
-        user_input.audio_output.async_set_audio_stream(
-            tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
-            response_audio(),
-        )
-        # Like an agent that keeps reading while it speaks
-        received_audio.extend([chunk async for chunk in audio])
-
-        return conversation.ConversationResult(
-            response=intent.IntentResponse(language=user_input.language),
-            conversation_id=chat_log.conversation_id,
-        )
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    with (
-        patch.object(
-            mock_audio_agent,
-            "_async_handle_message",
-            side_effect=answer_while_listening,
-        ),
-        patch(
-            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
-        ) as mock_vad,
-    ):
-        # The end of the voice command comes after the agent answered
-        mock_vad.return_value.process.side_effect = [True, True, True, False]
-        mock_vad.return_value.in_command = True
-
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=_stt_metadata(),
-            stt_stream=satellite_audio(),
-            pipeline_id=AUDIO_AGENT_ID,
-            tts_audio_output="wav",
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
-        )
-
-    assert len(received_audio) == 1
-    assert chunks_read < 20
-    # A late end of speech would put satellites back to waiting for the response
-    assert [event.type for event in events] == [
-        PipelineEventType.RUN_START,
-        PipelineEventType.STT_START,
-        PipelineEventType.STT_VAD_START,
-        PipelineEventType.STT_VAD_END,
-        PipelineEventType.STT_END,
-        PipelineEventType.INTENT_START,
-        PipelineEventType.INTENT_PROGRESS,
-        PipelineEventType.INTENT_END,
-        PipelineEventType.TTS_START,
-        PipelineEventType.TTS_END,
-        PipelineEventType.RUN_END,
-    ]
-
-
-@pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_listening_end_stops_audio(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
@@ -3562,147 +3428,6 @@ async def test_pipeline_audio_agent_listening_end_stops_audio(
 
 
 @pytest.mark.usefixtures("init_audio_agent")
-async def test_pipeline_audio_agent_transcript_after_answer(
-    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
-) -> None:
-    """Test a transcript that comes after the answer started is no delta."""
-
-    async def transcript_after_answer(
-        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
-    ) -> conversation.ConversationResult:
-        assert user_input.audio is not None
-        assert user_input.audio_output is not None
-        async for _chunk in user_input.audio.stream:
-            pass
-
-        async def response_audio() -> AsyncGenerator[bytes]:
-            yield b"\x01\x02"
-
-        user_input.audio_output.async_set_audio_stream(
-            tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
-            response_audio(),
-        )
-        chat_log.async_add_user_content(
-            conversation.UserContent(content="late transcript")
-        )
-
-        return conversation.ConversationResult(
-            response=intent.IntentResponse(language=user_input.language),
-            conversation_id=chat_log.conversation_id,
-        )
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    with patch.object(
-        mock_audio_agent, "_async_handle_message", side_effect=transcript_after_answer
-    ):
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=_stt_metadata(),
-            stt_stream=_audio_agent_input(),
-            pipeline_id=AUDIO_AGENT_ID,
-            tts_audio_output="wav",
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        )
-
-    stt_end = next(event for event in events if event.type is PipelineEventType.STT_END)
-    assert stt_end.data == {"stt_output": {"text": ""}}
-    # Listeners that follow the role of deltas would lose the rest of the answer
-    assert not [
-        event
-        for event in events
-        if event.data and event.data.get("chat_log_delta", {}).get("role") == "user"
-    ]
-
-
-@pytest.mark.usefixtures("init_audio_agent")
-async def test_pipeline_audio_agent_transcript_during_streamed_tts(
-    hass: HomeAssistant,
-    mock_audio_agent: MockAudioConversationEntity,
-    mock_tts_entity: MockTTSEntity,
-) -> None:
-    """Test a transcript in the middle of the answer does not cut its speech."""
-    mock_audio_agent._attr_supported_features = (
-        conversation.ConversationEntityFeature.AUDIO_INPUT
-    )
-    # Long enough to stream the text into TTS
-    first_part = (
-        "The kitchen light is on, the living room light is off, "
-        "and the bedroom light is dimmed to half. "
-    )
-    second_part = "Anything else?"
-
-    received_tts: list[str] = []
-
-    async def async_stream_tts_audio(
-        request: tts.TTSAudioRequest,
-    ) -> tts.TTSAudioResponse:
-        async def data_gen() -> AsyncGenerator[bytes]:
-            async for message in request.message_gen:
-                received_tts.append(message)
-                yield message.encode()
-
-        return tts.TTSAudioResponse(extension="mp3", data_gen=data_gen())
-
-    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
-    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
-
-    async def transcript_during_answer(
-        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
-    ) -> conversation.ConversationResult:
-        assert user_input.audio is not None
-        async for _chunk in user_input.audio.stream:
-            pass
-
-        async def answer() -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
-            yield {"role": "assistant"}
-            yield {"content": first_part}
-            chat_log.async_add_user_content(
-                conversation.UserContent(content="late transcript")
-            )
-            yield {"content": second_part}
-
-        async for _content in chat_log.async_add_delta_content_stream(
-            user_input.agent_id, answer()
-        ):
-            pass
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(first_part + second_part)
-        return conversation.ConversationResult(
-            response=intent_response, conversation_id=chat_log.conversation_id
-        )
-
-    events: list[assist_pipeline.PipelineEvent] = []
-
-    with patch.object(
-        mock_audio_agent, "_async_handle_message", side_effect=transcript_during_answer
-    ):
-        await assist_pipeline.async_pipeline_from_audio_stream(
-            hass,
-            context=Context(),
-            event_callback=events.append,
-            stt_metadata=_stt_metadata(),
-            stt_stream=_audio_agent_input(),
-            pipeline_id=AUDIO_AGENT_ID,
-            tts_audio_output="mp3",
-            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
-        )
-
-    assert any(event.data and event.data.get("tts_start_streaming") for event in events)
-    tts_end = next(event for event in events if event.type is PipelineEventType.TTS_END)
-    assert tts_end.data is not None
-    stream = tts.async_get_stream(hass, tts_end.data["tts_output"]["token"])
-    assert stream is not None
-    async for _chunk in stream.async_stream_result():
-        pass
-
-    assert "".join(received_tts) == first_part + second_part
-
-
-@pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_cancelled_run_ends_response_audio(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
@@ -3722,6 +3447,9 @@ async def test_pipeline_audio_agent_cancelled_run_ends_response_audio(
         user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
     ) -> conversation.ConversationResult:
         assert user_input.audio_output is not None
+        chat_log.async_add_user_content(
+            conversation.UserContent(content="tell me a story")
+        )
         user_input.audio_output.async_set_audio_stream(
             tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
             response_audio(),
@@ -3871,6 +3599,189 @@ async def test_pipeline_audio_agent_response_audio_set_twice(
         )
         == 1
     )
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_ends_the_command(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test the agent, not voice activity detection, ends the voice command."""
+    chunks_read = 0
+
+    async def satellite_audio() -> AsyncGenerator[bytes]:
+        nonlocal chunks_read
+        for _ in range(20):
+            chunks_read += 1
+            yield make_10ms_chunk(b"audio")
+
+    received_audio: list[bytes] = []
+
+    async def transcript_after_five_chunks(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        audio = aiter(user_input.audio.stream)
+        received_audio.extend([await anext(audio) for _ in range(5)])
+        chat_log.async_add_user_content(
+            conversation.UserContent(content="turn on the light")
+        )
+        # The audio ends with listening
+        received_audio.extend([chunk async for chunk in audio])
+        return conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=chat_log.conversation_id,
+        )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with (
+        patch.object(
+            mock_audio_agent,
+            "_async_handle_message",
+            side_effect=transcript_after_five_chunks,
+        ),
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=satellite_audio(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=True),
+        )
+
+    mock_vad.assert_not_called()
+    assert len(received_audio) == 5
+    assert chunks_read < 20
+    # Satellites stop listening when the agent has the transcript
+    assert [
+        (event.type, event.data)
+        for event in events
+        if event.type
+        in (
+            PipelineEventType.STT_VAD_START,
+            PipelineEventType.STT_VAD_END,
+            PipelineEventType.STT_END,
+        )
+    ] == [
+        (PipelineEventType.STT_VAD_END, {"timestamp": 40}),
+        (
+            PipelineEventType.STT_END,
+            {"stt_output": {"text": "turn on the light"}},
+        ),
+    ]
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_holds_early_audio(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test response audio set before the transcript plays after it."""
+
+    async def audio_before_transcript(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        assert user_input.audio_output is not None
+        async for _chunk in user_input.audio.stream:
+            pass
+
+        async def response_audio() -> AsyncGenerator[bytes]:
+            yield b"\x01\x02"
+
+        user_input.audio_output.async_set_audio_stream(
+            tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            response_audio(),
+        )
+        chat_log.async_add_user_content(conversation.UserContent(content="hello"))
+        return conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=chat_log.conversation_id,
+        )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch.object(
+        mock_audio_agent,
+        "_async_handle_message",
+        side_effect=audio_before_transcript,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert [event.type for event in events] == [
+        PipelineEventType.RUN_START,
+        PipelineEventType.STT_START,
+        PipelineEventType.STT_VAD_END,
+        PipelineEventType.STT_END,
+        PipelineEventType.INTENT_START,
+        PipelineEventType.INTENT_PROGRESS,
+        PipelineEventType.INTENT_END,
+        PipelineEventType.TTS_START,
+        PipelineEventType.TTS_END,
+        PipelineEventType.RUN_END,
+    ]
+    assert events[5].data == {"tts_start_streaming": True}
+
+
+@pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_answer_before_transcript(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test an agent that answers before it adds the transcript fails the turn."""
+
+    async def answer_first(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        async for _chunk in user_input.audio.stream:
+            pass
+
+        async def answer() -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+            yield {"role": "assistant"}
+            yield {"content": "Hello"}
+
+        async for _content in chat_log.async_add_delta_content_stream(
+            user_input.agent_id, answer()
+        ):
+            pass
+        raise AssertionError("The answer was accepted")
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch.object(
+        mock_audio_agent, "_async_handle_message", side_effect=answer_first
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert not [
+        event for event in events if event.data and "chat_log_delta" in event.data
+    ]
+    assert events[-2].type == PipelineEventType.ERROR
+    assert events[-2].data is not None
+    assert events[-2].data["code"] == "intent-failed"
 
 
 @pytest.mark.usefixtures("init_audio_agent")

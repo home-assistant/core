@@ -264,6 +264,10 @@ class _DefaultPipelineProcessor:
     """True if the conversation agent provides the response audio instead of TTS."""
     _pending_intent_start: dict[str, Any] | None = field(init=False, default=None)
     """Data of the start of intent recognition, held back while the agent listens."""
+    _held_response_audio: tuple[tts.PcmFormat, AsyncGenerator[bytes]] | None = field(
+        init=False, default=None
+    )
+    """Response audio the agent set while it was still listening."""
     _agent_listening_ended: asyncio.Event = field(
         init=False, default_factory=asyncio.Event
     )
@@ -551,9 +555,28 @@ class _DefaultPipelineProcessor:
 
         self.host.start_debug_recording(f"01_stt-{engine}")
 
-        run, stt_vad, command_timeout_ms = self._command_end_detection(
-            audio_processing.requires_external_vad
-        )
+        # While the run listens, it alone says where the command ends,
+        # and what it said stands once it is done
+        run: voice_support.AudioRun | None = None
+        if (
+            is_vad_enabled
+            and (self._audio_run is not None)
+            and (
+                self._audio_run.listening
+                or (self._audio_run.speech_ended_ms is not None)
+            )
+        ):
+            run = self._audio_run
+
+        stt_vad: VoiceCommandSegmenter | None = None
+        command_timeout_ms: int | None = None
+        if is_vad_enabled and audio_processing.requires_external_vad:
+            if run is None:
+                stt_vad = VoiceCommandSegmenter(
+                    silence_seconds=self.host.audio_settings.silence_seconds
+                )
+            else:
+                command_timeout_ms = RUN_COMMAND_TIMEOUT_MS
 
         try:
             # Transcribe audio stream
@@ -619,34 +642,6 @@ class _DefaultPipelineProcessor:
         )
 
         return result.text
-
-    @callback
-    def _command_end_detection(
-        self, requires_external_vad: bool
-    ) -> tuple[voice_support.AudioRun | None, VoiceCommandSegmenter | None, int | None]:
-        """Return the run, voice activity detector and timeout that end the command."""
-        if not self.host.audio_settings.is_vad_enabled:
-            return (None, None, None)
-
-        # While the run listens, it alone says where the command ends,
-        # and what it said stands once it is done
-        run = self._audio_run
-        if (run is not None) and not (
-            run.listening or (run.speech_ended_ms is not None)
-        ):
-            run = None
-
-        if not requires_external_vad:
-            return (run, None, None)
-        if run is None:
-            return (
-                None,
-                VoiceCommandSegmenter(
-                    silence_seconds=self.host.audio_settings.silence_seconds
-                ),
-                None,
-            )
-        return (run, None, RUN_COMMAND_TIMEOUT_MS)
 
     async def _speech_to_text_stream(
         self,
@@ -722,7 +717,11 @@ class _DefaultPipelineProcessor:
         metadata: stt.SpeechMetadata,
         stream: AsyncIterable[EnhancedAudioChunk],
     ) -> conversation.ConversationAudioInput:
-        """Start sending the spoken audio to the conversation agent."""
+        """Start sending the spoken audio to the conversation agent.
+
+        The agent finds the end of the voice command itself, so the audio goes
+        on until it adds the transcript.
+        """
         assert self.intent_agent is not None
 
         self.host.process_event(
@@ -733,24 +732,14 @@ class _DefaultPipelineProcessor:
         )
         self.host.start_debug_recording(f"01_stt-{self.intent_agent.id}")
 
-        # The agent hears everything it gets, so the pipeline ends the command
-        run, stt_vad, command_timeout_ms = self._command_end_detection(
-            requires_external_vad=True
-        )
-
         async def agent_audio_stream() -> AsyncGenerator[bytes]:
             async for chunk in self._speech_to_text_stream(
                 # Satellites stop sending audio when listening ends, so a read
                 # that waits for more must end with it
                 audio_stream=_async_until(stream, self._agent_listening_ended),
-                stt_vad=stt_vad,
-                run=run,
-                command_timeout_ms=command_timeout_ms,
+                stt_vad=None,
             ):
                 yield chunk
-            self._async_end_agent_speech()
-            # The run ends with the command
-            await self._async_close_audio_run()
 
         return conversation.ConversationAudioInput(
             pcm_format=tts.PcmFormat(
@@ -765,19 +754,19 @@ class _DefaultPipelineProcessor:
     def _async_end_agent_listening(self, transcript: str = "") -> None:
         """End speech-to-text of the agent and start intent recognition, once.
 
-        Listening ends when the agent adds the transcript, starts to answer
-        or returns.
+        Listening ends when the agent adds the transcript, or returns without one.
         """
         if (intent_start := self._pending_intent_start) is None:
             return
 
         self._pending_intent_start = None
-        self._async_end_agent_speech()
         self._agent_listening_ended.set()
         # Even if the agent never reads its audio again
         self.host.hass.async_create_task(
             self._async_close_audio_run(), "close the audio run of the agent"
         )
+        # The agent found the end of speech; satellites stop listening there
+        self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": transcript}}
@@ -786,41 +775,45 @@ class _DefaultPipelineProcessor:
         self.host.process_event(
             PipelineEvent(PipelineEventType.INTENT_START, intent_start)
         )
+        if (held_audio := self._held_response_audio) is not None:
+            self._held_response_audio = None
+            self._async_play_response_audio(*held_audio)
 
-    @callback
-    def _async_end_agent_speech(self) -> None:
-        """Send the end of speech once, also when nothing detected it.
-
-        Satellites stop listening at the end of speech. It comes before the
-        response, since ESPHome satellites wait for the response again after it.
-        """
-        if self._sent_stt_vad_end:
-            return
-        if (self._audio_run is not None) and (
-            self._audio_run.speech_ended_ms is not None
-        ):
-            # The run's audio stops at the end of the command, before a chunk
-            # could reach it
-            self._async_stt_vad_end(self._audio_run.speech_ended_ms)
-        else:
-            self._async_stt_vad_end(self._stt_last_timestamp_ms or 0)
+    def _check_agent_heard_user(self) -> None:
+        """Raise if the agent answers before it added the transcript."""
+        if self._pending_intent_start is not None:
+            raise RuntimeError(
+                "Add the transcript of the spoken audio before the response"
+            )
 
     @callback
     def async_set_audio_stream(
         self, pcm_format: tts.PcmFormat, audio_stream: AsyncGenerator[bytes]
     ) -> None:
-        """Play the spoken response of the conversation agent."""
-        assert self.tts_stream is not None
-        if self._streamed_response:
+        """Play the spoken response of the conversation agent.
+
+        With audio input, it plays once the agent has added the transcript.
+        """
+        if self._streamed_response or (self._held_response_audio is not None):
             raise RuntimeError("The response audio of this turn is already set")
 
+        if self._pending_intent_start is not None:
+            self._held_response_audio = (pcm_format, audio_stream)
+            return
+
+        self._async_play_response_audio(pcm_format, audio_stream)
+
+    @callback
+    def _async_play_response_audio(
+        self, pcm_format: tts.PcmFormat, audio_stream: AsyncGenerator[bytes]
+    ) -> None:
+        """Start playing the spoken response of the conversation agent."""
+        assert self.tts_stream is not None
         self._streamed_response = True
         # Its audio would otherwise outlive a cancelled run
         self.tts_stream.async_set_audio_stream(
             pcm_format, _async_until(audio_stream, self._stopped_early)
         )
-
-        self._async_end_agent_listening()
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_PROGRESS,
@@ -1002,16 +995,12 @@ class _DefaultPipelineProcessor:
             ) -> None:
                 """Handle chat log delta."""
                 if delta.get("role") == "user":
-                    # Only the transcript of spoken audio is news to listeners
-                    if audio is None:
-                        return
+                    # Listeners get the transcript of spoken audio in stt-end
                     if self._pending_intent_start is not None:
                         self._async_end_agent_listening(delta["content"])
-                    # A late transcript would split the streamed response for
-                    # listeners that follow the role of the deltas
                     return
 
-                self._async_end_agent_listening()
+                self._check_agent_heard_user()
                 self.host.process_event(
                     PipelineEvent(
                         PipelineEventType.INTENT_PROGRESS,
@@ -1261,7 +1250,7 @@ class _DefaultPipelineProcessor:
                 message="Unexpected error during intent recognition",
             ) from src_error
         finally:
-            # The agent may not read the spoken audio to its end
+            # For an agent that returns without a transcript
             self._async_end_agent_listening()
 
         _LOGGER.debug("conversation result %s", conversation_result)
@@ -1523,9 +1512,10 @@ class _DefaultPipelineProcessor:
                 satellite_id=self.host.satellite_id,
                 wake_word_phrase=request.wake_word_phrase,
                 wake_word_audio_ms=request.wake_word_audio_ms,
+                # An agent that hears the user finds the end of the command
                 silence_seconds=(
                     audio_settings.silence_seconds
-                    if audio_settings.is_vad_enabled
+                    if audio_settings.is_vad_enabled and not self._agent_audio_input
                     else None
                 ),
             ),
