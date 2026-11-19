@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -25,7 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import RADAR_ENTITY_ID
+from .const import ANIMATION, RADAR_ENTITY_ID
 
 RADAR_SVG = load_fixture("radar.svg", "irm_kmi").encode()
 OTHER_RADAR_SVG = RADAR_SVG.replace(b"#385E95", b"#393C40")
@@ -55,7 +55,13 @@ def mock_rain_graph() -> Generator[MagicMock]:
         "homeassistant.components.irm_kmi.image.RainGraph", autospec=True
     ) as rain_graph:
         graph = rain_graph.return_value
-        graph.build.return_value = graph
+
+        async def build_graph() -> MagicMock:
+            for frame in rain_graph.call_args.kwargs["animation_data"]["sequence"]:
+                frame["image"] = b"frame"
+            return graph
+
+        graph.build.side_effect = build_graph
         graph.get_animated.return_value = RADAR_SVG
         yield rain_graph
 
@@ -83,6 +89,78 @@ async def test_radar_image(
     image = await async_get_image(hass, RADAR_ENTITY_ID)
     assert image.content_type == "image/svg+xml"
     assert image.content == RADAR_SVG
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_radar_refresh_with_changed_animation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    mock_rain_graph: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a changed radar loop is rendered again after a polling refresh."""
+    mock_rain_graph.return_value.get_animated.side_effect = [
+        RADAR_SVG,
+        OTHER_RADAR_SVG,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    image = await async_get_image(hass, RADAR_ENTITY_ID)
+    assert image.content == RADAR_SVG
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state is not None
+    initial_timestamp = datetime.fromisoformat(state.state)
+
+    mock_irm_kmi_api.get_animation_data.return_value = {
+        **ANIMATION,
+        "hint": "Updated radar hint",
+    }
+    await next_refresh(hass, freezer)
+
+    image = await async_get_image(hass, RADAR_ENTITY_ID)
+    assert image.content == OTHER_RADAR_SVG
+    assert mock_rain_graph.call_count == 2
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state is not None
+    assert datetime.fromisoformat(state.state) > initial_timestamp
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_radar_refresh_with_unchanged_animation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    mock_rain_graph: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unchanged radar loop keeps the rendered image and timestamp."""
+    mock_rain_graph.return_value.get_animated.side_effect = [
+        RADAR_SVG,
+        OTHER_RADAR_SVG,
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    image = await async_get_image(hass, RADAR_ENTITY_ID)
+    assert image.content == RADAR_SVG
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state is not None
+    initial_timestamp = datetime.fromisoformat(state.state)
+
+    await next_refresh(hass, freezer)
+
+    image = await async_get_image(hass, RADAR_ENTITY_ID)
+    assert image.content == RADAR_SVG
+    mock_rain_graph.assert_called_once()
+
+    state = hass.states.get(RADAR_ENTITY_ID)
+    assert state is not None
+    assert datetime.fromisoformat(state.state) == initial_timestamp
 
 
 @pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")

@@ -33,7 +33,7 @@ async def test_load_unload_config_entry(
         for entity in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-    } == {"sensor", "weather"}
+    } == {"image", "sensor", "weather"}
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
