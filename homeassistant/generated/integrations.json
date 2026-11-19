@@ -12850,6 +12850,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "royal1915": {
+      "name": "Royal 1915",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "rss_feed_template": {
       "name": "RSS feed template",
       "integration_type": "hub",
@@ -15761,6 +15772,17 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "turbofonte": {
+      "name": "TurboFonte",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
+    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -16961,6 +16983,17 @@
       ],
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "wpalacontrol": {
+      "name": "WPalaControl",
+      "integration_type": "virtual",
+      "categories": [
+        "climate.thermostats_heating"
+      ],
+      "connectivity": [
+        "network"
+      ],
+      "supported_by": "palazzetti"
     },
     "ws66i": {
       "name": "Soundavo WS66i 6-Zone Amplifier",
