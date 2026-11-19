@@ -13,6 +13,7 @@ from pytest_homeassistant.common import (
     assert_platform_setup_creates_issue,
     async_fire_time_changed,
 )
+from sqlalchemy import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
@@ -495,6 +496,31 @@ async def test_invalid_url_setup_from_yaml(
         assert pattern not in caplog.text
     for pattern in expected_patterns:
         assert pattern in caplog.text
+
+
+async def test_postgresql_url_uses_psycopg2_from_yaml(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test the engine for a driverless PostgreSQL URL uses psycopg2."""
+    config = {
+        "sql": {
+            CONF_DB_URL: "postgresql://user:pass@host/db",
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_NAME: "count_tables",
+        }
+    }
+
+    with patch(
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
+        side_effect=SQLAlchemyError("error_message"),
+    ) as create_engine_mock:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert create_engine_mock.mock_calls[0].args[0] == make_url(
+        "postgresql+psycopg2://user:pass@host/db"
+    )
 
 
 async def test_attributes_from_yaml_setup(

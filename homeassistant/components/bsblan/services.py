@@ -1,13 +1,14 @@
 """Support for BSB-LAN services."""
 
 from datetime import time
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, HeatingSchedule, TimeSlot
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -24,22 +25,35 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
-ATTR_MONDAY_SLOTS = "monday_slots"
-ATTR_TUESDAY_SLOTS = "tuesday_slots"
-ATTR_WEDNESDAY_SLOTS = "wednesday_slots"
-ATTR_THURSDAY_SLOTS = "thursday_slots"
-ATTR_FRIDAY_SLOTS = "friday_slots"
-ATTR_SATURDAY_SLOTS = "saturday_slots"
-ATTR_SUNDAY_SLOTS = "sunday_slots"
+
+class BSBLanService(StrEnum):
+    """Store keys for BSB-LAN services."""
+
+    SYNC_TIME = "sync_time"
+    SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
+    SET_HEATING_SCHEDULE = "set_heating_schedule"
+
+
+class BSBLanServiceArgument(StrEnum):
+    """Store keys for BSB-LAN service arguments."""
+
+    MONDAY_SLOTS = "monday_slots"
+    TUESDAY_SLOTS = "tuesday_slots"
+    WEDNESDAY_SLOTS = "wednesday_slots"
+    THURSDAY_SLOTS = "thursday_slots"
+    FRIDAY_SLOTS = "friday_slots"
+    SATURDAY_SLOTS = "saturday_slots"
+    SUNDAY_SLOTS = "sunday_slots"
+
 
 _DAY_NAME_SLOT_ATTR_PAIRS: tuple[tuple[str, str], ...] = (
-    ("monday", ATTR_MONDAY_SLOTS),
-    ("tuesday", ATTR_TUESDAY_SLOTS),
-    ("wednesday", ATTR_WEDNESDAY_SLOTS),
-    ("thursday", ATTR_THURSDAY_SLOTS),
-    ("friday", ATTR_FRIDAY_SLOTS),
-    ("saturday", ATTR_SATURDAY_SLOTS),
-    ("sunday", ATTR_SUNDAY_SLOTS),
+    ("monday", BSBLanServiceArgument.MONDAY_SLOTS),
+    ("tuesday", BSBLanServiceArgument.TUESDAY_SLOTS),
+    ("wednesday", BSBLanServiceArgument.WEDNESDAY_SLOTS),
+    ("thursday", BSBLanServiceArgument.THURSDAY_SLOTS),
+    ("friday", BSBLanServiceArgument.FRIDAY_SLOTS),
+    ("saturday", BSBLanServiceArgument.SATURDAY_SLOTS),
+    ("sunday", BSBLanServiceArgument.SUNDAY_SLOTS),
 )
 
 
@@ -66,7 +80,7 @@ _WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
 
 
 _WEEKLY_SCHEDULE_SCHEMA: dict[probatio.Marker, Any] = {
-    probatio.Required(ATTR_DEVICE_ID): cv.string,
+    probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     **_WEEKLY_SCHEDULE_FIELDS,
 }
 
@@ -148,7 +162,7 @@ def _resolve_config_entry(
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
     config_entry: BSBLanConfigEntry
     device, config_entry = service.async_get_device_and_config_entry(
-        service_call.hass, DOMAIN, service_call.data[ATTR_DEVICE_ID]
+        service_call.hass, DOMAIN, service_call.data[CommonServiceArgument.DEVICE_ID]
     )
     return config_entry, device
 
@@ -246,13 +260,13 @@ async def async_sync_time(service_call: ServiceCall) -> None:
     entry, device_entry = _resolve_config_entry(service_call)
     client = entry.runtime_data.client
     await async_sync_device_time(
-        client, device_entry.name or service_call.data[ATTR_DEVICE_ID]
+        client, device_entry.name or service_call.data[CommonServiceArgument.DEVICE_ID]
     )
 
 
 SYNC_TIME_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CommonServiceArgument.DEVICE_ID): cv.string,
     }
 )
 
@@ -262,21 +276,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
-        "set_hot_water_schedule",
+        BSBLanService.SET_HOT_WATER_SCHEDULE,
         set_hot_water_schedule,
         schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        "set_heating_schedule",
+        BSBLanService.SET_HEATING_SCHEDULE,
         set_heating_schedule,
         schema=SERVICE_SET_HEATING_SCHEDULE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
-        "sync_time",
+        BSBLanService.SYNC_TIME,
         async_sync_time,
         schema=SYNC_TIME_SCHEMA,
     )

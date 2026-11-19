@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'brand': 'gree',
+        'hid': '362001000762+U-CS532AE(LT)V3.31.bin',
+        'info_version': 'V1.2.1',
+        'last_update_success': True,
+        'model': 'gree',
+        'raw_properties': dict({
+          'Lig': 1,
+          'Mod': 1,
+          'Pow': 1,
+          'Quiet': 0,
+          'SetTem': 22,
+          'TemSen': 64,
+          'TemUn': 0,
+          'Tur': 0,
+          'WdSpd': 0,
+        }),
+        'version': '3.31',
+      }),
+    ]),
+  })
+# ---

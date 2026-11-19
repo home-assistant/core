@@ -8,13 +8,7 @@ from aioimaplib import AioImapException
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
@@ -198,8 +192,8 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.title,
+                "username": reauth_entry.data[CONF_USERNAME],
+                "name": reauth_entry.title,
             },
             step_id="reauth_confirm",
             data_schema=probatio.Schema(

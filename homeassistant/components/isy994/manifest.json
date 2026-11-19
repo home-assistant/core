@@ -4,6 +4,7 @@
   "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
+  "connectivity": ["insteon", "x10", "zwave"],
   "dhcp": [
     {
       "registered_devices": true

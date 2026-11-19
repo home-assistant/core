@@ -21,6 +21,11 @@
       }
     }
   },
+  "device": {
+    "room": {
+      "name": "Room {room}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "burner": {
@@ -35,6 +40,9 @@
       "compressor": {
         "name": "Compressor"
       },
+      "condensation_risk": {
+        "name": "Condensation risk"
+      },
       "domestic_hot_water_charging": {
         "name": "DHW charging"
       },
@@ -46,6 +54,12 @@
       },
       "frost_protection": {
         "name": "Frost protection"
+      },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "holiday_at_home": {
+        "name": "Holiday at home"
       },
       "identification_mode": {
         "name": "Identification mode"
@@ -151,6 +165,20 @@
           "efficient_with_min_comfort": "Efficient with minimum comfort",
           "off": "[%key:common::state::off%]"
         }
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "cooling": "[%key:component::vicare::entity::sensor::active_mode::state::cooling%]",
+          "dhw": "DHW only",
+          "dhw_and_heating": "DHW and heating",
+          "dhw_and_heating_cooling": "DHW, heating and cooling",
+          "forced_normal": "Permanently normal",
+          "forced_reduced": "Permanently reduced",
+          "heating": "[%key:component::vicare::entity::sensor::active_mode::state::heating%]",
+          "heating_cooling": "Heating and cooling",
+          "standby": "[%key:common::state::standby%]"
+        }
       }
     },
     "sensor": {
@@ -161,6 +189,18 @@
           "heating": "Heating",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "air_flap_primary_position": {
+        "name": "Primary air flap position"
+      },
+      "air_flap_secondary_position": {
+        "name": "Secondary air flap position"
+      },
+      "ash_level": {
+        "name": "Ash level"
+      },
+      "boiler_circuit_pump_power": {
+        "name": "Boiler circuit pump"
       },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
@@ -346,6 +386,12 @@
         "state": {
           "charge": "[%key:common::state::charging%]",
           "discharge": "[%key:common::state::discharging%]",
+          "initialization": "Initializing",
+          "off": "[%key:common::state::off%]",
+          "precharge": "Precharging",
+          "ready": "Ready",
+          "safetycheck": "Safety check",
+          "shutdown": "Shutting down",
           "standby": "[%key:common::state::standby%]"
         }
       },
@@ -427,11 +473,38 @@
       "gas_summary_consumption_heating_lastsevendays": {
         "name": "Heating gas consumption last seven days"
       },
+      "heat_production_current": {
+        "name": "Heat production"
+      },
+      "heat_production_dhw_today": {
+        "name": "DHW heat production today"
+      },
+      "heat_production_heating_today": {
+        "name": "Heating heat production today"
+      },
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
+      "heating_rod_runtime_level_one": {
+        "name": "Heating rod runtime level 1"
+      },
+      "heating_rod_runtime_level_two": {
+        "name": "Heating rod runtime level 2"
+      },
       "heating_rod_starts": {
         "name": "Heating rod starts"
+      },
+      "holiday_at_home_end": {
+        "name": "Holiday at home end"
+      },
+      "holiday_at_home_start": {
+        "name": "Holiday at home start"
+      },
+      "holiday_end": {
+        "name": "Holiday end"
+      },
+      "holiday_start": {
+        "name": "Holiday start"
       },
       "hot_gas_pressure": {
         "name": "Hot gas pressure"
@@ -566,6 +639,9 @@
       "return_temperature": {
         "name": "Return temperature"
       },
+      "salt_supply": {
+        "name": "Salt supply"
+      },
       "secondary_circuit_return_temperature": {
         "name": "Secondary circuit return temperature"
       },
@@ -653,6 +729,15 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "water_consumption_today": {
+        "name": "Water consumption today"
+      },
+      "water_consumption_total": {
+        "name": "Water consumption"
+      },
+      "water_flow": {
+        "name": "Water flow"
       },
       "zigbee_signal_strength": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"

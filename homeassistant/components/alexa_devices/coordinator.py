@@ -12,6 +12,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    CannotSetFeature,
     NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
@@ -37,6 +38,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
@@ -74,6 +76,12 @@ async def alexa_api_call(
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except CannotSetFeature as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_set_feature_with_error",
             translation_placeholders={"error": repr(err)},
         ) from err
 
@@ -140,7 +148,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_PASSWORD],
             login_data=entry.data[CONF_LOGIN_DATA],
             save_data=AmazonSaveDataConfig(
-                path=Path(hass.config.path(DOMAIN)),
+                path=Path(hass.config.path(STORAGE_DIR, DOMAIN)),
             ),
         )
         device_registry = dr.async_get(hass)
@@ -460,3 +468,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def device_sensor(self, serial_num: str, key: str) -> AmazonDeviceSensor | None:
         """Return a sensor of a device, if present."""
         return self.sensors.get(serial_num, {}).get(key)
+
+    def supported_sensor_keys(self, serial_num: str) -> set[str]:
+        """Return the sensor keys the device supports."""
+        return {
+            key
+            for instances in self.data[serial_num].features.values()
+            for feature in instances.values()
+            for key in feature.sensor_keys.values()
+        }

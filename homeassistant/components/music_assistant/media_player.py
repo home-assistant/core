@@ -47,7 +47,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import MusicAssistantConfigEntry
+from . import MusicAssistantConfigEntry, PlatformHandlers
 from .const import (
     ATTR_ACTIVE,
     ATTR_ACTIVE_QUEUE,
@@ -183,7 +183,9 @@ async def async_setup_entry(
         async_add_entities([MusicAssistantPlayer(mass, player_id)])
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.MEDIA_PLAYER, PlatformHandlers(add_player=add_player)
+    )
 
     # known_dashboard_ids is scoped to this setup call, so a reload starts
     # fresh and re-adds whatever is in the dashboard cache.
@@ -543,6 +545,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         media_type: str | None = None,
         username: str | None = None,
         start_item: str | None = None,
+        shuffle: bool | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
         # An explicit username impersonates that Music Assistant user (the server rejects an
@@ -627,6 +630,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 option=self._convert_queueoption_to_media_player_enqueue(enqueue),
                 radio_mode=radio_mode or False,
                 start_item=start_item,
+                shuffle=shuffle,
                 user=user,
             )
 

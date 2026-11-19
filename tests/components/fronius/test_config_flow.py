@@ -1,8 +1,8 @@
 """Test the Fronius config flow."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from pyfronius import FroniusError
+from fronius_solarapi import FroniusError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -27,15 +27,10 @@ def no_setup():
         yield
 
 
-INVERTER_INFO_RETURN_VALUE = {
-    "inverters": [
-        {
-            "device_id": {"value": "1"},
-            "unique_id": {"value": "1234567"},
-        }
-    ]
-}
-LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
+LOGGER_UID = "123.4567"
+# only the fields the config flow reads
+INVERTER_INFO_RETURN_VALUE = Mock(data={"1": Mock(unique_id="1234567")})
+LOGGER_INFO_RETURN_VALUE = Mock(data=Mock(unique_id=LOGGER_UID))
 MOCK_DHCP_DATA = DhcpServiceInfo(
     hostname="fronius",
     ip="10.2.3.4",
@@ -46,7 +41,7 @@ MOCK_DHCP_DATA = DhcpServiceInfo(
 async def assert_finish_flow_with_logger(hass: HomeAssistant, flow_id: str) -> None:
     """Assert finishing the flow with a logger device."""
     with patch(
-        "pyfronius.Fronius.current_logger_info",
+        "fronius_solarapi.FroniusSolarApi.logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -73,7 +68,7 @@ async def assert_abort_flow_with_logger(
 ) -> config_entries.ConfigFlowResult:
     """Assert the flow was aborted when a logger device responded."""
     with patch(
-        "pyfronius.Fronius.current_logger_info",
+        "fronius_solarapi.FroniusSolarApi.logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -109,11 +104,11 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             side_effect=FroniusError,
         ),
         patch(
-            "pyfronius.Fronius.inverter_info",
+            "fronius_solarapi.FroniusSolarApi.inverter_info",
             return_value=INVERTER_INFO_RETURN_VALUE,
         ),
     ):
@@ -149,18 +144,18 @@ async def test_form_cannot_connect(
     hass: HomeAssistant, inverter_side_effect: type[FroniusError] | None
 ) -> None:
     """Test we handle cannot connect error."""
-    INVERTER_INFO_NONE: dict[str, list] = {"inverters": []}
+    INVERTER_INFO_NONE = Mock(data={})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with (
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             side_effect=FroniusError,
         ),
         patch(
-            "pyfronius.Fronius.inverter_info",
+            "fronius_solarapi.FroniusSolarApi.inverter_info",
             side_effect=inverter_side_effect,
             return_value=INVERTER_INFO_NONE,
         ),
@@ -184,7 +179,7 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pyfronius.Fronius.current_logger_info",
+        "fronius_solarapi.FroniusSolarApi.logger_info",
         side_effect=KeyError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -203,7 +198,7 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
     """Test existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
+        unique_id=LOGGER_UID,
         data={CONF_HOST: "10.9.8.1", "is_logger": True},
     ).add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -267,7 +262,7 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
     with (
         patch("homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0),
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             return_value=LOGGER_INFO_RETURN_VALUE,
         ),
     ):
@@ -351,11 +346,11 @@ async def test_dhcp_invalid(
     with (
         patch("homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0),
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             side_effect=FroniusError,
         ),
         patch(
-            "pyfronius.Fronius.inverter_info",
+            "fronius_solarapi.FroniusSolarApi.inverter_info",
             side_effect=FroniusError,
         ),
     ):
@@ -386,11 +381,11 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             side_effect=FroniusError,
         ),
         patch(
-            "pyfronius.Fronius.inverter_info",
+            "fronius_solarapi.FroniusSolarApi.inverter_info",
             return_value=INVERTER_INFO_RETURN_VALUE,
         ),
     ):
@@ -417,7 +412,7 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
+        unique_id=LOGGER_UID,
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -429,11 +424,11 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "pyfronius.Fronius.current_logger_info",
+            "fronius_solarapi.FroniusSolarApi.logger_info",
             side_effect=FroniusError,
         ),
         patch(
-            "pyfronius.Fronius.inverter_info",
+            "fronius_solarapi.FroniusSolarApi.inverter_info",
             side_effect=FroniusError,
         ),
     ):
@@ -456,7 +451,7 @@ async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
+        unique_id=LOGGER_UID,
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -467,7 +462,7 @@ async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
     result = await entry.start_reconfigure_flow(hass)
 
     with patch(
-        "pyfronius.Fronius.current_logger_info",
+        "fronius_solarapi.FroniusSolarApi.logger_info",
         side_effect=KeyError,
     ):
         result2 = await hass.config_entries.flow.async_configure(

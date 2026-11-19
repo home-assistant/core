@@ -66,8 +66,6 @@ class LookinDeviceCoordinatorEntity(
 ):
     """A lookin device entity on the device itself that uses the coordinator."""
 
-    _attr_should_poll = False
-
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
         assert lookin_data.meteo_coordinator is not None
@@ -101,7 +99,6 @@ class LookinCoordinatorEntity(
 ):
     """A lookin device entity for an external device that uses the coordinator."""
 
-    _attr_should_poll = False
     _attr_assumed_state = True
 
     def __init__(

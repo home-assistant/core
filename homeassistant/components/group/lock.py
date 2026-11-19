@@ -14,7 +14,6 @@ from homeassistant.components.lock import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -30,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.group import GenericGroup
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Lock Group"
@@ -117,7 +117,9 @@ class LockGroup(GroupEntity, LockEntity):
         self._attr_supported_features = LockEntityFeature.OPEN
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
     @callback

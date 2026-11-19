@@ -7,16 +7,9 @@ import blebox_uniapi
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -110,7 +103,7 @@ async def test_switchbox_on(switchbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -127,7 +120,7 @@ async def test_switchbox_off(switchbox, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -165,6 +158,7 @@ def switchbox_d_fixture():
     type(product).product = PropertyMock(return_value="switchBoxD")
     type(product).brand = PropertyMock(return_value="BleBox")
     type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).hardware_version = PropertyMock(return_value="0.1")
     type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
 
     type(relay1).product = product
@@ -255,7 +249,7 @@ async def test_switchbox_d_turn_first_on(switchbox_d, hass: HomeAssistant) -> No
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_ids[0]},
         blocking=True,
     )
@@ -273,7 +267,7 @@ async def test_switchbox_d_second_on(switchbox_d, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": entity_ids[1]},
         blocking=True,
     )
@@ -291,7 +285,7 @@ async def test_switchbox_d_first_off(switchbox_d, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_ids[0]},
         blocking=True,
     )
@@ -309,7 +303,7 @@ async def test_switchbox_d_second_off(switchbox_d, hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "switch",
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": entity_ids[1]},
         blocking=True,
     )

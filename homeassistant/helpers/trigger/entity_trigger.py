@@ -41,7 +41,7 @@ from homeassistant.helpers.target import (
     TargetStateChangedData,
     async_track_target_selector_state_change_event,
 )
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType, Undefined
 from homeassistant.util.unit_conversion import BaseUnitConverter
 
 from .models import (
@@ -557,7 +557,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
-    _valid_unit: str | UndefinedType | None = UNDEFINED
+    _valid_unit: str | Undefined | None = Undefined
     _threshold_type: NumericThresholdType
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -575,7 +575,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this trigger."""
-        if isinstance(self._valid_unit, UndefinedType):
+        if self._valid_unit is Undefined:
             return True
         return unit == self._valid_unit
 
@@ -1022,7 +1022,7 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
@@ -1040,7 +1040,7 @@ def make_entity_numerical_state_changed_trigger(
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | UndefinedType | None = UNDEFINED,
+    valid_unit: str | Undefined | None = Undefined,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:

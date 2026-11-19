@@ -92,9 +92,7 @@ rules:
   repair-issues:
     status: todo
     comment: There are some warnings/deprecations that should be repair issues
-  reconfiguration-flow:
-    status: exempt
-    comment: There is nothing to configure in the configuration flow
+  reconfiguration-flow: done
   entity-category:
     status: exempt
     comment: The entities in google calendar do not support categories

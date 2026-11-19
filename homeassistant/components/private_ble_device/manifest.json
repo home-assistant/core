@@ -4,6 +4,7 @@
   "categories": ["presence_location.trackers"],
   "codeowners": ["@Jc2k"],
   "config_flow": true,
+  "connectivity": ["bluetooth"],
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/private_ble_device",
   "integration_type": "device",

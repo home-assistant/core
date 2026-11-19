@@ -19,6 +19,8 @@ import sys
 import types
 from typing import Any
 
+from typing_extensions import Sentinel as sentinel
+
 from homeassistant.core import HomeAssistant
 
 from .inspection import (
@@ -49,7 +51,7 @@ _TOKEN = re.compile(r"(?P<token>[\w.]+)$")
 _CALLEE = re.compile(r"(?P<callee>[A-Za-z_][\w.]*)\s*$")
 _KEYWORD_ARGUMENT = re.compile(r"\s*(?P<name>\w+)\s*=(?!=)")
 
-_MISSING = object()
+_MISSING = sentinel("_MISSING")
 
 # Default values shown in signatures; others could bring their own __repr__.
 _SAFE_DEFAULT_TYPES = (type(None), bool, int, float, complex, str, bytes)

@@ -1,6 +1,6 @@
 """Common fixtures for the Cloudflare R2 tests."""
 
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,14 +14,27 @@ from homeassistant.components.cloudflare_r2.backup import (
 )
 from homeassistant.components.cloudflare_r2.const import DOMAIN
 
+from . import mock_streaming_body
 from .const import USER_INPUT
+
+
+@pytest.fixture
+def backup_data() -> bytes:
+    """Backup data, override in tests to change defaults."""
+    return b"backup data"
+
+
+@pytest.fixture
+def backup_protected() -> bool:
+    """Backup protected, override in tests to change defaults."""
+    return False
 
 
 @pytest.fixture(
     params=[2**20, MULTIPART_MIN_PART_SIZE_BYTES],
     ids=["small", "large"],
 )
-def test_backup(request: pytest.FixtureRequest) -> None:
+def test_backup(request: pytest.FixtureRequest, backup_protected: bool) -> None:
     """Test backup fixture."""
     return AgentBackup(
         addons=[],
@@ -33,13 +46,13 @@ def test_backup(request: pytest.FixtureRequest) -> None:
         homeassistant_included=True,
         homeassistant_version="2024.12.0.dev0",
         name="Core 2024.12.0.dev0",
-        protected=False,
+        protected=backup_protected,
         size=request.param,
     )
 
 
 @pytest.fixture(autouse=True)
-def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
+def mock_client(test_backup: AgentBackup, backup_data: bytes) -> Generator[AsyncMock]:
     """Mock the R2 client (S3-compatible)."""
     with patch(
         "aiobotocore.session.AioSession.create_client",
@@ -58,14 +71,13 @@ def mock_client(test_backup: AgentBackup) -> Generator[AsyncMock]:
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
 
-        class MockStream:
-            async def iter_chunks(self) -> AsyncIterator[bytes]:
-                yield b"backup data"
-
-            async def read(self) -> bytes:
-                return json.dumps(test_backup.as_dict()).encode()
-
-        client.get_object.return_value = {"Body": MockStream()}
+        objects = {
+            tar_file: backup_data,
+            metadata_file: json.dumps(test_backup.as_dict()).encode(),
+        }
+        client.get_object.side_effect = lambda **kwargs: {
+            "Body": mock_streaming_body(objects[kwargs["Key"].rsplit("/", 1)[-1]])
+        }
         client.head_bucket.return_value = {}
 
         create_client.return_value.__aenter__.return_value = client

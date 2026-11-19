@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
@@ -46,8 +46,11 @@ HOURLY = [
         cloudiness=60,
         uv_index=1,
         precip_type="rain",
+        snow_accum=0.3,
+        thunder_prob=12,
+        visibility=24000,
         solar_radiation=141.0,
-        snow_depth=0.0,
+        snow_depth=2.0,
     )
 ]
 
@@ -57,14 +60,47 @@ DAILY = [
         symbol="d310",
         max_temp=18.0,
         min_temp=9.0,
+        max_feels_like_temp=16.6,
+        cloudiness=55,
         precip_accum=1.2,
         precip_prob=40,
         max_wind_speed=6.0,
         max_wind_gust=11.0,
         wind_dir=225,
         uv_index=3,
+        min_feels_like_temp=7.4,
+        max_rel_humidity=93,
+        min_rel_humidity=51,
+        min_dew_point=4.6,
+        min_visibility=8000,
+        snow_accum=1.5,
+        snow_depth=4.0,
         sunhours=6.4,
+        solar_radiation_sum=2875,
+        sunrise_epoch=1788318000,
+        sunset_epoch=1788368400,
         confidence="g",
+        max_temp_ensemble={
+            "p000": 16.4,
+            "p025": 17.5,
+            "p050": 18.1,
+            "p075": 18.6,
+            "p100": 19.9,
+        },
+        min_temp_ensemble={
+            "p000": 7.2,
+            "p025": 8.4,
+            "p050": 9.1,
+            "p075": 9.6,
+            "p100": 10.8,
+        },
+        precip_accum_ensemble={
+            "p010": None,
+            "p025": 0.3,
+            "p050": 1.1,
+            "p075": 2.4,
+            "p090": 4.7,
+        },
     ),
     DailyForecast(
         date="2026-09-03",
@@ -114,6 +150,14 @@ def mock_foreca_client() -> Generator[MagicMock]:
         client.current = AsyncMock(return_value=CURRENT)
         client.forecast_hourly = AsyncMock(return_value=HOURLY)
         client.forecast_daily = AsyncMock(return_value=DAILY)
+        client.forecast_3hourly = AsyncMock(
+            return_value=[
+                HourlyForecast.from_api(step)
+                for step in load_json_object_fixture("forecast_3hourly.json", DOMAIN)[
+                    "forecast"
+                ]
+            ]
+        )
         yield client
 
 
