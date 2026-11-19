@@ -723,7 +723,6 @@ class _DefaultPipelineProcessor:
                 yield chunk
             # The run ends with the command
             await self._async_close_audio_run()
-            self._async_end_agent_listening()
 
         return conversation.ConversationAudioInput(
             pcm_format=tts.PcmFormat(
@@ -735,18 +734,20 @@ class _DefaultPipelineProcessor:
         )
 
     @callback
-    def _async_end_agent_listening(self) -> None:
+    def _async_end_agent_listening(self, transcript: str = "") -> None:
         """End speech-to-text of the agent and start intent recognition, once.
 
-        Listening ends with the spoken audio, or when the agent starts to answer.
+        Listening ends when the agent adds the transcript, starts to answer
+        or returns.
         """
         if (intent_start := self._pending_intent_start) is None:
             return
 
         self._pending_intent_start = None
-        # The agent adds the transcript to the chat log if it has one
         self.host.process_event(
-            PipelineEvent(PipelineEventType.STT_END, {"stt_output": {"text": ""}})
+            PipelineEvent(
+                PipelineEventType.STT_END, {"stt_output": {"text": transcript}}
+            )
         )
         self.host.process_event(intent_start)
 
@@ -942,9 +943,13 @@ class _DefaultPipelineProcessor:
                 chat_log: conversation.ChatLog, delta: dict
             ) -> None:
                 """Handle chat log delta."""
-                # Only the transcript of spoken audio is news to listeners
-                if delta.get("role") == "user" and audio is None:
-                    return
+                if delta.get("role") == "user":
+                    # Only the transcript of spoken audio is news to listeners
+                    if audio is None:
+                        return
+                    if self._pending_intent_start is not None:
+                        self._async_end_agent_listening(delta["content"])
+                        return
 
                 self._async_end_agent_listening()
                 self.host.process_event(

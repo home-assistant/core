@@ -35,8 +35,8 @@ class ConversationAudioInput:
     stream: AsyncIterable[bytes]
     """Audio chunks until the end of the voice command.
 
-    The command also ends when the agent starts to answer. Read the stream to
-    its end: satellites stop listening when it ends.
+    The command also ends when the agent adds the transcript or starts to
+    answer. Read the stream to its end: satellites stop listening when it ends.
     """
 
 
@@ -85,7 +85,7 @@ class ConversationInput:
     """Spoken audio of the user, only for agents that support audio input.
 
     The agent adds the transcript of the audio to the chat log as user content,
-    if it has one.
+    if it has one, once it has heard the voice command. Satellites show it.
     """
 
     audio_output: ConversationAudioOutput | None = None

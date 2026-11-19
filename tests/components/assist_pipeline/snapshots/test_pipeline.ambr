@@ -1019,7 +1019,7 @@
     dict({
       'data': dict({
         'stt_output': dict({
-          'text': '',
+          'text': 'agent transcript',
         }),
       }),
       'type': <PipelineEventType.STT_END: 'stt-end'>,
@@ -1035,16 +1035,6 @@
         'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'agent transcript',
-          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-          'role': 'user',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({
@@ -1143,7 +1133,7 @@
     dict({
       'data': dict({
         'stt_output': dict({
-          'text': '',
+          'text': 'agent transcript',
         }),
       }),
       'type': <PipelineEventType.STT_END: 'stt-end'>,
@@ -1159,16 +1149,6 @@
         'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'agent transcript',
-          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-          'role': 'user',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({
@@ -1273,7 +1253,7 @@
     dict({
       'data': dict({
         'stt_output': dict({
-          'text': '',
+          'text': 'agent transcript',
         }),
       }),
       'type': <PipelineEventType.STT_END: 'stt-end'>,
@@ -1289,16 +1269,6 @@
         'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
-    }),
-    dict({
-      'data': dict({
-        'chat_log_delta': dict({
-          'content': 'agent transcript',
-          'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
-          'role': 'user',
-        }),
-      }),
-      'type': <PipelineEventType.INTENT_PROGRESS: 'intent-progress'>,
     }),
     dict({
       'data': dict({

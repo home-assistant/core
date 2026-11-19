@@ -3435,6 +3435,61 @@ async def test_pipeline_audio_agent_answer_ends_audio(
 
 
 @pytest.mark.usefixtures("init_audio_agent")
+async def test_pipeline_audio_agent_transcript_after_answer(
+    hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
+) -> None:
+    """Test a transcript that comes after the answer started is a chat log delta."""
+
+    async def transcript_after_answer(
+        user_input: conversation.ConversationInput, chat_log: conversation.ChatLog
+    ) -> conversation.ConversationResult:
+        assert user_input.audio is not None
+        assert user_input.audio_output is not None
+        async for _chunk in user_input.audio.stream:
+            pass
+
+        async def response_audio() -> AsyncGenerator[bytes]:
+            yield b"\x01\x02"
+
+        user_input.audio_output.async_set_audio_stream(
+            tts.PcmFormat(sample_rate=16000, sample_width=2, channels=1),
+            response_audio(),
+        )
+        chat_log.async_add_user_content(
+            conversation.UserContent(content="late transcript")
+        )
+
+        return conversation.ConversationResult(
+            response=intent.IntentResponse(language=user_input.language),
+            conversation_id=chat_log.conversation_id,
+        )
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch.object(
+        mock_audio_agent, "_async_handle_message", side_effect=transcript_after_answer
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=_stt_metadata(),
+            stt_stream=_audio_agent_input(),
+            pipeline_id=AUDIO_AGENT_ID,
+            tts_audio_output="wav",
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    stt_end = next(event for event in events if event.type is PipelineEventType.STT_END)
+    assert stt_end.data == {"stt_output": {"text": ""}}
+    assert [
+        event.data["chat_log_delta"]["content"]
+        for event in events
+        if event.data and event.data.get("chat_log_delta", {}).get("role") == "user"
+    ] == ["late transcript"]
+
+
+@pytest.mark.usefixtures("init_audio_agent")
 async def test_pipeline_audio_agent_response_audio_set_twice(
     hass: HomeAssistant, mock_audio_agent: MockAudioConversationEntity
 ) -> None:
