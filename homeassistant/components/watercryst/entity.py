@@ -1,6 +1,6 @@
 """Common entity definitions."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -13,9 +13,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import WatercrystConfigEntry
 from .const import DOMAIN
-from .coordinator import WatercrystUpdateCoordinator
+from .coordinator import WatercrystConfigEntry, WatercrystUpdateCoordinator
 
 
 class WatercrystEntity[CoordinatorT: DataUpdateCoordinator[Any]](
@@ -56,3 +55,13 @@ class WatercrystEntity[CoordinatorT: DataUpdateCoordinator[Any]](
         )
         self._attr_unique_id = f"{info.biocat_serial}_{entity_description.key}"
         self.entity_description = entity_description
+        self.state_coordinator = coordinator.state
+
+    @property
+    @override
+    def available(self) -> bool:
+        return (
+            super().available
+            and self.state_coordinator.last_update_success
+            and self.state_coordinator.data.online is True
+        )
