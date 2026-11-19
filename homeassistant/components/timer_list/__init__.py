@@ -20,7 +20,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -50,6 +50,8 @@ __all__ = [
     "TimerListEventType",
     "TimerListServices",
     "TimerStatus",
+    "async_get_timer_list_entities",
+    "async_get_timer_list_entity",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +74,24 @@ def entity_became_available(event: Event[EventStateChangedData]) -> bool:
     if new_state is None or new_state.state == STATE_UNAVAILABLE:
         return False
     return old_state is None or old_state.state == STATE_UNAVAILABLE
+
+
+@callback
+def async_get_timer_list_entities(hass: HomeAssistant) -> list[TimerListEntity]:
+    """Return all timer list entities."""
+    return list(hass.data[DATA_COMPONENT].entities)
+
+
+@callback
+def async_get_timer_list_entity(
+    hass: HomeAssistant, device_id: str
+) -> TimerListEntity | None:
+    """Return the timer list entity of a device, if it has one."""
+    component = hass.data[DATA_COMPONENT]
+    for entry in er.async_entries_for_device(er.async_get(hass), device_id):
+        if entry.domain == DOMAIN and (entity := component.get_entity(entry.entity_id)):
+            return entity
+    return None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
