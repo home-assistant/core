@@ -779,13 +779,6 @@ class _DefaultPipelineProcessor:
             self._held_response_audio = None
             self._async_play_response_audio(*held_audio)
 
-    def _check_agent_heard_user(self) -> None:
-        """Raise if the agent answers before it added the transcript."""
-        if self._pending_intent_start is not None:
-            raise RuntimeError(
-                "Add the transcript of the spoken audio before the response"
-            )
-
     @callback
     def async_set_audio_stream(
         self, pcm_format: tts.PcmFormat, audio_stream: AsyncGenerator[bytes]
@@ -1000,7 +993,6 @@ class _DefaultPipelineProcessor:
                         self._async_end_agent_listening(delta["content"])
                     return
 
-                self._check_agent_heard_user()
                 self.host.process_event(
                     PipelineEvent(
                         PipelineEventType.INTENT_PROGRESS,
@@ -1206,11 +1198,7 @@ class _DefaultPipelineProcessor:
                         "speech", ""
                     )
                     # Agents that do not use the chat log only answer in their result.
-                    # With audio input, the turn may not even have a transcript.
-                    if speech and all(
-                        content.role == "user"
-                        for content in chat_log.content[chat_log.turn_start :]
-                    ):
+                    if chat_log.content[-1].role == "user" and speech:
                         chat_log.async_add_assistant_content_without_tools(
                             conversation.AssistantContent(
                                 agent_id=agent_id,

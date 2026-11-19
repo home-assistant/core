@@ -3841,7 +3841,7 @@ async def test_pipeline_audio_agent_skips_local_handling(
 async def test_pipeline_audio_agent_reply_without_chat_log(
     hass: HomeAssistant, mock_chat_session: chat_session.ChatSession
 ) -> None:
-    """Test the speech of an audio agent that adds no transcript is its reply."""
+    """Test listening ends for an audio agent that returns without a transcript."""
     events: list[assist_pipeline.PipelineEvent] = []
     pipeline_input = _stt_to_intent_input(
         hass,
@@ -3871,5 +3871,5 @@ async def test_pipeline_audio_agent_reply_without_chat_log(
     ]
     with conversation.async_get_chat_log(hass, mock_chat_session) as chat_log:
         assert [(c.role, c.content) for c in chat_log.content[1:]] == [
-            ("assistant", "Agent response"),
+            ("assistant", "(no response)"),
         ]

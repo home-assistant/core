@@ -119,8 +119,10 @@ def async_get_chat_log(
         all_chat_logs[session.conversation_id] = chat_log
 
     chat_log.turn_start = len(chat_log.content)
-    # With audio input, the agent adds the transcript
-    if user_input is not None and user_input.audio is None:
+    if user_input is not None and user_input.audio is not None:
+        # The agent adds the transcript, before its response
+        chat_log.awaiting_transcript = True
+    elif user_input is not None:
         user_content = UserContent(content=user_input.text)
         if is_new_log:
             chat_log.content.append(user_content)
@@ -145,9 +147,11 @@ def async_get_chat_log(
     try:
         yield chat_log
     except (Exception, asyncio.CancelledError) as err:
+        chat_log.awaiting_transcript = False
         chat_log.async_add_error(agent_id, err)
         raise
     finally:
+        chat_log.awaiting_transcript = False
         chat_log.turn_active = False
         current_chat_log.reset(token)
         chat_log.delta_listener = None
@@ -391,6 +395,8 @@ class ChatLog:
     created: datetime = field(init=False, default_factory=utcnow)
     turn_active: bool = field(default=False, init=False, repr=False)
     turn_start: int = field(default=0, init=False, repr=False)
+    awaiting_transcript: bool = field(default=False, init=False, repr=False)
+    """Whether a turn of spoken audio has no transcript yet."""
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the chat log."""
@@ -430,6 +436,7 @@ class ChatLog:
     def async_add_user_content(self, content: UserContent) -> None:
         """Add user content to the log."""
         LOGGER.debug("Adding user content: %s", content)
+        self.awaiting_transcript = False
         self.content.append(content)
         if self.delta_listener:
             self.delta_listener(self, content.as_dict())
@@ -439,6 +446,14 @@ class ChatLog:
             ChatLogEventType.CONTENT_ADDED,
             {"content": content.as_dict()},
         )
+
+    @callback
+    def _async_check_transcript(self) -> None:
+        """Raise if the response of a spoken turn comes before its transcript."""
+        if self.awaiting_transcript:
+            raise ValueError(
+                "Add the transcript of the spoken audio before the response"
+            )
 
     @callback
     def async_add_error(self, agent_id: str, error: BaseException) -> None:
@@ -489,6 +504,7 @@ class ChatLog:
         Allows assistant content without tool calls or with external tool calls only,
         as well as tool results for the external tools.
         """
+        self._async_check_transcript()
         LOGGER.debug("Adding assistant content: %s", content)
         if (
             isinstance(content, AssistantContent)
@@ -518,6 +534,7 @@ class ChatLog:
         This method is an async generator and will yield
         the tool results as they come in.
         """
+        self._async_check_transcript()
         LOGGER.debug("Adding assistant content: %s", content)
         self.content.append(content)
         _async_notify_subscribers(
@@ -608,6 +625,7 @@ class ChatLog:
         tool_call_tasks: dict[str, asyncio.Task] = {}
 
         async for delta in stream:
+            self._async_check_transcript()
             LOGGER.debug("Received delta: %s", delta)
 
             # Indicates update to current message
