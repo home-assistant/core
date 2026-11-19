@@ -7,11 +7,12 @@ from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.ecobee.switch import DATE_FORMAT
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import TargetKey
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
 from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
@@ -137,7 +138,7 @@ async def test_aux_heat_only_turn_on(hass: HomeAssistant) -> None:
 
 
 async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
-    """Test the switch can be turned off."""
+    """Test turning off the switch without a saved mode does not change HVAC mode."""
     with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off:
         await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -147,4 +148,27 @@ async def test_aux_heat_only_turn_off(hass: HomeAssistant) -> None:
             {TargetKey.ENTITY_ID: DEVICE_ID},
             blocking=True,
         )
-        mock_turn_off.assert_called_once_with(1, "auto")
+        mock_turn_off.assert_not_called()
+
+
+async def test_aux_heat_only_turn_off_after_restart(hass: HomeAssistant) -> None:
+    """Test the switch restores the prior mode after a Home Assistant restart."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(DEVICE_ID, "on"),
+                {"hvac_mode_before_aux_heat": "heat"},
+            )
+        ],
+    )
+    with patch("pyecobee.Ecobee.set_hvac_mode") as mock_turn_off:
+        await setup_platform(hass, SWITCH_DOMAIN)
+
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: DEVICE_ID},
+            blocking=True,
+        )
+        mock_turn_off.assert_called_once_with(1, "heat")
