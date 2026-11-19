@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import Final, override
+
+from irm_kmi_api import PollenLevel, PollenName, PollenParser
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,12 +31,22 @@ from .entity import IrmKmiBaseEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+POLLEN_LEVELS: Final = [level.value for level in PollenParser.get_option_values()]
+
 
 @dataclass(frozen=True, kw_only=True)
 class IrmKmiSensorEntityDescription(SensorEntityDescription):
     """Class describing IRM KMI sensor entities."""
 
     value_fn: Callable[[ProcessedCoordinatorData], StateType]
+    available_fn: Callable[[ProcessedCoordinatorData], bool] = lambda _: True
+
+
+def _pollen_level(
+    name: PollenName,
+) -> Callable[[ProcessedCoordinatorData], PollenLevel | None]:
+    """Return a getter for the level of one pollen type."""
+    return lambda data: data.pollen[name] if data.pollen is not None else None
 
 
 SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
@@ -82,6 +94,17 @@ SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: data.current_weather.get("uv_index"),
     ),
+    *(
+        IrmKmiSensorEntityDescription(
+            key=f"pollen_{pollen}",
+            translation_key=f"pollen_{pollen}",
+            device_class=SensorDeviceClass.ENUM,
+            options=POLLEN_LEVELS,
+            value_fn=_pollen_level(pollen),
+            available_fn=lambda data: data.pollen is not None,
+        )
+        for pollen in PollenName
+    ),
 )
 
 
@@ -108,6 +131,14 @@ class IrmKmiSensor(IrmKmiBaseEntity, SensorEntity):
         super().__init__(entry)
         self.entity_description = description
         self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-{description.key}"
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the value was provided by the API."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
     @override

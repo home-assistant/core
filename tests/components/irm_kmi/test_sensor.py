@@ -1,19 +1,33 @@
 """Tests for the IRM KMI sensor platform."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from irm_kmi_api import CurrentWeatherData
+from freezegun.api import FrozenDateTimeFactory
+from irm_kmi_api import (
+    CurrentWeatherData,
+    IrmKmiApiError,
+    PollenLevel,
+    PollenName,
+    PollenParser,
+)
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import (
+    ALDER_POLLEN_ENTITY_ID,
+    CURRENT_WEATHER,
     TEMPERATURE_ENTITY_ID,
     WIND_DIRECTION_ENTITY_ID,
     WIND_GUST_SPEED_ENTITY_ID,
@@ -84,3 +98,91 @@ async def test_current_condition_sensor_without_its_key(
     assert state
     assert state.state == STATE_UNKNOWN
     assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+
+
+@pytest.mark.parametrize(
+    ("get_pollen_side_effect", "expected_state"),
+    [
+        pytest.param(
+            PollenParser.get_default_data,
+            PollenLevel.NONE,
+            id="no_pollen_svg",
+        ),
+        pytest.param(
+            IrmKmiApiError,
+            STATE_UNAVAILABLE,
+            id="api_error",
+        ),
+    ],
+)
+async def test_pollen_without_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    get_pollen_side_effect: Callable[[], dict[PollenName, PollenLevel | None]]
+    | type[Exception],
+    expected_state: str,
+) -> None:
+    """Test the pollen level without a pollen SVG and when fetching it fails."""
+    mock_irm_kmi_api.get_pollen.side_effect = get_pollen_side_effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == expected_state
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "7.2"
+
+
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
+async def test_pollen_grace_period(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_irm_kmi_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the last pollen levels are only kept for the grace period."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert "Pollen data is available again" not in caplog.text
+
+    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
+    mock_irm_kmi_api.get_current_weather.return_value = CurrentWeatherData(
+        **{**CURRENT_WEATHER, "temperature": 9.9}
+    )
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "9.9"
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert caplog.text.count("Could not get pollen data from the API") == 1
+
+    mock_irm_kmi_api.get_pollen.side_effect = None
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(ALDER_POLLEN_ENTITY_ID).state == PollenLevel.GREEN
+    assert caplog.text.count("Pollen data is available again") == 1
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Pollen data is available again") == 1
+
+    mock_irm_kmi_api.get_pollen.side_effect = IrmKmiApiError
+
+    freezer.tick(timedelta(minutes=8))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Could not get pollen data from the API") == 2

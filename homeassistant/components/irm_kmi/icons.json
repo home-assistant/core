@@ -1,6 +1,27 @@
 {
   "entity": {
     "sensor": {
+      "pollen_alder": {
+        "default": "mdi:tree"
+      },
+      "pollen_ash": {
+        "default": "mdi:tree"
+      },
+      "pollen_birch": {
+        "default": "mdi:tree"
+      },
+      "pollen_grasses": {
+        "default": "mdi:grass"
+      },
+      "pollen_hazel": {
+        "default": "mdi:tree"
+      },
+      "pollen_mugwort": {
+        "default": "mdi:sprout"
+      },
+      "pollen_oak": {
+        "default": "mdi:tree"
+      },
       "uv_index": {
         "default": "mdi:sun-wireless"
       }
