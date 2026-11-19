@@ -25,9 +25,9 @@ from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_CONDITION,
-    CONF_ENTITY_ID,
     CONF_OPTIONS,
     CONF_TARGET,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.condition import async_validate_condition_config
@@ -102,7 +102,7 @@ async def test_button_is_being_held_condition_for_invalid(
             hass,
             {
                 CONF_CONDITION: "button.is_being_held",
-                CONF_TARGET: {CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+                CONF_TARGET: {TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
                 CONF_OPTIONS: {"for": duration},
             },
         )
@@ -232,7 +232,7 @@ async def test_button_is_being_held_condition_ignores_buttons(
     cond = await create_target_condition(
         hass,
         condition="button.is_being_held",
-        target={CONF_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         behavior="any",
     )
 
@@ -260,7 +260,7 @@ async def test_button_is_being_held_condition_for(
     cond = await create_target_condition(
         hass,
         condition="button.is_being_held",
-        target={CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
         behavior="any",
         condition_options={"for": {"seconds": 5}},
     )
@@ -313,7 +313,7 @@ async def test_button_is_being_held_condition_timeout(
     cond = await create_target_condition(
         hass,
         condition="button.is_being_held",
-        target={CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
         behavior="any",
         condition_options=condition_options,
     )
@@ -358,7 +358,7 @@ async def test_button_is_being_held_condition_timeout_start(
     cond = await create_target_condition(
         hass,
         condition="button.is_being_held",
-        target={CONF_ENTITY_ID: _EVENT_ENTITY_ID},
+        target={TargetKey.ENTITY_ID: _EVENT_ENTITY_ID},
         behavior="any",
     )
     assert cond.async_check() is True

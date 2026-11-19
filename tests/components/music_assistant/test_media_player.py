@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+from music_assistant_client.exceptions import InvalidServerVersion
 from music_assistant_client.helpers import LinkedUser
 from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
@@ -90,6 +91,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     create_players_from_fixture,
+    load_and_parse_fixture,
     setup_integration_from_fixtures,
     snapshot_music_assistant_entities,
     trigger_subscription_callback,
@@ -1562,7 +1564,10 @@ async def test_media_player_get_queue_action(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test media_player get_queue action."""
+    # even a calling user on a current server keeps a call without a limit cache-only
+    music_assistant_client.server_info.schema_version = 101
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    user = MockUser(is_owner=True).add_to_hass(hass)
     entity_id = "media_player.test_group_player_1"
     response = await hass.services.async_call(
         DOMAIN,
@@ -1572,10 +1577,171 @@ async def test_media_player_get_queue_action(
         },
         blocking=True,
         return_response=True,
+        context=Context(user_id=user.id),
     )
     # no call is made, this info comes from the cached queue data
     assert music_assistant_client.send_command.call_count == 0
     assert response == snapshot(exclude=paths(f"{entity_id}.elapsed_time"))
+
+
+async def test_media_player_get_queue_action_items(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test media_player get_queue action returns the requested queue items."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    queue = next(
+        queue
+        for queue in load_and_parse_fixture("player_queues")
+        if queue["queue_id"] == "test_group_player_1"
+    )
+    music_assistant_client.send_command.return_value = [
+        queue["current_item"],
+        queue["next_item"],
+    ]
+    entity_id = "media_player.test_group_player_1"
+    response = await hass.services.async_call(
+        DOMAIN,
+        MusicAssistantService.GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            MusicAssistantServiceArgument.LIMIT: 2,
+            MusicAssistantServiceArgument.OFFSET: 25,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    # the queue details come from the cached queue data, only its items are requested
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/items",
+        queue_id="test_group_player_1",
+        limit=2,
+        offset=25,
+        require_schema=None,
+    )
+    assert response == snapshot(exclude=paths(f"{entity_id}.elapsed_time"))
+
+
+@pytest.mark.parametrize(
+    ("schema_version", "extra_data", "expected_user", "expected_schema"),
+    [
+        pytest.param(
+            101,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user",
+        ),
+        pytest.param(
+            101,
+            {},
+            {"provider": "homeassistant", "user_id": "ha_user_1", "required": False},
+            101,
+            id="calling_user",
+        ),
+        pytest.param(
+            100,
+            {MusicAssistantServiceArgument.USERNAME: "john"},
+            "john",
+            101,
+            id="given_user_older_server",
+        ),
+        pytest.param(100, {}, None, None, id="older_server"),
+    ],
+)
+async def test_media_player_get_queue_action_user(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    schema_version: int,
+    extra_data: dict[str, Any],
+    expected_user: str | dict[str, Any] | None,
+    expected_schema: int | None,
+) -> None:
+    """Test the queue items are requested as a user only where the server supports it."""
+    music_assistant_client.server_info.schema_version = schema_version
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.send_command.return_value = []
+    MockUser(id="ha_user_1", is_owner=True).add_to_hass(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        MusicAssistantService.GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_group_player_1",
+            MusicAssistantServiceArgument.LIMIT: 5,
+        }
+        | extra_data,
+        blocking=True,
+        return_response=True,
+        context=Context(user_id="ha_user_1"),
+    )
+    sent = music_assistant_client.send_command.call_args.kwargs
+    assert sent.get("user") == expected_user
+    assert sent["require_schema"] == expected_schema
+
+
+async def test_media_player_get_queue_action_older_server(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_queue as a given user on a server that can't act as a user."""
+    music_assistant_client.server_info.schema_version = 100
+    music_assistant_client.send_command.side_effect = InvalidServerVersion(
+        "Command requires schema 101"
+    )
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.GET_QUEUE,
+            {
+                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.LIMIT: 5,
+                MusicAssistantServiceArgument.USERNAME: "john",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "server_too_old"
+
+
+async def test_media_player_get_queue_action_no_active_queue(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_queue raises a translated error when the player has no active queue."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.player_queues._queues.pop("test_group_player_1")
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.GET_QUEUE,
+            {ATTR_ENTITY_ID: "media_player.test_group_player_1"},
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "no_active_queue"
+
+
+async def test_media_player_get_queue_action_offset_without_limit(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test get_queue refuses an offset without a limit instead of ignoring it."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            MusicAssistantService.GET_QUEUE,
+            {
+                ATTR_ENTITY_ID: "media_player.test_group_player_1",
+                MusicAssistantServiceArgument.OFFSET: 10,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "offset_needs_limit"
+    music_assistant_client.send_command.assert_not_called()
 
 
 async def test_media_player_select_source_action(

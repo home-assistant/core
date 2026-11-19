@@ -1,10 +1,14 @@
 """Test the homewizard config flow."""
 
+import asyncio
+from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.components.repairs import (
@@ -66,7 +70,7 @@ async def test_repair_acquires_token(
 
     flow_id = result["flow_id"]
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "confirm_identify"
 
     result = await process_repair_fix_flow(client, flow_id)
 
@@ -89,6 +93,200 @@ async def test_repair_acquires_token(
     assert mock_config_entry.data[CONF_TOKEN] == "cool_token"
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.fixture
+def fast_identify() -> Generator[None]:
+    """Do not wait between identify requests."""
+    with patch("homeassistant.components.homewizard.repairs.IDENTIFY_INTERVAL", 0):
+        yield
+
+
+async def _async_open_migrate_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> tuple[TestClient, dict[str, Any]]:
+    """Set up the entry with v2 support and open its migration repair."""
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await start_repair_fix_flow(
+        client, DOMAIN, f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+    )
+    assert result["type"] == FlowResultType.FORM
+    return client, result
+
+
+@pytest.mark.usefixtures("fast_identify")
+@pytest.mark.parametrize(
+    ("device_fixture", "identify_side_effect", "identify_calls", "step_id"),
+    [
+        pytest.param(
+            "HWE-SKT-11",
+            [None, None, RequestError],
+            3,
+            "confirm_identify",
+            id="repeats_until_error",
+        ),
+        pytest.param(
+            "HWE-SKT-11", DisabledError, 1, "confirm_identify", id="api_disabled"
+        ),
+        pytest.param(
+            "HWE-SKT-11", UnsupportedError, 1, "confirm_identify", id="unsupported"
+        ),
+        pytest.param("HWE-KWH1", None, 0, "confirm", id="not_supported_by_device"),
+    ],
+)
+async def test_repair_identifies_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    hass_client: ClientSessionGenerator,
+    identify_side_effect: list[type[Exception] | None] | type[Exception] | None,
+    identify_calls: int,
+    step_id: str,
+) -> None:
+    """Test the migration repair keeps identifying the device until it fails."""
+    mock_homewizardenergy.identify.side_effect = identify_side_effect
+
+    _, result = await _async_open_migrate_repair(hass, mock_config_entry, hass_client)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["step_id"] == step_id
+    assert len(mock_homewizardenergy.identify.mock_calls) == identify_calls
+
+
+@pytest.mark.usefixtures("fast_identify")
+async def test_repair_identify_stops_after_duration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the migration repair stops identifying after the maximum duration."""
+    with patch("homeassistant.components.homewizard.repairs.IDENTIFY_DURATION", 0):
+        await _async_open_migrate_repair(hass, mock_config_entry, hass_client)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(mock_homewizardenergy.identify.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("fast_identify")
+@pytest.mark.parametrize("close_dialog", [False, True], ids=["submit", "close"])
+async def test_repair_identify_stops_when_leaving_confirm(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    mock_homewizardenergy_v2: MagicMock,
+    hass_client: ClientSessionGenerator,
+    close_dialog: bool,
+) -> None:
+    """Test identifying stops when the user submits or closes the confirm step."""
+    mock_homewizardenergy_v2.get_token.side_effect = DisabledError
+    client, result = await _async_open_migrate_repair(
+        hass, mock_config_entry, hass_client
+    )
+    await asyncio.sleep(0)
+    assert mock_homewizardenergy.identify.mock_calls
+
+    if close_dialog:
+        resp = await client.delete(f"/api/repairs/issues/fix/{result['flow_id']}")
+        assert resp.status == HTTPStatus.OK
+    else:
+        result = await process_repair_fix_flow(client, result["flow_id"])
+        assert result["step_id"] == "authorize"
+
+    identify_calls = len(mock_homewizardenergy.identify.mock_calls)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert len(mock_homewizardenergy.identify.mock_calls) == identify_calls
+
+
+async def test_repair_does_not_identify_unloaded_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the migration repair skips identify when the entry is not loaded."""
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    result = await start_repair_fix_flow(
+        client, DOMAIN, f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    mock_homewizardenergy.identify.assert_not_called()
+
+
+async def test_repair_token_request_network_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+    mock_homewizardenergy_v2: MagicMock,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test repair flow shows a recoverable error if the token request fails."""
+
+    assert await async_setup_component(hass, "repairs", {})
+    client = await hass_client()
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, unique_id="HWE-BAT_5c2fafabcdef"
+    )
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.homewizard.has_v2_api", return_value=True):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_id = f"migrate_to_v2_api_{mock_config_entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Simulate device unreachable when requesting a token
+    mock_homewizardenergy_v2.get_token.side_effect = RequestError
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "confirm_identify"
+
+    result = await process_repair_fix_flow(client, flow_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    result = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert result["errors"] == {"base": "network_error"}
+
+    # Simulate device reachable again and user pressing the button
+    mock_homewizardenergy_v2.get_token.side_effect = None
+    mock_homewizardenergy_v2.get_token.return_value = "cool_token"
+    result = await process_repair_fix_flow(client, flow_id, json={})
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.data[CONF_TOKEN] == "cool_token"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
