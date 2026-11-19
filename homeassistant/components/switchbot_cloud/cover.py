@@ -78,7 +78,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         if mode is not None:
             await self.send_api_command(
                 CurtainCommands.SET_POSITION,
-                parameters=f"{CURTAIN_MODE_MAP.get(mode)},ff,{0}",
+                parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{0}",
             )
         else:
             await self.send_api_command(CommonCommands.ON)
@@ -92,7 +92,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
         if mode is not None:
             await self.send_api_command(
                 CurtainCommands.SET_POSITION,
-                parameters=f"{CURTAIN_MODE_MAP.get(mode)},ff,{100}",
+                parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100}",
             )
         else:
             await self.send_api_command(CommonCommands.OFF)
@@ -108,12 +108,12 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
             if mode is not None:
                 await self.send_api_command(
                     CurtainCommands.SET_POSITION,
-                    parameters=f"{CURTAIN_MODE_MAP.get(mode)},ff,{100 - position}",
+                    parameters=f"0,{CURTAIN_MODE_MAP.get(mode)},{100 - position}",
                 )
             else:
                 await self.send_api_command(
                     CurtainCommands.SET_POSITION,
-                    parameters=f"{0},ff,{100 - position}",
+                    parameters=f"0,ff,{100 - position}",
                 )
             await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
