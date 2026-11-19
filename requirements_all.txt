@@ -2309,7 +2309,7 @@ pyfido==2.1.2
 pyfirefly==0.1.17
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.49
+pyfireservicerota==0.0.50
 
 # homeassistant.components.flic_button
 pyflic-ble==0.2.6
