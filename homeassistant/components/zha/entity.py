@@ -17,7 +17,7 @@ from homeassistant.const import STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import Context, State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS, Entity
 from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType, Undefined
@@ -184,10 +184,21 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         expected_state: StateType,
     ) -> None:
         """Set context propagated from a ZHA group entity."""
+        current_state = self.state if self.available else STATE_UNAVAILABLE
+        has_pending_transition = (
+            self._context is not None
+            and self._context_expected_state is not None
+            and not self._context_expected_state_matched
+            and self._context_set is not None
+            and context_set is not None
+            and context_set - self._context_set <= CONTEXT_RECENT_TIME_SECONDS
+        )
         self._context = context
         self._context_set = context_set
         self._context_expected_state = expected_state
-        self._context_expected_state_matched = False
+        self._context_expected_state_matched = (
+            current_state == expected_state and not has_pending_transition
+        )
 
     @callback
     def _propagate_group_context(
