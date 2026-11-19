@@ -12,13 +12,11 @@ from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
-    SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_OPERATION_MODE,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_evohome
@@ -95,10 +93,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "auto",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "auto",
             },
             blocking=True,
         )
@@ -109,10 +107,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "off",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "off",
             },
             blocking=True,
         )
@@ -129,10 +127,10 @@ async def test_set_operation_mode(
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_OPERATION_MODE,
+            WaterHeaterService.SET_OPERATION_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_OPERATION_MODE: "on",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.OPERATION_MODE: "on",
             },
             blocking=True,
         )
@@ -156,10 +154,10 @@ async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            WaterHeaterService.SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_AWAY_MODE: "off",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.AWAY_MODE: "off",
             },
             blocking=True,
         )
@@ -170,10 +168,10 @@ async def test_set_away_mode(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_SET_AWAY_MODE,
+            WaterHeaterService.SET_AWAY_MODE,
             {
-                ATTR_ENTITY_ID: dhw_id,
-                ATTR_AWAY_MODE: "on",
+                TargetKey.ENTITY_ID: dhw_id,
+                WaterHeaterServiceArgument.AWAY_MODE: "on",
             },
             blocking=True,
         )
@@ -189,9 +187,9 @@ async def test_turn_off(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_OFF,
+            WaterHeaterService.TURN_OFF,
             {
-                ATTR_ENTITY_ID: dhw_id,
+                TargetKey.ENTITY_ID: dhw_id,
             },
             blocking=True,
         )
@@ -207,9 +205,9 @@ async def test_turn_on(hass: HomeAssistant, dhw_id: str) -> None:
     with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
-            SERVICE_TURN_ON,
+            WaterHeaterService.TURN_ON,
             {
-                ATTR_ENTITY_ID: dhw_id,
+                TargetKey.ENTITY_ID: dhw_id,
             },
             blocking=True,
         )

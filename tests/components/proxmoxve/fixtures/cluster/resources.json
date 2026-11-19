@@ -1,0 +1,45 @@
+[
+  {
+    "id": "qemu/100",
+    "type": "qemu",
+    "vmid": 100,
+    "node": "pve1",
+    "name": "vm-web",
+    "status": "running",
+    "maxmem": 2147483648,
+    "mem": 536870912,
+    "memhost": 1073741824,
+    "maxcpu": 2,
+    "cpu": 0.15,
+    "uptime": 86400,
+    "template": 0
+  },
+  {
+    "id": "qemu/101",
+    "type": "qemu",
+    "vmid": 101,
+    "node": "pve1",
+    "name": "vm-db",
+    "status": "stopped",
+    "maxmem": 2147483648,
+    "mem": 0,
+    "maxcpu": 2,
+    "cpu": 0,
+    "uptime": 0,
+    "template": 0
+  },
+  {
+    "id": "lxc/200",
+    "type": "lxc",
+    "vmid": 200,
+    "node": "pve1",
+    "name": "ct-nginx",
+    "status": "running",
+    "maxmem": 1073741824,
+    "mem": 268435456,
+    "maxcpu": 1,
+    "cpu": 0.05,
+    "uptime": 43200,
+    "template": 0
+  }
+]

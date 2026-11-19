@@ -19,7 +19,7 @@ from homeassistant.components.select import (
     SelectService,
     SelectServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -97,7 +97,7 @@ async def test_selection_option_service(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
-        {CommonServiceArgument.ENTITY_ID: entity_id, SelectServiceArgument.OPTION: "9"},
+        {TargetKey.ENTITY_ID: entity_id, SelectServiceArgument.OPTION: "9"},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "9"
@@ -121,7 +121,7 @@ async def test_selection_option_write_failure(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: "select.28_111111111111_temperature_resolution",
+                TargetKey.ENTITY_ID: "select.28_111111111111_temperature_resolution",
                 SelectServiceArgument.OPTION: "9",
             },
             blocking=True,

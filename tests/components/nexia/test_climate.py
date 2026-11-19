@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.nexia.const import DOMAIN
 from homeassistant.components.nexia.services import NexiaService, NexiaServiceArgument
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -125,7 +125,7 @@ async def test_set_hvac_run_mode(
     await hass.services.async_call(
         DOMAIN,
         NexiaService.SET_HVAC_RUN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
