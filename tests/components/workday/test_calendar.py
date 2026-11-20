@@ -9,6 +9,7 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
+    EVENT_SUMMARY,
     CalendarService,
     CalendarServiceArgument,
 )
@@ -52,12 +53,12 @@ async def test_holiday_calendar_entity(
     assert {
         ATTR_END: "2023-01-02",
         ATTR_START: "2023-01-01",
-        CalendarServiceArgument.SUMMARY: "Workday Sensor DE BW",
+        EVENT_SUMMARY: "Workday Sensor DE BW",
     } not in response["calendar.workday_sensor_de_bw_calendar"]["events"]
     assert {
         ATTR_END: "2023-01-04",
         ATTR_START: "2023-01-03",
-        CalendarServiceArgument.SUMMARY: "Workday Sensor DE BW",
+        EVENT_SUMMARY: "Workday Sensor DE BW",
     } in response["calendar.workday_sensor_de_bw_calendar"]["events"]
 
     state = hass.states.get("calendar.workday_sensor_de_bw_calendar")
