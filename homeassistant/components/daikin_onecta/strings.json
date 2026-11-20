@@ -135,8 +135,27 @@
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
           "swing_mode": {
             "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
               "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
               "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
               "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
@@ -152,8 +171,27 @@
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
           "swing_mode": {
             "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
               "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
               "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
               "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
@@ -169,8 +207,27 @@
               "quiet": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::fan_mode::state::quiet%]"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::5%]",
+              "6": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::6%]",
+              "7": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::7%]",
+              "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::fixed%]",
+              "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::floorheatingairflow%]",
+              "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_horizontal_mode::state::windnice%]"
+            }
+          },
           "swing_mode": {
             "state": {
+              "1": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::1%]",
+              "2": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::2%]",
+              "3": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::3%]",
+              "4": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::4%]",
+              "5": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::5%]",
               "fixed": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::fixed%]",
               "floorheatingairflow": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::floorheatingairflow%]",
               "windnice": "[%key:component::daikin_onecta::entity::climate::room_temperature::state_attributes::swing_mode::state::windnice%]"
@@ -186,8 +243,27 @@
               "quiet": "Quiet"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "1": "Position 1 (leftmost)",
+              "2": "Position 2",
+              "3": "Position 3",
+              "4": "Position 4",
+              "5": "Position 5",
+              "6": "Position 6",
+              "7": "Position 7 (rightmost)",
+              "fixed": "Fixed",
+              "floorheatingairflow": "Floor heating airflow",
+              "windnice": "Comfort airflow"
+            }
+          },
           "swing_mode": {
             "state": {
+              "1": "Position 1 (highest)",
+              "2": "Position 2",
+              "3": "Position 3",
+              "4": "Position 4",
+              "5": "Position 5 (lowest)",
               "fixed": "Fixed",
               "floorheatingairflow": "Floor heating airflow",
               "windnice": "Comfort airflow"

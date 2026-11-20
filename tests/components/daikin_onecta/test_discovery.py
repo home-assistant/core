@@ -19,9 +19,6 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
-    has_air_purifier_power,
-    has_air_purifier_power_control,
-    scalar_characteristics_for_platform,
     scalar_platform,
     scalar_platform_for_point,
 )
@@ -50,104 +47,66 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
     (
         "name",
         "characteristic",
-        "management_point_type",
-        "air_purifier_power_present",
         "expected",
     ),
     [
         pytest.param(
             "econoMode",
             Characteristic(value="on", settable=True, values=["on", "off"]),
-            "climateControl",
-            False,
             Platform.SWITCH,
             id="econo-mode-is-a-switch-before-point-classification",
         ),
         pytest.param(
             "econoMode",
             Characteristic(value="on", settable=True, values=["on", "off"]),
-            "domesticHotWaterTank",
-            False,
             Platform.SWITCH,
             id="econo-mode-switch-on-water-heater",
         ),
         pytest.param(
             "ledEnabled",
             Characteristic(value="on", settable=True, values=["on", "off"]),
-            "climateControl",
-            False,
             None,
             id="writable-on-off-without-switch-description",
         ),
         pytest.param(
             "ledEnabled",
             Characteristic(value="on", values=["on", "off"]),
-            "climateControl",
-            False,
             Platform.BINARY_SENSOR,
             id="read-only-on-off-binary-sensor",
         ),
         pytest.param(
             "ledEnabled",
             Characteristic(value="on"),
-            "climateControl",
-            False,
             Platform.BINARY_SENSOR,
             id="binary-sensor-without-values",
         ),
         pytest.param(
             "ledEnabled",
             Characteristic(value="on", values=["on", "off", "auto"]),
-            "climateControl",
-            False,
             None,
             id="read-only-on-off-with-additional-value",
         ),
         pytest.param(
             "streamerMode",
             Characteristic(value="on", settable=True, values=["on", "off", "auto"]),
-            "gateway",
-            False,
             None,
             id="writable-switch-with-additional-value",
         ),
         pytest.param(
             "operationMode",
             Characteristic(value="heating"),
-            "climateControl",
-            False,
             Platform.SENSOR,
             id="control-operation-mode-sensor",
         ),
         pytest.param(
-            "airPurificationMode",
-            Characteristic(value="autoFan"),
-            "climateControl",
-            True,
-            None,
-            id="air-purification-mode-is-a-fan-preset",
-        ),
-        pytest.param(
-            "airPurificationMode",
-            Characteristic(value="autoFan"),
-            "climateControl",
-            False,
-            Platform.SENSOR,
-            id="read-only-air-purification-mode-sensor",
-        ),
-        pytest.param(
             "operationMode",
             Characteristic(value="heating"),
-            "outdoorUnit",
-            False,
             Platform.SENSOR,
             id="non-control-operation-mode",
         ),
         pytest.param(
             "futureCharacteristic",
             Characteristic(value="unknown"),
-            "climateControl",
-            False,
             None,
             id="unknown-characteristic",
         ),
@@ -156,8 +115,6 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
 def test_scalar_platform(
     name: str,
     characteristic: Characteristic,
-    management_point_type: str,
-    air_purifier_power_present: bool,
     expected: Platform | None,
 ) -> None:
     """Classify supported scalar characteristics consistently."""
@@ -165,8 +122,6 @@ def test_scalar_platform(
         scalar_platform(
             name,
             characteristic,
-            management_point_type,
-            air_purifier_power_present=air_purifier_power_present,
         )
         is expected
     )
@@ -251,21 +206,6 @@ def test_energy_description_key() -> None:
     assert energy_description_key(replace(aggregate, source="future-source")) is None
 
 
-def test_air_purifier_mode_is_sensor_when_power_control_is_absent() -> None:
-    """Expose purifier mode when the device has no power characteristic."""
-    device = _load_gateway_devices("mc80z")[0]
-    point = device.management_points_by_type("climateControl")[0]
-    assert point.air_purification is not None
-    assert point.air_purification.power is not None
-    point.on_off_mode = None
-
-    assert not has_air_purifier_power(point)
-    assert not has_air_purifier_power_control(point)
-    assert "airPurificationMode" in dict(
-        scalar_characteristics_for_platform(point, Platform.SENSOR)
-    )
-
-
 async def test_air_purifier_offline_does_not_create_mode_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -273,7 +213,7 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
     freezer: FrozenDateTimeFactory,
     mock_onecta_client: MockOnectaClient,
 ) -> None:
-    """Do not register a duplicate mode sensor while purifier power is read-only."""
+    """Expose purifier mode only when its fan entity cannot control power."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
     coordinator = config_entry.runtime_data
     device = next(iter(coordinator.data.values()))
@@ -309,6 +249,24 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
     fan_state = hass.states.get(fan_entity_id)
     assert fan_state is not None and fan_state.state == STATE_UNAVAILABLE
 
+    read_only_devices = deepcopy(_load_gateway_devices("mc80z"))
+    read_only_point = read_only_devices[0].management_points_by_type("climateControl")[
+        0
+    ]
+    assert read_only_point.air_purification is not None
+    assert read_only_point.air_purification.power is not None
+    read_only_point.air_purification.power.settable = False
+    mock_onecta_client.get_gateway_devices.return_value = read_only_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    mode_sensor_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+    )
+    assert mode_sensor_entity_id is not None
+    mode_sensor_state = hass.states.get(mode_sensor_entity_id)
+    assert mode_sensor_state is not None
+    assert mode_sensor_state.state != STATE_UNAVAILABLE
+
     mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("mc80z")
     await _async_fire_coordinator_update(hass, coordinator, freezer)
 
@@ -316,7 +274,11 @@ async def test_air_purifier_offline_does_not_create_mode_sensor(
         entity_registry.async_get_entity_id(
             Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
         )
-        is None
+        == mode_sensor_entity_id
+    )
+    mode_sensor_state = hass.states.get(mode_sensor_entity_id)
+    assert (
+        mode_sensor_state is not None and mode_sensor_state.state == STATE_UNAVAILABLE
     )
     fan_state = hass.states.get(fan_entity_id)
     assert fan_state is not None and fan_state.state != STATE_UNAVAILABLE

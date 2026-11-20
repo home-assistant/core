@@ -8,7 +8,9 @@ from daikin_onecta import ClimateControl, ClimateControlClient
 from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
+    FanDirectionMode,
     FanOperationMode,
+    FanSpeedMode,
     Setpoint,
 )
 
@@ -31,6 +33,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .climate_entity_descriptions import CLIMATE_ENTITY_DESCRIPTIONS
 from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
@@ -49,24 +52,22 @@ _DAIKIN_SWING_TO_HA = {"stop": SWING_OFF, "swing": SWING_ON}
 
 PRESET_MODES = (PRESET_BOOST, PRESET_AWAY, PRESET_COMFORT, PRESET_ECO)
 
-CLIMATE_ENTITY_DESCRIPTIONS = {
-    "calculatedLeavingWaterTemperature": ClimateEntityDescription(
-        key="calculated_leaving_water_temperature",
-        translation_key="calculated_leaving_water_temperature",
-    ),
-    "leavingWaterOffset": ClimateEntityDescription(
-        key="leaving_water_offset",
-        translation_key="leaving_water_offset",
-    ),
-    "leavingWaterTemperature": ClimateEntityDescription(
-        key="leaving_water_temperature",
-        translation_key="leaving_water_temperature",
-    ),
-    "roomTemperature": ClimateEntityDescription(
-        key="room_temperature",
-        translation_key="room_temperature",
-    ),
-}
+
+def _fixed_positions(mode: FanSpeedMode | FanDirectionMode) -> range | None:
+    """Return valid integral fixed positions from the Daikin range metadata."""
+    minimum = mode.min_value
+    maximum = mode.max_value
+    step = mode.step_value
+    if (
+        minimum is None
+        or maximum is None
+        or step is None
+        or step <= 0
+        or not all(float(value).is_integer() for value in (minimum, maximum, step))
+    ):
+        return None
+    return range(int(minimum), int(maximum) + 1, int(step))
+
 
 DAIKIN_HVAC_TO_HA = {
     "fanOnly": HVACMode.FAN_ONLY,
@@ -530,20 +531,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                 and FANMODE_FIXED in fan_speed.modes
             ):
                 fixed = fan_speed.modes[FANMODE_FIXED]
-                if (
-                    fixed.settable
-                    and fixed.min_value is not None
-                    and fixed.max_value is not None
-                    and fixed.step_value is not None
-                ):
-                    fan_modes.extend(
-                        str(value)
-                        for value in range(
-                            int(fixed.min_value),
-                            int(fixed.max_value) + 1,
-                            int(fixed.step_value),
-                        )
-                    )
+                positions = _fixed_positions(fixed) if fixed.settable else None
+                if positions is not None:
+                    fan_modes.extend(str(position) for position in positions)
             else:
                 fan_modes.append(mode)
         return fan_modes
@@ -625,19 +615,20 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self, direction: Literal["vertical", "horizontal"]
     ) -> str | None:
         """Return current swing mode for an axis."""
-        fan_operation = self._fan_operation()
-        if fan_operation is None or fan_operation.fan_direction is None:
-            return None
-        axis = cast(
-            "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
-        )
+        axis = self._fan_direction_axis(direction)
         if axis is None:
             return None
         if (value := cast("str | None", axis.current_mode.value)) is None:
             return None
         mode = value.lower()
-        if mode == FANMODE_FIXED and axis.modes and FANMODE_FIXED in axis.modes:
-            return str(axis.modes[FANMODE_FIXED].value)
+        if mode == FANMODE_FIXED:
+            swing_modes = self._get_swing_modes_for_direction(direction)
+            fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
+            if fixed is not None and float(fixed.value).is_integer():
+                position = str(int(fixed.value))
+                if position in swing_modes:
+                    return position
+            return mode if mode in swing_modes else None
         return _DAIKIN_SWING_TO_HA.get(mode, mode)
 
     def _get_swing_mode(self) -> str | None:
@@ -652,12 +643,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         self, direction: Literal["vertical", "horizontal"]
     ) -> list[str]:
         """Return supported swing modes for an axis."""
-        fan_operation = self._fan_operation()
-        if fan_operation is None or fan_operation.fan_direction is None:
-            return []
-        axis = cast(
-            "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
-        )
+        axis = self._fan_direction_axis(direction)
         if axis is None:
             return []
         # Daikin also exposes comfort and floor-heating airflow direction modes.
@@ -665,6 +651,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         for mode in axis.current_mode.values or []:
             if mode.lower() == FANMODE_FIXED:
                 fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
+                positions = _fixed_positions(fixed) if fixed is not None else None
                 if (
                     fixed is not None
                     and fixed.settable
@@ -672,22 +659,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                         axis.current_mode.value == FANMODE_FIXED
                         or axis.current_mode.settable
                     )
-                    and fixed.min_value is not None
-                    and fixed.max_value is not None
-                    and fixed.step_value is not None
-                    and int(fixed.min_value) == fixed.min_value
-                    and int(fixed.max_value) == fixed.max_value
-                    and int(fixed.step_value) == fixed.step_value
-                    and fixed.step_value > 0
+                    and positions is not None
                 ):
-                    swing_modes.extend(
-                        str(position)
-                        for position in range(
-                            int(fixed.min_value),
-                            int(fixed.max_value) + 1,
-                            int(fixed.step_value),
-                        )
-                    )
+                    swing_modes.extend(str(position) for position in positions)
                     continue
             if axis.current_mode.settable:
                 swing_modes.append(_DAIKIN_SWING_TO_HA.get(mode.lower(), mode.lower()))
@@ -701,33 +675,34 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
         """Return the supported horizontal swing modes."""
         return self._get_swing_modes_for_direction("horizontal")
 
+    def _fan_direction_axis(
+        self,
+        direction: Literal["vertical", "horizontal"],
+        operation_mode: str | None = None,
+    ) -> FanDirectionAxis | None:
+        """Return one fan-direction axis for the current or given mode."""
+        fan_operation = self._fan_operation(operation_mode)
+        if fan_operation is None or fan_operation.fan_direction is None:
+            return None
+        return cast(
+            "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
+        )
+
     async def _async_set_swing(
         self, direction: Literal["vertical", "horizontal"], swing_mode: str
     ) -> bool:
         """Set a fan-direction mode."""
-        fan_operation = self._fan_operation()
         cc = self._climate_control()
-        if (
-            fan_operation is None
-            or fan_operation.fan_direction is None
-            or cc is None
-            or cc.operation_mode is None
-        ):
+        if cc is None or cc.operation_mode is None:
             return False
-        axis = cast(
-            "FanDirectionAxis | None", getattr(fan_operation.fan_direction, direction)
-        )
+        axis = self._fan_direction_axis(direction)
         if axis is None:
             return False
         operation_mode = cc.operation_mode.value
 
         if swing_mode.isnumeric():
             fixed = axis.modes.get(FANMODE_FIXED) if axis.modes else None
-            if (
-                fixed is None
-                or not fixed.settable
-                or swing_mode not in self._get_swing_modes_for_direction(direction)
-            ):
+            if fixed is None or not fixed.settable:
                 return False
 
             if axis.current_mode.value != FANMODE_FIXED:
@@ -739,13 +714,7 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     )
                 ):
                     return False
-                fan_operation = self._fan_operation(operation_mode)
-                if fan_operation is None or fan_operation.fan_direction is None:
-                    return False
-                axis = cast(
-                    "FanDirectionAxis | None",
-                    getattr(fan_operation.fan_direction, direction),
-                )
+                axis = self._fan_direction_axis(direction, operation_mode)
                 if axis is None:
                     return False
                 axis.current_mode.value = FANMODE_FIXED
@@ -763,18 +732,8 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
                     )
                 ):
                     return False
-                fan_operation = self._fan_operation(operation_mode)
-                if fan_operation is None or fan_operation.fan_direction is None:
-                    return False
-                axis = cast(
-                    "FanDirectionAxis | None",
-                    getattr(fan_operation.fan_direction, direction),
-                )
-                fixed = (
-                    axis.modes.get(FANMODE_FIXED)
-                    if axis is not None and axis.modes
-                    else None
-                )
+                axis = self._fan_direction_axis(direction, operation_mode)
+                fixed = axis.modes.get(FANMODE_FIXED) if axis and axis.modes else None
                 if fixed is None:
                     return False
                 fixed.value = position
@@ -799,14 +758,9 @@ class DaikinClimate(DaikinManagementPointEntity, ClimateEntity):
             )
         )
         if result:
-            fan_operation = self._fan_operation(operation_mode)
-            if fan_operation is not None and fan_operation.fan_direction is not None:
-                axis = cast(
-                    "FanDirectionAxis | None",
-                    getattr(fan_operation.fan_direction, direction),
-                )
-                if axis is not None:
-                    axis.current_mode.value = new_mode
+            axis = self._fan_direction_axis(direction, operation_mode)
+            if axis is not None:
+                axis.current_mode.value = new_mode
         return result
 
     @override

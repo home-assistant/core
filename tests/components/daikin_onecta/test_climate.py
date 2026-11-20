@@ -34,16 +34,17 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import (
-    CLIMATE_ENTITY_DESCRIPTIONS,
     DaikinClimate,
     _create_climate_entities,
+)
+from homeassistant.components.daikin_onecta.climate_entity_descriptions import (
+    CLIMATE_ENTITY_DESCRIPTIONS,
 )
 from homeassistant.components.daikin_onecta.const import FANMODE_FIXED
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
-from homeassistant.components.daikin_onecta.discovery import CLIMATE_SETPOINT_TYPES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -271,11 +272,6 @@ def test_create_climate_entities_deduplicates_targets_per_management_point() -> 
             {},
         ),
     ]
-
-
-def test_climate_setpoint_types_match_entity_descriptions() -> None:
-    """Keep discovery's climate setpoint support aligned with entity creation."""
-    assert frozenset(CLIMATE_ENTITY_DESCRIPTIONS) == CLIMATE_SETPOINT_TYPES
 
 
 def test_create_climate_entities_skips_management_points_without_climate_control() -> (
@@ -2465,6 +2461,53 @@ async def test_climate_state_keeps_fixed_swing_distinct_from_off(
     assert entity.swing_mode != SWING_OFF
 
 
+@pytest.mark.parametrize(
+    ("fixed_settable", "fixed_value", "expected_swing_mode"),
+    [
+        pytest.param(False, 2, "fixed", id="fixed-control-read-only"),
+        pytest.param(True, 9, None, id="position-outside-supported-range"),
+    ],
+)
+async def test_climate_swing_state_is_in_advertised_modes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fixed_settable: bool,
+    fixed_value: int,
+    expected_swing_mode: str | None,
+) -> None:
+    """Never report a fixed swing position outside the advertised modes."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    gateway_id = DRY_FIXED_DIRECTION_GATEWAY_ID
+    device = coordinator.data[gateway_id]
+    point = device.management_point("climateControl")
+    assert point is not None and point.climate_control is not None
+    fan_operation = point.climate_control.fan_operation()
+    assert fan_operation is not None and fan_operation.fan_direction is not None
+    vertical = fan_operation.fan_direction.vertical
+    assert vertical is not None
+    vertical.current_mode.value = "fixed"
+    vertical.current_mode.settable = True
+    vertical.current_mode.values = ["swing", "fixed"]
+    fixed = vertical.modes[FANMODE_FIXED]
+    fixed.settable = fixed_settable
+    fixed.value = fixed_value
+    fixed.min_value = 1
+    fixed.max_value = 5
+    fixed.step_value = 1
+    coordinator.async_update_listeners()
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.CLIMATE, DOMAIN, f"{gateway_id}_climateControl_roomTemperature"
+    )
+    assert entity_id is not None
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, DaikinClimate)
+    assert entity.swing_mode == expected_swing_mode
+    assert expected_swing_mode is None or expected_swing_mode in entity.swing_modes
+
+
 async def test_climate_service_sets_fixed_swing_position(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2783,11 +2826,18 @@ async def test_read_only_fan_controls_do_not_call_cloud(
 
 
 @pytest.mark.parametrize(
-    ("current_mode", "mode_settable", "speed_settable", "expected_modes"),
+    (
+        "current_mode",
+        "mode_settable",
+        "speed_settable",
+        "fixed_step",
+        "expected_modes",
+    ),
     [
-        ("quiet", False, True, []),
-        ("fixed", False, True, ["1", "2"]),
-        ("quiet", True, False, ["quiet"]),
+        pytest.param("quiet", False, True, 1, [], id="current-mode-read-only"),
+        pytest.param("fixed", False, True, 1, ["1", "2"], id="fixed-position"),
+        pytest.param("quiet", True, False, 1, ["quiet"], id="fixed-speed-read-only"),
+        pytest.param("quiet", True, True, 0, ["quiet"], id="zero-step-is-ignored"),
     ],
 )
 async def test_climate_state_fan_modes_respect_writable_characteristics(
@@ -2797,6 +2847,7 @@ async def test_climate_state_fan_modes_respect_writable_characteristics(
     current_mode: str,
     mode_settable: bool,
     speed_settable: bool,
+    fixed_step: int,
     expected_modes: list[str],
 ) -> None:
     """Treat mode selection and numeric speed control as separate capabilities."""
@@ -2818,7 +2869,7 @@ async def test_climate_state_fan_modes_respect_writable_characteristics(
     fixed.settable = speed_settable
     fixed.min_value = 1
     fixed.max_value = 2
-    fixed.step_value = 1
+    fixed.step_value = fixed_step
     coordinator.async_update_listeners()
 
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_id)

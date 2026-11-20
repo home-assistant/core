@@ -143,7 +143,9 @@ def add_simple_sensors(
 ) -> None:
     """Add sensors for simple characteristics of one management point."""
     for value, _characteristic in scalar_characteristics_for_platform(
-        management_point, Platform.SENSOR
+        management_point,
+        Platform.SENSOR,
+        gateway_online=device.device.cloud_connection.value is True,
     ):
         unique_id = _value_sensor_unique_id(
             device.id, management_point.embedded_id, None, value

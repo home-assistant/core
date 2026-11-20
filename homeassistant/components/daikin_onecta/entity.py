@@ -262,7 +262,13 @@ class DaikinManagementPointEntity(DaikinOnectaEntity):
         return (
             point is not None
             and characteristic is not None
-            and scalar_platform_for_point(point, name, characteristic) is platform
+            and scalar_platform_for_point(
+                point,
+                name,
+                characteristic,
+                gateway_online=self._device.device.cloud_connection.value is True,
+            )
+            is platform
         )
 
     @property

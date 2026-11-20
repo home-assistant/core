@@ -6,28 +6,10 @@ from daikin_onecta.models import Characteristic, EnergyAggregate, ManagementPoin
 
 from homeassistant.const import Platform
 
+from .climate_entity_descriptions import CLIMATE_SETPOINT_TYPES
 from .const import ENERGY_AGGREGATE_PERIODS
 from .entity_metadata import BINARY_SENSOR_KEYS, SENSOR_KEYS, SWITCH_KEYS
 from .utils import is_read_only_on_off_value
-
-CLIMATE_SETPOINT_TYPES = frozenset(
-    {
-        "calculatedLeavingWaterTemperature",
-        "leavingWaterOffset",
-        "leavingWaterTemperature",
-        "roomTemperature",
-    }
-)
-
-
-def has_air_purifier_power(
-    point: ManagementPoint | None,
-) -> bool:
-    """Return whether an air-purifier power characteristic is present."""
-    if point is None or point.management_point_type != "climateControl":
-        return False
-    air_purification = point.air_purification
-    return air_purification is not None and air_purification.power is not None
 
 
 def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
@@ -45,9 +27,6 @@ def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
 def scalar_platform(
     name: str,
     characteristic: Characteristic,
-    management_point_type: str,
-    *,
-    air_purifier_power_present: bool = False,
 ) -> Platform | None:
     """Return the platform that exposes a scalar characteristic, if any."""
     values = characteristic.values or []
@@ -58,11 +37,7 @@ def scalar_platform(
         or is_read_only_on_off_value(characteristic.settable, characteristic.values)
     ):
         return Platform.BINARY_SENSOR
-    if name in SENSOR_KEYS and not (
-        name == "airPurificationMode"
-        and management_point_type == "climateControl"
-        and air_purifier_power_present
-    ):
+    if name in SENSOR_KEYS:
         return Platform.SENSOR
     return None
 
@@ -71,11 +46,19 @@ def scalar_platform_for_point(
     point: ManagementPoint,
     name: str,
     characteristic: Characteristic | None = None,
+    *,
+    gateway_online: bool = True,
 ) -> Platform | None:
     """Return the Home Assistant platform for a point's scalar characteristic."""
     if characteristic is None:
         characteristic = point.scalar_characteristic(name)
     if characteristic is None:
+        return None
+    if (
+        name == "airPurificationMode"
+        and point.management_point_type == "climateControl"
+        and (not gateway_online or has_air_purifier_power_control(point))
+    ):
         return None
     # Econo mode is already exposed as a preset only on climate points that
     # also produce a climate entity; otherwise retain the scalar switch.
@@ -100,22 +83,22 @@ def scalar_platform_for_point(
         )
     ):
         return None
-    return scalar_platform(
-        name,
-        characteristic,
-        point.management_point_type,
-        air_purifier_power_present=has_air_purifier_power(point),
-    )
+    return scalar_platform(name, characteristic)
 
 
 def scalar_characteristics_for_platform(
-    point: ManagementPoint, platform: Platform
+    point: ManagementPoint, platform: Platform, *, gateway_online: bool = True
 ) -> Iterator[tuple[str, Characteristic]]:
     """Yield scalar characteristics exposed by one platform."""
     return (
         (name, characteristic)
         for name, characteristic in point.scalar_characteristics().items()
-        if scalar_platform_for_point(point, name, characteristic) is platform
+        if (
+            scalar_platform_for_point(
+                point, name, characteristic, gateway_online=gateway_online
+            )
+            is platform
+        )
     )
 
 
