@@ -27,7 +27,7 @@ TEST_LONGITUDE = 5.4002156
 TEST_CFG_DATA = {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
 
 
-pytestmark = pytest.mark.usefixtures("mock_buienradar_data")
+pytestmark = pytest.mark.usefixtures("mock_buienradar_feeds")
 
 
 def radar_map_url(country_code: str = "NL") -> str:

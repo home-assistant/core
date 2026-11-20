@@ -16,7 +16,7 @@ from . import TEST_CFG_DATA, TEST_LATITUDE, TEST_LONGITUDE, setup_integration
 CONDITIONS = {"stationname": "Eindhoven (6370)", "temperature": "8.2"}
 
 
-@pytest.mark.usefixtures("mock_buienradar_data")
+@pytest.mark.usefixtures("mock_buienradar_feeds")
 async def test_smoke_test_setup_component(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

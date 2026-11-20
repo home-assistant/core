@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from . import setup_integration
 
 
-@pytest.mark.usefixtures("mock_buienradar_data")
+@pytest.mark.usefixtures("mock_buienradar_feeds")
 async def test_load_unload(hass: HomeAssistant) -> None:
     """Test loading and unloading a config entry."""
     entry = await setup_integration(hass)
