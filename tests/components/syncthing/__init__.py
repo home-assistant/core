@@ -3,10 +3,10 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-
-from tests.common import load_json_object_fixture
 
 URL = "http://127.0.0.1:8384"
 TOKEN = "token"

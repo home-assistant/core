@@ -1,8 +1,10 @@
 {
   "domain": "yolink",
   "name": "YoLink",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@matrixd2"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "dependencies": ["auth", "application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/yolink",
   "integration_type": "hub",

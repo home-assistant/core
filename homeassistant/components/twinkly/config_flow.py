@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from aiohttp import ClientError
+from probatio import Required, Schema
 from ttls.client import Twinkly
-from voluptuous import Required, Schema
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
@@ -84,7 +84,6 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self._create_entry_from_device(device_info, host)
 
-        self._set_confirm_only()
         self.context["title_placeholders"] = {
             "name": device_info[DEV_NAME],
         }

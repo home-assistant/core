@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
@@ -12,7 +12,7 @@ from homeassistant.components.image import (
     ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -22,8 +22,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator, validators as tcv
-from .const import CONF_PICTURE
+from . import validators as tcv
+from .const import CONF_PICTURE, DEFAULT_NAMES
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
@@ -35,7 +36,7 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Template Image"
+DEFAULT_NAME = DEFAULT_NAMES[Platform.IMAGE]
 
 GET_IMAGE_TIMEOUT = 10
 
@@ -43,10 +44,10 @@ _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
     attributes=ImageEntityStateAttribute
 )
 
-IMAGE_YAML_SCHEMA = vol.Schema(
+IMAGE_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
     make_template_entity_common_schema(
@@ -55,10 +56,10 @@ IMAGE_YAML_SCHEMA = vol.Schema(
 )
 
 
-IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
+IMAGE_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 

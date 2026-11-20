@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.util import slugify, utcnow
 
 from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("mock_config_entry", ["mocked-config-entry-id"], indirect=True)

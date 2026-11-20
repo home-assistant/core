@@ -27,6 +27,12 @@
           "off": "mdi:microphone-message-off"
         }
       },
+      "aqm_led": {
+        "default": "mdi:led-on",
+        "state": {
+          "off": "mdi:led-off"
+        }
+      },
       "communications": {
         "default": "mdi:message-bulleted",
         "state": {

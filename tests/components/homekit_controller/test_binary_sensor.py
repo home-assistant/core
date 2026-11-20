@@ -318,7 +318,7 @@ async def test_valve_status_binary_sensors(
 
     low_battery = Helper(
         hass,
-        "binary_sensor.testdevice_low_battery",
+        "binary_sensor.testdevice_battery",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -364,9 +364,9 @@ async def test_duplicate_low_battery_characteristics_create_single_binary_sensor
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get("binary_sensor.shared_sensor_low_battery")
+    low_battery = hass.states.get("binary_sensor.shared_sensor_battery")
     assert low_battery
-    assert hass.states.get("binary_sensor.shared_sensor_low_battery_2") is None
+    assert hass.states.get("binary_sensor.shared_sensor_battery_2") is None
 
 
 async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
@@ -381,9 +381,9 @@ async def test_unnamed_low_battery_characteristics_create_single_binary_sensor(
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get("binary_sensor.unnamed_sensor_low_battery")
+    low_battery = hass.states.get("binary_sensor.unnamed_sensor_battery")
     assert low_battery
-    assert hass.states.get("binary_sensor.unnamed_sensor_low_battery_2") is None
+    assert hass.states.get("binary_sensor.unnamed_sensor_battery_2") is None
 
 
 async def test_named_low_battery_characteristic_creates_binary_sensor(
@@ -398,7 +398,7 @@ async def test_named_low_battery_characteristic_creates_binary_sensor(
 
     await setup_test_accessories(hass, [accessory])
 
-    low_battery = hass.states.get("binary_sensor.outdoor_sensor_low_battery")
+    low_battery = hass.states.get("binary_sensor.outdoor_sensor_battery")
     assert low_battery
 
 
@@ -411,10 +411,10 @@ async def test_labeled_low_battery_characteristics_create_binary_sensors(
         hass, get_next_aid(), create_labeled_valves_with_low_battery_characteristics
     )
 
-    valve_1 = hass.states.get("binary_sensor.testdevice_low_battery")
+    valve_1 = hass.states.get("binary_sensor.testdevice_battery")
     assert valve_1
 
-    valve_2 = hass.states.get("binary_sensor.testdevice_low_battery_2")
+    valve_2 = hass.states.get("binary_sensor.testdevice_battery_2")
     assert valve_2
 
 

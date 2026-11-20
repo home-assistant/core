@@ -5,20 +5,22 @@ from unittest.mock import MagicMock
 
 from PySrDaliGateway import CallbackEventType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import find_device_listener, trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
 TEST_DIMMER_DEVICE_ID = "01010000026A242121110E"
@@ -72,8 +74,8 @@ async def test_turn_on_light(
     """Test turning on a light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: TEST_DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -88,8 +90,8 @@ async def test_turn_off_light(
     """Test turning off a light."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TEST_DIMMER_ENTITY_ID},
         blocking=True,
     )
 
@@ -104,8 +106,11 @@ async def test_turn_on_with_brightness(
     """Test turning on light with brightness."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_DIMMER_ENTITY_ID, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: TEST_DIMMER_ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 128,
+        },
         blocking=True,
     )
 

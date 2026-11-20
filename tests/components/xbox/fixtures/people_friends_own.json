@@ -133,8 +133,8 @@
       "modernGamertagSuffix": "",
       "uniqueModernGamertag": "erics273",
       "xboxOneRep": "GoodPlayer",
-      "presenceState": "Offline",
-      "presenceText": "Last seen 17h ago: Home",
+      "presenceState": "Online",
+      "presenceText": "Minecraft",
       "presenceDevices": null,
       "isFriend": true,
       "isFriendRequestReceived": false,
@@ -174,23 +174,23 @@
         {
           "IsBroadcasting": false,
           "Device": "XboxOne",
-          "PresenceText": "Last seen 17h ago: Home",
-          "State": "LastSeen",
-          "TitleId": "750323071",
+          "PresenceText": "Minecraft",
+          "State": "Active",
+          "TitleId": "1739947436",
           "TitleType": null,
           "IsPrimary": true,
-          "IsGame": false,
+          "IsGame": true,
           "RichPresenceText": null
         }
       ],
       "titlePresence": {
-        "IsCurrentlyPlaying": false,
-        "PresenceText": null,
-        "TitleName": null,
-        "TitleId": null
+        "IsCurrentlyPlaying": true,
+        "PresenceText": "Minecraft",
+        "TitleName": "Minecraft",
+        "TitleId": "1739947436"
       },
       "titleSummaries": null,
-      "presenceTitleIds": ["750323071"],
+      "presenceTitleIds": ["1739947436"],
       "detail": {
         "accountTier": "Silver",
         "bio": "",

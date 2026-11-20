@@ -1,6 +1,7 @@
 """The tests for Samsung TV device triggers."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -17,8 +18,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
 from .const import ENTRYDATA_ENCRYPTED_WEBSOCKET
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.usefixtures("remote_encrypted_websocket", "rest_api")

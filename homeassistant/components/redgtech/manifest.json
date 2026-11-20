@@ -1,8 +1,10 @@
 {
   "domain": "redgtech",
   "name": "Redgtech",
+  "categories": ["plugs_switches"],
   "codeowners": ["@jonhsady", "@luan-nvg"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/redgtech",
   "integration_type": "service",
   "iot_class": "cloud_polling",

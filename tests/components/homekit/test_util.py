@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
@@ -87,8 +88,6 @@ from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
 
-from tests.common import MockConfigEntry
-
 
 def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     """Mock a socket that fails to bind failure_attempts amount of times."""
@@ -164,7 +163,7 @@ def test_validate_entity_config() -> None:
     ]
 
     for conf in configs:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             vec(conf)
 
     assert vec({}) == {}

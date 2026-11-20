@@ -1,9 +1,10 @@
 """Support for the MaryTTS service."""
 
+from enum import StrEnum
 from typing import Any, override
 
+import probatio
 from speak2mary import MaryTTS
-import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -17,9 +18,16 @@ from homeassistant.helpers import config_validation as cv
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
 
+
+class MaryTTSTextToSpeechOption(StrEnum):
+    """Store keys for the MaryTTS text-to-speech options."""
+
+    EFFECT = "effect"
+
+
 SUPPORT_LANGUAGES = MaryTTS.supported_locales()
 SUPPORT_CODEC = MaryTTS.supported_codecs()
-SUPPORT_OPTIONS = [CONF_EFFECT]
+SUPPORT_OPTIONS: list[str] = [MaryTTSTextToSpeechOption.EFFECT]
 SUPPORT_EFFECTS = MaryTTS.supported_effects().keys()
 
 DEFAULT_HOST = "localhost"
@@ -33,13 +41,17 @@ MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
-        vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC),
-        vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECTS): {
-            vol.All(cv.string, vol.In(SUPPORT_EFFECTS)): cv.string
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
+        probatio.Optional(CONF_CODEC, default=DEFAULT_CODEC): probatio.In(
+            SUPPORT_CODEC
+        ),
+        probatio.Optional(CONF_EFFECT, default=DEFAULT_EFFECTS): {
+            probatio.All(cv.string, probatio.In(SUPPORT_EFFECTS)): cv.string
         },
     }
 )
@@ -82,7 +94,7 @@ class MaryTTSProvider(Provider):
     @override
     def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
-        return {CONF_EFFECT: self._effects}
+        return {MaryTTSTextToSpeechOption.EFFECT: self._effects}
 
     @property
     @override
@@ -95,7 +107,7 @@ class MaryTTSProvider(Provider):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from MaryTTS."""
-        effects = options[CONF_EFFECT]
+        effects = options[MaryTTSTextToSpeechOption.EFFECT]
 
         data = self._mary.speak(message, effects)
         audiotype = MAP_MARYTTS_CODEC[self._mary.codec]

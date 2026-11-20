@@ -4,11 +4,9 @@ import time
 from typing import Any, override
 
 from omnilogic import OmniLogicException
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import check_guard
@@ -16,7 +14,6 @@ from .const import PUMP_TYPES
 from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
-SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7
 
 
@@ -56,15 +53,6 @@ async def async_setup_entry(
                 entities.append(entity)
 
     async_add_entities(entities)
-
-    # register service
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_SPEED,
-        {vol.Required("speed"): cv.positive_int},
-        "async_set_speed",
-    )
 
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):

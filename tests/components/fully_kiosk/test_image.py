@@ -4,12 +4,11 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from fullykiosk import FullyKioskError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_image(

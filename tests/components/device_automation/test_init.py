@@ -1,12 +1,20 @@
 """The test for light device automation."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import attr
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import automation, device_automation
@@ -14,7 +22,10 @@ from homeassistant.components.device_automation import (
     DOMAIN,
     DeviceAutomationType,
     InvalidDeviceAutomationConfig,
+    action as device_action,
+    condition as device_condition,
     toggle_entity,
+    trigger as device_trigger,
 )
 from homeassistant.components.device_automation.helpers import (
     _resolve_device_id,
@@ -33,9 +44,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import RequirementsNotFound
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.typing import WebSocketGenerator
 
 
 @attr.s(frozen=True, slots=True)
@@ -75,7 +83,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             spec=["ACTION_SCHEMA", "async_get_actions"],
@@ -87,7 +95,7 @@ def fake_integration(hass: HomeAssistant) -> None:
         f"{FAKE_DOMAIN}.device_condition",
         Mock(
             CONDITION_SCHEMA=toggle_entity.CONDITION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_conditions=_async_get_conditions,
             spec=["CONDITION_SCHEMA", "async_get_conditions"],
@@ -98,10 +106,11 @@ def fake_integration(hass: HomeAssistant) -> None:
         hass,
         f"{FAKE_DOMAIN}.device_trigger",
         Mock(
-            TRIGGER_SCHEMA=vol.All(
+            TRIGGER_SCHEMA=probatio.All(
                 toggle_entity.TRIGGER_SCHEMA,
-                vol.Schema(
-                    {vol.Required("domain"): FAKE_DOMAIN}, extra=vol.ALLOW_EXTRA
+                probatio.Schema(
+                    {probatio.Required("domain"): FAKE_DOMAIN},
+                    extra=probatio.ALLOW_EXTRA,
                 ),
             ),
             async_get_triggers=_async_get_triggers,
@@ -311,10 +320,10 @@ async def test_websocket_get_action_capabilities(
 
     async def _async_get_action_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List action capabilities."""
         if config["type"] == "turn_on":
-            return {"extra_fields": vol.Schema({vol.Optional("code"): str})}
+            return {"extra_fields": probatio.Schema({probatio.Optional("code"): str})}
         return {}
 
     module_cache = hass.data[loader.DATA_COMPONENTS]
@@ -473,7 +482,7 @@ async def test_websocket_get_condition_capabilities(
 
     async def _async_get_condition_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
         return await toggle_entity.async_get_condition_capabilities(hass, config)
 
@@ -771,7 +780,7 @@ async def test_websocket_get_trigger_capabilities(
 
     async def _async_get_trigger_capabilities(
         hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List trigger capabilities."""
         return await toggle_entity.async_get_trigger_capabilities(hass, config)
 
@@ -1031,7 +1040,7 @@ async def test_automation_with_integration_without_device_action(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event1"},
-                "action": {"device_id": "", "domain": "test"},
+                "action": {"device_id": "abc123", "domain": "test"},
             }
         },
     )
@@ -1316,7 +1325,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1332,17 +1341,61 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided at 'entity_id'",
+        "required key not provided at '{platform_path}entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
         "Unknown entity 'wrong'",
     ),
+    (
+        {"device_id": "", "domain": ""},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "", "domain": "light"},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": ""},
+        "required value is empty at '{platform_path}domain'",
+    ),
 ]
 
-BAD_TRIGGERS = BAD_CONDITIONS = [
+BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
     ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+]
+
+BAD_TRIGGERS = [
+    (
+        {"device_id": "very_unique", "domain": "light"},
+        "expected type to be one of",
+    ),
+    (
+        {"device_id": "wrong", "domain": "light"},
+        "Unknown device 'wrong'",
+    ),
+    (
+        {"device_id": "wrong"},
+        "required key not provided at '{path}domain'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
+        "Unknown entity 'wrong'",
+    ),
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
+    (
+        {"device_id": "", "domain": ""},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "", "domain": "light"},
+        "required value is empty at '{platform_path}device_id'",
+    ),
+    (
+        {"device_id": "very_unique", "domain": ""},
+        "required value is empty at '{platform_path}domain'",
+    ),
 ]
 
 
@@ -1377,7 +1430,10 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1411,7 +1467,10 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="actions[0].") in caplog.text
+    assert (
+        expected_error.format(path="actions.", platform_path="actions[0].")
+        in caplog.text
+    )
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1445,7 +1504,10 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="conditions[0].") in caplog.text
+    assert (
+        expected_error.format(path="conditions.", platform_path="conditions[0].")
+        in caplog.text
+    )
 
 
 async def test_automation_with_sub_condition(
@@ -1611,8 +1673,9 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "conditions[0].conditions[0]."
-    assert expected_error.format(path=path) in caplog.text
+    path = "conditions.conditions[0]."
+    platform_path = "conditions[0].conditions[0]."
+    assert expected_error.format(path=path, platform_path=platform_path) in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1645,7 +1708,10 @@ async def test_automation_with_bad_trigger(
         },
     )
 
-    assert expected_error.format(path="") in caplog.text
+    assert (
+        expected_error.format(path="triggers[0].", platform_path="triggers[0].")
+        in caplog.text
+    )
 
 
 async def test_websocket_device_not_found(
@@ -1926,13 +1992,61 @@ async def test_validate_config_rewrites_composite_device_id(
             "entity_id": entity.entity_id,
             "type": "turned_on",
         },
-        vol.Schema(
-            {vol.Required("device_id"): str, vol.Required("domain"): str},
-            extra=vol.ALLOW_EXTRA,
+        probatio.Schema(
+            {probatio.Required("device_id"): str, probatio.Required("domain"): str},
+            extra=probatio.ALLOW_EXTRA,
         ),
         DeviceAutomationType.TRIGGER,
     )
     assert validated["device_id"] == device_fake.id
+
+
+@pytest.mark.parametrize(
+    ("validator", "base_config"),
+    [
+        pytest.param(
+            device_trigger.async_validate_trigger_config,
+            {"platform": "device"},
+            id="trigger",
+        ),
+        pytest.param(
+            device_condition.DeviceCondition.async_validate_complete_config,
+            {"condition": "device"},
+            id="condition",
+        ),
+        pytest.param(device_action.async_validate_action_config, {}, id="action"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("config", "path"),
+    [
+        pytest.param(
+            {"device_id": "", "domain": ""},
+            ["device_id"],
+            id="empty_device_id_and_domain",
+        ),
+        pytest.param(
+            {"device_id": "", "domain": "light"}, ["device_id"], id="empty_device_id"
+        ),
+        pytest.param(
+            {"device_id": "abc123", "domain": ""}, ["domain"], id="empty_domain"
+        ),
+    ],
+)
+async def test_validate_config_empty_device_id_or_domain(
+    hass: HomeAssistant,
+    validator: Callable[[HomeAssistant, ConfigType], Awaitable[ConfigType]],
+    base_config: ConfigType,
+    config: ConfigType,
+    path: list[str],
+) -> None:
+    """Test an empty device ID or domain is reported as an empty required value."""
+    with pytest.raises(probatio.RequiredFieldInvalid) as excinfo:
+        await validator(hass, base_config | config)
+
+    assert excinfo.value.error_message == "required value is empty"
+    assert excinfo.value.path == path
+    assert excinfo.value.code == "required"
 
 
 def _mock_device_trigger_platform(hass: HomeAssistant, domain: str) -> None:

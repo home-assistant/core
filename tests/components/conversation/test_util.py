@@ -13,7 +13,7 @@ async def test_async_get_result_from_chat_log(
     intent_response = intent.IntentResponse(language="en")
     tool_result = llm.IntentResponseDict(intent_response)
     with (
-        chat_session.async_get_chat_session(hass) as session,
+        chat_session.async_get_chat_session(hass, context=None) as session,
         conversation.async_get_chat_log(
             hass, session, mock_conversation_input
         ) as chat_log,
@@ -24,7 +24,7 @@ async def test_async_get_result_from_chat_log(
                     agent_id="mock-agent-id",
                     tool_call_id="mock-tool-call-id",
                     tool_name="mock-tool-name",
-                    tool_result=tool_result,
+                    result=llm.ToolResult(data=tool_result),
                 ),
                 conversation.AssistantContent(
                     agent_id="mock-agent-id",

@@ -3,16 +3,11 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from solaredged import SolarEdge, SolarEdgeConnectionError, SolarEdgeError
-import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
@@ -37,6 +32,7 @@ from .const import (
     TYPE_SERIAL,
     TYPE_TCP,
 )
+from .coordinator import SolarEdgeModbusConfigEntry
 from .entity import inverter_name
 from .helpers import create_modbus_params
 
@@ -45,16 +41,16 @@ SECTION_MORE_OPTIONS = "more_options"
 # Almost every inverter answers on the factory-default device ID, so that
 # setting is tucked away in a collapsed section.
 MORE_OPTIONS = {
-    vol.Required(SECTION_MORE_OPTIONS): section(
-        vol.Schema(
+    probatio.Required(SECTION_MORE_OPTIONS): section(
+        probatio.Schema(
             {
-                vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+                probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
                     NumberSelector(
                         NumberSelectorConfig(
                             min=1, max=247, step=1, mode=NumberSelectorMode.BOX
                         )
                     ),
-                    vol.Coerce(int),
+                    probatio.Coerce(int),
                 ),
             }
         ),
@@ -62,29 +58,29 @@ MORE_OPTIONS = {
     )
 }
 
-STEP_TCP = vol.Schema(
+STEP_TCP = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1, max=65535, step=1, mode=NumberSelectorMode.BOX
                 )
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
         **MORE_OPTIONS,
     }
 )
 
-STEP_SERIAL = vol.Schema(
+STEP_SERIAL = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(min=1, step=1, mode=NumberSelectorMode.BOX)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
         **MORE_OPTIONS,
     }
@@ -103,7 +99,7 @@ def _flatten(connection_type: str, user_input: dict[str, Any]) -> dict[str, Any]
     return data
 
 
-def _needs_relink(entry: ConfigEntry, data: Mapping[str, Any]) -> bool:
+def _needs_relink(entry: SolarEdgeModbusConfigEntry, data: Mapping[str, Any]) -> bool:
     """Whether probing these settings clashes with the connection in use.
 
     Everything talking to one device shares a single connection, which cannot
@@ -199,8 +195,6 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_title, data=self._discovered
             )
 
-        self._set_confirm_only()
-
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
@@ -233,7 +227,7 @@ class SolarEdgeModbusFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_step_link(
         self,
         connection_type: str,
-        schema: vol.Schema,
+        schema: probatio.Schema,
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Ask for the link settings, then probe the inverter behind them."""

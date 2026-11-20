@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.meater.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import PROBE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_info(

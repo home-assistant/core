@@ -4,6 +4,7 @@ from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.spaceapi import (
     ATTR_SENSOR_LOCATION,
@@ -14,8 +15,6 @@ from homeassistant.components.spaceapi import (
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 CONFIG = {
     DOMAIN: {

@@ -5,6 +5,7 @@ from typing import cast
 from caldav.calendarobjectresource import CalendarObjectResource
 from caldav.collection import Calendar
 from caldav.davclient import DAVClient
+from caldav.elements import ical
 
 from homeassistant.core import HomeAssistant
 
@@ -23,6 +24,20 @@ async def async_get_calendars(
         ]
 
     return await hass.async_add_executor_job(_get_calendars)
+
+
+async def async_get_calendar_color(
+    hass: HomeAssistant, calendar: Calendar
+) -> str | None:
+    """Get the color of a calendar, None if it has none."""
+    color = cast(
+        str | None,
+        await hass.async_add_executor_job(calendar.get_property, ical.CalendarColor()),
+    )
+    # Apple Calendar, DAVx5 and SOGo append an alpha channel.
+    if color and color.startswith("#") and len(color) == 9:
+        return color[:7]
+    return color
 
 
 def get_attr_value(obj: CalendarObjectResource, attribute: str) -> str | None:

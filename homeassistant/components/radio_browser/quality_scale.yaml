@@ -1,0 +1,127 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll. Stations are fetched from Radio Browser
+      when the media source is browsed, searched, or played.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-unique-id:
+    status: exempt
+    comment: This integration does not provide entities.
+  has-entity-name:
+    status: exempt
+    comment: This integration does not provide entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: This integration does not ask for anything during setup.
+  entity-unavailable:
+    status: exempt
+    comment: This integration does not provide entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      This integration does not provide entities, and does not poll. When
+      Radio Browser cannot be reached, browsing or playing a station raises an
+      error to the user instead.
+  parallel-updates:
+    status: exempt
+    comment: This integration does not provide entity platforms.
+  reauthentication-flow:
+    status: exempt
+    comment: Radio Browser is a public service, without authentication.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration provides a media source, not devices.
+  diagnostics:
+    status: exempt
+    comment: |
+      This integration has no state of its own to diagnose. It passes the
+      public Radio Browser directory on to the media browser.
+  discovery-update-info:
+    status: exempt
+    comment: Radio Browser is an online service that cannot be discovered.
+  discovery:
+    status: exempt
+    comment: Radio Browser is an online service that cannot be discovered.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not provide devices.
+  entity-category:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not provide entities.
+  entity-translations:
+    status: exempt
+    comment: This integration does not provide entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: This integration does not provide entities or actions.
+  reconfiguration-flow:
+    status: exempt
+    comment: This integration has nothing to configure.
+  repair-issues:
+    status: exempt
+    comment: This integration has no problems a user would need to repair.
+  stale-devices:
+    status: exempt
+    comment: This integration does not provide devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

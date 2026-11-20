@@ -17,12 +17,6 @@
     },
     "remove_from_queue": {
       "service": "mdi:playlist-remove"
-    },
-    "sign_in": {
-      "service": "mdi:login"
-    },
-    "sign_out": {
-      "service": "mdi:logout"
     }
   }
 }

@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 from aiohttp import BodyPartReader, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.ulid import ulid_hex
+from homeassistant.util.uuid import secure_uuid_hex
 
 DOMAIN = "file_upload"
 _DATA: HassKey[FileUploadData] = HassKey(DOMAIN)
@@ -209,7 +209,7 @@ class FileUploadView(HomeAssistantView):
             or file_field_reader.name != "file"
             or (filename := file_field_reader.filename) is None
         ):
-            raise vol.Invalid("Expected a file")
+            raise probatio.Invalid("Expected a file")
 
         try:
             raise_if_invalid_filename(filename)
@@ -217,7 +217,7 @@ class FileUploadView(HomeAssistantView):
             raise web.HTTPBadRequest from err
 
         hass = request.app[KEY_HASS]
-        file_id = ulid_hex()
+        file_id = secure_uuid_hex()
 
         if _DATA not in hass.data:
             hass.data[_DATA] = await FileUploadData.create(hass)
@@ -241,7 +241,7 @@ class FileUploadView(HomeAssistantView):
 
         return self.json({"file_id": file_id})
 
-    @RequestDataValidator({vol.Required("file_id"): str})
+    @RequestDataValidator({probatio.Required("file_id"): str})
     async def delete(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Delete a file."""
         hass = request.app[KEY_HASS]

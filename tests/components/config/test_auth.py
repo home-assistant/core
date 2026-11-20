@@ -1,13 +1,12 @@
 """Test config entries API."""
 
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockGroup, MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
 from homeassistant.core import HomeAssistant
-
-from tests.common import CLIENT_ID, MockGroup, MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -159,6 +158,36 @@ async def test_delete_unknown_user(
     result = await client.receive_json()
     assert not result["success"], result
     assert result["error"]["code"] == "not_found"
+
+
+async def test_delete_owner(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the owner cannot be deleted."""
+    owner = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": owner.id})
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_delete_owner"
+    assert await hass.auth.async_get_user(owner.id) is owner
+
+
+async def test_delete_system_generated(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that system generated users cannot be deleted."""
+    user = MockUser(id="abc", name="System", system_generated=True).add_to_hass(hass)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "config/auth/delete", "user_id": user.id})
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_modify_system_generated"
+    assert await hass.auth.async_get_user(user.id) is user
 
 
 async def test_delete(
@@ -322,6 +351,31 @@ async def test_update_system_generated(
     assert not result["success"], result
     assert result["error"]["code"] == "cannot_modify_system_generated"
     assert user.name == "Test user"
+
+
+async def test_update_invalid_group(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test update command with a group that does not exist."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_user("Test user")
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "group_ids": ["does-not-exist"],
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "invalid_format"
+    assert user.name == "Test user"
+    assert user.groups == []
 
 
 async def test_deactivate(

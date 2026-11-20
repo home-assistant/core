@@ -6,6 +6,18 @@ import logging
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+    mock_registry,
+    mock_restore_cache,
+    patch_yaml_files,
+)
 
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import (
@@ -40,19 +52,6 @@ from homeassistant.util import dt as dt_util
 
 from . import common
 from .common import MockScanner, mock_legacy_device_tracker_setup
-
-from tests.common import (
-    MockModule,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    assert_setup_component,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-    mock_registry,
-    mock_restore_cache,
-    patch_yaml_files,
-)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 

@@ -36,6 +36,7 @@ class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
             name=NAME,
             model=self.device.model,
             manufacturer=MANUFACTURER,
+            sw_version=coordinator.software_version,
         )
 
     @property

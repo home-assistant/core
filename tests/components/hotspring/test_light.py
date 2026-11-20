@@ -11,26 +11,21 @@ from hotspring import (
     Spa,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "light.connectedspa_ddeeff_light_zone_1"
 
@@ -60,15 +55,15 @@ async def test_turn_on_default(
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
 
     def _set_light_brightness(zone: int, brightness: int) -> None:
-        device_fixture.light_zones[0].intensity = brightness
-        device_fixture.light_zones[0].is_on = brightness > 0
+        device_fixture.light_zones[1].intensity = brightness
+        device_fixture.light_zones[1].is_on = brightness > 0
 
     mock_hotspring.set_light_brightness.side_effect = _set_light_brightness
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -88,17 +83,17 @@ async def test_turn_on_with_brightness(
     """Test turning on light with brightness."""
 
     def _set_light_brightness(zone: int, brightness: int) -> None:
-        device_fixture.light_zones[0].intensity = brightness
-        device_fixture.light_zones[0].is_on = brightness > 0
+        device_fixture.light_zones[1].intensity = brightness
+        device_fixture.light_zones[1].is_on = brightness > 0
 
     mock_hotspring.set_light_brightness.side_effect = _set_light_brightness
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_BRIGHTNESS: 153,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.BRIGHTNESS: 153,
         },
         blocking=True,
     )
@@ -118,10 +113,10 @@ async def test_turn_on_with_rgb_color_when_off(
     """Test turning on light with rgb color when light is off."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
         },
         blocking=True,
     )
@@ -137,8 +132,8 @@ async def test_turn_on_with_rgb_color_when_on(
     device_fixture: Spa,
 ) -> None:
     """Test setting rgb color when light is already on."""
-    device_fixture.light_zones = [
-        LightZone(
+    device_fixture.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=True,
@@ -147,15 +142,15 @@ async def test_turn_on_with_rgb_color_when_on(
             intensity=3,
             loop_speed=0,
         ),
-    ]
+    }
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
         },
         blocking=True,
     )
@@ -172,11 +167,11 @@ async def test_turn_on_with_rgb_color_and_brightness(
     """Test turning on light with rgb color and brightness."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_RGB_COLOR: (120, 200, 50),
-            ATTR_BRIGHTNESS: 102,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            LightServiceArgument.RGB_COLOR: (120, 200, 50),
+            LightServiceArgument.BRIGHTNESS: 102,
         },
         blocking=True,
     )
@@ -192,8 +187,8 @@ async def test_rgb_color_active_custom(
     device_fixture: Spa,
 ) -> None:
     """Test rgb_color property returns custom RGB values when active."""
-    device_fixture.light_zones = [
-        LightZone(
+    device_fixture.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=True,
@@ -206,7 +201,7 @@ async def test_rgb_color_active_custom(
             c_blue=50,
             rgb_state="active",
         ),
-    ]
+    }
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     state = hass.states.get(ENTITY_ID)
@@ -221,8 +216,8 @@ async def test_rgb_color_all_zero(
     device_fixture: Spa,
 ) -> None:
     """Test rgb_color property returns (0, 0, 0) when rgb_state is active."""
-    device_fixture.light_zones = [
-        LightZone(
+    device_fixture.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=True,
@@ -235,7 +230,7 @@ async def test_rgb_color_all_zero(
             c_blue=0,
             rgb_state="active",
         ),
-    ]
+    }
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     state = hass.states.get(ENTITY_ID)
@@ -250,8 +245,8 @@ async def test_turn_off(
     device_fixture: Spa,
 ) -> None:
     """Test turning off light."""
-    device_fixture.light_zones = [
-        LightZone(
+    device_fixture.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=True,
             is_on=True,
@@ -260,12 +255,12 @@ async def test_turn_off(
             intensity=5,
             loop_speed=0,
         ),
-    ]
+    }
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     def _turn_off_light(zone: int) -> None:
-        device_fixture.light_zones[0].intensity = 0
-        device_fixture.light_zones[0].is_on = False
+        device_fixture.light_zones[1].intensity = 0
+        device_fixture.light_zones[1].is_on = False
 
     mock_hotspring.turn_off_light.side_effect = _turn_off_light
 
@@ -275,8 +270,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -309,8 +304,8 @@ async def test_turn_on_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -338,8 +333,8 @@ async def test_turn_off_error(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_ID},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
 
@@ -352,8 +347,8 @@ async def test_disabled_zone_not_added(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test disabled light zones are not added to entity registry."""
-    device_fixture.light_zones = [
-        LightZone(
+    device_fixture.light_zones = {
+        1: LightZone(
             zone_id=1,
             is_enabled=False,
             is_on=False,
@@ -362,7 +357,7 @@ async def test_disabled_zone_not_added(
             intensity=0,
             loop_speed=0,
         ),
-    ]
+    }
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     assert not entity_registry.async_is_registered(ENTITY_ID)

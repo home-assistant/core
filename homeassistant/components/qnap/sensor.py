@@ -410,7 +410,8 @@ class QNAPSystemSensor(QNAPSensor):
             return self.coordinator.data["system_health"]
 
         if self.entity_description.key == "system_temp":
-            return int(self.coordinator.data["system_stats"]["system"]["temp_c"])
+            temp = self.coordinator.data["system_stats"]["system"]["temp_c"]
+            return None if temp is None else int(temp)
 
         if self.entity_description.key == "uptime":
             uptime = self.coordinator.data["system_stats"]["uptime"]
@@ -482,7 +483,7 @@ class QNAPVolumeSensor(QNAPSensor):
         if self.entity_description.key == "volume_size_used":
             return used_gb
 
-        if self.entity_description.key == "volume_percentage_used":
+        if self.entity_description.key == "volume_percentage_used" and total_gb != 0:
             return used_gb / total_gb * 100
 
         return None

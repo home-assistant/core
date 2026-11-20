@@ -7,6 +7,7 @@ from aioambient import OpenAPI
 from aioambient.errors import RequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time("2023-11-9")

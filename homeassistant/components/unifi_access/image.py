@@ -83,6 +83,7 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 ) from err
         return None
 
+    @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

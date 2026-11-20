@@ -3,6 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -15,8 +20,6 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry, MockEntity, setup_test_component_platform
 
 
 class MockHumidifierEntity(MockEntity, HumidifierEntity):

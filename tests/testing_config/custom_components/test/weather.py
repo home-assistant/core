@@ -5,6 +5,8 @@ Call init before using it in your tests to ensure clean test data.
 
 from typing import Any
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_HUMIDITY,
@@ -23,8 +25,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntity
 
 ENTITIES = []
 

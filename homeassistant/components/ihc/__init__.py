@@ -3,11 +3,10 @@
 import logging
 
 from ihcsdk.ihccontroller import IHCController
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
@@ -24,8 +23,9 @@ from .services import setup_services
 _LOGGER = logging.getLogger(__name__)
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [IHC_SCHEMA]))}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema(probatio.All(probatio.EnsureList(), [IHC_SCHEMA]))},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

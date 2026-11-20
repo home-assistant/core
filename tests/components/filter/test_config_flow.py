@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.filter.const import (
@@ -32,8 +33,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -73,6 +72,18 @@ from tests.common import MockConfigEntry
                 CONF_FILTER_NAME: FILTER_NAME_RANGE,
                 CONF_FILTER_LOWER_BOUND: 1.0,
                 CONF_FILTER_UPPER_BOUND: 10.0,
+            },
+        ),
+        (
+            {CONF_FILTER_NAME: FILTER_NAME_RANGE},
+            {
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
+            },
+            {
+                CONF_FILTER_NAME: FILTER_NAME_RANGE,
+                CONF_FILTER_LOWER_BOUND: -40.0,
+                CONF_FILTER_UPPER_BOUND: -5.0,
             },
         ),
         (

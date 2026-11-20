@@ -1,8 +1,10 @@
 {
   "domain": "mutesync",
   "name": "mutesync",
+  "categories": ["computers_network"],
   "codeowners": ["@currentoor"],
   "config_flow": true,
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/mutesync",
   "integration_type": "service",
   "iot_class": "local_polling",

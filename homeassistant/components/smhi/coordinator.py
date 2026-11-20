@@ -21,9 +21,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-type SMHIConfigEntry = ConfigEntry[
-    tuple[SMHIDataUpdateCoordinator, SMHIFireDataUpdateCoordinator]
-]
+type SMHIConfigEntry = ConfigEntry[SMHIRuntimeData]
+
+
+@dataclass
+class SMHIRuntimeData:
+    """Runtime data for the SMHI integration."""
+
+    coordinator: SMHIDataUpdateCoordinator
+    fire_coordinator: SMHIFireDataUpdateCoordinator
 
 
 @dataclass
@@ -75,7 +81,8 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 )
         except SmhiForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="forecast_update_failed",
             ) from ex
 
         return SMHIForecastData(
@@ -123,7 +130,8 @@ class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData])
                 )
         except SmhiFireForecastException as ex:
             raise UpdateFailed(
-                "Failed to retrieve the forecast from the SMHI API"
+                translation_domain=DOMAIN,
+                translation_key="fire_forecast_update_failed",
             ) from ex
 
         return SMHIFireForecastData(
