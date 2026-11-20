@@ -11,9 +11,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
@@ -203,8 +202,12 @@ async def test_calendar_events(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: [entity_id],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-07T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -349,8 +352,12 @@ async def test_calendar_invalid_season_data(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-06-15T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-06-17T00:00:00Z"),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-15T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-17T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -377,8 +384,12 @@ async def test_calendar_week_crossing_get_events(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-08T00:00:00Z"),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-08T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -415,8 +426,8 @@ async def test_calendar_midnight_crossing_local_start(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: start,
-            EVENT_END_DATETIME: end,
+            CalendarServiceArgument.START_DATE_TIME: start,
+            CalendarServiceArgument.END_DATE_TIME: end,
         },
         blocking=True,
         return_response=True,
@@ -467,8 +478,12 @@ async def test_calendar_end_of_day_period(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: datetime(2024, 1, 7, 0, 0, 0, tzinfo=tz),
-            EVENT_END_DATETIME: datetime(2024, 1, 8, 0, 0, 0, tzinfo=tz),
+            CalendarServiceArgument.START_DATE_TIME: datetime(
+                2024, 1, 7, 0, 0, 0, tzinfo=tz
+            ),
+            CalendarServiceArgument.END_DATE_TIME: datetime(
+                2024, 1, 8, 0, 0, 0, tzinfo=tz
+            ),
         },
         blocking=True,
         return_response=True,

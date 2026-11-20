@@ -9,10 +9,8 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    EVENT_SUMMARY,
     CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
@@ -44,8 +42,9 @@ async def test_holiday_calendar_entity(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: "calendar.workday_sensor_de_bw_calendar",
-            EVENT_START_DATETIME: dt_util.now(),
-            EVENT_END_DATETIME: dt_util.now() + timedelta(days=10, hours=1),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.now(),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.now()
+            + timedelta(days=10, hours=1),
         },
         blocking=True,
         return_response=True,
@@ -53,12 +52,12 @@ async def test_holiday_calendar_entity(
     assert {
         ATTR_END: "2023-01-02",
         ATTR_START: "2023-01-01",
-        EVENT_SUMMARY: "Workday Sensor DE BW",
+        CalendarServiceArgument.SUMMARY: "Workday Sensor DE BW",
     } not in response["calendar.workday_sensor_de_bw_calendar"]["events"]
     assert {
         ATTR_END: "2023-01-04",
         ATTR_START: "2023-01-03",
-        EVENT_SUMMARY: "Workday Sensor DE BW",
+        CalendarServiceArgument.SUMMARY: "Workday Sensor DE BW",
     } in response["calendar.workday_sensor_de_bw_calendar"]["events"]
 
     state = hass.states.get("calendar.workday_sensor_de_bw_calendar")

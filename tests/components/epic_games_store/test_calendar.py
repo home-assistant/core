@@ -7,9 +7,8 @@ from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
@@ -152,8 +151,12 @@ async def test_get_events(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2022-10-20T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2022-10-27T00:00:00.000Z"),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-20T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-27T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -167,8 +170,12 @@ async def test_get_events(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("1970-01-01T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("1970-01-08T00:00:00.000Z"),
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-01T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-08T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,

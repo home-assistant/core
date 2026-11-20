@@ -20,9 +20,8 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.const import (
     STATE_OFF,
@@ -61,8 +60,8 @@ async def get_events(
         CalendarService.GET_EVENTS,
         {
             TargetKey.ENTITY_ID: ENTITY_ID,
-            EVENT_START_DATETIME: start,
-            EVENT_END_DATETIME: end,
+            CalendarServiceArgument.START_DATE_TIME: start,
+            CalendarServiceArgument.END_DATE_TIME: end,
         },
         blocking=True,
         return_response=True,

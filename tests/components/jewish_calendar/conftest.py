@@ -13,9 +13,8 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
     CalendarService,
+    CalendarServiceArgument,
 )
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -231,8 +230,8 @@ def get_calendar_events() -> GetCalendarEvents:
             CalendarService.GET_EVENTS,
             {
                 TargetKey.ENTITY_ID: entity_id,
-                EVENT_START_DATETIME: start_date.isoformat(),
-                EVENT_END_DATETIME: end_date.isoformat(),
+                CalendarServiceArgument.START_DATE_TIME: start_date.isoformat(),
+                CalendarServiceArgument.END_DATE_TIME: end_date.isoformat(),
             },
             blocking=True,
             return_response=True,
