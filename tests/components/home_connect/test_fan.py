@@ -8,6 +8,7 @@ from aiohomeconnect.model import (
     ApplianceType,
     ArrayOfEvents,
     ArrayOfOptions,
+    ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
@@ -15,6 +16,7 @@ from aiohomeconnect.model import (
     HomeAppliance,
     Option,
     OptionKey,
+    Program,
     ProgramDefinition,
     ProgramKey,
 )
@@ -25,6 +27,7 @@ from aiohomeconnect.model.error import (
     SelectedProgramNotSetError,
 )
 from aiohomeconnect.model.program import (
+    EnumerateProgram,
     ProgramDefinitionConstraints,
     ProgramDefinitionOption,
 )
@@ -717,7 +720,6 @@ async def test_added_entity_automatically(
                 constraints=ProgramDefinitionConstraints(
                     allowed_values=[
                         "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
-                        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
                     ]
                 ),
             ),
@@ -728,7 +730,7 @@ async def test_added_entity_automatically(
             ATTR_PRESET_MODE,
             "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
             "manual",
-            {ATTR_PRESET_MODES: ["auto", "manual"]},
+            {ATTR_PRESET_MODES: ["auto"]},
         ),
         (
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
@@ -885,3 +887,62 @@ async def test_options_features_available_non_writable(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[state_attribute] == expected_state_attribute_value
+
+
+@pytest.mark.parametrize("appliance", [ApplianceType.AIR_CONDITIONER], indirect=True)
+async def test_options_features_error_obtaining_available_program(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test exposed preset modes when cannot get options constraints.
+
+    The entity should expose all the preset modes by default.
+    Setting the option should be also possible.
+    """
+    entity_id = "fan.air_conditioner"
+    client.get_available_program.side_effect = HomeConnectError("error.key")
+    client.get_all_programs = AsyncMock(
+        return_value=ArrayOfPrograms(
+            [
+                EnumerateProgram(
+                    key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                    raw_key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                )
+            ],
+            Program(
+                key=ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_AUTO,
+                options=[
+                    Option(
+                        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+                    )
+                ],
+            ),
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert set(state.attributes[ATTR_PRESET_MODES]) == {"auto", "manual"}
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PRESET_MODE: "manual",
+        },
+        blocking=True,
+    )
+
+    client.set_active_program_option.assert_awaited_once_with(
+        appliance.ha_id,
+        option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+        value="HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    )

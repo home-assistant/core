@@ -170,7 +170,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         if (
             (
                 (
-                    option_definition := self.appliance.available_options.get(
+                    option_definition := self.appliance.options_definitions.get(
                         OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
                     )
                 )
@@ -190,7 +190,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     def _get_temperature_constraints(self) -> ProgramDefinitionConstraints | None:
         """Get the temperature constraints for the appliance."""
-        if option_definition := self.appliance.available_options.get(
+        if option_definition := self.appliance.options_definitions.get(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
         ):
             return option_definition.constraints
@@ -327,7 +327,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Return the list of available fan modes."""
         if (
             (
-                option_definition := self.appliance.available_options.get(
+                option_definition := self.appliance.options_definitions.get(
                     OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
                 )
             )

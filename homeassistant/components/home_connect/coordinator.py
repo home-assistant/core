@@ -67,7 +67,7 @@ MAX_EXECUTIONS = 8
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectRuntimeData]
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
 class HomeConnectApplianceData:
     """Class to hold Home Connect appliance data."""
 
@@ -75,7 +75,8 @@ class HomeConnectApplianceData:
     events: dict[EventKey, Event]
     info: HomeAppliance
     options: dict[OptionKey, Option]
-    available_options: dict[OptionKey, ProgramDefinitionOption]
+    options_definitions: dict[OptionKey, ProgramDefinitionOption]
+    available_options: set[OptionKey] | None
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
@@ -91,8 +92,14 @@ class HomeConnectApplianceData:
         self.info.connected = other.info.connected
         self.options.clear()
         self.options.update(other.options)
-        self.available_options.clear()
-        self.available_options.update(other.available_options)
+        self.options_definitions.clear()
+        self.options_definitions.update(other.options_definitions)
+        if other.available_options is None:
+            self.available_options = None
+        else:
+            if self.available_options is None:
+                self.available_options = set()
+            self.available_options.update(other.available_options)
         self.programs.clear()
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
@@ -106,7 +113,8 @@ class HomeConnectApplianceData:
             events={},
             info=appliance,
             options={},
-            available_options={},
+            options_definitions={},
+            available_options=None,
             programs=[],
             settings={},
             status={},
@@ -718,7 +726,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         programs = []
         events = {}
         options = {}
-        available_options = {}
+        available_options: dict[OptionKey, ProgramDefinitionOption] | None = None
         if appliance.type in APPLIANCES_WITH_PROGRAMS:  # pylint: disable=too-many-nested-blocks
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -755,9 +763,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         )
                         current_program_key = program.key
                         options_data = program.options or []
-                        options = {
-                            option.key: option for option in program.options or []
-                        }
+                        options = {option.key: option for option in options_data}
                         if current_program_key in FAVORITE_PROGRAMS and options:
                             # The API doesn't allow to fetch the
                             # options from the favorite program.
@@ -783,7 +789,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                                 display_value=None,
                                 unit=available_option.unit,
                             )
-                            for option_key, available_option in available_options.items()
+                            for option_key, available_option in (
+                                available_options or {}
+                            ).items()
                         }
                     )
                     for option in options_data:
@@ -818,7 +826,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 events=events,
                 info=appliance,
                 options=options,
-                available_options=available_options,
+                options_definitions=available_options or {},
+                available_options=set(available_options.keys())
+                if available_options is not None
+                else None,
                 programs=programs,
                 settings=settings,
                 status=status,
@@ -827,10 +838,10 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
     async def get_options_definitions(
         self, program_key: ProgramKey
-    ) -> dict[OptionKey, ProgramDefinitionOption]:
+    ) -> dict[OptionKey, ProgramDefinitionOption] | None:
         """Get options with constraints for appliance."""
         if program_key is ProgramKey.UNKNOWN:
-            return {}
+            return None
         try:
             return {
                 option.key: option
@@ -850,7 +861,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 error,
             )
             self.last_fetched_program = None
-            return {}
+            return None
 
     async def update_options(
         self,
@@ -864,9 +875,16 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options = self.data.options
         available_options = self.data.available_options
         events = self.data.events
-        options_to_notify = options.copy()
+        options_to_notify = {
+            *options.keys(),
+            # In theory, available options should be always a subset of options,
+            # but we add them to options anyway just to be safe.
+            *(available_options or set()),
+        }
+
         options.clear()
-        available_options.clear()
+        if available_options is not None:
+            available_options.clear()
         if (
             program_key in FAVORITE_PROGRAMS
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
@@ -878,9 +896,14 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         else:
             resolved_program_key = program_key
 
-        available_options.update(
-            await self.get_options_definitions(resolved_program_key)
-        )
+        _available_options = await self.get_options_definitions(resolved_program_key)
+        if _available_options is not None:
+            if available_options is None:
+                self.data.available_options = available_options = set()
+            available_options.update(_available_options.keys())
+            self.data.options_definitions.update(_available_options)
+        else:
+            self.data.available_options = available_options = None
         try:
             _options = (
                 await (
@@ -917,7 +940,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 display_value=option.display_value,
                 unit=option.unit,
             )
-        for option_key, available_option in available_options.items():
+        for option_key, available_option in (_available_options or {}).items():
             option_event_key = EventKey(available_option.key)
             option_default_value = None
             if (
@@ -946,7 +969,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     display_value=None,
                     unit=available_option.unit,
                 )
-        options_to_notify.update(options)
+        options_to_notify.update(options.keys())
         for option_key in options_to_notify:
             for listener in self._get_listeners_for_event_key(EventKey(option_key)):
                 listener()

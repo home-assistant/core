@@ -85,7 +85,10 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         self, option_key: OptionKey, value: Any
     ) -> None:
         """Set an option for the entity."""
-        if option_key not in self.appliance.available_options:
+        if (
+            self.appliance.available_options is not None
+            and option_key not in self.appliance.available_options
+        ):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_option_not_writable",
