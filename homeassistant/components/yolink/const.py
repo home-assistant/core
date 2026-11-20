@@ -52,7 +52,6 @@ SUPPORTED_REMOTERS = [
 ]
 
 CONF_AUTH_TYPE = "auth_type"
-AUTH_TYPE_OAUTH = "oauth"
 AUTH_TYPE_UAC = "uac"
 
 CONF_UAID = "uaid"

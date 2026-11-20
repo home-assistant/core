@@ -13,8 +13,8 @@ from yolink.endpoint import Endpoints
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.model import BRDP
 
+from homeassistant.components.yolink.config_flow import AUTH_TYPE_OAUTH
 from homeassistant.components.yolink.const import (
-    AUTH_TYPE_OAUTH,
     AUTH_TYPE_UAC,
     CONF_AUTH_TYPE,
     CONF_HOME_ID,
@@ -50,7 +50,7 @@ HOME_LOOKUP_FAILURES = [
     ),
     pytest.param({"side_effect": TimeoutError()}, "cannot_connect", id="timeout"),
     pytest.param(
-        {"side_effect": AttributeError("'NoneType' object has no attribute 'get'")},
+        {"side_effect": RuntimeError("Boom")},
         "unknown",
         id="unexpected_error",
     ),
@@ -474,6 +474,16 @@ async def test_oauth_reauthentication_aborts_when_home_lookup_fails(
             BRDP(code="000000", data={"id": TEST_HOME_ID}),
             "YoLink Home",
             id="unnamed_home",
+        ),
+        pytest.param(
+            BRDP(code="000000", data={"id": TEST_HOME_ID, "name": None}),
+            "YoLink Home",
+            id="null_name",
+        ),
+        pytest.param(
+            BRDP(code="000000", data={"id": TEST_HOME_ID, "name": ""}),
+            "YoLink Home",
+            id="empty_name",
         ),
     ],
 )

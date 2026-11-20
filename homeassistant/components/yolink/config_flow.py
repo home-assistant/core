@@ -17,7 +17,6 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow, sele
 
 from .api import StaticTokenAuth
 from .const import (
-    AUTH_TYPE_OAUTH,
     AUTH_TYPE_UAC,
     CONF_AUTH_TYPE,
     CONF_HOME_ID,
@@ -27,6 +26,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+AUTH_TYPE_OAUTH = "oauth"
 
 
 async def _async_fetch_home_info(auth_mgr: YoLinkAuthMgr) -> dict[str, Any]:
@@ -123,7 +124,7 @@ class OAuth2FlowHandler(
                 self._async_abort_entries_match({CONF_HOME_ID: home_id})
 
                 return self.async_create_entry(
-                    title=home_info.get("name", "YoLink Home"),
+                    title=home_info.get("name") or "YoLink Home",
                     data={
                         CONF_AUTH_TYPE: AUTH_TYPE_UAC,
                         CONF_UAID: user_input[CONF_UAID],

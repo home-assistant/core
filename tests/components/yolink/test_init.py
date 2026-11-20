@@ -190,7 +190,7 @@ async def test_setup_survives_failing_home_id_lookup(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    # A later start records the home again.
+    # The lookup is retried on a later start.
     assert CONF_HOME_ID not in mock_config_entry.data
 
 

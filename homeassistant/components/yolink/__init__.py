@@ -153,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> No
                 home_info = await yolink_home.async_get_home_info()
         except (YoLinkClientError, TimeoutError) as err:
             # Includes YoLinkAuthFailError: a failed backfill must not start a reauth.
-            _LOGGER.debug("Could not determine the home of the entry: %s", err)
+            _LOGGER.debug("Could not determine the home of the entry: %r", err)
         else:
             if home_id := (home_info.data or {}).get("id"):
                 hass.config_entries.async_update_entry(
