@@ -196,6 +196,13 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=STEP_MODBUS_PLACEHOLDERS,
             )
 
+        self._async_abort_entries_match(
+            {
+                CONF_MODBUS_URL: user_input[CONF_MODBUS_URL],
+                CONF_MODBUS_UNIT: user_input[CONF_MODBUS_UNIT],
+            }
+        )
+
         errors = {}
 
         try:
@@ -224,6 +231,8 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="nibegw", data_schema=STEP_NIBEGW_DATA_SCHEMA
             )
+
+        self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
 
         errors = {}
 

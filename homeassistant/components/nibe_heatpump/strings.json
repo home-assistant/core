@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
     "error": {
       "address": "Invalid remote address specified. Address must be an IP address or a resolvable hostname.",
       "address_in_use": "The selected listening port is already in use on this system.",
