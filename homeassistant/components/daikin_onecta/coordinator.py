@@ -414,7 +414,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         devices = previous_devices or {}
         if (remaining := self._polling_backoff_remaining()) is not None:
             self.update_interval = remaining
-            if not self.last_update_success:
+            if not self.last_update_success or previous_devices is None:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_exceeded",
@@ -447,7 +447,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 # Preserve transient token errors so the coordinator retries.
                 raise
             except OnectaRateLimitError as err:
-                if self.last_update_success:
+                if self.last_update_success and previous_devices is not None:
                     # Preserve known-good entities while every refresh waits
                     # for Daikin's Retry-After deadline.
                     if remaining := self._polling_backoff_remaining():

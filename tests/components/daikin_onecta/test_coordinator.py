@@ -40,7 +40,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
@@ -318,6 +318,33 @@ async def test_rate_limited_poll_after_success_keeps_cached_state(
     assert warnings == []
     assert coordinator.last_update_success
     coordinator.client.get_gateway_devices.assert_awaited_once_with()
+
+
+async def test_rate_limited_first_refresh_does_not_load_empty_cache(
+    coordinator: OnectaDataUpdateCoordinator,
+) -> None:
+    """Do not treat the coordinator's initial success flag as cached data."""
+    assert coordinator.last_update_success
+    assert coordinator.data_or_none is None
+    coordinator.client.get_gateway_devices = AsyncMock(
+        side_effect=OnectaRateLimitError(
+            RateLimit(retry_after=60), method="GET", path="/v1/gateway-devices"
+        )
+    )
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data_from_cloud()
+
+    assert err.value.translation_key == "rate_limit_exceeded"
+    assert coordinator.data_or_none is None
+    assert coordinator.client.get_gateway_devices.await_count == 1
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data_from_cloud()
+
+    assert err.value.translation_key == "rate_limit_exceeded"
+    assert coordinator.data_or_none is None
+    assert coordinator.client.get_gateway_devices.await_count == 1
 
 
 def _patch_polling_schedule(
@@ -816,7 +843,6 @@ class TestOnectaDataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         config_entry: MockConfigEntry,
-        entity_registry: er.EntityRegistry,
     ) -> None:
         """One manual update for multiple climate entities makes one cloud call."""
         await _async_setup_fixture(hass, config_entry, "altherma")
@@ -824,21 +850,11 @@ class TestOnectaDataUpdateCoordinator:
         coordinator.client.get_gateway_devices = AsyncMock(
             return_value=_load_gateway_devices("altherma")
         )
-        registry = entity_registry
-        entity_ids_by_device: dict[str, list[str]] = {}
-        for entry in registry.entities.values():
-            if (
-                entry.config_entry_id == config_entry.entry_id
-                and entry.device_id is not None
-            ):
-                entity_ids_by_device.setdefault(entry.device_id, []).append(
-                    entry.entity_id
-                )
-        entity_ids = next(
-            entity_ids
-            for entity_ids in entity_ids_by_device.values()
-            if len(entity_ids) > 1
-        )
+        entity_ids = [
+            "climate.altherma_leaving_water_offset",
+            "climate.altherma_leaving_water_temperature",
+            "climate.altherma_room_temperature",
+        ]
 
         await asyncio.gather(
             *(async_update_entity(hass, entity_id) for entity_id in entity_ids)

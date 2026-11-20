@@ -340,11 +340,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             )
         if self.current_operation is None:
             self._raise_service_validation_error("water_heater_on_off_unavailable")
-        # First determine the new settings for onOffMode/powerfulMode, we need these to set them to Daikin
-        # and update our local cached version when succeeded
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
 
-        # Only set the on/off to Daikin when we need to change it
         if on_off_mode != "":
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_power(on_off_mode == "on"),
@@ -355,7 +352,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 hot_water.power.value = on_off_mode
             self._publish_write_update()
 
-        # Only set powerfulMode when it is set and supported by the device
         if powerful_mode != "" and STATE_PERFORMANCE in (self.operation_list or []):
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_powerful_mode(powerful_mode == "on"),
