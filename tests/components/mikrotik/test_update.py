@@ -9,7 +9,7 @@ from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, UpdateService
-from homeassistant.const import STATE_OFF, CommonServiceArgument, Platform
+from homeassistant.const import STATE_OFF, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -71,7 +71,7 @@ async def test_update_install(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: entity_id},
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -87,7 +87,7 @@ async def test_firmware_update_install_with_backup(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         UpdateService.INSTALL,
-        {CommonServiceArgument.ENTITY_ID: FW_UPDATE_ENTITY_ID, "backup": True},
+        {TargetKey.ENTITY_ID: FW_UPDATE_ENTITY_ID, "backup": True},
         blocking=True,
     )
 

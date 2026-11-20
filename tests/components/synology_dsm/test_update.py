@@ -272,7 +272,7 @@ async def test_package_release_notes(
         {"type": "update/release_notes", "entity_id": NODE_ENTITY_ID}
     )
     result = await client.receive_json()
-    assert result["result"] == "<p>Fixed issues.</p>"
+    assert result["result"]["release_notes"] == "<p>Fixed issues.</p>"
 
 
 async def test_first_visible_package_installed(

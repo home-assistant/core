@@ -20,7 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.ulid import ulid_now, ulid_to_bytes
+from homeassistant.util.ulid import secure_ulid_now, ulid_to_bytes
 
 from . import frame
 from .event import async_call_later
@@ -166,7 +166,7 @@ def async_get_chat_session(
         hass.data[DATA_CHAT_SESSION_CLEANUP] = SessionCleanup(hass)
 
     if conversation_id is None:
-        conversation_id = ulid_now()
+        conversation_id = secure_ulid_now()
 
     elif conversation_id in all_sessions:
         session = all_sessions[conversation_id]
@@ -178,7 +178,7 @@ def async_get_chat_session(
         # want to track a conversation and we respect it.
         try:
             ulid_to_bytes(conversation_id)
-            conversation_id = ulid_now()
+            conversation_id = secure_ulid_now()
         except ValueError:
             pass
 

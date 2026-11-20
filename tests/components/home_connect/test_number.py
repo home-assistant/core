@@ -54,6 +54,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     CommonServiceArgument,
     Platform,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -359,7 +360,7 @@ async def test_number_entity_functionality(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SERVICE_ATTR_VALUE: value,
         },
     )
@@ -508,7 +509,7 @@ async def test_number_entity_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SERVICE_ATTR_VALUE: DEFAULT_MIN_VALUE,
             },
             blocking=True,
@@ -633,7 +634,7 @@ async def test_options_functionality(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+        {TargetKey.ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
     )
     await hass.async_block_till_done()
 

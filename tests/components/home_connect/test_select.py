@@ -52,8 +52,8 @@ from homeassistant.const import (
     ATTR_RESTORED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -391,7 +391,7 @@ async def test_select_program_functionality(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: program_to_set,
         },
     )
@@ -482,7 +482,7 @@ async def test_select_exception_handling(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: program_to_set,
             },
             blocking=True,
@@ -598,7 +598,7 @@ async def test_select_functionality(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: value_to_set,
         },
     )
@@ -854,7 +854,7 @@ async def test_select_entity_error(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: value_to_set,
             },
             blocking=True,
@@ -984,7 +984,7 @@ async def test_options_functionality(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
     )
@@ -1066,7 +1066,7 @@ async def test_options_entities_available_non_writable(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
         blocking=True,
@@ -1121,7 +1121,7 @@ async def test_options_entities_available_non_writable(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
             },
             blocking=True,
@@ -1197,7 +1197,7 @@ async def test_options_entities_error_obtaining_available_program(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
         },
         blocking=True,
