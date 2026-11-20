@@ -2,12 +2,18 @@
   "domain": "lg_soundbar",
   "name": "LG Soundbars",
   "categories": ["media_entertainment.speakers_audio"],
-  "codeowners": [],
+  "codeowners": ["@fthiery"],
   "config_flow": true,
   "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/lg_soundbar",
   "integration_type": "device",
-  "iot_class": "local_polling",
-  "loggers": ["temescal"],
-  "requirements": ["temescal==0.5"]
+  "iot_class": "local_push",
+  "loggers": ["aiotemescal"],
+  "requirements": ["aiotemescal==0.4.0"],
+  "zeroconf": [
+    {
+      "name": "lg_smart_audio-*",
+      "type": "_lg-smart-device._tcp.local."
+    }
+  ]
 }
