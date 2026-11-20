@@ -22,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_buienradar_data() -> Generator[AsyncMock]:
     """Return parsed Buienradar data instead of fetching it."""
     with patch(
-        "homeassistant.components.buienradar.util.BrData.async_fetch",
-        side_effect=lambda: copy.deepcopy(TEST_DATA),
+        "homeassistant.components.buienradar.coordinator.async_fetch_data",
+        side_effect=lambda *args: copy.deepcopy(TEST_DATA),
     ) as mock_fetch:
         yield mock_fetch

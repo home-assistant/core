@@ -1,13 +1,25 @@
 """The tests for the Buienradar sensor platform."""
 
+import copy
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.buienradar.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import TEST_CFG_DATA, TEST_LATITUDE, TEST_LONGITUDE
+from . import TEST_CFG_DATA, TEST_DATA, TEST_LATITUDE, TEST_LONGITUDE, setup_integration
 
 CONDITIONS = {"stationname": "Eindhoven (6370)", "temperature": "8.2"}
 
@@ -36,3 +48,46 @@ async def test_smoke_test_setup_component(
 
     for cond, value in CONDITIONS.items():
         assert hass.states.get(entity_ids[cond]).state == value
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_data")
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all sensors."""
+    with patch("homeassistant.components.buienradar.PLATFORMS", [Platform.SENSOR]):
+        entry = await setup_integration(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_unavailable_and_recovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_buienradar_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors are unavailable after a failed update and recover."""
+    with patch("homeassistant.components.buienradar.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{TEST_LATITUDE:2.6f}{TEST_LONGITUDE:2.6f}temperature"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "8.2"
+
+    mock_buienradar_data.side_effect = UpdateFailed("Unable to retrieve data")
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # A failed update is retried two minutes later, with the same measurement.
+    mock_buienradar_data.side_effect = lambda *args: copy.deepcopy(TEST_DATA)
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "8.2"

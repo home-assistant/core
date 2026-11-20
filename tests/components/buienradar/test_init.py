@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 
@@ -26,8 +27,7 @@ async def test_setup_retry_when_fetch_fails(
     hass: HomeAssistant, mock_buienradar_data: AsyncMock
 ) -> None:
     """Test setup is retried when the first update fails."""
-    mock_buienradar_data.side_effect = None
-    mock_buienradar_data.return_value = None
+    mock_buienradar_data.side_effect = UpdateFailed("Unable to retrieve data")
 
     entry = await setup_integration(hass)
 
