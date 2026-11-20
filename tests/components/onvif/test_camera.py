@@ -62,7 +62,7 @@ async def test_stream_uri_request_cancelled(hass: HomeAssistant) -> None:
     first.cancel()
     with pytest.raises(asyncio.CancelledError):
         await first
-    # Before, the waiting call waited for the cancelled request forever
+    # The waiting call gets an error instead of waiting forever
     async with asyncio.timeout(5):
         with pytest.raises(HomeAssistantError, match="cancelled"):
             await waiting
