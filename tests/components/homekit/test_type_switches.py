@@ -49,18 +49,18 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.valve import ValveService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
     SERVICE_SELECT_OPTION,
     STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     CommonServiceArgument,
+    TargetKey,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
@@ -267,14 +267,14 @@ async def test_valve_set_state(
     assert acc.char_in_use.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
-    call_turn_off = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+    call_turn_on = async_mock_service(hass, "valve", ValveService.OPEN)
+    call_turn_off = async_mock_service(hass, "valve", ValveService.CLOSE)
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_in_use.value == 1
     assert call_turn_on
-    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_on[0].data[TargetKey.ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
@@ -282,7 +282,7 @@ async def test_valve_set_state(
     await hass.async_block_till_done()
     assert acc.char_in_use.value == 0
     assert call_turn_off
-    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_turn_off[0].data[TargetKey.ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 

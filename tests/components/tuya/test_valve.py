@@ -10,12 +10,8 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.components.valve import (
-    DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-)
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveService
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -109,7 +105,7 @@ async def test_ggq_indexed_valve_child_devices(
 @pytest.mark.parametrize("code", ["switch_1", "switch_2"])
 @pytest.mark.parametrize(
     ("service", "value"),
-    [(SERVICE_OPEN_VALVE, True), (SERVICE_CLOSE_VALVE, False)],
+    [(ValveService.OPEN, True), (ValveService.CLOSE, False)],
 )
 async def test_ggq_indexed_valve_action(
     hass: HomeAssistant,
@@ -130,7 +126,7 @@ async def test_ggq_indexed_valve_action(
     assert entity_id is not None
 
     await hass.services.async_call(
-        VALVE_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        VALVE_DOMAIN, service, {TargetKey.ENTITY_ID: entity_id}, blocking=True
     )
 
     mock_manager.send_commands.assert_called_once_with(
@@ -209,11 +205,11 @@ async def test_selective_state_update(
     ("service", "expected_commands"),
     [
         (
-            SERVICE_OPEN_VALVE,
+            ValveService.OPEN,
             [{"code": "switch_1", "value": True}],
         ),
         (
-            SERVICE_CLOSE_VALVE,
+            ValveService.CLOSE,
             [{"code": "switch_1", "value": False}],
         ),
     ],
@@ -236,7 +232,7 @@ async def test_action(
         VALVE_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
         },
         blocking=True,
     )
