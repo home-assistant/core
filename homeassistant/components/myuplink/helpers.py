@@ -24,6 +24,11 @@ def has_value_range(device_point: DevicePoint) -> bool:
     )
 
 
+def is_unit_setting(device_point: DevicePoint) -> bool:
+    """Return True for settings of the unit itself, such as its local API."""
+    return device_point.category.lower() == "software debug"
+
+
 def find_matching_platform(
     device_point: DevicePoint,
     description: SensorEntityDescription | NumberEntityDescription | None = None,

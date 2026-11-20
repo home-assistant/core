@@ -21,7 +21,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -363,6 +368,20 @@ def _s320_point(parameter_id: str, name: str, **overrides: Any) -> dict[str, Any
                 _s320_point(
                     "10613", "Activate SG Ready via API", minValue=0.0, maxValue=1.0
                 ),
+                _s320_point(
+                    "61597",
+                    "Public Rest API Enabled",
+                    category="Software Debug",
+                    minValue=0.0,
+                    maxValue=1.0,
+                ),
+                _s320_point(
+                    "61999",
+                    "Debug log level",
+                    category="Software Debug",
+                    minValue=0.0,
+                    maxValue=5.0,
+                ),
             ]
         ).decode()
     ],
@@ -396,3 +415,14 @@ async def test_settings_with_zero_limit(
     assert entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{device_id}-10613"
     )
+
+    # Settings for the unit itself, like its local API, start disabled
+    for platform, point_id in ((Platform.SWITCH, "61597"), (Platform.NUMBER, "61999")):
+        entity_id = entity_registry.async_get_entity_id(
+            platform, DOMAIN, f"{device_id}-{point_id}"
+        )
+        assert entity_id
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert entry.entity_category is EntityCategory.CONFIG

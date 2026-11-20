@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from myuplink import DevicePoint
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -14,7 +14,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity, transform_model_series
+from .helpers import (
+    find_matching_platform,
+    is_unit_setting,
+    skip_entity,
+    transform_model_series,
+)
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
     "DM": NumberEntityDescription(
@@ -123,6 +128,9 @@ class MyUplinkNumber(MyUplinkEntity, NumberEntity):
             max_value if max_value is not None else 30000
         ) * _scale
         self._attr_native_step = (step_value or 1.0) * _scale
+        if is_unit_setting(device_point):
+            self._attr_entity_category = EntityCategory.CONFIG
+            self._attr_entity_registry_enabled_default = False
         if entity_description is not None:
             self.entity_description = entity_description
 
