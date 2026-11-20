@@ -39,7 +39,7 @@ from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoC
 
 from homeassistant.components import date
 from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
@@ -53,8 +53,8 @@ async def async_set_value(
     """Set date value."""
     await hass.services.async_call(
         date.DOMAIN,
-        date.SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: entity_id, date.ATTR_DATE: value},
+        date.DateService.SET_VALUE,
+        {TargetKey.ENTITY_ID: entity_id, date.DateServiceArgument.DATE: value},
         blocking=True,
     )
 
