@@ -1,5 +1,6 @@
 """Support for Baidu speech service."""
 
+from enum import StrEnum
 import logging
 from typing import Any, override
 
@@ -28,14 +29,24 @@ CONF_PITCH = "pitch"
 CONF_VOLUME = "volume"
 CONF_PERSON = "person"
 
+
+class BaiduTextToSpeechOption(StrEnum):
+    """Store keys for the Baidu text-to-speech options."""
+
+    PERSON = "person"
+    PITCH = "pitch"
+    SPEED = "speed"
+    VOLUME = "volume"
+
+
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
             SUPPORTED_LANGUAGES
         ),
         probatio.Required(CONF_APP_ID): cv.string,
-        probatio.Required(CONF_API_KEY): cv.string,
-        probatio.Required(CONF_SECRET_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Required(probatio.Secret(CONF_SECRET_KEY)): cv.string,
         probatio.Optional(CONF_SPEED, default=5): probatio.All(
             probatio.Coerce(int), probatio.Range(min=0, max=9)
         ),
@@ -57,7 +68,12 @@ _OPTIONS = {
     CONF_SPEED: "spd",
     CONF_VOLUME: "vol",
 }
-SUPPORTED_OPTIONS = [CONF_PERSON, CONF_PITCH, CONF_SPEED, CONF_VOLUME]
+SUPPORTED_OPTIONS: list[str] = [
+    BaiduTextToSpeechOption.PERSON,
+    BaiduTextToSpeechOption.PITCH,
+    BaiduTextToSpeechOption.SPEED,
+    BaiduTextToSpeechOption.VOLUME,
+]
 
 
 def get_engine(hass, config, discovery_info=None):
@@ -105,10 +121,14 @@ class BaiduTTSProvider(Provider):
     def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
         return {
-            CONF_PERSON: self._speech_conf_data[_OPTIONS[CONF_PERSON]],
-            CONF_PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
-            CONF_SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
-            CONF_VOLUME: self._speech_conf_data[_OPTIONS[CONF_VOLUME]],
+            BaiduTextToSpeechOption.PERSON: self._speech_conf_data[
+                _OPTIONS[CONF_PERSON]
+            ],
+            BaiduTextToSpeechOption.PITCH: self._speech_conf_data[_OPTIONS[CONF_PITCH]],
+            BaiduTextToSpeechOption.SPEED: self._speech_conf_data[_OPTIONS[CONF_SPEED]],
+            BaiduTextToSpeechOption.VOLUME: self._speech_conf_data[
+                _OPTIONS[CONF_VOLUME]
+            ],
         }
 
     @property

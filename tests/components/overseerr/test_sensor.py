@@ -2,6 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr import DOMAIN
@@ -10,13 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import call_webhook, setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(

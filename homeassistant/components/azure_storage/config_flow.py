@@ -89,13 +89,14 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
+            step_id="user",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_ACCOUNT_NAME): str,
                     probatio.Required(
                         CONF_CONTAINER_NAME, default="home-assistant-backups"
                     ): str,
-                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_STORAGE_ACCOUNT_KEY)): str,
                 }
             ),
             errors=errors,
@@ -131,7 +132,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_STORAGE_ACCOUNT_KEY)): str,
                 }
             ),
             errors=errors,
@@ -157,6 +158,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**reconfigure_entry.data, **user_input},
                 )
         return self.async_show_form(
+            step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
@@ -164,7 +166,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=reconfigure_entry.data[CONF_CONTAINER_NAME],
                     ): str,
                     probatio.Required(
-                        CONF_STORAGE_ACCOUNT_KEY,
+                        probatio.Secret(CONF_STORAGE_ACCOUNT_KEY),
                         default=reconfigure_entry.data[CONF_STORAGE_ACCOUNT_KEY],
                     ): str,
                 }

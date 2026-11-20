@@ -29,6 +29,9 @@
     "cannot_connect": {
       "message": "Error communicating with Dropbox"
     },
+    "file_not_found": {
+      "message": "Backup file not found in {service}"
+    },
     "missing_refresh_token": {
       "message": "[%key:component::dropbox::config::step::reauth_confirm::description%]"
     },

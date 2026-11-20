@@ -1,10 +1,12 @@
 """Tests for the Tuya component."""
 
+from copy import copy
 import pathlib
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from tuya_sharing import (
     CustomerApi,
     CustomerDevice,
@@ -19,8 +21,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 DEVICE_MOCKS = sorted(
@@ -159,6 +159,15 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
             # It was redacted, which may cause issue with b64decode
             device.status[key] = ""
     return device
+
+
+def add_indexed_switches(device: CustomerDevice, channels: int) -> None:
+    """Add indexed switch DPs, copied from the unindexed "switch" DP."""
+    for index in range(1, channels + 1):
+        for container in (device.function, device.status_range):
+            container[f"switch_{index}"] = copy(container["switch"])
+            container[f"switch_{index}"].code = f"switch_{index}"
+        device.status[f"switch_{index}"] = False
 
 
 def create_manager(

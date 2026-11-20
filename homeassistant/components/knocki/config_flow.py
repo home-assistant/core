@@ -17,7 +17,7 @@ from .const import DOMAIN, LOGGER
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -37,7 +37,9 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
                 token_response = await client.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 await self.async_set_unique_id(token_response.user_id)
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 self._abort_if_unique_id_configured()
                 client.token = token_response.token
                 await client.link()

@@ -63,7 +63,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
     _attr_precision = PRECISION_HALVES
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_supported_features = (
         ClimateEntityFeature.TURN_ON
@@ -108,8 +108,10 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         if self._attr_hvac_mode and self.read_only:
             self._attr_hvac_modes = [self._attr_hvac_mode]
 
-        self._attr_current_temperature = self.get("climate_state_inside_temp")
-        self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
+        self._attr_native_current_temperature = self.get("climate_state_inside_temp")
+        self._attr_native_target_temperature = self.get(
+            f"climate_state_{self.key}_setting"
+        )
         self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
         self._attr_min_temp = cast(
             float, self.get("climate_state_min_avail_temp", DEFAULT_MIN_TEMP)
@@ -157,7 +159,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
                 passenger_temp=temp,
             )
         )
-        self._attr_target_temperature = temp
+        self._attr_native_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state
@@ -216,7 +218,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     _attr_target_temperature_step = 5
     _attr_min_temp = COP_LEVELS["Low"]
     _attr_max_temp = COP_LEVELS["High"]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
 
     _attr_entity_registry_enabled_default = False
@@ -257,11 +259,11 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             self._attr_hvac_modes = [self._attr_hvac_mode]
 
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
         else:
-            self._attr_target_temperature = COP_LEVELS.get(level)
+            self._attr_native_target_temperature = COP_LEVELS.get(level)
 
-        self._attr_current_temperature = self.get("climate_state_inside_temp")
+        self._attr_native_current_temperature = self.get("climate_state_inside_temp")
 
     @property
     @override
@@ -304,7 +306,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.set_cop_temp(cop_mode))
-        self._attr_target_temperature = temp
+        self._attr_native_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self._async_set_cop(mode)

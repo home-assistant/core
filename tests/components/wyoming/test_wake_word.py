@@ -4,8 +4,10 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.audio import AudioChunk
 from wyoming.error import Error
 from wyoming.info import Info, WakeModel, WakeProgram
 from wyoming.wake import Detection
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TEST_ATTR, MockAsyncTcpClient
-
-from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:
@@ -207,6 +207,56 @@ async def test_detect_message_with_wrong_wake_word(
         result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
 
     assert result is None
+
+
+@pytest.mark.parametrize(
+    ("detections", "expected_forwarded", "expected_queued"),
+    [
+        pytest.param(["my-wake-word"], [], [(b"chunk0", 0)], id="detection"),
+        pytest.param(
+            ["not-my-wake-word", "my-wake-word"],
+            [b"chunk0"],
+            [(b"chunk1", 1)],
+            id="skipped_detection",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_wyoming_wake_word")
+async def test_detection_keeps_ready_audio(
+    hass: HomeAssistant,
+    detections: list[str],
+    expected_forwarded: list[bytes],
+    expected_queued: list[tuple[bytes, int]],
+) -> None:
+    """Test that audio read alongside a detection is forwarded or queued."""
+    entity = wake_word.async_get_wake_word_detection_entity(
+        hass, "wake_word.test_wake_word"
+    )
+    assert entity is not None
+
+    async def audio_stream():
+        for i in range(5):
+            yield f"chunk{i}".encode(), i
+
+    mock_client = MockAsyncTcpClient(
+        [Detection(name=name, timestamp=0).event() for name in detections]
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.wake_word.AsyncTcpClient",
+        mock_client,
+    ):
+        result = await entity.async_process_audio_stream(audio_stream(), "my-wake-word")
+
+    assert isinstance(result, wake_word.DetectionResult)
+    assert result.wake_word_id == "my-wake-word"
+
+    assert [
+        AudioChunk.from_event(event).audio
+        for event in mock_client.written
+        if AudioChunk.is_type(event.type)
+    ] == expected_forwarded
+    assert result.queued_audio == expected_queued
 
 
 async def test_dynamic_wake_word_info(

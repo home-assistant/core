@@ -2,8 +2,7 @@
 
 from typing import override
 
-from pyintelliclima.const import FanMode, FanSpeed
-from pyintelliclima.intelliclima_types import IntelliClimaECO
+from pyintelliclima import FanMode, FanSpeed, IntelliClimaECO2
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
@@ -53,7 +52,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
-        device: IntelliClimaECO,
+        device: IntelliClimaECO2,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator, device)
@@ -64,20 +63,9 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
     @override
     def current_option(self) -> str | None:
         """Return the current fan mode."""
-        device_data = self._device_data
-
-        if device_data.mode_set == FanMode.off:
+        if (fan_state := self._fan_state) is None:
             return None
-
-        # If in auto mode (sensor mode with auto speed),
-        # return None (handled by fan entity preset mode)
-        if (
-            device_data.speed_set == FanSpeed.auto_get
-            and device_data.mode_set == FanMode.sensor
-        ):
-            return None
-
-        return INTELLICLIMA_MODE_TO_FAN_MODE.get(device_data.mode_set)
+        return INTELLICLIMA_MODE_TO_FAN_MODE.get(fan_state.direction)
 
     @override
     async def async_select_option(self, option: str) -> None:
@@ -88,14 +76,14 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
 
         # Determine speed: keep current speed if available, otherwise default to sleep
         if (
-            device_data.speed_set == FanSpeed.auto_get
+            device_data.speed_set == FanSpeed.auto
             or device_data.mode_set == FanMode.off
         ):
             speed = FanSpeed.sleep
         else:
             speed = device_data.speed_set
 
-        await self.coordinator.api.ecocomfort.set_mode_speed(
+        await self.coordinator.api.ecocomfort2.set_mode_speed(
             self._device_sn, mode, speed
         )
         await self.coordinator.async_request_refresh()

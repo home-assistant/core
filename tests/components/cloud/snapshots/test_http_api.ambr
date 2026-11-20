@@ -31,7 +31,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown
@@ -126,9 +126,9 @@
   <details><summary>Logs</summary>
   
   ```logs
-  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
-  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
-  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  2025-02-10 12:00:00.000+00:00 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000+00:00 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000+00:00 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
   ```
   
   </details>
@@ -167,7 +167,7 @@
   ai_task | AI Task
   auth | Auth
   binary_sensor | Binary sensor
-  cloud | Home Assistant Cloud
+  cloud | Home Assistant Link
   cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
   cloud.conversation | Unknown
@@ -238,9 +238,9 @@
   <details><summary>Logs</summary>
   
   ```logs
-  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
-  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
-  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  2025-02-10 12:00:00.000+00:00 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000+00:00 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000+00:00 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
   ```
   
   </details>
@@ -319,9 +319,9 @@
   <details><summary>Logs</summary>
   
   ```logs
-  2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
-  2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
-  2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
+  2025-02-10 12:00:00.000+00:00 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
+  2025-02-10 12:00:00.000+00:00 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
+  2025-02-10 12:00:00.000+00:00 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
   ```
   
   </details>

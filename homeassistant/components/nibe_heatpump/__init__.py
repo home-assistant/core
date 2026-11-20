@@ -44,7 +44,7 @@ COIL_READ_RETRIES = 5
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
-) -> bool:
+) -> None:
     """Set up Nibe Heat Pump from a config entry."""
 
     heatpump = HeatPump(Model[entry.data[CONF_MODEL]])
@@ -107,12 +107,13 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Trigger a refresh again now that all platforms have registered
-    hass.async_create_task(coordinator.async_refresh())
-    return True
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "NIBE initial refresh"
+    )
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NibeHeatpumpConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

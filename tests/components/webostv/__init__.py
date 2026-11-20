@@ -2,13 +2,13 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME
-
-from tests.common import MockConfigEntry
 
 
 async def setup_webostv(

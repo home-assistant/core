@@ -8,14 +8,13 @@ from pyairvisual.node import (
     NodeProError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -86,6 +85,7 @@ async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> 
         CONF_IP_ADDRESS: "192.168.1.101",
         CONF_PASSWORD: "password123",
     }
+    assert result["result"].unique_id == "XXXXXXX"
 
 
 @pytest.mark.parametrize(

@@ -33,7 +33,6 @@ class MotionMountMovingSensor(MotionMountEntity, BinarySensorEntity):
     """The moving sensor of a MotionMount."""
 
     _attr_device_class = BinarySensorDeviceClass.MOVING
-    _attr_translation_key = "motionmount_is_moving"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 

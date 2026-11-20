@@ -11,16 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -31,6 +25,7 @@ from .const import SITE_INFO, SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
 ENTITY_BUY = "calendar.energy_site_buy_tariff"
 ENTITY_SELL = "calendar.energy_site_sell_tariff"
 ENTITY_OPERATION_MODE = "select.energy_site_operation_mode"
+SITE_TIME_ZONE = dt_util.get_time_zone("Australia/Brisbane")
 
 TARIFF_V2 = SITE_INFO["response"]["tariff_content_v2"]
 SLIM_SITE_INFO = {
@@ -141,12 +136,33 @@ async def test_calendar(
     mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the calendar entity is correct."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
     entry = await setup_platform(hass, [Platform.CALENDAR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_site_time_zone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test the tariff is evaluated in the site timezone, not the Home Assistant one."""
+    await hass.config.async_set_time_zone("US/Pacific")
+    # 17:00 at the Australia/Brisbane site, inside ON_PEAK 16-21
+    freezer.move_to("2024-01-01T07:00:00Z")
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "on"
+    assert state.attributes["message"] == "On peak: 0.22/kWh"
+    assert state.attributes["start_time"] == "2023-12-31 22:00:00"
+    assert state.attributes["end_time"] == "2024-01-01 03:00:00"
 
 
 @pytest.mark.parametrize(
@@ -172,7 +188,7 @@ async def test_calendar_events(
     time_tuple: tuple,
 ) -> None:
     """Tests that the energy tariff calendar entity events are correct."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(*time_tuple, tzinfo=tz))
 
     await setup_platform(hass, [Platform.CALENDAR])
@@ -183,11 +199,15 @@ async def test_calendar_events(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+            TargetKey.ENTITY_ID: [entity_id],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-07T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -329,11 +349,15 @@ async def test_calendar_invalid_season_data(
     # async_get_events also returns empty when no valid seasons
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-06-15T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-06-17T00:00:00Z"),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-15T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-06-17T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -357,11 +381,15 @@ async def test_calendar_week_crossing_get_events(
     # Request events for a full week - only Fri-Mon should have events
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-08T00:00:00Z"),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-01T00:00:00Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2024-01-08T00:00:00Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -383,7 +411,7 @@ async def test_calendar_midnight_crossing_local_start(
     mock_legacy: AsyncMock,
 ) -> None:
     """Test async_get_events includes overnight period at local midnight."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
     await setup_platform(hass, [Platform.CALENDAR])
@@ -395,11 +423,11 @@ async def test_calendar_midnight_crossing_local_start(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: start,
-            EVENT_END_DATETIME: end,
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: start,
+            CalendarServiceArgument.END_DATE_TIME: end,
         },
         blocking=True,
         return_response=True,
@@ -435,7 +463,7 @@ async def test_calendar_end_of_day_period(
     mock_site_info_end_of_day: AsyncMock,
 ) -> None:
     """Test a tariff period ending at the day boundary parses instead of crashing."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     # Sunday 23:45, inside the 23:30->24:00 end-of-day period
     freezer.move_to(datetime(2024, 1, 7, 23, 45, 0, tzinfo=tz))
 
@@ -447,11 +475,15 @@ async def test_calendar_end_of_day_period(
 
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: [ENTITY_BUY],
-            EVENT_START_DATETIME: datetime(2024, 1, 7, 0, 0, 0, tzinfo=tz),
-            EVENT_END_DATETIME: datetime(2024, 1, 8, 0, 0, 0, tzinfo=tz),
+            TargetKey.ENTITY_ID: [ENTITY_BUY],
+            CalendarServiceArgument.START_DATE_TIME: datetime(
+                2024, 1, 7, 0, 0, 0, tzinfo=tz
+            ),
+            CalendarServiceArgument.END_DATE_TIME: datetime(
+                2024, 1, 8, 0, 0, 0, tzinfo=tz
+            ),
         },
         blocking=True,
         return_response=True,

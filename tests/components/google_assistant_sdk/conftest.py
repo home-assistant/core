@@ -6,6 +6,7 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -16,13 +17,17 @@ from homeassistant.components.google_assistant_sdk.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 type ComponentSetup = Callable[[], Awaitable[None]]
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 ACCESS_TOKEN = "mock-access-token"
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant) -> None:
+    """Set up the homeassistant integration, which the conversation agent needs."""
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture

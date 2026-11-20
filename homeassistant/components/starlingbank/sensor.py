@@ -34,9 +34,9 @@ SCAN_INTERVAL = timedelta(seconds=180)
 
 ACCOUNT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ACCESS_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): cv.string,
         probatio.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES): probatio.All(
-            cv.ensure_list, [probatio.In(BALANCE_TYPES)]
+            probatio.EnsureList(), [probatio.In(BALANCE_TYPES)]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
         probatio.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,

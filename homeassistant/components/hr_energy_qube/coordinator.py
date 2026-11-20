@@ -10,11 +10,12 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_SW_VERSION, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
+
+    from . import QubeConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,10 +32,14 @@ class QubeData:
 class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     """Qube Heat Pump data coordinator."""
 
+    config_entry: QubeConfigEntry
     sw_version: str | None = None
 
     def __init__(
-        self, hass: HomeAssistant, client: QubeClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: QubeClient,
+        entry: QubeConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
@@ -48,20 +53,18 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
 
     @override
     async def _async_setup(self) -> None:
-        """Connect to the device and read its software version."""
-        try:
-            connected = await self.client.connect()
-            if not connected:
-                await self.client.close()
-                raise UpdateFailed(
-                    f"Unable to connect to Qube heat pump at {self.client.host}"
-                )
-            self.sw_version = await self.client.async_get_software_version()
-        except OSError as err:
-            await self.client.close()
+        """Read the software version; the first request opens the connection."""
+        self.sw_version = await self.client.async_get_software_version()
+        if not self.client.is_connected:
             raise UpdateFailed(
-                f"Unable to connect to Qube heat pump at {self.client.host}"
-            ) from err
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.client.host},
+            )
+        # Register 77 reads 0 on recent firmware; the version on the panel is
+        # only in the mDNS record, which discovery stores with the entry
+        if sw_version := self.config_entry.data.get(CONF_SW_VERSION):
+            self.sw_version = sw_version
 
     @override
     async def _async_update_data(self) -> QubeData:
@@ -72,10 +75,15 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
             sg_ready_mode = await self.client.get_sg_ready_mode()
         except OSError as exc:
             raise UpdateFailed(
-                f"Error communicating with Qube heat pump: {exc}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(exc)},
             ) from exc
 
         if state is None:
-            raise UpdateFailed("No data received from Qube heat pump")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+            )
 
         return QubeData(state=state, switches=switches, sg_ready_mode=sg_ready_mode)

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -24,7 +25,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.climate.common import async_set_fan_mode, async_set_temperature
 
 CLIMATE_ENTITY_ID = "climate.flexit"

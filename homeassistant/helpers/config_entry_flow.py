@@ -61,7 +61,6 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
     ) -> config_entries.ConfigFlowResult:
         """Confirm setup."""
         if user_input is None and onboarding.async_is_onboarded(self.hass):
-            self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
         if self.source == config_entries.SOURCE_USER:
@@ -275,7 +274,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         # Local import to be sure cloud is loaded and setup
         from homeassistant.components.cloud import (  # noqa: PLC0415
             async_active_subscription,
-            async_create_cloudhook,
+            async_get_or_create_cloudhook,
             async_is_connected,
         )
 
@@ -300,7 +299,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
                     translation_domain=HOMEASSISTANT_DOMAIN,
                 )
 
-            webhook_url = await async_create_cloudhook(self.hass, webhook_id)
+            webhook_url = await async_get_or_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
             webhook_url = async_generate_url(self.hass, webhook_id)

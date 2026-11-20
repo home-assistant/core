@@ -8,6 +8,7 @@ from pyfirefly.exceptions import (
     FireflyTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.firefly_iii.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_TEST_CONFIG
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_SETUP = {
     CONF_URL: "https://127.0.0.1:8080/",
@@ -100,12 +99,6 @@ async def test_form_exceptions(
     assert result["errors"] == {"base": reason}
 
     mock_firefly_client.get_about.side_effect = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,

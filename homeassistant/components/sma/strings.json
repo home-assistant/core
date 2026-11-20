@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_supported": "This SMA device is not supported",
       "unique_id_mismatch": "You selected a different SMA device than the one this config entry was configured with, this is not allowed."
     },
     "error": {

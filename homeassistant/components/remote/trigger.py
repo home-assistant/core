@@ -4,7 +4,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
 
-from . import DOMAIN
+from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "turned_on": make_entity_target_state_trigger(DOMAIN, STATE_ON),

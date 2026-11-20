@@ -1,5 +1,7 @@
 """Entity definition."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,3 +31,10 @@ class WeatherFlowCloudEntity[T](CoordinatorEntity[BaseWeatherFlowCoordinator[T]]
             manufacturer="WeatherFlow",
             configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the station is still reported by the API."""
+        data = self.coordinator.data
+        return super().available and data is not None and self.station_id in data

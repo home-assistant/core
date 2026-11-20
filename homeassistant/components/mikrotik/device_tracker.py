@@ -7,12 +7,13 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
-from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .device import Device
 from .entity import MikrotikBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -25,8 +26,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Mikrotik component."""
     coordinator = config_entry.runtime_data
-
-    tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
     registry = er.async_get(hass)
 
@@ -45,7 +44,7 @@ async def async_setup_entry(
     @callback
     def update_hub() -> None:
         """Update the status of the device."""
-        update_items(coordinator, async_add_entities, tracked)
+        update_items(coordinator, async_add_entities)
 
     config_entry.async_on_unload(coordinator.async_add_listener(update_hub))
 
@@ -56,41 +55,55 @@ async def async_setup_entry(
 def update_items(
     coordinator: MikrotikDataUpdateCoordinator,
     async_add_entities: AddConfigEntryEntitiesCallback,
-    tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
 ) -> None:
     """Update tracked device state from the hub."""
     new_tracked: list[MikrotikDataUpdateCoordinatorTracker] = []
-    for mac, device in coordinator.api.devices.items():
-        if mac not in tracked:
-            tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, coordinator)
-            new_tracked.append(tracked[mac])
+    # A poll in the executor can add clients meanwhile
+    for mac, device in list(coordinator.api.devices.items()):
+        if mac not in coordinator.tracked_macs:
+            coordinator.tracked_macs.add(mac)
+            new_tracked.append(
+                MikrotikDataUpdateCoordinatorTracker(
+                    device, coordinator, _client_device_info(coordinator, device)
+                )
+            )
 
     async_add_entities(new_tracked)
+
+
+@callback
+def _client_device_info(
+    coordinator: MikrotikDataUpdateCoordinator, device: Device
+) -> DeviceInfo:
+    """Return device info which never renames a device to its MAC."""
+    connection = (CONNECTION_NETWORK_MAC, device.mac)
+    if (name := device.host_name) is None and dr.async_get(
+        coordinator.hass
+    ).async_get_device_by_connection(connection, coordinator.config_entry.entry_id):
+        return DeviceInfo(connections={connection})
+    return DeviceInfo(connections={connection}, name=name or device.mac)
 
 
 class MikrotikDataUpdateCoordinatorTracker(MikrotikBaseEntity, ScannerEntity):
     """Representation of network device."""
 
     def __init__(
-        self, device: Device, coordinator: MikrotikDataUpdateCoordinator
+        self,
+        device: Device,
+        coordinator: MikrotikDataUpdateCoordinator,
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize the tracked device."""
         super().__init__(coordinator, EntityDescription(key=device.mac))
         self.device = device
-        self._attr_name = device.name
         self._attr_unique_id = device.mac
+        self._attr_device_info = device_info
 
     @property
     @override
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
-        if (
-            self.device.last_seen
-            and (dt_util.utcnow() - self.device.last_seen)
-            < self.coordinator.option_detection_time
-        ):
-            return True
-        return False
+        return self.coordinator.is_client_connected(self.device)
 
     @property
     @override

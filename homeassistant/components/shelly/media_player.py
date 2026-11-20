@@ -4,7 +4,7 @@ import base64
 import binascii
 import contextlib
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import hashlib
 from typing import Any, Final, cast, override
 
@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -110,20 +110,10 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     entity_description: RpcMediaPlayerDescription
 
     _last_media_position: int | None = None
-    _last_media_position_updated_at: datetime.datetime | None = None
+    _last_media_position_updated_at: dt.datetime | None = None
 
     _cached_thumb: str | None = None
     _cached_thumb_result: tuple[bytes, str] | None = None
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcMediaPlayerDescription,
-    ) -> None:
-        """Initialize Shelly RPC media player."""
-        super().__init__(coordinator, key, attribute, description)
 
     @property
     def _media_meta(self) -> dict[str, Any]:
@@ -206,7 +196,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     @property
     @override
-    def media_position_updated_at(self) -> datetime.datetime | None:
+    def media_position_updated_at(self) -> dt.datetime | None:
         """Return when the position was last updated."""
         self._get_updated_media_position()
 
@@ -375,9 +365,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_audio_files(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for audio files."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_media()
+            result = await self.coordinator.device.media_list_media()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=item["title"],
@@ -408,9 +396,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_radio_stations(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for radio stations."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_radio_stations()
+            result = await self.coordinator.device.media_list_radio_stations()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=station["name"],

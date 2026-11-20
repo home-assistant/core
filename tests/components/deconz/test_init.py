@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pydeconz
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.deconz.const import CONF_MASTER_GATEWAY, DOMAIN
 from homeassistant.components.deconz.errors import AuthenticationRequired
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import ConfigEntryFactoryType
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(config_entry_setup: MockConfigEntry) -> None:

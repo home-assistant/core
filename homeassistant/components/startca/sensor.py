@@ -129,9 +129,9 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
-            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -152,7 +152,7 @@ async def async_setup_platform(
     ts_data = StartcaData(websession, apikey, bandwidthcap)
     ret = await ts_data.async_update()
     if ret is False:
-        _LOGGER.error("Invalid Start.ca API key: %s", apikey)
+        _LOGGER.error("Invalid Start.ca API key")
         return
 
     name = config[CONF_NAME]

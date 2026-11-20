@@ -15,7 +15,7 @@ import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -37,6 +37,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .coordinator import PhilipsTVConfigEntry
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -89,14 +90,28 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_HOST] = host
         self._current[CONF_SYSTEM] = hub.system
         self._current[CONF_API_VERSION] = hub.api_version
-        self.context.update({"title_placeholders": {CONF_NAME: hub.name}})
+        self.context.update({"title_placeholders": {"name": hub.name}})
 
         if serialnumber := hub.system.get("serialnumber"):
             await self.async_set_unique_id(serialnumber)
-            if self.source != SOURCE_REAUTH:
+            if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
                 self._abort_if_unique_id_configured(
                     updates=self._current, reload_on_update=True
                 )
+
+    async def _async_prepare_user_input(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Connect to the TV from the user input and return any errors."""
+        self._current = user_input
+        try:
+            await self._async_attempt_prepare(
+                user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
+            )
+        except GeneralFailure as exc:
+            LOGGER.error(exc)
+            return {"base": "cannot_connect"}
+        return {}
 
     async def _async_attempt_add(self) -> ConfigFlowResult:
         assert self._hub
@@ -105,12 +120,22 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_create_current()
 
     async def _async_create_current(self) -> ConfigFlowResult:
-        system = self._current[CONF_SYSTEM]
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            # A loaded entry is reloaded by its update listener
+            if reconfigure_entry.update_listeners:
+                return self.async_update_and_abort(
+                    reconfigure_entry, data_updates=self._current
+                )
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates=self._current
+            )
         if self.source == SOURCE_REAUTH:
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data_updates=self._current
             )
 
+        system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
             title=f"{system['name']} ({system['serialnumber']})",
             data=self._current,
@@ -125,7 +150,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_PIN): str,
+                probatio.Required(probatio.Secret(CONF_PIN)): str,
             }
         )
 
@@ -177,6 +202,32 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current[CONF_API_VERSION] = entry_data[CONF_API_VERSION]
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and API version."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input and not (
+            errors := await self._async_prepare_user_input(user_input)
+        ):
+            self._abort_if_unique_id_mismatch()
+            if CONF_USERNAME in reconfigure_entry.data:
+                return await self._async_create_current()
+            return await self._async_attempt_add()
+
+        schema = self.add_suggested_values_to_schema(
+            USER_SCHEMA,
+            user_input
+            or {
+                CONF_HOST: reconfigure_entry.data[CONF_HOST],
+                CONF_API_VERSION: str(reconfigure_entry.data[CONF_API_VERSION]),
+            },
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -184,7 +235,9 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
 
         LOGGER.debug(
-            "Checking discovered device: {discovery_info.name} on {discovery_info.host}"
+            "Checking discovered device: %s on %s",
+            discovery_info.name,
+            discovery_info.host,
         )
 
         secured_transport = discovery_info.type == "_philipstv_s_rpc._tcp.local."
@@ -212,7 +265,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={CONF_NAME: name},
+            description_placeholders={"name": name},
         )
 
     @override
@@ -220,18 +273,11 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input:
-            self._current = user_input
-            try:
-                await self._async_attempt_prepare(
-                    user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
-                )
-            except GeneralFailure as exc:
-                LOGGER.error(exc)
-                errors["base"] = "cannot_connect"
-            else:
-                return await self._async_attempt_add()
+        errors: dict[str, str] = {}
+        if user_input and not (
+            errors := await self._async_prepare_user_input(user_input)
+        ):
+            return await self._async_attempt_add()
 
         schema = self.add_suggested_values_to_schema(USER_SCHEMA, self._current)
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -240,7 +286,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PhilipsTVConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

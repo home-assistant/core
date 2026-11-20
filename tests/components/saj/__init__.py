@@ -1,10 +1,10 @@
 """Tests for the saj integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.saj.const import CONNECTION_TYPES
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_INPUT_ETHERNET = {
     CONF_HOST: "192.168.1.100",

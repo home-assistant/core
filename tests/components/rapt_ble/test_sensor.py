@@ -1,6 +1,8 @@
 """Test the RAPT Pill BLE sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.rapt_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
@@ -21,9 +23,6 @@ from . import (
     V2_NO_VELOCITY_SERVICE_INFO,
     V2_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 VELOCITY_ENTITY_ID = "sensor.rapt_pill_0666_specific_gravity_velocity"
 

@@ -39,6 +39,8 @@ from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
     ATTR_DEVICE_NAME,
+    ATTR_RAW_GPS,
+    ATTR_RAW_GPS_ACCURACY,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
@@ -62,6 +64,9 @@ LOCATION_UPDATE_SCHEMA = probatio.All(
             probatio.Optional(ATTR_COURSE): cv.positive_int,
             probatio.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
             probatio.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+            # The fix before the app adjusted gps to agree with a zone event
+            probatio.Optional(ATTR_RAW_GPS): cv.gps,
+            probatio.Optional(ATTR_RAW_GPS_ACCURACY): cv.positive_float,
         },
     ),
 )

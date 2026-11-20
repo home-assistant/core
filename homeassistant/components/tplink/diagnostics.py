@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry
 
 TO_REDACT = {
     # Entry fields

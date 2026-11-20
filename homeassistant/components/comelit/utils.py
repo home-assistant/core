@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.exceptions import (
     CannotAuthenticate,
     CannotConnect,
@@ -14,7 +14,6 @@ from aiocomelit.exceptions import (
 from aiohttp import ClientSession, CookieJar
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -24,7 +23,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN, LOGGER, ObjectClassType
-from .coordinator import ComelitBaseCoordinator
+from .coordinator import ComelitBaseCoordinator, ComelitConfigEntry
 from .entity import ComelitBridgeBaseEntity
 
 
@@ -36,7 +35,7 @@ async def async_client_session(hass: HomeAssistant) -> ClientSession:
 
 
 def load_api_data(
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
     domain: Literal["climate", "humidifier"],
 ) -> list[Any]:
     """Load data from the API."""
@@ -52,9 +51,9 @@ def load_api_data(
 
 async def cleanup_stale_entity(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ComelitConfigEntry,
     entry_unique_id: str,
-    device: ComelitSerialBridgeObject,
+    device: ComelitDeviceObject,
 ) -> None:
     """Cleanup stale entity."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
@@ -73,7 +72,7 @@ async def cleanup_stale_entity(
 
 
 def _async_remove_stale_devices(
-    hass: HomeAssistant, identifiers: list[str], config_entry: ConfigEntry
+    hass: HomeAssistant, identifiers: list[str], config_entry: ComelitConfigEntry
 ) -> None:
     """Remove stale devices."""
 

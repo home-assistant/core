@@ -25,9 +25,6 @@
       },
       "real_time_weight": {
         "name": "Real-time weight"
-      },
-      "weight": {
-        "name": "Weight"
       }
     }
   }

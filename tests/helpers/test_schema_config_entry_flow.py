@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant, callback
@@ -21,8 +27,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     wrapped_entity_config_entry_title,
 )
 from homeassistant.util.decorator import Registry
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 TEST_DOMAIN = "test"
 
@@ -590,8 +594,8 @@ async def test_options_flow_with_automatic_reload(
         options_flow = OPTIONS_FLOW
         options_flow_reloads = True
 
-    load_entry_mock = AsyncMock(return_value=True)
-    unload_entry_mock = AsyncMock(return_value=True)
+    load_entry_mock = AsyncMock(return_value=None)
+    unload_entry_mock = AsyncMock(return_value=None)
     mock_integration(
         hass,
         MockModule(

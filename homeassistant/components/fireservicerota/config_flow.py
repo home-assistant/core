@@ -17,7 +17,7 @@ DATA_SCHEMA = probatio.Schema(
             URL_LIST
         ),
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -107,10 +107,10 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_URL, default="www.brandweerrooster.nl"
                 ): probatio.In(URL_LIST),
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         else:
-            schema = {probatio.Required(CONF_PASSWORD): str}
+            schema = {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
 
         return self.async_show_form(
             step_id=step_id,
@@ -125,7 +125,7 @@ class FireServiceRotaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialise re-authentication."""
         await self.async_set_unique_id(entry_data[CONF_USERNAME])
         self._existing_entry = {**entry_data}
-        self._description_placeholders = {CONF_USERNAME: entry_data[CONF_USERNAME]}
+        self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

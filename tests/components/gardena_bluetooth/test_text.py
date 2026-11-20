@@ -5,20 +5,19 @@ from unittest.mock import Mock
 from gardena_bluetooth.const import AquaContourContours, AquaContourPosition
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.text import (
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextService,
+    TextServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
-
-from tests.common import snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
@@ -77,10 +76,10 @@ async def test_text_set_value(
 
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
+        TextService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "text.mock_title_position_1",
-            ATTR_VALUE: "New Position Name",
+            TargetKey.ENTITY_ID: "text.mock_title_position_1",
+            TextServiceArgument.VALUE: "New Position Name",
         },
         blocking=True,
     )

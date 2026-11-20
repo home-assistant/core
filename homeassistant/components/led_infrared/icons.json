@@ -19,6 +19,12 @@
       "green_up": {
         "default": "mdi:alpha-g-circle"
       },
+      "mode_down": {
+        "default": "mdi:minus-box"
+      },
+      "mode_up": {
+        "default": "mdi:plus-box"
+      },
       "quick": {
         "default": "mdi:speedometer"
       },
@@ -30,6 +36,12 @@
       },
       "slow": {
         "default": "mdi:speedometer-slow"
+      },
+      "speed_down": {
+        "default": "mdi:speedometer-slow"
+      },
+      "speed_up": {
+        "default": "mdi:speedometer"
       },
       "timer": {
         "default": "mdi:timer"
@@ -107,7 +119,9 @@
               "light": "mdi:lightbulb-on",
               "light_cyan": "mdi:palette",
               "light_green": "mdi:palette",
+              "light_yellow": "mdi:palette",
               "magenta": "mdi:palette",
+              "moccasin": "mdi:palette",
               "mode_1": "mdi:numeric-1-box",
               "mode_2": "mdi:numeric-2-box",
               "mode_3": "mdi:numeric-3-box",

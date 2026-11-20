@@ -50,6 +50,10 @@ class ConnectMotionGateway:
     ) -> bool:
         """Connect to the Motion Gateway."""
         _LOGGER.debug("Initializing with host %s (key %s)", host, key[:3])
+        if self._multicast is not None:
+            # A previous attempt (e.g. a config entry retry) may still hold a
+            # callback for this host on the shared multicast listener.
+            self._multicast.Unregister_motion_gateway(host)
         self._gateway_device = MotionGateway(
             ip=host, key=key, multicast=self._multicast, blind_type_list=blind_type_list
         )
@@ -57,7 +61,7 @@ class ConnectMotionGateway:
             # update device info and get the connected sub devices
             await self._hass.async_add_executor_job(self.update_gateway)
         except TimeoutError:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Timeout trying to connect to Motion Gateway with host %s", host
             )
             return False

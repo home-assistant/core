@@ -125,7 +125,10 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the cloud step."""
         data_schema = probatio.Schema(
-            {probatio.Required(ACCOUNT_ID): int, probatio.Required(CONF_PASSWORD): str}
+            {
+                probatio.Required(ACCOUNT_ID): int,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+            }
         )
         if user_input is None:
             return self.async_show_form(step_id="cloud", data_schema=data_schema)

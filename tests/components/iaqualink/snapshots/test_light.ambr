@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[light.pool_light-entry]
+# name: test_setup[light.pool_pool_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -11,13 +11,13 @@
       ]),
     }),
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <ChildDeviceEntry identifiers=[('iaqualink', 'SN00001_aux_2')]>,
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.pool_light',
+    'entity_id': 'light.pool_pool_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[light.pool_light-state]
+# name: test_setup[light.pool_pool_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
@@ -51,7 +51,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.pool_light',
+    'entity_id': 'light.pool_pool_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

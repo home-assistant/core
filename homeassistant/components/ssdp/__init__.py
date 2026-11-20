@@ -13,12 +13,7 @@ from homeassistant.util.logging import catch_log_exception
 
 from . import websocket_api
 from .const import DOMAIN, SSDP_SCANNER, UPNP_SERVER
-from .scanner import (
-    IntegrationMatchers,
-    Scanner,
-    SsdpChange,
-    SsdpHassJobCallback,  # noqa: F401
-)
+from .scanner import IntegrationMatchers, Scanner, SsdpChange
 from .server import Server
 
 # Attributes for accessing info from SSDP response
@@ -36,6 +31,17 @@ ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = [
+    "ATTR_SSDP_BOOTID",
+    "ATTR_SSDP_LOCATION",
+    "ATTR_SSDP_NEXTBOOTID",
+    "DOMAIN",
+    "SsdpChange",
+    "async_get_discovery_info_by_st",
+    "async_get_discovery_info_by_udn_st",
+    "async_register_callback",
+]
 
 
 def _format_err(name: str, *args: Any) -> str:

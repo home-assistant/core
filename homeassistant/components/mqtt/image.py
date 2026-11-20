@@ -6,7 +6,7 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.components import image
@@ -104,7 +104,7 @@ class MqttImage(MqttEntity, ImageEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
-    _client: httpx.AsyncClient
+    _client: httpx2.AsyncClient
     _url_template: Callable[[ReceivePayloadType], ReceivePayloadType]
     _topic: dict[str, Any]
 

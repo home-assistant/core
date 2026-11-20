@@ -24,6 +24,9 @@
     }
   },
   "services": {
+    "add_ingredient": {
+      "service": "mdi:basket-plus"
+    },
     "delete_mealplan": {
       "service": "mdi:food-off"
     },
@@ -41,6 +44,9 @@
     },
     "import_recipe": {
       "service": "mdi:map-search"
+    },
+    "parse_ingredient": {
+      "service": "mdi:food-apple"
     },
     "set_mealplan": {
       "service": "mdi:food"

@@ -7,6 +7,7 @@ from homeassistant.components.device_automation import (
     entity,
 )
 from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -39,9 +40,17 @@ MEDIA_PLAYER_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 TRIGGER_SCHEMA = probatio.All(
-    probatio.Any(
-        MEDIA_PLAYER_TRIGGER_SCHEMA,
-        entity.TRIGGER_SCHEMA,
+    probatio.TaggedUnion(
+        CONF_TYPE,
+        {
+            "turned_on": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "turned_off": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "buffering": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "idle": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "paused": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "playing": MEDIA_PLAYER_TRIGGER_SCHEMA,
+            "changed_states": entity.TRIGGER_SCHEMA,
+        },
     ),
     probatio.Schema(
         {probatio.Required(CONF_DOMAIN): DOMAIN}, extra=probatio.ALLOW_EXTRA
@@ -111,13 +120,13 @@ async def async_attach_trigger(
     else:  # "playing"
         to_state = STATE_PLAYING
 
-    state_config = {
-        CONF_PLATFORM: "state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_TO: to_state,
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+        StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, trigger_info, platform_type="device"

@@ -5,28 +5,17 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any, NamedTuple, cast
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
 
-from . import (
-    ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
-    ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_TRANSITION,
-    ATTR_WHITE,
-    ATTR_XY_COLOR,
+from . import ATTR_TRANSITION
+from .const import (
+    DOMAIN,
+    ColorMode,
+    LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
-from .const import DOMAIN, ColorMode, LightEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,17 +23,20 @@ VALID_STATES = {STATE_ON, STATE_OFF}
 
 # Each entry maps a state attribute to the service data parameter used to restore it.
 ATTR_GROUP: list[tuple[LightEntityStateAttribute, str]] = [
-    (LightEntityStateAttribute.BRIGHTNESS, ATTR_BRIGHTNESS),
-    (LightEntityStateAttribute.EFFECT, ATTR_EFFECT),
+    (LightEntityStateAttribute.BRIGHTNESS, LightServiceArgument.BRIGHTNESS),
+    (LightEntityStateAttribute.EFFECT, LightServiceArgument.EFFECT),
 ]
 
 COLOR_GROUP: list[tuple[LightEntityStateAttribute, str]] = [
-    (LightEntityStateAttribute.HS_COLOR, ATTR_HS_COLOR),
-    (LightEntityStateAttribute.COLOR_TEMP_KELVIN, ATTR_COLOR_TEMP_KELVIN),
-    (LightEntityStateAttribute.RGB_COLOR, ATTR_RGB_COLOR),
-    (LightEntityStateAttribute.RGBW_COLOR, ATTR_RGBW_COLOR),
-    (LightEntityStateAttribute.RGBWW_COLOR, ATTR_RGBWW_COLOR),
-    (LightEntityStateAttribute.XY_COLOR, ATTR_XY_COLOR),
+    (LightEntityStateAttribute.HS_COLOR, LightServiceArgument.HS_COLOR),
+    (
+        LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+        LightServiceArgument.COLOR_TEMP_KELVIN,
+    ),
+    (LightEntityStateAttribute.RGB_COLOR, LightServiceArgument.RGB_COLOR),
+    (LightEntityStateAttribute.RGBW_COLOR, LightServiceArgument.RGBW_COLOR),
+    (LightEntityStateAttribute.RGBWW_COLOR, LightServiceArgument.RGBWW_COLOR),
+    (LightEntityStateAttribute.XY_COLOR, LightServiceArgument.XY_COLOR),
 ]
 
 
@@ -57,18 +49,27 @@ class ColorModeAttr(NamedTuple):
 
 COLOR_MODE_TO_ATTRIBUTE = {
     ColorMode.COLOR_TEMP: ColorModeAttr(
-        ATTR_COLOR_TEMP_KELVIN, LightEntityStateAttribute.COLOR_TEMP_KELVIN
+        LightServiceArgument.COLOR_TEMP_KELVIN,
+        LightEntityStateAttribute.COLOR_TEMP_KELVIN,
     ),
-    ColorMode.HS: ColorModeAttr(ATTR_HS_COLOR, LightEntityStateAttribute.HS_COLOR),
-    ColorMode.RGB: ColorModeAttr(ATTR_RGB_COLOR, LightEntityStateAttribute.RGB_COLOR),
+    ColorMode.HS: ColorModeAttr(
+        LightServiceArgument.HS_COLOR, LightEntityStateAttribute.HS_COLOR
+    ),
+    ColorMode.RGB: ColorModeAttr(
+        LightServiceArgument.RGB_COLOR, LightEntityStateAttribute.RGB_COLOR
+    ),
     ColorMode.RGBW: ColorModeAttr(
-        ATTR_RGBW_COLOR, LightEntityStateAttribute.RGBW_COLOR
+        LightServiceArgument.RGBW_COLOR, LightEntityStateAttribute.RGBW_COLOR
     ),
     ColorMode.RGBWW: ColorModeAttr(
-        ATTR_RGBWW_COLOR, LightEntityStateAttribute.RGBWW_COLOR
+        LightServiceArgument.RGBWW_COLOR, LightEntityStateAttribute.RGBWW_COLOR
     ),
-    ColorMode.WHITE: ColorModeAttr(ATTR_WHITE, LightEntityStateAttribute.BRIGHTNESS),
-    ColorMode.XY: ColorModeAttr(ATTR_XY_COLOR, LightEntityStateAttribute.XY_COLOR),
+    ColorMode.WHITE: ColorModeAttr(
+        LightServiceArgument.WHITE, LightEntityStateAttribute.BRIGHTNESS
+    ),
+    ColorMode.XY: ColorModeAttr(
+        LightServiceArgument.XY_COLOR, LightEntityStateAttribute.XY_COLOR
+    ),
 }
 
 
@@ -119,10 +120,12 @@ async def _async_reproduce_state(
     service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
 
     if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
-        service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
+        service_data[LightServiceArgument.TRANSITION] = reproduce_options[
+            ATTR_TRANSITION
+        ]
 
     if state.state == STATE_ON:
-        service = SERVICE_TURN_ON
+        service = LightService.TURN_ON
         for attribute, service_arg in ATTR_GROUP:
             # All attributes that are not colors
             if (attr_state := state.attributes.get(attribute)) is not None:
@@ -155,7 +158,7 @@ async def _async_reproduce_state(
                     break
 
     elif state.state == STATE_OFF:
-        service = SERVICE_TURN_OFF
+        service = LightService.TURN_OFF
 
     await hass.services.async_call(
         DOMAIN, service, service_data, context=context, blocking=True

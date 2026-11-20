@@ -7,7 +7,6 @@ from typing import Any, override
 
 import probatio
 from pyephember2.pyephember2 import (
-    EphEmber,
     ZoneMode,
     boiler_state,
     zone_current_temperature,
@@ -24,18 +23,32 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PASSWORD,
     CONF_USERNAME,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import EphEmberConfigEntry
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
+
+INTEGRATION_TITLE = "EPH Controls"
+
+# Import aborts that mean the YAML couldn't be imported
+IMPORT_FAILURES = ("cannot_connect", "invalid_auth", "unknown")
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
@@ -45,7 +58,7 @@ OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
@@ -67,29 +80,69 @@ class EPHBoilerStates(IntEnum):
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the ephember thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    """Import the YAML configuration into a config entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+        },
+    )
 
-    try:
-        ember = EphEmber(username, password)
-    except RuntimeError:
-        _LOGGER.error("Cannot login to EphEmber")
-
-    try:
-        homes = ember.get_zones()
-    except RuntimeError:
-        _LOGGER.error("Fail to get zones")
+    if (
+        result["type"] is FlowResultType.ABORT
+        and (reason := result["reason"]) in IMPORT_FAILURES
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2027.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
         return
 
-    add_entities(
-        EphEmberThermostat(ember, zone) for home in homes for zone in home["zones"]
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.7.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: EphEmberConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a climate entity for each zone."""
+    data = entry.runtime_data
+    async_add_entities(
+        EphEmberThermostat(data.ember, zone)
+        for home in data.homes
+        for zone in home["zones"]
     )
 
 
@@ -97,7 +150,7 @@ class EphEmberThermostat(ClimateEntity):
     """Representation of a EphEmber thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, ember, zone) -> None:
         """Initialize the thermostat."""
@@ -123,13 +176,13 @@ class EphEmberThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
@@ -167,7 +220,7 @@ class EphEmberThermostat(ClimateEntity):
         if self._hot_water:
             return
 
-        if temperature == self.target_temperature:
+        if temperature == self.native_target_temperature:
             return
 
         if temperature > self.max_temp or temperature < self.min_temp:
@@ -196,8 +249,18 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self._ember.get_zones()
-        self._zone = self._ember.get_zone(self._zone["zoneid"])
+        try:
+            self._ember.get_zones()
+            self._zone = self._ember.get_zone(self._zone["zoneid"])
+        except RuntimeError as err:
+            if self._attr_available:
+                _LOGGER.warning("Unable to update %s: %s", self._zone_name, err)
+            self._attr_available = False
+            return
+
+        if not self._attr_available:
+            _LOGGER.info("%s is available again", self._zone_name)
+        self._attr_available = True
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):
