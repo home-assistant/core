@@ -210,6 +210,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """
         if (owned_subentry_id := self._async_owned_subentry_id(device)) is not None:
             device.is_manual = True
+            # The lamp may have answered, and the library consumed, the probe
+            # of another subentry's address; restore it for that owner.
+            if (
+                ip_subentry_id := self._async_subentry_id_for_ip(device.ip)
+            ) is not None and ip_subentry_id != owned_subentry_id:
+                self.add_device_to_discovery_queue(device.ip)
             return owned_subentry_id
 
         subentry_id = self._async_subentry_id_for_ip(device.ip)

@@ -835,6 +835,73 @@ async def test_probe_not_drained_by_other_subentrys_lamp(
     assert coordinator.discovery_queue == {"192.168.1.101"}
 
 
+async def test_probe_restored_when_new_reply_is_other_subentrys_lamp(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a probe consumed by another subentry's lamp is restored.
+
+    After a restart a lamp can own its subentry in the registry while being
+    new to the controller. Answering another subentry's probe makes the
+    library consume that probe for it, so the claim has to restore it.
+    """
+
+    # Setup waits for discovery to find a device, so seed one that answered.
+    discovered = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="discovered-fingerprint",
+        sku="H615C",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [discovered])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries("192.168.1.100", "192.168.1.101"),
+    )
+    config_entry.add_to_hass(hass)
+    subentry_b = _subentry_id_of(config_entry, "192.168.1.101")
+    # The previous session stored the second lamp under its subentry.
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id=subentry_b,
+        identifiers={(DOMAIN, "other-fingerprint")},
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = config_entry.runtime_data
+    assert coordinator.discovery_queue == {"192.168.1.100", "192.168.1.101"}
+
+    # The second lamp answers the first subentry's probe: the library drains
+    # that probe, marks the lamp manual and reports it as new.
+    other_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="other-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    other_device.is_manual = True
+    mock_govee_api.remove_device_from_discovery_queue("192.168.1.100")
+    set_mocked_devices(mock_govee_api, [discovered, other_device])
+    discovery_callback = mock_govee_api.set_device_discovered_callback.call_args[0][0]
+    discovery_callback(other_device, True)
+    await hass.async_block_till_done()
+
+    # The lamp keeps its own subentry, and the consumed probe is restored.
+    entry_b = device_registry.async_get_device_by_identifier(
+        (DOMAIN, other_device.fingerprint), config_entry.entry_id
+    )
+    assert entry_b is not None
+    assert entry_b.config_subentry_id == subentry_b
+    assert other_device.is_manual is True
+    assert coordinator.discovery_queue == {"192.168.1.100", "192.168.1.101"}
+
+
 async def test_reconfigure_queued_device(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
