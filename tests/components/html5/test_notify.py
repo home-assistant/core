@@ -32,8 +32,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -797,7 +797,7 @@ async def test_html5_send_message(
         DOMAIN,
         HTML5Service.SEND_MESSAGE,
         {
-            CommonServiceArgument.ENTITY_ID: "notify.my_desktop",
+            TargetKey.ENTITY_ID: "notify.my_desktop",
             HTML5ServiceArgument.TITLE: "Hello",
             **service_data,
         },
@@ -859,7 +859,7 @@ async def test_html5_dismiss_message(
         DOMAIN,
         HTML5Service.DISMISS_MESSAGE,
         {
-            CommonServiceArgument.ENTITY_ID: "notify.my_desktop",
+            TargetKey.ENTITY_ID: "notify.my_desktop",
             **service_data,
         },
         blocking=True,

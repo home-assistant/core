@@ -449,6 +449,7 @@ class AssistSatelliteEntity(entity.Entity):
         *,
         context: Context | None = None,
         audio_settings: AudioSettings | None = None,
+        wake_word_audio_ms: int | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite.
 
@@ -533,6 +534,7 @@ class AssistSatelliteEntity(entity.Entity):
                         satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
+                        wake_word_audio_ms=wake_word_audio_ms,
                         audio_settings=replace(
                             audio_settings or AudioSettings(),
                             silence_seconds=self._resolve_vad_sensitivity(),

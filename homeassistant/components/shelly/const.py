@@ -355,7 +355,21 @@ RPC_ERROR_CODE_REMOTE_DISABLED = -110
 
 TRV_CHANNEL = 0
 
-ATTR_KEY = "key"
-ATTR_VALUE = "value"
-
 DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"
+
+
+class ShellyService(StrEnum):
+    """Store keys for Shelly services."""
+
+    GET_KVS_VALUE = "get_kvs_value"
+    SET_KVS_VALUE = "set_kvs_value"
+    SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+
+
+class ShellyServiceArgument(StrEnum):
+    """Store keys for Shelly service arguments."""
+
+    KEY = "key"
+    VALUE = "value"
+    POSITION = "position"
+    TILT_POSITION = "tilt_position"

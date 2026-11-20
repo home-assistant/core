@@ -10,11 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -82,10 +78,14 @@ async def test_async_match_states(
     )
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "switch.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom switch"}
+        "switch.bedroom",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "bedroom switch"},
     )
 
     # Put entities into different areas
@@ -315,7 +315,7 @@ async def test_async_match_targets(
     state_bedroom_switch_3 = State(
         bedroom_switch_3.entity_id,
         "off",
-        attributes={ATTR_DEVICE_CLASS: switch.SwitchDeviceClass.OUTLET},
+        attributes={EntityStateAttribute.DEVICE_CLASS: switch.SwitchDeviceClass.OUTLET},
     )
 
     bathroom_light_3 = entity_registry.async_get_or_create(
@@ -331,8 +331,8 @@ async def test_async_match_targets(
         bathroom_light_3.entity_id,
         "on",
         attributes={
-            ATTR_FRIENDLY_NAME: "bathroom light",
-            ATTR_SUPPORTED_FEATURES: light.LightEntityFeature.EFFECT,
+            EntityStateAttribute.FRIENDLY_NAME: "bathroom light",
+            EntityStateAttribute.SUPPORTED_FEATURES: light.LightEntityFeature.EFFECT,
         },
     )
 
@@ -589,13 +589,19 @@ async def test_match_device_area(
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "light.bedroom", "on", attributes={ATTR_FRIENDLY_NAME: "bedroom light"}
+        "light.bedroom",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "bedroom light"},
     )
     state3 = State(
-        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+        "light.living_room",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "living room light"},
     )
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"
@@ -646,10 +652,14 @@ async def test_match_child_device_area(
     )
 
     state1 = State(
-        "light.kitchen", "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        "light.kitchen",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "kitchen light"},
     )
     state2 = State(
-        "light.living_room", "on", attributes={ATTR_FRIENDLY_NAME: "living room light"}
+        "light.living_room",
+        "on",
+        attributes={EntityStateAttribute.FRIENDLY_NAME: "living room light"},
     )
     entity_registry.async_get_or_create(
         "light", "demo", "1234", suggested_object_id="kitchen"

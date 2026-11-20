@@ -103,10 +103,19 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while communicating with the Hot Spring API."
+      "message": "An error occurred while communicating with the Hot Spring API"
     },
     "invalid_response": {
-      "message": "Invalid response received from the Hot Spring API."
+      "message": "Invalid response received from the Hot Spring API"
+    },
+    "spa_not_connected": {
+      "message": "The spa is not connected to its Hot Spring home network adapter"
+    },
+    "timeout": {
+      "message": "Timed out while communicating with the Hot Spring API"
+    },
+    "wrong_device": {
+      "message": "The device at the configured host has MAC address {found}, not {expected}"
     }
   }
 }

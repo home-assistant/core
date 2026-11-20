@@ -5,7 +5,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
-import re
 from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
@@ -47,7 +46,7 @@ from .const import (
     SCAN_INTERVAL,
     MeshRoles,
 )
-from .helpers import ha_is_stopping
+from .helpers import ha_is_stopping, normalize_version
 from .models import (
     ConnectionInfo,
     Device,
@@ -55,6 +54,7 @@ from .models import (
     HostAttributes,
     HostInfo,
     Interface,
+    LinkInfo,
 )
 
 FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
@@ -66,6 +66,7 @@ type FritzConfigEntry = ConfigEntry[AvmWrapper]
 class FritzData:
     """Storage class for platform global data."""
 
+    link_sensors: dict[str, dict[str, set[str]]] = field(default_factory=dict)
     tracked: dict[str, set[str]] = field(default_factory=dict)
     profile_switches: dict[str, set[str]] = field(default_factory=dict)
     wol_buttons: dict[str, set[str]] = field(default_factory=dict)
@@ -191,9 +192,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
-        self.hass.data[FRITZ_DATA_KEY].tracked[self.unique_id] = set()
-        self.hass.data[FRITZ_DATA_KEY].profile_switches[self.unique_id] = set()
-        self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
+        fritz_data = self.hass.data[FRITZ_DATA_KEY]
+        fritz_data.link_sensors[self.unique_id] = {}
+        fritz_data.tracked[self.unique_id] = set()
+        fritz_data.profile_switches[self.unique_id] = set()
+        fritz_data.wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
@@ -221,10 +224,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             pool_maxsize=30,
             redact_debug_log=True,
         )
-
-        if not self.connection:
-            LOGGER.error("Unable to establish a connection with %s", self.host)
-            return
 
         LOGGER.debug(
             "detected services on %s %s",
@@ -260,12 +259,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._unique_id = info.serial_number
 
         self._model = info.model_name
-        if (
-            version_normalized := re.search(r"^\d+\.[0]?(.*)", info.software_version)
-        ) is not None:
-            self._current_firmware = version_normalized.group(1)
-        else:
-            self._current_firmware = info.software_version
+        self._current_firmware = normalize_version(info.software_version)
 
         (
             self._update_available,
@@ -611,7 +605,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
         info = self.connection.call_action("UserInterface1", "GetInfo")
-        version = info.get("NewX_AVM-DE_Version")
+        version = normalize_version(info.get("NewX_AVM-DE_Version"))
         release_url = info.get("NewX_AVM-DE_InfoURL")
         return bool(version), version, release_url
 
@@ -775,6 +769,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                         dev_info.connected_to = intf["device"]
                         dev_info.connection_type = intf["type"]
                         dev_info.ssid = intf.get("ssid")
+                        dev_info.link_info = LinkInfo.from_node_link(link)
 
                 if self.manage_device_info(dev_info, dev_mac, consider_home):
                     new_device = True
@@ -843,7 +838,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ) and entry_mac not in device_hosts:
                 LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
-                self._devices.pop(entry_mac, None)
+
+        # Forget devices the FRITZ!Box dropped, so they count as new if they return
+        for mac in self._devices.keys() - device_hosts.keys():
+            self._devices.pop(mac)
 
         device_reg = dr.async_get(self.hass)
         valid_connections = {
@@ -857,6 +855,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_remove_device(device.id)
 
         fritz_data = self.hass.data[FRITZ_DATA_KEY]
+
+        link_sensors = fritz_data.link_sensors.get(self.unique_id, {})
+        for mac in link_sensors.copy():
+            if mac in device_hosts:
+                continue
+            LOGGER.debug("Removing orphan mac address %s from link sensors", mac)
+            link_sensors.pop(mac)
 
         tracked = fritz_data.tracked.get(self.unique_id, set())
         for mac in tracked.copy():
@@ -1056,6 +1061,9 @@ class AvmWrapper(FritzBoxTools):
 
     async def async_get_current_user_rights(self) -> dict[str, Any]:
         """Call X_AVM-DE_GetCurrentUser service."""
+
+        if "LANConfigSecurity1" not in self.connection.services:
+            return {}
 
         result = await self._async_service_call(
             "LANConfigSecurity",

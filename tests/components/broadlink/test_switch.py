@@ -9,11 +9,7 @@ from homeassistant.components.broadlink.switch import (
     PLATFORM_SCHEMA,
     async_setup_platform,
 )
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -69,7 +65,7 @@ async def test_switch_turn_off_turn_on(
     switch = switches[0]
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        SwitchService.TURN_OFF,
         {"entity_id": switch.entity_id},
         blocking=True,
     )
@@ -77,7 +73,7 @@ async def test_switch_turn_off_turn_on(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        SwitchService.TURN_ON,
         {"entity_id": switch.entity_id},
         blocking=True,
     )
@@ -130,7 +126,7 @@ async def test_slots_switch_turn_off_turn_on(
     for switch in switches:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
+            SwitchService.TURN_OFF,
             {"entity_id": switch.entity_id},
             blocking=True,
         )
@@ -138,7 +134,7 @@ async def test_slots_switch_turn_off_turn_on(
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
+            SwitchService.TURN_ON,
             {"entity_id": switch.entity_id},
             blocking=True,
         )
@@ -173,6 +169,9 @@ async def test_custom_ir_switch_setup_works(
     assert len(entity_ids) == 1
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {"entity_id": entity_ids[0]}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {"entity_id": entity_ids[0]},
+        blocking=True,
     )
     assert mock_setup.api.send_data.call_count == 1

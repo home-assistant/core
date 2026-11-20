@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.netgear_lte.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.netgear_lte.services import NetgearLTEServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -20,7 +20,11 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         await hass.services.async_call(
             DOMAIN,
             "set_option",
-            {CONF_HOST: HOST, "failover": "auto", "autoconnect": "home"},
+            {
+                NetgearLTEServiceArgument.HOST: HOST,
+                "failover": "auto",
+                "autoconnect": "home",
+            },
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 1
@@ -31,7 +35,7 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         await hass.services.async_call(
             DOMAIN,
             "connect_lte",
-            {CONF_HOST: HOST},
+            {NetgearLTEServiceArgument.HOST: HOST},
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 1
@@ -42,7 +46,7 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         await hass.services.async_call(
             DOMAIN,
             "disconnect_lte",
-            {CONF_HOST: HOST},
+            {NetgearLTEServiceArgument.HOST: HOST},
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 1
@@ -53,7 +57,7 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         await hass.services.async_call(
             DOMAIN,
             "delete_sms",
-            {CONF_HOST: HOST, "sms_id": 1},
+            {NetgearLTEServiceArgument.HOST: HOST, "sms_id": 1},
             blocking=True,
         )
     assert len(mock_client.mock_calls) == 1
@@ -66,6 +70,6 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         await hass.services.async_call(
             DOMAIN,
             "delete_sms",
-            {CONF_HOST: "no-match", "sms_id": 1},
+            {NetgearLTEServiceArgument.HOST: "no-match", "sms_id": 1},
             blocking=True,
         )

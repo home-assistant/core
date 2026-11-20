@@ -83,6 +83,12 @@ async def validate_ws(hass: HomeAssistant, data):
         await kodi.ping()
     except CannotConnectError as error:
         raise WSCannotConnect from error
+    finally:
+        try:
+            await kwc.close()
+        except Exception:
+            # A failed close must not replace the outcome of the probe
+            _LOGGER.debug("Error closing the WebSocket probe", exc_info=True)
 
 
 class KodiConfigFlow(ConfigFlow, domain=DOMAIN):

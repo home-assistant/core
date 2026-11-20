@@ -27,7 +27,7 @@ from .coordinator import (
     SMHIDataUpdateCoordinator,
     SMHIFireDataUpdateCoordinator,
 )
-from .entity import SmhiFireEntity, SmhiWeatherEntity
+from .entity import SmhiEntity
 
 PARALLEL_UPDATES = 0
 
@@ -257,8 +257,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMHI sensor platform."""
 
-    coordinator = entry.runtime_data[0]
-    fire_coordinator = entry.runtime_data[1]
+    coordinator = entry.runtime_data.coordinator
+    fire_coordinator = entry.runtime_data.fire_coordinator
     location = entry.data
     entities: list[SMHIWeatherSensor | SMHIFireSensor] = []
     entities.extend(
@@ -283,7 +283,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SMHIWeatherSensor(SmhiWeatherEntity, SensorEntity):
+class SMHIWeatherSensor(SmhiEntity[SMHIDataUpdateCoordinator], SensorEntity):
     """Representation of a SMHI Weather Sensor."""
 
     entity_description: SMHIWeatherEntityDescription
@@ -311,7 +311,7 @@ class SMHIWeatherSensor(SmhiWeatherEntity, SensorEntity):
             self._attr_native_value = self.entity_description.value_fn(self)
 
 
-class SMHIFireSensor(SmhiFireEntity, SensorEntity):
+class SMHIFireSensor(SmhiEntity[SMHIFireDataUpdateCoordinator], SensorEntity):
     """Representation of a SMHI Weather Sensor."""
 
     entity_description: SMHIFireEntityDescription

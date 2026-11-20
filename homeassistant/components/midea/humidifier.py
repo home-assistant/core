@@ -35,11 +35,13 @@ HUMIDIFIERS: list[MideaHumidifierEntityDescription] = [
         key="humidifier",
         models=[DeviceType.A1],
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
+        translation_key="humidifier",
     ),
     MideaHumidifierEntityDescription(
         key="humidifier",
         models=[DeviceType.FD],
         device_class=HumidifierDeviceClass.HUMIDIFIER,
+        translation_key="humidifier",
     ),
 ]
 

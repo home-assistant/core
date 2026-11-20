@@ -1,11 +1,20 @@
 """Tests for arcam fmj receivers."""
 
 from collections.abc import Generator
+import logging
 from math import isclose
 from unittest.mock import Mock, PropertyMock, patch
 
 from arcam.fmj.codecs import DecodeMode2CH, DecodeModeMCH, SourceCodes
-from arcam.fmj.errors import ConnectionFailed
+from arcam.fmj.errors import (
+    CommandInvalidAtThisTime,
+    CommandNotRecognised,
+    ConnectionFailed,
+    NotConnectedException,
+    ResponseException,
+    UnsupportedCommand,
+    UnsupportedZone,
+)
 from arcam.fmj.state import State
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
@@ -17,28 +26,15 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_BROWSE_MEDIA,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityStateAttribute,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant, State as CoreState
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -73,8 +69,8 @@ async def test_browse_media_without_presets(
     state_1.get_preset_details.return_value = None
     response = await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_BROWSE_MEDIA,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.BROWSE_MEDIA,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
         return_response=True,
     )
@@ -146,8 +142,8 @@ async def test_turn_on(hass: HomeAssistant, state_1: State) -> None:
     state_1.get_power.return_value = None
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.set_power.assert_not_called()
@@ -155,8 +151,8 @@ async def test_turn_on(hass: HomeAssistant, state_1: State) -> None:
     state_1.get_power.return_value = False
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.TURN_ON,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.set_power.assert_called_with(True)
@@ -167,8 +163,8 @@ async def test_turn_off(hass: HomeAssistant, state_1: State) -> None:
     """Test command to turn off."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.TURN_OFF,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.set_power.assert_called_with(False)
@@ -180,8 +176,11 @@ async def test_mute_volume(hass: HomeAssistant, state_1: State, mute: bool) -> N
     """Test mute functionality."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
+        MediaPlayerService.VOLUME_MUTE,
+        service_data={
+            TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: mute,
+        },
         blocking=True,
     )
     state_1.set_mute.assert_called_with(mute)
@@ -199,14 +198,22 @@ async def test_update(hass: HomeAssistant, state_1: State) -> None:
     state_1.update.assert_called_with()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ConnectionFailed(), id="connection_failed"),
+        pytest.param(NotConnectedException(), id="not_connected"),
+    ],
+)
 @pytest.mark.usefixtures("player_setup")
-async def test_update_lost(
+async def test_update_unreachable(
     hass: HomeAssistant,
     state_1: State,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Test update, with connection loss is ignored."""
-    state_1.update.side_effect = ConnectionFailed()
+    """Test a lost connection marks the entity unavailable and logs at info."""
+    state_1.update.side_effect = exception
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -214,7 +221,13 @@ async def test_update_lost(
         service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
-    state_1.update.assert_called_with()
+
+    assert hass.states.get(MOCK_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        "homeassistant.components.arcam_fmj.coordinator",
+        logging.INFO,
+        "Arcam FMJ zone 1 is unavailable: Connection failed to the device",
+    ) in caplog.record_tuples
 
 
 @pytest.mark.parametrize(
@@ -231,8 +244,11 @@ async def test_select_valid_source(
     """Test selection of source."""
     await hass.services.async_call(
         "media_player",
-        SERVICE_SELECT_SOURCE,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_INPUT_SOURCE: source},
+        MediaPlayerService.SELECT_SOURCE,
+        service_data={
+            TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+            MediaPlayerServiceArgument.SOURCE: source,
+        },
         blocking=True,
     )
 
@@ -254,8 +270,11 @@ async def test_select_invalid_source(
     ):
         await hass.services.async_call(
             "media_player",
-            SERVICE_SELECT_SOURCE,
-            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
+            MediaPlayerService.SELECT_SOURCE,
+            service_data={
+                TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: "INVALID",
+            },
             blocking=True,
         )
     state_1.set_source.assert_not_called()
@@ -283,8 +302,11 @@ async def test_select_sound_mode(
     """Test selection sound mode."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_SOUND_MODE: mode},
+        MediaPlayerService.SELECT_SOUND_MODE,
+        service_data={
+            TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: mode,
+        },
         blocking=True,
     )
     state_1.set_decode_mode.assert_called_with(mode)
@@ -306,8 +328,11 @@ async def test_select_invalid_sound_mode(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
-            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_SOUND_MODE: "INVALID"},
+            MediaPlayerService.SELECT_SOUND_MODE,
+            service_data={
+                TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "INVALID",
+            },
             blocking=True,
         )
 
@@ -317,8 +342,8 @@ async def test_volume_up(hass: HomeAssistant, state_1: State) -> None:
     """Test mute functionality."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.VOLUME_UP,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.inc_volume.assert_called_with()
@@ -329,8 +354,8 @@ async def test_volume_down(hass: HomeAssistant, state_1: State) -> None:
     """Test mute functionality."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        MediaPlayerService.VOLUME_DOWN,
+        service_data={TargetKey.ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.dec_volume.assert_called_with()
@@ -341,11 +366,11 @@ async def test_play_media(hass: HomeAssistant, state_1: State) -> None:
     """Test mute functionality."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         service_data={
-            ATTR_ENTITY_ID: MOCK_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: "preset:1",
+            TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "preset:1",
         },
         blocking=True,
     )
@@ -364,11 +389,11 @@ async def test_play_media_invalid(hass: HomeAssistant, state_1: State) -> None:
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             service_data={
-                ATTR_ENTITY_ID: MOCK_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: "invalid",
+                TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "invalid",
             },
             blocking=True,
         )
@@ -480,31 +505,60 @@ async def test_set_volume_level(
     """Test setting volume."""
     await hass.services.async_call(
         "media_player",
-        SERVICE_VOLUME_SET,
-        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: volume},
+        MediaPlayerService.VOLUME_SET,
+        service_data={
+            TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: volume,
+        },
         blocking=True,
     )
 
     state_1.set_volume.assert_called_with(call)
 
 
+@pytest.mark.parametrize(
+    ("exception", "translation_key"),
+    [
+        pytest.param(ConnectionFailed(), "connection_failed", id="connection_failed"),
+        pytest.param(NotConnectedException(), "connection_failed", id="not_connected"),
+        pytest.param(TimeoutError(), "connection_failed", id="timeout"),
+        pytest.param(
+            UnsupportedCommand(), "command_not_supported", id="unsupported_command"
+        ),
+        pytest.param(UnsupportedZone(), "command_not_supported", id="unsupported_zone"),
+        pytest.param(
+            CommandNotRecognised(), "command_not_supported", id="not_recognised"
+        ),
+        pytest.param(
+            CommandInvalidAtThisTime(), "command_rejected", id="invalid_at_this_time"
+        ),
+        pytest.param(ResponseException(), "command_rejected", id="response_exception"),
+    ],
+)
 @pytest.mark.usefixtures("player_setup")
-async def test_set_volume_level_lost(hass: HomeAssistant, state_1: State) -> None:
-    """Test setting volume, with a lost connection."""
+async def test_set_volume_level_error(
+    hass: HomeAssistant,
+    state_1: State,
+    exception: Exception,
+    translation_key: str,
+) -> None:
+    """Test library errors are converted to translated errors."""
 
-    state_1.set_volume.side_effect = ConnectionFailed()
+    state_1.set_volume.side_effect = exception
 
     with pytest.raises(
         HomeAssistantError,
         check=lambda e: (
-            e.translation_domain == "arcam_fmj"
-            and e.translation_key == "connection_failed"
+            e.translation_domain == "arcam_fmj" and e.translation_key == translation_key
         ),
     ):
         await hass.services.async_call(
             "media_player",
-            SERVICE_VOLUME_SET,
-            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.0},
+            MediaPlayerService.VOLUME_SET,
+            service_data={
+                TargetKey.ENTITY_ID: MOCK_ENTITY_ID,
+                MediaPlayerServiceArgument.VOLUME_LEVEL: 0.0,
+            },
             blocking=True,
         )
 

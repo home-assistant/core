@@ -24,7 +24,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -159,7 +163,11 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 LOGGER.debug(
                     "Unable to get data for %s due to %s", unique_id, exception
                 )
-            except (GardenaBluetoothException, DeviceUnavailable) as exception:
+            except DeviceUnavailable as exception:
+                raise UpdateFailedUnreachable(
+                    f"Unable to update data for {unique_id} due to {exception}"
+                ) from exception
+            except GardenaBluetoothException as exception:
                 raise UpdateFailed(
                     f"Unable to update data for {unique_id} due to {exception}"
                 ) from exception

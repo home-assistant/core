@@ -1,5 +1,6 @@
 """Tests for the gen_requirements_all script."""
 
+import json
 from pathlib import Path
 import tomllib
 from unittest.mock import patch
@@ -8,6 +9,44 @@ from hassfest.requirements_util import _normalize_package_name
 import pytest
 
 from script import gen_requirements_all
+
+
+@pytest.mark.parametrize("dependency_key", ["dependencies", "after_dependencies"])
+def test_gather_recursive_requirements(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, dependency_key: str
+) -> None:
+    """Collect transitive requirements with shared dependencies and cycles."""
+    monkeypatch.chdir(tmp_path)
+    manifests = {
+        "root": {
+            "requirements": ["root-lib==1.0.0"],
+            "dependencies": ["required"],
+            "after_dependencies": ["optional"],
+        },
+        "required": {
+            "requirements": ["required-lib==1.0.0"],
+            dependency_key: ["shared"],
+        },
+        "optional": {
+            "requirements": ["optional-lib==1.0.0"],
+            dependency_key: ["shared"],
+        },
+        "shared": {
+            "requirements": ["shared-lib==1.0.0"],
+            dependency_key: ["root"],
+        },
+    }
+    for domain, manifest in manifests.items():
+        path = tmp_path / "homeassistant" / "components" / domain
+        path.mkdir(parents=True)
+        (path / "manifest.json").write_text(json.dumps({"domain": domain, **manifest}))
+
+    assert gen_requirements_all.gather_recursive_requirements("root") == {
+        "root-lib==1.0.0",
+        "required-lib==1.0.0",
+        "optional-lib==1.0.0",
+        "shared-lib==1.0.0",
+    }
 
 
 def test_pytest_package_dependency_versions(
