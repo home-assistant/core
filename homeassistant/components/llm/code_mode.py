@@ -421,7 +421,7 @@ class ExecuteTool(Tool):
             await asyncio.gather(*tasks, return_exceptions=True)
 
         try:
-            json_result = _json_value(result, [MAX_RESULT_SIZE], MAX_RESULT_DEPTH)
+            json_result = _to_bounded_json(result, [MAX_RESULT_SIZE], MAX_RESULT_DEPTH)
         except ValueError:
             return ToolResult(
                 data={
@@ -434,7 +434,7 @@ class ExecuteTool(Tool):
         return ToolResult(data={"result": json_result, "output": output.output})
 
 
-def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
+def _to_bounded_json(value: Any, budget: list[int], depth: int) -> JsonValueType:
     """Return the sandbox result as a JSON value.
 
     The sandbox can return values that JSON cannot represent, such as sets
@@ -445,20 +445,22 @@ def _json_value(value: Any, budget: list[int], depth: int) -> JsonValueType:
     if budget[0] < 0 or depth < 0:
         raise ValueError("Result too large")
     if isinstance(value, int) and not MIN_JSON_INT <= value <= MAX_JSON_INT:
-        return _json_text(value, budget, depth)
+        return _to_bounded_text(value, budget, depth)
     if value is None or isinstance(value, (bool, int, float, str)):
         return value
     if isinstance(value, dict):
         return {
-            _json_text(key, budget, depth): _json_value(item, budget, depth - 1)
+            _to_bounded_text(key, budget, depth): _to_bounded_json(
+                item, budget, depth - 1
+            )
             for key, item in value.items()
         }
     if isinstance(value, (list, tuple, set, frozenset)):
-        return [_json_value(item, budget, depth - 1) for item in value]
-    return _json_text(value, budget, depth)
+        return [_to_bounded_json(item, budget, depth - 1) for item in value]
+    return _to_bounded_text(value, budget, depth)
 
 
-def _json_text(value: Any, budget: list[int], depth: int) -> str:
+def _to_bounded_text(value: Any, budget: list[int], depth: int) -> str:
     """Return a dict key, or a value without a JSON type, as a string.
 
     The string of a value can be much larger than the value, so the size is
@@ -468,7 +470,7 @@ def _json_text(value: Any, budget: list[int], depth: int) -> str:
         text = value
     elif isinstance(value, (tuple, frozenset)):
         # The conversion of the items applies the budget.
-        text = str(_json_value(value, budget, depth))
+        text = str(_to_bounded_json(value, budget, depth))
     elif isinstance(value, bytes):
         if len(value) > budget[0]:
             raise ValueError("Result too large")
