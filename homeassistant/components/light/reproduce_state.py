@@ -8,6 +8,7 @@ from typing import Any, NamedTuple, cast
 from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import Context, HomeAssistant, State
 
+from . import ATTR_TRANSITION
 from .const import (
     DOMAIN,
     ColorMode,
@@ -118,12 +119,9 @@ async def _async_reproduce_state(
 
     service_data: dict[str, Any] = {TargetKey.ENTITY_ID: state.entity_id}
 
-    if (
-        reproduce_options is not None
-        and LightServiceArgument.TRANSITION in reproduce_options
-    ):
+    if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
         service_data[LightServiceArgument.TRANSITION] = reproduce_options[
-            LightServiceArgument.TRANSITION
+            ATTR_TRANSITION
         ]
 
     if state.state == STATE_ON:
