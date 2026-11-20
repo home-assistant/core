@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, override
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
@@ -21,6 +22,7 @@ from .const import BORDER_ROUTER_DEVICE_TYPES
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+from .wifi_credentials import async_import_credentials
 
 
 async def async_setup_entry(
@@ -77,6 +79,16 @@ class MatterThreadDatasetImportButton(MatterEntity, ButtonEntity):
         await entry.runtime_data.thread_datasets.async_import(self._endpoint)
 
 
+class MatterWifiCredentialsImportButton(MatterEntity, ButtonEntity):
+    """Button handing a network manager's Wi-Fi credentials to the Matter server."""
+
+    @override
+    async def async_press(self) -> None:
+        """Import the credentials, replacing the server's."""
+        await _async_require_admin(self.hass, self._context)
+        await async_import_credentials(self.matter_client, self._endpoint)
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -92,6 +104,19 @@ DISCOVERY_SCHEMAS = [
         ),
         device_type=BORDER_ROUTER_DEVICE_TYPES,
         # Null while the router has no network; the button stays.
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="WifiCredentialsImportButton",
+            translation_key="import_wifi_credentials",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        entity_class=MatterWifiCredentialsImportButton,
+        required_attributes=(clusters.WiFiNetworkManagement.Attributes.Ssid,),
+        device_type=(device_types.NetworkInfrastructureManager,),
+        # Null while sharing is off; the button stays.
         allow_none_value=True,
     ),
     MatterDiscoverySchema(

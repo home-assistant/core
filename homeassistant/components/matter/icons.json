@@ -9,6 +9,9 @@
       "import_thread_network": {
         "default": "mdi:download-network"
       },
+      "import_wifi_credentials": {
+        "default": "mdi:wifi-sync"
+      },
       "pause": {
         "default": "mdi:pause"
       },

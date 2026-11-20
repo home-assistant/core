@@ -188,6 +188,9 @@
       "import_thread_network": {
         "name": "Import Thread network"
       },
+      "import_wifi_credentials": {
+        "name": "Import Wi-Fi credentials"
+      },
       "pause": {
         "name": "[%key:common::action::pause%]"
       },
@@ -908,6 +911,18 @@
     },
     "thread_network_missing": {
       "message": "The border router has no Thread network."
+    },
+    "wifi_credentials_import_failed": {
+      "message": "Could not import the Wi-Fi credentials of the network manager: {error}."
+    },
+    "wifi_credentials_unusable": {
+      "message": "The network manager returned no usable Wi-Fi credentials."
+    },
+    "wifi_network_changed": {
+      "message": "The Wi-Fi network or passphrase of the network manager changed during the import. Press the button again."
+    },
+    "wifi_network_not_shared": {
+      "message": "The network manager shares no Wi-Fi network."
     }
   },
   "issues": {
