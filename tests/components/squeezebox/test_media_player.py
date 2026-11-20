@@ -69,6 +69,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -776,7 +777,7 @@ async def test_squeezebox_call_query(
         DOMAIN,
         SqueezeboxService.CALL_QUERY,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             SqueezeboxServiceArgument.COMMAND: "test_command",
             SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
@@ -793,7 +794,7 @@ async def test_squeezebox_call_method(
         DOMAIN,
         SqueezeboxService.CALL_METHOD,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            TargetKey.ENTITY_ID: "media_player.test_player",
             SqueezeboxServiceArgument.COMMAND: "test_command",
             SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },

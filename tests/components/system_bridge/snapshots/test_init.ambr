@@ -1,0 +1,103 @@
+# serializer version: 1
+# name: test_device_info[board]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'http://hostname:9170/settings',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'version',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'system_bridge',
+        'uuid',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'board_vendor',
+    'model': 'board_name',
+    'model_id': None,
+    'name': 'hostname',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[dmi]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'http://hostname:9170/settings',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'version',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'system_bridge',
+        'uuid',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'manufacturer',
+    'model': 'model',
+    'model_id': None,
+    'name': 'hostname',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[no_dmi]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'configuration_url': 'http://hostname:9170/settings',
+    'connections': set({
+      tuple(
+        'mac',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'system_bridge',
+        'uuid',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'hostname',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---

@@ -8,18 +8,20 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_pairing_code": "That pairing code has been used or has expired. Make a new one in System Bridge.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_version": "This version of System Bridge isn't supported. Update System Bridge to the latest version, then try again."
     },
     "flow_title": "{name}",
     "step": {
       "authenticate": {
         "data": {
-          "token": "[%key:common::config_flow::data::api_token%]"
+          "token": "[%key:component::system_bridge::config::step::user::data::token%]"
         },
         "data_description": {
           "token": "[%key:component::system_bridge::config::step::user::data_description::token%]"
         },
-        "description": "Please enter the token set in your configuration for {name}."
+        "description": "Sign in to System Bridge on {name} with a key or a pairing code."
       },
       "reconfigure": {
         "data": {
@@ -36,12 +38,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "Token"
+          "token": "Key or pairing code"
         },
         "data_description": {
           "host": "The hostname or IP address of the computer running System Bridge.",
           "port": "The port System Bridge listens on. The default is 9170.",
-          "token": "The token from the System Bridge settings."
+          "token": "Make a key or a pairing code under Settings > Devices in System Bridge's web client. A pairing code, or its copied link, works once, for 5 minutes."
         },
         "description": "Please enter your connection details."
       }
@@ -398,6 +400,9 @@
     },
     "media_player_not_found": {
       "message": "No media player named {name}"
+    },
+    "media_url_failed": {
+      "message": "System Bridge couldn't make a link to {path}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

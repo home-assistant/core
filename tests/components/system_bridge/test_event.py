@@ -14,7 +14,7 @@ from systembridgeconnector.models.notification import (
     NotificationEvent,
 )
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -137,5 +137,5 @@ async def test_notification_event(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == "2009-02-13T23:31:30.000+00:00"
-    assert state.attributes[ATTR_EVENT_TYPE] == event_type
+    assert state.attributes[EventEntityStateAttribute.EVENT_TYPE] == event_type
     assert attributes.items() <= state.attributes.items()

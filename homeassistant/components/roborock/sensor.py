@@ -595,6 +595,7 @@ async def async_setup_entry(
                 RoborockSensorEntityB01Q10(coordinator, description)
                 for description in Q10_B01_SENSOR_DESCRIPTIONS
             )
+            entities.append(RoborockCurrentRoomQ10(coordinator))
         async_add_entities(entities)
 
     for coordinator in coordinators.values():
@@ -677,6 +678,41 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
             for room in self._home_trait.current_map_data.rooms:
                 if room.segment_id == self._map_content_trait.map_data.vacuum_room:
                     return room.name
+        return None
+
+
+class RoborockCurrentRoomQ10(RoborockCoordinatedEntityB01Q10, SensorEntity):
+    """Representation of the current room of a Q10 vacuum."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_translation_key = "current_room"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: RoborockB01Q10UpdateCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(f"current_room_{coordinator.duid_slug}", coordinator)
+        self._map_trait = coordinator.api.map
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Listen for map and position updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self._map_trait.add_update_listener(self.async_write_ha_state)
+        )
+
+    @property
+    @override
+    def options(self) -> list[str]:
+        """Return the currently valid rooms."""
+        return [room.name for room in self._map_trait.rooms]
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the room inferred by the library, if available."""
+        if (room := self._map_trait.current_room) is not None:
+            return room.name
         return None
 
 

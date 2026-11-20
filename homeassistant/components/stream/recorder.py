@@ -181,6 +181,11 @@ class RecorderOutput(StreamOutput):
                     out_file.write(chunk)
             os.remove(video_path + ".tmp")
 
+        def write_lookback_segments(segments: deque[Segment]) -> None:
+            """Write the completed lookback segments."""
+            while len(segments) > 1:  # The last segment is in progress
+                write_segment(segments.popleft())
+
         def finish_writing(segments: deque[Segment]) -> None:
             """Finish writing output."""
             # Should only have 0 or 1 segments, but loop through just in case
@@ -201,11 +206,7 @@ class RecorderOutput(StreamOutput):
                     self.video_path,
                 )
 
-        # Write lookback segments
-        while len(self._segments) > 1:  # The last segment is in progress
-            await self._hass.async_add_executor_job(
-                write_segment, self._segments.popleft()
-            )
+        await self._hass.async_add_executor_job(write_lookback_segments, self._segments)
         # Make sure the first segment has been added
         if not self._segments:
             await self.recv()

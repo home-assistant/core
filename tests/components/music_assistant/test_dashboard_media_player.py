@@ -20,12 +20,11 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import (
-    ATTR_URL,
-    DASHBOARD_ID_PREFIX,
-    DOMAIN,
+from homeassistant.components.music_assistant.const import DASHBOARD_ID_PREFIX, DOMAIN
+from homeassistant.components.music_assistant.services import (
+    MusicAssistantService,
+    MusicAssistantServiceArgument,
 )
-from homeassistant.components.music_assistant.services import SERVICE_PLAY_ANNOUNCEMENT
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -33,6 +32,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -1059,10 +1059,10 @@ async def test_platform_entity_service_rejects_display(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PLAY_ANNOUNCEMENT,
+            MusicAssistantService.PLAY_ANNOUNCEMENT,
             {
-                ATTR_ENTITY_ID: KITCHEN_ENTITY_ID,
-                ATTR_URL: "http://blah.com/announcement.mp3",
+                TargetKey.ENTITY_ID: KITCHEN_ENTITY_ID,
+                MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
             },
             blocking=True,
         )
@@ -1094,10 +1094,10 @@ async def test_platform_entity_service_skips_display_indirect_target(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_PLAY_ANNOUNCEMENT,
+        MusicAssistantService.PLAY_ANNOUNCEMENT,
         {
             ATTR_DEVICE_ID: [player_device.id, display_device.id],
-            ATTR_URL: "http://blah.com/announcement.mp3",
+            MusicAssistantServiceArgument.URL: "http://blah.com/announcement.mp3",
         },
         blocking=True,
     )

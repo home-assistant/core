@@ -17,7 +17,10 @@ from homeassistant.components.bang_olufsen.const import (
     DEVICE_BUTTON_EVENTS,
     EVENT_TRANSLATION_MAP,
 )
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -185,7 +188,9 @@ async def test_button(
 
     assert (states := hass.states.get(TEST_BUTTON_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
-    assert states.attributes[ATTR_EVENT_TYPES] == list(DEVICE_BUTTON_EVENTS)
+    assert states.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == list(
+        DEVICE_BUTTON_EVENTS
+    )
 
     # Check button reacts as expected to WebSocket events
     notification_callback = mock_mozart_client.get_button_notifications.call_args[0][0]
@@ -196,7 +201,7 @@ async def test_button(
     assert (states := hass.states.get(TEST_BUTTON_EVENT_ENTITY_ID))
     assert states.state is not None
     assert (
-        states.attributes[ATTR_EVENT_TYPE]
+        states.attributes[EventEntityStateAttribute.EVENT_TYPE]
         == EVENT_TRANSLATION_MAP["shortPress (Release)"]
     )
 
@@ -220,7 +225,9 @@ async def test_remote_key(
 
     assert (states := hass.states.get(TEST_REMOTE_KEY_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
-    assert states.attributes[ATTR_EVENT_TYPES] == list(BEO_REMOTE_KEY_EVENTS)
+    assert states.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == list(
+        BEO_REMOTE_KEY_EVENTS
+    )
 
     # Check button reacts as expected to WebSocket events
     notification_callback = (
@@ -232,4 +239,7 @@ async def test_remote_key(
 
     assert (states := hass.states.get(TEST_REMOTE_KEY_EVENT_ENTITY_ID))
     assert states.state is not None
-    assert states.attributes[ATTR_EVENT_TYPE] == EVENT_TRANSLATION_MAP["KeyPress"]
+    assert (
+        states.attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == EVENT_TRANSLATION_MAP["KeyPress"]
+    )

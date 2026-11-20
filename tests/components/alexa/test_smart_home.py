@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Generator
-import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 
@@ -6037,7 +6036,6 @@ async def test_initiate_session_with_offer(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6129,7 +6127,6 @@ async def test_initiate_session_with_offer_candidate_timeout(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the answer is returned when no end of candidates is signalled."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6464,7 +6461,6 @@ async def test_rtc_session_connected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test SessionConnected is acknowledged."""
-    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController", "SessionConnected", DEMO_CAMERA_ENDPOINT
     )
@@ -6489,7 +6485,6 @@ async def test_rtc_session_disconnected(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, camera_on: bool
 ) -> None:
     """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
-    caplog.set_level(logging.DEBUG)
     await hass.services.async_call(
         camera.DOMAIN,
         SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
@@ -6579,7 +6574,6 @@ async def test_rtc_session_expires(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a session is closed when Alexa never sends SessionDisconnected."""
-    caplog.set_level(logging.DEBUG)
     with patch(
         "homeassistant.components.camera.Camera.close_webrtc_session"
     ) as mock_close:

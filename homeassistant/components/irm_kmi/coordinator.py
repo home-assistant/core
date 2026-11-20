@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .data import ProcessedCoordinatorData
 from .utils import preferred_language
 
@@ -73,8 +74,9 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             if self._within_grace(self._last_api_success_time):
                 return self.data
             raise UpdateFailed(
-                f"Error communicating with API for general forecast: {err}. "
-                f"Last success time is: {self._last_api_success_time}"
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         data = await self.process_api_data()
@@ -85,6 +87,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
         tz = await dt_util.async_get_time_zone("Europe/Brussels")
+        if TYPE_CHECKING:
+            assert tz is not None
         lang = preferred_language(self.hass, self.config_entry)
 
         return ProcessedCoordinatorData(
