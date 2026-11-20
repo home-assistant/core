@@ -1700,7 +1700,7 @@ def _get_oldest_sum_statistic(
         table: type[StatisticsBase],
         metadata_id: int,
     ) -> float | None:
-        """Return the oldest non-NULL sum during the period."""
+        """Return the non-NULL sum the period's change is measured from."""
         stmt = lambda_stmt(
             lambda: (
                 select(table.sum)
@@ -1719,6 +1719,24 @@ def _get_oldest_sum_statistic(
                 period = start_time.replace(minute=0, second=0, microsecond=0)
             prev_period = period - table.duration
             prev_period_ts = prev_period.timestamp()
+            # Not for short-term: its data may stop while imported long-term
+            # rows continue, so an older short-term sum would be stale
+            if table == Statistics:
+                newest_before_stmt = lambda_stmt(
+                    lambda: (
+                        select(table.sum)
+                        .filter(table.metadata_id == metadata_id)
+                        .filter(table.sum.is_not(None))
+                        .filter(table.start_ts <= prev_period_ts)
+                        .order_by(table.start_ts.desc())
+                        .limit(1)
+                    )
+                )
+                if stats := cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(session, newest_before_stmt),
+                ):
+                    return cast(float, stats[0].sum)
             stmt += lambda q: q.filter(table.start_ts >= prev_period_ts)
         stats = cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
         return stats[0].sum if stats else None
@@ -1951,7 +1969,9 @@ def statistic_during_period(
                 types,
             )
 
-        if "change" in types:
+        if "change" in types and not metadata[1]["has_sum"]:
+            result["change"] = None
+        elif "change" in types:
             oldest_sum: float | None
             if start_time is None:
                 oldest_sum = 0.0
