@@ -20,9 +20,7 @@ from homeassistant.components.intent import DOMAIN
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_STOP_VALVE,
+    ValveService,
     ValveState,
 )
 from homeassistant.const import (
@@ -322,8 +320,8 @@ async def test_turn_on_off_intent_valve(
     valve = entity_registry.async_get_or_create("valve", "test", "valve_uid")
 
     hass.states.async_set(valve.entity_id, "closed")
-    open_calls = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
-    close_calls = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+    open_calls = async_mock_service(hass, "valve", ValveService.OPEN)
+    close_calls = async_mock_service(hass, "valve", ValveService.CLOSE)
 
     await intent.async_handle(
         hass, "test", "HassTurnOn", {"name": {"value": valve.entity_id}}
@@ -332,7 +330,7 @@ async def test_turn_on_off_intent_valve(
     assert len(open_calls) == 1
     call = open_calls[0]
     assert call.domain == "valve"
-    assert call.service == SERVICE_OPEN_VALVE
+    assert call.service == ValveService.OPEN
     assert call.data == {"entity_id": valve.entity_id}
 
     await intent.async_handle(
@@ -342,7 +340,7 @@ async def test_turn_on_off_intent_valve(
     assert len(close_calls) == 1
     call = close_calls[0]
     assert call.domain == "valve"
-    assert call.service == SERVICE_CLOSE_VALVE
+    assert call.service == ValveService.CLOSE
     assert call.data == {"entity_id": valve.entity_id}
 
 
@@ -750,7 +748,7 @@ async def test_stop_moving_valve(hass: HomeAssistant) -> None:
 
     entity_id = f"{VALVE_DOMAIN}.test_valve"
     hass.states.async_set(entity_id, ValveState.OPEN)
-    calls = async_mock_service(hass, VALVE_DOMAIN, SERVICE_STOP_VALVE)
+    calls = async_mock_service(hass, VALVE_DOMAIN, ValveService.STOP)
 
     response = await intent.async_handle(
         hass, "test", intent.INTENT_STOP_MOVING, {"name": {"value": "test valve"}}
@@ -761,7 +759,7 @@ async def test_stop_moving_valve(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == VALVE_DOMAIN
-    assert call.service == SERVICE_STOP_VALVE
+    assert call.service == ValveService.STOP
     assert call.data == {"entity_id": entity_id}
 
 

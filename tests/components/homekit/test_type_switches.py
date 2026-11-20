@@ -49,12 +49,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.valve import ValveService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
     SERVICE_SELECT_OPTION,
     STATE_CLOSED,
     STATE_OFF,
@@ -267,8 +266,8 @@ async def test_valve_set_state(
     assert acc.char_in_use.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, "valve", SERVICE_OPEN_VALVE)
-    call_turn_off = async_mock_service(hass, "valve", SERVICE_CLOSE_VALVE)
+    call_turn_on = async_mock_service(hass, "valve", ValveService.OPEN)
+    call_turn_off = async_mock_service(hass, "valve", ValveService.CLOSE)
 
     acc.char_active.client_update_value(1)
     await hass.async_block_till_done()

@@ -44,19 +44,19 @@ from homeassistant.components.mqtt.valve import (
     ValveEntityFeature,
 )
 from homeassistant.components.valve import (
-    ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
-    SERVICE_SET_VALVE_POSITION,
+    ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_STOP_VALVE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 
@@ -284,7 +284,10 @@ async def test_state_via_state_topic_through_position(
 
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == valve_position
+    assert (
+        state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        == valve_position
+    )
 
 
 @pytest.mark.parametrize(
@@ -338,7 +341,10 @@ async def test_opening_closing_state_is_reset(
 
         state = hass.states.get("valve.test")
         assert state.state == asserted_state
-        assert state.attributes.get(ATTR_CURRENT_POSITION) == valve_position
+        assert (
+            state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+            == valve_position
+        )
 
 
 @pytest.mark.parametrize(
@@ -456,7 +462,10 @@ async def test_state_via_state_trough_position_with_alt_range(
 
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == valve_position
+    assert (
+        state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        == valve_position
+    )
 
 
 @pytest.mark.parametrize(
@@ -499,7 +508,7 @@ async def test_controlling_valve_by_state(
     await hass.services.async_call(
         valve.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "valve.test"},
+        {TargetKey.ENTITY_ID: "valve.test"},
         blocking=True,
     )
 
@@ -654,7 +663,7 @@ async def test_controlling_valve_by_state_optimistic(
     await hass.services.async_call(
         valve.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "valve.test"},
+        {TargetKey.ENTITY_ID: "valve.test"},
         blocking=True,
     )
 
@@ -705,7 +714,7 @@ async def test_controlling_valve_by_position(
     await hass.services.async_call(
         valve.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "valve.test"},
+        {TargetKey.ENTITY_ID: "valve.test"},
         blocking=True,
     )
 
@@ -751,8 +760,8 @@ async def test_controlling_valve_by_set_valve_position(
 
     await hass.services.async_call(
         valve.DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test", ATTR_POSITION: position},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test", ValveServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -805,8 +814,8 @@ async def test_controlling_valve_optimistic_by_set_valve_position(
 
     await hass.services.async_call(
         valve.DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test", ATTR_POSITION: position},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test", ValveServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -816,7 +825,10 @@ async def test_controlling_valve_optimistic_by_set_valve_position(
 
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == asserted_position
+    assert (
+        state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        == asserted_position
+    )
 
 
 @pytest.mark.parametrize(
@@ -855,8 +867,8 @@ async def test_controlling_valve_with_alt_range_by_set_valve_position(
 
     await hass.services.async_call(
         valve.DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test", ATTR_POSITION: position},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test", ValveServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -907,7 +919,7 @@ async def test_controlling_valve_with_alt_range_by_position(
     await hass.services.async_call(
         valve.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "valve.test"},
+        {TargetKey.ENTITY_ID: "valve.test"},
         blocking=True,
     )
 
@@ -966,12 +978,12 @@ async def test_controlling_valve_by_position_optimistic(
 
     state = hass.states.get("valve.test")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_CURRENT_POSITION) is None
+    assert state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION) is None
 
     await hass.services.async_call(
         valve.DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "valve.test"},
+        {TargetKey.ENTITY_ID: "valve.test"},
         blocking=True,
     )
 
@@ -981,7 +993,10 @@ async def test_controlling_valve_by_position_optimistic(
 
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
-    assert state.attributes[ATTR_CURRENT_POSITION] == asserted_position
+    assert (
+        state.attributes[ValveEntityStateAttribute.CURRENT_POSITION]
+        == asserted_position
+    )
 
 
 @pytest.mark.parametrize(
@@ -1028,8 +1043,8 @@ async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
 
     await hass.services.async_call(
         valve.DOMAIN,
-        SERVICE_SET_VALVE_POSITION,
-        {ATTR_ENTITY_ID: "valve.test", ATTR_POSITION: position},
+        ValveService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "valve.test", ValveServiceArgument.POSITION: position},
         blocking=True,
     )
 
@@ -1039,7 +1054,10 @@ async def test_controlling_valve_optimistic_alt_range_by_set_valve_position(
 
     state = hass.states.get("valve.test")
     assert state.state == asserted_state
-    assert state.attributes.get(ATTR_CURRENT_POSITION) == asserted_position
+    assert (
+        state.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        == asserted_position
+    )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

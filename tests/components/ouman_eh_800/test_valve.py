@@ -13,13 +13,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
-    ATTR_POSITION,
     DOMAIN as VALVE_DOMAIN,
-    SERVICE_CLOSE_VALVE,
-    SERVICE_OPEN_VALVE,
-    SERVICE_SET_VALVE_POSITION,
+    ValveService,
+    ValveServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -47,13 +45,13 @@ async def test_entities(
     ("service", "service_data", "expected_position"),
     [
         pytest.param(
-            SERVICE_SET_VALVE_POSITION,
-            {ATTR_POSITION: 42},
+            ValveService.SET_POSITION,
+            {ValveServiceArgument.POSITION: 42},
             42,
             id="set_position",
         ),
-        pytest.param(SERVICE_OPEN_VALVE, {}, 100, id="open"),
-        pytest.param(SERVICE_CLOSE_VALVE, {}, 0, id="close"),
+        pytest.param(ValveService.OPEN, {}, 100, id="open"),
+        pytest.param(ValveService.CLOSE, {}, 0, id="close"),
     ],
 )
 async def test_async_set_valve_position(
@@ -71,7 +69,7 @@ async def test_async_set_valve_position(
     await hass.services.async_call(
         VALVE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: entity_id, **service_data},
+        {TargetKey.ENTITY_ID: entity_id, **service_data},
         blocking=True,
     )
 
@@ -117,10 +115,10 @@ async def test_async_set_valve_position_errors(
     with pytest.raises(HomeAssistantError, match=expected_message):
         await hass.services.async_call(
             VALVE_DOMAIN,
-            SERVICE_SET_VALVE_POSITION,
+            ValveService.SET_POSITION,
             {
-                ATTR_ENTITY_ID: "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint",
-                ATTR_POSITION: 50,
+                TargetKey.ENTITY_ID: "valve.ouman_eh_800_heating_circuit_1_patterilammitys_valve_position_setpoint",
+                ValveServiceArgument.POSITION: 50,
             },
             blocking=True,
         )

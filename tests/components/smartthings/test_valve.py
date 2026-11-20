@@ -11,11 +11,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.smartthings import MAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +62,7 @@ async def test_valve_open_close(
     await hass.services.async_call(
         VALVE_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "valve.theater_volvo"},
+        {TargetKey.ENTITY_ID: "valve.theater_volvo"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(

@@ -682,9 +682,9 @@ async def test_startstop_lawn_mower(hass: HomeAssistant) -> None:
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
-            valve.SERVICE_OPEN_VALVE,
-            valve.SERVICE_CLOSE_VALVE,
-            valve.SERVICE_STOP_VALVE,
+            valve.ValveService.OPEN,
+            valve.ValveService.CLOSE,
+            valve.ValveService.STOP,
             cover.SERVICE_TOGGLE,
         ),
     ],
@@ -808,9 +808,9 @@ async def test_startstop_cover_valve_no_assumed_state(
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
-            valve.SERVICE_OPEN_VALVE,
-            valve.SERVICE_CLOSE_VALVE,
-            valve.SERVICE_STOP_VALVE,
+            valve.ValveService.OPEN,
+            valve.ValveService.CLOSE,
+            valve.ValveService.STOP,
             cover.SERVICE_TOGGLE,
             True,
         ),
@@ -840,9 +840,9 @@ async def test_startstop_cover_valve_no_assumed_state(
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE
             | ValveEntityFeature.SET_POSITION,
-            valve.SERVICE_OPEN_VALVE,
-            valve.SERVICE_CLOSE_VALVE,
-            valve.SERVICE_STOP_VALVE,
+            valve.ValveService.OPEN,
+            valve.ValveService.CLOSE,
+            valve.ValveService.STOP,
             cover.SERVICE_TOGGLE,
             False,
         ),
@@ -968,9 +968,9 @@ async def test_startstop_cover_valve_with_assumed_state_or_reports_position(
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
-            valve.SERVICE_OPEN_VALVE,
-            valve.SERVICE_CLOSE_VALVE,
-            valve.SERVICE_STOP_VALVE,
+            valve.ValveService.OPEN,
+            valve.ValveService.CLOSE,
+            valve.ValveService.STOP,
             cover.SERVICE_TOGGLE,
         ),
     ],
@@ -3379,12 +3379,12 @@ async def test_traits_unknown_domains(
         ),
         (
             valve.DOMAIN,
-            valve.SERVICE_SET_VALVE_POSITION,
-            valve.SERVICE_CLOSE_VALVE,
-            valve.SERVICE_OPEN_VALVE,
+            valve.ValveService.SET_POSITION,
+            valve.ValveService.CLOSE,
+            valve.ValveService.OPEN,
             ValveEntityFeature.SET_POSITION,
-            valve.ATTR_POSITION,
-            valve.ATTR_CURRENT_POSITION,
+            valve.ValveServiceArgument.POSITION,
+            valve.ValveEntityStateAttribute.CURRENT_POSITION,
         ),
     ],
 )
@@ -3460,7 +3460,7 @@ async def test_openclose_cover_valve(
         ),
         (
             valve.DOMAIN,
-            valve.SERVICE_OPEN_VALVE,
+            valve.ValveService.OPEN,
             ValveEntityFeature.SET_POSITION,
             ValveEntityFeature.OPEN,
         ),
@@ -3515,7 +3515,7 @@ async def test_openclose_cover_valve_unknown_state(
         ),
         (
             valve.DOMAIN,
-            valve.SERVICE_SET_VALVE_POSITION,
+            valve.ValveService.SET_POSITION,
             ValveEntityFeature.SET_POSITION,
             valve.ValveState.OPEN,
         ),
@@ -3618,8 +3618,8 @@ async def test_openclose_cover_valve_query_only(
             valve.ValveState.OPEN,
             valve.ValveState.CLOSED,
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
-            valve.SERVICE_OPEN_VALVE,
-            valve.SERVICE_CLOSE_VALVE,
+            valve.ValveService.OPEN,
+            valve.ValveService.CLOSE,
         ),
     ],
 )
