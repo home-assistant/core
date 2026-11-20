@@ -249,7 +249,7 @@ async def async_setup_entry(
 
     for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_OUTPUT):
         output_num: int = subentry.data[CONF_OUTPUT_NUMBER]
-        output_type: BinarySensorDeviceClass = subentry.data[CONF_ZONE_TYPE]
+        output_type: BinarySensorDeviceClass | None = subentry.data[CONF_ZONE_TYPE]
 
         async_add_entities(
             [
@@ -278,7 +278,7 @@ class SatelIntegraBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
-        device_class: BinarySensorDeviceClass,
+        device_class: BinarySensorDeviceClass | None,
     ) -> None:
         """Initialize the binary_sensor."""
         super().__init__(

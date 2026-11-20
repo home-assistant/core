@@ -21,10 +21,12 @@
     "step": {
       "discover": {
         "data": {
+          "scan_outputs": "Outputs",
           "scan_partitions": "Partitions",
           "scan_zones": "Zones"
         },
         "data_description": {
+          "scan_outputs": "Find configured outputs and add them as read-only binary sensors.",
           "scan_partitions": "Find partitions configured on the alarm panel.",
           "scan_zones": "Find zones assigned to a partition. This can take longer on larger panels."
         },
@@ -33,7 +35,7 @@
         "title": "Choose what to scan"
       },
       "finish_scan": {
-        "description": "Continue to set up the panel without adding discovered resources. You can add partitions and zones manually later.",
+        "description": "Continue to set up the panel without adding discovered resources. You can add them manually later.",
         "title": "Continue without discovery results"
       },
       "reconfigure": {

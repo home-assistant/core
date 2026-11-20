@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 import probatio
-from satel_integra import AsyncSatel, SatelPartitionInfo, SatelZoneInfo
+from satel_integra import AsyncSatel, SatelOutputInfo, SatelPartitionInfo, SatelZoneInfo
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -50,7 +50,9 @@ from .coordinator import SatelConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
 
-type ScanResult = tuple[list[SatelPartitionInfo], list[SatelZoneInfo]]
+type ScanResult = tuple[
+    list[SatelPartitionInfo], list[SatelZoneInfo], list[SatelOutputInfo]
+]
 
 CONNECTION_SCHEMA = probatio.Schema(
     {
@@ -123,7 +125,7 @@ SWITCHABLE_OUTPUT_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.str
 
 def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
     """Convert eligible discovery results into initial configuration."""
-    partitions, zones = result
+    partitions, zones, outputs = result
     subentries: list[ConfigSubentryData] = []
     for partition in partitions:
         number = partition.device_number
@@ -155,6 +157,21 @@ def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
                     CONF_NAME: zone.name or label,
                     CONF_ZONE_TYPE: None,
                     CONF_ENABLE_TEMPERATURE_SENSOR: False,
+                },
+            )
+        )
+    for output in outputs:
+        number = output.device_number
+        label = f"Output {number}"
+        subentries.append(
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_OUTPUT,
+                unique_id=f"{SUBENTRY_TYPE_OUTPUT}_{number}",
+                title=f"{label}: {output.name}" if output.name else label,
+                data={
+                    CONF_OUTPUT_NUMBER: number,
+                    CONF_NAME: output.name or label,
+                    CONF_ZONE_TYPE: None,
                 },
             )
         )
@@ -252,12 +269,13 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Choose which resources to discover before creating the entry."""
         if user_input is not None:
-            if not (user_input["scan_partitions"] or user_input["scan_zones"]):
+            if not any(user_input.values()):
                 return self._async_create_panel_entry()
             self._scan_task = self.hass.async_create_task(
                 self._async_scan(
                     scan_partitions=user_input["scan_partitions"],
                     scan_zones=user_input["scan_zones"],
+                    scan_outputs=user_input["scan_outputs"],
                 ),
                 eager_start=False,
             )
@@ -271,6 +289,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         selector.BooleanSelector()
                     ),
                     probatio.Required("scan_zones", default=True): (
+                        selector.BooleanSelector()
+                    ),
+                    probatio.Required("scan_outputs", default=True): (
                         selector.BooleanSelector()
                     ),
                 }
@@ -292,7 +313,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_scan(
-        self, *, scan_partitions: bool, scan_zones: bool
+        self, *, scan_partitions: bool, scan_zones: bool, scan_outputs: bool
     ) -> ScanResult | None:
         """Discover selected resources using one temporary connection."""
         controller = AsyncSatel(
@@ -302,7 +323,8 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         partitions: list[SatelPartitionInfo] = []
         zones: list[SatelZoneInfo] = []
-        stages = int(scan_partitions) + int(scan_zones)
+        outputs: list[SatelOutputInfo] = []
+        stages = int(scan_partitions) + int(scan_zones) + int(scan_outputs)
         try:
             await controller.connect(raise_exceptions=True)
             await controller.start(enable_monitoring=False)
@@ -319,12 +341,20 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         (int(scan_partitions) + completed / total) / stages
                     )
                 )
+
+            if scan_outputs:
+                outputs = await controller.scan_outputs(
+                    on_progress=lambda completed, total: self.async_update_progress(
+                        (int(scan_partitions) + int(scan_zones) + completed / total)
+                        / stages
+                    )
+                )
         except SatelIntegraError as err:
             _LOGGER.debug("Discovery scan failed: %s", err)
             return None
         finally:
             await controller.close()
-        return partitions, zones
+        return partitions, zones, outputs
 
     async def async_step_finish_scan(
         self, user_input: dict[str, Any] | None = None

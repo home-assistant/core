@@ -11,6 +11,7 @@ from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
     SatelNoResponseError,
+    SatelOutputInfo,
     SatelPanelBusyError,
     SatelPartitionInfo,
     SatelZoneInfo,
@@ -29,7 +30,9 @@ from homeassistant.components.satel_integra.const import (
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DOMAIN,
+    SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
+    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
 from homeassistant.config_entries import (
@@ -106,9 +109,14 @@ async def test_setup_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
     assert (schema := result["data_schema"]) is not None
-    assert schema({}) == {"scan_partitions": True, "scan_zones": True}
+    assert schema({}) == {
+        "scan_partitions": True,
+        "scan_zones": True,
+        "scan_outputs": True,
+    }
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"scan_partitions": False, "scan_zones": False}
+        result["flow_id"],
+        {"scan_partitions": False, "scan_zones": False, "scan_outputs": False},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_CONFIG_DATA[CONF_HOST]
@@ -117,6 +125,7 @@ async def test_setup_flow(
     assert not result["result"].subentries
     mock_satel.scan_partitions.assert_not_called()
     mock_satel.scan_zones.assert_not_called()
+    mock_satel.scan_outputs.assert_not_called()
 
     # Continues to options flow
     flow_type, flow_id = result["next_flow"]
@@ -175,7 +184,8 @@ async def test_setup_connection_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discover"
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"scan_partitions": False, "scan_zones": False}
+        result["flow_id"],
+        {"scan_partitions": False, "scan_zones": False, "scan_outputs": False},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["next_flow"][0] is FlowType.OPTIONS_FLOW
@@ -183,7 +193,11 @@ async def test_setup_connection_failed(
 
 
 async def _start_scan(
-    hass: HomeAssistant, *, scan_partitions: bool = True, scan_zones: bool = False
+    hass: HomeAssistant,
+    *,
+    scan_partitions: bool = True,
+    scan_zones: bool = False,
+    scan_outputs: bool = False,
 ) -> ConfigFlowResult:
     """Submit the connection form and start the selected scans."""
     result = await hass.config_entries.flow.async_init(
@@ -198,7 +212,11 @@ async def _start_scan(
     assert not hass.config_entries.async_entries(DOMAIN)
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"scan_partitions": scan_partitions, "scan_zones": scan_zones},
+        {
+            "scan_partitions": scan_partitions,
+            "scan_zones": scan_zones,
+            "scan_outputs": scan_outputs,
+        },
     )
 
 
@@ -295,6 +313,41 @@ async def test_setup_adds_discovered_zones(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
     mock_satel.read_temperature.assert_not_called()
+
+
+async def test_setup_adds_discovered_outputs_as_read_only(
+    hass: HomeAssistant, mock_satel: AsyncMock
+) -> None:
+    """Add configured outputs as binary sensors, even for switch functions."""
+    mock_satel.scan_outputs.return_value = [
+        SatelOutputInfo(device_number=2, name="Alarm status", type_code=1),
+        SatelOutputInfo(device_number=5, name="Light relay", type_code=25),
+    ]
+    result = await _start_scan(hass, scan_partitions=False, scan_outputs=True)
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    assert mock_satel.close.await_count == 2
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    assert {
+        output.unique_id: (output.title, dict(output.data))
+        for output in entry.get_subentries_of_type(SUBENTRY_TYPE_OUTPUT)
+    } == {
+        f"output_{number}": (
+            f"Output {number}: {name}",
+            {CONF_OUTPUT_NUMBER: number, CONF_NAME: name, CONF_ZONE_TYPE: None},
+        )
+        for number, name in ((2, "Alarm status"), (5, "Light relay"))
+    }
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_SWITCHABLE_OUTPUT)
+    mock_satel.scan_partitions.assert_not_called()
+    mock_satel.scan_zones.assert_not_called()
+    mock_satel.scan_outputs.assert_awaited_once()
+    mock_satel.set_output.assert_not_called()
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("binary_sensor.light_relay") is not None
 
 
 @pytest.mark.parametrize(
@@ -991,7 +1044,8 @@ async def test_partition_discovery_rechecks_host_before_creating_entry(
 
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"scan_partitions": True, "scan_zones": False}
+        result["flow_id"],
+        {"scan_partitions": True, "scan_zones": False, "scan_outputs": False},
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     await hass.async_block_till_done()
