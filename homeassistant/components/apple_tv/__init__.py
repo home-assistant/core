@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
     SIGNAL_CONNECTED,
     SIGNAL_DISCONNECTED,
+    SIGNAL_GROUP_CHANGED,
 )
 from .services import async_setup_services
 
@@ -171,6 +172,7 @@ class AppleTVManager(DeviceListener):
         self._start_connect_loop()
         # Entities must see reconnection before handling the lost transport.
         self._dispatch_send(SIGNAL_DISCONNECTED)
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
 
     async def connect(self) -> None:
         """Connect to device."""
@@ -185,6 +187,7 @@ class AppleTVManager(DeviceListener):
             if self.atv:
                 self.atv.close()
                 self.atv = None
+                async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
             if self._task:
                 self._task.cancel()
                 self._task = None
@@ -333,6 +336,7 @@ class AppleTVManager(DeviceListener):
         self.atv.listener = self
 
         self._dispatch_send(SIGNAL_CONNECTED, self.atv)
+        async_dispatcher_send(self.hass, SIGNAL_GROUP_CHANGED)
         self._address_updated(str(conf.address))
 
         self._async_setup_device_registry()

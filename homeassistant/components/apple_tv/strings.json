@@ -72,6 +72,12 @@
     "command_failed": {
       "message": "Failed to send the command to the Apple TV"
     },
+    "grouping_unavailable": {
+      "message": "{entity_id} can't be grouped now. It is not connected, or it has no AirPlay output device"
+    },
+    "invalid_grouping_entity": {
+      "message": "{entity_id} can't join the group. Only Apple TV and HomePod media players can be grouped"
+    },
     "keyboard_error": {
       "message": "An error occurred while sending text to the Apple TV"
     },
