@@ -21,9 +21,8 @@ from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .discovery import (
     energy_description_key,
-    has_air_purifier_power_control,
     scalar_characteristics_for_platform,
-    scalar_platform,
+    scalar_platform_for_point,
 )
 from .entity import (
     DaikinManagementPointEntity,
@@ -443,12 +442,7 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             and characteristic is not None
             and (
                 self._sub_type is not None
-                or scalar_platform(
-                    self._value,
-                    characteristic,
-                    point.management_point_type,
-                    air_purifier_power_settable=has_air_purifier_power_control(point),
-                )
+                or scalar_platform_for_point(point, self._value, characteristic)
                 is Platform.SENSOR
             )
         )

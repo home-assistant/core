@@ -139,14 +139,17 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
 
         schedule_id = selection.selected
         if option != SCHEDULE_DISABLED:
-            schedule_id = next(
+            selected_schedule_id = next(
                 (
                     schedule_id
                     for label, schedule_id in self._schedule_options(selection)
                     if label == option
                 ),
-                option,
+                None,
             )
+            if selected_schedule_id is None:
+                self._raise_service_validation_error("schedule_selection_unavailable")
+            schedule_id = selected_schedule_id
 
         enabled = (
             option != SCHEDULE_DISABLED

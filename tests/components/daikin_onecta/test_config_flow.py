@@ -529,10 +529,8 @@ async def test_oauth_errors_can_be_retried_from_supported_sources(
     assert mock_get_gateway_devices.call_count == expected_gateway_calls
 
 
-async def test_zeroconf_already_configured(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("config_entry")
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Ignore zeroconf discovery when the integration is already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

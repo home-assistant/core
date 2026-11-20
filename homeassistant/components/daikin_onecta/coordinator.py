@@ -108,6 +108,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         self._polling_backoff_until: datetime | None = None
         self._cloud_lock = asyncio.Lock()
         self._cloud_update_sequence = 0
+        self._manual_refresh_previous_sequence: int | None = None
         self._unsub_post_write_refresh: CALLBACK_TYPE | None = None
         self._sites_cache: tuple[datetime, list[Site]] | None = None
 
@@ -159,7 +160,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         # The same backoff check used by scheduled and entity refreshes runs
         # again after acquiring the cloud lock.
         previous_sequence = self._cloud_update_sequence
-        await self.async_refresh()
+        self._manual_refresh_previous_sequence = previous_sequence
+        try:
+            await self.async_refresh()
+        finally:
+            self._manual_refresh_previous_sequence = None
         if remaining := (
             self._polling_backoff_remaining() or self._post_write_cooldown_remaining()
         ):
@@ -189,11 +194,18 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 return None
             if self._post_write_cooldown_remaining() is not None:
                 return None
+            if (
+                self._manual_refresh_previous_sequence is not None
+                and self._cloud_update_sequence > self._manual_refresh_previous_sequence
+            ):
+                return None
             try:
-                return await self._client.get_gateway_devices()
+                devices = await self._client.get_gateway_devices()
             except OnectaRateLimitError as err:
                 self._set_polling_backoff(err.retry_after)
                 raise
+            self._cloud_update_sequence += 1
+            return devices
 
     async def async_get_sites(self, *, use_cache: bool = False) -> list[Site]:
         """Return account sites unless Daikin's rate-limit backoff is active.
@@ -216,11 +228,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 )
             try:
                 sites = await self._client.get_sites()
-                self._sites_cache = (dt_util.utcnow(), sites)
             except OnectaRateLimitError as err:
                 self._set_polling_backoff(err.retry_after)
                 raise
             else:
+                self._sites_cache = (dt_util.utcnow(), sites)
                 return sites
 
     async def async_get_site_lookup(
@@ -492,7 +504,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                         retry_after=retry_after.total_seconds(),
                     )
             else:
-                self._cloud_update_sequence += 1
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
                     if device_id not in cloud_device_ids:

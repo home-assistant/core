@@ -1,8 +1,10 @@
 """Tests for Daikin Onecta refresh button entities."""
 
+import asyncio
 from unittest.mock import AsyncMock
 
 from daikin_onecta.exceptions import OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta.models import GatewayDevice
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -36,6 +38,46 @@ async def test_refresh_button_requests_coordinator_refresh(
     )
 
     coordinator.async_manual_refresh.assert_awaited_once()
+
+
+async def test_refresh_button_reuses_in_flight_poll(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Do not spend another request when a scheduled poll is already running."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    mock_onecta_client.get_gateway_devices.reset_mock()
+    request_started = asyncio.Event()
+    finish_request = asyncio.Event()
+
+    async def delayed_get_gateway_devices() -> list[GatewayDevice]:
+        request_started.set()
+        await finish_request.wait()
+        return _load_gateway_devices("dry")
+
+    mock_onecta_client.get_gateway_devices.side_effect = delayed_get_gateway_devices
+    assert coordinator.update_interval is not None
+    freezer.tick(coordinator.update_interval)
+    async_fire_time_changed(hass)
+    await request_started.wait()
+
+    button_task = hass.async_create_task(
+        hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+    finish_request.set()
+    await button_task
+    await hass.async_block_till_done()
+
+    mock_onecta_client.get_gateway_devices.assert_awaited_once_with()
 
 
 async def test_refresh_button_reports_failed_refresh(

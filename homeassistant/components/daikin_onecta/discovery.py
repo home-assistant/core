@@ -65,6 +65,24 @@ def scalar_platform(
     return None
 
 
+def scalar_platform_for_point(
+    point: ManagementPoint,
+    name: str,
+    characteristic: Characteristic | None = None,
+) -> Platform | None:
+    """Return the Home Assistant platform for a point's scalar characteristic."""
+    if characteristic is None:
+        characteristic = point.scalar_characteristic(name)
+    if characteristic is None:
+        return None
+    return scalar_platform(
+        name,
+        characteristic,
+        point.management_point_type,
+        air_purifier_power_settable=has_air_purifier_power_control(point),
+    )
+
+
 def scalar_characteristics_for_platform(
     point: ManagementPoint, platform: Platform
 ) -> Iterator[tuple[str, Characteristic]]:
@@ -72,13 +90,7 @@ def scalar_characteristics_for_platform(
     return (
         (name, characteristic)
         for name, characteristic in point.scalar_characteristics().items()
-        if scalar_platform(
-            name,
-            characteristic,
-            point.management_point_type,
-            air_purifier_power_settable=has_air_purifier_power_control(point),
-        )
-        is platform
+        if scalar_platform_for_point(point, name, characteristic) is platform
     )
 
 

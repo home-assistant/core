@@ -22,6 +22,10 @@ from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 GATEWAY_DEVICES_URL = "https://api.onecta.daikineurope.com/v1/gateway-devices"
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "issue_841_gateway_devices.json"
+_ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER = (
+    DOMAIN,
+    "00000000-0000-4000-8000-000000000105_domesticHotWaterTank",
+)
 
 
 async def test_setup_with_gateway_missing_management_points(
@@ -60,16 +64,13 @@ def _get_domestic_hot_water_tank_child(
     device_registry: dr.DeviceRegistry,
 ) -> dr.AnyDeviceEntry:
     """Return the registered domestic-hot-water child device."""
-    for device in config_entry.runtime_data.data.values():
-        for point in device.device.management_points:
-            if point.management_point_type != "domesticHotWaterTank":
-                continue
-            child = device_registry.async_get_child_device_by_identifier(
-                (DOMAIN, f"{device.id}_{point.embedded_id}"), config_entry.entry_id
-            )
-            if child is not None:
-                return child
-    raise AssertionError("Domestic hot water child device was not registered")
+    child = device_registry.async_get_child_device_by_identifier(
+        _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER,
+        config_entry.entry_id,
+    )
+    if child is None:
+        raise AssertionError("Domestic hot water child device was not registered")
+    return child
 
 
 async def _async_poll(
