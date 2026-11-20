@@ -2068,6 +2068,7 @@ async def test_restore_state_after_unavailable_away_mode(hass: HomeAssistant) ->
     )
     await hass.async_block_till_done()
 
+    await _setup_switch(hass, False)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
 
