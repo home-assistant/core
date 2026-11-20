@@ -1392,6 +1392,8 @@ async def test_config_entry_without_ignore_non_numeric(hass: HomeAssistant) -> N
             "type": "sum",
         },
         title="test_sum",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
