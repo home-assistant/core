@@ -43,10 +43,6 @@ async def test_sensors(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Equipped gear missing from the cached content raises KeyError",
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_attribute_sensor_skips_gear_missing_from_content(
     hass: HomeAssistant,

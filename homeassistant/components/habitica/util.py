@@ -118,10 +118,12 @@ def get_attribute_points(
 ) -> dict[str, float]:
     """Get modifiers contributing to STR/INT/CON/PER attributes."""
 
+    # Content is only fetched at setup, so it may not know gear released since then
     equipped_gear = [
-        content.gear.flat[equipped]
+        stats
         for gear in fields(user.items.gear.equipped)
         if (equipped := getattr(user.items.gear.equipped, gear.name))
+        and (stats := content.gear.flat.get(equipped)) is not None
     ]
 
     equipment = sum(getattr(stats, attribute) for stats in equipped_gear)
