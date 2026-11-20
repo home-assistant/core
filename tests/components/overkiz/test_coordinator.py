@@ -196,6 +196,50 @@ async def test_rejected_credentials_are_retried_before_reauth(
     )
 
 
+async def test_rejected_credentials_at_setup_start_reauth_immediately(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Credentials rejected during setup are not retried."""
+    mock_client.fetch_events.side_effect = BadCredentialsError("Bad credentials")
+
+    entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+
+
+async def test_failed_relogin_keeps_the_retry_delay(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A rate limited relogin does not bring the polling back to the normal rate."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+
+    mock_client.fetch_events.side_effect = BadCredentialsError("Bad credentials")
+    mock_client.login.side_effect = TooManyRequestsError("Too many requests")
+    mock_client.fetch_events.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_client.fetch_events.await_count == 1
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_client.fetch_events.await_count == 1
+
+    freezer.tick(RATE_LIMIT_RETRY_AFTER - UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_client.fetch_events.await_count == 2
+
+
 async def test_persistently_rejected_credentials_start_reauth(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
