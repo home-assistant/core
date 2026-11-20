@@ -6,6 +6,14 @@
       }
     }
   },
+  "exceptions": {
+    "loop_timing_not_running": {
+      "message": "Event loop timing is not running."
+    },
+    "loop_timing_running": {
+      "message": "Event loop timing is already running."
+    }
+  },
   "services": {
     "dump_log_objects": {
       "description": "Lets the Profiler dump the repr of all matching objects to the log.",
@@ -99,7 +107,7 @@
       "description": "Lets the Profiler time every callback of the event loop and keep the slow ones, until stopped.",
       "fields": {
         "threshold": {
-          "description": "Callbacks that take longer than this are listed individually.",
+          "description": "Callbacks that take at least this long are listed individually.",
           "name": "Threshold"
         }
       },

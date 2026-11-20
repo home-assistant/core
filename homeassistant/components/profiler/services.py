@@ -26,18 +26,13 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_PROFILER, DOMAIN
-from .loop_timing import (
-    DEFAULT_THRESHOLD_MS,
-    MAX_THRESHOLD_MS,
-    LoopTiming,
-    format_report,
-)
+from .const import DATA_PROFILER, DOMAIN, LOOP_TIMING
+from .loop_timing import LoopTiming, format_report
 
 _LRU_CACHE_WRAPPER_OBJECT = _lru_cache_wrapper.__name__
 _SQLALCHEMY_LRU_OBJECT = "LRUCache"
@@ -55,7 +50,11 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_MAX_OBJECTS = 5
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
-LOOP_TIMING = "loop_timing"
+
+# asyncio's own idea of a slow callback in debug mode
+DEFAULT_THRESHOLD_MS = 100.0
+MAX_THRESHOLD_MS = 60_000
+LOOP_TIMING_NOTIFICATION = "profile_loop_timing"
 
 
 class ProfilerService(StrEnum):
@@ -292,12 +291,23 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     def _async_start_loop_timing(call: ServiceCall) -> None:
         nonlocal loop_timing
         if loop_timing is not None:
-            raise HomeAssistantError("Event loop timing already started")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="loop_timing_running"
+            )
         loop_timing = LoopTiming(
             hass.loop, call.data[ProfilerServiceArgument.THRESHOLD]
         )
         loop_timing.start()
         domain_data[LOOP_TIMING] = _async_unload_loop_timing
+        persistent_notification.async_create(
+            hass,
+            (
+                "Event loop timing has started and adds a little work to every"
+                " callback. Stop it when you are done."
+            ),
+            title="Event loop timing started",
+            notification_id=LOOP_TIMING_NOTIFICATION,
+        )
         _LOGGER.critical(
             "Event loop timing started, callbacks over %s ms are kept",
             call.data[ProfilerServiceArgument.THRESHOLD],
@@ -310,6 +320,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             loop_timing.stop()
             loop_timing = None
         domain_data.pop(LOOP_TIMING, None)
+        persistent_notification.async_dismiss(hass, LOOP_TIMING_NOTIFICATION)
 
     @callback
     def _async_unload_loop_timing() -> None:
@@ -336,7 +347,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     # Only a coroutine's return value reaches the caller of an admin service
     async def _async_stop_loop_timing(call: ServiceCall) -> ServiceResponse:
         if (ended := loop_timing) is None:
-            raise HomeAssistantError("Event loop timing not running")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="loop_timing_not_running"
+            )
         _async_end_loop_timing()
         report = _loop_timing_report(ended)
         _LOGGER.critical("Event loop timing stopped\n%s", format_report(report))
@@ -344,7 +357,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
     async def _async_dump_loop_timing(call: ServiceCall) -> ServiceResponse:
         if loop_timing is None:
-            raise HomeAssistantError("Event loop timing not running")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="loop_timing_not_running"
+            )
         report = _loop_timing_report(loop_timing)
         if call.return_response:
             return report

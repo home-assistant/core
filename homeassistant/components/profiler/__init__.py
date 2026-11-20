@@ -5,8 +5,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_PROFILER, DOMAIN
-from .services import LOG_INTERVAL_SUB, LOOP_TIMING, async_setup_services
+from .const import DATA_PROFILER, DOMAIN, LOOP_TIMING
+from .services import LOG_INTERVAL_SUB, async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

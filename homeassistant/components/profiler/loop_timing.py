@@ -1,13 +1,8 @@
 """Time the callbacks of the event loop.
 
-Every step of the event loop, a task step included, runs through
-asyncio.events.Handle._run. While timing is on, a wrapper around it charges
-the wall time of each callback to what ran: a task step to its coroutine
-and the class of its `self`, a HassJob to its target, anything else to its
-function or method and class, each split by the config entry whose context
-it runs in. The first step of an eager task runs inside the callback that
-created it and counts for that callback. While timing is off, Handle._run is
-the original.
+While timing is on, a wrapper around asyncio.events.Handle._run charges the
+wall time of each callback to what ran, split by config entry. The first step
+of an eager task counts for the callback that created it.
 """
 
 import asyncio
@@ -26,10 +21,6 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-# asyncio's own idea of a slow callback in debug mode
-DEFAULT_THRESHOLD_MS = 100.0
-# As in services.yaml; a callback over a minute is a stuck loop anyway
-MAX_THRESHOLD_MS = 60_000
 MAX_SLOW_CALLBACKS = 100
 # Only code compiled at runtime can add rows without bound
 MAX_ROWS = 10_000
@@ -90,8 +81,6 @@ class LoopTiming:
 
     def start(self) -> None:
         """Install the wrapper on Handle._run."""
-        if self._wrapper is not None:
-            return
         original = events.Handle._run  # noqa: SLF001
         loop = self._loop
         rows = self._rows
@@ -107,25 +96,24 @@ class LoopTiming:
                 row = rows[_OTHER] = _Row("other callbacks")
             return row
 
-        # One function with everything inline: it runs once per callback
+        # Inline on purpose: it runs once per callback
         def _run(handle: Any) -> None:
-            # Once stopped, a wrapper that something else wrapped in turn
-            # stays in the chain; it only passes calls on
+            # Once stopped, a wrapper that something else wrapped passes through
             if not active[0] or handle._loop is not loop:  # noqa: SLF001
                 original(handle)
                 return
             row: _Row
             key: _Key = _OTHER
-            # Nothing in here may escape into the loop, hence one wide try
+            # Nothing in here may escape into the loop
             try:
-                # Before the run: a callback that cancels its handle drops
-                # _callback, and a coroutine that finishes drops its frame
+                # Read before the run, which can drop _callback and the frame
                 func = handle._callback  # noqa: SLF001
                 owner = getattr(func, "__self__", None)
                 module = None
                 if isinstance(owner, task_type):
                     coro: Any = owner.get_coro()
                     code = getattr(coro, "cr_code", None)
+                    label_code = code
                     frame = getattr(coro, "cr_frame", None)
                     if frame is not None:
                         owner = frame.f_locals.get("self")
@@ -135,6 +123,11 @@ class LoopTiming:
                     if code is None:
                         # Not a coroutine: an async generator step, say
                         func = coro
+                    elif frame is not None and module is None:
+                        # Cython frames have no globals; the coroutine has the names
+                        func = coro
+                        module = getattr(coro, "__module__", None)
+                        label_code = None
                 else:
                     args = handle._args  # noqa: SLF001
                     if args and isinstance(args[-1], HassJob):
@@ -148,17 +141,14 @@ class LoopTiming:
                         func = type(func).__call__
                     func = getattr(func, "__func__", func)
                     code = getattr(func, "__code__", None)
+                    label_code = code
                     module = getattr(func, "__module__", None)
                 if owner is None or isinstance(owner, ModuleType):
                     cls = None
                 else:
                     cls = owner if isinstance(owner, type) else type(owner)
                 entry = handle._context.get(current_entry)  # noqa: SLF001
-                # Code objects compare by value, so two alike functions in
-                # different modules would share a row, and hashing one costs
-                # with its size: the id stands for it, and the row holds the
-                # object so the id stays its own. C code has no code object;
-                # module and qualified name must do.
+                # Code objects compare by value; the row keeps the object alive
                 key = (
                     id(code)
                     if code is not None
@@ -172,7 +162,7 @@ class LoopTiming:
                 if (found := rows.get(key)) is not None:
                     row = found
                 elif len(rows) < MAX_ROWS:
-                    row = rows[key] = _Row(_label(func, code, cls, module), code)
+                    row = rows[key] = _Row(_label(func, label_code, cls, module), code)
                 else:
                     key = _OTHER
                     row = _other_row()
@@ -215,8 +205,6 @@ class LoopTiming:
 
     def stop(self) -> None:
         """Remove the wrapper, if it is still in place."""
-        if self._wrapper is None:
-            return
         self._active[0] = False
         if events.Handle._run is self._wrapper:  # noqa: SLF001
             events.Handle._run = self._original  # type: ignore[method-assign, assignment]  # noqa: SLF001
