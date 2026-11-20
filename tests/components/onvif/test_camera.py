@@ -116,11 +116,17 @@ async def test_stream_uri_waiting_call_and_request_cancelled(
 ) -> None:
     """Test cancelling a waiting call and then the request itself."""
     _, _, device = await setup_onvif_integration(hass)
+    device.username = USERNAME
+    device.password = PASSWORD
     request_started = asyncio.Event()
+    calls = 0
 
     async def get_stream_uri(profile: Any) -> str:
-        request_started.set()
-        await asyncio.Event().wait()
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            request_started.set()
+            await asyncio.Event().wait()
         return "rtsp://1.2.3.4/stream"
 
     device.async_get_stream_uri = get_stream_uri
@@ -134,6 +140,12 @@ async def test_stream_uri_waiting_call_and_request_cancelled(
     with pytest.raises(asyncio.CancelledError):
         await cancelled
     first.cancel()
-    # Before, this raised InvalidStateError instead of CancelledError
     with pytest.raises(asyncio.CancelledError):
         await first
+
+    # The next call asks the camera again
+    assert (
+        await async_get_stream_source(hass, ENTITY_ID)
+        == f"rtsp://{USERNAME}:{PASSWORD}@1.2.3.4/stream"
+    )
+    assert calls == 2
