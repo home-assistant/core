@@ -411,14 +411,29 @@ async def test_sandbox_lives_with_chat_session(
 
 
 async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
-    """Test a chat session above the limit gets a sandbox for one call only."""
+    """Test runs wait for a sandbox when the maximum number is in use."""
+    api_instance = await _api_instance(hass, llm_context)
+    sandbox_counts: list[int] = []
+
+    async def run(value: int) -> int:
+        with chat_session.async_get_chat_session(hass, context=None):
+            result = await _execute(
+                api_instance,
+                f'await test__get_state(entity_id="light.room_{value}")\n{value}',
+            )
+        sandbox_counts.append(_sandbox_count())
+        return result.data["result"]
+
     with patch.object(code_mode_api, "MAX_SANDBOXES", 2):
-        for expected in (1, 2, 2):
-            api_instance = await _api_instance(hass, llm_context)
-            with chat_session.async_get_chat_session(hass, context=None):
-                result = await _execute(api_instance, "1")
-            assert result.data["result"] == 1
-            assert _sandbox_count() == expected
+        assert await asyncio.gather(*[run(value) for value in range(6)]) == [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+        ]
+    assert max(sandbox_counts) == 2
 
     async_fire_time_changed(
         hass,
@@ -427,7 +442,18 @@ async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -
     await hass.async_block_till_done()
 
     assert _sandbox_count() == 0
-    assert hass.data[code_mode_api.DATA_SANDBOXES] == set()
+    assert hass.data[code_mode_api.DATA_SANDBOXES].users == set()
+
+
+async def test_sandbox_stops_without_chat_session(
+    api_instance: llm.APIInstance, hass: HomeAssistant
+) -> None:
+    """Test the sandbox stops after a run outside a chat session."""
+    result = await _execute(api_instance, "1")
+    await hass.async_block_till_done()
+
+    assert result.data["result"] == 1
+    assert _sandbox_count() == 0
 
 
 async def test_sandbox_stops_with_home_assistant(

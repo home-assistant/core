@@ -5,6 +5,7 @@ import builtins
 from collections.abc import Callable, Coroutine
 from contextlib import AsyncExitStack
 from datetime import date, time, timedelta
+from functools import partial
 import json
 import keyword
 import re
@@ -14,7 +15,7 @@ import probatio
 from pydantic_monty import AsyncMonty, CollectString, MontyError, ResourceLimits
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv
 from homeassistant.helpers.llm import (
@@ -54,12 +55,23 @@ SEARCH_LIMIT = 10
 IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
 # Dicts in a parameter type are written with their keys up to this depth.
 MAX_TYPE_DEPTH = 3
-# Sandbox processes of one chat session, for execute calls that run in parallel.
-MAX_WORKERS = 4
-# Sandboxes that stay for a chat session. Above this, a sandbox runs only for one call.
+# Sandbox processes for all chat sessions. A run waits when all are in use.
 MAX_SANDBOXES = 10
 
-DATA_SANDBOXES: HassKey[set[AsyncExitStack]] = HassKey("llm_code_mode_sandboxes")
+
+class Sandboxes:
+    """The pool of sandbox processes and the users that keep it running."""
+
+    def __init__(self) -> None:
+        """Init the class."""
+        self.lock = asyncio.Lock()
+        self.pool: AsyncMonty | None = None
+        # IDs of chat sessions, and an object for each run outside a chat session.
+        self.users: set[object] = set()
+        self.async_stop: CALLBACK_TYPE | None = None
+
+
+DATA_SANDBOXES: HassKey[Sandboxes] = HassKey("llm_code_mode_sandboxes")
 
 PROMPT = (
     "The tools of this API are Python functions. "
@@ -227,6 +239,45 @@ def _python_type(schema: dict[str, Any], depth: int = MAX_TYPE_DEPTH) -> str:
     return _JSON_TYPES.get(str(json_type), "Any")
 
 
+async def _async_get_pool(hass: HomeAssistant) -> AsyncMonty:
+    """Return the pool of sandbox processes, and start it when it does not run."""
+    sandboxes = hass.data[DATA_SANDBOXES]
+    async with sandboxes.lock:
+        if sandboxes.pool is not None:
+            return sandboxes.pool
+        stack = AsyncExitStack()
+        pool = await stack.enter_async_context(
+            AsyncMonty(min_processes=0, max_processes=MAX_SANDBOXES)
+        )
+
+        async def _async_stop_on_close(_: Event) -> None:
+            sandboxes.pool = sandboxes.async_stop = None
+            await stack.aclose()
+
+        unsub = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, _async_stop_on_close
+        )
+
+        @callback
+        def _async_stop() -> None:
+            unsub()
+            hass.async_create_task(stack.aclose(), "code_mode_stop_sandboxes")
+
+        sandboxes.pool = pool
+        sandboxes.async_stop = _async_stop
+        return pool
+
+
+@callback
+def _async_release_pool(hass: HomeAssistant, user: object) -> None:
+    """Remove a user of the sandbox pool, and stop the pool after the last user."""
+    sandboxes = hass.data[DATA_SANDBOXES]
+    sandboxes.users.discard(user)
+    if not sandboxes.users and sandboxes.async_stop is not None:
+        sandboxes.async_stop()
+        sandboxes.pool = sandboxes.async_stop = None
+
+
 class SearchTool(Tool):
     """Tool that finds the functions that code can call."""
 
@@ -305,8 +356,6 @@ class ExecuteTool(Tool):
         """Init the class."""
         self._api_instance = api_instance
         self._functions = functions
-        self._pool: AsyncMonty | None = None
-        self._pool_lock = asyncio.Lock()
 
     @override
     async def async_call(
@@ -315,66 +364,30 @@ class ExecuteTool(Tool):
         tool_input: ToolInput,
         llm_context: LLMContext,
     ) -> ToolResult:
-        """Run the code in the sandbox of the chat session.
+        """Run the code in a sandbox.
 
-        Without a chat session, the sandbox runs only for this call.
+        The sandbox processes run until the chat sessions that used them are
+        cleaned up. Outside a chat session, they can stop after this call.
         """
         code = self.parameters(tool_input.tool_args)["code"]
         # The chat log keeps this tool between turns, so the tools must get
         # the context of the current turn.
         self._api_instance.llm_context = llm_context
+        session = chat_session.current_session.get()
+        user: object = session.conversation_id if session else object()
+        sandboxes = hass.data.setdefault(DATA_SANDBOXES, Sandboxes())
+        if (is_new_user := user not in sandboxes.users) and session:
+            session.async_on_cleanup(partial(_async_release_pool, hass, user))
+        sandboxes.users.add(user)
         try:
-            if (session := chat_session.current_session.get()) is not None and (
-                session_pool := await self._async_get_pool(hass, session)
-            ) is not None:
-                return await self._async_run(session_pool, code)
-            async with AsyncMonty(max_processes=1) as pool:
-                return await self._async_run(pool, code)
+            return await self._async_run(await _async_get_pool(hass), code)
         except (MontyError, OSError) as err:
             return ToolResult(
                 data={"error": str(err)[:MAX_ERROR_SIZE], "output": ""}, error=True
             )
-
-    async def _async_get_pool(
-        self, hass: HomeAssistant, session: chat_session.ChatSession
-    ) -> AsyncMonty | None:
-        """Return the sandbox of the chat session, which stops with the session.
-
-        Return None when the maximum number of sandboxes is in use.
-        """
-        sandboxes = hass.data.setdefault(DATA_SANDBOXES, set())
-        async with self._pool_lock:
-            if self._pool is not None:
-                return self._pool
-            if len(sandboxes) >= MAX_SANDBOXES:
-                return None
-            stack = AsyncExitStack()
-            sandboxes.add(stack)
-            try:
-                self._pool = await stack.enter_async_context(
-                    AsyncMonty(max_processes=MAX_WORKERS)
-                )
-            except BaseException:
-                sandboxes.discard(stack)
-                raise
-
-        async def _async_stop_on_close(_: Event) -> None:
-            sandboxes.discard(stack)
-            await stack.aclose()
-
-        unsub = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, _async_stop_on_close
-        )
-
-        @callback
-        def _async_stop() -> None:
-            self._pool = None
-            sandboxes.discard(stack)
-            unsub()
-            hass.async_create_task(stack.aclose(), "code_mode_stop_sandbox")
-
-        session.async_on_cleanup(_async_stop)
-        return self._pool
+        finally:
+            if is_new_user and not session:
+                _async_release_pool(hass, user)
 
     async def _async_run(self, pool: AsyncMonty, code: str) -> ToolResult:
         """Run the code in a sandbox of the pool."""
