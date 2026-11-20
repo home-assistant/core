@@ -56,12 +56,8 @@ jobs:
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
         run: |
           mkdir -p deterministic
-          BASE_REF=$(gh pr view "${PR_NUMBER}" --json baseRefName --jq '.baseRefName')
-          git fetch --no-tags origin "${BASE_REF}:refs/remotes/origin/${BASE_REF}"
-          git fetch --no-tags origin "refs/pull/${PR_NUMBER}/head:refs/remotes/origin/pr/${PR_NUMBER}/head"
-          BASE_SHA=$(git rev-parse "refs/remotes/origin/${BASE_REF}")
-          HEAD_SHA=$(git rev-parse "refs/remotes/origin/pr/${PR_NUMBER}/head")
-          git diff --no-ext-diff --unified=3 "${BASE_SHA}...${HEAD_SHA}" > deterministic/pr.diff
+          gh pr diff "${PR_NUMBER}" > deterministic/pr.diff
+          HEAD_SHA=$(gh pr view "${PR_NUMBER}" --json headRefOid --jq '.headRefOid')
           echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Run deterministic checks
         env:
