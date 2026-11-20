@@ -281,7 +281,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
-        vendor_id=(4874,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
