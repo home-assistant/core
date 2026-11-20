@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     CountrySelector,
@@ -46,6 +46,8 @@ from .const import (
     DEFAULT_WORKDAYS,
     DOMAIN,
     LOGGER,
+    SECTION_COUNTRY_SETTINGS,
+    SECTION_CUSTOM_HOLIDAYS,
 )
 
 
@@ -53,7 +55,7 @@ def add_province_and_language_to_schema(
     schema: probatio.Schema,
     country: str | None,
 ) -> probatio.Schema:
-    """Update schema with province from country."""
+    """Update schema with the country settings section."""
     if not country:
         return schema
 
@@ -113,12 +115,21 @@ def add_province_and_language_to_schema(
             ),
         }
 
-    return probatio.Schema(
-        {
-            **DATA_SCHEMA_OPT.schema,
+    if not (
+        country_settings_schema := {
             **language_schema,
             **province_schema,
             **category_schema,
+        }
+    ):
+        return schema
+
+    return probatio.Schema(
+        {
+            **schema.schema,
+            probatio.Optional(SECTION_COUNTRY_SETTINGS, default={}): section(
+                probatio.Schema(country_settings_schema), {"collapsed": True}
+            ),
         }
     )
 
@@ -136,7 +147,8 @@ def _is_valid_date_range(check_date: str, error: type[HomeAssistantError]) -> bo
 
 def validate_custom_dates(user_input: dict[str, Any]) -> None:
     """Validate custom dates for add/remove holidays."""
-    for add_date in user_input[CONF_ADD_HOLIDAYS]:
+    custom_holidays: dict[str, list[str]] = user_input[SECTION_CUSTOM_HOLIDAYS]
+    for add_date in custom_holidays[CONF_ADD_HOLIDAYS]:
         if (
             not _is_valid_date_range(add_date, AddDateRangeError)
             and dt_util.parse_date(add_date) is None
@@ -145,20 +157,19 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
-        language: str | None = user_input.get(CONF_LANGUAGE)
-        province = user_input.get(CONF_PROVINCE)
+        country_settings: dict[str, Any] = user_input.get(SECTION_COUNTRY_SETTINGS, {})
         obj_holidays = country_holidays(
             country=country,
-            subdiv=province,
+            subdiv=country_settings.get(CONF_PROVINCE),
             years=year,
-            language=language,
-            categories=[PUBLIC, *user_input.get(CONF_CATEGORY, [])],
+            language=country_settings.get(CONF_LANGUAGE),
+            categories=[PUBLIC, *country_settings.get(CONF_CATEGORY, [])],
         )
 
     else:
         obj_holidays = HolidayBase(years=year)
 
-    for remove_date in user_input[CONF_REMOVE_HOLIDAYS]:
+    for remove_date in custom_holidays[CONF_REMOVE_HOLIDAYS]:
         if (
             not _is_valid_date_range(remove_date, RemoveDateRangeError)
             and dt_util.parse_date(remove_date) is None
@@ -188,21 +199,28 @@ DATA_SCHEMA_OPT = probatio.Schema(
         probatio.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
         ),
-        probatio.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
-            SelectSelectorConfig(
-                options=[],
-                multiple=True,
-                custom_value=True,
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        ),
-        probatio.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
-            SelectSelectorConfig(
-                options=[],
-                multiple=True,
-                custom_value=True,
-                mode=SelectSelectorMode.DROPDOWN,
-            )
+        probatio.Optional(SECTION_CUSTOM_HOLIDAYS, default={}): section(
+            probatio.Schema(
+                {
+                    probatio.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[],
+                            multiple=True,
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    probatio.Optional(CONF_REMOVE_HOLIDAYS, default=[]): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[],
+                            multiple=True,
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -211,8 +229,8 @@ DATA_SCHEMA_OPT = probatio.Schema(
 class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Workday integration."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     data: dict[str, Any] = {}
 
@@ -279,12 +297,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                 CONF_OFFSET: combined_input[CONF_OFFSET],
                 CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
-                CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
-                CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
+                SECTION_CUSTOM_HOLIDAYS: combined_input[SECTION_CUSTOM_HOLIDAYS],
             }
-            if CONF_CATEGORY in combined_input:
-                abort_match[CONF_CATEGORY] = combined_input[CONF_CATEGORY]
+            if SECTION_COUNTRY_SETTINGS in combined_input:
+                abort_match[SECTION_COUNTRY_SETTINGS] = combined_input[
+                    SECTION_COUNTRY_SETTINGS
+                ]
             LOGGER.debug("abort_check in options with %s", combined_input)
             self._async_abort_entries_match(abort_match)
 
@@ -295,7 +313,8 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
                 name = DEFAULT_NAME
                 if (country := combined_input.get(CONF_COUNTRY)) is not None:
                     name += f" {country}"
-                if (province := combined_input.get(CONF_PROVINCE)) is not None:
+                country_settings = combined_input.get(SECTION_COUNTRY_SETTINGS, {})
+                if (province := country_settings.get(CONF_PROVINCE)) is not None:
                     name += f" {province}"
                 return self.async_create_entry(
                     title=name,
@@ -330,9 +349,6 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
 
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.config_entry.options, **user_input}
-            if CONF_PROVINCE not in user_input:
-                # Province not present, delete old value (if present) too
-                combined_input.pop(CONF_PROVINCE, None)
 
             try:
                 await self.hass.async_add_executor_job(
@@ -353,12 +369,12 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
                     CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                     CONF_OFFSET: combined_input[CONF_OFFSET],
                     CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
-                    CONF_ADD_HOLIDAYS: combined_input[CONF_ADD_HOLIDAYS],
-                    CONF_REMOVE_HOLIDAYS: combined_input[CONF_REMOVE_HOLIDAYS],
-                    CONF_PROVINCE: combined_input.get(CONF_PROVINCE),
+                    SECTION_CUSTOM_HOLIDAYS: combined_input[SECTION_CUSTOM_HOLIDAYS],
                 }
-                if CONF_CATEGORY in combined_input:
-                    abort_match[CONF_CATEGORY] = combined_input[CONF_CATEGORY]
+                if SECTION_COUNTRY_SETTINGS in combined_input:
+                    abort_match[SECTION_COUNTRY_SETTINGS] = combined_input[
+                        SECTION_COUNTRY_SETTINGS
+                    ]
                 try:
                     self._async_abort_entries_match(abort_match)
                 except AbortFlow as err:
