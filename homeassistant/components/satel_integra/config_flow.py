@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 import probatio
-from satel_integra import AsyncSatel
+from satel_integra import AsyncSatel, SatelPartitionInfo, SatelZoneInfo
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -49,6 +49,8 @@ from .const import (
 from .coordinator import SatelConfigEntry
 
 _LOGGER = logging.getLogger(__package__)
+
+type ScanResult = tuple[list[SatelPartitionInfo], list[SatelZoneInfo]]
 
 CONNECTION_SCHEMA = probatio.Schema(
     {
@@ -119,6 +121,46 @@ ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
 SWITCHABLE_OUTPUT_SCHEMA = probatio.Schema({probatio.Required(CONF_NAME): cv.string})
 
 
+def _scan_result_to_subentries(result: ScanResult) -> list[ConfigSubentryData]:
+    """Convert eligible discovery results into initial configuration."""
+    partitions, zones = result
+    subentries: list[ConfigSubentryData] = []
+    for partition in partitions:
+        number = partition.device_number
+        label = f"Partition {number}"
+        subentries.append(
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_PARTITION,
+                unique_id=f"{SUBENTRY_TYPE_PARTITION}_{number}",
+                title=f"{label}: {partition.name}" if partition.name else label,
+                data={
+                    CONF_PARTITION_NUMBER: number,
+                    CONF_NAME: partition.name or label,
+                    CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
+                },
+            )
+        )
+    for zone in zones:
+        if zone.partition_assignment is None:
+            continue
+        number = zone.device_number
+        label = f"Zone {number}"
+        subentries.append(
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ZONE,
+                unique_id=f"{SUBENTRY_TYPE_ZONE}_{number}",
+                title=f"{label}: {zone.name}" if zone.name else label,
+                data={
+                    CONF_ZONE_NUMBER: number,
+                    CONF_NAME: zone.name or label,
+                    CONF_ZONE_TYPE: None,
+                    CONF_ENABLE_TEMPERATURE_SENSOR: False,
+                },
+            )
+        )
+    return subentries
+
+
 async def _async_validate_zone_temperature_sensor(
     entry: SatelConfigEntry, zone_number: int
 ) -> dict[str, str]:
@@ -150,7 +192,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 3
 
     _connection_data: dict[str, Any]
-    _scan_task: asyncio.Task[list[ConfigSubentryData] | None] | None = None
+    _scan_task: asyncio.Task[ScanResult | None] | None = None
 
     @staticmethod
     @callback
@@ -251,14 +293,15 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_scan(
         self, *, scan_partitions: bool, scan_zones: bool
-    ) -> list[ConfigSubentryData] | None:
+    ) -> ScanResult | None:
         """Discover selected resources using one temporary connection."""
         controller = AsyncSatel(
             self._connection_data[CONF_HOST],
             self._connection_data[CONF_PORT],
             integration_key=self._connection_data[CONF_ENCRYPTION_KEY],
         )
-        subentries: list[ConfigSubentryData] = []
+        partitions: list[SatelPartitionInfo] = []
+        zones: list[SatelZoneInfo] = []
         stages = int(scan_partitions) + int(scan_zones)
         try:
             await controller.connect(raise_exceptions=True)
@@ -269,53 +312,19 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         completed / total / stages
                     )
                 )
-                for partition in partitions:
-                    number = partition.device_number
-                    label = f"Partition {number}"
-                    subentries.append(
-                        ConfigSubentryData(
-                            subentry_type=SUBENTRY_TYPE_PARTITION,
-                            unique_id=f"{SUBENTRY_TYPE_PARTITION}_{number}",
-                            title=f"{label}: {partition.name}"
-                            if partition.name
-                            else label,
-                            data={
-                                CONF_PARTITION_NUMBER: number,
-                                CONF_NAME: partition.name or label,
-                                CONF_ARM_HOME_MODE: int(DEFAULT_CONF_ARM_HOME_MODE),
-                            },
-                        )
-                    )
+
             if scan_zones:
                 zones = await controller.scan_zones(
                     on_progress=lambda completed, total: self.async_update_progress(
                         (int(scan_partitions) + completed / total) / stages
                     )
                 )
-                for zone in zones:
-                    if zone.partition_assignment is None:
-                        continue
-                    number = zone.device_number
-                    label = f"Zone {number}"
-                    subentries.append(
-                        ConfigSubentryData(
-                            subentry_type=SUBENTRY_TYPE_ZONE,
-                            unique_id=f"{SUBENTRY_TYPE_ZONE}_{number}",
-                            title=f"{label}: {zone.name}" if zone.name else label,
-                            data={
-                                CONF_ZONE_NUMBER: number,
-                                CONF_NAME: zone.name or label,
-                                CONF_ZONE_TYPE: None,
-                                CONF_ENABLE_TEMPERATURE_SENSOR: False,
-                            },
-                        )
-                    )
         except SatelIntegraError as err:
             _LOGGER.debug("Discovery scan failed: %s", err)
             return None
         finally:
             await controller.close()
-        return subentries
+        return partitions, zones
 
     async def async_step_finish_scan(
         self, user_input: dict[str, Any] | None = None
@@ -325,13 +334,12 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_create_panel_entry()
 
         assert self._scan_task is not None
-        subentries = self._scan_task.result()
+        result = self._scan_task.result()
+        subentries = _scan_result_to_subentries(result) if result is not None else []
         if not subentries:
             return self.async_show_form(
                 step_id="finish_scan",
-                errors={
-                    "base": "scan_failed" if subentries is None else "nothing_found"
-                },
+                errors={"base": "scan_failed" if result is None else "nothing_found"},
             )
         return self._async_create_panel_entry(subentries)
 
