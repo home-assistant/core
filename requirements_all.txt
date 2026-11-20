@@ -774,7 +774,7 @@ bring-api==1.1.2
 broadlink-async==1.3.0
 
 # homeassistant.components.brother
-brother==6.2.0
+brother==7.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
