@@ -154,8 +154,7 @@ class GEMSensor(SensorEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listener from the sensor."""
-        if self._sensor:
-            self._sensor.remove_listener(self.async_write_ha_state)
+        self._sensor.remove_listener(self.async_write_ha_state)
 
 
 class CurrentSensor(GEMSensor):

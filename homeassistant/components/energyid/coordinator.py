@@ -152,12 +152,16 @@ class EnergyIDDirectiveCoordinator(DataUpdateCoordinator[EnergyIDDirectivesData]
     def _schedule_signal_change(self) -> None:
         """Notify entities at the next signal change without an API request."""
         self._cancel_signal_change()
-        if self._shutdown_requested or not self.last_update_success or not self.data:
+        if (
+            self._shutdown_requested
+            or not self.last_update_success
+            or (data := self.data_or_none) is None
+        ):
             return
         now = dt_util.utcnow()
         changes = [
             change
-            for snapshot in self.data.schedules.values()
+            for snapshot in data.schedules.values()
             if (change := snapshot.state_at(now).next_change) is not None
         ]
         if changes:
