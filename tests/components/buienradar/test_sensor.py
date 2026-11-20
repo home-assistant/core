@@ -42,7 +42,7 @@ async def test_smoke_test_setup_component(
         assert hass.states.get(entity_ids[cond]).state == value
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_data")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_feeds")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
