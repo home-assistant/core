@@ -252,18 +252,6 @@ print("checked", len(states))
     assert len(state_tool.calls) == 10
 
 
-async def test_tool_error_result_is_marked(api_instance: llm.APIInstance) -> None:
-    """Test a tool result with the error flag gives the code an error dict."""
-    result = await _execute(
-        api_instance, 'await test__get_state(entity_id="light.failed")'
-    )
-
-    assert result.data["result"] == {
-        "error": "ToolError",
-        "data": {"reason": "No power"},
-    }
-
-
 async def test_modules_without_import(api_instance: llm.APIInstance) -> None:
     """Test the code can use the listed modules without an import."""
     result = await _execute(
@@ -285,16 +273,35 @@ states = await asyncio.gather(
     assert result.data["result"] == [["on", "off"], '{"a": 1}', 2, "2026-01-02", "bb"]
 
 
-async def test_tool_error_is_returned_to_code(api_instance: llm.APIInstance) -> None:
-    """Test a failing tool gives the code an error dict."""
+@pytest.mark.parametrize(
+    ("entity_id", "message"),
+    [
+        ("light.broken", "HomeAssistantError: Light is broken"),
+        # A tool result with the error flag.
+        ("light.failed", '{"reason": "No power"}'),
+    ],
+)
+async def test_tool_error_raises_in_code(
+    api_instance: llm.APIInstance, entity_id: str, message: str
+) -> None:
+    """Test a failing tool raises an exception that the code can catch."""
     result = await _execute(
-        api_instance, 'await test__get_state(entity_id="light.broken")'
+        api_instance,
+        f"""
+try:
+    await test__get_state(entity_id="{entity_id}")
+except Exception as err:
+    caught = [type(err).__name__, str(err)]
+caught
+""",
     )
+    assert result.data["result"] == ["Exception", message]
 
-    assert result.data["result"] == {
-        "error": "HomeAssistantError",
-        "error_text": "Light is broken",
-    }
+    result = await _execute(
+        api_instance, f'await test__get_state(entity_id="{entity_id}")'
+    )
+    assert result.error is True
+    assert result.data["error"] == f"Exception: {message}"
 
 
 @pytest.mark.parametrize(
@@ -326,10 +333,10 @@ async def test_arguments_too_large(
         'await test__get_state(entity_id="light.room_1", attributes=x)',
     )
 
-    assert result.data["result"] == {
-        "error": "ValueError",
-        "error_text": "The arguments are too large or nested too deep.",
-    }
+    assert result.error is True
+    assert result.data["error"] == (
+        "Exception: The arguments are too large or nested too deep"
+    )
     assert state_tool.calls == []
 
 

@@ -69,7 +69,6 @@ PROMPT = (
     "Do not guess the name or the parameters of a function.\n"
     "- Every function is async and takes keyword arguments: "
     "`result = await name(param=value)`. The result is a dict.\n"
-    "- A call that fails does not raise. Its result has the key `error`.\n"
     '- A parameter type like `{"key": str, "other"?: int}` is a dict with '
     "those keys. A key with `?` is optional.\n"
     "- The modules `asyncio`, `datetime`, `json`, `math` and `re` are already "
@@ -121,6 +120,14 @@ def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
         tools=[SearchTool(functions), ExecuteTool(api_instance, functions)],
         custom_serializer=api_instance.custom_serializer,
     )
+
+
+class ToolError(Exception):
+    """Error that a failed tool call raises in the code.
+
+    The sandbox does not have the error classes of Home Assistant. The code
+    gets an Exception with the message of this error.
+    """
 
 
 class ToolFunction:
@@ -176,17 +183,16 @@ class ToolFunction:
                 result = await self._api_instance.async_call_tool(
                     ToolInput(tool_name=self._tool_name, tool_args=tool_args)
                 )
-            except ValueError:
-                return {
-                    "error": "ValueError",
-                    "error_text": "The arguments are too large or nested too deep.",
-                }
+            except ValueError as err:
+                raise ToolError(
+                    "The arguments are too large or nested too deep"
+                ) from err
             except (HomeAssistantError, probatio.Invalid) as err:
-                return {"error": type(err).__name__, "error_text": str(err)}
+                raise ToolError(f"{type(err).__name__}: {err}") from err
             finally:
                 tasks.discard(task)
             if result.error:
-                return {"error": "ToolError", "data": result.data}
+                raise ToolError(json.dumps(result.data))
             return result.data
 
         return call_tool
