@@ -330,23 +330,6 @@ async def test_sandbox(api_instance: llm.APIInstance, code: str, error: str) -> 
     assert error in result.data["error"]
 
 
-async def test_arguments_too_large(
-    api_instance: llm.APIInstance, state_tool: GetStateTool
-) -> None:
-    """Test a tool is not called with arguments that are too large."""
-    result = await _execute(
-        api_instance,
-        "x = [1]\nfor _ in range(60):\n    x = [x, x]\n"
-        'await test__get_state(entity_id="light.room_1", attributes=x)',
-    )
-
-    assert result.error is True
-    assert result.data["error"] == (
-        "Exception: The arguments are too large or nested too deep"
-    )
-    assert state_tool.calls == []
-
-
 async def test_error_size_limit(api_instance: llm.APIInstance) -> None:
     """Test a large error message of the code is cut."""
     result = await _execute(api_instance, "raise ValueError('a' * 1000000)")

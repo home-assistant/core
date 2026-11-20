@@ -208,17 +208,9 @@ class ToolFunction:
             assert task is not None
             tasks.add(task)
             try:
-                # The arguments can contain the same list many times, like
-                # the result of the code.
-                tool_args = _json_value(kwargs, [MAX_RESULT_SIZE], MAX_RESULT_DEPTH)
-                assert isinstance(tool_args, dict)
                 result = await self._api_instance.async_call_tool(
-                    ToolInput(tool_name=self._tool_name, tool_args=tool_args)
+                    ToolInput(tool_name=self._tool_name, tool_args=kwargs)
                 )
-            except ValueError as err:
-                raise ToolError(
-                    "The arguments are too large or nested too deep"
-                ) from err
             except (HomeAssistantError, probatio.Invalid) as err:
                 raise ToolError(f"{type(err).__name__}: {err}") from err
             finally:
