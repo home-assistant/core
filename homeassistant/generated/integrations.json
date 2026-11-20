@@ -11757,6 +11757,17 @@
       ],
       "supported_by": "neopool"
     },
+    "poolwatch_neopool": {
+      "name": "Poolwatch",
+      "integration_type": "virtual",
+      "categories": [
+        "water.pools_spas"
+      ],
+      "connectivity": [
+        "modbus"
+      ],
+      "supported_by": "neopool"
+    },
     "portainer": {
       "name": "Portainer",
       "integration_type": "service",
@@ -15470,15 +15481,29 @@
     },
     "tile": {
       "name": "Tile",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.trackers"
-      ],
-      "connectivity": [
-        "cloud"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "tile": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "connectivity": [
+            "cloud"
+          ],
+          "name": "Tile"
+        },
+        "tile_ble": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "presence_location.trackers"
+          ],
+          "name": "Tile BLE"
+        }
+      }
     },
     "tilt": {
       "name": "Tilt",

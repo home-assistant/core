@@ -6,12 +6,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import (
-    ATTR_PRESET_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.components.climate import ClimateService, ClimateServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -38,8 +34,11 @@ async def test_set_temperature(
 
     await hass.services.async_call(
         "climate",
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.zone_1", ATTR_TEMPERATURE: 22.0},
+        ClimateService.SET_TEMPERATURE,
+        {
+            TargetKey.ENTITY_ID: "climate.zone_1",
+            ClimateServiceArgument.TEMPERATURE: 22.0,
+        },
         blocking=True,
     )
 
@@ -73,8 +72,11 @@ async def test_set_temperature_error(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.zone_1", ATTR_TEMPERATURE: 22.0},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: "climate.zone_1",
+                ClimateServiceArgument.TEMPERATURE: 22.0,
+            },
             blocking=True,
         )
 
@@ -87,8 +89,11 @@ async def test_set_preset_mode(
     """Test setting the preset mode."""
     await hass.services.async_call(
         "climate",
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.zone_1", ATTR_PRESET_MODE: "sleep"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.zone_1",
+            ClimateServiceArgument.PRESET_MODE: "sleep",
+        },
         blocking=True,
     )
 
@@ -127,7 +132,10 @@ async def test_set_preset_mode_error(
     ):
         await hass.services.async_call(
             "climate",
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.zone_1", ATTR_PRESET_MODE: "sleep"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.zone_1",
+                ClimateServiceArgument.PRESET_MODE: "sleep",
+            },
             blocking=True,
         )
