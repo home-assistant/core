@@ -1,6 +1,7 @@
 """Support for Iperf3 network measurement tool."""
 
 import logging
+import threading
 
 import iperf3
 import probatio
@@ -46,6 +47,9 @@ from .const import (
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+# libiperf and the iperf3 wrapper are not thread safe
+_TEST_LOCK = threading.Lock()
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -138,6 +142,7 @@ class Iperf3Data:
         self._hass = hass
         self._host = host
         self.data = {ATTR_DOWNLOAD: None, ATTR_UPLOAD: None, ATTR_VERSION: None}
+        self._update_lock = threading.Lock()
 
     def create_client(self):
         """Create a new iperf3 client to use for measurement."""
@@ -167,6 +172,21 @@ class Iperf3Data:
 
     def update(self, now=None):
         """Get the latest data from iperf3."""
+        # pylint: disable-next=consider-using-with
+        if not self._update_lock.acquire(blocking=False):
+            _LOGGER.warning(
+                "Skipping update, the previous iperf3 test of %s is still running",
+                self.host,
+            )
+            return
+        try:
+            with _TEST_LOCK:
+                self._update()
+        finally:
+            self._update_lock.release()
+
+    def _update(self):
+        """Run the download and upload tests and store the results."""
         if self.protocol == "udp":
             # UDP only have 1 way attribute
             result = self._run_test(ATTR_DOWNLOAD)
