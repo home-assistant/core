@@ -166,7 +166,11 @@ class ToolFunction:
         self._api_instance = api_instance
         self._tool_name = tool.name
         self.name = name
-        self.description = tool.description or ""
+        # The title can be the only text that says what the tool does, like
+        # the name that a user gave a script.
+        self.description = ". ".join(
+            text for text in (tool.title, tool.description) if text
+        )
         schema = probatio.to_openapi(
             tool.parameters,
             custom_serializer=api_instance.custom_serializer,

@@ -23,6 +23,7 @@ class GetStateTool(llm.Tool):
     """Tool that returns a fake state."""
 
     name = "test__get-state"
+    title = "Read a light"
     description = "Get the state\nof an entity"
     parameters = probatio.Schema(
         {
@@ -158,11 +159,15 @@ async def test_search(api_instance: llm.APIInstance) -> None:
     attributes: list[Literal['brightness', 'color']] = None,
     retries: int | None = None,
 ) -> dict:
-    \"\"\"Get the state of an entity\"\"\""""
+    \"\"\"Read a light. Get the state of an entity\"\"\""""
+    )
+    # The title of a tool is part of the search.
+    assert (await _search(api_instance, "read light"))[0].startswith(
+        "async def test__get_state("
     )
     assert (await _search(api_instance, "GetDateTime"))[0] == (
         "async def llm__GetDateTime() -> dict:\n"
-        '    """Provides the current date and time."""'
+        '    """Get date and time. Provides the current date and time."""'
     )
     assert await _search(api_instance, "vacuum") == []
 
