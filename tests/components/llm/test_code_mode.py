@@ -171,6 +171,57 @@ async def test_search(api_instance: llm.APIInstance) -> None:
     assert await _search(api_instance, "vacuum") == []
 
 
+@pytest.mark.parametrize(
+    ("title", "query"),
+    [
+        ("Включить свет", "включить свет"),
+        ("Küche aufräumen", "küche"),
+        ("打开灯", "打开灯"),
+    ],
+)
+async def test_search_other_languages(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    conversation_id: str,
+    title: str,
+    query: str,
+) -> None:
+    """Test search finds a tool by a title that is not in English."""
+
+    class TitledTool(llm.Tool):
+        """Tool with a title, like a script that a user named."""
+
+        name = "script__s1"
+        integration = "test"
+
+        @override
+        async def async_call(
+            self,
+            hass: HomeAssistant,
+            tool_input: llm.ToolInput,
+            llm_context: llm.LLMContext,
+        ) -> llm.ToolResult:
+            """Return nothing."""
+            return llm.ToolResult(data={})
+
+    tool = TitledTool()
+    tool.title = title
+    api_instance = code_mode_api.async_create_api_instance(
+        llm.APIInstance(
+            api=TestAPI(hass, tool),
+            api_prompt="",
+            llm_context=llm_context,
+            tools=[tool],
+        ),
+        conversation_id,
+    )
+
+    assert await _search(api_instance, query) == [
+        f'async def script__s1() -> dict:\n    """{title}"""'
+    ]
+    assert await _search(api_instance, "vacuum") == []
+
+
 async def test_nested_parameters(
     hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> None:

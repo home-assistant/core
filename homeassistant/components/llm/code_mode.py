@@ -82,6 +82,11 @@ PROMPT = (
     "do not exist.\n"
 )
 
+# The places in a name like HassTurnOn or llm__GetDateTime2 where a word starts.
+_CAMEL_CASE = re.compile(
+    r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[A-Za-z])(?=\d)"
+)
+
 _JSON_TYPES = {
     "string": "str",
     "integer": "int",
@@ -334,9 +339,7 @@ class SearchTool(Tool):
 
 def _words(text: str) -> list[str]:
     """Split text into lower case words, also at camel case and underscores."""
-    return [
-        word.lower() for word in re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+", text)
-    ]
+    return [word.lower() for word in re.findall(r"[^\W_]+", _CAMEL_CASE.sub(" ", text))]
 
 
 class ExecuteTool(Tool):
