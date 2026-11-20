@@ -14,7 +14,6 @@ from homeassistant.components.llm import code_mode as code_mode_api
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv, llm
-from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -445,24 +444,20 @@ async def test_sandbox_stops_with_home_assistant(
 
 
 async def test_result_is_json(api_instance: llm.APIInstance) -> None:
-    """Test values that JSON cannot represent are converted."""
-    result = await _execute(
-        api_instance,
-        "{'items': (1, 2), 'ids': {1}, (1, 2): None, 'kind': type(1), "
-        "'big': 2**100, 'max': 2**64 - 1, 'min': -(2**63)}",
-    )
+    """Test the result is converted with the JSON encoder of Home Assistant."""
+    result = await _execute(api_instance, "{'items': (1, 2), 'ids': {1}, 5: 'five'}")
 
-    assert result.data["result"] == {
-        "items": [1, 2],
-        "ids": [1],
-        "(1, 2)": None,
-        "kind": "<class 'int'>",
-        "big": "1267650600228229401496703205376",
-        "max": 2**64 - 1,
-        "min": -(2**63),
-    }
-    # The JSON encoder of Home Assistant accepts the result.
-    json_dumps(result.data)
+    assert result.data["result"] == {"items": [1, 2], "ids": [1], "5": "five"}
+
+
+@pytest.mark.parametrize("code", ["{(1, 2): None}", "2**100", "type(1)", "b'abc'"])
+async def test_result_is_not_json(api_instance: llm.APIInstance, code: str) -> None:
+    """Test a result that JSON cannot represent gives an error."""
+    result = await _execute(api_instance, f"print('ran')\n{code}")
+
+    assert result.error is True
+    assert result.data["error"].startswith("The result cannot be converted to JSON: ")
+    assert result.data["output"] == "ran\n"
 
 
 async def test_python_names_are_unique(

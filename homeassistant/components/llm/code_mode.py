@@ -17,6 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, config_validation as cv
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.llm import (
     APIInstance,
     LLMContext,
@@ -26,7 +27,7 @@ from homeassistant.helpers.llm import (
     ToolResult,
 )
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.json import JsonObjectType, JsonValueType
+from homeassistant.util.json import JsonObjectType, json_loads
 
 from .const import DOMAIN
 
@@ -40,9 +41,6 @@ LIMITS = ResourceLimits(
 MAX_OUTPUT_BYTES = 64 * 1024
 # Code can raise an error with a message of any size.
 MAX_ERROR_SIZE = 4096
-# The JSON encoder of Home Assistant fails on integers outside this range.
-MIN_JSON_INT = -(2**63)
-MAX_JSON_INT = 2**64 - 1
 SEARCH_LIMIT = 10
 # Modules that the code can use without an import.
 IMPORTED_MODULES = ("asyncio", "datetime", "json", "math", "re")
@@ -413,24 +411,15 @@ class ExecuteTool(Tool):
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        return ToolResult(data={"result": _to_json(result), "output": output.output})
-
-
-def _to_json(value: Any) -> JsonValueType:
-    """Return the result of the code as a value that the JSON encoder accepts.
-
-    The code can return values that JSON cannot represent, such as sets and
-    dicts with tuple keys.
-    """
-    if isinstance(value, int) and not MIN_JSON_INT <= value <= MAX_JSON_INT:
-        return str(value)
-    if value is None or isinstance(value, (bool, int, float, str)):
-        return value
-    if isinstance(value, dict):
-        return {
-            key if isinstance(key, str) else str(key): _to_json(item)
-            for key, item in value.items()
-        }
-    if isinstance(value, (list, tuple, set, frozenset)):
-        return [_to_json(item) for item in value]
-    return str(value)
+        try:
+            # The code can return values that are not JSON, such as a set.
+            json_result = json_loads(json_bytes(result))
+        except TypeError as err:
+            return ToolResult(
+                data={
+                    "error": f"The result cannot be converted to JSON: {err}",
+                    "output": output.output,
+                },
+                error=True,
+            )
+        return ToolResult(data={"result": json_result, "output": output.output})
