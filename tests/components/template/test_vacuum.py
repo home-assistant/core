@@ -16,7 +16,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import template, vacuum
 from homeassistant.components.template.vacuum import CONF_CLEAN_SEGMENTS, CONF_SEGMENTS
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     Segment,
     VacuumActivity,
     VacuumEntityCapabilityAttribute,
@@ -105,7 +104,7 @@ def _verify(
     state = hass.states.get(TEST_VACUUM.entity_id)
     attributes = state.attributes
     assert state.state == expected_state
-    assert attributes.get(ATTR_FAN_SPEED) == expected_fan_speed
+    assert attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == expected_fan_speed
 
 
 @pytest.fixture
@@ -786,11 +785,11 @@ async def test_empty_action_config(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
-        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
-        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
-        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
-        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+        (vacuum.VacuumService.START, VacuumActivity.CLEANING),
+        (vacuum.VacuumService.PAUSE, VacuumActivity.PAUSED),
+        (vacuum.VacuumService.STOP, VacuumActivity.IDLE),
+        (vacuum.VacuumService.RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.VacuumService.CLEAN_SPOT, VacuumActivity.CLEANING),
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
@@ -836,11 +835,11 @@ async def test_assumed_optimistic(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
-        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
-        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
-        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
-        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+        (vacuum.VacuumService.START, VacuumActivity.CLEANING),
+        (vacuum.VacuumService.PAUSE, VacuumActivity.PAUSED),
+        (vacuum.VacuumService.STOP, VacuumActivity.IDLE),
+        (vacuum.VacuumService.RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.VacuumService.CLEAN_SPOT, VacuumActivity.CLEANING),
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")
@@ -900,11 +899,11 @@ async def test_optimistic_option(
 @pytest.mark.parametrize(
     "service",
     [
-        vacuum.SERVICE_START,
-        vacuum.SERVICE_PAUSE,
-        vacuum.SERVICE_STOP,
-        vacuum.SERVICE_RETURN_TO_BASE,
-        vacuum.SERVICE_CLEAN_SPOT,
+        vacuum.VacuumService.START,
+        vacuum.VacuumService.PAUSE,
+        vacuum.VacuumService.STOP,
+        vacuum.VacuumService.RETURN_TO_BASE,
+        vacuum.VacuumService.CLEAN_SPOT,
     ],
 )
 @pytest.mark.usefixtures("setup_vacuum")

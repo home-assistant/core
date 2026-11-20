@@ -9,16 +9,11 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,7 +48,7 @@ async def test_platform_setup_and_discovery(
         (
             "sd_i6hyjg3af7doaswm",
             "vacuum.hoover",
-            SERVICE_RETURN_TO_BASE,
+            VacuumService.RETURN_TO_BASE,
             {},
             {"code": "mode", "value": "chargego"},
         ),
@@ -61,42 +56,42 @@ async def test_platform_setup_and_discovery(
             # Based on #141278
             "sd_lr33znaodtyarrrz",
             "vacuum.v20",
-            SERVICE_RETURN_TO_BASE,
+            VacuumService.RETURN_TO_BASE,
             {},
             {"code": "switch_charge", "value": True},
         ),
         (
             "sd_lr33znaodtyarrrz",
             "vacuum.v20",
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "gentle"},
+            VacuumService.SET_FAN_SPEED,
+            {VacuumServiceArgument.FAN_SPEED: "gentle"},
             {"code": "suction", "value": "gentle"},
         ),
         (
             "sd_i6hyjg3af7doaswm",
             "vacuum.hoover",
-            SERVICE_LOCATE,
+            VacuumService.LOCATE,
             {},
             {"code": "seek", "value": True},
         ),
         (
             "sd_i6hyjg3af7doaswm",
             "vacuum.hoover",
-            SERVICE_START,
+            VacuumService.START,
             {},
             {"code": "power_go", "value": True},
         ),
         (
             "sd_i6hyjg3af7doaswm",
             "vacuum.hoover",
-            SERVICE_STOP,
+            VacuumService.STOP,
             {},
             {"code": "power_go", "value": False},
         ),
         (
             "sd_lr33znaodtyarrrz",
             "vacuum.v20",
-            SERVICE_PAUSE,
+            VacuumService.PAUSE,
             {},
             {"code": "pause", "value": True},
         ),
@@ -121,7 +116,7 @@ async def test_action(
         VACUUM_DOMAIN,
         service,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             **service_data,
         },
         blocking=True,

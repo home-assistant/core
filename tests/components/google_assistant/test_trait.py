@@ -446,7 +446,7 @@ async def test_dock_vacuum(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {"isDocked": False}
 
-    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_RETURN_TO_BASE)
+    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.RETURN_TO_BASE)
     await trt.execute(trait.COMMAND_DOCK, BASIC_DATA, {}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
@@ -473,7 +473,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {}
 
-    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_LOCATE)
+    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.LOCATE)
     await trt.execute(trait.COMMAND_LOCATE, BASIC_DATA, {"silence": False}, {})
     assert len(calls) == 1
     assert calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
@@ -530,12 +530,14 @@ async def test_startstop_vacuum(
 
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
-    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
+    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.START)
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
-    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    start_calls = async_mock_service(
+        hass, vacuum.DOMAIN, vacuum.VacuumService.CLEAN_AREA
+    )
     await trt.execute(
         trait.COMMAND_START_STOP, BASIC_DATA, {"start": True, "zone": "Office"}, {}
     )
@@ -545,7 +547,9 @@ async def test_startstop_vacuum(
         "cleaning_area_id": [area_entry.id],
     }
 
-    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    start_calls = async_mock_service(
+        hass, vacuum.DOMAIN, vacuum.VacuumService.CLEAN_AREA
+    )
     await trt.execute(
         trait.COMMAND_START_STOP,
         BASIC_DATA,
@@ -558,17 +562,17 @@ async def test_startstop_vacuum(
         "cleaning_area_id": [area_entry.id, area_entry_2.id],
     }
 
-    stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_STOP)
+    stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.STOP)
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
     assert stop_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
-    pause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_PAUSE)
+    pause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.PAUSE)
     await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": True}, {})
     assert len(pause_calls) == 1
     assert pause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
-    unpause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
+    unpause_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.START)
     await trt.execute(trait.COMMAND_PAUSE_UNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}

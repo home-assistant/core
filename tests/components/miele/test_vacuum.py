@@ -14,15 +14,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN, PROCESS_ACTION, PROGRAM_ID
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_PAUSE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -79,10 +75,10 @@ async def test_vacuum_states_api_push(
 @pytest.mark.parametrize(
     ("service", "action_command", "vacuum_power"),
     [
-        (SERVICE_START, PROCESS_ACTION, 1),
-        (SERVICE_STOP, PROCESS_ACTION, 2),
-        (SERVICE_PAUSE, PROCESS_ACTION, 3),
-        (SERVICE_CLEAN_SPOT, PROGRAM_ID, 2),
+        (VacuumService.START, PROCESS_ACTION, 1),
+        (VacuumService.STOP, PROCESS_ACTION, 2),
+        (VacuumService.PAUSE, PROCESS_ACTION, 3),
+        (VacuumService.CLEAN_SPOT, PROGRAM_ID, 2),
     ],
 )
 async def test_vacuum_program(
@@ -96,7 +92,7 @@ async def test_vacuum_program(
     """Test the vacuum can be controlled."""
 
     await hass.services.async_call(
-        VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        VACUUM_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_miele_client.send_action.assert_called_once_with(
         "Dummy_Vacuum_1", {action_command: vacuum_power}
@@ -117,8 +113,8 @@ async def test_vacuum_fan_speed(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: fan_speed},
         blocking=True,
     )
     mock_miele_client.send_action.assert_called_once_with(
@@ -129,8 +125,8 @@ async def test_vacuum_fan_speed(
 @pytest.mark.parametrize(
     ("service"),
     [
-        (SERVICE_START),
-        (SERVICE_STOP),
+        (VacuumService.START),
+        (VacuumService.STOP),
     ],
 )
 async def test_api_failure(
@@ -146,6 +142,6 @@ async def test_api_failure(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            VACUUM_DOMAIN, service, {TargetKey.ENTITY_ID: ENTITY_ID}, blocking=True
         )
     mock_miele_client.send_action.assert_called_once()

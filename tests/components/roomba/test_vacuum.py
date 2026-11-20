@@ -8,21 +8,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaConnectionError, RoombaScopeError
 
 from homeassistant.components.vacuum import (
-    ATTR_COMMAND,
-    ATTR_FAN_SPEED,
-    ATTR_PARAMS,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -146,8 +138,11 @@ async def test_braava_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: fan_speed},
+            VacuumService.SET_FAN_SPEED,
+            {
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                VacuumServiceArgument.FAN_SPEED: fan_speed,
+            },
             blocking=True,
         )
 
@@ -168,8 +163,8 @@ async def test_carpet_boost_set_fan_speed_invalid(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "Turbo"},
+            VacuumService.SET_FAN_SPEED,
+            {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "Turbo"},
             blocking=True,
         )
 
@@ -189,8 +184,8 @@ async def test_carpet_boost_set_fan_speed_valid(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "eco"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "eco"},
         blocking=True,
     )
 
@@ -212,8 +207,8 @@ async def test_braava_set_fan_speed_valid(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: "deep-2"},
+        VacuumService.SET_FAN_SPEED,
+        {TargetKey.ENTITY_ID: ENTITY_ID, VacuumServiceArgument.FAN_SPEED: "deep-2"},
         blocking=True,
     )
 
@@ -227,16 +222,21 @@ async def test_braava_set_fan_speed_valid(
 @pytest.mark.parametrize(
     ("phase", "service", "service_data", "expected_args"),
     [
-        pytest.param("charge", SERVICE_START, {}, ("start", None), id="start"),
-        pytest.param("pause", SERVICE_START, {}, ("resume", None), id="resume"),
-        pytest.param("run", SERVICE_STOP, {}, ("stop", None), id="stop"),
-        pytest.param("run", SERVICE_PAUSE, {}, ("pause", None), id="pause"),
-        pytest.param("stop", SERVICE_RETURN_TO_BASE, {}, ("dock", None), id="dock"),
-        pytest.param("charge", SERVICE_LOCATE, {}, ("find", None), id="locate"),
+        pytest.param("charge", VacuumService.START, {}, ("start", None), id="start"),
+        pytest.param("pause", VacuumService.START, {}, ("resume", None), id="resume"),
+        pytest.param("run", VacuumService.STOP, {}, ("stop", None), id="stop"),
+        pytest.param("run", VacuumService.PAUSE, {}, ("pause", None), id="pause"),
+        pytest.param(
+            "stop", VacuumService.RETURN_TO_BASE, {}, ("dock", None), id="dock"
+        ),
+        pytest.param("charge", VacuumService.LOCATE, {}, ("find", None), id="locate"),
         pytest.param(
             "charge",
-            SERVICE_SEND_COMMAND,
-            {ATTR_COMMAND: "evac", ATTR_PARAMS: {"key": "value"}},
+            VacuumService.SEND_COMMAND,
+            {
+                VacuumServiceArgument.COMMAND: "evac",
+                VacuumServiceArgument.PARAMS: {"key": "value"},
+            },
             ("evac", {"key": "value"}),
             id="send_command",
         ),
@@ -262,7 +262,7 @@ async def test_commands(
     await hass.services.async_call(
         VACUUM_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+        {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
         blocking=True,
     )
 
@@ -308,10 +308,10 @@ async def test_state_update_after_reported_dictionary_replaced(
 @pytest.mark.parametrize(
     ("service", "service_data", "method"),
     [
-        pytest.param(SERVICE_LOCATE, {}, "send_command", id="command"),
+        pytest.param(VacuumService.LOCATE, {}, "send_command", id="command"),
         pytest.param(
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_FAN_SPEED: "eco"},
+            VacuumService.SET_FAN_SPEED,
+            {VacuumServiceArgument.FAN_SPEED: "eco"},
             "set_preference",
             id="preference",
         ),
@@ -335,7 +335,7 @@ async def test_action_while_not_connected(
         await hass.services.async_call(
             VACUUM_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
+            {TargetKey.ENTITY_ID: ENTITY_ID, **service_data},
             blocking=True,
         )
 
@@ -355,11 +355,11 @@ async def test_send_command_with_empty_regions(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_SEND_COMMAND,
+            VacuumService.SEND_COMMAND,
             {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_COMMAND: "start",
-                ATTR_PARAMS: {"regions": []},
+                TargetKey.ENTITY_ID: ENTITY_ID,
+                VacuumServiceArgument.COMMAND: "start",
+                VacuumServiceArgument.PARAMS: {"regions": []},
             },
             blocking=True,
         )

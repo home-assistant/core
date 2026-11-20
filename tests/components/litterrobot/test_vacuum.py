@@ -13,11 +13,10 @@ from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.litterrobot.services import LitterRobotService
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumActivity,
+    VacuumService,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -107,8 +106,8 @@ async def test_activities(
 @pytest.mark.parametrize(
     ("service_domain", "service", "command", "extra"),
     [
-        (VACUUM_DOMAIN, SERVICE_START, "start_cleaning", None),
-        (VACUUM_DOMAIN, SERVICE_STOP, "set_power_status", None),
+        (VACUUM_DOMAIN, VacuumService.START, "start_cleaning", None),
+        (VACUUM_DOMAIN, VacuumService.STOP, "set_power_status", None),
         (
             DOMAIN,
             LitterRobotService.SET_SLEEP_MODE,
@@ -170,8 +169,8 @@ async def test_vacuum_command_exception(
     with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            SERVICE_START,
-            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            VacuumService.START,
+            {TargetKey.ENTITY_ID: VACUUM_ENTITY_ID},
             blocking=True,
         )
 

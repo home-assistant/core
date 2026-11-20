@@ -15,14 +15,12 @@ from homeassistant.components.demo.vacuum import (
     FAN_SPEEDS,
 )
 from homeassistant.components.vacuum import (
-    ATTR_COMMAND,
-    ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST,
-    ATTR_PARAMS,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -71,32 +69,38 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     """Test vacuum supported features."""
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 32700
-    assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == "medium"
+    assert (
+        state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST)
+        == FAN_SPEEDS
+    )
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MOST)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12348
-    assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == "medium"
+    assert (
+        state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST)
+        == FAN_SPEEDS
+    )
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_BASIC)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 12296
-    assert state.attributes.get(ATTR_FAN_SPEED) is None
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) is None
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_MINIMAL)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
-    assert state.attributes.get(ATTR_FAN_SPEED) is None
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) is None
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
 
     state = hass.states.get(ENTITY_VACUUM_NONE)
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
-    assert state.attributes.get(ATTR_FAN_SPEED) is None
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) is None
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) is None
     assert state.state == VacuumActivity.DOCKED
 
 
@@ -133,7 +137,7 @@ async def test_methods(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.attributes.get(ATTR_FAN_SPEED) == FAN_SPEEDS[-1]
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == FAN_SPEEDS[-1]
 
     await common.async_clean_spot(hass, ENTITY_VACUUM_COMPLETE)
     await hass.async_block_till_done()
@@ -184,7 +188,9 @@ async def test_unsupported_methods(hass: HomeAssistant) -> None:
 async def test_services(hass: HomeAssistant) -> None:
     """Test vacuum services."""
     # Test send_command
-    send_command_calls = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_SEND_COMMAND)
+    send_command_calls = async_mock_service(
+        hass, VACUUM_DOMAIN, VacuumService.SEND_COMMAND
+    )
 
     params = {"rotate": 150, "speed": 20}
     await common.async_send_command(
@@ -194,22 +200,24 @@ async def test_services(hass: HomeAssistant) -> None:
     call = send_command_calls[-1]
 
     assert call.domain == VACUUM_DOMAIN
-    assert call.service == SERVICE_SEND_COMMAND
+    assert call.service == VacuumService.SEND_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_VACUUM_BASIC
-    assert call.data[ATTR_COMMAND] == "test_command"
-    assert call.data[ATTR_PARAMS] == params
+    assert call.data[VacuumServiceArgument.COMMAND] == "test_command"
+    assert call.data[VacuumServiceArgument.PARAMS] == params
 
     # Test set fan speed
-    set_fan_speed_calls = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_SET_FAN_SPEED)
+    set_fan_speed_calls = async_mock_service(
+        hass, VACUUM_DOMAIN, VacuumService.SET_FAN_SPEED
+    )
 
     await common.async_set_fan_speed(hass, FAN_SPEEDS[0], ENTITY_VACUUM_COMPLETE)
     assert len(set_fan_speed_calls) == 1
     call = set_fan_speed_calls[-1]
 
     assert call.domain == VACUUM_DOMAIN
-    assert call.service == SERVICE_SET_FAN_SPEED
+    assert call.service == VacuumService.SET_FAN_SPEED
     assert call.data[ATTR_ENTITY_ID] == ENTITY_VACUUM_COMPLETE
-    assert call.data[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
+    assert call.data[VacuumServiceArgument.FAN_SPEED] == FAN_SPEEDS[0]
 
 
 async def test_set_fan_speed(hass: HomeAssistant) -> None:
@@ -224,12 +232,22 @@ async def test_set_fan_speed(hass: HomeAssistant) -> None:
     new_state_most = hass.states.get(ENTITY_VACUUM_MOST)
 
     assert old_state_complete != new_state_complete
-    assert old_state_complete.attributes[ATTR_FAN_SPEED] == FAN_SPEEDS[1]
-    assert new_state_complete.attributes[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
+    assert (
+        old_state_complete.attributes[VacuumEntityStateAttribute.FAN_SPEED]
+        == FAN_SPEEDS[1]
+    )
+    assert (
+        new_state_complete.attributes[VacuumEntityStateAttribute.FAN_SPEED]
+        == FAN_SPEEDS[0]
+    )
 
     assert old_state_most != new_state_most
-    assert old_state_most.attributes[ATTR_FAN_SPEED] == FAN_SPEEDS[1]
-    assert new_state_most.attributes[ATTR_FAN_SPEED] == FAN_SPEEDS[0]
+    assert (
+        old_state_most.attributes[VacuumEntityStateAttribute.FAN_SPEED] == FAN_SPEEDS[1]
+    )
+    assert (
+        new_state_most.attributes[VacuumEntityStateAttribute.FAN_SPEED] == FAN_SPEEDS[0]
+    )
 
 
 async def test_send_command(hass: HomeAssistant) -> None:

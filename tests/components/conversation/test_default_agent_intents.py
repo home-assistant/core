@@ -236,7 +236,7 @@ async def test_vacuum_intents(
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
 
     # start
-    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_START)
+    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.START)
     result = await conversation.async_converse(
         hass, "start rover", None, Context(), None
     )
@@ -250,7 +250,7 @@ async def test_vacuum_intents(
     assert call.data == {"entity_id": entity_id}
 
     # return to base
-    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_RETURN_TO_BASE)
+    calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.VacuumService.RETURN_TO_BASE)
     result = await conversation.async_converse(
         hass, "return rover to base", None, Context(), None
     )

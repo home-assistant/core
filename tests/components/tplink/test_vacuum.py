@@ -6,14 +6,11 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
     VacuumActivity,
+    VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -59,7 +56,7 @@ async def test_vacuum(
     state = hass.states.get(ENTITY_ID)
     assert state.state == VacuumActivity.DOCKED
 
-    assert state.attributes[ATTR_FAN_SPEED] == "max"
+    assert state.attributes[VacuumEntityStateAttribute.FAN_SPEED] == "max"
     result = translation.async_translate_state(
         hass, "max", "vacuum", "tplink", "vacuum.state_attributes.fan_speed", None
     )
@@ -86,16 +83,16 @@ async def test_states(
 @pytest.mark.parametrize(
     ("service_call", "module_name", "method", "params"),
     [
-        (SERVICE_START, Module.Clean, "start", {}),
-        (SERVICE_PAUSE, Module.Clean, "pause", {}),
-        (SERVICE_RETURN_TO_BASE, Module.Clean, "return_home", {}),
+        (VacuumService.START, Module.Clean, "start", {}),
+        (VacuumService.PAUSE, Module.Clean, "pause", {}),
+        (VacuumService.RETURN_TO_BASE, Module.Clean, "return_home", {}),
         (
-            SERVICE_SET_FAN_SPEED,
+            VacuumService.SET_FAN_SPEED,
             Module.Clean,
             "set_fan_speed_preset",
-            {ATTR_FAN_SPEED: "quiet"},
+            {VacuumServiceArgument.FAN_SPEED: "quiet"},
         ),
-        (SERVICE_LOCATE, Module.Speaker, "locate", {}),
+        (VacuumService.LOCATE, Module.Speaker, "locate", {}),
     ],
 )
 async def test_vacuum_module(

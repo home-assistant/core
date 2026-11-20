@@ -41,13 +41,11 @@ from homeassistant.components.select import ATTR_OPTIONS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-    SERVICE_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     VacuumActivity,
     VacuumEntityFeature,
+    VacuumService,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -367,9 +365,9 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_start = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_START)
+    call_start = async_mock_service(hass, VACUUM_DOMAIN, VacuumService.START)
     call_return_to_base = async_mock_service(
-        hass, VACUUM_DOMAIN, SERVICE_RETURN_TO_BASE
+        hass, VACUUM_DOMAIN, VacuumService.RETURN_TO_BASE
     )
 
     acc.char_on.client_update_value(1)
@@ -418,8 +416,8 @@ async def test_vacuum_set_state_without_returnhome_support(
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_start = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_START)
-    call_stop = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_STOP)
+    call_start = async_mock_service(hass, VACUUM_DOMAIN, VacuumService.START)
+    call_stop = async_mock_service(hass, VACUUM_DOMAIN, VacuumService.STOP)
 
     acc.char_on.client_update_value(1)
     await hass.async_block_till_done()

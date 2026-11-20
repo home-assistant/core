@@ -12,7 +12,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import vacuum
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -116,9 +116,9 @@ async def test_clean_area(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        vacuum.SERVICE_CLEAN_AREA,
+        vacuum.VacuumService.CLEAN_AREA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "cleaning_area_id": ["area_living_room", "area_kitchen"],
         },
         blocking=True,
@@ -148,9 +148,9 @@ async def test_clean_area_no_map(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        vacuum.SERVICE_CLEAN_AREA,
+        vacuum.VacuumService.CLEAN_AREA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "cleaning_area_id": ["area_living_room", "area_kitchen"],
         },
         blocking=True,
@@ -198,9 +198,9 @@ async def test_clean_area_invalid_map_id(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        vacuum.SERVICE_CLEAN_AREA,
+        vacuum.VacuumService.CLEAN_AREA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "cleaning_area_id": ["area_living_room", "area_kitchen"],
         },
         blocking=True,
@@ -280,9 +280,9 @@ async def test_clean_area_room_from_not_current_map(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        vacuum.SERVICE_CLEAN_AREA,
+        vacuum.VacuumService.CLEAN_AREA,
         {
-            ATTR_ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             "cleaning_area_id": ["area_bedroom", "area_kitchen"],
         },
         blocking=True,

@@ -7,10 +7,8 @@ from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.vacuum import (
     DOMAIN,
-    SERVICE_CLEAN_AREA,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
     VacuumEntityFeature,
+    VacuumService,
     intent as vacuum_intent,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_IDLE
@@ -26,7 +24,7 @@ async def test_start(hass: HomeAssistant) -> None:
     hass.states.async_set(
         entity_id, STATE_IDLE, {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.START}
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_START)
+    calls = async_mock_service(hass, DOMAIN, VacuumService.START)
 
     response = await intent.async_handle(
         hass,
@@ -40,7 +38,7 @@ async def test_start(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_START
+    assert call.service == VacuumService.START
     assert call.data == {"entity_id": entity_id}
 
 
@@ -52,7 +50,7 @@ async def test_start_without_name(hass: HomeAssistant) -> None:
     hass.states.async_set(
         entity_id, STATE_IDLE, {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.START}
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_START)
+    calls = async_mock_service(hass, DOMAIN, VacuumService.START)
 
     response = await intent.async_handle(
         hass, "test", vacuum_intent.INTENT_VACUUM_START, {}
@@ -63,7 +61,7 @@ async def test_start_without_name(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_START
+    assert call.service == VacuumService.START
     assert call.data == {"entity_id": entity_id}
 
 
@@ -77,7 +75,7 @@ async def test_return_to_base(hass: HomeAssistant) -> None:
         STATE_IDLE,
         {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME},
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_RETURN_TO_BASE)
+    calls = async_mock_service(hass, DOMAIN, VacuumService.RETURN_TO_BASE)
 
     response = await intent.async_handle(
         hass,
@@ -91,7 +89,7 @@ async def test_return_to_base(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_RETURN_TO_BASE
+    assert call.service == VacuumService.RETURN_TO_BASE
     assert call.data == {"entity_id": entity_id}
 
 
@@ -105,7 +103,7 @@ async def test_return_to_base_without_name(hass: HomeAssistant) -> None:
         STATE_IDLE,
         {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME},
     )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_RETURN_TO_BASE)
+    calls = async_mock_service(hass, DOMAIN, VacuumService.RETURN_TO_BASE)
 
     response = await intent.async_handle(
         hass, "test", vacuum_intent.INTENT_VACUUM_RETURN_TO_BASE, {}
@@ -116,7 +114,7 @@ async def test_return_to_base_without_name(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_RETURN_TO_BASE
+    assert call.service == VacuumService.RETURN_TO_BASE
     assert call.data == {"entity_id": entity_id}
 
 
@@ -134,7 +132,7 @@ async def test_clean_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -
             STATE_IDLE,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.CLEAN_AREA},
         )
-    calls = async_mock_service(hass, DOMAIN, SERVICE_CLEAN_AREA)
+    calls = async_mock_service(hass, DOMAIN, VacuumService.CLEAN_AREA)
 
     # Without name: all vacuums receive the service call
     response = await intent.async_handle(
@@ -266,6 +264,6 @@ async def test_clean_area_service_failure(
         )
 
     assert str(err.value) == (
-        f"Failed to call {SERVICE_CLEAN_AREA} for areas: ['{kitchen.id}']"
+        f"Failed to call {VacuumService.CLEAN_AREA} for areas: ['{kitchen.id}']"
         f" with vacuums: ['{entity_id}']"
     )

@@ -8,12 +8,8 @@ from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-)
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumService
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -41,7 +37,10 @@ from . import (
 )
 @pytest.mark.parametrize(
     ("service", "mock_method"),
-    [(SERVICE_START, "clean_up"), (SERVICE_RETURN_TO_BASE, "return_to_dock")],
+    [
+        (VacuumService.START, "clean_up"),
+        (VacuumService.RETURN_TO_BASE, "return_to_dock"),
+    ],
 )
 async def test_vacuum_controlling(
     hass: HomeAssistant,
@@ -73,7 +72,7 @@ async def test_vacuum_controlling(
         await hass.services.async_call(
             VACUUM_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 

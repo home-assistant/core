@@ -30,21 +30,18 @@ from homeassistant.components.sharkiq.vacuum import (
     FAN_SPEEDS_MAP,
 )
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -169,8 +166,8 @@ async def test_simple_properties(
     ("attribute", "target_value"),
     [
         (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
-        (ATTR_FAN_SPEED, "Eco"),
-        (ATTR_FAN_SPEED_LIST, list(FAN_SPEEDS_MAP)),
+        (VacuumEntityStateAttribute.FAN_SPEED, "Eco"),
+        (VacuumEntityCapabilityAttribute.FAN_SPEED_LIST, list(FAN_SPEEDS_MAP)),
         (ATTR_ERROR_CODE, 7),
         (ATTR_ERROR_MSG, "Cliff sensor is blocked"),
         (ATTR_LOW_LIGHT, False),
@@ -189,17 +186,17 @@ async def test_initial_attributes(
 @pytest.mark.parametrize(
     ("service", "target_state"),
     [
-        (SERVICE_STOP, VacuumActivity.IDLE),
-        (SERVICE_PAUSE, VacuumActivity.PAUSED),
-        (SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
-        (SERVICE_START, VacuumActivity.CLEANING),
+        (VacuumService.STOP, VacuumActivity.IDLE),
+        (VacuumService.PAUSE, VacuumActivity.PAUSED),
+        (VacuumService.RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (VacuumService.START, VacuumActivity.CLEANING),
     ],
 )
 async def test_cleaning_states(
     hass: HomeAssistant, service: str, target_state: str
 ) -> None:
     """Test cleaning states."""
-    service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
+    service_data = {TargetKey.ENTITY_ID: VAC_ENTITY_ID}
     await hass.services.async_call("vacuum", service, service_data, blocking=True)
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.state == target_state
@@ -208,12 +205,15 @@ async def test_cleaning_states(
 @pytest.mark.parametrize("fan_speed", list(FAN_SPEEDS_MAP))
 async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
     """Test setting fan speeds."""
-    service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID, ATTR_FAN_SPEED: fan_speed}
+    service_data = {
+        TargetKey.ENTITY_ID: VAC_ENTITY_ID,
+        VacuumServiceArgument.FAN_SPEED: fan_speed,
+    }
     await hass.services.async_call(
-        "vacuum", SERVICE_SET_FAN_SPEED, service_data, blocking=True
+        "vacuum", VacuumService.SET_FAN_SPEED, service_data, blocking=True
     )
     state = hass.states.get(VAC_ENTITY_ID)
-    assert state.attributes.get(ATTR_FAN_SPEED) == fan_speed
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == fan_speed
 
 
 @pytest.mark.parametrize(
@@ -262,7 +262,9 @@ async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
-        await hass.services.async_call("vacuum", SERVICE_LOCATE, data, blocking=True)
+        await hass.services.async_call(
+            "vacuum", VacuumService.LOCATE, data, blocking=True
+        )
         mock_locate.assert_called_once()
 
 

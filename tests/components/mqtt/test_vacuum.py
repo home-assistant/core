@@ -56,15 +56,10 @@ from homeassistant.components.mqtt.vacuum import (
     services_to_strings,
 )
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-    SERVICE_STOP,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityStateAttribute,
+    VacuumService,
 )
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
@@ -142,7 +137,10 @@ async def test_all_commands(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        VacuumService.START,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "start", 0, False, message_expiry_interval=None
@@ -150,7 +148,10 @@ async def test_all_commands(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        VacuumService.STOP,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "stop", 0, False, message_expiry_interval=None
@@ -158,7 +159,10 @@ async def test_all_commands(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        VacuumService.PAUSE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "pause", 0, False, message_expiry_interval=None
@@ -166,7 +170,10 @@ async def test_all_commands(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        VacuumService.LOCATE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "locate", 0, False, message_expiry_interval=None
@@ -175,7 +182,7 @@ async def test_all_commands(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        SERVICE_CLEAN_SPOT,
+        VacuumService.CLEAN_SPOT,
         {"entity_id": ENTITY_MATCH_ALL},
         blocking=True,
     )
@@ -186,7 +193,7 @@ async def test_all_commands(
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        SERVICE_RETURN_TO_BASE,
+        VacuumService.RETURN_TO_BASE,
         {"entity_id": ENTITY_MATCH_ALL},
         blocking=True,
     )
@@ -239,26 +246,8 @@ async def test_commands_without_supported_features(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
-    )
-    mqtt_mock.async_publish.assert_not_called()
-    mqtt_mock.async_publish.reset_mock()
-
-    await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
-    )
-    mqtt_mock.async_publish.assert_not_called()
-    mqtt_mock.async_publish.reset_mock()
-
-    await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
-    )
-    mqtt_mock.async_publish.assert_not_called()
-    mqtt_mock.async_publish.reset_mock()
-
-    await hass.services.async_call(
         vacuum.DOMAIN,
-        SERVICE_RETURN_TO_BASE,
+        VacuumService.START,
         {"entity_id": ENTITY_MATCH_ALL},
         blocking=True,
     )
@@ -266,14 +255,44 @@ async def test_commands_without_supported_features(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        VacuumService.PAUSE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
         vacuum.DOMAIN,
-        SERVICE_CLEAN_SPOT,
+        VacuumService.STOP,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        VacuumService.RETURN_TO_BASE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        VacuumService.LOCATE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+    mqtt_mock.async_publish.assert_not_called()
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        VacuumService.CLEAN_SPOT,
         {"entity_id": ENTITY_MATCH_ALL},
         blocking=True,
     )
@@ -675,7 +694,7 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_FAN_SPEED) == "max"
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == "max"
 
     message = """{
         "battery_level": 61,
@@ -686,8 +705,13 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_FAN_SPEED) == "min"
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) == "min"
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) == [
+        "min",
+        "medium",
+        "high",
+        "max",
+    ]
 
     message = '{"state":null}'
     async_fire_mqtt_message(hass, "vacuum/state", message)
@@ -725,8 +749,8 @@ async def test_no_fan_vacuum(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_FAN_SPEED) is None
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) is None
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) is None
 
     message = """{
         "battery_level": 54,
@@ -737,8 +761,8 @@ async def test_no_fan_vacuum(
     state = hass.states.get("vacuum.mqtttest")
 
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_FAN_SPEED) is None
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
+    assert state.attributes.get(VacuumEntityStateAttribute.FAN_SPEED) is None
+    assert state.attributes.get(VacuumEntityCapabilityAttribute.FAN_SPEED_LIST) is None
 
     message = """{
         "battery_level": 61,
@@ -997,7 +1021,7 @@ async def test_entity_debug_info_message(
         mqtt_mock_entry,
         vacuum.DOMAIN,
         DEFAULT_CONFIG_2,
-        vacuum.SERVICE_START,
+        vacuum.VacuumService.START,
         command_payload="start",
         state_payload="{}",
     )
@@ -1006,23 +1030,23 @@ async def test_entity_debug_info_message(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (vacuum.SERVICE_START, "command_topic", None, "start", None),
-        (vacuum.SERVICE_CLEAN_SPOT, "command_topic", None, "clean_spot", None),
+        (vacuum.VacuumService.START, "command_topic", None, "start", None),
+        (vacuum.VacuumService.CLEAN_SPOT, "command_topic", None, "clean_spot", None),
         (
-            vacuum.SERVICE_SET_FAN_SPEED,
+            vacuum.VacuumService.SET_FAN_SPEED,
             "set_fan_speed_topic",
             {"fan_speed": "medium"},
             "medium",
             None,
         ),
         (
-            vacuum.SERVICE_SEND_COMMAND,
+            vacuum.VacuumService.SEND_COMMAND,
             "send_command_topic",
             {"command": "custom command"},
             "custom command",
             None,
         ),
-        (vacuum.SERVICE_STOP, "command_topic", None, "stop", None),
+        (vacuum.VacuumService.STOP, "command_topic", None, "stop", None),
     ],
 )
 async def test_publishing_with_custom_encoding(

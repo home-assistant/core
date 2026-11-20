@@ -10,15 +10,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
     VacuumActivity,
+    VacuumEntityStateAttribute,
+    VacuumService,
+    VacuumServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -47,9 +45,9 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_START, Command.START),
-        (SERVICE_PAUSE, Command.PAUSE),
-        (SERVICE_RETURN_TO_BASE, Command.RETURN_TO_HOME),
+        (VacuumService.START, Command.START),
+        (VacuumService.PAUSE, Command.PAUSE),
+        (VacuumService.RETURN_TO_BASE, Command.RETURN_TO_HOME),
     ],
 )
 async def test_vacuum_actions(
@@ -65,7 +63,7 @@ async def test_vacuum_actions(
     await hass.services.async_call(
         VACUUM_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "vacuum.robot_vacuum"},
+        {TargetKey.ENTITY_ID: "vacuum.robot_vacuum"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -144,7 +142,10 @@ async def test_fan_speed_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("vacuum.robot_vacuum").attributes[ATTR_FAN_SPEED] == "maximum"
+        hass.states.get("vacuum.robot_vacuum").attributes[
+            VacuumEntityStateAttribute.FAN_SPEED
+        ]
+        == "maximum"
     )
 
     await trigger_update(
@@ -156,7 +157,12 @@ async def test_fan_speed_update(
         "extraSilence",
     )
 
-    assert hass.states.get("vacuum.robot_vacuum").attributes[ATTR_FAN_SPEED] == "quiet"
+    assert (
+        hass.states.get("vacuum.robot_vacuum").attributes[
+            VacuumEntityStateAttribute.FAN_SPEED
+        ]
+        == "quiet"
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_rvc_map_01011"])
@@ -170,8 +176,11 @@ async def test_vacuum_set_fan_speed(
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {ATTR_ENTITY_ID: "vacuum.robot_vacuum", ATTR_FAN_SPEED: "normal"},
+        VacuumService.SET_FAN_SPEED,
+        {
+            TargetKey.ENTITY_ID: "vacuum.robot_vacuum",
+            VacuumServiceArgument.FAN_SPEED: "normal",
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
