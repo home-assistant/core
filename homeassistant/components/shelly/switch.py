@@ -1,6 +1,6 @@
 """Switch for Shelly."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -83,6 +83,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
     is_on: Callable[[dict[str, Any]], bool]
+    # "{component}" in a method name is replaced by the component of the entity
     method_on: str
     method_off: str
     method_params_fn: Callable[[int | None, bool], tuple]
@@ -110,6 +111,17 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         ):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
+    def _get_method(self, name: str) -> Callable[..., Awaitable[Any]]:
+        """Return the device method, resolved for the component of the entity."""
+        method = getattr(
+            self.coordinator.device, name.format(component=get_rpc_key(self.key)[1])
+        )
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        return cast(Callable[..., Awaitable[Any]], method)
+
     @property
     @override
     def is_on(self) -> bool:
@@ -120,11 +132,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_on)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
+        method = self._get_method(self.entity_description.method_on)
         params = self.entity_description.method_params_fn(self._id, True)
         await method(*params)
 
@@ -132,11 +140,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        method = getattr(self.coordinator.device, self.entity_description.method_off)
-
-        if TYPE_CHECKING:
-            assert method is not None
-
+        method = self._get_method(self.entity_description.method_off)
         params = self.entity_description.method_params_fn(self._id, False)
         await method(*params)
 
@@ -499,31 +503,16 @@ RPC_SWITCHES = {
         supported=lambda _: True,
         entity_class=RpcLedStripSwitch,
     ),
-    "switch_in_locked": RpcSwitchDescription(
+    "in_locked": RpcSwitchDescription(
         key="switch",
-        translation_key="input_lock",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        # on a device in cover profile the "switch" key resolves to the cover
-        # component, which is handled by "cover_in_locked"
-        removal_condition=lambda config, _status, key: (
-            get_rpc_key(key)[1] != "switch" or "in_locked" not in config[key]
-        ),
-        is_on=lambda config: bool(config["in_locked"]),
-        method_on="switch_setconfig",
-        method_off="switch_setconfig",
-        method_params_fn=lambda id, value: (id, {"in_locked": value}),
-        entity_class=RpcConfigSwitch,
-    ),
-    "cover_in_locked": RpcSwitchDescription(
-        key="cover",
+        components=("switch", "cover"),
         translation_key="input_lock",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         removal_condition=lambda config, _status, key: "in_locked" not in config[key],
         is_on=lambda config: bool(config["in_locked"]),
-        method_on="cover_setconfig",
-        method_off="cover_setconfig",
+        method_on="{component}_setconfig",
+        method_off="{component}_setconfig",
         method_params_fn=lambda id, value: (id, {"in_locked": value}),
         entity_class=RpcConfigSwitch,
     ),

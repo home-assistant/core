@@ -24,16 +24,11 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.components.tradfri.const import DOMAIN
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
@@ -304,7 +299,7 @@ async def test_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id, **service_data, **transition},
         blocking=True,
     )
@@ -348,7 +343,7 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id, **transition},
         blocking=True,
     )
@@ -420,10 +415,10 @@ async def test_turn_on_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
             "entity_id": entity_id,
-            ATTR_BRIGHTNESS: 200,
+            LightServiceArgument.BRIGHTNESS: 200,
             **service_data,
             **transition,
         },
@@ -468,7 +463,7 @@ async def test_turn_off_commands(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": "light.test_w", **transition},
         blocking=True,
     )

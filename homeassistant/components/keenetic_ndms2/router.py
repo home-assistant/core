@@ -58,6 +58,11 @@ class KeeneticRouter:
         return self._last_devices
 
     @property
+    def router_info(self) -> RouterInfo | None:
+        """Read-only accessor for the cached router information."""
+        return self._router_info
+
+    @property
     def host(self):
         """Return the host of this hub."""
         return self.config_entry.data[CONF_HOST]

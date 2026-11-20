@@ -126,11 +126,6 @@ async def async_validate_trigger_config(
     config = TRIGGER_SCHEMA(config)
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    if not device_entry:
-        raise InvalidDeviceAutomationConfig(
-            f"Device {config[CONF_DEVICE_ID]} not found"
-        )
-
     if device_entry.model not in REMOTES:
         raise InvalidDeviceAutomationConfig(
             f"Device model {device_entry.model} is not a remote"

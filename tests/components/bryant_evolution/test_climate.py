@@ -21,9 +21,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
     HVACAction,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -74,7 +72,7 @@ async def test_set_temperature_mode_cool(
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     client.read_cooling_setpoint.side_effect = Exception("fake failure")
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+        CLIMATE_DOMAIN, ClimateService.SET_TEMPERATURE, data, blocking=True
     )
 
     # Verify effect.
@@ -104,7 +102,7 @@ async def test_set_temperature_mode_heat(
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     client.read_heating_setpoint.side_effect = Exception("fake failure")
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+        CLIMATE_DOMAIN, ClimateService.SET_TEMPERATURE, data, blocking=True
     )
     # Verify effect.
     state = hass.states.get("climate.system_1_zone_1")
@@ -138,7 +136,7 @@ async def test_set_temperature_mode_heat_cool(
     data = {"target_temp_low": 70, "target_temp_high": 80}
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, data, blocking=True
+        CLIMATE_DOMAIN, ClimateService.SET_TEMPERATURE, data, blocking=True
     )
     state = hass.states.get("climate.system_1_zone_1")
     assert state.attributes["target_temp_low"] == 70, state.attributes
@@ -163,7 +161,7 @@ async def test_set_fan_mode(
         data = {ATTR_FAN_MODE: mode}
         data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
         await hass.services.async_call(
-            CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True
+            CLIMATE_DOMAIN, ClimateService.SET_FAN_MODE, data, blocking=True
         )
         assert (
             hass.states.get("climate.system_1_zone_1").attributes[ATTR_FAN_MODE] == mode
@@ -192,7 +190,7 @@ async def test_set_hvac_mode(
     data[ATTR_ENTITY_ID] = "climate.system_1_zone_1"
     mock_client.read_hvac_mode.side_effect = Exception("fake failure")
     await hass.services.async_call(
-        CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True
+        CLIMATE_DOMAIN, ClimateService.SET_HVAC_MODE, data, blocking=True
     )
     await hass.async_block_till_done()
     assert hass.states.get("climate.system_1_zone_1").state == evolution_mode
