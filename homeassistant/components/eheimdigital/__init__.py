@@ -27,7 +27,7 @@ PLATFORMS = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: EheimDigitalConfigEntry
-) -> bool:
+) -> None:
     """Set up EHEIM Digital from a config entry."""
 
     coordinator = EheimDigitalUpdateCoordinator(hass, entry)
@@ -41,21 +41,19 @@ async def async_setup_entry(
         assert isinstance(main, EheimDigitalDevice)
     # Register the main device up front so child devices can resolve their
     # via_device_id link during concurrent platform setup.
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **async_device_info(coordinator, main)
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=async_device_info(coordinator, main)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: EheimDigitalConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     await entry.runtime_data.hub.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

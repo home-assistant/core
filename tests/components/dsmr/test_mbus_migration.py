@@ -1,6 +1,6 @@
 """Tests for the DSMR integration."""
 
-import datetime
+import datetime as dt
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -11,13 +11,27 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+
+def assert_belgian_gas_entities(
+    entities: list[er.RegistryEntry], gas_consumption: er.RegistryEntry
+) -> None:
+    """Check gas migration retains consumption plus disabled diagnostics."""
+    assert gas_consumption in entities
+    assert {entity.unique_id for entity in entities} == {
+        gas_consumption.unique_id,
+        f"{gas_consumption.unique_id}_belgium_gas_device_type",
+        f"{gas_consumption.unique_id}_belgium_gas_equipment_identifier",
+    }
+    for entity in entities:
+        if entity != gas_consumption:
+            assert entity.disabled_by is not None
 
 
 async def test_migrate_gas_to_mbus(
@@ -85,7 +99,7 @@ async def test_migrate_gas_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -111,7 +125,7 @@ async def test_migrate_gas_to_mbus(
     new_dev_entities = er.async_entries_for_device(
         entity_registry, new_device.id, include_disabled_entities=True
     )
-    assert new_dev_entities == [new_entity]
+    assert_belgian_gas_entities(new_dev_entities, new_entity)
 
     # Check no entities are connected to the old device
     dev_entities = er.async_entries_for_device(
@@ -196,7 +210,7 @@ async def test_migrate_hourly_gas_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1722749707)},
+                {"value": dt.datetime.fromtimestamp(1722749707)},
                 {"value": Decimal("778.963"), "unit": "m3"},
             ],
         ),
@@ -307,7 +321,7 @@ async def test_migrate_gas_with_devid_to_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -335,7 +349,7 @@ async def test_migrate_gas_with_devid_to_mbus(
     dev_entities = er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     )
-    assert dev_entities == [new_entity]
+    assert_belgian_gas_entities(dev_entities, new_entity)
 
     assert (
         entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
@@ -432,7 +446,7 @@ async def test_migrate_gas_to_mbus_exists(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -463,7 +477,7 @@ async def test_migrate_gas_to_mbus_exists(
     dev2_entities = er.async_entries_for_device(
         entity_registry, device2.id, include_disabled_entities=True
     )
-    assert dev2_entities == [entity2]
+    assert_belgian_gas_entities(dev2_entities, entity2)
 
     assert (
         entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)

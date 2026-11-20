@@ -1,6 +1,7 @@
 """Services for the Google Calendar integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 from typing import TYPE_CHECKING, cast
 
 from gcal_sync.exceptions import ApiException
@@ -9,9 +10,6 @@ from gcal_sync.model import DateOrDatetime, Event
 from homeassistant.components.calendar import (
     CREATE_EVENT_SCHEMA,
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_DESCRIPTION,
-    EVENT_LOCATION,
-    EVENT_SUMMARY,
     CalendarEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -19,22 +17,30 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import service
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DOMAIN,
-    EVENT_END_DATE,
-    EVENT_END_DATETIME,
-    EVENT_IN,
-    EVENT_IN_DAYS,
-    EVENT_IN_WEEKS,
-    EVENT_START_DATE,
-    EVENT_START_DATETIME,
-)
+from .const import DOMAIN, EVENT_IN_DAYS, EVENT_IN_WEEKS
 from .coordinator import CalendarSyncUpdateCoordinator
 
 if TYPE_CHECKING:
     from .calendar import GoogleCalendarEntity
 
-SERVICE_CREATE_EVENT = "create_event"
+
+class GoogleCalendarService(StrEnum):
+    """Store keys for Google Calendar services."""
+
+    CREATE_EVENT = "create_event"
+
+
+class GoogleCalendarServiceArgument(StrEnum):
+    """Store keys for Google Calendar service arguments."""
+
+    SUMMARY = "summary"
+    DESCRIPTION = "description"
+    START_DATE_TIME = "start_date_time"
+    END_DATE_TIME = "end_date_time"
+    START_DATE = "start_date"
+    END_DATE = "end_date"
+    IN = "in"
+    LOCATION = "location"
 
 
 async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) -> None:
@@ -43,32 +49,42 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     end: DateOrDatetime | None = None
     hass = entity.hass
 
-    if EVENT_IN in call.data:
-        if EVENT_IN_DAYS in call.data[EVENT_IN]:
+    if GoogleCalendarServiceArgument.IN in call.data:
+        if EVENT_IN_DAYS in call.data[GoogleCalendarServiceArgument.IN]:
             today = dt_util.now().date()
 
-            start_in = today + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
+            start_in = today + timedelta(
+                days=call.data[GoogleCalendarServiceArgument.IN][EVENT_IN_DAYS]
+            )
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
             end = DateOrDatetime(date=end_in)
 
-        elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
+        elif EVENT_IN_WEEKS in call.data[GoogleCalendarServiceArgument.IN]:
             today = dt_util.now().date()
 
-            start_in = today + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
+            start_in = today + timedelta(
+                weeks=call.data[GoogleCalendarServiceArgument.IN][EVENT_IN_WEEKS]
+            )
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
             end = DateOrDatetime(date=end_in)
 
-    elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
-        start = DateOrDatetime(date=call.data[EVENT_START_DATE])
-        end = DateOrDatetime(date=call.data[EVENT_END_DATE])
+    elif (
+        GoogleCalendarServiceArgument.START_DATE in call.data
+        and GoogleCalendarServiceArgument.END_DATE in call.data
+    ):
+        start = DateOrDatetime(date=call.data[GoogleCalendarServiceArgument.START_DATE])
+        end = DateOrDatetime(date=call.data[GoogleCalendarServiceArgument.END_DATE])
 
-    elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
-        start_dt = call.data[EVENT_START_DATETIME]
-        end_dt = call.data[EVENT_END_DATETIME]
+    elif (
+        GoogleCalendarServiceArgument.START_DATE_TIME in call.data
+        and GoogleCalendarServiceArgument.END_DATE_TIME in call.data
+    ):
+        start_dt = call.data[GoogleCalendarServiceArgument.START_DATE_TIME]
+        end_dt = call.data[GoogleCalendarServiceArgument.END_DATE_TIME]
         start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))
         end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
 
@@ -76,12 +92,12 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
         raise ValueError("Missing required fields to set start or end date/datetime")
 
     event = Event(
-        summary=call.data[EVENT_SUMMARY],
-        description=call.data[EVENT_DESCRIPTION],
+        summary=call.data[GoogleCalendarServiceArgument.SUMMARY],
+        description=call.data[GoogleCalendarServiceArgument.DESCRIPTION],
         start=start,
         end=end,
     )
-    if location := call.data.get(EVENT_LOCATION):
+    if location := call.data.get(GoogleCalendarServiceArgument.LOCATION):
         event.location = location
     try:
         await cast(
@@ -102,7 +118,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_CREATE_EVENT,
+        GoogleCalendarService.CREATE_EVENT,
         entity_domain=CALENDAR_DOMAIN,
         schema=CREATE_EVENT_SCHEMA,
         func=async_create_event,

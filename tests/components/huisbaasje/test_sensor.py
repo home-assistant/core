@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -22,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_LIMITED_CURRENT_MEASUREMENTS
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:

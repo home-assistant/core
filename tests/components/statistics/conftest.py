@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.statistics import DOMAIN
 from homeassistant.components.statistics.sensor import (
@@ -28,15 +29,13 @@ from homeassistant.core import HomeAssistant
 
 from .test_sensor import VALUES_NUMERIC
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.statistics.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

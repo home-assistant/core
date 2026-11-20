@@ -7,6 +7,7 @@ from ismartgate import GogoGate2Api, ISmartGateApi
 from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.gogogate2.const import (
@@ -35,8 +36,6 @@ from . import (
     _mocked_ismartgate_closed_door_response,
 )
 
-from tests.common import MockConfigEntry
-
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
 
 
@@ -56,7 +55,7 @@ MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
         pytest.param(ApiError(0, "blah"), "cannot_connect", id="api_error"),
     ],
 )
-@patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
+@patch("homeassistant.components.gogogate2.async_setup_entry", return_value=None)
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
 async def test_auth_fail(
     gogogate2api_mock: MagicMock,
@@ -200,7 +199,7 @@ async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
     }
 
 
-@patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
+@patch("homeassistant.components.gogogate2.async_setup_entry", return_value=None)
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
 async def test_discovered_dhcp(
     ismartgateapi_mock, async_setup_entry_mock, hass: HomeAssistant

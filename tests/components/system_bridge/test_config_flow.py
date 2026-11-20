@@ -2,22 +2,35 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from unittest.mock import patch
+from dataclasses import replace
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from systembridgeconnector.exceptions import (
     AuthenticationException,
+    BadRequestException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.modules import ModulesData
+from systembridgeconnector.models.system_control import PowerState, PowerStateEvent
 
 from homeassistant import config_entries
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     FIXTURE_AUTH_INPUT,
     FIXTURE_DATA_RESPONSE,
+    FIXTURE_KEY,
+    FIXTURE_NEW_KEY,
+    FIXTURE_OLD_TOKEN,
+    FIXTURE_PAIRING_CODE,
     FIXTURE_USER_INPUT,
     FIXTURE_UUID,
     FIXTURE_ZEROCONF,
@@ -26,7 +39,17 @@ from . import (
     mock_data_listener,
 )
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture(autouse=True)
+def mock_flow_version() -> Generator[MagicMock]:
+    """Report a supported System Bridge version to the config flow."""
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.Version",
+        autospec=True,
+    ) as mock_version:
+        version = mock_version.return_value
+        version.check_supported.return_value = True
+        yield version.check_supported
 
 
 @contextmanager
@@ -46,7 +69,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -85,7 +108,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -98,6 +121,148 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == FIXTURE_USER_INPUT
     assert result2["result"].unique_id == FIXTURE_UUID
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "entered",
+    [
+        pytest.param(FIXTURE_PAIRING_CODE, id="code"),
+        pytest.param(
+            f"http://test-bridge.local:9170/?ip=127.0.0.1&pair={FIXTURE_PAIRING_CODE}",
+            id="link",
+        ),
+    ],
+)
+async def test_user_flow_pairing_code(hass: HomeAssistant, entered: str) -> None:
+    """Test a pairing code, or its link, is traded for a key that's kept."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+            return_value=FIXTURE_KEY,
+        ) as mock_pair,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**FIXTURE_USER_INPUT, CONF_TOKEN: entered}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == FIXTURE_USER_INPUT
+    assert result["result"].unique_id == FIXTURE_UUID
+    code, client = mock_pair.call_args.args
+    assert code == FIXTURE_PAIRING_CODE
+    assert client.kind == "home-assistant"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(AuthenticationException, "invalid_pairing_code", id="used"),
+        pytest.param(BadRequestException, "invalid_pairing_code", id="mistyped"),
+        pytest.param(ConnectionErrorException, "cannot_connect", id="unreachable"),
+        pytest.param(TimeoutError, "cannot_connect", id="timeout"),
+    ],
+)
+async def test_user_flow_pairing_failed(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
+    """Test pairing that fails says why, and can be tried again."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_PAIRING_CODE}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_pairing_kept_after_failed_connection(
+    hass: HomeAssistant,
+) -> None:
+    """Test a retry reuses the key from a used pairing code."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = {**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_PAIRING_CODE}
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        return_value=FIXTURE_KEY,
+    ) as mock_pair:
+        with patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.connect",
+            side_effect=ConnectionErrorException,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        with _patch_success():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == FIXTURE_USER_INPUT
+    mock_pair.assert_called_once()
+
+
+async def test_reauth_pairing_kept_after_failed_connection(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a reauth retry reuses the key from a used pairing code."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+        return_value=FIXTURE_NEW_KEY,
+    ) as mock_pair:
+        with patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.connect",
+            side_effect=TimeoutError,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_TOKEN: FIXTURE_PAIRING_CODE}
+            )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        with _patch_success():
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_TOKEN: FIXTURE_PAIRING_CODE}
+            )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_NEW_KEY
+    mock_pair.assert_called_once()
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -122,6 +287,38 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_unsupported_version(
+    hass: HomeAssistant, mock_flow_version: MagicMock
+) -> None:
+    """Test we ask for an update when System Bridge is too old."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_flow_version.return_value = False
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+    ) as mock_connect:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "unsupported_version"}
+    mock_connect.assert_not_called()
+
+    mock_flow_version.return_value = True
     with _patch_success():
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
@@ -331,6 +528,79 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the user flow aborts when the device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_already_configured_updates_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test pairing an entry again keeps the new key, as the old one is replaced."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair",
+            return_value=FIXTURE_NEW_KEY,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: "9171",
+                CONF_TOKEN: FIXTURE_PAIRING_CODE,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: "9171",
+        CONF_TOKEN: FIXTURE_NEW_KEY,
+    }
+
+
+async def test_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reauth aborts when the token belongs to another device."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id="another-uuid", data=FIXTURE_USER_INPUT
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: FIXTURE_NEW_KEY}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config.data == FIXTURE_USER_INPUT
+
+
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
     """Test we show user form on authorization error."""
     mock_config = MockConfigEntry(
@@ -476,6 +746,41 @@ async def test_reauth_connection_closed_error(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
 
 
+async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
+    """Test reauth recovers from an unknown error."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=FIXTURE_UUID, data=FIXTURE_USER_INPUT
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            side_effect=Exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
 async def test_reauth_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -501,7 +806,7 @@ async def test_reauth_flow(
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -511,6 +816,24 @@ async def test_reauth_flow(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_reloads_once(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Test a successful reauth reloads a loaded entry once."""
+    result = await init_integration.start_reauth_flow(hass)
+
+    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_TOKEN: FIXTURE_NEW_KEY}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert init_integration.data[CONF_TOKEN] == FIXTURE_NEW_KEY
+    mock_reload.assert_called_once_with(init_integration.entry_id)
 
 
 async def test_zeroconf_flow(hass: HomeAssistant) -> None:
@@ -539,7 +862,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -588,6 +911,166 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(AuthenticationException, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_zeroconf_errors(
+    hass: HomeAssistant, exception: type[Exception], error: str
+) -> None:
+    """Test zeroconf recovers from errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect"
+        ),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            side_effect=exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_AUTH_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("10.0.0.2", id="host_changed"),
+        pytest.param(FIXTURE_USER_INPUT[CONF_HOST], id="host_unchanged"),
+    ],
+)
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, host: str
+) -> None:
+    """Test zeroconf aborts and updates the host of a configured device."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: host}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == FIXTURE_USER_INPUT[CONF_HOST]
+
+
+async def test_zeroconf_reconnects_loaded_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test zeroconf reconnects a loaded entry once its host is back."""
+    power_state_callback = mock_websocket_client.listen.call_args.kwargs[
+        "power_state_callback"
+    ]
+    await power_state_callback(PowerStateEvent(state=PowerState.SLEEPING))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    state = hass.states.get("update.hostname")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_zeroconf_resets_reconnect_backoff(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test zeroconf reconnects at once and restarts the backoff."""
+    register = mock_websocket_client.register_data_listener
+    register.side_effect = ConnectionErrorException
+    mock_websocket_client.connect.side_effect = ConnectionErrorException
+
+    for wait in (30, 60, 120):
+        freezer.tick(timedelta(seconds=wait))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    calls = register.await_count
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF,
+    )
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 1
+
+    # The failed reconnect waits 60 seconds rather than the 2 minute cap
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert register.await_count == calls + 2
+
+
+async def test_zeroconf_host_changed_reloads_loaded_entry(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test a changed host reloads a loaded entry rather than refreshing it."""
+    register = mock_websocket_client.register_data_listener
+    calls = register.await_count
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=replace(
+                FIXTURE_ZEROCONF,
+                properties={**FIXTURE_ZEROCONF.properties, "ip": "192.168.1.20"},
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert init_integration.data[CONF_HOST] == "192.168.1.20"
+    mock_schedule_reload.assert_called_once_with(init_integration.entry_id)
+    assert register.await_count == calls
+
+
 async def test_zeroconf_bad_zeroconf_info(hass: HomeAssistant) -> None:
     """Test zeroconf cannot connect flow."""
 
@@ -599,3 +1082,149 @@ async def test_zeroconf_bad_zeroconf_info(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_zeroconf_updates_existing_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test zeroconf updates the host and port of an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=replace(
+            FIXTURE_ZEROCONF,
+            properties={
+                **FIXTURE_ZEROCONF.properties,
+                "ip": "192.168.1.20",
+                "port": "9171",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.20"
+    assert mock_config_entry.data[CONF_PORT] == "9171"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "192.168.1.20",
+        CONF_PORT: "9171",
+        CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
+    }
+
+
+async def test_reconfigure_flow_old_token(hass: HomeAssistant) -> None:
+    """Test reconfigure signs in with an old token as it is, without pairing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data={**FIXTURE_USER_INPUT, CONF_TOKEN: FIXTURE_OLD_TOKEN},
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_success(),
+        patch(
+            "homeassistant.components.system_bridge.config_flow.HTTPClient.pair"
+        ) as mock_pair,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_pair.assert_not_called()
+    assert mock_config_entry.data[CONF_TOKEN] == FIXTURE_OLD_TOKEN
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(ConnectionErrorException, "cannot_connect", id="cannot_connect"),
+        pytest.param(AuthenticationException, "invalid_auth", id="invalid_auth"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test reconfigure flow shows errors and recovers."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.system_bridge.config_flow.WebSocketClient.connect",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when the host is a different System Bridge."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_success(),
+        patch(
+            "systembridgeconnector.websocket_client.WebSocketClient.get_data",
+            return_value=ModulesData(
+                system=replace(FIXTURE_DATA_RESPONSE.system, uuid="other-uuid")
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.20", CONF_PORT: "9171"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == FIXTURE_USER_INPUT[CONF_HOST]

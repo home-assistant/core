@@ -36,6 +36,11 @@ DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = Ha
     "llm_platforms"
 )
 
+__all__ = [
+    "DOMAIN",
+    "LLMTools",
+]
+
 
 @dataclass(slots=True)
 class LLMTools:

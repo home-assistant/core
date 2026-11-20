@@ -24,12 +24,12 @@ def is_granted(
     permission: ProxmoxPermission = ProxmoxPermission.POWER,
 ) -> bool:
     """Validate user permissions for the given type and permission."""
-    paths = [f"/{p_type}/{p_id}", f"/{p_type}", "/"]
-    for path in paths:
-        value = permissions.get(path, {}).get(permission)
-        if value is not None:
-            return value == 1
-    return False
+    if (privileges := permissions.get(f"/{p_type}/{p_id}")) is not None:
+        return permission in privileges
+
+    # Proxmox omits /{p_type} only when nothing reaches it, so "/" never applies.
+    # Known limitation: an exact path denied via NoAccess is omitted as well.
+    return permissions.get(f"/{p_type}", {}).get(permission) == 1
 
 
 def is_proxmox_package(update: dict[str, Any]) -> bool:

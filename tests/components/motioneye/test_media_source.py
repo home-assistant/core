@@ -9,6 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import client_exceptions
 from motioneye_client.client import MotionEyeClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.media_source import (
     URI_SCHEME,
@@ -32,9 +34,6 @@ from . import (
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 TEST_MOVIES = {
     "mediaList": [

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaConnectionError, RoombaScopeError
 
 from homeassistant.components.vacuum import (
@@ -24,8 +25,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.test_roomba"
 
@@ -281,6 +280,25 @@ async def test_state_update_from_robot(
 
     reported = mock_roomba.master_state["state"]["reported"]
     reported["cleanMissionStatus"] = {"cycle": "clean", "phase": "run"}
+    on_message = mock_roomba.register_on_message_callback.call_args_list[-1].args[0]
+    on_message({"state": {"reported": {"cleanMissionStatus": {"phase": "run"}}}})
+
+    assert hass.states.get(ENTITY_ID).state == VacuumActivity.CLEANING
+
+
+async def test_state_update_after_reported_dictionary_replaced(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roomba: AsyncMock,
+) -> None:
+    """Test that entity state updates when the reported dictionary is replaced."""
+    await _setup(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == VacuumActivity.DOCKED
+
+    # Replace the reported dictionary instance after setup
+    mock_roomba.master_state["state"]["reported"] = {
+        "cleanMissionStatus": {"cycle": "clean", "phase": "run"}
+    }
     on_message = mock_roomba.register_on_message_callback.call_args_list[-1].args[0]
     on_message({"state": {"reported": {"cleanMissionStatus": {"phase": "run"}}}})
 

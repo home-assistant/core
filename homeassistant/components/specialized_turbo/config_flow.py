@@ -311,8 +311,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Start reauthentication for an encrypted existing entry."""
         del entry_data
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
+        entry = self._get_reauth_entry()
         self._target_entry_id = entry.entry_id
         self._address = entry.data[CONF_ADDRESS]
         self._title = entry.title

@@ -1,7 +1,8 @@
 """Config flow for HomeWizard."""
 
+import asyncio
 from collections.abc import Mapping
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homewizard_energy import (
     HomeWizardEnergy,
@@ -19,9 +20,14 @@ from homewizard_energy.models import Device
 import probatio
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import instance_id
@@ -30,6 +36,9 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
+
+TOKEN_POLL_INTERVAL = 2
+TOKEN_TIMEOUT = 300
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,6 +50,15 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     product_name: str | None = None
     product_type: str | None = None
     serial: str | None = None
+    _token: str | None = None
+    _token_task: asyncio.Task[str] | None = None
+    _removed = False
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Mark the flow as removed so no token polling is started for it."""
+        self._removed = True
 
     @override
     async def async_step_user(
@@ -85,29 +103,61 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step where we attempt to get a token."""
-        assert self.ip_address
+        """Wait in the background until the user presses the device button."""
+        if TYPE_CHECKING:
+            assert self.ip_address
 
-        # Tell device we want a token, user must now press the
-        # button within 30 seconds. The first attempt will always
-        # fail, but this opens the window to press the button.
-        token = await async_request_token(self.hass, self.ip_address)
-        errors: dict[str, str] | None = None
+        if self._token_task is None:
+            # The flow manager would not track or cancel a task started after
+            # the flow was closed, e.g. while the user step was connecting
+            if self._removed:
+                return self.async_abort(reason="flow_closed")
+            self._token_task = self.hass.async_create_task(
+                async_wait_for_token(self.hass, self.ip_address)
+            )
 
-        if token is None:
-            if user_input is not None:
-                errors = {"base": "authorization_failed"}
+        if not self._token_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="wait_for_button",
+                progress_task=self._token_task,
+            )
 
-            return self.async_show_form(step_id="authorize", errors=errors)
+        token_task, self._token_task = self._token_task, None
+        try:
+            self._token = token_task.result()
+        except TimeoutError:
+            return self.async_show_progress_done(next_step_id="authorize_timeout")
+        return self.async_show_progress_done(next_step_id="finish_authorize")
 
-        # Now we got a token, we can ask for some more info
+    async def async_step_authorize_timeout(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user retry after the button was not pressed in time."""
+        if user_input is not None:
+            return await self.async_step_authorize()
+        return self.async_show_form(step_id="authorize_timeout")
 
-        async with HomeWizardEnergyV2(self.ip_address, token=token) as api:
+    async def async_step_finish_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create or update the entry with the received token."""
+        if TYPE_CHECKING:
+            assert self.ip_address
+            assert self._token
+
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={CONF_TOKEN: self._token},
+            )
+
+        async with HomeWizardEnergyV2(self.ip_address, token=self._token) as api:
             device_info = await api.device()
 
         data = {
             CONF_IP_ADDRESS: self.ip_address,
-            CONF_TOKEN: token,
+            CONF_TOKEN: self._token,
         }
 
         await self.async_set_unique_id(
@@ -198,8 +248,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_IP_ADDRESS: self.ip_address},
                 )
 
-        self._set_confirm_only()
-
         # We won't be adding mac/serial to the title for devices
         # that users generally don't have multiple of.
         name = self.product_name
@@ -210,9 +258,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.product_type,
-                CONF_SERIAL: self.serial,
-                CONF_IP_ADDRESS: self.ip_address,
+                "product_type": self.product_type,
+                "serial": self.serial,
+                "ip_address": self.ip_address,
             },
             errors=errors,
         )
@@ -253,26 +301,11 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
-        assert self.ip_address
-
-        errors: dict[str, str] | None = None
-
-        token = await async_request_token(self.hass, self.ip_address)
-
+        # Reauth flows start without the user, so only poll once they confirm
         if user_input is not None:
-            if token is None:
-                errors = {"base": "authorization_failed"}
-            else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_TOKEN: token,
-                    },
-                )
+            return await self.async_step_authorize()
 
-        return self.async_show_form(
-            step_id="reauth_confirm_update_token", errors=errors
-        )
+        return self.async_show_form(step_id="reauth_confirm_update_token")
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -360,23 +393,24 @@ async def async_try_connect(ip_address: str, token: str | None = None) -> Device
         await energy_api.close()
 
 
-async def async_request_token(hass: HomeAssistant, ip_address: str) -> str | None:
-    """Try to request a token from the device.
+async def async_wait_for_token(hass: HomeAssistant, ip_address: str) -> str:
+    """Poll the device for a token until the user presses the button.
 
-    This method is used to request a token from the device,
-    it will return None if the token request failed.
+    Raises TimeoutError when the button is not pressed within TOKEN_TIMEOUT.
     """
-
+    uuid = await instance_id.async_get(hass)
     api = HomeWizardEnergyV2(ip_address)
 
-    # Get a part of the unique id to make the token unique
-    # This is to prevent token conflicts when multiple HA instances are used
-    uuid = await instance_id.async_get(hass)
-
     try:
-        return await api.get_token(f"home-assistant#{uuid[:6]}")
-    except DisabledError:
-        return None
+        async with asyncio.timeout(TOKEN_TIMEOUT):
+            while True:
+                try:
+                    return await api.get_token(f"home-assistant#{uuid[:6]}")
+                except DisabledError:
+                    pass
+                except RequestError:
+                    LOGGER.debug("Device unreachable while waiting for button press")
+                await asyncio.sleep(TOKEN_POLL_INTERVAL)
     finally:
         await api.close()
 

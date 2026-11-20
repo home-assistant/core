@@ -1,6 +1,6 @@
 """Binary sensor platform for the Vitesy integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import override
 
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .coordinator import VitesyConfigEntry, VitesyDataUpdateCoordinator
-from .entity import VitesyEntity
+from .entity import VitesyEntity, async_add_device_entities
 
 PARALLEL_UPDATES = 0
 
@@ -67,12 +67,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Vitesy binary sensors from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        VitesyBinarySensor(coordinator, device_id, description)
-        for device_id, device in coordinator.data.items()
-        for description in BINARY_SENSORS
-        if description.value_fn(device) is not None
-    )
+
+    def _entities(device_id: str, device: VitesyDevice) -> Iterable[VitesyBinarySensor]:
+        return (
+            VitesyBinarySensor(coordinator, device_id, description)
+            for description in BINARY_SENSORS
+            if description.value_fn(device) is not None
+        )
+
+    async_add_device_entities(coordinator, async_add_entities, _entities)
 
 
 class VitesyBinarySensor(VitesyEntity, BinarySensorEntity):

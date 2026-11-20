@@ -6,15 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.velbus.const import (
-    CONF_CONFIG_ENTRY,
-    CONF_MEMO_TEXT,
-    DOMAIN,
-    SERVICE_CLEAR_CACHE,
-    SERVICE_SCAN,
-    SERVICE_SET_MEMO_TEXT,
-    SERVICE_SYNC,
+from homeassistant.components.velbus.const import DOMAIN
+from homeassistant.components.velbus.services import (
+    VelbusService,
+    VelbusServiceArgument,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -22,8 +19,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_global_services_with_config_entry(
@@ -35,16 +30,16 @@ async def test_global_services_with_config_entry(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SCAN,
-        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        VelbusService.SCAN,
+        {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
         blocking=True,
     )
     config_entry.runtime_data.controller.scan.assert_called_once_with()
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SYNC,
-        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        VelbusService.SYNC_CLOCK,
+        {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
         blocking=True,
     )
     config_entry.runtime_data.controller.sync_clock.assert_called_once_with()
@@ -53,8 +48,8 @@ async def test_global_services_with_config_entry(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SCAN,
-            {CONF_CONFIG_ENTRY: "nonexistent"},
+            VelbusService.SCAN,
+            {VelbusServiceArgument.CONFIG_ENTRY: "nonexistent"},
             blocking=True,
         )
 
@@ -62,7 +57,7 @@ async def test_global_services_with_config_entry(
     with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SCAN,
+            VelbusService.SCAN,
             {},
             blocking=True,
         )
@@ -72,8 +67,8 @@ async def test_global_services_with_config_entry(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SCAN,
-            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            VelbusService.SCAN,
+            {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
             blocking=True,
         )
 
@@ -82,8 +77,8 @@ async def test_global_services_with_config_entry(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SYNC,
-            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            VelbusService.SYNC_CLOCK,
+            {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
             blocking=True,
         )
 
@@ -98,10 +93,10 @@ async def test_set_memo_text(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_MEMO_TEXT,
+        VelbusService.SET_MEMO_TEXT,
         {
-            CONF_CONFIG_ENTRY: config_entry.entry_id,
-            CONF_MEMO_TEXT: "Test",
+            VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+            VelbusServiceArgument.MEMO_TEXT: "Test",
             CONF_ADDRESS: 1,
         },
         blocking=True,
@@ -117,10 +112,10 @@ async def test_set_memo_text(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_MEMO_TEXT,
+            VelbusService.SET_MEMO_TEXT,
             {
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_MEMO_TEXT: "Test",
+                VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                VelbusServiceArgument.MEMO_TEXT: "Test",
                 CONF_ADDRESS: 2,
             },
             blocking=True,
@@ -129,17 +124,19 @@ async def test_set_memo_text(
 
     # Test with unfound module
     controller.return_value.get_module.return_value = None
-    with pytest.raises(ServiceValidationError, match="Module with address 2 not found"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_MEMO_TEXT,
+            VelbusService.SET_MEMO_TEXT,
             {
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_MEMO_TEXT: "Test",
+                VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                VelbusServiceArgument.MEMO_TEXT: "Test",
                 CONF_ADDRESS: 2,
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "module_not_found"
+    assert exc_info.value.translation_placeholders == {"address": "2"}
 
 
 async def test_clear_cache(
@@ -151,16 +148,16 @@ async def test_clear_cache(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_CACHE,
-        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        VelbusService.CLEAR_CACHE,
+        {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id},
         blocking=True,
     )
     config_entry.runtime_data.controller.scan.assert_called_once_with()
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CLEAR_CACHE,
-        {CONF_CONFIG_ENTRY: config_entry.entry_id, CONF_ADDRESS: 1},
+        VelbusService.CLEAR_CACHE,
+        {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id, CONF_ADDRESS: 1},
         blocking=True,
     )
     assert config_entry.runtime_data.controller.scan.call_count == 2
@@ -200,8 +197,8 @@ async def test_clear_cache_error(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_CACHE,
-            {CONF_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            VelbusService.CLEAR_CACHE,
+            {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id, **service_data},
             blocking=True,
         )
 
@@ -249,8 +246,8 @@ async def test_clear_cache_path_exists(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_CACHE,
-            {CONF_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            VelbusService.CLEAR_CACHE,
+            {VelbusServiceArgument.CONFIG_ENTRY: config_entry.entry_id, **service_data},
             blocking=True,
         )
         exists_mock.assert_called_once()

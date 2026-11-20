@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.assist_pipeline import PipelineStage
 from homeassistant.components.assist_satellite.websocket_api import (
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_intercept_wake_word(

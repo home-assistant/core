@@ -4,11 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from pyHomee.model import HomeeAttribute, HomeeNode
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

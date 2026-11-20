@@ -148,11 +148,15 @@ class AzureStorageBackupAgent(BackupAgent):
             "backup_metadata": json.dumps(backup.as_dict()),
         }
 
+        async def progress_hook(current: int, total: int | None) -> None:
+            on_progress(bytes_uploaded=current)
+
         await self._client.upload_blob(
             name=suggested_filename(backup),
             metadata=metadata,
             data=await open_stream(),
             length=backup.size,
+            progress_hook=progress_hook,
         )
 
     @handle_backup_errors

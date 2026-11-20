@@ -3,8 +3,8 @@
 import logging
 from typing import override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import TICK
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import TICK
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components.radio_frequency import RadioFrequencyTransmitterEntity
@@ -24,6 +24,8 @@ PARALLEL_UPDATES = 0
 # The device's timing unit in microseconds, taken from the library so the
 # IR and RF paths on the same hardware always agree.
 _TICK_US = TICK
+
+_MAX_TICKS = 0xFFFF  # About 2 s
 
 _RF_433_TYPE_BYTE = 0xB2
 _RF_315_TYPE_BYTE = 0xB4
@@ -64,12 +66,19 @@ def encode_rf_packet(
                          0x00 followed by a 2-byte big-endian tick count
 
     Each pulse is expressed as multiples of the Broadlink timing unit
-    (about 30.45 µs, ``broadlink.remote.TICK``), which is the timing
-    resolution of the RF front-end.
+    (about 30.45 µs, ``broadlink_async.remote.TICK``), which is the timing
+    resolution of the RF front-end. A duration shorter than half a unit is
+    written as one unit, since a lone 0x00 would be read as an escape.
     """
     buf = bytearray([type_byte, repeat_count, 0, 0])
     for duration in timings_us:
-        ticks = round(abs(duration) / _TICK_US)
+        ticks = max(round(abs(duration) / _TICK_US), 1)
+        if ticks > _MAX_TICKS:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timing_too_long",
+                translation_placeholders={"duration": f"{abs(duration) / 1_000_000:g}"},
+            )
         div, mod = divmod(ticks, 256)
         if div:
             buf.append(0x00)

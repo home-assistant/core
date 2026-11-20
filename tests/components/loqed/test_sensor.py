@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from loqedAPI import loqed
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.loqed.const import DOMAIN
@@ -12,12 +17,6 @@ from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 BATTERY_ENTITY_ID = "sensor.home_battery"
 BLE_STRENGTH_ENTITY_ID = "sensor.home_bluetooth_signal"

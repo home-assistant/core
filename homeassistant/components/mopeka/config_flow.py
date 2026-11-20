@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Any, override
 
-from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
+from mopeka_iot_ble import MediumType, MopekaIOTBluetoothDeviceData as DeviceData
 import probatio
 
 from homeassistant import config_entries
@@ -15,7 +15,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
-from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN, MediumType
+from . import MopekaConfigEntry
+from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN
 
 
 def format_medium_type(medium_type: Enum) -> str:
@@ -54,7 +55,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @override
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: MopekaConfigEntry,
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
         return MopekaOptionsFlow()
@@ -89,7 +90,6 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_MEDIUM_TYPE: user_input[CONF_MEDIUM_TYPE]},
             )
 
-        self._set_confirm_only()
         placeholders = {"name": title}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

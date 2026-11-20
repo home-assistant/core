@@ -2,6 +2,8 @@
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.search import DOMAIN, ItemType, Searcher
@@ -15,9 +17,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import EntityInfo
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_search(

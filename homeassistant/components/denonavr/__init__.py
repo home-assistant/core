@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> None:
     """Set up the denonavr components from a config entry."""
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
@@ -82,29 +82,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: DenonavrConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    # Remove zone2 and zone3 entities if needed
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    unique_id = config_entry.unique_id or config_entry.entry_id
-    zone2_id = f"{unique_id}-Zone2"
-    zone3_id = f"{unique_id}-Zone3"
-    for entry in entries:
-        if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
-            entity_registry.async_remove(entry.entity_id)
-            _LOGGER.debug("Removing zone2 from DenonAvr")
-        if entry.unique_id == zone3_id and not config_entry.options.get(CONF_ZONE3):
-            entity_registry.async_remove(entry.entity_id)
-            _LOGGER.debug("Removing zone3 from DenonAvr")
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        # Remove zone2 and zone3 entities if needed
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        unique_id = config_entry.unique_id or config_entry.entry_id
+        zone2_id = f"{unique_id}-Zone2"
+        zone3_id = f"{unique_id}-Zone3"
+        for entry in entries:
+            if entry.unique_id == zone2_id and not config_entry.options.get(CONF_ZONE2):
+                entity_registry.async_remove(entry.entity_id)
+                _LOGGER.debug("Removing zone2 from DenonAvr")
+            if entry.unique_id == zone3_id and not config_entry.options.get(CONF_ZONE3):
+                entity_registry.async_remove(entry.entity_id)
+                _LOGGER.debug("Removing zone3 from DenonAvr")

@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.switch import DOMAIN
-from homeassistant.components.switch.trigger import TRIGGERS
-from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -22,6 +16,11 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.switch import DOMAIN
+from homeassistant.components.switch.trigger import TRIGGERS
+from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 TRIGGER_STATES = [
     *parametrize_trigger_states(

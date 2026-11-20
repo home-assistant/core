@@ -15,6 +15,7 @@ from pylamarzocco.const import MachineMode, WidgetType
 from pylamarzocco.exceptions import (
     AuthFail,
     BluetoothConnectionFailed,
+    PolicyAcceptanceRequired,
     RequestNotSuccessful,
 )
 from pylamarzocco.models import BluetoothMachineTelemetry, MachineStatus
@@ -104,6 +105,13 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from ex
+        except PolicyAcceptanceRequired as ex:
+            _LOGGER.debug("Privacy policy acceptance required", exc_info=True)
+            self.update_success = False
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="policy_acceptance_required",
+            ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
             self.update_success = False
@@ -147,11 +155,14 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    dashboard_loaded = False
+
     @override
     async def _internal_async_setup(self) -> None:
         """Set up the coordinator."""
         await self.device.ensure_token_valid()
         await self.device.get_dashboard()
+        self.dashboard_loaded = True
 
     @override
     async def _internal_async_update_data(self) -> None:
@@ -281,7 +292,9 @@ class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     @override
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
-        await self.device.get_model_info_from_bluetooth()
+        # the cloud dashboard already holds the model and is more reliable
+        if not self._config_coordinator.dashboard_loaded:
+            await self.device.get_model_info_from_bluetooth()
 
     @property
     def _machine_can_brew(self) -> bool:

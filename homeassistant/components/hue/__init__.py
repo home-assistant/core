@@ -25,18 +25,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Migrate old entry."""
     if entry.minor_version < 2:
         _migrate_zigbee_connections(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
-    return True
-
 
 @callback
 def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> None:
-    """Migrate zigbee macs that were incorrectly stored as network macs."""
+    """Remove zigbee macs that were incorrectly stored as network macs.
+
+    Device setup adds them back as zigbee connections. Multi-channel devices
+    share one zigbee mac, which older versions stored on each channel, and only
+    setup knows which channel should own it.
+    """
     dev_reg = dr.async_get(hass)
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         # Zigbee macs have 8 octets, network macs have 6.
@@ -47,13 +50,12 @@ def _migrate_zigbee_connections(hass: HomeAssistant, entry: HueConfigEntry) -> N
         }
         if not zigbee_connections:
             continue
-        new_connections = (device.connections - zigbee_connections) | {
-            (dr.CONNECTION_ZIGBEE, value) for _, value in zigbee_connections
-        }
-        dev_reg.async_update_device(device.id, new_connections=new_connections)
+        dev_reg.async_update_device(
+            device.id, new_connections=device.connections - zigbee_connections
+        )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Set up a bridge from a config entry."""
     # check (and run) migrations if needed
     await check_migration(hass, entry)
@@ -119,9 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     ):
         _async_register_bridge_device(hass, entry, api, bridge.api_version)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> None:
     """Unload a config entry."""
-    return await entry.runtime_data.async_reset()
+    if not await entry.runtime_data.async_reset():
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unload_failed",
+        )

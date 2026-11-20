@@ -53,7 +53,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Set up an entry."""
     entry.runtime_data = ThinqData()
 
@@ -80,8 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
 
     # Clean up devices they are no longer in use.
     async_cleanup_device_registry(hass, entry)
-
-    return True
 
 
 async def async_setup_coordinators(
@@ -182,6 +180,6 @@ async def async_setup_mqtt(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Unload the entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

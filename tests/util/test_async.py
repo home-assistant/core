@@ -5,11 +5,10 @@ import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import extract_stack_to_frame
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import async_ as hasync
-
-from tests.common import extract_stack_to_frame
 
 
 @patch("concurrent.futures.Future")

@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> None:
     """Set up pushbullet from a config entry."""
 
     try:
@@ -71,11 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await hass.async_add_executor_job(entry.runtime_data.close)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await hass.async_add_executor_job(entry.runtime_data.close)

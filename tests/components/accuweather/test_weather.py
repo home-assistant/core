@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import UPDATE_INTERVAL_DAILY_FORECAST
@@ -15,7 +17,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherService,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -23,9 +25,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 async def test_weather(
@@ -128,7 +127,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": "weather.home",
             "type": forecast_type,
@@ -152,7 +151,7 @@ async def test_forecast_daily_missing_average_humidity(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
+        WeatherService.GET_FORECASTS,
         {
             "entity_id": "weather.home",
             "type": "daily",

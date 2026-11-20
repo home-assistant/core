@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Set up Switcher from a config entry."""
 
     token = entry.data.get(CONF_TOKEN)
@@ -98,12 +98,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

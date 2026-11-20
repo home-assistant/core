@@ -12,8 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import MIKROTIK_SERVICES
-from .coordinator import MikrotikConfigEntry, mikrotik_config_entry_errors
+from .coordinator import MikrotikConfigEntry
 from .entity import MikrotikEntity
+from .utils import mikrotik_config_entry_errors
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0

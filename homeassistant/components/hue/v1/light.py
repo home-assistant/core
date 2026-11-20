@@ -98,14 +98,6 @@ GAMUT_TYPE_UNAVAILABLE = "None"
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Hue lights.
-
-    Can only be called when a user accidentally mentions hue platform in their
-    config. But even in that case it would have been ignored.
-    """
-
-
 def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id):
     """Create the light."""
     api_item = api[item_id]
@@ -315,7 +307,7 @@ def hass_to_hue_brightness(value):
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
-class HueLight(CoordinatorEntity, LightEntity):
+class HueLight(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     """Representation of a Hue light."""
 
     def __init__(

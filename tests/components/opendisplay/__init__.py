@@ -15,10 +15,9 @@ from opendisplay import (
     SecurityConfig,
     SystemConfig,
 )
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 OPENDISPLAY_MANUFACTURER_ID = 9286  # 0x2446
 

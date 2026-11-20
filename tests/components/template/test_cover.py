@@ -4,6 +4,8 @@ from itertools import chain
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cover, template
@@ -15,6 +17,8 @@ from homeassistant.components.cover import (
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.template.cover import DEFAULT_NAME
@@ -26,16 +30,15 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,9 +61,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_POSITION_ENTITY_ID = "sensor.test_position"
@@ -404,8 +404,8 @@ async def test_template_position(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, "position": 10},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, "position": 10},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -434,8 +434,8 @@ async def test_template_not_optimistic(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -446,8 +446,8 @@ async def test_template_not_optimistic(
     # Test to make sure optimistic is not set with only a position template.
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -586,8 +586,8 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -613,16 +613,16 @@ async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) 
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -780,6 +780,30 @@ async def test_supported_speeds(
             id="close_with_set_position_only",
         ),
         pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_OPEN_COVER,
+            {ATTR_SPEED: "turbo"},
+            "open_cover",
+            {"speed": None},
+            id="open_with_unsupported_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "turbo"},
+            "close_cover",
+            {"speed": None},
+            id="close_with_unsupported_speed",
+        ),
+        pytest.param(
+            {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS},
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 30, ATTR_SPEED: "turbo"},
+            "set_cover_position",
+            {"position": 30, "speed": None},
+            id="set_position_with_unsupported_speed",
+        ),
+        pytest.param(
             {**COVER_ACTIONS_WITH_SPEED, "variables": {"speed": "configured"}},
             SERVICE_OPEN_COVER,
             {ATTR_SPEED: "fast"},
@@ -810,42 +834,6 @@ async def test_speed_action(
     )
 
     assert_action(TEST_COVER, calls, 1, expected_action, **expected_data)
-
-
-@pytest.mark.parametrize(
-    ("count", "config"),
-    [(1, {**COVER_ACTIONS_WITH_SPEED, "supported_speeds": TEST_SPEEDS})],
-)
-@pytest.mark.parametrize(
-    "style",
-    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
-)
-@pytest.mark.parametrize(
-    ("service", "options"),
-    [
-        pytest.param(SERVICE_OPEN_COVER, {}, id="open"),
-        pytest.param(SERVICE_CLOSE_COVER, {}, id="close"),
-        pytest.param(SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 30}, id="position"),
-    ],
-)
-@pytest.mark.usefixtures("setup_cover")
-async def test_invalid_speed(
-    hass: HomeAssistant,
-    calls: list[ServiceCall],
-    service: str,
-    options: dict[str, Any],
-) -> None:
-    """Test a speed that is not in supported_speeds is rejected."""
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_SPEED: "turbo", **options},
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_key == "not_valid_speed"
-    assert calls == []
 
 
 @pytest.mark.parametrize(
@@ -904,8 +892,8 @@ async def test_set_position_optimistic(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_POSITION: 42},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, CoverServiceArgument.POSITION: 42},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -952,8 +940,8 @@ async def test_non_optimistic_template_with_optimistic_state(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_POSITION: 42},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: TEST_COVER.entity_id, CoverServiceArgument.POSITION: 42},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -992,8 +980,11 @@ async def test_set_tilt_position_optimistic(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1042,8 +1033,11 @@ async def test_set_tilt_position_optimistic_with_tilt_optimistic_true(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1096,8 +1090,11 @@ async def test_set_tilt_position_optimistic_with_tilt_optimistic_false(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: TEST_COVER.entity_id,
+            CoverServiceArgument.TILT_POSITION: 42,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()

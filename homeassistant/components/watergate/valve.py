@@ -1,17 +1,16 @@
 """Support for Watergate Valve."""
 
-from typing import override
+from typing import Any, override
 
 from watergate_local_api import WatergateApiException
 
-from homeassistant.components.sensor import Any, HomeAssistant
 from homeassistant.components.valve import (
     ValveDeviceClass,
     ValveEntity,
     ValveEntityFeature,
     ValveState,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 

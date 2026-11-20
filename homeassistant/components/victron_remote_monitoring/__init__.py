@@ -16,7 +16,7 @@ _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: VictronRemoteMonitoringConfigEntry
-) -> bool:
+) -> None:
     """Set up VRM from a config entry."""
     coordinator = VictronRemoteMonitoringDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
@@ -34,11 +34,9 @@ async def async_setup_entry(
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: VictronRemoteMonitoringConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

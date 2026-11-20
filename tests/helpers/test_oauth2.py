@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from multidict import CIMultiDict
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -11,8 +12,6 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import oauth2
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ACCESS_TOKEN = "mock-access-token"
 TOKEN_URL = "https://example.com/token"
@@ -122,3 +121,46 @@ async def test_token_request_refuses_redirect(hass: HomeAssistant) -> None:
     response.release.assert_called_once()
     assert exc_info.value.status == 307
     assert not isinstance(exc_info.value, OAuth2TokenRequestReauthError)
+
+
+@pytest.mark.parametrize(
+    ("client_secret", "method", "expected_body", "expected_headers"),
+    [
+        pytest.param(
+            "s:cr&t",
+            "client_secret_basic",
+            {"grant_type": "refresh_token"},
+            # base64 of "my+client:s%3Acr%26t"
+            {"Authorization": "Basic bXkrY2xpZW50OnMlM0FjciUyNnQ="},
+            id="basic",
+        ),
+        pytest.param(
+            "secret",
+            "client_secret_post",
+            {
+                "grant_type": "refresh_token",
+                "client_id": "my client",
+                "client_secret": "secret",
+            },
+            {},
+            id="post",
+        ),
+        pytest.param(
+            None,
+            "client_secret_basic",
+            {"grant_type": "refresh_token", "client_id": "my client"},
+            {},
+            id="public-client",
+        ),
+    ],
+)
+def test_client_auth(
+    client_secret: str | None,
+    method: oauth2.ClientAuthMethod,
+    expected_body: dict[str, str],
+    expected_headers: dict[str, str],
+) -> None:
+    """Test the client authenticates with exactly one method."""
+    assert oauth2.client_auth(
+        {"grant_type": "refresh_token"}, "my client", client_secret, method
+    ) == (expected_body, expected_headers)

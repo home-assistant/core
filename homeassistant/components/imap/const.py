@@ -1,5 +1,6 @@
 """Constants for the imap integration."""
 
+import re
 from typing import Final
 
 DOMAIN: Final = "imap"
@@ -21,3 +22,6 @@ DEFAULT_MAX_MESSAGE_SIZE = 2048
 MESSAGE_DATA_OPTIONS: Final = ["text", "headers"]
 
 MAX_MESSAGE_SIZE_LIMIT: Final = 30000
+
+# aioimaplib raises a ValueError for command arguments containing these
+INVALID_COMMAND_CHARS: Final = re.compile(r"[\x00\r\n]")

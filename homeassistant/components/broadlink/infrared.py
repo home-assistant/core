@@ -2,8 +2,8 @@
 
 from typing import TYPE_CHECKING, override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data as _bl_pulses_to_data
+from broadlink_async.exceptions import BroadlinkException
+from broadlink_async.remote import pulses_to_data as _bl_pulses_to_data
 
 from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
 from homeassistant.config_entries import ConfigEntry

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from holidays import UNOFFICIAL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.holiday.const import (
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_COUNTRY, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -483,3 +482,33 @@ async def test_options_abort_no_categories(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_categories"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_entry_exists(hass: HomeAssistant) -> None:
+    """Test options flow stops if other entry already exist."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="United States, TX",
+        data={CONF_COUNTRY: "US", CONF_PROVINCE: "TX"},
+    )
+    entry.add_to_hass(hass)
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        title="United States, TX",
+        data={CONF_COUNTRY: "US", CONF_PROVINCE: "TX"},
+        options={CONF_CATEGORIES: [UNOFFICIAL]},
+    )
+    entry2.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_CATEGORIES: [UNOFFICIAL]},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.options == {}

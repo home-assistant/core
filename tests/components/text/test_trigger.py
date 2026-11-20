@@ -3,14 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
-from homeassistant.components.text.const import DOMAIN
-from homeassistant.components.text.trigger import TRIGGERS
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     BasicTriggerStateDescription,
     TargetSupport,
     arm_trigger,
@@ -20,6 +13,12 @@ from tests.components.common import (
     set_or_remove_state,
     target_entities,
 )
+
+from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
+from homeassistant.components.text.const import DOMAIN
+from homeassistant.components.text.trigger import TRIGGERS
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 TEST_TRIGGER_STATES = [
     (

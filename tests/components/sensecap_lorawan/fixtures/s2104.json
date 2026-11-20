@@ -1,0 +1,9 @@
+{
+  "source": "Synthetic frame using the SenseCAP decoder protocol test vectors.",
+  "f_port": 1,
+  "payload": "0106106ceeffff010710c86400000000",
+  "expected": {
+    "soil_temperature": -4.5,
+    "soil_moisture": 25.8
+  }
+}

@@ -1,7 +1,9 @@
 {
   "domain": "xeoma",
   "name": "Xeoma",
+  "categories": ["security_safety.cameras"],
   "codeowners": [],
+  "connectivity": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/xeoma",
   "iot_class": "local_polling",
   "loggers": ["pyxeoma"],

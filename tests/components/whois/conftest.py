@@ -6,13 +6,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.whois.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -32,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.whois.async_setup_entry", return_value=True
+        "homeassistant.components.whois.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

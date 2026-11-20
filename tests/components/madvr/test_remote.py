@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.madvr.const import DOMAIN
@@ -24,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_COMMAND, TEST_CON_ERROR, TEST_IMP_ERROR
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_remote_setup(

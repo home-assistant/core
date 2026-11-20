@@ -3,6 +3,7 @@
 from typing import Any
 
 from holidays import OPTIONAL
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.workday.const import (
     DEFAULT_EXCLUDES,
@@ -13,8 +14,6 @@ from homeassistant.components.workday.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(

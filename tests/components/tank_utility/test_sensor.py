@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests
 
 from homeassistant.components.tank_utility.sensor import SENSOR_ATTRS
@@ -11,8 +12,6 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 MOCK_DEVICE_ID = "device_1"
 

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pylast import WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import (
     CONF_MAIN_USER,
@@ -27,8 +28,6 @@ from . import (
 )
 from .conftest import ComponentSetup
 
-from tests.common import MockConfigEntry
-
 
 async def test_full_user_flow(hass: HomeAssistant, default_user: MockUser) -> None:
     """Test the full user configuration flow."""
@@ -45,6 +44,9 @@ async def test_full_user_flow(hass: HomeAssistant, default_user: MockUser) -> No
         assert result["type"] is FlowResultType.FORM
         assert not result["errors"]
         assert result["step_id"] == "friends"
+        assert result["data_schema"].schema[CONF_USERS].config["options"] == [
+            USERNAME_1
+        ]
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONF_FRIENDS_DATA
@@ -223,6 +225,9 @@ async def test_options_flow(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
+        assert result["data_schema"].schema[CONF_USERS].config["options"] == [
+            USERNAME_1
+        ]
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

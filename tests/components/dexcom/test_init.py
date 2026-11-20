@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from pydexcom.errors import AccountError, SessionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG, init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_account_error(hass: HomeAssistant) -> None:

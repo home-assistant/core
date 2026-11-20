@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, override
 
@@ -28,8 +28,6 @@ from .coordinator import (
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=90)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -131,6 +129,9 @@ class SwissPublicTransportSensor(
     @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
+        connections = self.coordinator.data
+        if len(connections) <= self.entity_description.index:
+            return None
         return self.entity_description.value_fn(
-            self.coordinator.data[self.entity_description.index]
+            connections[self.entity_description.index]
         )

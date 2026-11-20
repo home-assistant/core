@@ -5,28 +5,35 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zigpy.device import Device
+from zigpy.application import ControllerApplication
+from zigpy.device import GreenPowerDevice as ZigpyGreenPowerDevice, ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
+from zigpy.zgp.types import ApplicationID, SrcID
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zha import DOMAIN, device_action
-from homeassistant.components.zha.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_gateway, get_zha_gateway_proxy
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
+from .conftest import (
+    FIXTURE_GRP_WITH_ENTITIES_ID,
+    SIG_EP_INPUT,
+    SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
+    SIG_EP_TYPE,
 )
 
 SHORT_PRESS = "remote_button_short_press"
@@ -54,13 +61,58 @@ def required_platforms_only():
         yield
 
 
+async def test_get_actions_group_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller_with_group: ControllerApplication,
+) -> None:
+    """Test that ZHA group devices expose no ZHA device actions."""
+    await setup_zha()
+
+    gateway_proxy = get_zha_gateway_proxy(hass)
+    group_proxy = gateway_proxy.group_proxies[FIXTURE_GRP_WITH_ENTITIES_ID]
+    assert group_proxy.device_id is not None
+
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, group_proxy.device_id
+    )
+    # Entity based actions (e.g. from the switch domain) are fine, but the
+    # group device must not offer ZHA device actions (squawk/warn)
+    assert actions
+    assert not [action for action in actions if action["domain"] == DOMAIN]
+
+
+async def test_get_actions_green_power_device(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+) -> None:
+    """Test that Green Power devices expose no ZHA device actions."""
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_gpd = ZigpyGreenPowerDevice(
+        gateway.application_controller,
+        application_id=ApplicationID.SrcID,
+        src_id=SrcID(0x12345678),
+    )
+    gateway.application_controller.devices[zigpy_gpd.ieee] = zigpy_gpd
+    gateway.get_or_create_device(zigpy_gpd)
+    await gateway.async_device_initialized(zigpy_gpd)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_proxy = get_zha_gateway_proxy(hass).device_proxies[zigpy_gpd.ieee]
+    assert device_proxy.device_id is not None
+
+    assert await device_action.async_get_actions(hass, device_proxy.device_id) == []
+
+
 async def test_get_actions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test we get the expected actions from a ZHA device."""
 
@@ -149,7 +201,7 @@ async def test_action(
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test for executing a ZHA device action."""
     await setup_zha()
@@ -311,10 +363,18 @@ async def test_inovelli_led_effect_rejects_unknown_effect(
         await device_action.async_validate_action_config(hass, config)
 
 
+async def test_action_without_type_is_invalid(hass: HomeAssistant) -> None:
+    """Test an action without a type fails validation."""
+    config = {"device_id": "device_id", "domain": DOMAIN}
+
+    with pytest.raises(probatio.Invalid):
+        await device_action.async_validate_action_config(hass, config)
+
+
 async def test_client_unique_id_suffix_stripped(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test that the `_CLIENT_` unique ID suffix is stripped."""
     assert await async_setup_component(

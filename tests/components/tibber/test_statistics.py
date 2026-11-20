@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.components.tibber.coordinator import TibberDataCoordinator
@@ -9,9 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .test_common import CONSUMPTION_DATA_1, PRODUCTION_DATA_1, mock_get_homes
-
-from tests.common import MockConfigEntry
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_async_setup_entry(

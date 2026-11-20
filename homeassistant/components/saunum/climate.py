@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LeilSaunaConfigEntry, LeilSaunaCoordinator
+from . import LeilSaunaConfigEntry
 from .const import (
     DEFAULT_PRESET_NAME_TYPE_1,
     DEFAULT_PRESET_NAME_TYPE_2,
@@ -39,6 +39,7 @@ from .const import (
     OPT_PRESET_NAME_TYPE_2,
     OPT_PRESET_NAME_TYPE_3,
 )
+from .coordinator import LeilSaunaCoordinator
 from .entity import LeilSaunaEntity
 
 PARALLEL_UPDATES = 1

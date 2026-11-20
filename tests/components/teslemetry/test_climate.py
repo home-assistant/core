@@ -4,31 +4,28 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import CabinOverheatProtectionTemp
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     DATA_COMPONENT,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
@@ -49,8 +46,6 @@ from .const import (
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
-
-from tests.common import mock_restore_cache
 
 VIN = "LRW3F7EK4NC700000"
 
@@ -73,11 +68,11 @@ async def test_climate(
     # Turn On and Set Temp
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TEMPERATURE: 20,
-            ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.TEMPERATURE: 20,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
         },
         blocking=True,
     )
@@ -88,10 +83,10 @@ async def test_climate(
     # Set Temp
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TEMPERATURE: 21,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.TEMPERATURE: 21,
         },
         blocking=True,
     )
@@ -101,8 +96,8 @@ async def test_climate(
     # Set Preset
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: "keep"},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.PRESET_MODE: "keep"},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -111,8 +106,8 @@ async def test_climate(
     # Set Preset
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: "off"},
+        ClimateService.SET_PRESET_MODE,
+        {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.PRESET_MODE: "off"},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -121,8 +116,11 @@ async def test_climate(
     # Turn Off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -133,11 +131,11 @@ async def test_climate(
     # Turn On and Set Low
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TEMPERATURE: 30,
-            ATTR_HVAC_MODE: HVACMode.FAN_ONLY,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.TEMPERATURE: 30,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.FAN_ONLY,
         },
         blocking=True,
     )
@@ -148,10 +146,10 @@ async def test_climate(
     # Set Temp Medium
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TEMPERATURE: 35,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.TEMPERATURE: 35,
         },
         blocking=True,
     )
@@ -161,10 +159,10 @@ async def test_climate(
     # Set Temp High
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TEMPERATURE: 40,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.TEMPERATURE: 40,
         },
         blocking=True,
     )
@@ -174,8 +172,8 @@ async def test_climate(
     # Turn Off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: [entity_id]},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -184,8 +182,8 @@ async def test_climate(
     # Turn On
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: [entity_id]},
+        ClimateService.TURN_ON,
+        {TargetKey.ENTITY_ID: [entity_id]},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -198,8 +196,8 @@ async def test_climate(
     # Set Temp between levels snaps to the nearest level
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.TEMPERATURE: 34},
         blocking=True,
     )
     state = hass.states.get(entity_id)
@@ -231,8 +229,11 @@ async def test_cop_set_temperature_fahrenheit(
     ) as mock_set_cop_temp:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: temperature},
+            ClimateService.SET_TEMPERATURE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.TEMPERATURE: temperature,
+            },
             blocking=True,
         )
     mock_set_cop_temp.assert_called_once_with(cop_temp)
@@ -323,8 +324,8 @@ async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_on.assert_called_once()
@@ -347,8 +348,8 @@ async def test_errors(hass: HomeAssistant, response: str) -> None:
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
     mock_on.assert_called_once()
@@ -367,8 +368,8 @@ async def test_ignored_error(
     ) as mock_on:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: [entity_id]},
+            ClimateService.TURN_ON,
+            {TargetKey.ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_on.assert_called_once()
@@ -396,16 +397,19 @@ async def test_climate_noscope(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT_COOL,
+            },
             blocking=True,
         )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.TEMPERATURE: 20},
             blocking=True,
         )
 
@@ -456,8 +460,31 @@ async def test_select_streaming(
         assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
 
+STORED_CLIMATE = {
+    "native_current_temperature": 21.0,
+    "native_target_temperature": 22.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
+STORED_COP = {
+    "native_current_temperature": 21.0,
+    "native_target_temperature": 35.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
+
+
 @pytest.mark.parametrize(
-    ("entity_id", "units", "attributes", "expected_native", "expected_display"),
+    (
+        "entity_id",
+        "units",
+        "attributes",
+        "extra_data",
+        "expected_native",
+        "expected_display",
+    ),
     [
         pytest.param(
             "climate.test_climate",
@@ -469,6 +496,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (21.111, 22.222),
             (70.0, 72.0),
             id="climate_fahrenheit_on_us_customary",
@@ -483,6 +511,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (21.111, 22.222),
             (21.0, 22.0),
             id="climate_fahrenheit_on_metric",
@@ -497,6 +526,7 @@ async def test_select_streaming(
                     UnitOfTemperature.CELSIUS
                 ),
             },
+            None,
             (21.0, 22.0),
             (70.0, 71.5),
             id="climate_celsius_on_us_customary",
@@ -508,6 +538,7 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
             },
+            None,
             (21.111, 22.222),
             (70.0, 72.0),
             id="climate_legacy_on_us_customary",
@@ -520,6 +551,7 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
                 ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
             },
+            None,
             (None, None),
             (None, None),
             id="climate_invalid_unit",
@@ -534,9 +566,22 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (None, None),
             (None, None),
             id="climate_none_values",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 100,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 100,
+            },
+            STORED_CLIMATE,
+            (21.0, 22.0),
+            (70.0, 71.5),
+            id="climate_extra_data_on_us_customary",
         ),
         pytest.param(
             "climate.test_cabin_overheat_protection",
@@ -548,6 +593,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (22.222, 35.0),
             (72, 95),
             id="cop_fahrenheit_on_us_customary",
@@ -562,6 +608,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (22.222, 35.0),
             (22, 35),
             id="cop_fahrenheit_on_metric",
@@ -573,9 +620,22 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 72,
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 95,
             },
+            None,
             (22.222, 35.0),
             (72, 95),
             id="cop_legacy_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_cabin_overheat_protection",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 100,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 100,
+            },
+            STORED_COP,
+            (21.0, 35.0),
+            (70, 95),
+            id="cop_extra_data_on_us_customary",
         ),
     ],
 )
@@ -586,15 +646,18 @@ async def test_streaming_restore_temperature_unit(
     entity_id: str,
     units: UnitSystem,
     attributes: dict[str, float | str | None],
+    extra_data: dict[str, float | str | None] | None,
     expected_native: tuple[float | None, float | None],
     expected_display: tuple[float | None, float | None],
 ) -> None:
-    """Tests restored display-unit temperatures are converted to native Celsius."""
+    """Test restored temperatures are converted to native Celsius."""
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VIN]["config"] = {"cop_user_set_temp_supported": True}
     mock_metadata.return_value = metadata
     hass.config.units = units
-    mock_restore_cache(hass, (State(entity_id, HVACMode.OFF, attributes),))
+    mock_restore_cache_with_extra_data(
+        hass, ((State(entity_id, HVACMode.OFF, attributes), extra_data),)
+    )
 
     await setup_platform(hass, [Platform.CLIMATE])
 
@@ -673,8 +736,8 @@ async def test_cabin_overheat_protection_streaming_set_temperature(
     ) as mock_set_cop_temp:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 35},
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: [entity_id], ClimateServiceArgument.TEMPERATURE: 35},
             blocking=True,
         )
     mock_set_cop_temp.assert_called_once_with(CabinOverheatProtectionTemp.MEDIUM)

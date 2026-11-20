@@ -170,7 +170,11 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if (settings := self.unit.settings) is not None:
+        if (settings := self.unit.settings) is not None and (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_air_direction is not False
+            or self.unit.capabilities.has_swing is not False
+        ):
             if settings.get("VaneVerticalDirection") is not None:
                 features |= ClimateEntityFeature.SWING_MODE
             if settings.get("VaneHorizontalDirection") is not None:

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.here_travel_time.config_flow import (
@@ -41,15 +42,13 @@ from .const import (
     ORIGIN_LONGITUDE,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def bypass_setup_fixture():
     """Prevent setup."""
     with patch(
         "homeassistant.components.here_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
