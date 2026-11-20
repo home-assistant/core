@@ -188,6 +188,9 @@
     }
   },
   "services": {
+    "command": {
+      "service": "mdi:console"
+    },
     "get_kvs_value": {
       "service": "mdi:import"
     },
