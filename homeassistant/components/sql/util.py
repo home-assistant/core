@@ -24,11 +24,16 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DB_URL_RE, DOMAIN, DOMAIN_DATA
+from .const import DB_URL_RE, DOMAIN
 from .models import SQLData
 
 _LOGGER = logging.getLogger(__name__)
+
+# One SQLData holds the shared session makers and the shutdown listener for
+# every config entry, so it is shared rather than owned by any one entry.
+DOMAIN_DATA: HassKey[SQLData] = HassKey(DOMAIN)
 
 _SQL_LAMBDA_CACHE: LRUCache = LRUCache(1000)
 
