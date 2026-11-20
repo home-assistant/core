@@ -7,14 +7,12 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_DELAY_SECS,
-    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA
@@ -39,13 +37,13 @@ async def test_onoff(hass: HomeAssistant, mock_remote) -> None:
 
     await setup_panasonic_viera(hass)
 
-    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
+    data = {TargetKey.ENTITY_ID: "remote.panasonic_viera_tv"}
 
     # simulate tv off when async_update
     mock_remote.get_mute = Mock(side_effect=SOAPError)
 
-    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
-    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)
+    await hass.services.async_call(REMOTE_DOMAIN, RemoteService.TURN_OFF, data)
+    await hass.services.async_call(REMOTE_DOMAIN, RemoteService.TURN_ON, data)
     await hass.async_block_till_done()
 
     power = getattr(Keys.POWER, "value", Keys.POWER)
@@ -57,8 +55,11 @@ async def test_send_command(hass: HomeAssistant, mock_remote) -> None:
 
     await setup_panasonic_viera(hass)
 
-    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv", ATTR_COMMAND: "command"}
-    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data)
+    data = {
+        TargetKey.ENTITY_ID: "remote.panasonic_viera_tv",
+        RemoteServiceArgument.COMMAND: "command",
+    }
+    await hass.services.async_call(REMOTE_DOMAIN, RemoteService.SEND_COMMAND, data)
     await hass.async_block_till_done()
 
     assert mock_remote.send_key.call_args == call("command")
@@ -72,17 +73,17 @@ async def test_send_command_repeats_and_delay(
     await setup_panasonic_viera(hass)
 
     data = {
-        ATTR_ENTITY_ID: "remote.panasonic_viera_tv",
-        ATTR_COMMAND: ["down", "right"],
-        ATTR_NUM_REPEATS: 3,
-        ATTR_DELAY_SECS: 0.2,
+        TargetKey.ENTITY_ID: "remote.panasonic_viera_tv",
+        RemoteServiceArgument.COMMAND: ["down", "right"],
+        RemoteServiceArgument.NUM_REPEATS: 3,
+        RemoteServiceArgument.DELAY_SECS: 0.2,
     }
     with patch(
         "homeassistant.components.panasonic_viera.remote.asyncio.sleep",
         new_callable=AsyncMock,
     ) as mock_sleep:
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data, blocking=True
+            REMOTE_DOMAIN, RemoteService.SEND_COMMAND, data, blocking=True
         )
 
     assert (
@@ -100,16 +101,16 @@ async def test_send_command_default_delay(
     await setup_panasonic_viera(hass)
 
     data = {
-        ATTR_ENTITY_ID: "remote.panasonic_viera_tv",
-        ATTR_COMMAND: "up",
-        ATTR_NUM_REPEATS: 2,
+        TargetKey.ENTITY_ID: "remote.panasonic_viera_tv",
+        RemoteServiceArgument.COMMAND: "up",
+        RemoteServiceArgument.NUM_REPEATS: 2,
     }
     with patch(
         "homeassistant.components.panasonic_viera.remote.asyncio.sleep",
         new_callable=AsyncMock,
     ) as mock_sleep:
         await hass.services.async_call(
-            REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data, blocking=True
+            REMOTE_DOMAIN, RemoteService.SEND_COMMAND, data, blocking=True
         )
 
     assert mock_remote.send_key.call_args_list == [call(Keys.UP)] * 2

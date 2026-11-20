@@ -9,16 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.madvr.const import DOMAIN
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -55,13 +49,19 @@ async def test_remote_power(
     assert remote.state == STATE_ON
 
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
 
     mock_madvr_client.power_off.assert_called_once()
 
     await hass.services.async_call(
-        REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        REMOTE_DOMAIN,
+        RemoteService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -83,8 +83,8 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
-        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
+        RemoteService.SEND_COMMAND,
+        {TargetKey.ENTITY_ID: entity_id, RemoteServiceArgument.COMMAND: TEST_COMMAND},
         blocking=True,
     )
 
@@ -95,12 +95,12 @@ async def test_send_command(
 @pytest.mark.parametrize(
     ("client_method", "service", "extra_data", "translation_key"),
     [
-        ("power_off", SERVICE_TURN_OFF, {}, "power_off_failed"),
-        ("power_on", SERVICE_TURN_ON, {}, "power_on_failed"),
+        ("power_off", RemoteService.TURN_OFF, {}, "power_off_failed"),
+        ("power_on", RemoteService.TURN_ON, {}, "power_on_failed"),
         (
             "add_command_to_queue",
-            SERVICE_SEND_COMMAND,
-            {ATTR_COMMAND: TEST_COMMAND},
+            RemoteService.SEND_COMMAND,
+            {RemoteServiceArgument.COMMAND: TEST_COMMAND},
             "send_command_failed",
         ),
     ],
@@ -125,7 +125,7 @@ async def test_remote_action_failures(
         await hass.services.async_call(
             REMOTE_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: entity_id, **extra_data},
+            {TargetKey.ENTITY_ID: entity_id, **extra_data},
             blocking=True,
         )
 

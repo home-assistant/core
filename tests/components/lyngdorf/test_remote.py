@@ -10,17 +10,11 @@ from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -52,10 +46,14 @@ async def test_send_command(
     """Test sending a sequence of remote keys."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         {
-            ATTR_ENTITY_ID: REMOTE,
-            ATTR_COMMAND: [RemoteKey.MENU, RemoteKey.DOWN, RemoteKey.ENTER],
+            TargetKey.ENTITY_ID: REMOTE,
+            RemoteServiceArgument.COMMAND: [
+                RemoteKey.MENU,
+                RemoteKey.DOWN,
+                RemoteKey.ENTER,
+            ],
         },
         blocking=True,
     )
@@ -73,11 +71,11 @@ async def test_send_command_repeats(
     """Test the repeat count is passed through to the library."""
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         {
-            ATTR_ENTITY_ID: REMOTE,
-            ATTR_COMMAND: [RemoteKey.DOWN],
-            ATTR_NUM_REPEATS: 3,
+            TargetKey.ENTITY_ID: REMOTE,
+            RemoteServiceArgument.COMMAND: [RemoteKey.DOWN],
+            RemoteServiceArgument.NUM_REPEATS: 3,
         },
         blocking=True,
     )
@@ -96,8 +94,8 @@ async def test_send_unsupported_command(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             REMOTE_DOMAIN,
-            SERVICE_SEND_COMMAND,
-            {ATTR_ENTITY_ID: REMOTE, ATTR_COMMAND: ["nonsense"]},
+            RemoteService.SEND_COMMAND,
+            {TargetKey.ENTITY_ID: REMOTE, RemoteServiceArgument.COMMAND: ["nonsense"]},
             blocking=True,
         )
 
@@ -111,8 +109,8 @@ async def test_send_unsupported_command(
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (SERVICE_TURN_ON, True),
-        (SERVICE_TURN_OFF, False),
+        (RemoteService.TURN_ON, True),
+        (RemoteService.TURN_OFF, False),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -126,7 +124,7 @@ async def test_power(
     await hass.services.async_call(
         REMOTE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: REMOTE},
+        {TargetKey.ENTITY_ID: REMOTE},
         blocking=True,
     )
 
