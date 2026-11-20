@@ -12,16 +12,11 @@ from homeassistant.components.androidtv.const import (
     CONF_TURN_ON_COMMAND,
 )
 from homeassistant.components.remote import (
-    ATTR_NUM_REPEATS,
     DOMAIN as REMOTE_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import (
-    ATTR_COMMAND,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -52,7 +47,7 @@ async def _test_service(
     if expected_call_args is None:
         expected_call_args = [None]
 
-    service_data = {ATTR_ENTITY_ID: entity_id}
+    service_data = {TargetKey.ENTITY_ID: entity_id}
     if additional_service_data:
         service_data.update(additional_service_data)
 
@@ -89,14 +84,17 @@ async def test_services_remote(hass: HomeAssistant, config) -> None:
             patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key],
             patchers.PATCH_SCREENCAP,
         ):
-            await _test_service(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
-            await _test_service(hass, entity_id, SERVICE_TURN_ON, "turn_on")
+            await _test_service(hass, entity_id, RemoteService.TURN_OFF, "turn_off")
+            await _test_service(hass, entity_id, RemoteService.TURN_ON, "turn_on")
             await _test_service(
                 hass,
                 entity_id,
-                SERVICE_SEND_COMMAND,
+                RemoteService.SEND_COMMAND,
                 "adb_shell",
-                {ATTR_COMMAND: ["BACK", "test"], ATTR_NUM_REPEATS: 2},
+                {
+                    RemoteServiceArgument.COMMAND: ["BACK", "test"],
+                    RemoteServiceArgument.NUM_REPEATS: 2,
+                },
                 [
                     f"input keyevent {KEYS['BACK']}",
                     "test",
@@ -129,10 +127,10 @@ async def test_services_remote_custom(hass: HomeAssistant, config) -> None:
             patchers.PATCH_SCREENCAP,
         ):
             await _test_service(
-                hass, entity_id, SERVICE_TURN_OFF, "adb_shell", None, ["test off"]
+                hass, entity_id, RemoteService.TURN_OFF, "adb_shell", None, ["test off"]
             )
             await _test_service(
-                hass, entity_id, SERVICE_TURN_ON, "adb_shell", None, ["test on"]
+                hass, entity_id, RemoteService.TURN_ON, "adb_shell", None, ["test on"]
             )
 
 
@@ -154,8 +152,11 @@ async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
             try:
                 await hass.services.async_call(
                     REMOTE_DOMAIN,
-                    SERVICE_SEND_COMMAND,
-                    service_data={ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: "BACK"},
+                    RemoteService.SEND_COMMAND,
+                    service_data={
+                        TargetKey.ENTITY_ID: entity_id,
+                        RemoteServiceArgument.COMMAND: "BACK",
+                    },
                     blocking=True,
                 )
                 pytest.fail("Exception not raised")

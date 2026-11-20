@@ -5,11 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.apple_tv.remote import AppleTVRemote
-from homeassistant.components.remote import (
-    ATTR_DELAY_SECS,
-    ATTR_HOLD_SECS,
-    ATTR_NUM_REPEATS,
-)
+from homeassistant.components.remote import RemoteServiceArgument
 
 
 @pytest.mark.parametrize(
@@ -29,7 +25,11 @@ async def test_send_command(command: str, method: str, hold_secs: float) -> None
     remote.atv = AsyncMock()
     await remote.async_send_command(
         [command],
-        **{ATTR_NUM_REPEATS: 1, ATTR_DELAY_SECS: 0, ATTR_HOLD_SECS: hold_secs},
+        **{
+            RemoteServiceArgument.NUM_REPEATS: 1,
+            RemoteServiceArgument.DELAY_SECS: 0,
+            RemoteServiceArgument.HOLD_SECS: hold_secs,
+        },
     )
     assert len(remote.atv.method_calls) == 1
     if hold_secs >= 1:

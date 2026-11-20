@@ -5,14 +5,11 @@ from unittest.mock import MagicMock
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.remote import (
-    ATTR_COMMAND,
-    ATTR_DELAY_SECS,
-    ATTR_HOLD_SECS,
-    ATTR_NUM_REPEATS,
     DOMAIN as R_DOMAIN,
-    SERVICE_SEND_COMMAND,
+    RemoteService,
+    RemoteServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -53,13 +50,13 @@ async def test_services(
     command = "Select"
     await hass.services.async_call(
         R_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_COMMAND: command,
-            ATTR_NUM_REPEATS: 1,
-            ATTR_DELAY_SECS: 0,
-            ATTR_HOLD_SECS: 0,
+            TargetKey.ENTITY_ID: state.entity_id,
+            RemoteServiceArgument.COMMAND: command,
+            RemoteServiceArgument.NUM_REPEATS: 1,
+            RemoteServiceArgument.DELAY_SECS: 0,
+            RemoteServiceArgument.HOLD_SECS: 0,
         },
         blocking=True,
     )
@@ -72,13 +69,13 @@ async def test_services(
     command = "MoveLeft"
     await hass.services.async_call(
         R_DOMAIN,
-        SERVICE_SEND_COMMAND,
+        RemoteService.SEND_COMMAND,
         {
-            ATTR_ENTITY_ID: state.entity_id,
-            ATTR_COMMAND: command,
-            ATTR_NUM_REPEATS: 2,
-            ATTR_DELAY_SECS: 0,
-            ATTR_HOLD_SECS: 0,
+            TargetKey.ENTITY_ID: state.entity_id,
+            RemoteServiceArgument.COMMAND: command,
+            RemoteServiceArgument.NUM_REPEATS: 2,
+            RemoteServiceArgument.DELAY_SECS: 0,
+            RemoteServiceArgument.HOLD_SECS: 0,
         },
         blocking=True,
     )

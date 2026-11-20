@@ -6,7 +6,7 @@ from pytest_homeassistant.components.diagnostics import get_diagnostics_for_conf
 from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
+from homeassistant.components.remote import RemoteServiceArgument
 from homeassistant.core import HomeAssistant
 
 
@@ -20,7 +20,11 @@ async def test_diagnostics(
     """Test diagnostics."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        mock_config_entry, options={ATTR_ACTIVITY: "Watch TV", ATTR_DELAY_SECS: 0.4}
+        mock_config_entry,
+        options={
+            RemoteServiceArgument.ACTIVITY: "Watch TV",
+            RemoteServiceArgument.DELAY_SECS: 0.4,
+        },
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
