@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import Final, override
+
+from irm_kmi_api import PollenName, PollenParser
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,12 +24,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator, IrmKmiPollenCoordinator
 from .data import ProcessedCoordinatorData
 from .entity import IrmKmiBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+POLLEN_LEVELS: Final = [level.value for level in PollenParser.get_option_values()]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,6 +39,13 @@ class IrmKmiSensorEntityDescription(SensorEntityDescription):
     """Class describing IRM KMI sensor entities."""
 
     value_fn: Callable[[ProcessedCoordinatorData], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class IrmKmiPollenSensorEntityDescription(SensorEntityDescription):
+    """Class describing IRM KMI pollen sensor entities."""
+
+    pollen: PollenName
 
 
 SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
@@ -84,6 +95,17 @@ SENSOR_TYPES: tuple[IrmKmiSensorEntityDescription, ...] = (
     ),
 )
 
+POLLEN_SENSOR_TYPES: tuple[IrmKmiPollenSensorEntityDescription, ...] = tuple(
+    IrmKmiPollenSensorEntityDescription(
+        key=f"pollen_{pollen}",
+        translation_key=f"pollen_{pollen}",
+        device_class=SensorDeviceClass.ENUM,
+        options=POLLEN_LEVELS,
+        pollen=pollen,
+    )
+    for pollen in PollenName
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -91,10 +113,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    async_add_entities(IrmKmiSensor(entry, description) for description in SENSOR_TYPES)
+    async_add_entities(
+        [
+            *(IrmKmiSensor(entry, description) for description in SENSOR_TYPES),
+            *(
+                IrmKmiPollenSensor(entry, description)
+                for description in POLLEN_SENSOR_TYPES
+            ),
+        ]
+    )
 
 
-class IrmKmiSensor(IrmKmiBaseEntity, SensorEntity):
+class IrmKmiSensor(IrmKmiBaseEntity[IrmKmiCoordinator], SensorEntity):
     """Sensor for a value reported by IRM KMI."""
 
     entity_description: IrmKmiSensorEntityDescription
@@ -105,7 +135,7 @@ class IrmKmiSensor(IrmKmiBaseEntity, SensorEntity):
         description: IrmKmiSensorEntityDescription,
     ) -> None:
         """Create a new instance of the sensor from a configuration entry."""
-        super().__init__(entry)
+        super().__init__(entry, entry.runtime_data.weather)
         self.entity_description = description
         self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-{description.key}"
 
@@ -114,3 +144,25 @@ class IrmKmiSensor(IrmKmiBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class IrmKmiPollenSensor(IrmKmiBaseEntity[IrmKmiPollenCoordinator], SensorEntity):
+    """Sensor for the level of one pollen type."""
+
+    entity_description: IrmKmiPollenSensorEntityDescription
+
+    def __init__(
+        self,
+        entry: IrmKmiConfigEntry,
+        description: IrmKmiPollenSensorEntityDescription,
+    ) -> None:
+        """Create a new instance of the sensor from a configuration entry."""
+        super().__init__(entry, entry.runtime_data.pollen)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.data[CONF_UNIQUE_ID]}-{description.key}"
+
+    @property
+    @override
+    def native_value(self) -> str | None:
+        """Return the current pollen level."""
+        return self.coordinator.data[self.entity_description.pollen]
