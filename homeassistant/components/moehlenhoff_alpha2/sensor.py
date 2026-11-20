@@ -1,5 +1,7 @@
 """Support for Alpha2 heat control valve opening sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
@@ -50,6 +52,7 @@ class Alpha2HeatControlValveOpeningSensor(
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the current valve opening percentage."""
         return self.coordinator.data["heat_controls"][self.heat_control_id][

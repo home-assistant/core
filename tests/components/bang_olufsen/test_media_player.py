@@ -1,7 +1,6 @@
 """Test the Bang & Olufsen media_player entity."""
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
-import logging
 from unittest.mock import AsyncMock, patch
 
 from mozart_api.exceptions import NotFoundException
@@ -15,10 +14,12 @@ from mozart_api.models import (
     SourceArray,
     WebsocketNotificationTag,
 )
+from probatio import Invalid, MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
-from voluptuous import Invalid, MultipleInvalid
 
 from homeassistant.components.bang_olufsen.const import (
     BEO_REPEAT_FROM_HA,
@@ -28,21 +29,17 @@ from homeassistant.components.bang_olufsen.const import (
     BeoSource,
 )
 from homeassistant.components.media_player import (
-    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_TRACK,
@@ -51,29 +48,16 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_JOIN,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_REPEAT_SET,
-    SERVICE_SELECT_SOUND_MODE,
-    SERVICE_SELECT_SOURCE,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_UNJOIN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
@@ -118,9 +102,6 @@ from .const import (
     TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT,
 )
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
-
 
 async def test_initialization(
     hass: HomeAssistant,
@@ -128,8 +109,10 @@ async def test_initialization(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
-    caplog.set_level(logging.DEBUG)
+    """Test the integration is initialized properly.
+
+    Checks _initialize, async_added_to_hass and __init__.
+    """
 
     # Setup entity
     mock_config_entry.add_to_hass(hass)
@@ -218,7 +201,7 @@ async def test_async_update_sources_availability(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that the playback_source WebSocket event updates available playback sources."""
+    """Test playback_source WebSocket event updates sources."""
     # Remove video sources to simplify test
     mock_mozart_client.get_remote_menu.return_value = {}
 
@@ -237,7 +220,8 @@ async def test_async_update_sources_availability(
         items=[TEST_SOURCE]
     )
 
-    # Send playback_source. The source is not actually used, so its attributes don't matter
+    # Send playback_source. The source is not actually
+    # used, so its attributes don't matter
     playback_source_callback(Source())
 
     assert mock_mozart_client.get_available_sources.call_count == 2
@@ -298,12 +282,15 @@ async def test_async_update_playback_error(
         mock_mozart_client.get_playback_error_notifications.call_args[0][0]
     )
 
-    # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
+    # The async_dispatcher_send function seems to swallow
+    # exceptions, making pytest.raises unusable
     playback_error_callback(TEST_PLAYBACK_ERROR)
 
     assert (
-        "Exception in _async_update_playback_error when dispatching 'bang_olufsen_11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
-        in caplog.text
+        "Exception in _async_update_playback_error when"
+        " dispatching"
+        " 'bang_olufsen_11111111_playback_error':"
+        " (PlaybackError(error='Test error', item=None),)" in caplog.text
     )
 
 
@@ -476,8 +463,8 @@ async def test_async_turn_off(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -504,10 +491,10 @@ async def test_async_set_volume_level(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
+        MediaPlayerService.VOLUME_SET,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_VOLUME_LEVEL: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.VOLUME_LEVEL: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
         },
         blocking=True,
     )
@@ -575,7 +562,7 @@ async def test_async_update_beolink_listener(
     playback_metadata_callback(
         PlaybackContentMetadata(
             remote_leader=BeolinkLeader(
-                friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
+                friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2, audio_transport="v2"
             )
         )
     )
@@ -589,7 +576,8 @@ async def test_async_update_beolink_listener(
     # Called once for each entity during _initialize
     assert mock_mozart_client.get_beolink_listeners.call_count == 3
     # Called once for each entity during _initialize and
-    # once more during _async_update_beolink for the entity that has the callback associated with it.
+    # once more during _async_update_beolink for the entity
+    # that has the callback associated with it.
     assert mock_mozart_client.get_beolink_peers.call_count == 4
 
     # Main entity
@@ -599,6 +587,48 @@ async def test_async_update_beolink_listener(
     # Secondary entity
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID_2))
     assert states == snapshot(exclude=props("media_position_updated_at"))
+
+
+@pytest.mark.usefixtures("integration")
+async def test_group_members_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_mozart_client: AsyncMock,
+) -> None:
+    """Test the own entity_id in group_members follows an entity_id change."""
+    new_entity_id = "media_player.renamed_balance"
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    entity_registry.async_update_entity(
+        TEST_MEDIA_PLAYER_ENTITY_ID, new_entity_id=new_entity_id
+    )
+    await hass.async_block_till_done()
+
+    assert (states := hass.states.get(new_entity_id))
+    assert states.attributes["group_members"] == [
+        new_entity_id,
+        f"listener_not_in_hass-{TEST_JID_3}",
+        f"listener_not_in_hass-{TEST_JID_4}",
+    ]
+    # The state is written once under the new entity_id, already re-keyed
+    assert [
+        (
+            event.data["old_state"],
+            event.data["new_state"].attributes["group_members"],
+        )
+        for event in state_changes
+        if event.data["entity_id"] == new_entity_id
+    ] == [
+        (
+            None,
+            [
+                new_entity_id,
+                f"listener_not_in_hass-{TEST_JID_3}",
+                f"listener_not_in_hass-{TEST_JID_4}",
+            ],
+        )
+    ]
+    # The rename does not query the device
+    assert mock_mozart_client.get_beolink_listeners.call_count == 2
 
 
 async def test_async_update_name_and_beolink(
@@ -632,8 +662,8 @@ async def test_async_update_name_and_beolink(
     # Check that device name has been changed
     assert mock_config_entry.unique_id
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.unique_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
         )
     )
     assert device.name == TEST_FRIENDLY_NAME_2
@@ -652,10 +682,10 @@ async def test_async_mute_volume(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
+        MediaPlayerService.VOLUME_MUTE,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_VOLUME_MUTED: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
         },
         blocking=True,
     )
@@ -704,8 +734,8 @@ async def test_async_media_play_pause(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -731,8 +761,8 @@ async def test_async_media_stop(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -748,8 +778,8 @@ async def test_async_media_next_track(
     """Test async_media_next_track."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -787,10 +817,10 @@ async def test_async_media_seek(
     with expected_result:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_MEDIA_SEEK,
+            MediaPlayerService.MEDIA_SEEK,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_SEEK_POSITION: TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SEEK_POSITION: TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
             },
             blocking=True,
         )
@@ -806,8 +836,8 @@ async def test_async_media_previous_track(
     """Test async_media_previous_track."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -822,8 +852,8 @@ async def test_async_clear_playlist(
     """Test async_clear_playlist."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.CLEAR_PLAYLIST,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -850,14 +880,14 @@ async def test_async_select_source(
     audio_source_call: int,
     video_source_call: int,
 ) -> None:
-    """Test async_select_source with an invalid source and valid audio and video sources."""
+    """Test async_select_source with invalid/valid sources."""
     with expected_result:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_INPUT_SOURCE: source,
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOURCE: source,
             },
             blocking=True,
         )
@@ -881,10 +911,10 @@ async def test_async_select_sound_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOUND_MODE,
+        MediaPlayerService.SELECT_SOUND_MODE,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_SOUND_MODE: TEST_ACTIVE_SOUND_MODE_NAME_2,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SOUND_MODE: TEST_ACTIVE_SOUND_MODE_NAME_2,
         },
         blocking=True,
     )
@@ -907,10 +937,10 @@ async def test_async_select_sound_mode_invalid(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SELECT_SOUND_MODE,
+            MediaPlayerService.SELECT_SOUND_MODE,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_SOUND_MODE: "invalid_sound_mode",
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.SOUND_MODE: "invalid_sound_mode",
             },
             blocking=True,
         )
@@ -928,11 +958,11 @@ async def test_async_play_media_invalid_type(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_ID: "test",
-                ATTR_MEDIA_CONTENT_TYPE: "invalid type",
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "test",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "invalid type",
             },
             blocking=True,
         )
@@ -953,11 +983,11 @@ async def test_async_play_media_url(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
-            ATTR_MEDIA_CONTENT_TYPE: "audio/mpeg",
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "audio/mpeg",
         },
         blocking=True,
     )
@@ -970,18 +1000,18 @@ async def test_async_play_media_overlay_absolute_volume_uri(
     integration: None,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
+    """Test async_play_media overlay with local URI."""
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {"overlay_absolute_volume": 60},
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {"overlay_absolute_volume": 60},
         },
         blocking=True,
     )
@@ -1003,13 +1033,13 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "Dette er en test",
-            ATTR_MEDIA_CONTENT_TYPE: "overlay_tts",
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "Dette er en test",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "overlay_tts",
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {
                 "overlay_offset_volume": 20,
                 "overlay_tts_language": "da-dk",
             },
@@ -1036,13 +1066,13 @@ async def test_async_play_media_overlay_offset_volume_tts(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "This is a test",
-            ATTR_MEDIA_CONTENT_TYPE: "overlay_tts",
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {"overlay_offset_volume": 20},
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "This is a test",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "overlay_tts",
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {"overlay_offset_volume": 20},
         },
         blocking=True,
     )
@@ -1062,11 +1092,11 @@ async def test_async_play_media_tts(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
-            ATTR_MEDIA_CONTENT_TYPE: "provider",
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "provider",
         },
         blocking=True,
     )
@@ -1082,11 +1112,11 @@ async def test_async_play_media_radio(
     """Test async_play_media with B&O radio."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "1234567890123456",
-            ATTR_MEDIA_CONTENT_TYPE: "radio",
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1234567890123456",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "radio",
         },
         blocking=True,
     )
@@ -1104,11 +1134,11 @@ async def test_async_play_media_favourite(
     """Test async_play_media with B&O favourite."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "1",
-            ATTR_MEDIA_CONTENT_TYPE: "favourite",
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "favourite",
         },
         blocking=True,
     )
@@ -1125,12 +1155,12 @@ async def test_async_play_media_deezer_flow(
     # Send a service call
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "flow",
-            ATTR_MEDIA_CONTENT_TYPE: "deezer",
-            ATTR_MEDIA_EXTRA: {"id": "123"},
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "flow",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "deezer",
+            MediaPlayerServiceArgument.EXTRA: {"id": "123"},
         },
         blocking=True,
     )
@@ -1148,12 +1178,12 @@ async def test_async_play_media_deezer_playlist(
     """Test async_play_media with Deezer playlist."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "playlist:1234567890",
-            ATTR_MEDIA_CONTENT_TYPE: "deezer",
-            ATTR_MEDIA_EXTRA: {"start_from": 123},
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "playlist:1234567890",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "deezer",
+            MediaPlayerServiceArgument.EXTRA: {"start_from": 123},
         },
         blocking=True,
     )
@@ -1171,11 +1201,11 @@ async def test_async_play_media_deezer_track(
     """Test async_play_media with Deezer track."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_CONTENT_ID: "1234567890",
-            ATTR_MEDIA_CONTENT_TYPE: "deezer",
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "1234567890",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "deezer",
         },
         blocking=True,
     )
@@ -1196,11 +1226,11 @@ async def test_async_play_media_invalid_deezer(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_ID: "flow",
-                ATTR_MEDIA_CONTENT_TYPE: "deezer",
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "flow",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "deezer",
             },
             blocking=True,
         )
@@ -1229,11 +1259,11 @@ async def test_async_play_media_url_m3u(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
-                ATTR_MEDIA_CONTENT_TYPE: "audio/mpeg",
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "audio/mpeg",
             },
             blocking=True,
         )
@@ -1259,6 +1289,7 @@ async def test_async_play_media_url_m3u(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": None,
             },
@@ -1274,6 +1305,7 @@ async def test_async_play_media_url_m3u(
                 "can_play": True,
                 "can_expand": False,
                 "can_search": False,
+                "search_media_classes": None,
                 "thumbnail": None,
                 "children_media_class": None,
             },
@@ -1337,10 +1369,10 @@ async def test_async_join_players(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: group_members,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.GROUP_MEMBERS: group_members,
         },
         blocking=True,
     )
@@ -1400,10 +1432,10 @@ async def test_async_join_players_invalid(
     with expected_result as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_GROUP_MEMBERS: group_members,
+                TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+                MediaPlayerServiceArgument.GROUP_MEMBERS: group_members,
             },
             blocking=True,
         )
@@ -1433,8 +1465,8 @@ async def test_async_unjoin_player(
     """Test async_unjoin_player."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
 
@@ -1564,8 +1596,12 @@ async def test_async_beolink_join_invalid(
             [TEST_JID_3, TEST_JID_4],
             NotFoundException(),
             [
-                f"Unable to expand to {TEST_JID_3}. Is the device available on the network?",
-                f"Unable to expand to {TEST_JID_4}. Is the device available on the network?",
+                "Unable to expand to "
+                f"{TEST_JID_3}. Is the device "
+                "available on the network?",
+                "Unable to expand to "
+                f"{TEST_JID_4}. Is the device "
+                "available on the network?",
             ],
             2,
         ),
@@ -1607,7 +1643,8 @@ async def test_async_beolink_expand(
     for log_message in log_messages:
         assert log_message in caplog.text
 
-    # Called once during _initialize and once during async_beolink_expand for all_discovered
+    # Called once during _initialize and once during
+    # async_beolink_expand for all_discovered
     assert mock_mozart_client.get_beolink_peers.call_count == peers_call_count
 
     assert mock_mozart_client.post_beolink_expand.call_count == len(
@@ -1689,10 +1726,10 @@ async def test_async_set_repeat(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_REPEAT: repeat,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.REPEAT: repeat,
         },
         blocking=True,
     )
@@ -1731,10 +1768,10 @@ async def test_async_set_shuffle(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            ATTR_MEDIA_SHUFFLE: shuffle,
+            TargetKey.ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            MediaPlayerServiceArgument.SHUFFLE: shuffle,
         },
         blocking=True,
     )

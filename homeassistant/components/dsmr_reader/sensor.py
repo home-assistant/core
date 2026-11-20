@@ -1,6 +1,6 @@
 """Support for DSMR Reader through MQTT."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
@@ -37,9 +37,10 @@ class DSMRSensor(SensorEntity):
         self.entity_description = description
 
         slug = slugify(description.key.replace("/", "_"))
-        self.entity_id = f"sensor.{slug}"
         self._attr_unique_id = f"{config_entry.entry_id}-{slug}"
+        self._config_entry_id = config_entry.entry_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
 
@@ -71,4 +72,5 @@ class DSMRSensor(SensorEntity):
                     "topic": self.entity_description.key,
                     "topic_title": self.entity_description.key.split("/")[-1],
                 },
+                config_entry_id=self._config_entry_id,
             )

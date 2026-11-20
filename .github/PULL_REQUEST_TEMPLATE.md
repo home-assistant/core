@@ -35,7 +35,8 @@
 - [ ] New feature (which adds functionality to an existing integration)
 - [ ] Deprecation (breaking change to happen in the future)
 - [ ] Breaking change (fix/feature causing existing functionality to break)
-- [ ] Code quality improvements to existing code or addition of tests
+- [ ] Code quality improvements to existing code or addition of tests (refactoring, typing, performance, etc.)
+- [ ] Developer tooling (CI, GitHub workflows, linters and checkers, scripts, AI instructions, code owners)
 
 ## Additional information
 <!--
@@ -46,7 +47,7 @@
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
-- Link to developer documentation pull request: 
+- Link to contributors documentation pull request: 
 - Link to frontend pull request: 
 
 ## Checklist
@@ -57,7 +58,8 @@
   for before merging your code.
 
   AI tools are welcome, but contributors are responsible for *fully*
-  understanding the code before submitting a PR.
+  understanding the code before submitting a PR. Please follow our AI policy:
+  https://contributors.home-assistant.io/start/ai-policy/
 -->
 
 - [ ] I understand the code I am submitting and can explain how it works.
@@ -110,8 +112,8 @@ To help with the load of incoming pull requests:
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
-[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
-[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
+[dev-checklist]: https://contributors.home-assistant.io/core/development/checklist/
+[manifest-docs]: https://contributors.home-assistant.io/core/integrations/manifest/
+[quality-scale]: https://contributors.home-assistant.io/core/quality-scale/
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
-[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
+[perfect-pr]: https://contributors.home-assistant.io/start/pull-requests/#before-you-open-it

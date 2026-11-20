@@ -1,14 +1,12 @@
 """Config flow for Coinbase integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from coinbase.rest import RESTClient
 from coinbase.rest.rest_base import HTTPError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -38,10 +36,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_API_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+        probatio.Required(probatio.Secret(CONF_API_TOKEN)): str,
     }
 )
 
@@ -78,6 +76,13 @@ async def validate_api(hass: HomeAssistant, data):
     return {"title": user}
 
 
+def _get_accounts_and_exchange_rates(
+    client: RESTClient,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Get the accounts and the exchange rates."""
+    return get_accounts(client), client.get("/v2/exchange-rates")
+
+
 async def validate_options(
     hass: HomeAssistant, config_entry: CoinbaseConfigEntry, options
 ):
@@ -85,7 +90,9 @@ async def validate_options(
 
     client = config_entry.runtime_data.client
 
-    accounts = await hass.async_add_executor_job(get_accounts, client)
+    accounts, resp = await hass.async_add_executor_job(
+        _get_accounts_and_exchange_rates, client
+    )
 
     accounts_currencies = [
         account[API_ACCOUNT_CURRENCY]
@@ -93,7 +100,6 @@ async def validate_options(
         if not account[ACCOUNT_IS_VAULT]
     ]
 
-    resp = await hass.async_add_executor_job(client.get, "/v2/exchange-rates")
     available_rates = resp[API_DATA]
 
     if CONF_CURRENCIES in options:
@@ -116,6 +122,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     reauth_entry: CoinbaseConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -203,6 +210,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: CoinbaseConfigEntry,
     ) -> OptionsFlowHandler:
@@ -254,21 +262,21 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CURRENCIES,
                         default=default_currencies,
                     ): cv.multi_select(WALLETS),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EXCHANGE_RATES,
                         default=default_exchange_rates,
                     ): cv.multi_select(RATES),
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EXCHANGE_BASE,
                         default=default_exchange_base,
-                    ): vol.In(WALLETS),
-                    vol.Optional(
+                    ): probatio.In(WALLETS),
+                    probatio.Optional(
                         CONF_EXCHANGE_PRECISION, default=default_exchange_precision
                     ): int,
                 }
@@ -302,4 +310,4 @@ class CurrencyUnavailable(HomeAssistantError):
 
 
 class ExchangeRateUnavailable(HomeAssistantError):
-    """Error to indicate the requested exchange rate resource is not provided by the API."""
+    """Error to indicate the requested exchange rate is not provided by the API."""

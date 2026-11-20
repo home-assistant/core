@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import TRMNLError
 from trmnl.models import Device
@@ -16,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_trmnl_client")
@@ -113,7 +116,7 @@ async def test_dynamic_new_device(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that new entities are added when a new device appears in coordinator data."""
+    """Test new entities are added when a new device appears in data."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.test_trmnl_sleep_mode") is not None

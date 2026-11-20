@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from pynecil import CommunicationError, DeviceInfoResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
@@ -14,8 +15,6 @@ import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 
 from .conftest import DEFAULT_NAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_pynecil", "ble_device")
@@ -109,8 +108,8 @@ async def test_device_info_update(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_BLUETOOTH, config_entry.unique_id)}
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_BLUETOOTH, config_entry.unique_id), config_entry.entry_id
     )
     assert device
     assert device.sw_version is None
@@ -128,8 +127,8 @@ async def test_device_info_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_BLUETOOTH, config_entry.unique_id)}
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_BLUETOOTH, config_entry.unique_id), config_entry.entry_id
     )
     assert device
     assert device.sw_version == "v2.22"

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from youless_api import YoulessAPI
 
@@ -11,14 +12,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type YouLessConfigEntry = ConfigEntry[YouLessCoordinator]
+
 
 class YouLessCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching YouLess data."""
 
-    config_entry: ConfigEntry
+    config_entry: YouLessConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: YoulessAPI
+        self, hass: HomeAssistant, config_entry: YouLessConfigEntry, device: YoulessAPI
     ) -> None:
         """Initialize global YouLess data provider."""
         super().__init__(
@@ -30,5 +33,6 @@ class YouLessCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
         await self.hass.async_add_executor_job(self.device.update)

@@ -1,11 +1,13 @@
 """The elkm1 integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
 from elkm1_lib import Elk
+
+from homeassistant.config_entries import ConfigEntry
+
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 
 @dataclass(slots=True)

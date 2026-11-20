@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from miio import (
     AirQualityMonitor,
@@ -47,6 +47,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for Xiaomi cgllc.airmonitor.b1 device."""
 
     _attr_icon = "mdi:cloud"
+    _device: AirQualityMonitor
 
     def __init__(
         self,
@@ -66,7 +67,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         self._temperature = None
         self._humidity = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -82,11 +83,13 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._air_quality_index
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
@@ -97,6 +100,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._carbon_dioxide_equivalent
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
@@ -117,6 +121,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._humidity
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data = {}
@@ -131,7 +136,8 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
 class AirMonitorS1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
-    async def async_update(self):
+    @override
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -151,7 +157,8 @@ class AirMonitorS1(AirMonitorB1):
 class AirMonitorV1(AirMonitorB1):
     """Air Quality class for Xiaomi cgllc.airmonitor.s1 device."""
 
-    async def async_update(self):
+    @override
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -164,6 +171,7 @@ class AirMonitorV1(AirMonitorB1):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return None
@@ -173,6 +181,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
     """Air Quality class for cgllc.airm.cgdn1 device."""
 
     _attr_icon = "mdi:cloud"
+    _device: AirQualityMonitorCGDN1
 
     def __init__(
         self,
@@ -188,7 +197,7 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
         self._particulate_matter_2_5 = None
         self._particulate_matter_10 = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the miio device."""
         try:
             state = await self.hass.async_add_executor_job(self._device.status)
@@ -202,16 +211,19 @@ class AirMonitorCGDN1(XiaomiMiioEntity, AirQualityEntity):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._carbon_dioxide
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._particulate_matter_2_5
 
     @property
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._particulate_matter_10

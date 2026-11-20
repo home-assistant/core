@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.foscam.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
@@ -9,8 +11,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_mock_foscam_camera
 from .const import ENTRY_ID, VALID_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_unique_id_new_entry(
@@ -81,7 +81,7 @@ async def test_unique_id_migration_not_needed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the unique ID for a sleep switch is not executed if already in right format."""
+    """Test unique ID for sleep switch skipped if already correct."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
     entry.add_to_hass(hass)
 
@@ -100,7 +100,7 @@ async def test_unique_id_migration_not_needed(
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
         patch(
             "homeassistant.components.foscam.async_migrate_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         setup_mock_foscam_camera(mock_foscam_camera)

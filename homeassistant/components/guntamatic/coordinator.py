@@ -1,0 +1,53 @@
+"""Coordinator for Guntamatic integration."""
+
+import logging
+from typing import override
+
+from guntamatic.heater import Heater, NoSerialException
+import requests
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, SCAN_INTERVAL
+
+_LOGGER = logging.getLogger(__name__)
+
+type GuntamaticConfigEntry = ConfigEntry[GuntamaticCoordinator]
+
+
+class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
+    """Guntamatic data coordinator."""
+
+    def __init__(self, hass: HomeAssistant, entry: GuntamaticConfigEntry) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            logger=_LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+            config_entry=entry,
+        )
+        self.heater = Heater(entry.data[CONF_HOST])
+
+    @override
+    async def _async_update_data(self) -> dict[str, list[str]]:
+        """Fetch data from heater."""
+        try:
+            data: dict[str, list[str]] = await self.hass.async_add_executor_job(
+                self.heater.parse_data
+            )
+        except requests.exceptions.RequestException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except NoSerialException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_serial",
+            ) from err
+        return data

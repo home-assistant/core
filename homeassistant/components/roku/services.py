@@ -1,8 +1,8 @@
 """Support for the Roku media player."""
 
-from __future__ import annotations
+from enum import StrEnum
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -11,11 +11,20 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
 
-ATTR_KEYWORD = "keyword"
 
-SERVICE_SEARCH = "search"
+class RokuService(StrEnum):
+    """Store keys for Roku services."""
 
-SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
+    SEARCH = "search"
+
+
+class RokuServiceArgument(StrEnum):
+    """Store keys for Roku service arguments."""
+
+    KEYWORD = "keyword"
+
+
+SEARCH_SCHEMA: VolDictType = {probatio.Required(RokuServiceArgument.KEYWORD): str}
 
 
 @callback
@@ -24,7 +33,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_SEARCH,
+        RokuService.SEARCH,
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema=SEARCH_SCHEMA,
         func="search",

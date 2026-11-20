@@ -1,7 +1,5 @@
 """Diagnostics support for TP-Link Omada."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -27,6 +25,7 @@ RUNTIME_TO_REDACT = {
     "ip",
     "priDns",
     "priDns2",
+    "psk",
     "sndDns",
     "sndDns2",
     "ssid",

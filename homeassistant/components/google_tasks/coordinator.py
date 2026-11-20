@@ -1,9 +1,9 @@
 """Coordinator for fetching data from Google Tasks API."""
 
 import asyncio
-import datetime
+import datetime as dt
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,7 @@ from .api import AsyncConfigEntryAuth
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL: Final = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL: Final = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type GoogleTasksConfigEntry = ConfigEntry[list[TaskUpdateCoordinator]]
@@ -44,6 +44,7 @@ class TaskUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.task_list_id = task_list_id
         self.task_list_title = task_list_title
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch tasks from API endpoint."""
         async with asyncio.timeout(TIMEOUT):

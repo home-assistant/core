@@ -1,6 +1,7 @@
 """Support for Firmata sensor input."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN
@@ -47,15 +48,18 @@ async def async_setup_entry(
 class FirmataSensor(FirmataPinEntity, SensorEntity):
     """Representation of a sensor on a Firmata board."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a sensor."""
         await self._api.start_pin(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop reporting a sensor."""
         await self._api.stop_pin()
 
     @property
+    @override
     def native_value(self) -> int:
         """Return sensor state."""
         return self._api.state

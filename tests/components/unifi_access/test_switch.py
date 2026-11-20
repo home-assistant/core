@@ -1,12 +1,11 @@
 """Tests for the UniFi Access switch platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import (
     ApiAuthError,
@@ -17,20 +16,13 @@ from unifi_access_api import (
 )
 from unifi_access_api.models.websocket import SettingUpdate, SettingUpdateData
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 EVACUATION_ENTITY = "switch.unifi_access_evacuation"
 LOCKDOWN_ENTITY = "switch.unifi_access_lockdown"
@@ -86,8 +78,8 @@ async def test_turn_on_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -112,8 +104,8 @@ async def test_turn_off_switch(
     """Test turning off emergency switch."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert hass.states.get(entity_id).state == "on"
@@ -121,8 +113,8 @@ async def test_turn_off_switch(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -151,8 +143,8 @@ async def test_switch_api_error(
     with pytest.raises(HomeAssistantError, match="Failed to set emergency status"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
             blocking=True,
         )
 
@@ -165,8 +157,8 @@ async def test_switches_are_independent(
     """Test that toggling one switch does not affect the other."""
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: LOCKDOWN_ENTITY},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: LOCKDOWN_ENTITY},
         blocking=True,
     )
     assert hass.states.get(LOCKDOWN_ENTITY).state == "on"
@@ -179,8 +171,8 @@ async def test_switches_are_independent(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     assert hass.states.get(EVACUATION_ENTITY).state == "on"
@@ -269,8 +261,8 @@ async def test_optimistic_update_before_ws_confirmation(
     # Turn on evacuation — state should be optimistically "on" immediately
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     assert hass.states.get(EVACUATION_ENTITY).state == "on"
@@ -308,8 +300,8 @@ async def test_no_optimistic_update_when_ws_disconnected(
     # API call succeeds but optimistic update must NOT restore availability
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: EVACUATION_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()

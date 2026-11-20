@@ -6,7 +6,7 @@ Entity to be updated with new values.
 """
 
 import asyncio
-import datetime
+import datetime as dt
 from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
@@ -14,6 +14,7 @@ from unittest.mock import DEFAULT, MagicMock
 from dsmr_parser import obis_references
 from dsmr_parser.obis_references import (
     BELGIUM_CURRENT_AVERAGE_DEMAND,
+    BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
     BELGIUM_MAXIMUM_DEMAND_MONTH,
     CURRENT_ELECTRICITY_USAGE,
     ELECTRICITY_ACTIVE_TARIFF,
@@ -25,10 +26,16 @@ from dsmr_parser.obis_references import (
     MBUS_EQUIPMENT_IDENTIFIER,
     MBUS_METER_READING,
 )
-from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+from dsmr_parser.objects import CosemObject, MBusObject, MBusObjectPeak, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
-from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
+from homeassistant.components.dsmr.sensor import (
+    SENSORS,
+    SENSORS_MBUS_DEVICE_TYPE,
+    DSMRBelgiumDemandHistory,
+    DSMREntity,
+)
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -47,8 +54,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, patch
 
 
 async def test_default_setup(
@@ -88,7 +93,7 @@ async def test_default_setup(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
@@ -151,7 +156,7 @@ async def test_default_setup(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": dt.datetime.fromtimestamp(1551642214)},
                 {"value": Decimal("745.701"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
@@ -278,7 +283,7 @@ async def test_v4_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -366,7 +371,7 @@ async def test_v5_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": value, "unit": "m3"},
             ],
         ),
@@ -439,7 +444,7 @@ async def test_luxembourg_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -510,6 +515,171 @@ async def test_luxembourg_meter(
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfVolume.CUBIC_METERS
     )
+
+
+async def test_luxembourg_smarty_encrypted_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if an encrypted Luxembourg Smarty (MSn) meter is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "MSn",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+        "encryption_key": "aabbccddeeff00112233445566778899",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        HOURLY_GAS_METER_READING,
+        MBusObject(
+            (0, 0),
+            [
+                {"value": dt.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "m3"},
+            ],
+        ),
+        "HOURLY_GAS_METER_READING",
+    )
+    telegram.add(
+        ELECTRICITY_IMPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_IMPORTED_TOTAL",
+    )
+    telegram.add(
+        ELECTRICITY_EXPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_EXPORTED_TOTAL",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    consumption = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert consumption.state == "123.456"
+    assert consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    assert (
+        consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfEnergy.KILO_WATT_HOUR
+    )
+
+    production = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert production.state == "654.321"
+
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "745.695"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+
+
+async def test_austrian_sagemcom_encrypted_meter(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if an encrypted Austrian Sagemcom (T210-D-R) meter is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "SAGEMCOM_T210_D_R",
+        "serial_id": None,
+        "serial_id_gas": None,
+        "encryption_key": "aabbccddeeff00112233445566778899",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        ELECTRICITY_IMPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_IMPORTED_TOTAL",
+    )
+    telegram.add(
+        ELECTRICITY_EXPORTED_TOTAL,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_EXPORTED_TOTAL",
+    )
+    telegram.add(
+        obis_references.ELECTRICITY_USED_TARIFF_1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("11.111"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_1",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    consumption = hass.states.get("sensor.electricity_meter_energy_consumption_total")
+    assert consumption.state == "123.456"
+    assert consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+
+    production = hass.states.get("sensor.electricity_meter_energy_production_total")
+    assert production.state == "654.321"
+
+    tariff_1 = hass.states.get("sensor.electricity_meter_energy_consumption_tarif_1")
+    assert tariff_1.state == "11.111"
+    assert tariff_1.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
 
 
 async def test_eonhu_meter(
@@ -612,7 +782,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("4.11"), "unit": "kW"},
             ],
         ),
@@ -636,7 +806,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -660,7 +830,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 2),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": dt.datetime.fromtimestamp(1551642214)},
                 {"value": Decimal("678.695"), "unit": "m3"},
             ],
         ),
@@ -684,7 +854,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": dt.datetime.fromtimestamp(1551642215)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -708,7 +878,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": dt.datetime.fromtimestamp(1551642216)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -851,7 +1021,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": dt.datetime.fromtimestamp(1551642215)},
                 {"value": Decimal("123.456"), "unit": "m3"},
             ],
         ),
@@ -875,7 +1045,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 2),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": dt.datetime.fromtimestamp(1551642216)},
                 {"value": Decimal("678.901"), "unit": "m3"},
             ],
         ),
@@ -899,7 +1069,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": dt.datetime.fromtimestamp(1551642217)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -923,7 +1093,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -1070,7 +1240,7 @@ async def test_belgian_meter_mbus(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": dt.datetime.fromtimestamp(1551642217)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -1086,7 +1256,7 @@ async def test_belgian_meter_mbus(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -1380,8 +1550,12 @@ async def test_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    # Legacy host/port entries are combined into a socket URL in memory and
+    # opened with the keep-alive watchdog; the stored entry is left untouched so
+    # a downgrade keeps working.
+    assert mock_entry.data["host"] == "localhost"
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
 
 
 async def test_rfxtrx_tcp(
@@ -1409,8 +1583,66 @@ async def test_rfxtrx_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Legacy host/port entries keep using the TCP reader (with keep-alive); the
+    # stored entry is left untouched so a downgrade keeps working.
+    assert mock_entry.data["host"] == "localhost"
     assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    assert connection_factory.call_args_list[0][0][1] == 1234
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_tcp_socket_url(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A socket:// port should be opened with the keep-alive watchdog."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "socket://localhost:1234",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_serial_no_keep_alive(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A local serial device should use the plain reader without keep-alive."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "/dev/ttyUSB0"
+    assert "keep_alive_interval" not in connection_factory.call_args_list[0][1]
 
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
@@ -1558,7 +1790,7 @@ async def test_gas_meter_providing_energy_reading(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("123.456"), "unit": UnitOfEnergy.GIGA_JOULE},
             ],
         ),
@@ -1618,7 +1850,75 @@ async def test_heat_meter_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "GJ"},
+            ],
+        ),
+        "MBUS_METER_READING",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    hass.loop.set_debug(True)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
+    assert heat_consumption.state == "745.695"
+    assert (
+        heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    )
+    assert (
+        heat_consumption.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.GIGA_JOULE
+    )
+    assert (
+        heat_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
+
+async def test_heat_cool_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if heat/cool meter reading is correctly parsed."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5",
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "012", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
+            [
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "GJ"},
             ],
         ),
@@ -1667,3 +1967,267 @@ def test_all_obis_references_exists() -> None:
     for sensors in SENSORS_MBUS_DEVICE_TYPE.values():
         for sensor in sensors:
             assert hasattr(obis_references, sensor.obis_reference)
+
+
+def test_belgian_diagnostic_descriptions() -> None:
+    """Belgian diagnostic descriptions are limited to DSMR 5B."""
+    keys = {
+        "belgium_version_information",
+        "belgium_equipment_identifier",
+        "belgium_switch_position",
+        "belgium_text_message",
+        "belgium_maximum_demand_history",
+    }
+    descriptions = {description.key: description for description in SENSORS}
+    assert keys <= descriptions.keys()
+    for key in keys:
+        assert descriptions[key].dsmr_versions == {"5B"}
+    gas_keys = {
+        "belgium_gas_device_type",
+        "belgium_gas_equipment_identifier",
+        "belgium_gas_valve_position",
+    }
+    gas_descriptions = {
+        description.key: description for description in SENSORS_MBUS_DEVICE_TYPE[3]
+    }
+    assert gas_keys <= gas_descriptions.keys()
+
+
+def test_belgian_monthly_demand_history() -> None:
+    """Expose completed months, ignoring malformed placeholder peak records."""
+    description = next(
+        item for item in SENSORS if item.key == "belgium_maximum_demand_history"
+    )
+    telegram = Telegram()
+    peaks = [
+        MBusObjectPeak(
+            (0, 0),
+            [
+                {"value": None},
+                {"value": None},
+                {"value": Decimal(0), "unit": "kW"},
+            ],
+        ),
+        MBusObjectPeak(
+            (0, 0),
+            [
+                {"value": dt.datetime(2026, 11, 1, tzinfo=dt.UTC)},
+                {"value": dt.datetime(2026, 10, 29, 16, 30, tzinfo=dt.UTC)},
+                {"value": Decimal("3.277"), "unit": "kW"},
+            ],
+        ),
+    ]
+    telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+        peaks,
+        "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+    )
+    entry = MockConfigEntry(
+        domain="dsmr",
+        data={"serial_id": "test-meter", "dsmr_version": "5B"},
+    )
+    entity = DSMRBelgiumDemandHistory(description, entry, telegram)
+    assert entity.native_value == 3.277
+    assert entity.extra_state_attributes == {
+        "monthly_peaks": [
+            {
+                "month": "2026-10",
+                "peak": 3.277,
+                "occurred": "2026-10-29T16:30:00+00:00",
+            }
+        ]
+    }
+
+
+def test_belgian_diagnostics_preserve_text_and_gas_unique_ids() -> None:
+    """Diagnostics must not overwrite consumption IDs or convert text."""
+    entry = MockConfigEntry(
+        domain="dsmr",
+        data={"serial_id": "1234", "serial_id_gas": "5678", "dsmr_version": "5B"},
+    )
+    for key, value in (
+        ("belgium_version_information", "0050221"),
+        ("belgium_equipment_identifier", "000A0123"),
+        ("belgium_text_message", "Meter message"),
+    ):
+        description = next(item for item in SENSORS if item.key == key)
+        telegram = Telegram()
+        telegram.add(
+            (0, 0),
+            CosemObject((0, 0), [{"value": value, "unit": None}]),
+            description.obis_reference,
+        )
+        entity = DSMREntity(description, entry, telegram, None, None)
+        assert entity.native_value == value
+
+    telegram = Telegram()
+    telegram.add(
+        (0, 1),
+        CosemObject((0, 1), [{"value": "0000000088", "unit": None}]),
+        "MBUS_EQUIPMENT_IDENTIFIER",
+    )
+    ids = set()
+    for description in SENSORS_MBUS_DEVICE_TYPE[3]:
+        entity = DSMREntity(description, entry, telegram, None, None, "5678", 1)
+        assert entity.unique_id not in ids
+        ids.add(entity.unique_id)
+        if description.key == "gas_reading":
+            assert entity.unique_id == "5678"
+        if description.key == "belgium_gas_equipment_identifier":
+            assert entity.native_value == "0000000088"
+
+
+def test_belgian_monthly_history_newest_first_and_empty() -> None:
+    """Use the newest completed month and clear state when history is empty."""
+    description = next(
+        item for item in SENSORS if item.key == "belgium_maximum_demand_history"
+    )
+    telegram = Telegram()
+    telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+        [
+            MBusObjectPeak(
+                (0, 0),
+                [
+                    {"value": month},
+                    {"value": month - dt.timedelta(days=5)},
+                    {"value": value, "unit": "kW"},
+                ],
+            )
+            for month, value in (
+                (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), Decimal("3.277")),
+                (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), Decimal("3.175")),
+            )
+        ],
+        "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+    )
+    entry = MockConfigEntry(
+        domain="dsmr", data={"serial_id": "test-meter", "dsmr_version": "5B"}
+    )
+    entity = DSMRBelgiumDemandHistory(description, entry, telegram)
+    assert entity.native_value == 3.277
+    assert len(entity.extra_state_attributes["monthly_peaks"]) == 2
+    empty_telegram = Telegram()
+    empty_telegram.add(
+        BELGIUM_MAXIMUM_DEMAND_13_MONTHS, [], "BELGIUM_MAXIMUM_DEMAND_13_MONTHS"
+    )
+    entity.hass = MagicMock()
+    with patch.object(entity, "async_write_ha_state") as write_state:
+        entity.update_data(empty_telegram)
+        write_state.assert_called_once()
+    assert entity.native_value is None
+    assert entity.extra_state_attributes == {"monthly_peaks": []}
+
+
+def test_belgian_long_text_message_state() -> None:
+    """Truncate message states but retain complete messages in attributes."""
+    description = next(item for item in SENSORS if item.key == "belgium_text_message")
+    entry = MockConfigEntry(
+        domain="dsmr", data={"serial_id": "test-meter", "dsmr_version": "5B"}
+    )
+    telegram = Telegram()
+    message = "Important message. " * 20
+    telegram.add(
+        obis_references.TEXT_MESSAGE,
+        CosemObject((0, 0), [{"value": message, "unit": None}]),
+        "TEXT_MESSAGE",
+    )
+    entity = DSMREntity(description, entry, telegram, None, None)
+    assert entity.native_value == message[:255]
+    assert entity.extra_state_attributes == {"full_message": message}
+
+
+@pytest.mark.parametrize("newest_first", [True, False])
+async def test_belgian_history_sensor_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    newest_first: bool,
+) -> None:
+    """Create the history entity and update its published state through telegrams."""
+    connection_factory, _transport, _protocol = dsmr_connection_fixture
+    entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5B",
+            "serial_id": "1234",
+        },
+        options={"time_between_update": 0},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    def history_telegram(
+        monthly_peaks: tuple[tuple[dt.datetime, str], ...],
+    ) -> Telegram:
+        """Construct a DSMR telegram with its historical demand buffer."""
+        telegram = Telegram()
+        telegram.add(
+            BELGIUM_MAXIMUM_DEMAND_13_MONTHS,
+            [
+                MBusObjectPeak(
+                    (0, 0),
+                    [
+                        {"value": month},
+                        {"value": month - dt.timedelta(days=5)},
+                        {"value": Decimal(peak), "unit": "kW"},
+                    ],
+                )
+                for month, peak in monthly_peaks
+            ],
+            "BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+        )
+        return telegram
+
+    october = (dt.datetime(2026, 11, 1, tzinfo=dt.UTC), "3.277")
+    september = (dt.datetime(2026, 10, 1, tzinfo=dt.UTC), "3.175")
+    months = (october, september) if newest_first else (september, october)
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+    telegram_callback(history_telegram(months))
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", "dsmr", "1234_belgium_maximum_demand_history"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "3.277"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kW"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes["monthly_peaks"] == [
+        {
+            "month": ("2026-10" if month == october[0] else "2026-09"),
+            "peak": float(peak),
+            "occurred": (month - dt.timedelta(days=5)).isoformat(),
+        }
+        for month, peak in months
+    ]
+
+    telegram_callback(
+        history_telegram(((dt.datetime(2026, 12, 1, tzinfo=dt.UTC), "4.125"),))
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "4.125"
+    assert state.attributes["monthly_peaks"] == [
+        {
+            "month": "2026-11",
+            "peak": 4.125,
+            "occurred": "2026-11-26T00:00:00+00:00",
+        }
+    ]
+
+    telegram_callback(history_telegram(()))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["monthly_peaks"] == []

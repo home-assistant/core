@@ -1,9 +1,8 @@
 """Tests for siren platform."""
 
-from __future__ import annotations
-
 from kasa import Device, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.siren import (
@@ -20,8 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import _mocked_device, setup_platform_for_device, snapshot_platform
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "siren.hub"
 

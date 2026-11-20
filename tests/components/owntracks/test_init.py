@@ -2,14 +2,14 @@
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import owntracks
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.owntracks import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_component
-from tests.typing import ClientSessionGenerator
 
 MINIMAL_LOCATION_MESSAGE = {
     "_type": "location",
@@ -52,9 +52,9 @@ async def mock_client(
     mock_component(hass, "device_tracker")
 
     MockConfigEntry(
-        domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
+        domain=DOMAIN, data={"webhook_id": "owntracks_test", "secret": "abcd"}
     ).add_to_hass(hass)
-    await async_setup_component(hass, "owntracks", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     return await hass_client_no_auth()
 

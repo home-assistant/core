@@ -1,12 +1,11 @@
 """Teltonika sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
-from teltasync.modems import ModemStatus
+from teltasync.modems import ModemStatusFull
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TeltonikaConfigEntry, TeltonikaDataUpdateCoordinator
+from . import TeltonikaConfigEntry
+from .coordinator import TeltonikaDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ PARALLEL_UPDATES = 0
 class TeltonikaSensorEntityDescription(SensorEntityDescription):
     """Describes Teltonika sensor entity."""
 
-    value_fn: Callable[[ModemStatus], StateType]
+    value_fn: Callable[[ModemStatusFull], StateType]
 
 
 SENSOR_DESCRIPTIONS: tuple[TeltonikaSensorEntityDescription, ...] = (
@@ -155,7 +155,7 @@ class TeltonikaSensorEntity(
         device_info: DeviceInfo,
         description: TeltonikaSensorEntityDescription,
         modem_id: str,
-        modem: ModemStatus,
+        modem: ModemStatusFull,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -177,11 +177,13 @@ class TeltonikaSensorEntity(
         self._attr_translation_placeholders = {"modem_name": modem_name}
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._modem_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Handle updated data from the coordinator."""
         return self.entity_description.value_fn(self.coordinator.data[self._modem_id])

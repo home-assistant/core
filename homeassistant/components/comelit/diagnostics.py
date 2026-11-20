@@ -1,14 +1,8 @@
 """Diagnostics support for Comelit integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from aiocomelit import (
-    ComelitSerialBridgeObject,
-    ComelitVedoAreaObject,
-    ComelitVedoZoneObject,
-)
+from aiocomelit import ComelitDeviceObject, ComelitVedoAreaObject, ComelitVedoZoneObject
 from aiocomelit.const import BRIDGE
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -33,7 +27,7 @@ async def async_get_config_entry_diagnostics(
     for dev_type in coordinator.data:
         dev_type_list = []
         for sensor_data in coordinator.data[dev_type].values():
-            if isinstance(sensor_data, ComelitSerialBridgeObject):
+            if isinstance(sensor_data, ComelitDeviceObject):
                 dev_type_list.append(
                     {
                         sensor_data.index: {

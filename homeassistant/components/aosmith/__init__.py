@@ -1,7 +1,5 @@
 """The A. O. Smith integration."""
 
-from __future__ import annotations
-
 from py_aosmith import AOSmithAPIClient
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -19,7 +17,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR, Platform.WATER_HEATER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> None:
     """Set up A. O. Smith from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -56,9 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,37 +1,23 @@
 """Class to hold all light accessories."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
-    ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_RGBW_COLOR,
-    ATTR_RGBWW_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
-    ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
     brightness_supported,
     color_supported,
     color_temp_supported,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
@@ -77,9 +63,9 @@ class Light(HomeAccessory):
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
         self._reload_on_change_attrs.extend(
             (
-                ATTR_SUPPORTED_COLOR_MODES,
-                ATTR_MAX_COLOR_TEMP_KELVIN,
-                ATTR_MIN_COLOR_TEMP_KELVIN,
+                LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES,
+                LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
             )
         )
         self.chars = []
@@ -90,9 +76,9 @@ class Light(HomeAccessory):
         assert state
         attributes = state.attributes
         self.color_modes = color_modes = (
-            attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
+            attributes.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES) or []
         )
-        self._previous_color_mode = attributes.get(ATTR_COLOR_MODE)
+        self._previous_color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.color_supported = color_supported(color_modes)
         self.color_temp_supported = color_temp_supported(color_modes)
         self.rgbw_supported = ColorMode.RGBW in color_modes
@@ -115,17 +101,24 @@ class Light(HomeAccessory):
         self.char_on = serv_light.configure_char(CHAR_ON, value=0)
 
         if self.brightness_supported:
-            # Initial value is set to 100 because 0 is a special value (off). 100 is
-            # an arbitrary non-zero value. It is updated immediately by async_update_state
-            # to set to the correct initial value.
+            # Initial value is set to 100 because 0 is a special
+            # value (off). 100 is an arbitrary non-zero value. It
+            # is updated immediately by async_update_state to set
+            # to the correct initial value.
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
+                attributes.get(
+                    LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+                    DEFAULT_MAX_COLOR_TEMP,
+                )
             )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
+                attributes.get(
+                    LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+                    DEFAULT_MIN_COLOR_TEMP,
+                )
             )
             # Ensure min is less than max
             self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
@@ -172,13 +165,13 @@ class Light(HomeAccessory):
         char_values = self._pending_events
         self._pending_events = {}
         events = []
-        service = SERVICE_TURN_ON
+        service = LightService.TURN_ON
         params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
         has_on = CHAR_ON in char_values
 
         if has_on:
             if not char_values[CHAR_ON]:
-                service = SERVICE_TURN_OFF
+                service = LightService.TURN_OFF
             events.append(f"Set state to {char_values[CHAR_ON]}")
 
         brightness_pct = None
@@ -188,12 +181,12 @@ class Light(HomeAccessory):
                     events[-1] = "Set state to 0"
                 else:
                     events.append("Set state to 0")
-                service = SERVICE_TURN_OFF
+                service = LightService.TURN_OFF
             else:
                 brightness_pct = char_values[CHAR_BRIGHTNESS]
             events.append(f"brightness at {char_values[CHAR_BRIGHTNESS]}%")
 
-        if service == SERVICE_TURN_OFF:
+        if service == LightService.TURN_OFF:
             self.async_call_service(
                 LIGHT_DOMAIN,
                 service,
@@ -210,18 +203,20 @@ class Light(HomeAccessory):
                 ((brightness_pct or self.char_brightness.value) * 255) / 100
             )
             if self.color_temp_supported:
-                params[ATTR_COLOR_TEMP_KELVIN] = color_temperature_mired_to_kelvin(temp)
+                params[LightServiceArgument.COLOR_TEMP_KELVIN] = (
+                    color_temperature_mired_to_kelvin(temp)
+                )
             elif self.rgbww_supported:
-                params[ATTR_RGBWW_COLOR] = color_temperature_to_rgbww(
+                params[LightServiceArgument.RGBWW_COLOR] = color_temperature_to_rgbww(
                     color_temperature_mired_to_kelvin(temp),
                     bright_val,
                     color_temperature_mired_to_kelvin(self.max_mireds),
                     color_temperature_mired_to_kelvin(self.min_mireds),
                 )
             elif self.rgbw_supported:
-                params[ATTR_RGBW_COLOR] = (*(0,) * 3, bright_val)
+                params[LightServiceArgument.RGBW_COLOR] = (*(0,) * 3, bright_val)
             elif self.white_supported:
-                params[ATTR_WHITE] = bright_val
+                params[LightServiceArgument.WHITE] = bright_val
 
         elif CHAR_HUE in char_values or CHAR_SATURATION in char_values:
             hue_sat = (
@@ -230,14 +225,14 @@ class Light(HomeAccessory):
             )
             _LOGGER.debug("%s: Set hs_color to %s", self.entity_id, hue_sat)
             events.append(f"set color at {hue_sat}")
-            params[ATTR_HS_COLOR] = hue_sat
+            params[LightServiceArgument.HS_COLOR] = hue_sat
 
         if (
             brightness_pct
-            and ATTR_RGBWW_COLOR not in params
-            and ATTR_RGBW_COLOR not in params
+            and LightServiceArgument.RGBWW_COLOR not in params
+            and LightServiceArgument.RGBW_COLOR not in params
         ):
-            params[ATTR_BRIGHTNESS_PCT] = brightness_pct
+            params[LightServiceArgument.BRIGHTNESS_PCT] = brightness_pct
 
         _LOGGER.debug(
             "Calling light service with params: %s -> %s", char_values, params
@@ -245,12 +240,13 @@ class Light(HomeAccessory):
         self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update light after state change."""
         # Handle State
         state = new_state.state
         attributes = new_state.attributes
-        color_mode = attributes.get(ATTR_COLOR_MODE)
+        color_mode = attributes.get(LightEntityStateAttribute.COLOR_MODE)
         self.char_on.set_value(int(state == STATE_ON))
         color_mode_changed = self._previous_color_mode != color_mode
         self._previous_color_mode = color_mode
@@ -258,7 +254,8 @@ class Light(HomeAccessory):
         # Handle Brightness
         if (
             self.brightness_supported
-            and (brightness := attributes.get(ATTR_BRIGHTNESS)) is not None
+            and (brightness := attributes.get(LightEntityStateAttribute.BRIGHTNESS))
+            is not None
             and isinstance(brightness, (int, float))
         ):
             brightness = round(brightness / 255 * 100, 0)
@@ -281,12 +278,14 @@ class Light(HomeAccessory):
         # Handle Color - color must always be set before color temperature
         # or the iOS UI will not display it correctly.
         if self.color_supported:
-            if color_temp := attributes.get(ATTR_COLOR_TEMP_KELVIN):
+            if color_temp := attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            ):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
             elif (
-                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                (hue_sat := attributes.get(LightEntityStateAttribute.HS_COLOR))
                 and isinstance(hue_sat, (list, tuple))
                 and len(hue_sat) == 2
             ):
@@ -306,7 +305,9 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temp = None
             if self.color_temp_supported:
-                color_temp_kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+                color_temp_kelvin = attributes.get(
+                    LightEntityStateAttribute.COLOR_TEMP_KELVIN
+                )
                 if color_temp_kelvin is not None:
                     color_temp = color_temperature_kelvin_to_mired(color_temp_kelvin)
             elif color_mode == ColorMode.WHITE:

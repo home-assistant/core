@@ -1,7 +1,7 @@
 """The Epion data coordinator."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from epion import Epion, EpionAuthenticationError, EpionConnectionError
 
@@ -33,17 +33,16 @@ class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.epion_api = epion_api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from Epion API and construct a dictionary with device IDs as keys."""
+        """Fetch data from Epion API, construct a dict with device IDs as keys."""
         try:
             response = await self.hass.async_add_executor_job(
                 self.epion_api.get_current
             )
         except EpionAuthenticationError as err:
-            _LOGGER.error("Authentication error with Epion API")
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed("Authentication error with Epion API") from err
         except EpionConnectionError as err:
-            _LOGGER.error("Epion API connection problem")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         device_data = {}
         for epion_device in response["devices"]:

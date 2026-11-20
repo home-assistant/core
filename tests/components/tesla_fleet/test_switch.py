@@ -3,29 +3,19 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import AutoSeat
 from tesla_fleet_api.exceptions import VehicleOffline
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry
 
 
 async def test_switch(
@@ -127,8 +117,8 @@ async def test_switch_services(
     ) as call:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
@@ -141,13 +131,34 @@ async def test_switch_services(
     ) as call:
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
         call.assert_called_once()
+
+
+async def test_switch_auto_seat_climate_off_seat_position(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Tests that turning off auto seat climate sends the 1-indexed AutoSeat position."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.SWITCH])
+
+    with patch(
+        "tesla_fleet_api.tesla.VehicleFleet.remote_auto_seat_climate_request",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test_auto_seat_climate_left"},
+            blocking=True,
+        )
+        call.assert_called_once_with(AutoSeat.FRONT_LEFT, False)
 
 
 async def test_switch_no_scope(
@@ -161,7 +172,7 @@ async def test_switch_no_scope(
     with pytest.raises(ServiceValidationError, match="Missing vehicle commands scope"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test_auto_steering_wheel_heater"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test_auto_steering_wheel_heater"},
             blocking=True,
         )

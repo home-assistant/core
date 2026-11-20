@@ -1,7 +1,5 @@
 """The Radio Thermostat integration."""
 
-from __future__ import annotations
-
 from collections.abc import Coroutine
 from typing import Any
 from urllib.error import URLError
@@ -36,7 +34,7 @@ async def _async_call_or_raise_not_ready[_T](
         raise ConfigEntryNotReady(msg) from ex
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RadioThermConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RadioThermConfigEntry) -> None:
     """Set up Radio Thermostat from a config entry."""
     host = entry.data[CONF_HOST]
     init_coro = async_get_init_data(hass, host)
@@ -56,8 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RadioThermConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: RadioThermConfigEntry
@@ -66,6 +62,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: RadioThermConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RadioThermConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

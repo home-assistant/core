@@ -1,14 +1,20 @@
 """Test the backups for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from io import StringIO
+from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.azure_storage.backup import (
     async_register_backup_agents_listener,
@@ -24,8 +30,11 @@ from homeassistant.setup import async_setup_component
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
 
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
+from tests.components.backup.common import (
+    collect_upload_events,
+    flush_upload_progress,
+    upload_backup_via_http,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -50,22 +59,34 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    azure_agent = {
+        "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+        "name": mock_config_entry.title,
+    }
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert response["result"] == {
-        "agents": [
-            {"agent_id": "backup.local", "name": "local"},
-            {
-                "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
-                "name": mock_config_entry.title,
-            },
-        ],
-    }
+    assert response["result"] == {"agents": [local_agent, azure_agent]}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, azure_agent]}
 
 
 async def test_agents_list_backups(
@@ -175,7 +196,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_client.delete_blob.assert_called_once()
 
 
@@ -196,7 +217,7 @@ async def test_agents_delete_not_throwing_on_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_client.delete_blob.call_count == 0
 
 
@@ -232,7 +253,34 @@ async def test_agents_upload(
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
+        progress_hook=ANY,
     )
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test upload progress reported by the SDK progress hook reaches the manager."""
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+
+    async def upload_blob(**kwargs: Any) -> None:
+        await kwargs["progress_hook"](4, 8)
+        # Report each value in its own event
+        flush_upload_progress(hass, freezer)
+        await kwargs["progress_hook"](8, 8)
+
+    mock_client.upload_blob.side_effect = upload_blob
+
+    with collect_upload_events(hass, agent_id) as events:
+        resp = await upload_backup_via_http(await hass_client(), agent_id, TEST_BACKUP)
+
+    assert resp.status == 201
+    # The manager emits the first (0) and last (backup size) events
+    assert [e.uploaded_bytes for e in events] == [0, 4, 8, TEST_BACKUP.size]
 
 
 async def test_agents_download(
@@ -279,19 +327,22 @@ async def test_agents_error_on_download_not_found(
 
 
 @pytest.mark.parametrize(
-    ("error", "message"),
+    ("error", "message", "translation_key"),
     [
         (
             HttpResponseError("http error"),
-            "Error during backup operation in async_delete_backup: Status None, message: http error",
+            "Backup operation failed",
+            "agent_operation_failed",
         ),
         (
             ServiceRequestError("timeout"),
-            "Timeout during backup operation in async_delete_backup",
+            "Backup operation timed out",
+            "agent_operation_timed_out",
         ),
         (
             AzureError("generic error"),
-            "Error during backup operation in async_delete_backup: generic error",
+            "Backup operation failed",
+            "agent_operation_failed",
         ),
     ],
 )
@@ -302,6 +353,7 @@ async def test_error_during_delete(
     mock_config_entry: MockConfigEntry,
     error: Exception,
     message: str,
+    translation_key: str,
 ) -> None:
     """Test the error wrapper."""
     mock_client.delete_blob.side_effect = error
@@ -317,8 +369,16 @@ async def test_error_during_delete(
     response = await client.receive_json()
 
     assert response["success"]
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.entry_id}": message}
+        "agent_error_translations": {
+            agent_id: {
+                "translation_domain": "backup",
+                "translation_key": translation_key,
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {agent_id: message},
     }
 
 

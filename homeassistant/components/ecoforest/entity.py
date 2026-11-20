@@ -1,7 +1,5 @@
 """Base Entity for Ecoforest."""
 
-from __future__ import annotations
-
 from pyecoforest.models.device import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,5 +37,4 @@ class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):
     @property
     def data(self) -> Device:
         """Return ecoforest data."""
-        assert self.coordinator.data
         return self.coordinator.data

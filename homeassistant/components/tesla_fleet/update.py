@@ -1,9 +1,7 @@
 """Update platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 import time
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
@@ -60,6 +58,7 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
             "vehicle_state_software_update_status",
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -70,6 +69,7 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
         self._attr_in_progress = True
         self.async_write_ha_state()
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
@@ -88,10 +88,8 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
             # Remove build from version
             self._attr_installed_version = self._attr_installed_version.split(" ")[0]
 
-        # Latest Version - hide update if scheduled far in the future
-        if self._value in (AVAILABLE, INSTALLING, DOWNLOADING, WIFI_WAIT) or (
-            self._value == SCHEDULED and self._is_scheduled_soon()
-        ):
+        # Latest Version - a scheduled update is still pending
+        if self._value in (AVAILABLE, INSTALLING, DOWNLOADING, WIFI_WAIT, SCHEDULED):
             self._attr_latest_version = self.coordinator.data[
                 "vehicle_state_software_update_version"
             ]
@@ -117,5 +115,5 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
         if scheduled_time_ms is None:
             return False
         # Convert milliseconds to seconds and compare to current time
-        scheduled_time_sec = scheduled_time_ms / 1000
+        scheduled_time_sec: float = scheduled_time_ms / 1000
         return scheduled_time_sec - time.time() < SCHEDULED_THRESHOLD_SECONDS

@@ -11,7 +11,6 @@ CONF_ACCESS_KEY_ID = "access_key_id"
 CONF_SECRET_ACCESS_KEY = "secret_access_key"
 CONF_ENDPOINT_URL = "endpoint_url"
 CONF_BUCKET = "bucket"
-CONF_PREFIX = "prefix"
 
 AWS_DOMAIN = "amazonaws.com"
 DEFAULT_ENDPOINT_URL = f"https://s3.eu-central-1.{AWS_DOMAIN}/"

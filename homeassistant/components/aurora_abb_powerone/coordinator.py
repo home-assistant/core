@@ -2,13 +2,18 @@
 
 import logging
 from time import sleep
+from typing import override
 
 from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN, SCAN_INTERVAL
 
@@ -31,8 +36,6 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         address: int,
     ) -> None:
         """Initialize the data update coordinator."""
-        self.available_prev = False
-        self.available = False
         self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         super().__init__(
             hass,
@@ -48,7 +51,6 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         This is the only function that should fetch new data for Home Assistant.
         """
         data: dict[str, float] = {}
-        self.available_prev = self.available
         retries: int = 3
         while retries > 0:
             try:
@@ -71,12 +73,12 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 r_iso = self.client.measure(30)
                 energy_wh = self.client.cumulated_energy(5)
                 [alarm, *_] = self.client.alarms()
-            except AuroraTimeoutError:
-                self.available = False
-                _LOGGER.debug("No response from inverter (could be dark)")
-                retries = 0
+            except AuroraTimeoutError as error:
+                raise UpdateFailedUnreachable(
+                    translation_domain=DOMAIN,
+                    translation_key="no_response",
+                ) from error
             except (SerialException, AuroraError) as error:
-                self.available = False
                 retries -= 1
                 if retries <= 0:
                     raise UpdateFailed(error) from error
@@ -103,22 +105,14 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 data["r_iso"] = r_iso
                 data["totalenergy"] = round(energy_wh / 1000, 2)
                 data["alarm"] = alarm
-                self.available = True
                 retries = 0
             finally:
-                if self.available != self.available_prev:
-                    if self.available:
-                        _LOGGER.warning("Communication with %s back online", self.name)
-                    else:
-                        _LOGGER.warning(
-                            "Communication with %s lost",
-                            self.name,
-                        )
                 if self.client.serline.isOpen():
                     self.client.close()
 
         return data
 
+    @override
     async def _async_update_data(self) -> dict[str, float]:
         """Update inverter data in the executor."""
         return await self.hass.async_add_executor_job(self._update_data)

@@ -1,10 +1,10 @@
 """ONVIF event abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import datetime as dt
+import secrets
+from typing import TYPE_CHECKING
 
 import aiohttp
 from aiohttp.web import Request
@@ -21,16 +21,17 @@ import onvif_parsers.util
 from zeep.exceptions import Fault, TransportError, ValidationError, XMLParseError
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 from .models import Event, PullPointManagerState, WebHookManagerState
+
+if TYPE_CHECKING:
+    from .device import ONVIFConfigEntry
 
 # Topics in this list are ignored because we do not want to create
 # entities for them.
@@ -49,6 +50,7 @@ CREATE_ERRORS = (
     asyncio.TimeoutError,
     XMLParseError,
     ValidationError,
+    TransportError,
 )
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -108,7 +110,7 @@ class EventManager:
         self,
         hass: HomeAssistant,
         device: ONVIFCamera,
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
         name: str,
     ) -> None:
         """Initialize event manager."""
@@ -129,8 +131,8 @@ class EventManager:
     def started(self) -> bool:
         """Return True if event manager is started."""
         return (
-            self.webhook_manager.state == WebHookManagerState.STARTED
-            or self.pullpoint_manager.state == PullPointManagerState.STARTED
+            self.webhook_manager.state is WebHookManagerState.STARTED
+            or self.pullpoint_manager.state is PullPointManagerState.STARTED
         )
 
     @callback
@@ -262,7 +264,7 @@ class EventManager:
     @callback
     def async_webhook_failed(self) -> None:
         """Mark webhook as failed."""
-        if self.pullpoint_manager.state != PullPointManagerState.PAUSED:
+        if self.pullpoint_manager.state is not PullPointManagerState.PAUSED:
             return
         LOGGER.debug("%s: Switching to PullPoint for events", self.name)
         self.pullpoint_manager.async_resume()
@@ -270,14 +272,14 @@ class EventManager:
     @callback
     def async_webhook_working(self) -> None:
         """Mark webhook as working."""
-        if self.pullpoint_manager.state != PullPointManagerState.STARTED:
+        if self.pullpoint_manager.state is not PullPointManagerState.STARTED:
             return
         LOGGER.debug("%s: Switching to webhook for events", self.name)
         self.pullpoint_manager.async_pause()
 
     @callback
     def async_mark_events_stale(self) -> None:
-        """Mark all events as stale when the subscriptions fail since we are out of sync."""
+        """Mark all events as stale when subscriptions fail."""
         self._events.clear()
         self.async_callback_listeners()
 
@@ -310,7 +312,7 @@ class PullPointManager:
 
     async def async_start(self) -> bool:
         """Start pullpoint subscription."""
-        assert self.state == PullPointManagerState.STOPPED, (
+        assert self.state is PullPointManagerState.STOPPED, (
             "PullPoint manager already started"
         )
         LOGGER.debug("%s: Starting PullPoint manager", self._name)
@@ -355,7 +357,8 @@ class PullPointManager:
             await self._async_create_pullpoint_subscription()
         except CREATE_ERRORS as err:
             LOGGER.debug(
-                "%s: Device does not support PullPoint service or has too many subscriptions: %s",
+                "%s: Device does not support PullPoint service"
+                " or has too many subscriptions: %s",
                 self._name,
                 stringify_onvif_error(err),
             )
@@ -423,8 +426,9 @@ class PullPointManager:
                 )
         except aiohttp.ServerDisconnectedError as err:
             # Either a shutdown event or the camera closed the connection. Because
-            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4 allows the server
-            # to close the connection at any time, we treat this as a normal. Some
+            # servers are allowed to close the connection at any time:
+            # http://datatracker.ietf.org/doc/html/rfc2616#section-8.1.4
+            # we treat this as a normal. Some
             # cameras may close the connection if there are no messages to pull.
             LOGGER.debug(
                 "%s: PullPoint subscription encountered a server disconnected error "
@@ -450,8 +454,9 @@ class PullPointManager:
             TransportError,
         ) as err:
             LOGGER.debug(
-                "%s: PullPoint subscription encountered an unexpected error and will be retried "
-                "(this is normal for some cameras): %s",
+                "%s: PullPoint subscription encountered an"
+                " unexpected error and will be retried"
+                " (this is normal for some cameras): %s",
                 self._name,
                 stringify_onvif_error(err),
             )
@@ -461,11 +466,12 @@ class PullPointManager:
         finally:
             self.async_schedule_pull_messages(next_pull_delay)
 
-        if self.state != PullPointManagerState.STARTED:
+        if self.state is not PullPointManagerState.STARTED:
             # If the webhook became started working during the long poll,
             # and we got paused, our data is stale and we should not process it.
             LOGGER.debug(
-                "%s: PullPoint state is %s (likely due to working webhook), skipping PullPoint messages",
+                "%s: PullPoint state is %s (likely due to working"
+                " webhook), skipping PullPoint messages",
                 self._name,
                 self.state,
             )
@@ -505,7 +511,7 @@ class PullPointManager:
         Must not check if the webhook is working.
         """
         self.async_cancel_pull_messages()
-        if self.state != PullPointManagerState.STARTED:
+        if self.state is not PullPointManagerState.STARTED:
             return
         if self._pullpoint_manager:
             when = delay if delay is not None else PULLPOINT_COOLDOWN_TIME
@@ -546,15 +552,10 @@ class WebHookManager:
         self._event_manager = event_manager
         self._device = event_manager.device
         self._hass = event_manager.hass
-        config_entry = event_manager.config_entry
 
-        self._old_webhook_unique_id = f"{DOMAIN}_{config_entry.entry_id}"
         # Some cameras have a limit on the length of the webhook URL
-        # so we use a shorter unique ID for the webhook.
-        unique_id = config_entry.unique_id
-        assert unique_id is not None
-        webhook_id = format_mac(unique_id).replace(":", "").lower()
-        self._webhook_unique_id = f"{DOMAIN}{webhook_id}"
+        # so we use a short random ID for the webhook.
+        self._webhook_unique_id = f"{DOMAIN}{secrets.token_hex(6)}"
         self._name = event_manager.name
 
         self._webhook_url: str | None = None
@@ -564,12 +565,22 @@ class WebHookManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         LOGGER.debug("%s: Starting webhook manager", self._name)
-        assert self.state == WebHookManagerState.STOPPED, (
+        assert self.state is WebHookManagerState.STOPPED, (
             "Webhook manager already started"
         )
         assert self._webhook_url is None, "Webhook already registered"
         self._async_register_webhook()
-        if not await self._async_start_webhook():
+        if self._webhook_url is None:
+            self.state = WebHookManagerState.FAILED
+            return False
+        # Unload skips stopping events if no event subscription started.
+        try:
+            started = await self._async_start_webhook()
+        except asyncio.CancelledError:
+            self._async_unregister_webhook()
+            raise
+        if not started:
+            self._async_unregister_webhook()
             self.state = WebHookManagerState.FAILED
             return False
         self.state = WebHookManagerState.STARTED
@@ -618,7 +629,8 @@ class WebHookManager:
         except CREATE_ERRORS as err:
             self._event_manager.async_webhook_failed()
             LOGGER.debug(
-                "%s: Device does not support notification service or too many subscriptions: %s",
+                "%s: Device does not support notification service"
+                " or too many subscriptions: %s",
                 self._name,
                 stringify_onvif_error(err),
             )
@@ -633,10 +645,10 @@ class WebHookManager:
         try:
             base_url = get_url(self._hass, prefer_external=False)
         except NoURLAvailableError:
-            try:
-                base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError:
-                return
+            LOGGER.debug(
+                "%s: No URL available, not using webhook for events", self._name
+            )
+            return
 
         webhook_id = self._webhook_unique_id
         self._async_unregister_webhook()
@@ -653,7 +665,6 @@ class WebHookManager:
         LOGGER.debug(
             "%s: Unregistering webhook %s", self._name, self._webhook_unique_id
         )
-        webhook.async_unregister(self._hass, self._old_webhook_unique_id)
         webhook.async_unregister(self._hass, self._webhook_unique_id)
         self._webhook_url = None
 

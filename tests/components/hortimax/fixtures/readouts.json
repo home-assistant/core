@@ -1,0 +1,367 @@
+[
+  {
+    "name": "Outside temperature (Weerstation )",
+    "readoutIdentifier": "OutsideTemperature-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "DegreeCelsius",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T07:55:00Z",
+        "value": 17.9
+      },
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 18.203125
+      }
+    ]
+  },
+  {
+    "name": "Relative humidity (Weerstation )",
+    "readoutIdentifier": "RelativeHumidity-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Percent",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 90.15303039550781
+      }
+    ]
+  },
+  {
+    "name": "Wind speed (Weerstation )",
+    "readoutIdentifier": "WindSpeed-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Meter/Second",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 3.5
+      }
+    ]
+  },
+  {
+    "name": "Cardinal wind direction (Weerstation )",
+    "readoutIdentifier": "CardinalWindDirection-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Scalar",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 8783
+      }
+    ]
+  },
+  {
+    "name": "Sunrise today (Weerstation )",
+    "readoutIdentifier": "SunriseToday-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Second",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 19145
+      }
+    ]
+  },
+  {
+    "name": "Absolute humidity (Weerstation )",
+    "readoutIdentifier": "AbsoluteHumidity-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Gram/Kilogram",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 9.4
+      }
+    ]
+  },
+  {
+    "name": "Weather status (Weerstation )",
+    "readoutIdentifier": "WeatherStatus-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Scalar",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Weather station 001",
+      "sourceType": "WeatherStation",
+      "userDefinedName": "Weerstation ",
+      "sourceGroups": ["Weather"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 8789
+      }
+    ]
+  },
+  {
+    "name": "Gas consumption today",
+    "readoutIdentifier": "GasConsumptionToday-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "CubicMeter",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Gas meter 001",
+      "sourceType": "GasMeter",
+      "userDefinedName": null,
+      "sourceGroups": ["Energy"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 42.5
+      }
+    ]
+  },
+  {
+    "name": "Gas consumption total",
+    "readoutIdentifier": "GasConsumptionTotal-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "CubicMeter",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Gas meter 001",
+      "sourceType": "GasMeter",
+      "userDefinedName": null,
+      "sourceGroups": ["Energy"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 128341.0
+      }
+    ]
+  },
+  {
+    "name": "Energy consumption today",
+    "readoutIdentifier": "EnergyConsumptionToday-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "KilowattHour",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Electricity meter 001",
+      "sourceType": "ElectricityMeter",
+      "userDefinedName": null,
+      "sourceGroups": ["Energy"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 128.25
+      }
+    ]
+  },
+  {
+    "name": "Screen position (OV1 Tropen)",
+    "readoutIdentifier": "ScreenPosition-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Percent",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Screen 001",
+      "sourceType": "Screen",
+      "userDefinedName": "OV1 Tropen",
+      "sourceGroups": ["Climate"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 62.5
+      }
+    ]
+  },
+  {
+    "name": "Screen status (OV1 Tropen)",
+    "readoutIdentifier": "ScreenStatus-Measured",
+    "readoutValueType": "String",
+    "unitIdentifier": null,
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Screen 001",
+      "sourceType": "Screen",
+      "userDefinedName": "OV1 Tropen",
+      "sourceGroups": ["Climate"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": "Closing"
+      }
+    ]
+  },
+  {
+    "name": "Vent position leeward side (OV1 Tropen)",
+    "readoutIdentifier": "VentPositionLeewardSide-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Percent",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Ventilation group 001",
+      "sourceType": "VentilationGroup",
+      "userDefinedName": "OV1 Tropen",
+      "sourceGroups": ["Climate"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 12.0
+      }
+    ]
+  },
+  {
+    "name": "Maximum pipe temperature (OV1 Tropen)",
+    "readoutIdentifier": "MaximumPipeTemperature-ActualSetting",
+    "readoutValueType": "Double",
+    "unitIdentifier": "DegreeCelsius",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Ventilation group 001",
+      "sourceType": "VentilationGroup",
+      "userDefinedName": "OV1 Tropen",
+      "sourceGroups": ["Climate"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 35.0
+      }
+    ]
+  },
+  {
+    "name": "Irrigation volume",
+    "readoutIdentifier": "IrrigationVolume-Measuered",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Liter/SquareMeter",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Valve group 003",
+      "sourceType": "IrrigationValveGroup",
+      "userDefinedName": null,
+      "sourceGroups": ["Irrigation"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 1.75
+      }
+    ]
+  },
+  {
+    "name": "Substrate conductivity",
+    "readoutIdentifier": "SubstrateConductivity-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "Furlong/Fortnight",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Valve group 003",
+      "sourceType": "IrrigationValveGroup",
+      "userDefinedName": null,
+      "sourceGroups": ["Irrigation"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 2.4
+      }
+    ]
+  },
+  {
+    "name": "Ph",
+    "readoutIdentifier": "Ph-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PH",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Valve group 003",
+      "sourceType": "IrrigationValveGroup",
+      "userDefinedName": null,
+      "sourceGroups": ["Irrigation"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 6.2
+      }
+    ]
+  },
+  {
+    "name": "CO2 level",
+    "readoutIdentifier": "CO2Level-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PartsPerMillion",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Block 001",
+      "sourceType": "Block",
+      "userDefinedName": "Kas 1",
+      "sourceGroups": ["Block 001"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 812.0
+      }
+    ]
+  },
+  {
+    "name": "Nutrient concentration",
+    "readoutIdentifier": "NutrientConcentration-Measured",
+    "readoutValueType": "Double",
+    "unitIdentifier": "PartsPerMillion",
+    "device": "HOR00000000.000",
+    "source": {
+      "sourceName": "Block 001",
+      "sourceType": "Block",
+      "userDefinedName": "Kas 1",
+      "sourceGroups": ["Block 001"]
+    },
+    "values": [
+      {
+        "timestampUTC": "2026-06-12T08:00:00Z",
+        "value": 145.0
+      }
+    ]
+  }
+]

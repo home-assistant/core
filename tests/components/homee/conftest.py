@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 HOMEE_ID = "00055511EECC"
 HOMEE_IP = "192.168.1.11"
@@ -24,7 +23,7 @@ NEW_TESTPASS = "testpass2"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.homee.async_setup_entry", return_value=True
+        "homeassistant.components.homee.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -80,6 +79,11 @@ def mock_homee() -> Generator[AsyncMock]:
             "wlan_ssid": "TestSSID",
             "latitude": 52.5200,
             "longitude": 13.4050,
+            "address": "Test address",
+            "zip": "10115",
+            "city": "Berlin",
+            "available_ssids": ["TestSSID", "OtherSSID"],
+            "webhooks_key": "test_webhooks_key",
         }
 
         yield homee

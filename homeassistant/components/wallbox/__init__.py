@@ -1,7 +1,5 @@
 """The Wallbox integration."""
 
-from __future__ import annotations
-
 from wallbox import Wallbox
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -17,6 +15,7 @@ from .const import (
 from .coordinator import WallboxConfigEntry, WallboxCoordinator, check_token_validity
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,
@@ -25,7 +24,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> None:
     """Set up Wallbox from a config entry."""
     wallbox = Wallbox(
         entry.data[CONF_USERNAME],
@@ -50,9 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

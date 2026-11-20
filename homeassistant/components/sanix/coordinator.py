@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from sanix import Sanix
 from sanix.exceptions import SanixException
@@ -15,14 +16,16 @@ from .const import MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
+type SanixConfigEntry = ConfigEntry[SanixCoordinator]
+
 
 class SanixCoordinator(DataUpdateCoordinator[Measurement]):
     """Sanix coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SanixConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, sanix_api: Sanix
+        self, hass: HomeAssistant, config_entry: SanixConfigEntry, sanix_api: Sanix
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -34,6 +37,7 @@ class SanixCoordinator(DataUpdateCoordinator[Measurement]):
         )
         self._sanix_api = sanix_api
 
+    @override
     async def _async_update_data(self) -> Measurement:
         """Fetch data from API endpoint."""
         try:

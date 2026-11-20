@@ -1,12 +1,10 @@
 """Support for WebDAV backup."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
@@ -22,6 +20,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import WebDavConfigEntry
@@ -31,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 4
 
 
 async def async_get_backup_agents(
@@ -74,6 +74,7 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except UnauthorizedError as err:
+            self._entry.async_start_reauth(self._hass)
             raise BackupAgentError("Authentication error") from err
         except WebDavError as err:
             _LOGGER.debug("Full error: %s", err, exc_info=True)
@@ -115,9 +116,11 @@ class WebDavBackupAgent(BackupAgent):
     @cached_property
     def _backup_path(self) -> str:
         """Return the path to the backup."""
-        return self._entry.data.get(CONF_BACKUP_PATH, "")
+        # Avoid "//file" paths when the backup path is the root
+        return self._entry.data.get(CONF_BACKUP_PATH, "").rstrip("/")
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -130,12 +133,13 @@ class WebDavBackupAgent(BackupAgent):
         """
         backup = await self._find_backup_by_id(backup_id)
 
-        return await self._client.download_iter(
+        return await self._client.iter_read(
             f"{self._backup_path}/{suggested_filename(backup)}",
             timeout=BACKUP_TIMEOUT,
         )
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -151,11 +155,11 @@ class WebDavBackupAgent(BackupAgent):
         """
         (filename_tar, filename_meta) = suggested_filenames(backup)
 
-        await self._client.upload_iter(
-            await open_stream(),
+        await self._client.write(
             f"{self._backup_path}/{filename_tar}",
-            timeout=BACKUP_TIMEOUT,
+            await open_stream(),
             content_length=backup.size,
+            timeout=BACKUP_TIMEOUT,
             progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
@@ -164,9 +168,9 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
         )
 
-        await self._client.upload_iter(
-            json_dumps(backup.as_dict()),
+        await self._client.write(
             f"{self._backup_path}/{filename_meta}",
+            json_dumps(backup.as_dict()),
         )
 
         _LOGGER.debug(
@@ -178,6 +182,7 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -192,8 +197,8 @@ class WebDavBackupAgent(BackupAgent):
         (filename_tar, filename_meta) = suggested_filenames(backup)
         backup_path = f"{self._backup_path}/{filename_tar}"
 
-        await self._client.clean(backup_path)
-        await self._client.clean(f"{self._backup_path}/{filename_meta}")
+        await self._client.delete(backup_path)
+        await self._client.delete(f"{self._backup_path}/{filename_meta}")
 
         _LOGGER.debug(
             "Deleted backup at %s",
@@ -204,11 +209,13 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -224,10 +231,7 @@ class WebDavBackupAgent(BackupAgent):
 
         async def _download_metadata(path: str) -> AgentBackup | None:
             """Download metadata file."""
-            iterator = await self._client.download_iter(path)
-            metadata_bytes = bytearray()
-            async for chunk in iterator:
-                metadata_bytes.extend(chunk)
+            metadata_bytes = await self._client.read(path)
             try:
                 return AgentBackup.from_dict(json_loads_object(metadata_bytes))
             except (*JSON_DECODE_EXCEPTIONS, KeyError, TypeError, ValueError) as err:
@@ -238,12 +242,19 @@ class WebDavBackupAgent(BackupAgent):
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""
-            files = await self._client.list_files(self._backup_path)
+            resources = await self._client.list(self._backup_path)
+            metadata_contents = await gather_with_limited_concurrency(
+                METADATA_DOWNLOAD_CONCURRENCY,
+                *(
+                    _download_metadata(resource.path)
+                    for resource in resources
+                    if not resource.is_dir and resource.path.endswith(".metadata.json")
+                ),
+            )
             return {
                 metadata_content.backup_id: metadata_content
-                for file_name in files
-                if file_name.endswith(".metadata.json")
-                if (metadata_content := await _download_metadata(file_name))
+                for metadata_content in metadata_contents
+                if metadata_content
             }
 
         self._cache_metadata_files = await _list_metadata_files()

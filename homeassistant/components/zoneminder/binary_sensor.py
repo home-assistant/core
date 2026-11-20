@@ -1,7 +1,5 @@
 """Support for ZoneMinder binary sensors."""
 
-from __future__ import annotations
-
 from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_platform(

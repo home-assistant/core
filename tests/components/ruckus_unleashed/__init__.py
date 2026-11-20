@@ -1,10 +1,9 @@
 """Tests for the Ruckus integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from aioruckus import AjaxSession, RuckusAjaxApi
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ruckus_unleashed.const import (
     API_AP_DEVNAME,
@@ -28,9 +27,6 @@ from homeassistant.components.ruckus_unleashed.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 DEFAULT_SYSTEM_INFO = {
     API_SYS_IDENTITY: {API_SYS_IDENTITY_NAME: "RuckusUnleashed"},
@@ -73,33 +69,37 @@ TEST_CLIENT = {
     API_CLIENT_AP_MAC: DEFAULT_AP_INFO[0][API_AP_MAC],
 }
 
+TEST_CLIENT_2_ENTITY_ID = "device_tracker.ruckus_test_device_2"
+TEST_CLIENT_2 = {
+    API_CLIENT_IP: "1.1.1.3",
+    API_CLIENT_MAC: "11:22:33:44:55:66",
+    API_CLIENT_HOSTNAME: "Ruckus Test Device 2",
+    API_CLIENT_AP_MAC: DEFAULT_AP_INFO[0][API_AP_MAC],
+}
+
 DEFAULT_TITLE = DEFAULT_MESH_INFO[API_MESH_NAME]
 DEFAULT_UNIQUEID = DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
 
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(
+    options: dict | None = None,
+) -> MockConfigEntry:
     """Return a Ruckus mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_TITLE,
         unique_id=DEFAULT_UNIQUEID,
         data=CONFIG,
-        options=None,
+        options=options,
     )
 
 
-async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, options: dict | None = None
+) -> MockConfigEntry:
     """Set up the Ruckus integration in Home Assistant."""
-    entry = mock_config_entry()
+    entry = mock_config_entry(options=options)
     entry.add_to_hass(hass)
-    # Make device tied to other integration so device tracker entities get enabled
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    dr.async_get(hass).async_get_or_create(
-        name="Device from other integration",
-        config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_CLIENT_MAC])},
-    )
 
     with RuckusAjaxApiPatchContext():
         await hass.config_entries.async_setup(entry.entry_id)

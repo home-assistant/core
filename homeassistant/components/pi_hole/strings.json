@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,12 +15,21 @@
         "description": "Please enter a new API key for Pi-hole at {host}/{location}",
         "title": "Reauthenticate Pi-hole"
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:component::pi_hole::config::step::user::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
       "user": {
         "data": {
           "api_key": "App password or API key",
           "host": "[%key:common::config_flow::data::host%]",
           "location": "[%key:common::config_flow::data::location%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
@@ -94,6 +102,14 @@
       "web_update_available": {
         "name": "Web update available"
       }
+    }
+  },
+  "exceptions": {
+    "disable_failed": {
+      "message": "Failed to disable Pi-hole: {error}"
+    },
+    "enable_failed": {
+      "message": "Failed to enable Pi-hole: {error}"
     }
   },
   "issues": {

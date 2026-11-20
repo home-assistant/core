@@ -1,9 +1,10 @@
 """Test KNX climate."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.knx.const import ClimateConf
+from homeassistant.components.knx.const import CONF_SYNC_STATE, ClimateConf
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events
 
 RAW_FLOAT_MINUS_1_0 = (0x87, 0x9C)
 RAW_FLOAT_20_0 = (0x07, 0xD0)
@@ -32,6 +31,7 @@ async def test_climate_basic_temperature_set(
                 ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
@@ -182,7 +182,8 @@ async def test_climate_hvac_mode(
     await knx.assert_read("1/2/7")
     await knx.receive_response("1/2/7", (0x01,))
 
-    # turn hvac mode to off - set_hvac_mode() doesn't send to on_off if dedicated hvac mode is available
+    # turn hvac mode to off - set_hvac_mode() doesn't send to
+    # on_off if dedicated hvac mode is available
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
@@ -366,8 +367,8 @@ async def test_climate_preset_mode(
     knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
 
     assert len(knx.xknx.devices) == 2
-    assert len(knx.xknx.devices[0].device_updated_cbs) == 2
-    assert len(knx.xknx.devices[1].device_updated_cbs) == 2
+    for device in knx.xknx.devices:
+        assert len(device.device_updated_cbs) == 2
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
     # If we remove the entity the underlying devices should disappear too
@@ -498,6 +499,45 @@ async def test_fan_speed_3_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     await knx.assert_write("1/2/6", (0x0,))
     knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+
+@pytest.mark.parametrize("raw_value", [0x04, 0xFF])
+async def test_fan_speed_step_out_of_range(
+    hass: HomeAssistant, knx: KNXTestKit, raw_value: int
+) -> None:
+    """Test that fan step values beyond fan_max_step don't crash the entity."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateConf.FAN_SPEED_MODE: "step",
+                ClimateConf.FAN_MAX_STEP: 3,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+
+    # a gateway may report a step value beyond the configured fan_max_step
+    await knx.receive_write("1/2/7", (raw_value,))
+    await hass.async_block_till_done()
+
+    # the invalid telegram is published without breaking the state write
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode=None)
 
 
 async def test_fan_speed_2_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:

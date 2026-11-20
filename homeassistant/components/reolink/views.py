@@ -1,24 +1,34 @@
 """Reolink Integration views."""
 
-from __future__ import annotations
-
+import asyncio
 from base64 import urlsafe_b64decode, urlsafe_b64encode
+from collections import defaultdict
+from contextlib import aclosing
+from datetime import datetime
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import SSLCipherList
 
+from .host import ReolinkHost
 from .util import get_host
 
 _LOGGER = logging.getLogger(__name__)
+
+# Each thumbnail costs a Baichuan request and an ffmpeg decode.
+MAX_PARALLEL_THUMBNAILS = 2
+THUMBNAIL_STREAMS = {"sub", "telephoto_sub"}
+TELEPHOTO_PREFIXES = ("autotrack_", "telephoto_")
 
 
 @callback
@@ -37,11 +47,28 @@ def async_generate_playback_proxy_url(
     )
 
 
+@callback
+def async_generate_thumbnail_url(
+    config_entry_id: str, channel: int, stream: str, time_id: str
+) -> str:
+    """Generate URL for the thumbnail of a recording."""
+    return ThumbnailView.url.format(
+        config_entry_id=config_entry_id,
+        channel=channel,
+        stream="telephoto_sub" if stream.startswith(TELEPHOTO_PREFIXES) else "sub",
+        time_id=time_id,
+    )
+
+
 class PlaybackProxyView(HomeAssistantView):
     """View to proxy playback video from Reolink."""
 
     requires_auth = True
-    url = "/api/reolink/video/{config_entry_id}/{channel}/{stream_res}/{vod_type}/{filename}"
+    url = (
+        "/api/reolink/video"
+        "/{config_entry_id}/{channel}/{stream_res}"
+        "/{vod_type}/{filename}"
+    )
     name = "api:reolink_playback"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -53,6 +80,7 @@ class PlaybackProxyView(HomeAssistantView):
             ssl_cipher=SSLCipherList.INSECURE,
         )
         self._vod_type: str | None = None
+        self._mp4_streams: dict[str, asyncio.Task] = {}
 
     async def get(
         self,
@@ -74,9 +102,17 @@ class PlaybackProxyView(HomeAssistantView):
         try:
             host = get_host(self.hass, config_entry_id)
         except Unresolvable:
-            err_str = f"Reolink playback proxy could not find config entry id: {config_entry_id}"
+            err_str = (
+                "Reolink playback proxy could not find"
+                f" config entry id: {config_entry_id}"
+            )
             _LOGGER.warning(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        if vod_type == VodRequestType.NVR_DOWNLOAD.value:
+            return await self._async_stream_mp4(
+                request, host, ch, stream_res, filename_decoded
+            )
 
         try:
             _mime_type, reolink_url = await host.api.get_vod_source(
@@ -123,13 +159,27 @@ class PlaybackProxyView(HomeAssistantView):
                 request, config_entry_id, channel, stream_res, vod_type, filename, retry
             )
 
+        if reolink_response.status == HTTPStatus.SERVICE_UNAVAILABLE:
+            response_headers = {}
+            if retry_after := reolink_response.headers.get("Retry-After"):
+                response_headers["Retry-After"] = retry_after
+            reolink_response.release()
+            return web.Response(
+                text="Reolink playback service temporarily unavailable",
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                headers=response_headers,
+            )
+
         # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
         if reolink_response.content_type not in [
             "video/mp4",
             "application/octet-stream",
             "apolication/octet-stream",
         ]:
-            err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+            err_str = (
+                "Reolink playback expected video/mp4"
+                f" but got {reolink_response.content_type}"
+            )
             if (
                 reolink_response.content_type == "video/x-flv"
                 and vod_type == VodRequestType.PLAYBACK.value
@@ -188,3 +238,149 @@ class PlaybackProxyView(HomeAssistantView):
 
         await response.write_eof()
         return response
+
+    async def _async_stream_mp4(
+        self,
+        request: web.Request,
+        host: ReolinkHost,
+        channel: int,
+        stream_res: str,
+        filename: str,
+    ) -> web.StreamResponse:
+        """Stream a NVR recording as fragmented mp4 using the Baichuan protocol."""
+        start_time, end_time = filename.split("_", 1)
+        mp4_stream = host.api.baichuan.stream_mp4(
+            channel,
+            datetime.strptime(start_time, "%Y%m%d%H%M%S"),
+            datetime.strptime(end_time, "%Y%m%d%H%M%S"),
+            stream_res,
+            get_ffmpeg_manager(self.hass).binary,
+        )
+        _LOGGER.debug(
+            "Opening Baichuan VOD stream from %s: %s",
+            host.api.camera_name(channel),
+            filename,
+        )
+
+        # the NVR allows only one download at a time, stop the previous playback
+        if (previous := self._mp4_streams.get(host.unique_id)) is not None:
+            _LOGGER.debug(
+                "Reolink %s: Cancelling previous Baichuan recording stream",
+                host.api.nvr_name,
+            )
+            previous.cancel()
+        task = asyncio.current_task()
+        if TYPE_CHECKING:
+            assert task is not None
+        self._mp4_streams[host.unique_id] = task
+
+        try:
+            # aclosing: stop ffmpeg and the download directly when the client disconnects
+            async with aclosing(mp4_stream):
+                # get the first part before sending the headers, to be able to return an error status
+                try:
+                    first_part = await anext(mp4_stream, b"")
+                except ReolinkError as err:
+                    _LOGGER.warning("Reolink playback proxy error: %s", str(err))
+                    return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+
+                response = web.StreamResponse(headers={"Content-Type": "video/mp4"})
+                await response.prepare(request)
+                await response.write(first_part)
+                try:
+                    async for part in mp4_stream:
+                        await response.write(part)
+                except ReolinkError as err:
+                    _LOGGER.warning(
+                        "Reolink playback error while streaming mp4 from %s: %s",
+                        host.api.camera_name(channel),
+                        str(err),
+                    )
+
+            await response.write_eof()
+            return response
+        finally:
+            if self._mp4_streams.get(host.unique_id) is task:
+                del self._mp4_streams[host.unique_id]
+
+
+class ThumbnailView(HomeAssistantView):
+    """View to get a thumbnail of a Reolink recording."""
+
+    requires_auth = True
+    url = "/api/reolink/thumbnail/{config_entry_id}/{channel}/{stream}/{time_id}"
+    name = "api:reolink_thumbnail"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize a thumbnail view."""
+        self.hass = hass
+        self._semaphores: defaultdict[str, asyncio.Semaphore] = defaultdict(
+            lambda: asyncio.Semaphore(MAX_PARALLEL_THUMBNAILS)
+        )
+
+    async def get(
+        self,
+        request: web.Request,
+        config_entry_id: str,
+        channel: str,
+        stream: str,
+        time_id: str,
+    ) -> web.Response:
+        """Get the key frame at a moment in a recording as JPEG."""
+        try:
+            get_host(self.hass, config_entry_id)
+        except Unresolvable:
+            return self._unknown_config_entry(config_entry_id)
+
+        try:
+            ch = int(channel)
+            time = datetime.strptime(time_id, "%Y%m%d%H%M%S")
+        except ValueError:
+            err_str = f"Reolink thumbnail invalid channel {channel} or time {time_id}"
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        if stream not in THUMBNAIL_STREAMS:
+            err_str = f"Reolink thumbnail invalid stream {stream}"
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
+
+        async with self._semaphores[config_entry_id]:
+            # The config entry can be unloaded or reloaded while waiting.
+            try:
+                host = get_host(self.hass, config_entry_id)
+            except Unresolvable:
+                return self._unknown_config_entry(config_entry_id)
+
+            if not host.api.supported(ch, "sub"):
+                stream = stream.replace("sub", "main")
+
+            try:
+                image = await host.api.baichuan.snapshot_past(
+                    ch,
+                    time,
+                    stream,
+                    get_ffmpeg_manager(self.hass).binary,
+                )
+            except ReolinkError as err:
+                _LOGGER.debug(
+                    "Error getting thumbnail of channel %s at %s: %s",
+                    ch,
+                    time_id,
+                    err,
+                )
+                return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+
+        # Recordings do not change, so the thumbnail can be cached.
+        return web.Response(
+            body=image,
+            content_type="image/jpeg",
+            headers={"Cache-Control": "private, max-age=2592000"},
+        )
+
+    @staticmethod
+    def _unknown_config_entry(config_entry_id: str) -> web.Response:
+        """Return the response for an unknown or unloaded config entry."""
+        _LOGGER.debug(
+            "Thumbnail requested for unknown config entry %s", config_entry_id
+        )
+        err_str = f"Reolink thumbnail could not find config entry id: {config_entry_id}"
+        return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)

@@ -4,6 +4,7 @@ from unittest.mock import ANY, MagicMock
 
 from pyhomeworks import exceptions as hw_exceptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -28,12 +29,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
 
-
-async def test_user_flow(
-    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_homeworks: MagicMock) -> None:
     """Test the user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -65,8 +63,9 @@ async def test_user_flow(
     mock_controller.join.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_credentials(
-    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+    hass: HomeAssistant, mock_homeworks: MagicMock
 ) -> None:
     """Test the user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -103,8 +102,9 @@ async def test_user_flow_credentials(
     mock_controller.join.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_credentials_user_only(
-    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+    hass: HomeAssistant, mock_homeworks: MagicMock
 ) -> None:
     """Test the user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -138,8 +138,9 @@ async def test_user_flow_credentials_user_only(
     mock_controller.join.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_credentials_password_only(
-    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+    hass: HomeAssistant, mock_homeworks: MagicMock
 ) -> None:
     """Test the user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -162,9 +163,22 @@ async def test_user_flow_credentials_password_only(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "need_username_with_password"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_homeworks", "mock_setup_entry")
 async def test_user_flow_already_exists(
-    hass: HomeAssistant, mock_empty_config_entry: MockConfigEntry, mock_setup_entry
+    hass: HomeAssistant, mock_empty_config_entry: MockConfigEntry
 ) -> None:
     """Test the user configuration flow."""
     mock_empty_config_entry.add_to_hass(hass)
@@ -198,6 +212,16 @@ async def test_user_flow_already_exists(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "duplicated_controller_id"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.2",
+            CONF_NAME: "Other controller",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -208,10 +232,10 @@ async def test_user_flow_already_exists(
         (Exception, "unknown_error"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
     mock_homeworks: MagicMock,
-    mock_setup_entry,
     side_effect: type[Exception],
     error: str,
 ) -> None:
@@ -233,6 +257,17 @@ async def test_user_flow_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "user"
+
+    mock_homeworks.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow(
@@ -321,6 +356,16 @@ async def test_reconfigure_flow_flow_duplicate(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "duplicated_host_port"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.3",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_reconfigure_flow_flow_no_change(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
@@ -388,6 +433,18 @@ async def test_reconfigure_flow_credentials_password_only(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "need_username_with_password"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.2",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_options_add_light_flow(
@@ -709,6 +766,16 @@ async def test_options_add_keypad_with_error(
     assert result["step_id"] == "add_keypad"
     assert result["errors"] == {"base": "duplicated_addr"}
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDR: "[02:08:03:01]",
+            CONF_NAME: "Hall Keypad",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_edit_light_no_lights_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
@@ -932,6 +999,17 @@ async def test_options_add_button_flow_duplicate(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "duplicated_number"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Dim down",
+            CONF_NUMBER: 4,
+            CONF_RELEASE_DELAY: 0.2,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_edit_button_flow(

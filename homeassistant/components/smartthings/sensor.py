@@ -1,44 +1,39 @@
 """Support for sensors through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, cast
+from typing import Any, cast, override
 
-from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
+from pysmartthings import Attribute, Capability, SmartThings, Status
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     EntityCategory,
     UnitOfArea,
+    UnitOfDensity,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
-from .util import deprecate_entity
 
 THERMOSTAT_CAPABILITIES = {
     Capability.TEMPERATURE_MEASUREMENT,
@@ -83,10 +78,6 @@ OVEN_JOB_STATE_MAP = {
     "scheduledEnd": "scheduled_end",
     "stone_heating": "stone_heating",
     "timeHoldPreheat": "time_hold_preheat",
-}
-
-MEDIA_PLAYBACK_STATE_MAP = {
-    "fast forwarding": "fast_forwarding",
 }
 
 ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
@@ -155,6 +146,18 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     return state
 
 
+def _power_report_energy(
+    value: dict[str, Any], key: str, *, allow_negative: bool = False
+) -> float | None:
+    """Return an energy value from a power consumption report in kWh.
+
+    Some devices send partial reports or negative placeholder values.
+    """
+    if (energy := value.get(key)) is None or (energy < 0 and not allow_negative):
+        return None
+    return energy / 1000
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
@@ -168,7 +171,6 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
-    deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
     presentation_fn: (
         Callable[
@@ -241,14 +243,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.VOLUME,
                 translation_key="audio_volume",
-                native_unit_of_measurement=PERCENTAGE,
-                deprecated=(
-                    lambda status: (
-                        ("2025.10.0", "media_player")
-                        if Capability.AUDIO_MUTE in status
-                        else None
-                    )
-                ),
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                capability_ignore_list=[{Capability.AUDIO_MUTE}],
             )
         ]
     },
@@ -256,7 +252,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.BATTERY: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.BATTERY,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 device_class=SensorDeviceClass.BATTERY,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
@@ -289,7 +285,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_DIOXIDE,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -311,7 +307,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_MONOXIDE_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_MONOXIDE_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -357,7 +353,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.WATER_FILTER_USAGE,
                 translation_key="water_filter_usage",
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -396,7 +392,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -449,7 +445,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -469,7 +465,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.DUST_LEVEL,
                 device_class=SensorDeviceClass.PM10,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -477,7 +473,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
                 device_class=SensorDeviceClass.PM25,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
@@ -508,7 +504,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT,
                 translation_key="equivalent_carbon_dioxide",
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -529,7 +525,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.PM25,
             )
@@ -541,7 +537,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.FORMALDEHYDE_LEVEL,
                 translation_key="formaldehyde",
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -567,7 +563,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.GAS_METER_TIME,
                 translation_key="gas_meter_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
         Attribute.GAS_METER_VOLUME: [
@@ -595,57 +591,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.INFRARED_LEVEL,
                 translation_key="infrared_level",
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 state_class=SensorStateClass.MEASUREMENT,
-            )
-        ]
-    },
-    Capability.MEDIA_INPUT_SOURCE: {
-        Attribute.INPUT_SOURCE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.INPUT_SOURCE,
-                translation_key="media_input_source",
-                device_class=SensorDeviceClass.ENUM,
-                options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
-                value_fn=lambda value: value.lower() if value else None,
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK_REPEAT: {
-        Attribute.PLAYBACK_REPEAT_MODE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_REPEAT_MODE,
-                translation_key="media_playback_repeat",
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK_SHUFFLE: {
-        Attribute.PLAYBACK_SHUFFLE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_SHUFFLE,
-                translation_key="media_playback_shuffle",
-                deprecated=lambda _: ("2025.10.0", "media_player"),
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK: {
-        Attribute.PLAYBACK_STATUS: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_STATUS,
-                translation_key="media_playback_status",
-                options=[
-                    "paused",
-                    "playing",
-                    "stopped",
-                    "fast_forwarding",
-                    "rewinding",
-                    "buffering",
-                ],
-                device_class=SensorDeviceClass.ENUM,
-                value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
-                deprecated=lambda _: ("2025.10.0", "media_player"),
             )
         ]
     },
@@ -728,7 +675,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "cavity-01",
                 component_translation_key={
                     "cavity-01": "oven_completion_time_cavity_01",
@@ -759,7 +706,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energy"] / 1000,
+                value_fn=lambda value: _power_report_energy(value, "energy"),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -771,7 +718,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.POWER,
                 native_unit_of_measurement=UnitOfPower.WATT,
-                value_fn=lambda value: value["power"],
+                value_fn=lambda value: value.get("power"),
                 extra_state_attributes_fn=power_attributes,
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
@@ -792,7 +739,9 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["deltaEnergy"] / 1000,
+                value_fn=lambda value: _power_report_energy(
+                    value, "deltaEnergy", allow_negative=True
+                ),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -805,7 +754,9 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["powerEnergy"] / 1000,
+                value_fn=lambda value: _power_report_energy(
+                    value, "powerEnergy", allow_negative=True
+                ),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -818,7 +769,7 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energySaved"] / 1000,
+                value_fn=lambda value: _power_report_energy(value, "energySaved"),
                 suggested_display_precision=2,
                 exists_fn=lambda status: (
                     (value := cast(dict | None, status.value)) is not None
@@ -870,7 +821,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.HUMIDITY,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 device_class=SensorDeviceClass.HUMIDITY,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -959,13 +910,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.TEMPERATURE,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
-                deprecated=(
-                    lambda status: (
-                        ("2025.12.0", "dhw")
-                        if Capability.CUSTOM_OUTING_MODE in status
-                        else None
-                    )
-                ),
+                capability_ignore_list=[{Capability.CUSTOM_OUTING_MODE}],
                 component_fn=(
                     lambda component: (
                         component in {"freezer", "cooler", "onedoor", "cavity-01"}
@@ -992,14 +937,8 @@ CAPABILITY_TO_SENSORS: dict[
                         Capability.AIR_CONDITIONER_MODE,
                     },
                     THERMOSTAT_CAPABILITIES,
+                    {Capability.CUSTOM_OUTING_MODE},
                 ],
-                deprecated=(
-                    lambda status: (
-                        ("2025.12.0", "dhw")
-                        if Capability.CUSTOM_OUTING_MODE in status
-                        else None
-                    )
-                ),
             )
         ]
     },
@@ -1063,17 +1002,17 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key="x_coordinate",
                 translation_key="x_coordinate",
-                value_fn=lambda value: value[0],
+                value_fn=lambda value: value[0] if value else None,
             ),
             SmartThingsSensorEntityDescription(
                 key="y_coordinate",
                 translation_key="y_coordinate",
-                value_fn=lambda value: value[1],
+                value_fn=lambda value: value[1] if value else None,
             ),
             SmartThingsSensorEntityDescription(
                 key="z_coordinate",
                 translation_key="z_coordinate",
-                value_fn=lambda value: value[2],
+                value_fn=lambda value: value[2] if value else None,
             ),
         ]
     },
@@ -1096,7 +1035,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.TVOC_LEVEL,
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
@@ -1125,7 +1064,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.VERY_FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.VERY_FINE_DUST_LEVEL,
-                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
                 device_class=SensorDeviceClass.PM1,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -1198,10 +1137,24 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
+                },
+            )
+        ],
+    },
+    Capability.SAMSUNG_CE_WASHER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="washer_progress",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_progress",
                 },
             )
         ],
@@ -1218,13 +1171,23 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.SAMSUNG_CE_DRYER_OPERATING_STATE: {
+        Attribute.PROGRESS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PROGRESS,
+                translation_key="dryer_progress",
+                state_class=SensorStateClass.MEASUREMENT,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            )
+        ],
+    },
     Capability.SAMSUNG_CE_HOOD_FILTER: {
         Attribute.HOOD_FILTER_USAGE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.HOOD_FILTER_USAGE,
                 translation_key="hood_filter_usage",
                 state_class=SensorStateClass.MEASUREMENT,
-                native_unit_of_measurement=PERCENTAGE,
+                native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
@@ -1266,6 +1229,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="stick_cleaner_operating_state",
                 options=list(STICK_CLEANER_STATUS.values()),
                 device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: STICK_CLEANER_STATUS.get(value, value),
             )
         ]
     },
@@ -1280,16 +1244,47 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.MIRRORHAPPY40050_COPPER_WATER_METER: {
+        Attribute.ENERGY_USAGE_DAY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY_USAGE_DAY,
+                translation_key="water_usage_day",
+                device_class=SensorDeviceClass.WATER,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                native_unit_of_measurement=UnitOfVolume.GALLONS,
+            )
+        ],
+        Attribute.ENERGY_USAGE_MONTH: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY_USAGE_MONTH,
+                translation_key="water_usage_month",
+                device_class=SensorDeviceClass.WATER,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                native_unit_of_measurement=UnitOfVolume.GALLONS,
+            )
+        ],
+        Attribute.POWER_CURRENT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POWER_CURRENT,
+                translation_key="water_usage_current",
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+                native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            )
+        ],
+    },
 }
 
 
 UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
+    "Celsius": UnitOfTemperature.CELSIUS,
+    "Fahrenheit": UnitOfTemperature.FAHRENHEIT,
     "ccf": UnitOfVolume.CENTUM_CUBIC_FEET,
     "lux": LIGHT_LUX,
     "mG": None,
-    "μg/m^3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m^3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     "kPa": UnitOfPressure.KPA,
 }
 
@@ -1301,85 +1296,43 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
-    entities = []
-
-    entity_registry = er.async_get(hass)
-
-    for device in entry_data.devices.values():  # pylint: disable=too-many-nested-blocks
-        for capability, attributes in CAPABILITY_TO_SENSORS.items():
-            for component, capabilities in device.status.items():
-                if capability in capabilities:
-                    for attribute, descriptions in attributes.items():
-                        for description in descriptions:
-                            if (
-                                (
-                                    not description.capability_ignore_list
-                                    or not any(
-                                        all(
-                                            capability in device.status[MAIN]
-                                            for capability in capability_list
-                                        )
-                                        for capability_list in description.capability_ignore_list
-                                    )
-                                )
-                                and (
-                                    not description.exists_fn
-                                    or (
-                                        component == MAIN
-                                        and description.exists_fn(
-                                            device.status[MAIN][capability][attribute]
-                                        )
-                                    )
-                                )
-                                and (
-                                    component == MAIN
-                                    or (
-                                        description.component_fn is not None
-                                        and description.component_fn(component)
-                                    )
-                                )
-                            ):
-                                if (
-                                    description.deprecated
-                                    and (
-                                        deprecation_info := description.deprecated(
-                                            device.status[MAIN]
-                                        )
-                                    )
-                                    is not None
-                                ):
-                                    version, reason = deprecation_info
-                                    if deprecate_entity(
-                                        hass,
-                                        entity_registry,
-                                        SENSOR_DOMAIN,
-                                        f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
-                                        f"deprecated_{reason}",
-                                        version,
-                                    ):
-                                        entities.append(
-                                            SmartThingsSensor(
-                                                entry_data.client,
-                                                device,
-                                                description,
-                                                MAIN,
-                                                capability,
-                                                attribute,
-                                            )
-                                        )
-                                    continue
-                                entities.append(
-                                    SmartThingsSensor(
-                                        entry_data.client,
-                                        device,
-                                        description,
-                                        component,
-                                        capability,
-                                        attribute,
-                                    )
-                                )
-
-    async_add_entities(entities)
+    async_add_entities(
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            component,
+            capability,
+            attribute,
+        )
+        for device in entry_data.devices.values()
+        for capability, attributes in CAPABILITY_TO_SENSORS.items()
+        for component, capabilities in device.status.items()
+        if capability in capabilities
+        for attribute, descriptions in attributes.items()
+        for description in descriptions
+        if (
+            not description.capability_ignore_list
+            or not any(
+                all(capability in device.status[MAIN] for capability in capability_list)
+                for capability_list in description.capability_ignore_list
+            )
+        )
+        and (
+            not description.exists_fn
+            or (
+                component == MAIN
+                and description.exists_fn(device.status[MAIN][capability][attribute])
+            )
+        )
+        and (
+            component == MAIN
+            or (
+                description.component_fn is not None
+                and description.component_fn(component)
+            )
+        )
+    )
 
 
 class SmartThingsSensor(SmartThingsEntity, SensorEntity):
@@ -1401,7 +1354,11 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if entity_description.use_temperature_unit:
             capabilities_to_subscribe.add(Capability.TEMPERATURE_MEASUREMENT)
         super().__init__(client, device, capabilities_to_subscribe, component=component)
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{attribute}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{capability}_{attribute}"
+            f"_{entity_description.key}"
+        )
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
@@ -1415,6 +1372,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             )
 
     @property
+    @override
     def native_value(self) -> str | float | datetime | int | None:
         """Return the state of the sensor."""
         res = self.get_attribute_value(self.capability, self._attribute)
@@ -1428,6 +1386,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         if self.entity_description.use_temperature_unit:
@@ -1443,6 +1402,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
@@ -1452,6 +1412,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         return None
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return the options for this sensor."""
         if self.entity_description.options_attribute:

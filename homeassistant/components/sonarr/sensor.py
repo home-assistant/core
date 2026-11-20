@@ -1,10 +1,8 @@
 """Support for Sonarr sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from aiopyarr import (
     Command,
@@ -31,7 +29,7 @@ from .entity import SonarrEntity
 
 
 @dataclass(frozen=True)
-class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
+class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):  # noqa: UP046
     """Mixin for Sonarr sensor."""
 
     attributes_fn: Callable[[SonarrDataT], dict[str, str]]
@@ -160,11 +158,13 @@ class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
 
     # Note: Sensor extra_state_attributes are deprecated and will be removed in 2026.9
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the entity."""
         return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

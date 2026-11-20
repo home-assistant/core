@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from py_aosmith.models import Device as AOSmithDevice
 
@@ -48,16 +49,18 @@ async def async_setup_entry(
     """Set up A. O. Smith sensor platform."""
     data = entry.runtime_data
 
-    async_add_entities(
+    entities: list[AOSmithStatusSensorEntity | AOSmithEnergySensorEntity] = [
         AOSmithStatusSensorEntity(data.status_coordinator, description, junction_id)
         for description in STATUS_ENTITY_DESCRIPTIONS
         for junction_id in data.status_coordinator.data
-    )
+    ]
 
-    async_add_entities(
+    entities.extend(
         AOSmithEnergySensorEntity(data.energy_coordinator, junction_id)
         for junction_id in data.status_coordinator.data
     )
+
+    async_add_entities(entities)
 
 
 class AOSmithStatusSensorEntity(AOSmithStatusEntity, SensorEntity):
@@ -77,6 +80,7 @@ class AOSmithStatusSensorEntity(AOSmithStatusEntity, SensorEntity):
         self._attr_unique_id = f"{description.key}_{junction_id}"
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
@@ -101,6 +105,7 @@ class AOSmithEnergySensorEntity(AOSmithEnergyEntity, SensorEntity):
         self._attr_unique_id = f"energy_usage_{junction_id}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.energy_usage

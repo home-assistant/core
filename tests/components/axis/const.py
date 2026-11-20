@@ -34,13 +34,68 @@ API_DISCOVERY_PORT_MANAGEMENT = {
     "name": "IO Port Management",
 }
 
-APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
- <application Name="fenceguard" NiceName="AXIS Fence Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="47775" License="None" Status="Running" ConfigurationPage="local/fenceguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="loiteringguard" NiceName="AXIS Loitering Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="46775" License="None" Status="Running" ConfigurationPage="local/loiteringguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="motionguard" NiceName="AXIS Motion Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="48170" License="None" Status="Running" ConfigurationPage="local/motionguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
- <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
- <application Name="objectanalytics" NiceName="AXIS Object Analytics" Vendor="Axis Communications" Version="1.0-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
-</reply>"""
+APPLICATIONS_LIST_RESPONSE = (
+    '<reply result="ok">\n'
+    " <application"
+    ' Name="fenceguard"'
+    ' NiceName="AXIS Fence Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="47775"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/fenceguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="loiteringguard"'
+    ' NiceName="AXIS Loitering Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="46775"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/loiteringguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="motionguard"'
+    ' NiceName="AXIS Motion Guard"'
+    ' Vendor="Axis Communications"'
+    ' Version="2.2-6"'
+    ' ApplicationID="48170"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/motionguard/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    ' LicenseName="Proprietary"'
+    " />\n"
+    " <application"
+    ' Name="vmd"'
+    ' NiceName="AXIS Video Motion Detection"'
+    ' Vendor="Axis Communications"'
+    ' Version="4.2-0"'
+    ' ApplicationID="143440"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/vmd/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    " />\n"
+    " <application"
+    ' Name="objectanalytics"'
+    ' NiceName="AXIS Object Analytics"'
+    ' Vendor="Axis Communications"'
+    ' Version="1.0-0"'
+    ' ApplicationID="143440"'
+    ' License="None"'
+    ' Status="Running"'
+    ' ConfigurationPage="local/vmd/config.html"'
+    ' VendorHomePage="http://www.axis.com"'
+    " />\n"
+    "</reply>"
+)
 
 BASIC_DEVICE_INFO_RESPONSE = {
     "apiVersion": "1.1",
@@ -61,6 +116,18 @@ BASIC_DEVICE_INFO_RESPONSE = {
             "Soc": "str",
             "SocSerialNumber": "str",
             "WebURL": "str",
+        }
+    },
+}
+
+COMPANION_FULL_NAME = "AXIS Companion Cube L Network Camera"
+
+BASIC_DEVICE_INFO_COMPANION_RESPONSE = {
+    **BASIC_DEVICE_INFO_RESPONSE,
+    "data": {
+        "propertyList": {
+            **BASIC_DEVICE_INFO_RESPONSE["data"]["propertyList"],
+            "ProdFullName": COMPANION_FULL_NAME,
         }
     },
 }
@@ -161,6 +228,10 @@ root.Brand.ProdType=Network Camera
 root.Brand.ProdVariant=
 root.Brand.WebURL=http://www.axis.com
 """
+
+BRAND_COMPANION_RESPONSE = BRAND_RESPONSE.replace(
+    "AXIS M1065-LW Network Camera", COMPANION_FULL_NAME
+)
 
 IMAGE_RESPONSE = """root.Image.I0.Enabled=yes
 root.Image.I0.Name=View Area 1

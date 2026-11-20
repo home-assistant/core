@@ -1,22 +1,22 @@
 """Tests for the HDMI-CEC switch platform."""
 
-from pycec.const import POWER_OFF, POWER_ON, STATUS_PLAY, STATUS_STILL, STATUS_STOP
+from pycec.const import (
+    CMD_STANDBY,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
 from pycec.network import PhysicalAddress
 import pytest
 
 from homeassistant.components.hdmi_cec import EVENT_HDMI_CEC_UNAVAILABLE
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 
-from . import MockHDMIDevice
+from . import MockHDMIDevice, assert_cec_command
 from .conftest import CecEntityCreator, HDMINetworkCreator
 
 
@@ -79,7 +79,10 @@ async def test_service_on(
     assert state.state != STATE_ON
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.hdmi_3"}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.hdmi_3"},
+        blocking=True,
     )
 
     mock_hdmi_device.turn_on.assert_called_once_with()
@@ -102,12 +105,17 @@ async def test_service_off(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.hdmi_3"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.hdmi_3"},
         blocking=True,
     )
 
-    mock_hdmi_device.turn_off.assert_called_once_with()
+    mock_hdmi_device.turn_off.assert_not_called()
+    assert_cec_command(
+        mock_hdmi_device.send_command,
+        cmd=CMD_STANDBY,
+        dst=mock_hdmi_device.logical_address,
+    )
 
     state = hass.states.get("switch.hdmi_3")
     assert state.state == STATE_OFF
@@ -143,10 +151,6 @@ async def test_device_status_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hdmi_3")
-    if power_status in (POWER_ON, 4) and status is not None:
-        pytest.xfail(
-            reason="`CecSwitchEntity.is_on` returns `False` here instead of `true` as expected."
-        )
     assert state.state == expected_state
 
 
@@ -190,7 +194,10 @@ async def test_friendly_name(
             {},
             {},
             marks=pytest.mark.xfail(
-                reason="physical address logic returns a string 'None' instead of not being set."
+                reason=(
+                    "physical address logic returns a string"
+                    " 'None' instead of not being set."
+                )
             ),
         ),
         (

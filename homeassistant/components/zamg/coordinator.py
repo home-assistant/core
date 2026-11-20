@@ -1,6 +1,6 @@
 """Data Update coordinator for ZAMG weather data."""
 
-from __future__ import annotations
+from typing import override
 
 from zamg import ZamgData as ZamgDevice
 from zamg.exceptions import ZamgError, ZamgNoDataError
@@ -12,11 +12,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_STATION_ID, DOMAIN, LOGGER, MIN_TIME_BETWEEN_UPDATES
 
+type ZamgConfigEntry = ConfigEntry[ZamgDataUpdateCoordinator]
+
 
 class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
     """Class to manage fetching ZAMG weather data."""
 
-    config_entry: ConfigEntry
+    config_entry: ZamgConfigEntry
     data: dict = {}
     api_fields: list[str] | None = None
 
@@ -24,7 +26,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: ZamgConfigEntry,
     ) -> None:
         """Initialize global ZAMG data updater."""
         self.zamg = ZamgDevice(session=async_get_clientsession(hass))
@@ -37,6 +39,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
+    @override
     async def _async_update_data(self) -> ZamgDevice:
         """Fetch data from ZAMG api."""
         try:

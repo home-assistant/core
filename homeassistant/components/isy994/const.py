@@ -16,14 +16,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.lock import LockState
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
     CURRENCY_DOLLAR,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
@@ -39,6 +37,7 @@ from homeassistant.const import (
     UV_INDEX,
     Platform,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -48,6 +47,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
@@ -58,7 +58,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "isy994"
 
@@ -68,18 +68,19 @@ CONF_NETWORK = "network"
 CONF_IGNORE_STRING = "ignore_string"
 CONF_SENSOR_STRING = "sensor_string"
 CONF_VAR_SENSOR_STRING = "variable_sensor_string"
-CONF_TLS_VER = "tls"
 CONF_RESTORE_LIGHT_STATE = "restore_light_state"
 
 DEFAULT_IGNORE_STRING = "{IGNORE ME}"
 DEFAULT_SENSOR_STRING = "sensor"
 DEFAULT_RESTORE_LIGHT_STATE = False
-DEFAULT_TLS_VERSION = 1.1
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PROGRAM_STRING = "HA."
 DEFAULT_VAR_SENSOR_STRING = "HA."
 
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
+
+EVENT_ISY994_CONTROL = "isy994_control"
 
 NODE_PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -107,10 +108,15 @@ PROGRAM_PLATFORMS = [
 ROOT_NODE_PLATFORMS = [Platform.BUTTON]
 VARIABLE_PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
+# Platforms that classify in parallel with NODE_PLATFORMS — a node placed in
+# one of these still falls through to its primary platform classification.
+NODE_PARALLEL_PLATFORMS = [Platform.EVENT]
+
 # Set of all platforms used by integration
 PLATFORMS = {
     *NODE_PLATFORMS,
     *NODE_AUX_PROP_PLATFORMS,
+    *NODE_PARALLEL_PLATFORMS,
     *PROGRAM_PLATFORMS,
     *ROOT_NODE_PLATFORMS,
     *VARIABLE_PLATFORMS,
@@ -316,6 +322,47 @@ NODE_FILTERS: dict[Platform, dict[str, list[str]]] = {
         FILTER_INSTEON_TYPE: ["4.8", TYPE_CATEGORY_CLIMATE],
         FILTER_ZWAVE_CAT: ["140"],
     },
+    # Additive: a node matching here still gets its primary classification.
+    Platform.EVENT: {
+        FILTER_UOM: [],
+        FILTER_STATES: [],
+        FILTER_NODE_DEF_ID: [
+            "BallastRelayLampSwitch",
+            "BallastRelayLampSwitch_ADV",
+            "DimmerLampSwitch",
+            "DimmerLampSwitch_ADV",
+            "DimmerSwitchOnly",
+            "DimmerSwitchOnly_ADV",
+            "KeypadButton",
+            "KeypadButton_ADV",
+            "KeypadDimmer",
+            "KeypadDimmer_ADV",
+            "KeypadRelay",
+            "KeypadRelay_ADV",
+            "RelayLampOnly",
+            "RelayLampOnly_ADV",
+            "RelayLampSwitch",
+            "RelayLampSwitch_ADV",
+            "RelaySwitchOnlyPlusQuery",
+            "RelaySwitchOnlyPlusQuery_ADV",
+        ],
+        # Type prefixes derived from observed eisy node families
+        # (SwitchLinc / KeypadLinc / InLineLinc / BallastLinc) — catches
+        # legacy non-_ADV firmware variants of the same hardware.
+        FILTER_INSTEON_TYPE: [
+            "1.14.",
+            "1.32.",
+            "1.45.",
+            "1.65.",
+            "1.66.",
+            "2.42.",
+            "2.44.",
+            "2.55.",
+            "2.57.",
+            "3.32.",
+        ],
+        FILTER_ZWAVE_CAT: [],
+    },
 }
 NODE_AUX_FILTERS: dict[str, Platform] = {
     PROP_ON_LEVEL: Platform.NUMBER,
@@ -341,8 +388,8 @@ UOM_FRIENDLY_NAME = {
     "18": UnitOfLength.FEET,
     "19": UnitOfTime.HOURS,
     "20": UnitOfTime.HOURS,
-    "21": PERCENTAGE,
-    "22": PERCENTAGE,
+    "21": UnitOfRatio.PERCENTAGE,
+    "22": UnitOfRatio.PERCENTAGE,
     "23": UnitOfPressure.INHG,
     "24": UnitOfVolumetricFlux.INCHES_PER_HOUR,
     UOM_INDEX: UOM_INDEX,  # Index type. Use "node.formatted" for value
@@ -371,10 +418,10 @@ UOM_FRIENDLY_NAME = {
     "48": UnitOfSpeed.MILES_PER_HOUR,
     "49": UnitOfSpeed.METERS_PER_SECOND,
     "50": "Ω",
-    UOM_PERCENTAGE: PERCENTAGE,
+    UOM_PERCENTAGE: UnitOfRatio.PERCENTAGE,
     "52": UnitOfMass.POUNDS,
     "53": "pf",
-    "54": CONCENTRATION_PARTS_PER_MILLION,
+    "54": UnitOfRatio.PARTS_PER_MILLION,
     "55": "pulse count",
     "57": UnitOfTime.SECONDS,
     "58": UnitOfTime.SECONDS,
@@ -423,7 +470,7 @@ UOM_FRIENDLY_NAME = {
     "118": UnitOfPressure.HPA,
     "119": UnitOfEnergy.WATT_HOUR,
     "120": UnitOfVolumetricFlux.INCHES_PER_DAY,
-    "122": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
+    "122": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,  # Microgram per cubic meter
     "123": f"bq/{UnitOfVolume.CUBIC_METERS}",  # Becquerel per cubic meter
     "124": f"pCi/{UnitOfVolume.LITERS}",  # Picocuries per liter
     "125": "pH",
@@ -431,7 +478,7 @@ UOM_FRIENDLY_NAME = {
     "127": UnitOfPressure.MMHG,
     "128": "J",
     "129": "BMI",  # Body Mass Index
-    "130": f"{UnitOfVolume.LITERS}/{UnitOfTime.HOURS}",
+    "130": UnitOfVolumeFlowRate.LITERS_PER_HOUR,
     "131": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     "132": "bpm",  # Breaths per minute
     "133": UnitOfFrequency.KILOHERTZ,
@@ -444,8 +491,8 @@ UOM_FRIENDLY_NAME = {
     "140": f"{UnitOfMass.MILLIGRAMS}/{UnitOfVolume.LITERS}",
     "141": "N",  # Netwon
     "142": f"{UnitOfVolume.GALLONS}/{UnitOfTime.SECONDS}",
-    "143": "gpm",  # Gallon per Minute
-    "144": "gph",  # Gallon per Hour
+    "143": UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+    "144": UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
 }
 
 UOM_TO_STATES = {
@@ -652,6 +699,13 @@ HA_HVAC_TO_ISY = {
 }
 
 HA_FAN_TO_ISY = {FAN_ON: "on", FAN_AUTO: "auto"}
+
+TOTAL_INCREASING_DEVICE_CLASSES = {
+    SensorDeviceClass.ENERGY,
+    SensorDeviceClass.WATER,
+    SensorDeviceClass.GAS,
+    SensorDeviceClass.PRECIPITATION,
+}
 
 BINARY_SENSOR_DEVICE_TYPES_ISY = {
     BinarySensorDeviceClass.MOISTURE: ["16.8.", "16.13.", "16.14."],

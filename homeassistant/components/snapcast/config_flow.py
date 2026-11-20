@@ -1,13 +1,12 @@
 """Snapcast config flow."""
 
-from __future__ import annotations
-
 import logging
 import socket
+from typing import override
 
+import probatio
 import snapcast.control
 from snapcast.control.server import CONTROL_PORT
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -16,10 +15,10 @@ from .const import DEFAULT_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SNAPCAST_SCHEMA = vol.Schema(
+SNAPCAST_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=CONTROL_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=CONTROL_PORT): int,
     }
 )
 
@@ -27,6 +26,7 @@ SNAPCAST_SCHEMA = vol.Schema(
 class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
     """Snapcast config flow."""
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle first step."""
         errors = {}

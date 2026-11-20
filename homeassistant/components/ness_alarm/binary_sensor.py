@@ -1,6 +1,6 @@
 """Support for Ness D8X/D16X zone states - represented as binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,12 +12,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SIGNAL_ZONE_CHANGED, NessAlarmConfigEntry, ZoneChangedData
+from . import NessAlarmConfigEntry, ZoneChangedData
 from .const import (
     CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
     DEFAULT_ZONE_TYPE,
     DOMAIN,
+    SIGNAL_ZONE_CHANGED,
     SUBENTRY_TYPE_ZONE,
 )
 
@@ -78,6 +79,7 @@ class NessZoneBinarySensor(BinarySensorEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

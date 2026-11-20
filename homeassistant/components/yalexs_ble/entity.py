@@ -1,6 +1,6 @@
 """The yalexs_ble integration entities."""
 
-from __future__ import annotations
+from typing import override
 
 from yalexs_ble import ConnectionInfo, LockInfo, LockState
 
@@ -66,6 +66,7 @@ class YALEXSBLEEntity(Entity):
         self._attr_available = False
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

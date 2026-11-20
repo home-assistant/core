@@ -7,8 +7,10 @@ DOMAIN = "reolink"
 CONF_USE_HTTPS = "use_https"
 CONF_BC_PORT = "baichuan_port"
 CONF_BC_ONLY = "baichuan_only"
+CONF_BC_CONNECT = "baichuan_connection"
 CONF_SUPPORTS_PRIVACY_MODE = "privacy_mode_supported"
 CONF_FIRMWARE_CHECK_TIME = "firmware_check_time"
+CONF_UID = "uid"
 
 # Conserve battery by not waking the battery cameras each minute during normal update
 # Most props are cached in the Home Hub and updated, but some are skipped
@@ -17,3 +19,8 @@ BATTERY_WAKE_UPDATE_INTERVAL = 6 * BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
 BATTERY_ALL_WAKE_UPDATE_INTERVAL = 2 * BATTERY_WAKE_UPDATE_INTERVAL
 
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
+
+ACCOUNT_DEVICE_HA_URL = (
+    "https://www.home-assistant.io/integrations/reolink/#cant-set-up-the-integration"
+)
+ACCOUNT_DEVICE_REOLINK_URL = "https://support.reolink.com/articles/61043321354265-Introduction-to-Reolink-Local-Device-and-Account-Device/#h_01KZQW3H9DPM7R1S131Z1K0F1Q"

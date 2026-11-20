@@ -1,7 +1,5 @@
 """Fixtures for the Switch as X integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -21,6 +19,6 @@ async def setup_homeassistant(hass: HomeAssistant):
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.switch_as_x.async_setup_entry", return_value=True
+        "homeassistant.components.switch_as_x.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

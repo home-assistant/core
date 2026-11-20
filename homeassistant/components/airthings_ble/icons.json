@@ -9,16 +9,19 @@
           "smartlink": "mdi:hub"
         }
       },
-      "radon_1day_avg": {
-        "default": "mdi:radioactive"
-      },
       "radon_1day_level": {
         "default": "mdi:radioactive"
       },
-      "radon_longterm_avg": {
+      "radon_longterm_level": {
         "default": "mdi:radioactive"
       },
-      "radon_longterm_level": {
+      "radon_month_level": {
+        "default": "mdi:radioactive"
+      },
+      "radon_week_level": {
+        "default": "mdi:radioactive"
+      },
+      "radon_year_level": {
         "default": "mdi:radioactive"
       }
     }

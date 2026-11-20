@@ -15,6 +15,7 @@
         }),
         'device_class': None,
         'disabled_by': None,
+        'domain': 'ai_task',
         'entity_category': None,
         'entity_id': 'ai_task.claude_ai_task',
         'has_entity_name': True,
@@ -23,6 +24,7 @@
         'labels': list([
         ]),
         'name': None,
+        'object_id_base': None,
         'options': dict({
           'conversation': dict({
             'should_expose': False,
@@ -32,7 +34,11 @@
         'original_icon': None,
         'original_name': None,
         'platform': 'anthropic',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 3,
         'translation_key': 'ai_task_data',
+        'unit_of_measurement': None,
       }),
       'conversation.claude_conversation': dict({
         'aliases': list([
@@ -44,6 +50,7 @@
         }),
         'device_class': None,
         'disabled_by': None,
+        'domain': 'conversation',
         'entity_category': None,
         'entity_id': 'conversation.claude_conversation',
         'has_entity_name': True,
@@ -52,6 +59,7 @@
         'labels': list([
         ]),
         'name': None,
+        'object_id_base': None,
         'options': dict({
           'conversation': dict({
             'should_expose': False,
@@ -61,10 +69,14 @@
         'original_icon': None,
         'original_name': None,
         'platform': 'anthropic',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
         'translation_key': 'conversation',
+        'unit_of_measurement': None,
       }),
     }),
-    'entry_version': '2.3',
+    'entry_version': '2.5',
     'options': dict({
     }),
     'state': 'loaded',

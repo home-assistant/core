@@ -1,8 +1,7 @@
 """Test serialization functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import json
+import math
 
 import orjson
 import pytest
@@ -88,6 +87,53 @@ def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     assert actual_result == expected_result
 
 
+def test_to_json_ensure_ascii_sort_keys_non_str_keys(hass: HomeAssistant) -> None:
+    """Test to_json with ensure_ascii sorts dicts with mixed key types."""
+    value = {"b": 1, 2: 2, None: 3, "a": {1: 4, "x": 5}}
+    actual_result = render(
+        hass,
+        "{{ value | to_json(sort_keys=True, ensure_ascii=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert actual_result == '{"2": 2, "a": {"1": 4, "x": 5}, "b": 1, "null": 3}'
+    default_result = render(
+        hass,
+        "{{ value | to_json(sort_keys=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert json.loads(actual_result) == json.loads(default_result)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(math.nan, "null", id="nan"),
+        pytest.param(
+            {"a": math.inf, "b": [-math.inf, 1.5]},
+            '{"a": null, "b": [null, 1.5]}',
+            id="nested",
+        ),
+    ],
+)
+def test_to_json_ensure_ascii_non_finite_floats(
+    hass: HomeAssistant, value: object, expected: str
+) -> None:
+    """Test to_json with ensure_ascii serializes NaN and Infinity as null."""
+    actual_result = render(
+        hass,
+        "{{ value | to_json(ensure_ascii=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert actual_result == expected
+    default_result = render(
+        hass, "{{ value | to_json }}", {"value": value}, parse_result=False
+    )
+    assert json.loads(actual_result) == json.loads(default_result)
+
+
 def test_from_json(hass: HomeAssistant) -> None:
     """Test the JSON string to object filter."""
 
@@ -121,7 +167,10 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     assert render(hass, "{{ pack(value, '>I') }}", variables) == b"\xde\xad\xbe\xef"
 
     # test with None value
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    # "Template warning: 'pack' unable to pack object with
+    # type '%s' and format_string '%s' see
+    # https://docs.python.org/3/library/struct.html
+    # for more information"
     assert render(hass, "{{ pack(value, '>I') }}", {"value": None}) is None
     assert (
         "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and"
@@ -130,7 +179,10 @@ def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     )
 
     # test with invalid filter
-    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    # "Template warning: 'pack' unable to pack object with
+    # type '%s' and format_string '%s' see
+    # https://docs.python.org/3/library/struct.html
+    # for more information"
     assert render(hass, "{{ pack(value, 'invalid filter') }}", variables) is None
     assert (
         "Template warning: 'pack' unable to pack object '3735928559' with type 'int'"

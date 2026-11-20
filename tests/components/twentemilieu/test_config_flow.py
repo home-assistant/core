@@ -3,10 +3,9 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from twentemilieu import TwenteMilieuAddressError, TwenteMilieuConnectionError
 
-from homeassistant import config_entries
-from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
     CONF_HOUSE_NUMBER,
@@ -17,8 +16,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -114,9 +111,15 @@ async def test_connection_error(
     mock_twentemilieu.unique_id.side_effect = TwenteMilieuConnectionError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_POST_CODE: "1234AB",
             CONF_HOUSE_NUMBER: "1",
             CONF_HOUSE_LETTER: "A",
@@ -160,9 +163,15 @@ async def test_address_already_set_up(
     """Test we abort if address has already been set up."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_POST_CODE: "1234AB",
             CONF_HOUSE_NUMBER: "1",
             CONF_HOUSE_LETTER: "A",

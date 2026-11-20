@@ -5,20 +5,21 @@ from unittest.mock import Mock
 from gardena_bluetooth.const import AquaContourContours, AquaContourPosition
 from habluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.text import (
-    ATTR_VALUE,
     DOMAIN as TEXT_DOMAIN,
-    SERVICE_SET_VALUE,
+    TextService,
+    TextServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
 
-from tests.common import snapshot_platform
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
 
 @pytest.mark.parametrize(
@@ -27,16 +28,16 @@ from tests.common import snapshot_platform
         pytest.param(
             AQUA_CONTOUR_SERVICE_INFO,
             {
-                AquaContourPosition.position_name_1.uuid: b"Position 1\x00",
-                AquaContourPosition.position_name_2.uuid: b"Position 2\x00",
-                AquaContourPosition.position_name_3.uuid: b"Position 3\x00",
-                AquaContourPosition.position_name_4.uuid: b"Position 4\x00",
-                AquaContourPosition.position_name_5.uuid: b"Position 5\x00",
-                AquaContourContours.contour_name_1.uuid: b"Contour 1\x00",
-                AquaContourContours.contour_name_2.uuid: b"Contour 2\x00",
-                AquaContourContours.contour_name_3.uuid: b"Contour 3\x00",
-                AquaContourContours.contour_name_4.uuid: b"Contour 4\x00",
-                AquaContourContours.contour_name_5.uuid: b"Contour 5\x00",
+                AquaContourPosition.position_name_1.unique_id: b"Position 1\x00",
+                AquaContourPosition.position_name_2.unique_id: b"Position 2\x00",
+                AquaContourPosition.position_name_3.unique_id: b"Position 3\x00",
+                AquaContourPosition.position_name_4.unique_id: b"Position 4\x00",
+                AquaContourPosition.position_name_5.unique_id: b"Position 5\x00",
+                AquaContourContours.contour_name_1.unique_id: b"Contour 1\x00",
+                AquaContourContours.contour_name_2.unique_id: b"Contour 2\x00",
+                AquaContourContours.contour_name_3.unique_id: b"Contour 3\x00",
+                AquaContourContours.contour_name_4.unique_id: b"Contour 4\x00",
+                AquaContourContours.contour_name_5.unique_id: b"Contour 5\x00",
             },
             id="aqua_contour",
         ),
@@ -65,7 +66,9 @@ async def test_text_set_value(
     mock_client: Mock,
 ) -> None:
     """Test setting text value."""
-    mock_read_char_raw[AquaContourPosition.position_name_1.uuid] = b"Position 1\x00"
+    mock_read_char_raw[AquaContourPosition.position_name_1.unique_id] = (
+        b"Position 1\x00"
+    )
 
     await setup_entry(
         hass, platforms=[Platform.TEXT], service_info=AQUA_CONTOUR_SERVICE_INFO
@@ -73,10 +76,10 @@ async def test_text_set_value(
 
     await hass.services.async_call(
         TEXT_DOMAIN,
-        SERVICE_SET_VALUE,
+        TextService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: "text.mock_title_position_1",
-            ATTR_VALUE: "New Position Name",
+            TargetKey.ENTITY_ID: "text.mock_title_position_1",
+            TextServiceArgument.VALUE: "New Position Name",
         },
         blocking=True,
     )

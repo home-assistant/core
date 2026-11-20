@@ -14,7 +14,7 @@ from .const import ATTR_SENSORS, DOMAIN
 from .helpers import get_spa_name
 
 
-class SmartTubEntity(CoordinatorEntity):
+class SmartTubEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
     """Base class for SmartTub entities."""
 
     _attr_has_entity_name = True
@@ -101,5 +101,5 @@ class SmartTubExternalSensorBase(SmartTubEntity):
 
     @property
     def sensor(self) -> SpaSensor:
-        """Convenience property to access the smarttub.SpaSensor instance for this sensor."""
+        """Access the smarttub.SpaSensor instance for this sensor."""
         return self.coordinator.data[self.spa.id][ATTR_SENSORS][self.sensor_address]

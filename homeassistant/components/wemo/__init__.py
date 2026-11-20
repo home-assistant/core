@@ -1,14 +1,12 @@
 """Support for WeMo device discovery."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime
 import logging
 from typing import Any
 
+import probatio
 import pywemo
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +20,7 @@ from homeassistant.util.async_ import gather_with_limited_concurrency
 from .const import DOMAIN
 from .coordinator import DeviceCoordinator, async_register_device
 from .models import DATA_WEMO, WemoConfigEntryData, WemoData
+from .services import async_setup_services
 
 # Max number of devices to initialize at once. This limit is in place to
 # avoid tying up too many executor threads with WeMo device setup.
@@ -56,9 +55,9 @@ def coerce_host_port(value: str) -> HostPortTuple:
     host, _, port_str = value.partition(":")
 
     if not host:
-        raise vol.Invalid("host cannot be empty")
+        raise probatio.Invalid("host cannot be empty")
 
-    port = cv.port(port_str) if port_str else None
+    port = probatio.Port()(port_str) if port_str else None
 
     return host, port
 
@@ -67,30 +66,43 @@ CONF_STATIC = "static"
 
 DEFAULT_DISCOVERY = True
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_STATIC, default=[]): vol.Schema(
-                    [vol.All(cv.string, coerce_host_port)]
+                probatio.Optional(CONF_STATIC, default=[]): probatio.Schema(
+                    [probatio.All(cv.string, coerce_host_port)]
                 ),
-                vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+                probatio.Optional(
+                    CONF_DISCOVERY, default=DEFAULT_DISCOVERY
+                ): cv.boolean,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
+
+
+def _start_registry_and_responder() -> tuple[
+    pywemo.SubscriptionRegistry, pywemo.ssdp.DiscoveryResponder
+]:
+    """Start the subscription registry and the discovery responder."""
+    # Keep track of WeMo device subscriptions for push updates
+    registry = pywemo.SubscriptionRegistry()
+    registry.start()
+
+    # Respond to discovery requests from WeMo devices.
+    discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
+    discovery_responder.start()
+    return registry, discovery_responder
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for WeMo devices."""
-    # Keep track of WeMo device subscriptions for push updates
-    registry = pywemo.SubscriptionRegistry()
-    await hass.async_add_executor_job(registry.start)
-
-    # Respond to discovery requests from WeMo devices.
-    discovery_responder = pywemo.ssdp.DiscoveryResponder(registry.port)
-    await hass.async_add_executor_job(discovery_responder.start)
+    async_setup_services(hass)
+    registry, discovery_responder = await hass.async_add_executor_job(
+        _start_registry_and_responder
+    )
 
     def _on_hass_stop(_: Event) -> None:
         discovery_responder.stop()
@@ -99,7 +111,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
     yaml_config = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = WemoData(
+    hass.data[DATA_WEMO] = WemoData(
         discovery_enabled=yaml_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY),
         static_config=yaml_config.get(CONF_STATIC, []),
         registry=registry,
@@ -115,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a wemo config entry."""
     wemo_data = hass.data[DATA_WEMO]
     dispatcher = WemoDispatcher(entry)
@@ -126,16 +138,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         dispatcher=dispatcher,
     )
 
-    # Need to do this at least once in case statistics are defined and discovery is disabled
+    # Need to do this at least once in case statistics
+    # are defined and discovery is disabled
     await discovery.discover_statics()
 
     if wemo_data.discovery_enabled:
         await discovery.async_discover_and_schedule()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
     wemo_data = hass.data[DATA_WEMO]
@@ -143,14 +154,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_data.config_entry_data.discovery.async_stop_discovery()
 
     dispatcher = wemo_data.config_entry_data.dispatcher
-    if unload_ok := await dispatcher.async_unload_platforms(hass):
-        for coordinator in list(
-            wemo_data.config_entry_data.device_coordinators.values()
-        ):
-            await coordinator.async_shutdown()
-        assert not wemo_data.config_entry_data.device_coordinators
-        wemo_data.config_entry_data = None  # type: ignore[assignment]
-    return unload_ok
+    await dispatcher.async_unload_platforms(hass)
+    for coordinator in list(wemo_data.config_entry_data.device_coordinators.values()):
+        await coordinator.async_shutdown()
+    assert not wemo_data.config_entry_data.device_coordinators
+    wemo_data.config_entry_data = None  # type: ignore[assignment]
 
 
 async def async_wemo_dispatcher_connect(
@@ -200,7 +208,8 @@ class WemoDispatcher:
             # Three cases:
             # - Platform is loaded, dispatch discovery
             # - Platform is being loaded, add to backlog
-            # - First time we see platform, we need to load it and initialize the backlog
+            # - First time we see platform, we need to load
+            #   it and initialize the backlog
 
             if platform in self._dispatch_callbacks:
                 await self._dispatch_callbacks[platform](coordinator)
@@ -221,7 +230,7 @@ class WemoDispatcher:
     async def async_connect_platform(
         self, platform: Platform, dispatch: DispatchCallback
     ) -> None:
-        """Consider a platform as loaded and dispatch any backlog of discovered devices."""
+        """Mark platform loaded and dispatch backlog of discovered devices."""
         self._dispatch_callbacks[platform] = dispatch
 
         await gather_with_limited_concurrency(
@@ -232,11 +241,11 @@ class WemoDispatcher:
             ),
         )
 
-    async def async_unload_platforms(self, hass: HomeAssistant) -> bool:
+    async def async_unload_platforms(self, hass: HomeAssistant) -> None:
         """Forward the unloading of an entry to platforms."""
         platforms: set[Platform] = set(self._dispatch_backlog.keys())
         platforms.update(self._dispatch_callbacks.keys())
-        return await hass.config_entries.async_unload_platforms(
+        await hass.config_entries.async_unload_platforms_or_raise(
             self._config_entry, platforms
         )
 

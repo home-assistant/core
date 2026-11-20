@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from sanix import (
     ATTR_API_BATTERY,
     ATTR_API_DEVICE_NO,
@@ -21,12 +22,10 @@ from sanix.models import Measurement
 from homeassistant.components.sanix.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_TOKEN
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_sanix():
-    """Build a fixture for the Sanix API that connects successfully and returns measurements."""
+    """Build a fixture for the Sanix API that connects successfully."""
     fixture = load_json_object_fixture("get_measurements.json", DOMAIN)
     with (
         patch(
@@ -71,6 +70,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sanix.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry

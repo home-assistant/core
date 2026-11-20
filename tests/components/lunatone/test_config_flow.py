@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 from lunatone_rest_api_client.models import InfoData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -18,14 +19,12 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import (
     BASE_IP,
     BASE_URL,
-    INFO_DATA,
-    LEGACY_INFO_DATA,
     MANUFACTURER,
+    SERIAL_NUMBER,
     UUID,
+    build_info_data,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(BASE_IP),
@@ -44,15 +43,22 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
+@pytest.mark.parametrize(
+    ("info_data", "expected_unique_id"),
+    [
+        (build_info_data(include_uuid=True), UUID.replace("-", "")),
+        (build_info_data(include_uuid=False), str(SERIAL_NUMBER)),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     info_data: InfoData,
+    expected_unique_id: str,
 ) -> None:
     """Test full user flow."""
-    mock_lunatone_info.set_data(info_data)
+    mock_lunatone_info.data = info_data
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -68,13 +74,15 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
+    assert result["result"].unique_id == expected_unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test full flow."""
-    mock_lunatone_info.serial_number = None
+    mock_lunatone_info.data = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -89,6 +97,14 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "missing_device_info"}
+
+    mock_lunatone_info.data = build_info_data()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: BASE_URL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_already_configured(
@@ -120,10 +136,10 @@ async def test_device_already_configured(
         (aiohttp.ClientConnectionError(), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -156,7 +172,11 @@ async def test_user_step_fail_with_error(
 
 
 async def test_zeroconf_flow(
-    hass: HomeAssistant, mock_lunatone_devices: AsyncMock, mock_lunatone_info: AsyncMock
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -176,8 +196,10 @@ async def test_zeroconf_flow(
 
 async def test_zeroconf_flow_abort_duplicate(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf flow aborts with duplicate."""
@@ -223,10 +245,10 @@ async def test_zeroconf_flow_abort_with_error(
     assert result["step_id"] == "discovery_confirm"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -253,10 +275,10 @@ async def test_reconfigure(
         (aiohttp.ClientConnectionError(), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_error: str,

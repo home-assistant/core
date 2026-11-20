@@ -1,14 +1,16 @@
 """Advantage Air Update platform."""
 
+from typing import override
+
 from homeassistant.components.update import UpdateEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import DOMAIN
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirEntity
+from .helpers import get_system_id
 
 
 async def async_setup_entry(
@@ -32,7 +34,7 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
         """Initialize the Advantage Air App."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data["system"]["rid"])},
+            identifiers={(DOMAIN, get_system_id(self.coordinator.data["system"]))},
             manufacturer="Advantage Air",
             model=self.coordinator.data["system"]["sysType"],
             name=self.coordinator.data["system"]["name"],
@@ -40,11 +42,13 @@ class AdvantageAirApp(AdvantageAirEntity, UpdateEntity):
         )
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the current app version."""
         return self.coordinator.data["system"]["myAppRev"]
 
     @property
+    @override
     def latest_version(self) -> str:
         """Return if there is an update."""
         if self.coordinator.data["system"]["needsUpdate"]:

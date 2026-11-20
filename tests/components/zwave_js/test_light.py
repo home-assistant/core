@@ -9,7 +9,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
@@ -18,16 +17,16 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     LightEntityFeature,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +40,7 @@ from .common import (
 )
 
 ZDB5100_ENTITY = "light.matrix_office"
-HSM200_V1_ENTITY = "light.hsm200"
+HSM200_V1_ENTITY = "light.basement_hsm200"
 
 
 @pytest.fixture
@@ -510,7 +509,7 @@ async def test_light_none_color_value(
     hass: HomeAssistant, light_color_null_values, integration
 ) -> None:
     """Test the light entity can handle None value in current color Value."""
-    entity_id = "light.repeater"
+    entity_id = "light.dining_room_repeater"
     state = hass.states.get(entity_id)
 
     assert state
@@ -642,8 +641,8 @@ async def test_light_on_off_color(
     # Turn on the light. Since this is the first call, the light should default to white
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ZDB5100_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 2
@@ -689,8 +688,8 @@ async def test_light_on_off_color(
     # Set the brightness to 128. This should be encoded in the color value
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_BRIGHTNESS: 128},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ZDB5100_ENTITY, LightServiceArgument.BRIGHTNESS: 128},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 2
@@ -726,8 +725,8 @@ async def test_light_on_off_color(
     # Set the color to red. This should preserve the previous brightness value
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY, ATTR_HS_COLOR: (0, 100)},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ZDB5100_ENTITY, LightServiceArgument.HS_COLOR: (0, 100)},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 2
@@ -763,8 +762,8 @@ async def test_light_on_off_color(
     # Turn the device off. This should only affect the binary switch, not the color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ZDB5100_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -786,8 +785,8 @@ async def test_light_on_off_color(
     # Turn the device on again. This should only affect the binary switch, not the color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ZDB5100_ENTITY},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: ZDB5100_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -904,8 +903,8 @@ async def test_light_color_only(
     # Attempt to turn on the light and ensure it defaults to white
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -935,8 +934,8 @@ async def test_light_color_only(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -958,8 +957,8 @@ async def test_light_color_only(
     # Assert that the last color is restored
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -986,8 +985,11 @@ async def test_light_color_only(
     # Assert that the brightness is preserved when changing colors
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_RGB_COLOR: (255, 0, 0)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: HSM200_V1_ENTITY,
+            LightServiceArgument.RGB_COLOR: (255, 0, 0),
+        },
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1012,8 +1014,8 @@ async def test_light_color_only(
     # Assert that the color is preserved when changing brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 69},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY, LightServiceArgument.BRIGHTNESS: 69},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1034,8 +1036,8 @@ async def test_light_color_only(
     # Turn off again
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
@@ -1045,8 +1047,8 @@ async def test_light_color_only(
     # Assert that the color is preserved when turning on with brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 123},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY, LightServiceArgument.BRIGHTNESS: 123},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1067,8 +1069,8 @@ async def test_light_color_only(
     # Turn off again
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
@@ -1077,8 +1079,8 @@ async def test_light_color_only(
     # when turning on light again in the next step
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
@@ -1088,8 +1090,11 @@ async def test_light_color_only(
     # Assert that the brightness is preserved when turning on with color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_HS_COLOR: (240, 100)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: HSM200_V1_ENTITY,
+            LightServiceArgument.HS_COLOR: (240, 100),
+        },
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1110,16 +1115,16 @@ async def test_light_color_only(
     # Turn off twice
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
@@ -1132,8 +1137,8 @@ async def test_light_color_only(
     # Assert that turning on after successive off calls works and keeps the last color
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 150},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY, LightServiceArgument.BRIGHTNESS: 150},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1157,8 +1162,8 @@ async def test_light_color_only(
     # Turn off already off light, we won't be aware of last color and brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY},
         blocking=True,
     )
     await update_color(0, 0, 0)
@@ -1168,12 +1173,13 @@ async def test_light_color_only(
 
     client.async_send_command.reset_mock()
 
-    # Assert that turning on light after off call with unknown off color/brightness state
-    # works and that light turns on to white with specified brightness
+    # Assert that turning on light after off call with unknown off
+    # color/brightness state works and turns on to white with
+    # specified brightness
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_BRIGHTNESS: 160},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: HSM200_V1_ENTITY, LightServiceArgument.BRIGHTNESS: 160},
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1
@@ -1220,8 +1226,11 @@ async def test_light_color_only(
     # Assert that call fails if attribute is added to service call
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: HSM200_V1_ENTITY, ATTR_RGBW_COLOR: (255, 76, 255, 0)},
+        LightService.TURN_ON,
+        {
+            TargetKey.ENTITY_ID: HSM200_V1_ENTITY,
+            LightServiceArgument.RGBW_COLOR: (255, 76, 255, 0),
+        },
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 1

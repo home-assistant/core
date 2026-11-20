@@ -16,10 +16,10 @@
     }
   },
   "triggers": {
-    "turned_off": {
+    "block_ended": {
       "trigger": "mdi:calendar-blank"
     },
-    "turned_on": {
+    "block_started": {
       "trigger": "mdi:calendar-clock"
     }
   }

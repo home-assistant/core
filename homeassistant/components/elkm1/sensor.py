@@ -1,18 +1,14 @@
 """Support for control of ElkM1 sensors."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-from elkm1_lib.const import SettingFormat, ZoneType
+from elkm1_lib.const import ZoneType
 from elkm1_lib.counters import Counter
 from elkm1_lib.elements import Element
 from elkm1_lib.keypads import Keypad
 from elkm1_lib.panel import Panel
-from elkm1_lib.settings import Setting
 from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,18 +18,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from . import ElkM1ConfigEntry
-from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
+from .models import ElkM1ConfigEntry
 
-SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
-SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
-SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
-SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
 
 _DEVICE_CLASS_MAP: dict[ZoneType, SensorDeviceClass] = {
@@ -46,10 +35,6 @@ _STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
     ZoneType.ANALOG_ZONE: SensorStateClass.MEASUREMENT,
 }
 
-ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -60,35 +45,13 @@ async def async_setup_entry(
     elk_data = config_entry.runtime_data
     elk = elk_data.elk
     entities: list[ElkEntity] = []
+
     create_elk_entities(elk_data, elk.counters, "counter", ElkCounter, entities)
     create_elk_entities(elk_data, elk.keypads, "keypad", ElkKeypad, entities)
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
-    create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
+
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_REFRESH,
-        None,
-        "async_counter_refresh",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_SET,
-        ELK_SET_COUNTER_SERVICE_SCHEMA,
-        "async_counter_set",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_zone_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_TRIGGER,
-        None,
-        "async_zone_trigger",
-    )
 
 
 def temperature_to_state(temperature: int, undefined_temperature: int) -> str | None:
@@ -134,6 +97,7 @@ class ElkCounter(ElkSensor):
     _attr_icon = "mdi:numeric"
     _element: Counter
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
 
@@ -150,11 +114,13 @@ class ElkKeypad(ElkSensor):
         return self._temperature_unit
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._temperature_unit
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the sensor."""
         attrs: dict[str, Any] = self.initial_attrs()
@@ -167,6 +133,7 @@ class ElkKeypad(ElkSensor):
         attrs["last_keypress"] = self._element.last_keypress
         return attrs
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = temperature_to_state(
             self._element.temperature, UNDEFINED_TEMPERATURE
@@ -181,34 +148,19 @@ class ElkPanel(ElkSensor):
     _element: Panel
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["system_trouble_status"] = self._element.system_trouble_status
         return attrs
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._elk.is_connected():
             self._attr_native_value = "Paused" if self._elk.is_paused() else "Connected"
         else:
             self._attr_native_value = "Disconnected"
-
-
-class ElkSetting(ElkSensor):
-    """Representation of an Elk-M1 Setting."""
-
-    _attr_translation_key = "setting"
-    _element: Setting
-
-    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        self._attr_native_value = self._element.value
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Attributes of the sensor."""
-        attrs: dict[str, Any] = self.initial_attrs()
-        attrs["value_format"] = SettingFormat(self._element.value_format).name.lower()
-        return attrs
 
 
 class ElkZone(ElkSensor):
@@ -217,6 +169,7 @@ class ElkZone(ElkSensor):
     _element: Zone
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend."""
         zone_icons = {
@@ -243,6 +196,7 @@ class ElkZone(ElkSensor):
         return f"mdi:{zone_icons.get(self._element.definition, 'alarm-bell')}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Attributes of the sensor."""
         attrs: dict[str, Any] = self.initial_attrs()
@@ -256,35 +210,39 @@ class ElkZone(ElkSensor):
     @property
     def temperature_unit(self) -> str | None:
         """Return the temperature unit."""
-        if self._element.definition == ZoneType.TEMPERATURE:
+        if self._element.definition is ZoneType.TEMPERATURE:
             return self._temperature_unit
         return None
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         return _DEVICE_CLASS_MAP.get(self._element.definition)
 
     @property
+    @override
     def state_class(self) -> SensorStateClass | None:
         """Return the state class of the sensor."""
         return _STATE_CLASS_MAP.get(self._element.definition)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self._element.definition == ZoneType.TEMPERATURE:
+        if self._element.definition is ZoneType.TEMPERATURE:
             return self._temperature_unit
-        if self._element.definition == ZoneType.ANALOG_ZONE:
+        if self._element.definition is ZoneType.ANALOG_ZONE:
             return UnitOfElectricPotential.VOLT
         return None
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
-        if self._element.definition == ZoneType.TEMPERATURE:
+        if self._element.definition is ZoneType.TEMPERATURE:
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE
             )
-        elif self._element.definition == ZoneType.ANALOG_ZONE:
+        elif self._element.definition is ZoneType.ANALOG_ZONE:
             self._attr_native_value = f"{self._element.voltage}"
         else:
             self._attr_native_value = pretty_const(self._element.logical_status.name)

@@ -1,20 +1,24 @@
 """Adds config flow for AccuWeather."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
-from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import AccuWeather
+from accuweather.exceptions import ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import DOMAIN
 
@@ -26,6 +30,7 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
     _latitude: float | None = None
     _longitude: float | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -39,8 +44,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                     accuweather = AccuWeather(
                         user_input[CONF_API_KEY],
                         websession,
-                        latitude=user_input[CONF_LATITUDE],
-                        longitude=user_input[CONF_LONGITUDE],
+                        latitude=user_input[CONF_LOCATION][CONF_LATITUDE],
+                        longitude=user_input[CONF_LOCATION][CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
             except ApiError, ClientConnectorError, TimeoutError, ClientError:
@@ -55,25 +60,32 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
+                if TYPE_CHECKING:
+                    assert accuweather.location_name is not None
+
+                location: dict[str, Any] = user_input.pop(CONF_LOCATION)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=accuweather.location_name, data={**user_input, **location}
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): str,
-                    vol.Optional(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    vol.Optional(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
+                    }
+                ),
+                user_input
+                or {
+                    CONF_LOCATION: {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
+                },
             ),
             errors=errors,
         )
@@ -117,6 +129,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )

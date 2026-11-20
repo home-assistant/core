@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.assist_pipeline import PipelineStage
 from homeassistant.components.assist_satellite.websocket_api import (
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
-
-from tests.common import MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_intercept_wake_word(
@@ -319,7 +318,7 @@ async def test_get_configuration_not_implemented(
     entity: MockAssistSatellite,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test getting stub satellite configuration when the entity doesn't implement the method."""
+    """Test getting stub config when entity lacks the method."""
     ws_client = await hass_ws_client(hass)
 
     with patch.object(
@@ -420,6 +419,33 @@ async def test_set_wake_words_bad_id(
     assert msg["error"] == {
         "code": "not_supported",
         "message": "Wake word id is not supported: abcd",
+    }
+
+
+async def test_connection_test_require_admin(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test connection test requires admin access."""
+    ws_client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unauthorized",
+        "message": "Unauthorized",
     }
 
 

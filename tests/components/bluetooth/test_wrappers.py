@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from contextlib import contextmanager
 from unittest.mock import patch
@@ -15,6 +13,11 @@ from habluetooth.usage import (
     uninstall_multiple_bleak_catcher,
 )
 import pytest
+from pytest_homeassistant.components.bluetooth import (
+    _get_manager,
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
@@ -23,8 +26,6 @@ from homeassistant.components.bluetooth import (
     HomeAssistantBluetoothManager,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-
-from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 @contextmanager

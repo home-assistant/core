@@ -1,19 +1,22 @@
 """Test Onkyo component setup process."""
 
-from __future__ import annotations
-
 import asyncio
 from unittest.mock import AsyncMock
 
-from aioonkyo import Status
+from aioonkyo import ReceiverInfo, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import mock_discovery, setup_integration
-
-from tests.common import MockConfigEntry
+from . import (
+    DISCONNECT,
+    RECEIVER_INFO,
+    mock_discovery,
+    receive_messages,
+    setup_integration,
+)
 
 
 @pytest.mark.usefixtures("mock_receiver")
@@ -33,22 +36,27 @@ async def test_load_unload_entry(
 
 
 @pytest.mark.parametrize(
-    "receiver_infos",
+    ("receiver_infos", "translation_key"),
     [
-        None,
-        [],
+        pytest.param(None, "interview_error", id="interview_error"),
+        pytest.param([], "interview_timeout", id="interview_timeout"),
     ],
 )
 async def test_initialization_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    receiver_infos,
+    receiver_infos: list[ReceiverInfo] | None,
+    translation_key: str,
 ) -> None:
     """Test initialization failure."""
     with mock_discovery(receiver_infos):
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "host": RECEIVER_INFO.host
+    }
 
 
 async def test_connection_failure(
@@ -62,6 +70,10 @@ async def test_connection_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "host": RECEIVER_INFO.host
+    }
 
 
 @pytest.mark.usefixtures("mock_receiver")
@@ -88,8 +100,6 @@ async def test_reconnect(
 
     assert mock_connect.call_count == 0
 
-    # Simulate a disconnect
-    read_queue.put_nowait(None)
-    await asyncio.sleep(0)
+    await receive_messages(read_queue, DISCONNECT)
 
     assert mock_connect.call_count == 1

@@ -1,9 +1,11 @@
 """Rain Bird irrigation calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
+from typing import override
+
+from pyrainbird.data import Schedule, ZoneDuration
+from pyrainbird.timeline import ProgramEvent
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -17,6 +19,28 @@ from .coordinator import RainbirdScheduleUpdateCoordinator
 from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _calendar_event(schedule: Schedule, program_event: ProgramEvent) -> CalendarEvent:
+    """Convert a program event to a calendar event listing the zone run times."""
+    durations: list[ZoneDuration] = next(
+        (
+            program.durations
+            for program in schedule.programs
+            if program.program == program_event.program_id.program
+        ),
+        [],
+    )
+    return CalendarEvent(
+        summary=program_event.program_id.name,
+        start=dt_util.as_local(program_event.start),
+        end=dt_util.as_local(program_event.end),
+        description="\n".join(
+            f"{zone.name}: {int(zone.duration.total_seconds() // 60)} min"
+            for zone in durations
+        ),
+        rrule=program_event.rrule_str,
+    )
 
 
 async def async_setup_entry(
@@ -67,6 +91,7 @@ class RainBirdCalendarEntity(
             self._attr_name = device_name
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         schedule = self.coordinator.data
@@ -78,13 +103,9 @@ class RainBirdCalendarEntity(
         program_event = next(cursor, None)
         if not program_event:
             return None
-        return CalendarEvent(
-            summary=program_event.program_id.name,
-            start=dt_util.as_local(program_event.start),
-            end=dt_util.as_local(program_event.end),
-            rrule=program_event.rrule_str,
-        )
+        return _calendar_event(schedule, program_event)
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -98,25 +119,14 @@ class RainBirdCalendarEntity(
             start_date,
             end_date,
         )
-        return [
-            CalendarEvent(
-                summary=program_event.program_id.name,
-                start=dt_util.as_local(program_event.start),
-                end=dt_util.as_local(program_event.end),
-                rrule=program_event.rrule_str,
-            )
-            for program_event in cursor
-        ]
+        return [_calendar_event(schedule, program_event) for program_event in cursor]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
         # We do not ask for an update with async_add_entities()
-        # because it will update disabled entities. This is started as a
-        # task to let it sync in the background without blocking startup
-        self.coordinator.config_entry.async_create_background_task(
-            self.hass,
-            self.coordinator.async_request_refresh(),
-            "rainbird.calendar-refresh",
-        )
+        # because it will update disabled entities. This loads the schedule
+        # in the background without blocking startup.
+        self.coordinator.async_load()

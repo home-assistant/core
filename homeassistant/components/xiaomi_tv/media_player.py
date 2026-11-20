@@ -1,11 +1,10 @@
 """Add support for the Xiaomi TVs."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
+import probatio
 import pymitv
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -26,8 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 # No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -75,6 +74,7 @@ class XiaomiTV(MediaPlayerEntity):
         self._attr_name = name
         self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_off(self) -> None:
         """Instruct the TV to turn sleep.
 
@@ -87,6 +87,7 @@ class XiaomiTV(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.OFF
 
+    @override
     def turn_on(self) -> None:
         """Wake the TV back up from sleep."""
         if self.state != MediaPlayerState.ON:

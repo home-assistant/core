@@ -14,19 +14,17 @@ from google_photos_library_api.model import (
     Status,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPE
 from homeassistant.components.google_photos.services import (
-    CONF_ALBUM,
-    CONF_CONFIG_ENTRY_ID,
-    UPLOAD_SERVICE,
+    GooglePhotosService,
+    GooglePhotosServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CommonServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 TEST_FILENAME = "doorbell_snapshot.jpg"
 ALBUM_TITLE = "Album title"
@@ -124,11 +122,11 @@ async def test_upload_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        UPLOAD_SERVICE,
+        GooglePhotosService.UPLOAD,
         {
-            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-            CONF_FILENAME: TEST_FILENAME,
-            CONF_ALBUM: ALBUM_TITLE,
+            CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+            GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+            GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
         },
         blocking=True,
         return_response=True,
@@ -149,11 +147,11 @@ async def test_upload_service_config_entry_not_found(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -175,11 +173,11 @@ async def test_config_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -199,11 +197,11 @@ async def test_path_is_not_allowed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -220,11 +218,11 @@ async def test_filename_does_not_exist(
     with pytest.raises(HomeAssistantError, match="does not exist"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -244,11 +242,11 @@ async def test_upload_service_upload_content_failure(
     with pytest.raises(HomeAssistantError, match="Failed to upload content"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -270,11 +268,11 @@ async def test_upload_service_fails_create(
     ):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -297,11 +295,11 @@ async def test_upload_service_no_scope(
     with pytest.raises(HomeAssistantError, match="not granted permission"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -321,11 +319,11 @@ async def test_upload_size_limit(
     ):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: ALBUM_TITLE,
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: ALBUM_TITLE,
             },
             blocking=True,
             return_response=True,
@@ -353,11 +351,11 @@ async def test_upload_to_new_album(
     mock_api.create_album.return_value = Album(id="album-media-id-2", title="New Album")
     response = await hass.services.async_call(
         DOMAIN,
-        UPLOAD_SERVICE,
+        GooglePhotosService.UPLOAD,
         {
-            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-            CONF_FILENAME: TEST_FILENAME,
-            CONF_ALBUM: "New Album",
+            CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+            GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+            GooglePhotosServiceArgument.ALBUM: "New Album",
         },
         blocking=True,
         return_response=True,
@@ -370,7 +368,8 @@ async def test_upload_to_new_album(
         "album_id": "album-media-id-2",
     }
 
-    # Upload an additional item to the same album and assert that no new album is created
+    # Upload an additional item to the same album and assert that no
+    # new album is created
     mock_api.create_album.reset_mock()
     mock_api.create_media_items.reset_mock()
     mock_api.create_media_items.return_value = CreateMediaItemsResult(
@@ -384,11 +383,11 @@ async def test_upload_to_new_album(
     )
     response = await hass.services.async_call(
         DOMAIN,
-        UPLOAD_SERVICE,
+        GooglePhotosService.UPLOAD,
         {
-            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-            CONF_FILENAME: TEST_FILENAME,
-            CONF_ALBUM: "New Album",
+            CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+            GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+            GooglePhotosServiceArgument.ALBUM: "New Album",
         },
         blocking=True,
         return_response=True,
@@ -408,7 +407,7 @@ async def test_create_album_failed(
     config_entry: MockConfigEntry,
     mock_api: Mock,
 ) -> None:
-    """Test service call to upload content to a new album but creating the album fails."""
+    """Test upload to new album when creating the album fails."""
     assert hass.services.has_service(DOMAIN, "upload")
 
     mock_api.create_album.side_effect = GooglePhotosApiError()
@@ -416,11 +415,11 @@ async def test_create_album_failed(
     with pytest.raises(HomeAssistantError, match="Failed to create album"):
         await hass.services.async_call(
             DOMAIN,
-            UPLOAD_SERVICE,
+            GooglePhotosService.UPLOAD,
             {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: "New Album",
+                CommonServiceArgument.CONFIG_ENTRY_ID: config_entry.entry_id,
+                GooglePhotosServiceArgument.FILENAME: TEST_FILENAME,
+                GooglePhotosServiceArgument.ALBUM: "New Album",
             },
             blocking=True,
             return_response=True,

@@ -1,12 +1,15 @@
 """The test for the Yale Smart ALarm alarm control panel platform."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import YaleSmartAlarmData
 
@@ -21,8 +24,6 @@ from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNAVAILABLE, Pl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(

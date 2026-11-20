@@ -20,14 +20,19 @@
   },
   "entity": {
     "binary_sensor": {
-      "charging": {
-        "name": "Charging"
-      },
       "connected": {
         "name": "Connected"
       },
       "ready": {
         "name": "Ready"
+      }
+    },
+    "light": {
+      "light_led": {
+        "name": "Light LED"
+      },
+      "logo_led": {
+        "name": "Logo LED"
       }
     },
     "number": {
@@ -39,6 +44,19 @@
       },
       "min_intensity": {
         "name": "Min intensity"
+      },
+      "voltage_installation": {
+        "name": "Installation voltage"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "mixed": "Mixed",
+          "monophasic": "Monophasic",
+          "threephasic": "Three-phase"
+        }
       }
     },
     "sensor": {
@@ -108,9 +126,6 @@
       },
       "ssid": {
         "name": "SSID"
-      },
-      "voltage_installation": {
-        "name": "Installation voltage"
       }
     },
     "switch": {

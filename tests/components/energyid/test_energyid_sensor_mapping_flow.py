@@ -4,9 +4,9 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
@@ -14,16 +14,14 @@ from homeassistant.components.energyid.const import (
     DOMAIN,
 )
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
-    EnergyIDSensorMappingFlowHandler,
     _get_suggested_entities,
     _validate_mapping_input,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import InvalidData
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 TEST_PROVISIONING_KEY = "test_prov_key"
 TEST_PROVISIONING_SECRET = "test_prov_secret"
@@ -227,12 +225,6 @@ def test_get_suggested_entities_no_suitable_entities(
     assert _get_suggested_entities(hass) == []
 
 
-def test_energyid_sensor_mapping_flow_handler_repr() -> None:
-    """Test instantiating and repr-ing the handler."""
-    handler = EnergyIDSensorMappingFlowHandler()
-    assert handler.__class__.__name__ == "EnergyIDSensorMappingFlowHandler"
-
-
 async def test_duplicate_entity_key(
     hass: HomeAssistant,
     mock_parent_entry: MockConfigEntry,
@@ -270,7 +262,7 @@ async def test_duplicate_entity_key(
 def test_validate_mapping_input_none_entity(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that _validate_mapping_input returns 'entity_required' error for None entity."""
+    """Test _validate_mapping_input returns error for None entity."""
     errors = _validate_mapping_input(None, set(), entity_registry)
     assert errors == {"base": "entity_required"}
 
@@ -278,7 +270,7 @@ def test_validate_mapping_input_none_entity(
 def test_validate_mapping_input_empty_string(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that _validate_mapping_input returns 'entity_required' error for empty string entity."""
+    """Test _validate_mapping_input returns error for empty string."""
     errors = _validate_mapping_input("", set(), entity_registry)
     assert errors == {"base": "entity_required"}
 
@@ -286,7 +278,7 @@ def test_validate_mapping_input_empty_string(
 def test_validate_mapping_input_already_mapped(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that _validate_mapping_input returns 'entity_already_mapped' error when entity is already mapped."""
+    """Test _validate_mapping_input returns error when entity is mapped."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor", "test", "mapped_entity", suggested_object_id="mapped"
     )
@@ -300,7 +292,7 @@ def test_validate_mapping_input_already_mapped(
 def test_get_suggested_entities_with_state_class(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test that _get_suggested_entities includes sensor entities with measurement state class."""
+    """Test _get_suggested_entities includes measurement sensors."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -347,7 +339,7 @@ def test_get_suggested_entities_with_state_class(
 def test_get_suggested_entities_with_device_class(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, test_case: dict[str, Any]
 ) -> None:
-    """Test that _get_suggested_entities includes sensor entities with various device class configurations."""
+    """Test _get_suggested_entities includes various device classes."""
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
         "test",
@@ -370,7 +362,7 @@ async def test_subentry_entity_not_found_after_validation(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that subentry flow returns error when entity is validated but disappears before registry lookup."""
+    """Test subentry flow error when entity disappears before lookup."""
     mock_parent_entry = MockConfigEntry(
         domain=DOMAIN,
         data={

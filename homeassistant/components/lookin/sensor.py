@@ -1,8 +1,7 @@
 """The lookin integration sensor platform."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import LookinDeviceCoordinatorEntity
@@ -68,6 +67,8 @@ class LookinSensorEntity(LookinDeviceCoordinatorEntity, SensorEntity):
         self._attr_native_value = getattr(self.coordinator.data, description.key)
         self._attr_unique_id = f"{self._lookin_device.id}-{description.key}"
 
+    @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
         self._attr_native_value = getattr(

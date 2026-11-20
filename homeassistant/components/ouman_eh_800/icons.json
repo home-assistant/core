@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "circulation_pump": {
+        "default": "mdi:pump-off",
+        "state": {
+          "on": "mdi:pump"
+        }
+      },
+      "relay": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed"
+        }
+      },
+      "summer_function": {
+        "default": "mdi:weather-sunny-off",
+        "state": {
+          "on": "mdi:weather-sunny"
+        }
+      }
+    },
+    "sensor": {
+      "valve_position": {
+        "default": "mdi:valve-open",
+        "range": {
+          "0": "mdi:valve-closed",
+          "1": "mdi:valve",
+          "100": "mdi:valve-open"
+        }
+      }
+    }
+  }
+}

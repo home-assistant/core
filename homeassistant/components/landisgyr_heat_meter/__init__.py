@@ -1,7 +1,5 @@
 """The Landis+Gyr Heat Meter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -19,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UltraheatConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UltraheatConfigEntry) -> None:
     """Set up heat meter from a config entry."""
 
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
@@ -33,21 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: UltraheatConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: UltraheatConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UltraheatConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: UltraheatConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    # Removing domain name and config entry id from entity unique id's, replacing it with device number
+    # Removing domain name and config entry id from entity
+    # unique id's, replacing it with device number
     if config_entry.version == 1:
         hass.config_entries.async_update_entry(config_entry, version=2)
 
@@ -72,5 +69,3 @@ async def async_migrate_entry(
         )
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
-
-    return True

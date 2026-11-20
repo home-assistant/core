@@ -1,7 +1,5 @@
 """The Vogel's MotionMount integration."""
 
-from __future__ import annotations
-
 import socket
 
 import motionmount
@@ -24,7 +22,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) -> None:
     """Set up Vogel's MotionMount from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -47,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) 
         # and update the config entry so we do not mix up devices.
         await mm.disconnect()
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+            f"Unexpected device found at {host};"
+            f" expected {entry.unique_id}, found {found_mac}"
         )
 
     # Check we're properly authenticated or be able to become so
@@ -71,15 +70,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: MotionMountConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        mm = entry.runtime_data
-        await mm.disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    mm = entry.runtime_data
+    await mm.disconnect()

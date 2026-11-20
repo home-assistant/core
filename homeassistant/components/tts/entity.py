@@ -3,16 +3,14 @@
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -21,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from .const import TtsAudioType
+from .const import DOMAIN, TtsAudioType
 from .media_source import generate_media_source_id
 from .models import Voice
 
@@ -63,6 +61,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         if self.__last_tts_loaded is None:
@@ -101,6 +100,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Return a list of supported voices for a language."""
         return None
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -108,13 +108,17 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
             _ = self.default_language
         except AttributeError as err:
             raise AttributeError(
-                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+                "TTS entities must either set the"
+                " '_attr_default_language' attribute or override"
+                " the 'default_language' property"
             ) from err
         try:
             _ = self.supported_languages
         except AttributeError as err:
             raise AttributeError(
-                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+                "TTS entities must either set the"
+                " '_attr_supported_languages' attribute or"
+                " override the 'supported_languages' property"
             ) from err
         state = await self.async_get_last_state()
         if (
@@ -135,10 +139,10 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Speak via a Media Player."""
         await self.hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player_entity_id,
-                ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                     self.hass,
                     message=message,
                     engine=self.entity_id,
@@ -146,8 +150,8 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
                     options=options,
                     cache=cache,
                 ),
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_ANNOUNCE: True,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
             },
             blocking=True,
             context=self._context,
@@ -178,7 +182,14 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         )
 
         if extension is None or data is None:
-            raise HomeAssistantError(f"No TTS from {self.entity_id} for '{message}'")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_tts_audio",
+                translation_placeholders={
+                    "engine": self.entity_id,
+                    "message": message,
+                },
+            )
 
         async def data_gen() -> AsyncGenerator[bytes]:
             yield data

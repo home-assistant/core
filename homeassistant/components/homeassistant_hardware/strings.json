@@ -60,6 +60,10 @@
         "start_otbr_addon": {
           "title": "Configuring Thread"
         },
+        "thread_not_supported": {
+          "description": "Your {model} is connected to Home Assistant through an ESPHome device on your network. OpenThread Border Router needs a stable, low-latency connection to the radio and it is not recommended to run it over Ethernet or WiFi. Plug the {model} directly into your Home Assistant computer or use a standalone OpenThread Border Router instead.",
+          "title": "Thread is not available here"
+        },
         "zigbee_installation_type": {
           "description": "Choose the installation type for the Zigbee adapter.",
           "menu_option_descriptions": {
@@ -102,7 +106,9 @@
       },
       "progress": {
         "install_addon": "Please wait while the {addon_name} app installation finishes. This can take several minutes.",
-        "start_addon": "Please wait while the {addon_name} app start completes. This may take some seconds."
+        "install_zigbee_firmware": "Please wait while Zigbee-only firmware is installed on your {hardware_name}. This can take several minutes.",
+        "start_addon": "Please wait while the {addon_name} app start completes. This may take some seconds.",
+        "uninstall_multiprotocol_addon": "Please wait while the {addon_name} app is uninstalled."
       },
       "step": {
         "addon_installed_other_device": {
@@ -125,7 +131,7 @@
           "data": {
             "channel": "Channel"
           },
-          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this is an advanced operation and can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you have selected **Submit**, the channel change starts quietly in the background and will finish after a few minutes.",
+          "description": "Start a channel change for your Zigbee and Thread networks.\n\nNote: this operation can leave your Thread and Zigbee networks inoperable if the new channel is congested. Depending on existing network conditions, many of your devices may not migrate to the new channel and will require re-joining before they start working again. Use with caution.\n\nOnce you have selected **Submit**, the channel change starts quietly in the background and will finish after a few minutes.",
           "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::reconfigure_addon::title%]"
         },
         "install_addon": {

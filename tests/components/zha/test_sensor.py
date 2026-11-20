@@ -4,14 +4,14 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
-from zigpy.device import Device
+from zhaquirks.builder import QuirkBuilder
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -308,6 +308,8 @@ async def async_test_setpoint_change_source(
     )
     hass_state = hass.states.get(entity_id)
     assert hass_state.state == "Schedule"
+    assert hass_state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert hass_state.attributes[ATTR_OPTIONS] == ["Manual", "Schedule", "External"]
 
 
 async def async_test_pi_heating_demand(
@@ -520,7 +522,7 @@ async def async_test_pi_heating_demand(
 async def test_sensor(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     cluster_id,
     entity_suffix,
     test_func,
@@ -636,7 +638,7 @@ async def test_sensor(
 async def test_sensor_name(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
     translation_key: str | None,
     fallback_name: str,
     device_class: SensorDeviceClass | None,

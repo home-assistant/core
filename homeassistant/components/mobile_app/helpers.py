@@ -1,7 +1,5 @@
 """Helpers for mobile_app."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import logging
@@ -31,6 +29,7 @@ from .const import (
     CONF_SECRET,
     CONF_USER_ID,
     DATA_DELETED_IDS,
+    DATA_LIVE_ACTIVITY_TOKENS,
     DOMAIN,
 )
 
@@ -169,8 +168,11 @@ def safe_registration(registration: dict) -> dict:
 
 def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
+    # pylint: disable-next=home-assistant-use-runtime-data
+    domain_data = hass.data[DOMAIN]
     return {
-        DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
+        DATA_DELETED_IDS: domain_data[DATA_DELETED_IDS],
+        DATA_LIVE_ACTIVITY_TOKENS: domain_data[DATA_LIVE_ACTIVITY_TOKENS],
     }
 
 

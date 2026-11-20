@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('apsystems', 'MY_SERIAL_NUMBER')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.mock_title_dc_1_short_circuit_error_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title DC 1 short circuit error status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title DC 1 short circuit error status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_dc_1_short_circuit_error_status',
@@ -58,9 +58,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('apsystems', 'MY_SERIAL_NUMBER')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -90,8 +90,8 @@
 # name: test_all_entities[binary_sensor.mock_title_dc_2_short_circuit_error_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title DC 2 short circuit error status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title DC 2 short circuit error status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_dc_2_short_circuit_error_status',
@@ -109,9 +109,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('apsystems', 'MY_SERIAL_NUMBER')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -141,8 +141,8 @@
 # name: test_all_entities[binary_sensor.mock_title_off_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Off-grid status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Off-grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_off_grid_status',
@@ -160,9 +160,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('apsystems', 'MY_SERIAL_NUMBER')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -192,8 +192,8 @@
 # name: test_all_entities[binary_sensor.mock_title_output_fault_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Output fault status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Output fault status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_output_fault_status',

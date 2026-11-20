@@ -1,13 +1,14 @@
 """Test the Developer Credentials integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_config_flow, mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
@@ -29,10 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_config_flow, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -238,6 +235,25 @@ async def test_websocket_list_empty(ws_client: ClientFixture) -> None:
     assert await client.cmd_result("list") == []
 
 
+async def test_websocket_config_entry_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config_entry websocket command requires admin."""
+    ws_client = await hass_ws_client(hass, hass_read_only_access_token)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "application_credentials/config_entry",
+            "config_entry_id": "some_id",
+        }
+    )
+    resp = await ws_client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unauthorized"
+
+
 async def test_websocket_create(ws_client: ClientFixture) -> None:
     """Test websocket create command."""
     client = await ws_client()
@@ -265,6 +281,22 @@ async def test_websocket_create(ws_client: ClientFixture) -> None:
             "id": ID,
         }
     ]
+
+
+@pytest.mark.parametrize("cmd", ["list", "subscribe"])
+async def test_websocket_list_subscribe_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    cmd: str,
+) -> None:
+    """Test that list and subscribe are restricted to admin users."""
+    ws = await hass_ws_client(access_token=hass_read_only_access_token)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/{cmd}"})
+    resp = await ws.receive_json()
+    assert resp["id"] == 1
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unauthorized"
 
 
 async def test_websocket_create_invalid_domain(ws_client: ClientFixture) -> None:

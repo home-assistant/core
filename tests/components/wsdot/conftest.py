@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from wsdot import TravelTime, WsdotTravelError
 
 from homeassistant.components.wsdot.const import DOMAIN
@@ -12,12 +13,10 @@ from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 
 @pytest.fixture
 def mock_travel_time() -> Generator[AsyncMock]:
-    """WsdotTravelTimes.get_travel_time is mocked to return a TravelTime data based on test fixture payload."""
+    """Mock get_travel_time to return TravelTime from fixture."""
     with (
         patch(
             "homeassistant.components.wsdot.wsdot_api.WsdotTravelTimes", autospec=True
@@ -108,6 +107,6 @@ async def init_integration(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock config entry setup."""
     with patch(
-        "homeassistant.components.wsdot.async_setup_entry", return_value=True
+        "homeassistant.components.wsdot.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup

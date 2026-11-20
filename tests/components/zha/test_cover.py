@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import closures
 import zigpy.zcl.foundation as zcl_f
@@ -12,17 +12,10 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.components.zha.helpers import (
@@ -66,7 +59,7 @@ WCCS = closures.WindowCovering.ConfigStatus
 async def test_cover(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover platform."""
 
@@ -102,12 +95,7 @@ async def test_cover(
     entity_id = find_entity_id(Platform.COVER, zha_device_proxy, hass)
     assert entity_id is not None
 
-    assert (
-        not zha_device_proxy.device.endpoints[1]
-        .all_cluster_handlers[f"1:0x{cluster.cluster_id:04x}"]
-        .inverted
-    )
-    assert cluster.read_attributes.call_count == 3
+    assert cluster.read_attributes.call_count == 2
     assert (
         WCAttrs.current_position_lift_percentage.name
         in cluster.read_attributes.call_args[0][0]
@@ -151,7 +139,7 @@ async def test_cover(
     # close lift from UI
     with patch("zigpy.zcl.Cluster.request", return_value=[0x1, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
+            COVER_DOMAIN, CoverService.CLOSE, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -177,7 +165,7 @@ async def test_cover(
     with patch("zigpy.zcl.Cluster.request", return_value=[0x1, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
+            CoverService.CLOSE_TILT,
             {"entity_id": entity_id},
             blocking=True,
         )
@@ -202,7 +190,7 @@ async def test_cover(
     # open lift from UI
     with patch("zigpy.zcl.Cluster.request", return_value=[0x0, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
+            COVER_DOMAIN, CoverService.OPEN, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -222,7 +210,7 @@ async def test_cover(
     with patch("zigpy.zcl.Cluster.request", return_value=[0x0, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
+            CoverService.OPEN_TILT,
             {"entity_id": entity_id},
             blocking=True,
         )
@@ -248,7 +236,7 @@ async def test_cover(
     with patch("zigpy.zcl.Cluster.request", return_value=[0x5, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
+            CoverService.SET_POSITION,
             {"entity_id": entity_id, "position": 47},
             blocking=True,
         )
@@ -280,8 +268,8 @@ async def test_cover(
     with patch("zigpy.zcl.Cluster.request", return_value=[0x5, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
-            {"entity_id": entity_id, ATTR_TILT_POSITION: 47},
+            CoverService.SET_TILT_POSITION,
+            {"entity_id": entity_id, CoverServiceArgument.TILT_POSITION: 47},
             blocking=True,
         )
         assert cluster.request.call_count == 1
@@ -311,7 +299,7 @@ async def test_cover(
     # stop from UI
     with patch("zigpy.zcl.Cluster.request", return_value=[0x2, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
+            COVER_DOMAIN, CoverService.STOP, {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -322,7 +310,7 @@ async def test_cover(
     with patch("zigpy.zcl.Cluster.request", return_value=[0x2, zcl_f.Status.SUCCESS]):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER_TILT,
+            CoverService.STOP_TILT,
             {"entity_id": entity_id},
             blocking=True,
         )
@@ -336,7 +324,7 @@ async def test_cover(
 async def test_cover_supported_features_runtime_update(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover supported features update at runtime."""
     await setup_zha()
@@ -400,7 +388,7 @@ async def test_cover_supported_features_runtime_update(
 async def test_cover_failures(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA cover platform failure cases."""
     await setup_zha()
@@ -466,7 +454,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to close cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_CLOSE_COVER,
+                CoverService.CLOSE,
                 {"entity_id": entity_id},
                 blocking=True,
             )
@@ -486,7 +474,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to close cover tilt"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_CLOSE_COVER_TILT,
+                CoverService.CLOSE_TILT,
                 {"entity_id": entity_id},
                 blocking=True,
             )
@@ -507,7 +495,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to open cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_OPEN_COVER,
+                CoverService.OPEN,
                 {"entity_id": entity_id},
                 blocking=True,
             )
@@ -527,7 +515,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to open cover tilt"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_OPEN_COVER_TILT,
+                CoverService.OPEN_TILT,
                 {"entity_id": entity_id},
                 blocking=True,
             )
@@ -548,7 +536,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to set cover position"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_POSITION,
+                CoverService.SET_POSITION,
                 {"entity_id": entity_id, "position": 47},
                 blocking=True,
             )
@@ -571,7 +559,7 @@ async def test_cover_failures(
         ):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_TILT_POSITION,
+                CoverService.SET_TILT_POSITION,
                 {"entity_id": entity_id, "tilt_position": 42},
                 blocking=True,
             )
@@ -592,7 +580,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to stop cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_STOP_COVER,
+                CoverService.STOP,
                 {"entity_id": entity_id},
                 blocking=True,
             )
@@ -613,7 +601,7 @@ async def test_cover_failures(
         with pytest.raises(HomeAssistantError, match=r"Failed to stop cover"):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_STOP_COVER_TILT,
+                CoverService.STOP_TILT,
                 {"entity_id": entity_id},
                 blocking=True,
             )

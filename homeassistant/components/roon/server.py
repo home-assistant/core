@@ -92,6 +92,12 @@ class RoonServer:
         self._roon_name_by_id[entity_id] = roon_name
         self._id_by_roon_name[roon_name] = entity_id
 
+    def remove_player_id(self, entity_id):
+        """Unregister a roon player."""
+        roon_name = self._roon_name_by_id.pop(entity_id, None)
+        if self._id_by_roon_name.get(roon_name) == entity_id:
+            del self._id_by_roon_name[roon_name]
+
     def roon_name(self, entity_id):
         """Get the name of the roon player from entity_id."""
         return self._roon_name_by_id.get(entity_id)
@@ -170,6 +176,7 @@ class RoonServer:
         new_dict["zone_name"] = zone["display_name"]
         new_dict["display_name"] = output["display_name"]
         new_dict["last_changed"] = utcnow()
-        # we don't use the zone_id or output_id for now as unique id as I've seen cases were it changes for some reason
+        # we don't use the zone_id or output_id for now as
+        # unique id as I've seen cases where it changes
         new_dict["dev_id"] = f"roon_{self.roon_id}_{output['display_name']}"
         return new_dict

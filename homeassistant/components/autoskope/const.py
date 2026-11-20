@@ -5,5 +5,5 @@ from datetime import timedelta
 DOMAIN = "autoskope"
 
 DEFAULT_HOST = "https://portal.autoskope.de"
-SECTION_ADVANCED_SETTINGS = "advanced_settings"
+SECTION_ADDITIONAL_SETTINGS = "additional_settings"
 UPDATE_INTERVAL = timedelta(seconds=60)

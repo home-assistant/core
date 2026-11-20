@@ -1,14 +1,12 @@
 """Config flow for EHEIM Digital."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -23,8 +21,12 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
-CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(
+            CONF_HOST, default="eheimdigital.local"
+        ): selector.TextSelector()
+    }
 )
 
 
@@ -37,6 +39,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.main_device_added_event = asyncio.Event()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -83,9 +86,9 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.data[CONF_HOST]},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,9 +117,6 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(
-                    hub.main.mac_address, raise_on_progress=False
-                )
                 await hub.close()
         except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
@@ -124,6 +124,9 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             LOGGER.exception("Unknown exception occurred")
         else:
+            await self.async_set_unique_id(
+                hub.main.mac_address, raise_on_progress=False
+            )
             self._abort_if_unique_id_configured()
             return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
         return self.async_show_form(
@@ -162,7 +165,6 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                 if TYPE_CHECKING:
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
-                await self.async_set_unique_id(hub.main.mac_address)
                 await hub.close()
         except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
@@ -170,6 +172,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             LOGGER.exception("Unknown exception occurred")
         else:
+            await self.async_set_unique_id(hub.main.mac_address)
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),

@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for solarlog integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import (
@@ -15,6 +14,7 @@ from solarlog_cli.solarlog_exceptions import (
 from solarlog_cli.solarlog_models import EnergyData, InverterData, SolarlogData
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -52,6 +52,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
         self.unique_id = config_entry.entry_id
         self.solarlog = api
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         _LOGGER.debug("Start async_setup")
@@ -63,6 +64,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices(dict.fromkeys(device_list, True))
 
+    @override
     async def _async_update_data(self) -> SolarlogData:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start basic data update")
@@ -76,7 +78,8 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             ) from ex
         except SolarLogAuthenticationError as ex:
             if await self.renew_authentication():
-                # login was successful, update availability of extended data, retry data update
+                # login was successful, update availability
+                # of extended data, retry data update
                 await self.solarlog.test_extended_data_available()
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
@@ -93,6 +96,9 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             ) from ex
 
         _LOGGER.debug("Basic data successfully updated")
+
+        if self.data is not None:
+            data.battery_data = self.data.battery_data
 
         return data
 
@@ -141,6 +147,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         self._devices_last_update: set[tuple[int, str]] = set()
         self.solarlog = api
 
+    @override
     async def _async_update_data(self) -> dict[int, InverterData]:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start device data update")
@@ -148,7 +155,14 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         try:
             await self.solarlog.update_device_list()
             inverter_data = await self.solarlog.update_inverter_data()
+            battery_data = await self.solarlog.update_battery_data()
         except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -161,8 +175,14 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
 
         _LOGGER.debug("Device data successfully updated")
 
-        self.data = inverter_data
+        if self.config_entry.runtime_data.basic_data_coordinator.data is not None:
+            data = self.config_entry.runtime_data.basic_data_coordinator.data
 
+            data.inverter_data = inverter_data
+            data.battery_data = battery_data
+            self.config_entry.runtime_data.basic_data_coordinator.async_update_listeners()
+
+        self.data = inverter_data  # Set self.data before calling _async_add_remove_devices, as it relies on self.data.
         self._async_add_remove_devices(inverter_data)
 
         return inverter_data
@@ -188,18 +208,14 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                     if did == removed_device[0]:
                         device_name = dn
                         break
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}_{slugify(device_name)}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (
+                        DOMAIN,
+                        f"{self.config_entry.entry_id}_{slugify(device_name)}",
+                    ),
+                    self.config_entry.entry_id,
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                     _LOGGER.info("Device removed from device registry: %s", device.id)
 
         # add new devices
@@ -236,6 +252,45 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         self.solarlog = api
         self.connection_timeout = timeout
 
+    @override
+    async def _async_setup(self) -> None:
+        """Do initialization logic."""
+        _LOGGER.debug("Start SolarLogLongtimeDataCoordinator async_setup")
+
+        try:
+            await self.solarlog.update_energy_data(timeout=self.connection_timeout)
+        except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
+        except (SolarLogConnectionError, SolarLogUpdateError) as ex:
+            if (
+                isinstance(ex.__cause__, TimeoutError)
+                and self.connection_timeout <= 150
+            ):
+                # Increase timeout for next try
+                self.connection_timeout = self.connection_timeout + 30
+                _LOGGER.debug(
+                    "Connection failed, increased timeout to %s for next try",
+                    self.connection_timeout,
+                )
+                new = {**self.config_entry.data}
+                new[CONF_TIMEOUT] = self.connection_timeout
+                self.hass.config_entries.async_update_entry(self.config_entry, data=new)
+
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from ex
+
+    @override
     async def _async_update_data(self) -> EnergyData:
         """Update the energy data from the SolarLog device."""
         _LOGGER.debug(
@@ -247,6 +302,12 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 timeout=self.connection_timeout
             )
         except SolarLogAuthenticationError as ex:
+            if await self.config_entry.runtime_data.basic_data_coordinator.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                ) from ex
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -260,7 +321,9 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         if energy_data is None:
             energy_data = EnergyData(None, None)
 
-        self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year = energy_data.self_consumption
+        (
+            self.config_entry.runtime_data.basic_data_coordinator.data.self_consumption_year
+        ) = energy_data.self_consumption
 
         _LOGGER.debug("Energy data successfully updated")
 

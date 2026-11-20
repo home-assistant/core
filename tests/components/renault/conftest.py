@@ -6,6 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
@@ -16,16 +17,26 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_VEHICLES
 
-from tests.common import MockConfigEntry, load_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.renault.async_setup_entry", return_value=True
+        "homeassistant.components.renault.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_get_vehicle_details() -> Generator[AsyncMock]:
+    """Fail the separate request for details missing from the vehicle list."""
+    with patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_details",
+        side_effect=exceptions.ResourceNotFoundException(
+            "err.func.wired.notFound", "Resource not found"
+        ),
+    ) as mock_get_details:
+        yield mock_get_details
 
 
 @pytest.fixture(name="vehicle_type", params=MOCK_VEHICLES.keys())
@@ -56,14 +67,33 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
         MOCK_ACCOUNT_ID,
         websession=aiohttp_client.async_get_clientsession(hass),
     )
-    with (
-        patch("renault_api.renault_session.RenaultSession.login"),
-        patch(
-            "renault_api.renault_client.RenaultClient.get_api_account",
-            return_value=renault_account,
-        ),
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_account",
+        return_value=renault_account,
     ):
         yield renault_account
+
+
+@pytest.fixture(name="account_ids")
+def get_account_ids() -> list[str]:
+    """Kamereon account ids returned by the Renault servers."""
+    return [MOCK_ACCOUNT_ID]
+
+
+@pytest.fixture(name="patch_get_api_accounts")
+def patch_get_api_accounts(
+    hass: HomeAssistant, account_ids: list[str]
+) -> Generator[None]:
+    """Mock the list of Kamereon accounts."""
+    websession = aiohttp_client.async_get_clientsession(hass)
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[
+            RenaultAccount(account_id, websession=websession)
+            for account_id in account_ids
+        ],
+    ):
+        yield
 
 
 @pytest.fixture(name="patch_get_vehicles")
@@ -253,7 +283,9 @@ def patch_fixtures_with_invalid_upstream_exception() -> Generator[dict[str, Asyn
     """Mock fixtures."""
     invalid_upstream_exception = exceptions.InvalidUpstreamException(
         "err.tech.500",
-        "Invalid response from the upstream server (The request sent to the GDC is erroneous) ; 502 Bad Gateway",
+        "Invalid response from the upstream server"
+        " (The request sent to the GDC is erroneous)"
+        " ; 502 Bad Gateway",
     )
 
     with patch_get_vehicle_data() as patches:

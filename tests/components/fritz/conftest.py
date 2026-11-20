@@ -1,7 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 import logging
@@ -97,6 +95,8 @@ class FritzConnectionMock:
                 normalized = alt
 
         action_data = self._fc_data.get(normalized, {}).get(action, {})
+        if isinstance(action_data, Exception):
+            raise action_data
         if kwargs:
             if (index := kwargs.get("NewIndex")) is None:
                 index = next(iter(kwargs.values()))

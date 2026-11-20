@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
     "step": {
       "user": {
         "description": "Do you want to configure the shopping list?",
@@ -15,6 +12,11 @@
       "shopping_list": {
         "name": "[%key:component::shopping_list::title%]"
       }
+    }
+  },
+  "exceptions": {
+    "item_not_found": {
+      "message": "No item named {name} found in the shopping list."
     }
   },
   "services": {
@@ -37,7 +39,7 @@
       "name": "Complete all shopping list items"
     },
     "complete_item": {
-      "description": "Marks the first item with matching name as completed in the shopping list.",
+      "description": "Marks all items with matching name as completed in the shopping list. Skips items that are already complete.",
       "fields": {
         "name": {
           "description": "The name of the item to mark as completed (without removing).",
@@ -81,5 +83,5 @@
       "name": "Sort shopping list"
     }
   },
-  "title": "Shopping List"
+  "title": "Shopping list"
 }

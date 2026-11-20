@@ -1,11 +1,9 @@
 """Sensor platform for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
@@ -19,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_URL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -128,6 +127,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.UPTIME_RATIO_30D,
@@ -141,6 +141,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.UPTIME_RATIO_365D,
@@ -154,6 +155,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_1D,
@@ -164,6 +166,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_30D,
@@ -174,6 +177,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.AVG_RESPONSE_TIME_365D,
@@ -184,6 +188,7 @@ SENSOR_DESCRIPTIONS: tuple[UptimeKumaSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.MILLISECONDS,
         create_entity=lambda t: True,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     UptimeKumaSensorEntityDescription(
         key=UptimeKumaSensor.TAGS,
@@ -249,12 +254,7 @@ class UptimeKumaSensorEntity(
         )
 
         url = URL(coordinator.config_entry.data[CONF_URL]) / "dashboard"
-        if url.host in LOCAL_INSTANCE:
-            configuration_url = None
-        elif isinstance(monitor, int):
-            configuration_url = url / str(monitor)
-        else:
-            configuration_url = url
+        configuration_url = None if url.host in LOCAL_INSTANCE else url / str(monitor)
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -266,19 +266,41 @@ class UptimeKumaSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data[self.monitor])
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.monitor in self.coordinator.data
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         if (fn := self.entity_description.attributes_fn) is not None:
             return fn(self.coordinator.data[self.monitor])
         return super().extra_state_attributes
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device_info, DeviceInfo)
+        if self.device_info.sw_version != self.coordinator.api.version.version:
+            device_registry = dr.async_get(self.hass)
+            if device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.monitor!s}"),
+                self.coordinator.config_entry.entry_id,
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, sw_version=self.coordinator.api.version.version
+                )
+                self.device_info.sw_version = self.coordinator.api.version.version
+
+        super()._handle_coordinator_update()

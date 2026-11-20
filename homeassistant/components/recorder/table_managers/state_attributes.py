@@ -1,20 +1,19 @@
 """Support managing StateAttributes."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.selectable import Select
 
 from homeassistant.core import Event, EventStateChangedData
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
 from ..db_schema import StateAttributes
-from ..queries import get_shared_attributes
-from ..util import execute_stmt_lambda_element
+from ..queries import SELECT_SHARED_ATTRIBUTES, SELECT_SHARED_ATTRIBUTES_BY_HASH
+from ..util import execute_select
 from . import BaseLRUTableManager
 
 if TYPE_CHECKING:
@@ -99,20 +98,26 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     def _load_from_hashes(
         self, hashes: Collection[int], session: Session
     ) -> dict[str, int | None]:
-        """Load the shared_attrs to attributes_ids mapping into memory from a list of hashes.
+        """Load shared_attrs to attributes_ids mapping from hashes.
 
         This call is not thread-safe and must be called from the
         recorder thread.
         """
         results: dict[str, int | None] = {}
-        with session.no_autoflush:
-            for hashs_chunk in chunked_or_all(hashes, self.recorder.max_bind_vars):
-                for attributes_id, shared_attrs in execute_stmt_lambda_element(
-                    session, get_shared_attributes(hashs_chunk), orm_rows=False
-                ):
-                    results[shared_attrs] = self._id_map[shared_attrs] = cast(
-                        int, attributes_id
-                    )
+        # A single cache miss is the common case on the write path
+        batches: Iterable[tuple[Select, dict[str, Any]]] = (
+            ((SELECT_SHARED_ATTRIBUTES_BY_HASH, {"hash": next(iter(hashes))}),)
+            if len(hashes) == 1
+            else (
+                (SELECT_SHARED_ATTRIBUTES, {"hashes": list(chunk)})
+                for chunk in chunked_or_all(hashes, self.recorder.max_bind_vars)
+            )
+        )
+        for stmt, params in batches:
+            for attributes_id, shared_attrs in execute_select(session, stmt, params):
+                results[shared_attrs] = self._id_map[shared_attrs] = cast(
+                    int, attributes_id
+                )
 
         return results
 
@@ -127,7 +132,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         self._pending[shared_attrs] = db_state_attributes
 
     def post_commit_pending(self) -> None:
-        """Call after commit to load the attributes_ids of the new StateAttributes into the LRU.
+        """Call after commit to load new StateAttributes into the LRU.
 
         This call is not thread-safe and must be called from the
         recorder thread.

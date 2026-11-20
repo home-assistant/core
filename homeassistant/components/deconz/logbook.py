@@ -1,7 +1,5 @@
 """Describe deCONZ logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
@@ -139,7 +137,11 @@ def async_describe_events(
     @callback
     def async_describe_deconz_alarm_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook alarm event."""
-        if device := device_registry.devices.get(event.data[ATTR_DEVICE_ID]):
+        if device := device_registry.async_get(
+            event.data[ATTR_DEVICE_ID],
+            include_child_devices=False,
+            include_composite_devices=False,
+        ):
             deconz_alarm_event = _get_deconz_event_from_device(hass, device)
             name = deconz_alarm_event.device.name
         else:
@@ -155,7 +157,11 @@ def async_describe_events(
     @callback
     def async_describe_deconz_event(event: Event) -> dict[str, str]:
         """Describe deCONZ logbook event."""
-        if device := device_registry.devices.get(event.data[ATTR_DEVICE_ID]):
+        if device := device_registry.async_get(
+            event.data[ATTR_DEVICE_ID],
+            include_child_devices=False,
+            include_composite_devices=False,
+        ):
             deconz_event = _get_deconz_event_from_device(hass, device)
             name = deconz_event.device.name
         else:

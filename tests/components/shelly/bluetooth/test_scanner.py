@@ -1,11 +1,13 @@
 """Test the shelly bluetooth scanner."""
 
-from __future__ import annotations
+from unittest.mock import Mock, patch
 
+from aioshelly.ble.backend.scanner import ShellyBLEScanner
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 import pytest
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.components.shelly.const import CONF_BLE_SCANNER_MODE, BLEScannerMode
 from homeassistant.core import HomeAssistant
 
@@ -188,3 +190,19 @@ async def test_scanner_warns_on_corrupt_event(
         },
     )
     assert "Failed to parse BLE event" in caplog.text
+
+
+async def test_scanner_auto_mode_starts_passive_and_binds_provider(
+    hass: HomeAssistant, mock_rpc_device: Mock
+) -> None:
+    """AUTO runs the radio passive; the scanner is pinned AUTO so the worker spawns."""
+    with patch.object(
+        ShellyBLEScanner, "set_active_window_provider", autospec=True
+    ) as mock_set_provider:
+        await init_integration(hass, 2, options={CONF_BLE_SCANNER_MODE: "auto"})
+    assert mock_rpc_device.initialized is True
+    scanner = bluetooth.async_scanner_by_source(hass, "12:34:56:78:9A:BE")
+    assert scanner is not None
+    assert scanner.requested_mode is BluetoothScanningMode.AUTO
+    assert scanner.current_mode is BluetoothScanningMode.PASSIVE
+    mock_set_provider.assert_called_once_with(scanner, mock_rpc_device)

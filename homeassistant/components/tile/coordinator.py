@@ -1,6 +1,7 @@
 """Update coordinator for Tile."""
 
 from datetime import timedelta
+from typing import override
 
 from pytile.api import API
 from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
@@ -37,6 +38,7 @@ class TileCoordinator(DataUpdateCoordinator[None]):
         self.client = client
         self.username = entry.data[CONF_USERNAME]
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via library."""
         try:

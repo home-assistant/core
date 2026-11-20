@@ -1,1 +1,1 @@
-"""Tests for the Infrared integration."""
+"""Tests for the infrared integration."""

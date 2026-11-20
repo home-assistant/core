@@ -5,7 +5,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
+from pytest_homeassistant.common import async_fire_time_changed
 
+from homeassistant.components.emulated_hue import DOMAIN
 from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
     DATA_VERSION,
@@ -17,8 +19,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
-
-from tests.common import async_fire_time_changed
 
 
 async def test_config_google_home_entity_id_to_number(
@@ -147,7 +147,7 @@ async def test_setup_works(hass: HomeAssistant) -> None:
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol
         )
-        assert await async_setup_component(hass, "emulated_hue", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 

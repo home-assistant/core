@@ -2,6 +2,9 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant import config_entries
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -20,9 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .test_common import get_device_discovery_payload, send_discovery_message
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient
 
 
 async def call_service(hass: HomeAssistant, entity_id, service, **kwargs):
@@ -111,28 +111,28 @@ async def test_mqtt_state_by_calling_service(
     # Turn relay ON
     await call_service(hass, "switch.test_relay_0", SERVICE_TURN_ON)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/0/set", "ON", 0, False
+        "pglab/test/relay/0/set", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay OFF
     await call_service(hass, "switch.test_relay_0", SERVICE_TURN_OFF)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/0/set", "OFF", 0, False
+        "pglab/test/relay/0/set", "OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay ON
     await call_service(hass, "switch.test_relay_3", SERVICE_TURN_ON)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/3/set", "ON", 0, False
+        "pglab/test/relay/3/set", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay OFF
     await call_service(hass, "switch.test_relay_3", SERVICE_TURN_OFF)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/3/set", "OFF", 0, False
+        "pglab/test/relay/3/set", "OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 

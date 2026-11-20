@@ -3,8 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
-from whirlpool.appliance import Appliance
+from whirlpool.dryer import Dryer
+from whirlpool.washer import Washer
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,7 +27,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 class WhirlpoolBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Whirlpool binary sensor entity."""
 
-    value_fn: Callable[[Appliance], bool | None]
+    value_fn: Callable[[Washer | Dryer], bool | None]
 
 
 WASHER_DRYER_SENSORS: list[WhirlpoolBinarySensorEntityDescription] = [
@@ -63,14 +65,19 @@ async def async_setup_entry(
 class WhirlpoolBinarySensor(WhirlpoolEntity, BinarySensorEntity):
     """A class for the Whirlpool binary sensors."""
 
+    _appliance: Washer | Dryer
+
     def __init__(
-        self, appliance: Appliance, description: WhirlpoolBinarySensorEntityDescription
+        self,
+        appliance: Washer | Dryer,
+        description: WhirlpoolBinarySensorEntityDescription,
     ) -> None:
         """Initialize the washer sensor."""
         super().__init__(appliance, unique_id_suffix=f"-{description.key}")
         self.entity_description: WhirlpoolBinarySensorEntityDescription = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self._appliance)

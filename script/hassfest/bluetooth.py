@@ -1,9 +1,7 @@
 """Generate bluetooth file."""
 
-from __future__ import annotations
-
-from .model import Config, Integration
-from .serializer import format_python_namespace
+from hassfest.model import Config, Integration
+from hassfest.serializer import format_python_namespace
 
 
 def generate_and_validate(integrations: dict[str, Integration]) -> str:

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyituran.exceptions import IturanApiError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ituran.const import UPDATE_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -98,7 +101,7 @@ async def test_availability(
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test ICE sensor is marked as unavailable when we can't reach the Ituran service."""
+    """Test ICE sensor unavailable when Ituran service unreachable."""
     await __test_availability(hass, freezer, mock_ituran, mock_config_entry)
 
 
@@ -110,7 +113,7 @@ async def test_ev_availability(
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test EV sensor is marked as unavailable when we can't reach the Ituran service."""
+    """Test EV sensor unavailable when Ituran service unreachable."""
     ev_entities = [
         "sensor.mock_model_battery",
         "sensor.mock_model_remaining_range",

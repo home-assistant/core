@@ -31,6 +31,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "EVSE 1.1.1.1"
     assert result["data"] == {CONF_HOST: "1.1.1.1"}
+    assert result["result"].unique_id == "ABC123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -41,12 +42,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    side_effect: Exception,
-    error: str,
-    mock_v2c_client: AsyncMock,
+    hass: HomeAssistant, side_effect: Exception, error: str, mock_v2c_client: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

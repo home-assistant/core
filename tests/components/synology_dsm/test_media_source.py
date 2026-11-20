@@ -2,10 +2,11 @@
 
 from pathlib import Path
 import tempfile
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import web
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
@@ -28,10 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.aiohttp import MockRequest
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -41,7 +40,8 @@ def dsm_with_photos() -> MagicMock:
     dsm.login = AsyncMock(return_value=True)
     dsm.update = AsyncMock(return_value=True)
     dsm.information = mock_dsm_information()
-    dsm.network.update = AsyncMock(return_value=True)
+    dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS, hostname=HOST)
+    dsm.hardware = mock_dsm_hardware()
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)
 
@@ -70,7 +70,7 @@ def dsm_with_photos() -> MagicMock:
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_get_media_source(hass: HomeAssistant) -> None:
-    """Test the async_get_media_source function and SynologyPhotosMediaSource constructor."""
+    """Test async_get_media_source and SynologyPhotosMediaSource."""
 
     source = await async_get_media_source(hass)
     assert isinstance(source, SynologyPhotosMediaSource)

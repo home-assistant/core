@@ -1,15 +1,13 @@
 """Config flow for Goal Zero Yeti integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from goalzero import Yeti, exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -26,6 +24,7 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
 
     _discovered_ip: str
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -48,21 +47,18 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=MANUFACTURER,
-                data={
-                    CONF_HOST: self._discovered_ip,
-                    CONF_NAME: DEFAULT_NAME,
-                },
+                data={CONF_HOST: self._discovered_ip},
             )
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm_discovery",
             description_placeholders={
-                CONF_HOST: self._discovered_ip,
-                CONF_NAME: DEFAULT_NAME,
+                "host": self._discovered_ip,
+                "name": DEFAULT_NAME,
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,7 +66,6 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            name = user_input[CONF_NAME]
 
             self._async_abort_entries_match({CONF_HOST: host})
 
@@ -79,21 +74,17 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(format_mac(str(mac_address)))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_HOST: host, CONF_NAME: name},
+                    title=DEFAULT_NAME, data={CONF_HOST: host}
                 )
             errors["base"] = error
 
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST) or ""
-                    ): str,
-                    vol.Optional(
-                        CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
                     ): str,
                 }
             ),

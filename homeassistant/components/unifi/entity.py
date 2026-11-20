@@ -1,11 +1,9 @@
 """UniFi entity representation."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -17,6 +15,7 @@ from aiounifi.interfaces.api_handlers import (
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -28,11 +27,32 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
 type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+
+
+def is_locally_administered_mac(mac: str) -> bool:
+    """Return True if the MAC has the locally-administered (U/L) bit set."""
+    return bool(int(mac.split(":", 1)[0], 16) & 0x02)
+
+
+@callback
+def async_client_ssid_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if client is connected to an allowed SSID."""
+    client = hub.api.clients[obj_id]
+
+    is_wireless = hub.entity_loader.wireless_clients.is_wireless(client)
+
+    return not (
+        is_wireless
+        and client.essid
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
+    )
 
 
 @callback
@@ -43,6 +63,34 @@ def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
 
     device = hub.api.devices[obj_id]
     return hub.available and not device.disabled
+
+
+@callback
+def async_device_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if device is adopted by the controller.
+
+    The controller also lists devices that are only pending adoption,
+    like a neighbour's access point. Those are not part of the site.
+    """
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    return hub.api.devices[obj_id].raw.get("adopted", True)
+
+
+@callback
+def async_port_poe_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port supports PoE."""
+    return async_device_supported_fn(hub, obj_id) and bool(
+        hub.api.ports[obj_id].port_poe
+    )
+
+
+@callback
+def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if firewall policy can be controlled."""
+    policy = hub.api.firewall_policies[obj_id]
+    return not policy.predefined and policy.name != ""
 
 
 @callback
@@ -63,7 +111,7 @@ def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
         connections={(CONNECTION_NETWORK_MAC, device.mac)},
         manufacturer=ATTR_MANUFACTURER,
         model=device.model,
-        name=device.name or None,
+        name=device.name or device.model,
         sw_version=device.version,
         hw_version=str(device.board_revision),
     )
@@ -88,8 +136,22 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     client = hub.api.clients[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, obj_id)},
-        default_manufacturer=client.oui,
-        default_name=client.name or client.hostname,
+        manufacturer=client.oui,
+        name=client.name or client.hostname,
+    )
+
+
+@callback
+def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for the UniFi Network application."""
+    unique_id = hub.config.entry.unique_id
+    assert unique_id is not None
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(SWITCH_DOMAIN, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi Network",
+        name="UniFi Network",
     )
 
 
@@ -115,6 +177,8 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
+    translation_placeholders_fn: Callable[[ItemT], Mapping[str, str]] | None = None
+    """Provide translation placeholders used together with translation_key."""
 
     # Optional constants
     has_entity_name = True  # Part of EntityDescription
@@ -131,6 +195,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ItemT]
+    coordinator: UnifiDataUpdateCoordinator[HandlerT]
     _attr_unique_id: str
 
     def __init__(
@@ -144,6 +209,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.hub = hub
         self.api = hub.api
         self.entity_description = description
+        self.coordinator = hub.entity_loader.get_data_update_coordinator(
+            description.api_handler_fn(self.api)
+        )
 
         hub.entity_loader.known_objects.add((description.key, obj_id))
 
@@ -155,13 +223,24 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self._attr_unique_id = description.unique_id_fn(hub, obj_id)
 
         obj = description.object_fn(self.api, obj_id)
-        self._attr_name = description.name_fn(obj)
+        if (name := description.name_fn(obj)) is not None:
+            self._attr_name = name
+        if description.translation_placeholders_fn is not None:
+            self._attr_translation_placeholders = (
+                description.translation_placeholders_fn(obj)
+            )
         self.async_initiate_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity and its coordinator are available."""
+        return super().available and self.coordinator.last_update_success
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description
-        handler = description.api_handler_fn(self.api)
 
         @callback
         def unregister_object() -> None:
@@ -172,11 +251,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         self.async_on_remove(unregister_object)
 
-        # New data from handler
+        # New data from coordinator
         self.async_on_remove(
-            handler.subscribe(
-                self.async_signalling_callback,
-                id_filter=self._obj_id,
+            self.coordinator.async_add_listener(
+                self._async_coordinator_updated,
+                context=(self._obj_id, self._obj_id.partition("_")[0]),
             )
         )
 
@@ -208,20 +287,69 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the entity state."""
-        if event is ItemEvent.DELETED and obj_id == self._obj_id:
-            self.hass.async_create_task(self.remove_item({obj_id}))
+    @override
+    def add_to_platform_abort(self) -> None:
+        """Keep the object of a disabled entity known, forget any other.
+
+        A disabled entity is not added but keeps its registry entry, so its
+        object stays known until that entry is removed. Any other entity
+        that is not added is tried again on the next scan.
+        """
+        super().add_to_platform_abort()
+        loader = self.hub.entity_loader
+        obj = (self.entity_description.key, self._obj_id)
+        if (entry := self.registry_entry) and entry.disabled:
+            loader.known_but_disabled[entry.entity_id] = obj
+        else:
+            loader.known_objects.discard(obj)
+
+    @callback
+    def _async_coordinator_updated(self) -> None:
+        """Skip coordinator updates that changed a different object."""
+        coordinator_data = self.coordinator.data
+        if coordinator_data is None and self.coordinator.supports_websocket:
+            self.async_write_ha_state()
+            return
+        if coordinator_data is None:
+            event = ItemEvent.CHANGED
+            changed_obj_id = None
+        else:
+            event, changed_obj_id = coordinator_data
+
+        own_obj_id = self._obj_id.partition("_")[0]
+        if changed_obj_id is not None and changed_obj_id not in (
+            self._obj_id,
+            own_obj_id,
+        ):
+            return
+        self._async_process_update(event)
+
+    @callback
+    def _async_process_update(self, event: ItemEvent = ItemEvent.CHANGED) -> None:
+        """Update the entity state from the handler."""
+        handler = self.entity_description.api_handler_fn(self.api)
+        if self._obj_id not in handler:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
         description = self.entity_description
         if not description.supported_fn(self.hub, self._obj_id):
+            self.hub.adoption.async_follow_if_unadopted(self._obj_id)
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
         self._attr_available = description.available_fn(self.hub, self._obj_id)
-        self.async_update_state(event, obj_id)
+        self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Update the entity state from a handler event."""
+        if event is ItemEvent.DELETED and obj_id == self._obj_id:
+            self.hass.async_create_task(self.remove_item({obj_id}))
+            return
+
+        self._async_process_update(event)
 
     @callback
     def async_signal_reachable_callback(self) -> None:
@@ -246,6 +374,14 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    async def async_refresh_after_control(self) -> None:
+        """Refresh handler data after a control call when polling."""
+        if (
+            not self.coordinator.supports_websocket
+            and self.coordinator.update_interval is not None
+        ):
+            await self.coordinator.async_refresh()
 
     @callback
     def async_initiate_state(self) -> None:

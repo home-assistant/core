@@ -1,7 +1,5 @@
 """Home Assistant SkyConnect switch entities."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
@@ -54,4 +52,5 @@ class BetaFirmwareSwitch(BaseBetaFirmwareSwitch):
             model=variant.full_name,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
+            via_device_id=config_entry.runtime_data.via_device_id,
         )

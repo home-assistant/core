@@ -1,9 +1,8 @@
 """Nintendo parental controls data coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pynintendoauth.exceptions import (
     HttpException,
@@ -49,13 +48,16 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
             authenticator, hass.config.time_zone, hass.config.language
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from Nintendo's API."""
         try:
             return await self.api.update()
         except InvalidOAuthConfigurationException as err:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryError(
-                err, translation_domain=DOMAIN, translation_key="invalid_auth"
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
             ) from err
         except NoDevicesFoundException as err:
             raise ConfigEntryError(

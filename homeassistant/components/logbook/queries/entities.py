@@ -1,7 +1,5 @@
 """Entities queries for logbook."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Iterable
 
 import sqlalchemy
@@ -62,7 +60,7 @@ def _apply_entities_context_union(
     states_metadata_ids: Collection[int],
     json_quoted_entity_ids: list[str],
 ) -> CompoundSelect:
-    """Generate a CTE to find the entity and device context ids and a query to find linked row."""
+    """Generate a CTE to find entity/device context ids and linked rows."""
     entities_cte: CTE = _select_entities_context_ids_sub_query(
         start_day,
         end_day,

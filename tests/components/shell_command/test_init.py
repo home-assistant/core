@@ -1,25 +1,24 @@
 """The tests for the Shell command component."""
 
-from __future__ import annotations
-
 import asyncio
 import os
 import re
 import shlex
 import sys
 import tempfile
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser, async_capture_events
 
 from homeassistant.components import shell_command
+from homeassistant.components.shell_command import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):
@@ -49,7 +48,7 @@ async def test_executing_service(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        await hass.services.async_call("shell_command", "test_service", blocking=True)
+        await hass.services.async_call(DOMAIN, "test_service", blocking=True)
         await hass.async_block_till_done()
         assert os.path.isfile(path)
 
@@ -72,7 +71,9 @@ async def test_config_not_valid_service_names(hass: HomeAssistant) -> None:
     )
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
 async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands without templates get rendered properly."""
     mock_call.return_value = mock_process_creator(error=False)
@@ -84,7 +85,7 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    await hass.services.async_call(DOMAIN, "test_service", blocking=True)
     await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1][0]
 
@@ -92,7 +93,9 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     assert cmd == "ls /bin"
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
 async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands with invalid templates are handled properly."""
     mock_call.return_value = mock_process_creator(error=False)
@@ -108,13 +111,13 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         await hass.services.async_call(
-            "shell_command", "test_service", blocking=True, return_response=True
+            DOMAIN, "test_service", blocking=True, return_response=True
         )
 
     await hass.async_block_till_done()
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_exec")
+@patch("homeassistant.components.shell_command.services.asyncio.create_subprocess_exec")
 async def test_template_render(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands with templates get rendered properly."""
     hass.states.async_set("sensor.test_state", "Works")
@@ -129,7 +132,7 @@ async def test_template_render(mock_call, hass: HomeAssistant) -> None:
         },
     )
 
-    await hass.services.async_call("shell_command", "test_service", blocking=True)
+    await hass.services.async_call(DOMAIN, "test_service", blocking=True)
 
     await hass.async_block_till_done()
     cmd = mock_call.mock_calls[0][1]
@@ -138,8 +141,10 @@ async def test_template_render(mock_call, hass: HomeAssistant) -> None:
     assert cmd == ("ls", "/bin", "Works")
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
-@patch("homeassistant.components.shell_command._LOGGER.error")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
+@patch("homeassistant.components.shell_command.services._LOGGER.error")
 async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> None:
     """Test subprocess that returns an error."""
     mock_call.return_value = mock_process_creator(error=True)
@@ -152,7 +157,7 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
         )
 
         response = await hass.services.async_call(
-            "shell_command", "test_service", blocking=True, return_response=True
+            DOMAIN, "test_service", blocking=True, return_response=True
         )
         await hass.async_block_till_done()
         assert mock_call.call_count == 1
@@ -161,7 +166,7 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
         assert response["returncode"] == 1
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
 async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     """Test subprocess that has stdout."""
     test_phrase = "I have output"
@@ -172,7 +177,7 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     )
 
     response = await hass.services.async_call(
-        "shell_command", "test_service", blocking=True, return_response=True
+        DOMAIN, "test_service", blocking=True, return_response=True
     )
 
     await hass.async_block_till_done()
@@ -182,10 +187,8 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     assert response["returncode"] == 0
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
-async def test_non_text_stdout_capture(
-    mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
+async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None:
     """Test handling of non-text output."""
     non_utf8_cmd = (
         f"{shlex.quote(sys.executable)} -c"
@@ -202,9 +205,7 @@ async def test_non_text_stdout_capture(
     )
 
     # No problem without 'return_response'
-    response = await hass.services.async_call(
-        "shell_command", "output_image", blocking=True
-    )
+    response = await hass.services.async_call(DOMAIN, "output_image", blocking=True)
 
     await hass.async_block_till_done()
     assert not response
@@ -217,15 +218,14 @@ async def test_non_text_stdout_capture(
         ),
     ):
         response = await hass.services.async_call(
-            "shell_command", "output_image", blocking=True, return_response=True
+            DOMAIN, "output_image", blocking=True, return_response=True
         )
 
     await hass.async_block_till_done()
     assert not response
-    assert "Unable to handle non-utf8 output of command" in caplog.text
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
 async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     """Test subprocess that has stderr."""
     test_phrase = "I have error"
@@ -236,7 +236,7 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     )
 
     response = await hass.services.async_call(
-        "shell_command", "test_service", blocking=True, return_response=True
+        DOMAIN, "test_service", blocking=True, return_response=True
     )
 
     await hass.async_block_till_done()
@@ -245,9 +245,7 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     assert response["stderr"] == test_phrase
 
 
-async def test_do_not_run_forever(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_do_not_run_forever(hass: HomeAssistant) -> None:
     """Test subprocesses terminate after the timeout."""
 
     async def block():
@@ -268,9 +266,9 @@ async def test_do_not_run_forever(
     await hass.async_block_till_done()
 
     with (
-        patch.object(shell_command, "COMMAND_TIMEOUT", 0.001),
+        patch("homeassistant.components.shell_command.services.COMMAND_TIMEOUT", 0.001),
         patch(
-            "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
+            "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell",
             side_effect=mock_create_subprocess_shell,
         ),
     ):
@@ -287,8 +285,6 @@ async def test_do_not_run_forever(
         await hass.async_block_till_done()
 
     mock_process.kill.assert_called_once()
-    assert "Timed out" in caplog.text
-    assert "mock_sleep 10000" in caplog.text
 
 
 async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
@@ -348,7 +344,7 @@ async def test_repair_issue_on_reserved_reload_name(
 async def test_repair_issue_on_reload_service_reload(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
 ) -> None:
-    """Test repair issue is created if 'reload' is used in YAML and reload service is called."""
+    """Test repair issue when 'reload' is used in YAML config."""
     config = {shell_command.DOMAIN: {"test": "echo ok"}}
     await async_setup_component(hass, shell_command.DOMAIN, config)
     await hass.async_block_till_done()
@@ -366,3 +362,67 @@ async def test_repair_issue_on_reload_service_reload(
         )
     issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
     assert issue is not None
+
+
+async def test_reload_keeps_ignored_reserved_reload_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, hass_admin_user: MockUser
+) -> None:
+    """Test reload keeps a still valid ignored issue instead of re-creating it."""
+    config = {shell_command.DOMAIN: {"reload": "echo should not work"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+    ir.async_ignore_issue(hass, shell_command.DOMAIN, "reserved_reload", True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config,
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    issue = issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    assert events == []
+
+
+@pytest.mark.parametrize(
+    "load_yaml_patch",
+    [
+        pytest.param({"side_effect": HomeAssistantError("bad yaml")}, id="yaml_error"),
+        pytest.param(
+            {"return_value": {shell_command.DOMAIN: ["not", "a", "dict"]}},
+            id="invalid_config",
+        ),
+    ],
+)
+async def test_failed_reload_keeps_reserved_reload_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_admin_user: MockUser,
+    load_yaml_patch: dict[str, Any],
+) -> None:
+    """Test a failed reload does not delete the issue."""
+    config = {shell_command.DOMAIN: {"reload": "echo should not work"}}
+    await async_setup_component(hass, shell_command.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        **load_yaml_patch,
+    ):
+        await hass.services.async_call(
+            shell_command.DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+
+    assert issue_registry.async_get_issue(shell_command.DOMAIN, "reserved_reload")

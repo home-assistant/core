@@ -4,15 +4,11 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -20,12 +16,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 
 async def test_default_state(
@@ -151,9 +146,12 @@ async def test_state_reporting(hass: HomeAssistant) -> None:
 async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
-    The group state is unavailable if all group members are unavailable.
-    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
-    Otherwise, the group state is off if at least one group member is off.
+    The group state is unavailable if all group members are
+    unavailable.
+    Otherwise, the group state is unknown if at least one group member
+    is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is
+    off.
     Otherwise, the group state is on.
     """
     await async_setup_component(
@@ -262,8 +260,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TOGGLE,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TOGGLE,
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
     assert hass.states.get("switch.ac").state == STATE_OFF
@@ -271,8 +269,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -281,8 +279,8 @@ async def test_service_calls(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_group"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.switch_group"},
         blocking=True,
     )
 
@@ -346,7 +344,7 @@ async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     )
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "switch.something", "icon": "mdi:work"},
@@ -376,7 +374,7 @@ async def test_reload_with_base_integration_platform_not_setup(
     """Test the ability to reload switches."""
     assert await async_setup_component(
         hass,
-        "group",
+        DOMAIN,
         {
             "group": {
                 "group_zero": {"entities": "switch.something", "icon": "mdi:work"},
@@ -451,8 +449,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TOGGLE,
-            {ATTR_ENTITY_ID: "switch.nested_group"},
+            SwitchService.TOGGLE,
+            {TargetKey.ENTITY_ID: "switch.nested_group"},
             blocking=True,
         )
     assert hass.states.get("switch.ac").state == STATE_OFF
@@ -493,7 +491,8 @@ async def test_assumed_state(hass: HomeAssistant) -> None:
     state = hass.states.get("switch.media_group")
     assert state.attributes.get(ATTR_ASSUMED_STATE) is True
 
-    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    # All members without assumed_state -> group doesn't have
+    # assumed_state in attributes
     hass.states.async_set("switch.tv", STATE_ON, {})
     await hass.async_block_till_done()
 

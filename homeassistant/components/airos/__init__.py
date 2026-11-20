@@ -1,9 +1,8 @@
 """The Ubiquiti airOS integration."""
 
-from __future__ import annotations
-
 import logging
 
+from aiohttp import ClientSession, TCPConnector
 from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
 from airos.exceptions import (
@@ -12,6 +11,7 @@ from airos.exceptions import (
     AirOSDataMissingError,
     AirOSDeviceConnectionError,
     AirOSKeyDataMissingError,
+    AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData, async_get_firmware_data
 
@@ -32,13 +32,20 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
+from .const import (
+    CONF_LEGACY_SSL,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    SECTION_ADDITIONAL_SETTINGS,
+)
 from .coordinator import (
     AirOSConfigEntry,
     AirOSDataUpdateCoordinator,
     AirOSFirmwareUpdateCoordinator,
     AirOSRuntimeData,
 )
+from .helpers import build_legacy_context
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -51,41 +58,62 @@ _PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Set up Ubiquiti airOS from a config entry."""
+    owns_session = False
+    verify_ssl = entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
 
     # By default airOS 8 comes with self-signed SSL certificates,
     # with no option in the web UI to change or upload a custom certificate.
-    session = async_get_clientsession(
-        hass, verify_ssl=entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL]
-    )
+    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
+
+    if entry.data.get(CONF_LEGACY_SSL, False):
+        session = ClientSession(
+            connector=TCPConnector(ssl=build_legacy_context(verify_ssl=verify_ssl))
+        )
+        owns_session = True
 
     conn_data = {
         CONF_HOST: entry.data[CONF_HOST],
         CONF_USERNAME: entry.data[CONF_USERNAME],
         CONF_PASSWORD: entry.data[CONF_PASSWORD],
-        "use_ssl": entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
         "session": session,
+        "use_ssl": entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL],
     }
+
+    async def close_session() -> None:
+        """Close legacy session before raising if needed."""
+        if owns_session:
+            await session.close()
 
     # Determine firmware version before creating the device instance
     try:
         device_data: DetectDeviceData = await async_get_firmware_data(**conn_data)
+
     except (
         AirOSConnectionSetupError,
         AirOSDeviceConnectionError,
+        AirOSTLSCompatibilityError,
         TimeoutError,
     ) as err:
+        await close_session()
         raise ConfigEntryNotReady from err
     except (
         AirOSConnectionAuthenticationError,
         AirOSDataMissingError,
     ) as err:
+        await close_session()
         raise ConfigEntryAuthFailed from err
     except AirOSKeyDataMissingError as err:
-        raise ConfigEntryError("key_data_missing") from err
+        await close_session()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="key_data_missing"
+        ) from err
     except Exception as err:
-        raise ConfigEntryError("unknown") from err
+        await close_session()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unknown"
+        ) from err
 
     airos_class: type[AirOS8 | AirOS6] = (
         AirOS8 if device_data["fw_major"] == 8 else AirOS6
@@ -96,39 +124,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     data_coordinator = AirOSDataUpdateCoordinator(
         hass, entry, device_data, airos_device
     )
-    await data_coordinator.async_config_entry_first_refresh()
 
-    firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
-    if device_data["fw_major"] >= 8:
-        firmware_coordinator = AirOSFirmwareUpdateCoordinator(hass, entry, airos_device)
-        await firmware_coordinator.async_config_entry_first_refresh()
+    try:
+        await data_coordinator.async_config_entry_first_refresh()
+
+        firmware_coordinator: AirOSFirmwareUpdateCoordinator | None = None
+        if device_data["fw_major"] >= 8:
+            firmware_coordinator = AirOSFirmwareUpdateCoordinator(
+                hass, entry, airos_device
+            )
+            await firmware_coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady, ConfigEntryAuthFailed:
+        await close_session()
+        raise
+    except Exception as err:
+        await close_session()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unknown"
+        ) from err
 
     entry.runtime_data = AirOSRuntimeData(
         status=data_coordinator,
         firmware=firmware_coordinator,
+        owns_session=owns_session,
+        session=session,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Migrate old config entry."""
 
-    # This means the user has downgraded from a future version
-    if entry.version > 2:
-        return False
-
-    # 1.1 Migrate config_entry to add advanced ssl settings
+    # 1.1 Migrate config_entry to add additional ssl settings
     if entry.version == 1 and entry.minor_version == 1:
         new_minor_version = 2
         new_data = {**entry.data}
-        advanced_data = {
+        additional_data = {
             CONF_SSL: DEFAULT_SSL,
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         }
-        new_data[SECTION_ADVANCED_SETTINGS] = advanced_data
+        new_data[SECTION_ADDITIONAL_SETTINGS] = additional_data
 
         hass.config_entries.async_update_entry(
             entry,
@@ -146,8 +182,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
         mac_adress = dr.format_mac(entry.unique_id)
 
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_adress)}
+        if device_entry := device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac_adress), entry.entry_id
         ):
             old_device_id = next(
                 (
@@ -181,9 +217,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
             entry, version=new_version, minor_version=new_minor_version
         )
 
-    return True
+    if entry.version == 2:
+        new_version = 3
+        new_minor_version = 1
+        new_data = {**entry.data}
+
+        if "advanced_settings" in new_data:
+            new_data[SECTION_ADDITIONAL_SETTINGS] = new_data.pop("advanced_settings")
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            version=new_version,
+            minor_version=new_minor_version,
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    # Clean up legacy session if needed
+    if entry.runtime_data.owns_session:
+        await entry.runtime_data.session.close()

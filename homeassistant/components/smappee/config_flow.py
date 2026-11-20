@@ -1,17 +1,18 @@
 """Config flow for Smappee."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pysmappee import helper, mqtt
-import voluptuous as vol
+from pysmappee.api import SmappeeLocalApi
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import api
 from .const import (
     CONF_SERIALNUMBER,
     DOMAIN,
@@ -31,17 +32,39 @@ class SmappeeFlowHandler(
     ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
-    async def async_oauth_create_entry(self, data):
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         await self.async_set_unique_id(unique_id=f"{DOMAIN}Cloud")
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        # The user and environment steps abort when the cloud entry exists
+        return await self.async_step_pick_implementation()
+
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -94,7 +117,7 @@ class SmappeeFlowHandler(
                 return self.async_abort(reason="cannot_connect")
         else:
             # legacy devices, without local mqtt broker, try api access
-            smappee_api = api.api.SmappeeLocalApi(ip=self.ip_address)
+            smappee_api = SmappeeLocalApi(ip=self.ip_address)
             logon = await self.hass.async_add_executor_job(smappee_api.logon)
             if logon is None:
                 return self.async_abort(reason="cannot_connect")
@@ -107,6 +130,7 @@ class SmappeeFlowHandler(
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -125,17 +149,18 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="environment",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required("environment", default=ENV_CLOUD): vol.In(
-                            [ENV_CLOUD, ENV_LOCAL]
-                        )
+                        probatio.Required(
+                            "environment", default=ENV_CLOUD
+                        ): probatio.In([ENV_CLOUD, ENV_LOCAL])
                     }
                 ),
                 errors={},
             )
 
-        # Environment chosen, request additional host information for LOCAL or OAuth2 flow for CLOUD
+        # Environment chosen, request additional host information
+        # for LOCAL or OAuth2 flow for CLOUD
         # Ask for host detail
         if user_input["environment"] == ENV_LOCAL:
             return await self.async_step_local()
@@ -153,15 +178,16 @@ class SmappeeFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="local",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
                 errors={},
             )
         # In a LOCAL setup we still need to resolve the host to serial number
         ip_address = user_input["host"]
         serial_number = None
 
-        # Attempt 1: try to use the local api (older generation) to resolve host to serialnumber
-        smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+        # Attempt 1: try to use the local api (older generation)
+        # to resolve host to serialnumber
+        smappee_api = SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is not None:
             advanced_config = await self.hass.async_add_executor_job(
@@ -171,16 +197,19 @@ class SmappeeFlowHandler(
                 if config_item["key"] == "mdnsHostName":
                     serial_number = config_item["value"]
         else:
-            # Attempt 2: try to use the local mqtt broker (newer generation) to resolve host to serialnumber
+            # Attempt 2: try to use the local mqtt broker
+            # (newer generation) to resolve host to serialnumber
             smappee_mqtt = mqtt.SmappeeLocalMqtt()
             connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
 
-            serial_number = await self.hass.async_add_executor_job(
-                smappee_mqtt.start_and_wait_for_config
-            )
-            await self.hass.async_add_executor_job(smappee_mqtt.stop)
+            def _get_config_and_stop() -> str | None:
+                result = smappee_mqtt.start_and_wait_for_config()
+                smappee_mqtt.stop()
+                return result
+
+            serial_number = await self.hass.async_add_executor_job(_get_config_and_stop)
             if serial_number is None:
                 return self.async_abort(reason="cannot_connect")
 

@@ -1,14 +1,10 @@
 """The Google Tasks integration."""
 
-from __future__ import annotations
-
 import asyncio
-
-from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -23,31 +19,16 @@ __all__ = [
 PLATFORMS: list[Platform] = [Platform.TODO]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GoogleTasksConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleTasksConfigEntry) -> None:
     """Set up Google Tasks from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(hass, session)
-    try:
-        await auth.async_get_access_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
+    await auth.async_get_access_token()
 
     try:
         task_lists = await auth.list_task_lists()
@@ -75,11 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleTasksConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleTasksConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

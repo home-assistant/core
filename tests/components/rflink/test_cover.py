@@ -6,6 +6,7 @@ control of RFLink cover devices.
 """
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.cover import CoverState
 from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
@@ -14,21 +15,19 @@ from homeassistant.core import CoreState, HomeAssistant, State, callback
 
 from .test_init import mock_rflink
 
-from tests.common import mock_restore_cache
-
 DOMAIN = "cover"
+
 
 CONFIG = {
     "rflink": {
         "port": "/dev/ttyABC0",
         "ignore_devices": ["ignore_wildcard_*", "ignore_cover"],
-    },
-    DOMAIN: {
-        "platform": "rflink",
-        "devices": {
-            "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]},
-            "cover_0_0": {"name": "dim_test"},
-            "cover_0_1": {"name": "cover_test"},
+        DOMAIN: {
+            "devices": {
+                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]},
+                "cover_0_0": {"name": "dim_test"},
+                "cover_0_1": {"name": "cover_test"},
+            },
         },
     },
 }
@@ -111,15 +110,16 @@ async def test_firing_bus_event(
 ) -> None:
     """Incoming RFLink command events should be put on the HA event bus."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {
-                    "name": "test",
-                    "aliases": ["test_alias_0_0"],
-                    "fire_event": True,
-                }
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {
+                        "name": "test",
+                        "aliases": ["test_alias_0_0"],
+                        "fire_event": True,
+                    }
+                },
             },
         },
     }
@@ -148,13 +148,14 @@ async def test_signal_repetitions(
 ) -> None:
     """Command should be sent amount of configured repetitions."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "device_defaults": {"signal_repetitions": 3},
-            "devices": {
-                "protocol_0_0": {"name": "test", "signal_repetitions": 2},
-                "protocol_0_1": {"name": "test1"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "device_defaults": {"signal_repetitions": 3},
+                "devices": {
+                    "protocol_0_0": {"name": "test", "signal_repetitions": 2},
+                    "protocol_0_1": {"name": "test1"},
+                },
             },
         },
     }
@@ -188,12 +189,13 @@ async def test_signal_repetitions_alternation(
 ) -> None:
     """Simultaneously switching entities must alternate repetitions."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "signal_repetitions": 2},
-                "protocol_0_1": {"name": "test1", "signal_repetitions": 2},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", "signal_repetitions": 2},
+                    "protocol_0_1": {"name": "test1", "signal_repetitions": 2},
+                },
             },
         },
     }
@@ -221,10 +223,11 @@ async def test_signal_repetitions_cancelling(
 ) -> None:
     """Cancel outstanding repetitions when state changed."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {"protocol_0_0": {"name": "test", "signal_repetitions": 3}},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {"protocol_0_0": {"name": "test", "signal_repetitions": 3}},
+            },
         },
     }
 
@@ -252,11 +255,15 @@ async def test_group_alias(
 ) -> None:
     """Group aliases should only respond to group commands (allon/alloff)."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {
+                        "name": "test",
+                        "group_aliases": ["test_group_0_0"],
+                    }
+                },
             },
         },
     }
@@ -284,14 +291,15 @@ async def test_nogroup_alias(
 ) -> None:
     """Non group aliases should not respond to group commands."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {
-                    "name": "test",
-                    "nogroup_aliases": ["test_nogroup_0_0"],
-                }
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {
+                        "name": "test",
+                        "nogroup_aliases": ["test_nogroup_0_0"],
+                    }
+                },
             },
         },
     }
@@ -319,10 +327,11 @@ async def test_nogroup_device_id(
 ) -> None:
     """Device id that do not respond to group commands (allon/alloff)."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {"test_nogroup_0_0": {"name": "test", "group": False}},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {"test_nogroup_0_0": {"name": "test", "group": False}},
+            },
         },
     }
 
@@ -349,14 +358,15 @@ async def test_restore_state(
 ) -> None:
     """Ensure states are restored on startup."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "RTS_12345678_0": {"name": "c1"},
-                "test_restore_2": {"name": "c2"},
-                "test_restore_3": {"name": "c3"},
-                "test_restore_4": {"name": "c4"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "RTS_12345678_0": {"name": "c1"},
+                    "test_restore_2": {"name": "c2"},
+                    "test_restore_3": {"name": "c3"},
+                    "test_restore_4": {"name": "c4"},
+                },
             },
         },
     }
@@ -401,27 +411,28 @@ async def test_inverted_cover(
 ) -> None:
     """Ensure states are restored on startup."""
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "nonkaku_device_1": {
-                    "name": "nonkaku_type_standard",
-                    "type": "standard",
-                },
-                "nonkaku_device_2": {"name": "nonkaku_type_none"},
-                "nonkaku_device_3": {
-                    "name": "nonkaku_type_inverted",
-                    "type": "inverted",
-                },
-                "newkaku_device_4": {
-                    "name": "newkaku_type_standard",
-                    "type": "standard",
-                },
-                "newkaku_device_5": {"name": "newkaku_type_none"},
-                "newkaku_device_6": {
-                    "name": "newkaku_type_inverted",
-                    "type": "inverted",
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "nonkaku_device_1": {
+                        "name": "nonkaku_type_standard",
+                        "type": "standard",
+                    },
+                    "nonkaku_device_2": {"name": "nonkaku_type_none"},
+                    "nonkaku_device_3": {
+                        "name": "nonkaku_type_inverted",
+                        "type": "inverted",
+                    },
+                    "newkaku_device_4": {
+                        "name": "newkaku_type_standard",
+                        "type": "standard",
+                    },
+                    "newkaku_device_5": {"name": "newkaku_type_none"},
+                    "newkaku_device_6": {
+                        "name": "newkaku_type_inverted",
+                        "type": "inverted",
+                    },
                 },
             },
         },

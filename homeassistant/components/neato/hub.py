@@ -1,7 +1,5 @@
 """Support for Neato botvac connected vacuum cleaners."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -12,6 +10,8 @@ from urllib3.response import HTTPResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
+
+type NeatoConfigEntry = ConfigEntry[NeatoHub]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class NeatoHub:
         map_image_data: HTTPResponse = self.my_neato.get_map_image(url)
         return map_image_data
 
-    async def async_update_entry_unique_id(self, entry: ConfigEntry) -> str:
+    async def async_update_entry_unique_id(self, entry: NeatoConfigEntry) -> str:
         """Update entry for unique_id."""
 
         await self._hass.async_add_executor_job(self.my_neato.refresh_userdata)

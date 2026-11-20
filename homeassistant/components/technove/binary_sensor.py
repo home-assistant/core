@@ -1,9 +1,8 @@
 """Support for TechnoVE binary sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from technove import Station as TechnoVEStation
 
@@ -19,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TechnoVEBinarySensorDescription(BinarySensorEntityDescription):
@@ -31,6 +32,7 @@ BINARY_SENSORS = [
     TechnoVEBinarySensorDescription(
         key="conflict_in_sharing_config",
         translation_key="conflict_in_sharing_config",
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.conflict_in_sharing_config,
     ),
@@ -89,6 +91,7 @@ class TechnoVEBinarySensorEntity(TechnoVEEntity, BinarySensorEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
 

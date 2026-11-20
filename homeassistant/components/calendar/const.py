@@ -1,21 +1,33 @@
 """Constants for calendar components."""
 
-from __future__ import annotations
-
-from enum import IntFlag
-from typing import TYPE_CHECKING
+from enum import IntFlag, StrEnum
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import CalendarEntity
+    from .entity import CalendarEntity
 
-DOMAIN = "calendar"
+DOMAIN: Final = "calendar"
+
+CREATE_EVENT_SERVICE: Final = "create_event"
+SERVICE_GET_EVENTS: Final = "get_events"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
-CONF_EVENT = "event"
+EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
+
+
+class CalendarEntityStateAttribute(StrEnum):
+    """State attributes for calendar entities."""
+
+    MESSAGE = "message"
+    ALL_DAY = "all_day"
+    START_TIME = "start_time"
+    END_TIME = "end_time"
+    LOCATION = "location"
+    DESCRIPTION = "description"
 
 
 class CalendarEntityFeature(IntFlag):
@@ -24,6 +36,22 @@ class CalendarEntityFeature(IntFlag):
     CREATE_EVENT = 1
     DELETE_EVENT = 2
     UPDATE_EVENT = 4
+
+
+class CalendarEventStatus(StrEnum):
+    """Status of a calendar event.
+
+    A subset of the statuses defined by the rfc5545 STATUS property: a calendar
+    entity does not return cancelled events, so that value is not represented
+    here.
+
+    An event without a status is not the same as a confirmed event: it means
+    the calendar did not report one, either because the source does not
+    support it or because the integration does not read it yet.
+    """
+
+    CONFIRMED = "confirmed"
+    TENTATIVE = "tentative"
 
 
 # rfc5545 fields
@@ -36,6 +64,7 @@ EVENT_LOCATION = "location"
 EVENT_RECURRENCE_ID = "recurrence_id"
 EVENT_RECURRENCE_RANGE = "recurrence_range"
 EVENT_RRULE = "rrule"
+EVENT_STATUS = "status"
 
 # Service call fields
 EVENT_START_DATE = "start_date"
@@ -62,4 +91,26 @@ LIST_EVENT_FIELDS = {
     EVENT_SUMMARY,
     EVENT_DESCRIPTION,
     EVENT_LOCATION,
+    EVENT_STATUS,
 }
+
+
+class CalendarService(StrEnum):
+    """Store keys for calendar services."""
+
+    CREATE_EVENT = "create_event"
+    GET_EVENTS = "get_events"
+
+
+class CalendarServiceArgument(StrEnum):
+    """Store keys for calendar service arguments."""
+
+    DESCRIPTION = "description"
+    DURATION = "duration"
+    END_DATE = "end_date"
+    END_DATE_TIME = "end_date_time"
+    IN = "in"
+    LOCATION = "location"
+    START_DATE = "start_date"
+    START_DATE_TIME = "start_date_time"
+    SUMMARY = "summary"

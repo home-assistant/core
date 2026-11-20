@@ -1,18 +1,15 @@
 """Fixtures for the Tailwind integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from gotailwind import TailwindDeviceStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.tailwind.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -39,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.tailwind.async_setup_entry", return_value=True
+        "homeassistant.components.tailwind.async_setup_entry", return_value=None
     ):
         yield
 

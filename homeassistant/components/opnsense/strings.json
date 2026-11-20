@@ -1,0 +1,65 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_unique_id": "Could not determine a unique identifier for this OPNsense router. Please ensure the API key has sufficient privileges, and your OPNsense instance has physical ports with a MAC address."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_interface": "Interface(s) do not exist",
+      "invalid_url": "URL is invalid or unreachable",
+      "invalid_version": "Unsupported OPNsense firmware version",
+      "privilege_missing": "The API key used does not have sufficient privileges. Please check the integration documentation for required permissions",
+      "ssl_error": "SSL certificate verification failed",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_version": "The OPNsense firmware version is unknown. Please ensure you are running a supported version of OPNsense and the user has the correct permissions."
+    },
+    "step": {
+      "interfaces": {
+        "data": {
+          "tracker_interfaces": "Interface(s) to use for tracking devices"
+        },
+        "description": "Select the OPNsense interfaces to use for tracking devices. If no interfaces are selected then all interfaces will be used for tracking."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_secret": "API secret",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Set required parameters to connect to your router. For more information, please refer to the [integration documentation]({doc_url})"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Connection failure while connecting to OPNsense API endpoint at {url}"
+    },
+    "firmware_too_old": {
+      "message": "OPNsense firmware at {url} is below the minimum supported version"
+    },
+    "invalid_auth": {
+      "message": "Authentication failure while connecting to OPNsense API endpoint at {url}"
+    },
+    "invalid_url": {
+      "message": "Invalid URL while connecting to OPNsense API endpoint at {url}"
+    },
+    "privilege_missing": {
+      "message": "The API user connecting to {url} does not have sufficient privileges"
+    },
+    "ssl_error": {
+      "message": "Unable to verify SSL certificate while connecting to OPNsense API endpoint at {url}"
+    },
+    "timeout_connecting": {
+      "message": "Timeout while connecting to OPNsense API endpoint at {url}"
+    },
+    "tracker_interface_not_found": {
+      "message": "Configured tracker interface {interface} is not present on the OPNsense router. Known interfaces: {known}"
+    },
+    "unknown_firmware": {
+      "message": "Could not determine the OPNsense firmware version at {url}"
+    }
+  }
+}

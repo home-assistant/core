@@ -1,12 +1,10 @@
 """Config flow for the Chess.com integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from chess_com_api import ChessComClient, NotFoundError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_USERNAME
@@ -20,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class ChessConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Chess.com."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -39,10 +38,12 @@ class ChessConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(str(user.player_id))
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=user.name, data=user_input)
+                return self.async_create_entry(
+                    title=user.name or user.username, data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_USERNAME): str}),
             errors=errors,
         )

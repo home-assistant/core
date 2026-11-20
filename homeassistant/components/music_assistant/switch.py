@@ -1,21 +1,53 @@
 """Music Assistant Switch platform."""
 
-from __future__ import annotations
-
-from typing import Any, Final
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
+from music_assistant_models.enums import EventType
+from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
+from music_assistant_models.player_queue import PlayerQueue
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MusicAssistantConfigEntry
-from .const import PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
-from .entity import MusicAssistantPlayerOptionEntity
+from . import MusicAssistantConfigEntry, PlatformHandlers
+from .entity import MusicAssistantEntity, MusicAssistantPlayerOptionEntity
 from .helpers import catch_musicassistant_error
+
+
+@dataclass(frozen=True, kw_only=True)
+class MusicAssistantQueueSwitchDescription(SwitchEntityDescription):
+    """Describes a switch for a setting of a player's queue."""
+
+    is_on_fn: Callable[[PlayerQueue], bool]
+    set_fn: Callable[[MusicAssistantClient, str, bool], Awaitable[None]]
+
+
+PLAYER_SETTINGS_SCHEMA_VERSION: Final = 101
+
+QUEUE_SWITCHES: Final = (
+    MusicAssistantQueueSwitchDescription(
+        key="queue_crossfade",
+        translation_key="queue_crossfade",
+        is_on_fn=lambda queue: queue.crossfade_enabled,
+        set_fn=lambda mass, queue_id, enabled: mass.player_queues.crossfade(
+            queue_id, enabled
+        ),
+    ),
+    MusicAssistantQueueSwitchDescription(
+        key="queue_autoplay",
+        translation_key="queue_autoplay",
+        is_on_fn=lambda queue: queue.autoplay_enabled,
+        set_fn=lambda mass, queue_id, enabled: mass.player_queues.autoplay(
+            queue_id, enabled
+        ),
+    ),
+)
 
 PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -24,11 +56,22 @@ PLAYER_OPTIONS_SWITCH: Final[dict[str, bool]] = {
     "clear_voice": False,
     "enhancer": True,
     "extra_bass": False,
+    "ir_repeater": False,
+    "ir_signal_light": False,
+    "loudness": True,
+    "night_mode": True,
     "party_mode": False,
     "pure_direct": True,
     "speaker_a": True,
     "speaker_b": True,
+    "speech_enhancement": True,
+    "status_light": False,
+    "sub_enabled": False,
     "surround_3d": False,
+    "surround_enabled": False,
+    "surround_mode": False,
+    "touch_controls": False,
+    "trueplay": False,
 }
 
 
@@ -39,32 +82,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up Music Assistant Switch Entities (Player Options) from Config Entry."""
     mass = entry.runtime_data.mass
+    # player_id -> keys of the player options that got an entity
+    added_option_keys_by_player: dict[str, set[str]] = {}
 
     def add_player(player_id: str) -> None:
         """Handle add player."""
+        if mass.players.get(player_id) is None:
+            return
+        if TYPE_CHECKING:
+            assert mass.server_info is not None
+        # older servers lack the commands, so their players keep only the option switches;
+        # the queue itself may still be missing, the server adds it after the player
+        if mass.server_info.schema_version >= PLAYER_SETTINGS_SCHEMA_VERSION:
+            async_add_entities(
+                MusicAssistantQueueSwitch(mass, player_id, description)
+                for description in QUEUE_SWITCHES
+            )
+        add_player_options(player_id)
+
+    def add_player_options(player_id: str) -> None:
+        """Add entities for the player options that do not have one yet."""
         player = mass.players.get(player_id)
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigSwitch] = []
+        added_option_keys = added_option_keys_by_player.setdefault(player_id, set())
         for player_option in player.options:
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.BOOLEAN
             ):
-                # the MA translation key must have the format player_options.<translation key>
                 # we ignore entities with unknown translation keys.
                 if (
-                    player_option.translation_key is None
-                    or not player_option.translation_key.startswith(
-                        PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX
-                    )
+                    player_option.translation_key not in PLAYER_OPTIONS_SWITCH
+                    or player_option.key in added_option_keys
                 ):
                     continue
-                translation_key = player_option.translation_key[
-                    len(PLAYER_OPTIONS_TRANSLATION_KEY_PREFIX) :
-                ]
-                if translation_key not in PLAYER_OPTIONS_SWITCH:
-                    continue
+                added_option_keys.add(player_option.key)
 
                 entities.append(
                     MusicAssistantPlayerConfigSwitch(
@@ -73,21 +127,31 @@ async def async_setup_entry(
                         player_option=player_option,
                         entity_description=SwitchEntityDescription(
                             key=player_option.key,
-                            translation_key=translation_key,
+                            translation_key=player_option.translation_key,
                             entity_registry_enabled_default=PLAYER_OPTIONS_SWITCH[
-                                translation_key
+                                player_option.translation_key
                             ],
                         ),
                     )
                 )
         async_add_entities(entities)
 
-    # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.SWITCH, add_player)
+    def remove_player(player_id: str) -> None:
+        """Forget the option keys of a removed player."""
+        added_option_keys_by_player.pop(player_id, None)
+
+    entry.runtime_data.platform_handlers.setdefault(
+        Platform.SWITCH,
+        PlatformHandlers(
+            add_player=add_player,
+            remove_player=remove_player,
+            update_player_options=add_player_options,
+        ),
+    )
 
 
 class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchEntity):
-    """Representation of a Switch entity to control player provider dependent settings."""
+    """Representation of a Switch entity to control player settings."""
 
     def __init__(
         self,
@@ -102,17 +166,79 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
         self.entity_description = entity_description
 
     @catch_musicassistant_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle turn on command."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, True)
 
     @catch_musicassistant_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle turn off command."""
         await self.mass.players.set_option(self.player_id, self.mass_option_key, False)
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         self._attr_is_on = (
             player_option.value if isinstance(player_option.value, bool) else None
         )
+
+
+class MusicAssistantQueueSwitch(MusicAssistantEntity, SwitchEntity):
+    """Switch for a setting of the player's own queue."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    entity_description: MusicAssistantQueueSwitchDescription
+
+    def __init__(
+        self,
+        mass: MusicAssistantClient,
+        player_id: str,
+        entity_description: MusicAssistantQueueSwitchDescription,
+    ) -> None:
+        """Initialize MusicAssistantQueueSwitch."""
+        super().__init__(mass, player_id)
+        self.entity_description = entity_description
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks, also for the queue the server adds after the player."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self._on_queue_added, EventType.QUEUE_ADDED, self.player_id
+            )
+        )
+
+    def _on_queue_added(self, event: MassEvent) -> None:
+        self.async_write_ha_state()
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the player and its queue are available."""
+        return (
+            super().available
+            and self.mass.player_queues.get(self.player_id) is not None
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return if the queue setting is on."""
+        if (queue := self.mass.player_queues.get(self.player_id)) is None:
+            return None
+        return self.entity_description.is_on_fn(queue)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the queue setting on."""
+        await self.entity_description.set_fn(self.mass, self.player_id, True)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the queue setting off."""
+        await self.entity_description.set_fn(self.mass, self.player_id, False)

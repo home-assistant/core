@@ -1,13 +1,21 @@
 """Test the Philips TV config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import ANY
+from typing import Any
+from unittest.mock import ANY, AsyncMock, MagicMock
 
-from haphilipsjs import PairingFailure
+from haphilipsjs import ConnectionFailure, PairingFailure
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -18,13 +26,12 @@ from . import (
     MOCK_HOSTNAME,
     MOCK_NAME,
     MOCK_PASSWORD,
+    MOCK_SERIAL_NO,
     MOCK_SYSTEM,
     MOCK_SYSTEM_UNPAIRED,
     MOCK_USERINPUT,
     MOCK_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -61,6 +68,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
+    assert result2["result"].unique_id == MOCK_SERIAL_NO
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,7 +100,7 @@ async def test_reauth(
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_tv: MagicMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,6 +113,13 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_tv.system = MOCK_SYSTEM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_USERINPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) -> None:
@@ -158,9 +173,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_request_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -185,9 +198,7 @@ async def test_pair_request_failed(
     }
 
 
-async def test_pair_grant_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -214,6 +225,7 @@ async def test_pair_grant_failed(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"pin": "invalid_pin"}
 
     # Test with unexpected failure
@@ -319,3 +331,158 @@ async def test_zeroconf_probe_failed(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_failure"
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        pytest.param({}, id="unpaired"),
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD}, id="paired"
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    credentials: dict[str, str],
+) -> None:
+    """Test reconfiguring the host keeps the pairing credentials."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG | credentials,
+        title=MOCK_NAME,
+        unique_id=MOCK_SERIAL_NO,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG | credentials | {CONF_HOST: "2.2.2.2"}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("system", "get_system_side_effect"),
+    [
+        pytest.param(None, None, id="empty_system"),
+        pytest.param(MOCK_SYSTEM, ConnectionFailure("Timeout"), id="connection"),
+    ],
+)
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+    system: dict[str, Any] | None,
+    get_system_side_effect: Exception | None,
+) -> None:
+    """Test reconfiguring shows an error when the TV can't be reached and recovers."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_tv.system = system
+    mock_tv.getSystem.side_effect = get_system_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_tv.system = MOCK_SYSTEM
+    mock_tv.getSystem.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tv: MagicMock
+) -> None:
+    """Test reconfiguring to a different TV aborts."""
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_tv.system = MOCK_SYSTEM | {"serialnumber": "other_serial"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "1"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_CONFIG
+
+
+async def test_reconfigure_pairing(
+    hass: HomeAssistant,
+    mock_tv_pairable: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring an unpaired entry to a TV that requires pairing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title=MOCK_NAME,
+        unique_id=MOCK_SYSTEM_UNPAIRED["serialnumber"],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "6"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    mock_tv_pairable.pairRequest.assert_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG_PAIRED | {CONF_HOST: "2.2.2.2"}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_reconfigure_paired_skips_pairing(
+    hass: HomeAssistant,
+    mock_tv_pairable: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reconfiguring a paired entry keeps its credentials without pairing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_PAIRED,
+        title=MOCK_NAME,
+        unique_id=MOCK_SYSTEM_UNPAIRED["serialnumber"],
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "2.2.2.2", CONF_API_VERSION: "6"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == MOCK_CONFIG_PAIRED | {CONF_HOST: "2.2.2.2"}
+    mock_tv_pairable.pairRequest.assert_not_called()

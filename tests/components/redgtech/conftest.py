@@ -1,15 +1,12 @@
 """Test fixtures for Redgtech integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.redgtech.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "test_password"

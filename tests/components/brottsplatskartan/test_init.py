@@ -1,13 +1,11 @@
 """Test Brottsplatskartan component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
+
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.brottsplatskartan.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(hass: HomeAssistant) -> None:

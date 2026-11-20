@@ -1,19 +1,18 @@
 """SFR Box coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -29,6 +28,7 @@ class SFRRuntimeData:
     """Runtime data for SFR Box."""
 
     box: SFRBox
+    has_authentication: bool
     dsl: SFRDataUpdateCoordinator[DslInfo]
     ftth: SFRDataUpdateCoordinator[FtthInfo]
     system: SFRDataUpdateCoordinator[SystemInfo]
@@ -60,11 +60,17 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Update data."""
         try:
             if data := await self._method(self.box):
                 return data
+        except SFRBoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SFRBoxError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

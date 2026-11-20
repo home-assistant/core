@@ -1,23 +1,20 @@
 """Provide tests for mysensors cover platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, call
 
 from mysensors.sensor import Sensor
+import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -39,8 +36,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -61,8 +58,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -83,8 +80,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -116,8 +113,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -148,8 +145,8 @@ async def test_cover_node_percentage(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 25},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 25},
         blocking=True,
     )
 
@@ -182,8 +179,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -203,8 +200,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -223,8 +220,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -253,8 +250,8 @@ async def test_cover_node_binary(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -271,6 +268,101 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;30;0\n")
     receive_message("1;1;1;0;2;0\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize("config_entry", ["2.4"], indirect=True)
+async def test_cover_node_tilt(
+    hass: HomeAssistant,
+    cover_node_tilt: Sensor,
+    receive_message: Callable[[str], None],
+    transport_write: MagicMock,
+) -> None:
+    """Test a cover tilt node."""
+    entity_id = "cover.cover_tilt_node_1_1"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert hass.states.async_entity_ids(COVER_DOMAIN) == [entity_id]
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.TILT_POSITION: 25},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;25\n")
+    receive_message("1;1;1;0;58;25\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 25
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;100\n")
+
+    receive_message("1;1;1;0;58;100\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;0\n")
+
+    receive_message("1;1;1;0;58;0\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.STOP_TILT,
+        {TargetKey.ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;31;1\n")
+
+    receive_message("1;1;1;0;31;1\n")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

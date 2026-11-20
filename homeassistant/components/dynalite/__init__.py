@@ -1,7 +1,5 @@
 """Support for the Dynalite networks."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,22 +34,20 @@ async def async_entry_changed(hass: HomeAssistant, entry: DynaliteConfigEntry) -
     LOGGER.debug("Reconfiguring entry finished %s", entry.data)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> None:
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
     bridge = DynaliteBridge(hass, convert_config(entry.data))
 
     if not await bridge.async_setup():
-        LOGGER.error("Could not set up bridge for entry %s", entry.data)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Could not set up bridge at {bridge.host}")
 
     entry.runtime_data = bridge
     entry.async_on_unload(entry.add_update_listener(async_entry_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> None:
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

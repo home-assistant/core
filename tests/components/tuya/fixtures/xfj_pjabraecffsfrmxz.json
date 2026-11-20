@@ -1,0 +1,75 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Register booster fan",
+  "category": "xfj",
+  "product_id": "pjabraecffsfrmxz",
+  "product_name": "REGISTER BOOSTER FAN ",
+  "online": true,
+  "sub": false,
+  "time_zone": "-04:00",
+  "active_time": "2026-06-05T22:42:53+00:00",
+  "create_time": "2026-06-05T22:42:53+00:00",
+  "update_time": "2026-06-05T22:42:53+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "°F",
+        "min": 32,
+        "max": 122,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_indoor": {
+      "type": "Integer",
+      "value": {
+        "unit": "°F",
+        "min": 32,
+        "max": 199,
+        "scale": 0,
+        "step": 1
+      },
+      "report_type": "un_known"
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "°F",
+        "min": 32,
+        "max": 122,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "temp_indoor": 61,
+    "child_lock": false,
+    "temp_set": 72
+  },
+  "set_up": true,
+  "support_local": true
+}

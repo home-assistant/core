@@ -1,6 +1,9 @@
 """Common entity for VeSync Component."""
 
+from typing import override
+
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import ConnectionStatus
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,6 +41,10 @@ class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordina
         return self.device.cid
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
-        return super().available and self.device.state.connection_status == "online"
+        return (
+            super().available
+            and self.device.state.connection_status == ConnectionStatus.ONLINE
+        )

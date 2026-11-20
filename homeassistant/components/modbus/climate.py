@@ -1,9 +1,7 @@
 """Support for Generic Modbus Thermostats."""
 
-from __future__ import annotations
-
 import struct
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -21,10 +19,10 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_ON,
     SWING_VERTICAL,
-    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -38,12 +36,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
@@ -105,6 +101,7 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
     DataType,
 )
 from .entity import ModbusStructEntity
@@ -137,7 +134,7 @@ async def async_setup_platform(
     async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
+class ModbusThermostat(ModbusStructEntity, RestoreClimate):
     """Representation of a Modbus Thermostat."""
 
     _attr_supported_features = (
@@ -159,9 +156,9 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
             CONF_TARGET_TEMP_WRITE_REGISTERS
         ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
-        self._attr_temperature_unit = (
+        self._attr_native_current_temperature = None
+        self._attr_native_target_temperature = None
+        self._attr_native_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
             if self._unit == "F"
             else UnitOfTemperature.CELSIUS
@@ -311,13 +308,16 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_coil = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state and state.attributes.get(ATTR_TEMPERATURE):
-            self._attr_target_temperature = float(state.attributes[ATTR_TEMPERATURE])
+        if (climate_data := await self.async_get_last_climate_data()) is not None and (
+            temperature := climate_data.native_target_temperature
+        ) is not None:
+            self._attr_native_target_temperature = temperature
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
@@ -375,6 +375,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
 
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if self._fan_mode_register is not None:
@@ -397,6 +398,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
 
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
         if self._swing_mode_register:
@@ -420,6 +422,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     break
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = (
@@ -475,9 +478,10 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
-        self._attr_target_temperature = await self._async_read_register(
+        self._attr_native_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING,
             self._target_temperature_register[
                 HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY[self._attr_hvac_mode]
@@ -486,7 +490,7 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
             self._target_temp_offset,
         )
 
-        self._attr_current_temperature = await self._async_read_register(
+        self._attr_native_current_temperature = await self._async_read_register(
             self._input_type,
             self._address,
             self._current_temp_scale,
@@ -571,8 +575,11 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                     break
 
             if self._attr_swing_mode is STATE_UNKNOWN:
-                _err = f"{self.name}: No answer received from Swing mode register. State is Unknown"
-                _LOGGER.error(_err)
+                _err = (
+                    f"{self.name}: No answer received from"
+                    " Swing mode register. State is Unknown"
+                )
+                LOGGER.error(_err)
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value

@@ -1,7 +1,5 @@
 """Setup mocks for the Plugwise integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 import json
 from typing import Any
@@ -10,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from munch import Munch
 from packaging.version import Version
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.const import (
@@ -20,8 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 def build_smile(**attrs):
@@ -104,7 +101,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.plugwise.async_setup_entry", return_value=True
+        "homeassistant.components.plugwise.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -271,6 +268,34 @@ def mock_smile_anna(chosen_env: str, cooling_present: bool) -> Generator[MagicMo
 
 
 @pytest.fixture
+def mock_smile_anna_loria() -> Generator[MagicMock]:
+    """Create a Mock Anna-connected-to-Loria-heatpump type for testing."""
+    chosen_env = "anna_loria_cooling_active"
+    data = _read_json(chosen_env, "data")
+    with patch(
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+    ) as api_mock:
+        api = api_mock.return_value
+
+        api.async_update.return_value = data
+        api.connect.return_value = Version("4.3.8")
+        api.cooling_present = True
+        api.gateway_id = "9ff0569b4984459fb243af64c0901894"
+        api.heater_id = "bfb5ee0a88e14e5f97bfa725a760cc49"
+        api.reboot = True
+        api.smile = build_smile(
+            hostname="smile98765",
+            model="Gateway",
+            model_id="smile_thermo",
+            name="Smile Anna",
+            type="thermostat",
+            version="4.3.8",
+        )
+
+        yield api
+
+
+@pytest.fixture
 def mock_smile_anna_p1() -> Generator[MagicMock]:
     """Create a Mock Anna-P1 type for testing."""
     chosen_env = "anna_p1"
@@ -300,7 +325,7 @@ def mock_smile_anna_p1() -> Generator[MagicMock]:
 
 @pytest.fixture
 def mock_smile_p1(chosen_env: str, gateway_id: str) -> Generator[MagicMock]:
-    """Create a base Mock P1 type for testing with different datasets and gateway-ids."""
+    """Create a base Mock P1 type for testing."""
     data = _read_json(chosen_env, "data")
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
@@ -336,6 +361,7 @@ def mock_smile_legacy_anna() -> Generator[MagicMock]:
 
         api.async_update.return_value = data
         api.connect.return_value = Version("1.8.22")
+        api.cooling_present = False
         api.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
         api.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
         api.reboot = False

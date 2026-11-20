@@ -8,8 +8,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 import respx
 
 from homeassistant.components.camera import (
@@ -37,9 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
 
 async def help_setup_mock_config_entry(
     hass: HomeAssistant, options: dict[str, Any], unique_id: Any | None = None
@@ -59,7 +58,7 @@ async def help_setup_mock_config_entry(
         CONF_VERIFY_SSL: options.get(CONF_VERIFY_SSL),
     }
     entry = MockConfigEntry(
-        domain="generic",
+        domain=DOMAIN,
         title=options[CONF_NAME],
         options=entry_options,
         unique_id=unique_id,
@@ -73,6 +72,7 @@ async def help_setup_mock_config_entry(
 async def test_fetching_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -101,8 +101,8 @@ async def test_fetching_url(
     body = await resp.read()
     assert body == fakeimgbytes_png
 
-    # sleep .1 seconds to make cached image expire
-    await asyncio.sleep(0.1)
+    # advance time by .1 seconds to make cached image expire
+    freezer.tick(timedelta(seconds=0.1))
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert respx.calls.call_count == 2
@@ -110,8 +110,8 @@ async def test_fetching_url(
     # If the template renders to an invalid URL we return the last image from cache
     hass.states.async_set("sensor.temp", "invalid url")
 
-    # sleep another .1 seconds to make cached image expire
-    await asyncio.sleep(0.1)
+    # advance time by another .1 seconds to make cached image expire
+    freezer.tick(timedelta(seconds=0.1))
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 2
@@ -121,7 +121,7 @@ async def test_fetching_url(
 
     # Restore a valid URL
     hass.states.async_set("sensor.temp", "http://example.com/1a")
-    await asyncio.sleep(0.1)
+    freezer.tick(timedelta(seconds=0.1))
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
     assert respx.calls.call_count == 3
@@ -134,7 +134,7 @@ async def test_image_caching(
     freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
 ) -> None:
-    """Test that the image is cached and not fetched more often than the framerate indicates."""
+    """Test image is cached and not fetched more than framerate."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
     framerate = 5
@@ -334,7 +334,9 @@ async def test_stream_source(
         data={},
         options={
             CONF_STILL_IMAGE_URL: "http://example.com",
-            CONF_STREAM_SOURCE: 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            CONF_STREAM_SOURCE: (
+                'http://example.com/{{ states.sensor.temp.state + "a" }}'
+            ),
             CONF_LIMIT_REFETCH_TO_URL_CHANGE: True,
             CONF_FRAMERATE: 2,
             CONF_CONTENT_TYPE: "image/png",
@@ -360,7 +362,7 @@ async def test_stream_source(
     mock_stream.endpoint_url = Mock(return_value="http://home.assistant/playlist.m3u8")
 
     with patch(
-        "homeassistant.components.camera.create_stream",
+        "homeassistant.components.camera.entity.create_stream",
         return_value=mock_stream,
     ):
         # Request playlist through WebSocket
@@ -402,7 +404,7 @@ async def test_stream_source_error(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
+        "homeassistant.components.camera.entity.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
@@ -420,7 +422,10 @@ async def test_stream_source_error(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
+            "translation_domain": "camera",
+            "translation_key": "stream_not_supported",
+            "translation_placeholders": {"entity_id": "camera.config_test"},
         }
 
 
@@ -464,7 +469,7 @@ async def test_no_stream_source(
     await help_setup_mock_config_entry(hass, options)
 
     with patch(
-        "homeassistant.components.camera.Stream.endpoint_url",
+        "homeassistant.components.camera.entity.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_request_stream:
         # Request playlist through WebSocket
@@ -482,7 +487,10 @@ async def test_no_stream_source(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
+            "translation_domain": "camera",
+            "translation_key": "stream_not_supported",
+            "translation_placeholders": {"entity_id": "camera.config_test"},
         }
 
 
@@ -537,13 +545,14 @@ async def test_camera_content_type(
 
 
 @respx.mock
-async def test_timeout_cancelled(
+async def test_timeout(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
     fakeimgbytes_png: bytes,
     fakeimgbytes_jpg: bytes,
 ) -> None:
-    """Test that timeouts and cancellations return last image."""
+    """Test that timeouts return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
@@ -569,20 +578,20 @@ async def test_timeout_cancelled(
 
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        side_effect=asyncio.CancelledError(),
+        side_effect=TimeoutError(),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 1
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
-        httpx.RequestError,
-        httpx.TimeoutException,
+        httpx2.RequestError,
+        httpx2.TimeoutException,
     ]
 
     for total_calls in range(2, 4):
-        # sleep .1 seconds to make cached image expire
-        await asyncio.sleep(0.1)
+        # advance time by .1 seconds to make cached image expire
+        freezer.tick(timedelta(seconds=0.1))
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK
@@ -602,7 +611,7 @@ async def test_frame_interval_property(hass: HomeAssistant) -> None:
 
     request = Mock()
     with patch(
-        "homeassistant.components.camera.async_get_still_stream"
+        "homeassistant.components.camera.entity.async_get_still_stream"
     ) as mock_get_stream:
         await async_get_mjpeg_stream(hass, request, "camera.config_test")
 

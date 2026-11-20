@@ -1,7 +1,5 @@
 """Collection and data structure functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, MutableSequence
 import random
 from typing import TYPE_CHECKING, Any
@@ -121,7 +119,7 @@ class CollectionExtension(BaseTemplateExtension):
         else:
             items = list(args)
 
-        if seed:
+        if seed is not None:
             r = random.Random(seed)
             r.shuffle(items)
         else:

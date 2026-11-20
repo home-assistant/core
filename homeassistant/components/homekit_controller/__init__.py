@@ -1,7 +1,5 @@
 """Support for Homekit device discovery."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging
@@ -19,7 +17,7 @@ from aiohomekit.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -45,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
     hass.data[KNOWN_DEVICES][conn.unique_id] = conn
@@ -69,8 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await conn.pairing.close()
         raise ConfigEntryNotReady from ex
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for Homekit devices."""
@@ -91,15 +87,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Disconnect from HomeKit devices before unloading entry."""
     hkid = entry.data["AccessoryPairingID"]
 
     if hkid in hass.data[KNOWN_DEVICES]:
         connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
         await connection.async_unload()
-
-    return True
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -125,15 +119,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove homekit_controller config entry from a device."""
     hkid = config_entry.data["AccessoryPairingID"]
     connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
-    return not device_entry.identifiers.intersection(
-        identifier
+    return not any(
+        connection.accessory_identifier(accessory) in device_entry.identifiers
         for accessory in connection.entity_map.accessories
-        for identifier in connection.device_info_for_accessory(accessory)[
-            ATTR_IDENTIFIERS
-        ]
     )

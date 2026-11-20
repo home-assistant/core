@@ -1,11 +1,10 @@
 """Tests for the Pinecil config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from pynecil import CommunicationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.iron_os import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
@@ -13,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEFAULT_NAME, PINECIL_SERVICE_INFO, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("discovery", "mock_pynecil")

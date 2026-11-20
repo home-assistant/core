@@ -1,11 +1,9 @@
 """Support for IPMA weather service."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 import logging
-from typing import Literal
+from typing import Literal, override
 
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast as IPMAForecast
@@ -75,7 +73,11 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         self._daily_forecast: list[IPMAForecast] | None = None
         self._hourly_forecast: list[IPMAForecast] | None = None
         if self._mode is not None:
-            self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+            self._attr_unique_id = (
+                f"{self._location.station_latitude},"
+                f" {self._location.station_longitude},"
+                f" {self._mode}"
+            )
         else:
             self._attr_unique_id = (
                 f"{self._location.station_latitude}, {self._location.station_longitude}"
@@ -129,8 +131,12 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return CONDITION_MAP.get(identifier)
 
     @property
+    @override
     def condition(self) -> str | None:
-        """Return the current condition which is only available on the hourly forecast data."""
+        """Return the current condition.
+
+        Only available on the hourly forecast data.
+        """
         forecast = self._hourly_forecast
 
         if not forecast:
@@ -139,6 +145,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._condition_conversion(forecast[0].weather_type.id, None)
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if not self._observation:
@@ -147,6 +154,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.temperature
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the current pressure."""
         if not self._observation:
@@ -155,6 +163,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.pressure
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if not self._observation:
@@ -163,6 +172,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if not self._observation:
@@ -171,6 +181,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.wind_intensity_km
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the current wind bearing (degrees)."""
         if not self._observation:
@@ -191,7 +202,9 @@ class IPMAWeather(WeatherEntity, IPMADevice):
                 ),
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.min_temperature,
                 ATTR_FORECAST_NATIVE_TEMP: data_in.max_temperature,
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                    data_in.precipitation_probability
+                ),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                 ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
             }
@@ -208,11 +221,13 @@ class IPMAWeather(WeatherEntity, IPMADevice):
             async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         await self._try_update_forecast("daily", 24)
         return self._forecast(self._daily_forecast)
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         await self._try_update_forecast("hourly", 1)

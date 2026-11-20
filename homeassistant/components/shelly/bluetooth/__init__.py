@@ -1,7 +1,5 @@
 """Bluetooth support for shelly."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aioshelly.ble import async_start_scanner, create_scanner
@@ -21,6 +19,7 @@ if TYPE_CHECKING:
 BLE_SCANNER_MODE_TO_BLUETOOTH_SCANNING_MODE = {
     BLEScannerMode.PASSIVE: BluetoothScanningMode.PASSIVE,
     BLEScannerMode.ACTIVE: BluetoothScanningMode.ACTIVE,
+    BLEScannerMode.AUTO: BluetoothScanningMode.AUTO,
 }
 
 
@@ -33,13 +32,25 @@ async def async_connect_scanner(
     """Connect scanner."""
     device = coordinator.device
     entry = coordinator.config_entry
-    bluetooth_scanning_mode = BLE_SCANNER_MODE_TO_BLUETOOTH_SCANNING_MODE[scanner_mode]
+    # Options persist as plain strings, coerce so `is` checks work.
+    scanner_mode = BLEScannerMode(scanner_mode)
+    requested_mode = BLE_SCANNER_MODE_TO_BLUETOOTH_SCANNING_MODE[scanner_mode]
+    # AUTO runs the radio passive and lets habluetooth's auto-scheduler
+    # flip the BLE script to active on demand.
+    firmware_active = scanner_mode is BLEScannerMode.ACTIVE
+    current_mode = (
+        BluetoothScanningMode.ACTIVE
+        if firmware_active
+        else BluetoothScanningMode.PASSIVE
+    )
     scanner = create_scanner(
         coordinator.bluetooth_source,
         entry.title,
-        requested_mode=bluetooth_scanning_mode,
-        current_mode=bluetooth_scanning_mode,
+        requested_mode=requested_mode,
+        current_mode=current_mode,
     )
+    if scanner_mode is BLEScannerMode.AUTO:
+        scanner.set_active_window_provider(device)
     unload_callbacks = [
         async_register_scanner(
             hass,
@@ -54,7 +65,7 @@ async def async_connect_scanner(
     ]
     await async_start_scanner(
         device=device,
-        active=scanner_mode == BLEScannerMode.ACTIVE,
+        active=firmware_active,
         event_type=BLE_SCAN_RESULT_EVENT,
         data_version=BLE_SCAN_RESULT_VERSION,
     )

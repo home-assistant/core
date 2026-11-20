@@ -1,14 +1,16 @@
 """Support for getting statistical data from a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from hole import Hole
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -32,6 +34,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="clients_ever_seen",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="dns_queries_today",
@@ -42,6 +45,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries_cached",
@@ -81,6 +85,7 @@ SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
         key="clients.total",
         translation_key="clients_ever_seen",
         suggested_display_precision=0,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="queries.total",
@@ -91,6 +96,7 @@ SENSOR_TYPES_V6: tuple[SensorEntityDescription, ...] = (
         key="gravity.domains_being_blocked",
         translation_key="domains_being_blocked",
         suggested_display_precision=0,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="queries.cached",
@@ -121,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole sensor."""
-    name = entry.data[CONF_NAME]
+    name = entry.title
     hole_data = entry.runtime_data
     sensors = [
         PiHoleSensor(
@@ -159,6 +165,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return get_nested(self.api.data, self.entity_description.key)

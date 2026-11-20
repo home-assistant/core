@@ -1,7 +1,5 @@
 """Diagnostics support for Nest."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from google_nest_sdm import diagnostics
@@ -9,7 +7,7 @@ from google_nest_sdm.device_traits import InfoTrait
 
 from homeassistant.components.camera import diagnostics as camera_diagnostics
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .types import NestConfigEntry
 
@@ -20,10 +18,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: NestConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    if (
-        not hasattr(config_entry, "runtime_data")
-        or not config_entry.runtime_data
-        or not (nest_devices := config_entry.runtime_data.device_manager.devices)
+    if not hasattr(config_entry, "runtime_data") or not (
+        nest_devices := config_entry.runtime_data.device_manager.devices
     ):
         return {}
     data: dict[str, Any] = {
@@ -43,7 +39,7 @@ async def async_get_config_entry_diagnostics(
 async def async_get_device_diagnostics(
     hass: HomeAssistant,
     config_entry: NestConfigEntry,
-    device: DeviceEntry,
+    device: AnyDeviceEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     nest_devices = config_entry.runtime_data.device_manager.devices

@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -32,11 +33,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    ChildDeviceEntry,
     DeviceEntry,
     DeviceRegistry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "123456789ABC"
 
@@ -49,6 +49,7 @@ async def init_integration(
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
     data: dict[str, Any] | None = None,
+    unique_id: str = MOCK_MAC,
 ) -> MockConfigEntry:
     """Set up the Shelly integration in Home Assistant."""
     if data is None:
@@ -61,13 +62,18 @@ async def init_integration(
         data[CONF_GEN] = gen
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, unique_id=MOCK_MAC, options=options, title="Test name"
+        domain=DOMAIN,
+        data=data,
+        unique_id=unique_id,
+        options=options,
+        title="Test name",
+        minor_version=3,
     )
     entry.add_to_hass(hass)
 
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return entry
 
@@ -75,7 +81,7 @@ async def init_integration(
 async def mock_block_device_push_update_failure(
     hass: HomeAssistant, mock_block_device: Mock
 ) -> None:
-    """Create updates with COAP_REPLY indicating push update failure for block device."""
+    """Create COAP_REPLY updates indicating push update failure."""
     for _ in range(MAX_PUSH_UPDATE_FAILURES):
         mock_block_device.mock_update_reply()
         await hass.async_block_till_done()
@@ -173,14 +179,25 @@ def register_device(
     )
 
 
-def register_sub_device(
+def register_child_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
+) -> ChildDeviceEntry:
+    """Register Shelly child device."""
+    return device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
+        parent_device_id=register_device(device_registry, config_entry).id,
+    )
+
+
+def register_legacy_sub_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry, unique_id: str
 ) -> DeviceEntry:
-    """Register Shelly sub-device."""
+    """Register Shelly sub-device created before sub-devices were child devices."""
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, MOCK_MAC),
+        via_device_id=register_device(device_registry, config_entry).id,
     )
 
 

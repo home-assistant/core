@@ -1,10 +1,10 @@
 """Config flow for Linn / OpenHome."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
@@ -27,6 +27,7 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str | None
     _name: str
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -37,11 +38,15 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("async_step_ssdp: Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
-        _LOGGER.debug(
-            "async_step_ssdp: setting unique id %s", discovery_info.upnp[ATTR_UPNP_UDN]
-        )
+        udn = discovery_info.upnp[ATTR_UPNP_UDN]
+        if isinstance(udn, list):
+            if not udn:
+                return self.async_abort(reason="incomplete_discovery")
+            udn = udn[0]
 
-        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
+        _LOGGER.debug("async_step_ssdp: setting unique id %s", udn)
+
+        await self.async_set_unique_id(udn)
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ssdp_location})
 
         _LOGGER.debug(
@@ -66,5 +71,5 @@ class OpenhomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={CONF_NAME: self._name},
+            description_placeholders={"name": self._name},
         )

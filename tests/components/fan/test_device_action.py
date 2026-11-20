@@ -1,6 +1,11 @@
 """The tests for Fan device actions."""
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -11,12 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 
 async def test_get_actions(
@@ -160,9 +159,9 @@ async def test_action(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
-    turn_on_calls = async_mock_service(hass, "fan", "turn_on")
-    toggle_calls = async_mock_service(hass, "fan", "toggle")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()
@@ -223,7 +222,7 @@ async def test_action_legacy(
         },
     )
 
-    turn_off_calls = async_mock_service(hass, "fan", "turn_off")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
 
     hass.bus.async_fire("test_event_turn_off")
     await hass.async_block_till_done()

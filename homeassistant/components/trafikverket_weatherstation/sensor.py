@@ -1,10 +1,9 @@
 """Weather information for air and road temperature (by Trafikverket)."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pytrafikverket.models import WeatherStationInfoModel
 
@@ -249,6 +248,7 @@ class TrafikverketWeatherStation(
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return state of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

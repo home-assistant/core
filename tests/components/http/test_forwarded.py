@@ -7,10 +7,9 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http.forwarded import async_setup_forwarded
-
-from tests.typing import ClientSessionGenerator
 
 
 async def mock_handler(request):
@@ -486,8 +485,8 @@ async def test_x_forwarded_proto_incorrect_number_of_elements(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     assert (
-        f"Incorrect number of elements in X-Forward-Proto. Expected 1 or {expected}, got {got}"
-        in caplog.text
+        "Incorrect number of elements in X-Forward-Proto."
+        f" Expected 1 or {expected}, got {got}" in caplog.text
     )
 
 

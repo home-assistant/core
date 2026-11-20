@@ -1,10 +1,9 @@
 """Tracking for iBeacon devices."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import time
+from typing import Any
 
 from ibeacon_ble import (
     APPLE_MFR_ID,
@@ -18,7 +17,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -36,6 +35,8 @@ from .const import (
     UNAVAILABLE_TIMEOUT,
     UPDATE_INTERVAL,
 )
+
+type IBeaconConfigEntry = ConfigEntry[IBeaconCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +70,11 @@ def async_name(
         service_info.name,
         service_info.name.replace("-", ":"),
     ):
-        base_name = f"{ibeacon_advertisement.uuid}_{ibeacon_advertisement.major}_{ibeacon_advertisement.minor}"
+        base_name = (
+            f"{ibeacon_advertisement.uuid}"
+            f"_{ibeacon_advertisement.major}"
+            f"_{ibeacon_advertisement.minor}"
+        )
     else:
         base_name = service_info.name
     if unique_address:
@@ -110,7 +115,10 @@ class IBeaconCoordinator:
     """Set up the iBeacon Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, registry: DeviceRegistry
+        self,
+        hass: HomeAssistant,
+        entry: IBeaconConfigEntry,
+        registry: dr.DeviceRegistry,
     ) -> None:
         """Initialize the Coordinator."""
         self.hass = hass
@@ -165,6 +173,56 @@ class IBeaconCoordinator:
         )
 
     @callback
+    def async_get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics without beacon identifiers or addresses."""
+        return {
+            "ignored_address_count": len(self._ignore_addresses),
+            "ignored_uuid_count": len(self._ignore_uuids),
+            "allowed_nameless_uuid_count": len(self._allow_nameless_uuids),
+            "ignored_nameless_address_count": len(
+                {
+                    address
+                    for addresses in self._ignored_nameless_by_uuid.values()
+                    for address in addresses
+                }
+            ),
+            "fixed_mac_beacon_count": len(
+                self._last_ibeacon_advertisement_by_unique_id
+            ),
+            "random_mac_group_count": len(self._group_ids_random_macs),
+            "unavailable_random_mac_group_count": len(self._unavailable_group_ids),
+            "pending_transient_count": len(self._transient_seen_count),
+            "source_count": len(
+                {
+                    advertisement.source
+                    for advertisement in (
+                        self._last_ibeacon_advertisement_by_unique_id.values()
+                    )
+                }
+                | {
+                    service_info.source
+                    for service_info in self._last_seen_by_group_id.values()
+                }
+            ),
+            "fixed_mac_beacons": [
+                {
+                    "power": advertisement.power,
+                    "rssi": advertisement.rssi,
+                    "distance": advertisement.distance,
+                    "transient": advertisement.transient,
+                    "vendor": advertisement.vendor,
+                }
+                for advertisement in (
+                    self._last_ibeacon_advertisement_by_unique_id.values()
+                )
+            ],
+            "random_mac_groups_seen": [
+                {"rssi": service_info.rssi}
+                for service_info in self._last_seen_by_group_id.values()
+            ],
+        }
+
+    @callback
     def _async_handle_unavailable(
         self, service_info: bluetooth.BluetoothServiceInfoBleak
     ) -> None:
@@ -182,7 +240,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_uuid(self, uuid: str) -> None:
-        """Ignore an UUID that does not follow the spec and any entities created by it."""
+        """Ignore a UUID that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_uuids.add(uuid)
         major_minor_by_uuid = self._major_minor_by_uuid.pop(uuid)
         unique_ids_to_purge = set()
@@ -201,7 +262,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_ignore_address(self, address: str) -> None:
-        """Ignore an address that does not follow the spec and any entities created by it."""
+        """Ignore an address that doesn't follow the spec.
+
+        Also removes any entities created by it.
+        """
         self._ignore_addresses.add(address)
         self._async_cancel_unavailable_tracker(address)
         entry_data = self._entry.data
@@ -215,8 +279,8 @@ class IBeaconCoordinator:
     def _async_purge_untrackable_entities(self, unique_ids: set[str]) -> None:
         """Remove entities that are no longer trackable."""
         for unique_id in unique_ids:
-            if device := self._dev_reg.async_get_device(
-                identifiers={(DOMAIN, unique_id)}
+            if device := self._dev_reg.async_get_device_by_identifier(
+                (DOMAIN, unique_id), self._entry.entry_id
             ):
                 self._dev_reg.async_remove_device(device.id)
             self._last_ibeacon_advertisement_by_unique_id.pop(unique_id, None)
@@ -228,7 +292,10 @@ class IBeaconCoordinator:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         ibeacon_advertisement: iBeaconAdvertisement,
     ) -> None:
-        """Switch to random mac tracking method when a group is using rotating mac addresses."""
+        """Switch to random mac tracking method.
+
+        Used when a group is using rotating mac addresses.
+        """
         self._group_ids_random_macs.add(group_id)
         self._async_purge_untrackable_entities(self._unique_ids_by_group_id[group_id])
         self._unique_ids_by_group_id.pop(group_id)
@@ -315,7 +382,8 @@ class IBeaconCoordinator:
         new = unique_id not in self._last_ibeacon_advertisement_by_unique_id
         uuid = str(ibeacon_advertisement.uuid)
 
-        # Reject creating new trackers if the name is not set (unless the uuid is allowlisted).
+        # Reject creating new trackers if the name is not set
+        # (unless the uuid is allowlisted).
         if (
             new
             and uuid not in self._allow_nameless_uuids
@@ -378,7 +446,10 @@ class IBeaconCoordinator:
 
     @callback
     def _async_check_unavailable_groups_with_random_macs(self) -> None:
-        """Check for random mac groups that have not been seen in a while and mark them as unavailable."""
+        """Check for unseen random mac groups.
+
+        Marks them as unavailable if not seen in a while.
+        """
         now = MONOTONIC_TIME()
         gone_unavailable = [
             group_id
@@ -458,7 +529,7 @@ class IBeaconCoordinator:
                 )
 
     async def async_config_entry_updated(
-        self, hass: HomeAssistant, config_entry: ConfigEntry
+        self, hass: HomeAssistant, config_entry: IBeaconConfigEntry
     ) -> None:
         """Restore ignored nameless beacons when the allowlist is updated."""
 
@@ -493,8 +564,8 @@ class IBeaconCoordinator:
     @callback
     def _async_restore_from_registry(self) -> None:
         """Restore the state of the Coordinator from the device registry."""
-        for device in self._dev_reg.devices.get_devices_for_config_entry_id(
-            self._entry.entry_id
+        for device in dr.async_entries_for_config_entry(
+            self._dev_reg, self._entry.entry_id
         ):
             if not (identifier := next(iter(device.identifiers), None)):
                 continue

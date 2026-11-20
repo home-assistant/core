@@ -1,10 +1,9 @@
 """Test the Melnor sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
@@ -19,8 +18,6 @@ from .conftest import (
     patch_async_register_callback,
     patch_melnor_device,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_battery_sensor(hass: HomeAssistant) -> None:

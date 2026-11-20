@@ -1,9 +1,12 @@
 """Test energy data storage and migration."""
 
+from typing import Any
+
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.energy.data import (
+    BATTERY_SOURCE_SCHEMA,
     ENERGY_SOURCE_SCHEMA,
     FLOW_FROM_GRID_SOURCE_SCHEMA,
     FLOW_TO_GRID_SOURCE_SCHEMA,
@@ -13,7 +16,7 @@ from homeassistant.components.energy.data import (
     EnergyManager,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import storage
+from homeassistant.helpers import entity_registry as er, storage
 
 
 async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> None:
@@ -42,6 +45,44 @@ async def test_energy_preferences_no_migration_needed(hass: HomeAssistant) -> No
     ]
 
 
+async def test_energy_preferences_load_resolves_renamed_power_sensor(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a stale stat_rate is pointed at the renamed power sensor on load."""
+    entity_registry.async_get_or_create(
+        "sensor",
+        "energy",
+        "energy_power_battery_inverted_sensor_battery_power",
+        suggested_object_id="renamed_power",
+    )
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 3,
+        "key": "energy",
+        "data": {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                    "stat_rate": "sensor.battery_power_inverted",
+                }
+            ],
+            "device_consumption": [],
+            "device_consumption_water": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == "sensor.renamed_power"
+
+
 async def test_energy_preferences_default(hass: HomeAssistant) -> None:
     """Test default preferences include device_consumption_water."""
     defaults = EnergyManager.default_preferences()
@@ -61,7 +102,7 @@ async def test_energy_preferences_empty_store(hass: HomeAssistant) -> None:
     assert manager.data is None
 
 
-async def test_energy_preferences_migration_from_old_version(
+async def test_energy_preferences_migration_from_version_1_1(
     hass: HomeAssistant,
 ) -> None:
     """Test that device_consumption_water is added when migrating from v1.1 to v1.2."""
@@ -85,10 +126,75 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data["device_consumption_water"] == []
 
 
+async def test_energy_preferences_migration_from_version_1_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test that device_consumption_gas is added when migrating from v1.3 to v1.4."""
+    # Create version 1.3 data without device_consumption_gas (old version)
+    old_data = {
+        "energy_sources": [],
+        "device_consumption": [],
+        "device_consumption_water": [],
+    }
+
+    # Save with old version (1.3) - migration will run to upgrade to 1.4
+    old_store = storage.Store(hass, 1, "energy", minor_version=3)
+    await old_store.async_save(old_data)
+
+    # Load with manager - should trigger migration
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    # Verify the field was added by migration
+    assert manager.data is not None
+    assert "device_consumption_gas" in manager.data
+    assert manager.data["device_consumption_gas"] == []
+
+
+async def test_energy_preferences_migration_from_version_1_4(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test that cost_adjustment_day is removed when migrating from v1.4 to v1.5."""
+    grid_source = {
+        "type": "grid",
+        "stat_energy_from": "sensor.grid_import",
+        "stat_energy_to": None,
+        "stat_cost": None,
+        "stat_compensation": None,
+        "entity_energy_price": None,
+        "number_energy_price": 0.15,
+        "entity_energy_price_export": None,
+        "number_energy_price_export": None,
+    }
+    gas_source = {"type": "gas", "stat_energy_from": "sensor.gas"}
+    hass_storage["energy"] = {
+        "version": 1,
+        "minor_version": 4,
+        "key": "energy",
+        "data": {
+            "energy_sources": [{**grid_source, "cost_adjustment_day": 0.5}, gas_source],
+            "device_consumption": [],
+            "device_consumption_water": [],
+            "device_consumption_gas": [],
+        },
+    }
+
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"] == [grid_source, gas_source]
+    assert hass_storage["energy"]["minor_version"] == 5
+    assert hass_storage["energy"]["data"]["energy_sources"] == [
+        grid_source,
+        gas_source,
+    ]
+
+
 async def test_battery_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:
-    """Test that battery with inverted power_config sets stat_rate to generated entity_id."""
+    """Test battery with inverted power_config sets stat_rate."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
     manager.data = manager.default_preferences()
@@ -150,6 +256,89 @@ async def test_battery_power_config_two_sensors_sets_stat_rate(
     )
 
 
+async def test_battery_stat_soc_round_trip(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery stat_soc is preserved through async_update."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_soc": "sensor.battery_state_of_charge",
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    assert source["stat_soc"] == "sensor.battery_state_of_charge"
+
+
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 13.5}, id="manual"),
+        pytest.param({"entity_capacity": "sensor.battery_capacity"}, id="sensor"),
+    ],
+)
+async def test_battery_capacity_round_trip(
+    hass: HomeAssistant,
+    capacity_config: dict[str, float | str],
+) -> None:
+    """Test that battery capacity is preserved through async_update."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    battery_source = {
+        "type": "battery",
+        "stat_energy_from": "sensor.battery_energy_from",
+        "stat_energy_to": "sensor.battery_energy_to",
+        **capacity_config,
+    }
+    sources = ENERGY_SOURCE_SCHEMA([battery_source])
+
+    await manager.async_update({"energy_sources": sources})
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0] == battery_source
+
+
+@pytest.mark.parametrize(
+    "capacity_config",
+    [
+        pytest.param({"capacity": 0}, id="zero"),
+        pytest.param({"capacity": -1}, id="negative"),
+        pytest.param(
+            {"capacity": 13.5, "entity_capacity": "sensor.battery_capacity"},
+            id="both",
+        ),
+        pytest.param({"entity_capacity": "invalid"}, id="invalid-entity"),
+        pytest.param({"entity_capacity": ""}, id="empty-entity"),
+        pytest.param({"entity_capacity": "number.capacity"}, id="wrong-domain"),
+    ],
+)
+def test_battery_capacity_invalid(capacity_config: dict[str, float | str]) -> None:
+    """Reject invalid or ambiguous battery capacity sources."""
+    with pytest.raises(probatio.Invalid):
+        BATTERY_SOURCE_SCHEMA(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                **capacity_config,
+            }
+        )
+
+
 async def test_grid_power_config_inverted_sets_stat_rate(
     hass: HomeAssistant,
 ) -> None:
@@ -174,7 +363,6 @@ async def test_grid_power_config_inverted_sets_stat_rate(
                     "power_config": {
                         "stat_rate_inverted": "sensor.grid_power",
                     },
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -272,14 +460,16 @@ async def test_power_config_takes_precedence_over_stat_rate(
 
 async def test_power_config_validation_empty() -> None:
     """Test that empty power_config raises validation error."""
-    with pytest.raises(vol.Invalid, match="power_config must have at least one option"):
+    with pytest.raises(
+        probatio.Invalid, match="power_config must have at least one option"
+    ):
         POWER_CONFIG_SCHEMA({})
 
 
 async def test_power_config_validation_multiple_methods() -> None:
     """Test that power_config with multiple methods raises validation error."""
     # Both stat_rate and stat_rate_inverted (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate": "sensor.power",
@@ -288,7 +478,7 @@ async def test_power_config_validation_multiple_methods() -> None:
         )
 
     # Both stat_rate and stat_rate_from/to (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate": "sensor.power",
@@ -298,7 +488,7 @@ async def test_power_config_validation_multiple_methods() -> None:
         )
 
     # Both stat_rate_inverted and stat_rate_from/to (should fail due to Exclusive)
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         POWER_CONFIG_SCHEMA(
             {
                 "stat_rate_inverted": "sensor.power",
@@ -312,7 +502,8 @@ async def test_flow_from_validation_multiple_prices() -> None:
     """Test that flow_from validation rejects both entity and number price."""
     # Both entity_energy_price and number_energy_price should fail
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for the price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for the price",
     ):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
@@ -332,13 +523,11 @@ async def test_energy_sources_validation_multiple_grids() -> None:
                 "type": "grid",
                 "stat_energy_from": "sensor.grid1_import",
                 "stat_energy_to": "sensor.grid1_export",
-                "cost_adjustment_day": 0,
             },
             {
                 "type": "grid",
                 "stat_energy_from": "sensor.grid2_import",
                 "stat_energy_to": None,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -389,7 +578,6 @@ async def test_grid_power_config_standard_stat_rate(hass: HomeAssistant) -> None
                     "power_config": {
                         "stat_rate": "sensor.grid_power",
                     },
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -416,7 +604,6 @@ async def test_grid_new_format_validates_correctly() -> None:
                 "number_energy_price": 0.15,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.08,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -431,7 +618,6 @@ async def test_grid_new_format_validates_correctly() -> None:
                 "type": "grid",
                 "stat_energy_from": "sensor.energy_import",
                 "stat_energy_to": None,
-                "cost_adjustment_day": 0,
             },
         ]
     )
@@ -489,7 +675,6 @@ async def test_grid_power_without_power_config(hass: HomeAssistant) -> None:
                     "number_energy_price_export": None,
                     # No power_config, just stat_rate directly
                     "stat_rate": "sensor.grid_power",
-                    "cost_adjustment_day": 0,
                 }
             ],
         }
@@ -552,7 +737,7 @@ async def test_grid_migration_single_import_export(hass: HomeAssistant) -> None:
     assert grid["stat_compensation"] is None
     assert grid["entity_energy_price"] is None
     assert grid["entity_energy_price_export"] == "sensor.sell_price"
-    assert grid["cost_adjustment_day"] == 0.5
+    assert "cost_adjustment_day" not in grid
 
     # Should not have legacy fields
     assert "flow_from" not in grid
@@ -672,11 +857,10 @@ async def test_grid_migration_more_imports_than_exports(hass: HomeAssistant) -> 
 
 
 async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
-    """Test migration preserves power config and stat_rate from first grid.
+    """Test migration preserves power config from first grid.
 
-    Note: Migration preserves the original stat_rate value from the legacy power array.
-    The stat_rate regeneration from power_config only happens during async_update()
-    for new data submissions, not during storage migration.
+    Note: stat_rate is regenerated from power_config when the preferences are
+    loaded, so a stale stat_rate from the legacy power array is replaced.
     """
     old_data = {
         "energy_sources": [
@@ -713,9 +897,7 @@ async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
     # Verify power_config is preserved
     assert grid["power_config"] == {"stat_rate_inverted": "sensor.grid_power"}
 
-    # Migration preserves the original stat_rate value from the legacy power array
-    # (stat_rate regeneration from power_config only happens in async_update)
-    assert grid["stat_rate"] == "sensor.grid_power"
+    assert grid["stat_rate"] == "sensor.grid_power_inverted"
 
 
 async def test_grid_migration_import_only(hass: HomeAssistant) -> None:
@@ -783,7 +965,7 @@ async def test_grid_migration_power_only(hass: HomeAssistant) -> None:
     assert grid["stat_energy_to"] is None
     # Power is preserved
     assert grid["stat_rate"] == "sensor.grid_power"
-    assert grid["cost_adjustment_day"] == 0.5
+    assert "cost_adjustment_day" not in grid
 
 
 async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
@@ -800,7 +982,6 @@ async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
                 "number_energy_price": 0.15,
                 "entity_energy_price_export": None,
                 "number_energy_price_export": 0.08,
-                "cost_adjustment_day": 0,
             }
         ],
         "device_consumption": [],
@@ -824,7 +1005,8 @@ async def test_grid_new_format_no_migration_needed(hass: HomeAssistant) -> None:
 async def test_grid_validation_single_import_price() -> None:
     """Test that grid validation rejects both entity and number import price."""
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for import price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for import price",
     ):
         ENERGY_SOURCE_SCHEMA(
             [
@@ -833,7 +1015,6 @@ async def test_grid_validation_single_import_price() -> None:
                     "stat_energy_from": "sensor.grid_import",
                     "entity_energy_price": "sensor.price",
                     "number_energy_price": 0.15,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -842,7 +1023,8 @@ async def test_grid_validation_single_import_price() -> None:
 async def test_grid_validation_single_export_price() -> None:
     """Test that grid validation rejects both entity and number export price."""
     with pytest.raises(
-        vol.Invalid, match="Define either an entity or a fixed number for export price"
+        probatio.Invalid,
+        match="Define either an entity or a fixed number for export price",
     ):
         ENERGY_SOURCE_SCHEMA(
             [
@@ -852,7 +1034,6 @@ async def test_grid_validation_single_export_price() -> None:
                     "stat_energy_to": "sensor.grid_export",
                     "entity_energy_price_export": "sensor.sell_price",
                     "number_energy_price_export": 0.08,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -860,7 +1041,7 @@ async def test_grid_validation_single_export_price() -> None:
 
 async def test_flow_from_rejects_entity_price_for_external_stat() -> None:
     """Test that entity_energy_price is rejected for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
@@ -871,7 +1052,7 @@ async def test_flow_from_rejects_entity_price_for_external_stat() -> None:
 
 async def test_flow_from_rejects_number_price_for_external_stat() -> None:
     """Test that number_energy_price is rejected for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_FROM_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
@@ -908,7 +1089,7 @@ async def test_flow_from_allows_no_cost_for_external_stat() -> None:
 
 async def test_flow_to_rejects_entity_price_for_external_stat() -> None:
     """Test that entity_energy_price is rejected for external export statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_TO_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_to": "external:grid_export",
@@ -919,7 +1100,7 @@ async def test_flow_to_rejects_entity_price_for_external_stat() -> None:
 
 async def test_flow_to_rejects_number_price_for_external_stat() -> None:
     """Test that number_energy_price is rejected for external export statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         FLOW_TO_GRID_SOURCE_SCHEMA(
             {
                 "stat_energy_to": "external:grid_export",
@@ -930,14 +1111,13 @@ async def test_flow_to_rejects_number_price_for_external_stat() -> None:
 
 async def test_grid_rejects_entity_price_for_external_import_stat() -> None:
     """Test that grid schema rejects entity price for external import stats."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         ENERGY_SOURCE_SCHEMA(
             [
                 {
                     "type": "grid",
                     "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                     "entity_energy_price": "input_number.electricity_rate",
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -945,14 +1125,13 @@ async def test_grid_rejects_entity_price_for_external_import_stat() -> None:
 
 async def test_grid_rejects_number_price_for_external_export_stat() -> None:
     """Test that grid schema rejects number price for external export stats."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         ENERGY_SOURCE_SCHEMA(
             [
                 {
                     "type": "grid",
                     "stat_energy_to": "external:grid_export",
                     "number_energy_price_export": 0.08,
-                    "cost_adjustment_day": 0,
                 }
             ]
         )
@@ -966,7 +1145,6 @@ async def test_grid_allows_stat_cost_for_external_stat() -> None:
                 "type": "grid",
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                 "stat_cost": "opower:utility_elec_12345_energy_cost",
-                "cost_adjustment_day": 0,
             }
         ]
     )
@@ -978,7 +1156,7 @@ async def test_grid_allows_stat_cost_for_external_stat() -> None:
 
 async def test_gas_rejects_entity_price_for_external_stat() -> None:
     """Test that gas schema rejects entity price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         GAS_SOURCE_SCHEMA(
             {
                 "type": "gas",
@@ -990,7 +1168,7 @@ async def test_gas_rejects_entity_price_for_external_stat() -> None:
 
 async def test_gas_rejects_number_price_for_external_stat() -> None:
     """Test that gas schema rejects number price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         GAS_SOURCE_SCHEMA(
             {
                 "type": "gas",
@@ -1002,7 +1180,7 @@ async def test_gas_rejects_number_price_for_external_stat() -> None:
 
 async def test_water_rejects_entity_price_for_external_stat() -> None:
     """Test that water schema rejects entity price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         WATER_SOURCE_SCHEMA(
             {
                 "type": "water",
@@ -1014,7 +1192,7 @@ async def test_water_rejects_entity_price_for_external_stat() -> None:
 
 async def test_water_rejects_number_price_for_external_stat() -> None:
     """Test that water schema rejects number price for external statistics."""
-    with pytest.raises(vol.Invalid, match="not supported for external statistics"):
+    with pytest.raises(probatio.Invalid, match="not supported for external statistics"):
         WATER_SOURCE_SCHEMA(
             {
                 "type": "water",
@@ -1060,7 +1238,6 @@ async def test_grid_allows_price_with_stat_cost_for_external_stat() -> None:
                 "stat_energy_from": "opower:utility_elec_12345_energy_consumption",
                 "stat_cost": "opower:utility_elec_12345_energy_cost",
                 "entity_energy_price": "input_number.electricity_rate",
-                "cost_adjustment_day": 0,
             }
         ]
     )
@@ -1094,3 +1271,350 @@ async def test_water_allows_price_with_stat_cost_for_external_stat() -> None:
     )
     assert result["stat_cost"] == "external:water_cost"
     assert result["number_energy_price"] == 0.005
+
+
+BATTERY_DIRECTIONS_ENERGY = {
+    "stat_energy_from_grid": "sensor.battery_from_grid",
+    "stat_energy_from_solar": "sensor.battery_from_solar",
+    "stat_energy_to_home": "sensor.battery_to_home",
+    "stat_energy_to_grid": "sensor.battery_to_grid",
+}
+BATTERY_DIRECTIONS_POWER = {
+    "stat_rate_from_grid": "sensor.battery_from_grid_power",
+    "stat_rate_from_solar": "sensor.battery_from_solar_power",
+    "stat_rate_to_home": "sensor.battery_to_home_power",
+    "stat_rate_to_grid": "sensor.battery_to_grid_power",
+}
+BATTERY_TOTALS = {
+    "type": "battery",
+    "stat_energy_from": "sensor.battery_energy_from",
+    "stat_energy_to": "sensor.battery_energy_to",
+}
+GRID = {
+    "type": "grid",
+    "stat_energy_from": "sensor.grid_import",
+    "stat_energy_to": "sensor.grid_export",
+    "stat_cost": None,
+    "entity_energy_price": None,
+    "number_energy_price": None,
+    "stat_compensation": None,
+    "entity_energy_price_export": None,
+    "number_energy_price_export": None,
+}
+
+
+@pytest.mark.parametrize(
+    "sources",
+    [
+        pytest.param(
+            [{"type": "battery", **BATTERY_DIRECTIONS_ENERGY}], id="all_directions"
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+            id="one_charge_one_discharge",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": BATTERY_DIRECTIONS_POWER,
+                    "stat_rate": "sensor.energy_battery_net_power",
+                }
+            ],
+            id="all_power_directions_with_generated_stat_rate",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {
+                        "stat_rate_to_home": "sensor.battery_to_home_power"
+                    },
+                }
+            ],
+            id="power_direction_subset",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy",
+                    "stat_energy_to": "sensor.battery_energy",
+                    "power_config": {"stat_rate": "sensor.battery_power"},
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+            id="totals_with_one_statistic_twice",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {**BATTERY_TOTALS, "stat_energy_to": "sensor.other_energy_to"},
+            ],
+            id="totals_batteries_sharing_a_statistic",
+        ),
+        pytest.param(
+            [
+                GRID,
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_grid": "sensor.grid_export",
+                },
+            ],
+            id="battery_to_grid_is_grid_export",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "external:battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                }
+            ],
+            id="external_direction_energy",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+            ],
+            id="totals_and_directions_batteries",
+        ),
+    ],
+)
+async def test_battery_measurement_schema_valid(sources: list[dict[str, Any]]) -> None:
+    """Test valid battery measurements pass validation unchanged."""
+    assert ENERGY_SOURCE_SCHEMA(sources) == sources
+
+
+@pytest.mark.parametrize(
+    ("sources", "message"),
+    [
+        pytest.param(
+            [{**BATTERY_TOTALS, "stat_energy_to_home": "sensor.battery_to_home"}],
+            "either in total or per direction",
+            id="totals_and_directions",
+        ),
+        pytest.param(
+            [{"type": "battery", "stat_energy_from": "sensor.battery_energy_from"}],
+            "group of inclusion 'total_energy'",
+            id="one_total",
+        ),
+        pytest.param(
+            [{"type": "battery"}],
+            "or at least one charge and one discharge direction",
+            id="no_energy",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_from_solar": "sensor.battery_from_solar",
+                }
+            ],
+            "or at least one charge and one discharge direction",
+            id="no_discharge_direction",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                    "stat_energy_to_grid": "sensor.battery_to_grid",
+                }
+            ],
+            "or at least one charge and one discharge direction",
+            id="no_charge_direction",
+        ),
+        pytest.param(
+            [{**BATTERY_TOTALS, "power_config": BATTERY_DIRECTIONS_POWER}],
+            "direction power sensors need energy per direction",
+            id="direction_power_with_totals",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                }
+            ],
+            "per direction needs direction power",
+            id="signed_power_with_directions",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+            "needs its power sensors in power_config",
+            id="bare_stat_rate_with_directions",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.battery_from_grid",
+                    "stat_energy_to_home": "sensor.battery_to_home",
+                    "power_config": BATTERY_DIRECTIONS_POWER,
+                }
+            ],
+            "stat_rate_from_solar needs stat_energy_from_solar",
+            id="power_direction_without_energy",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_grid": "sensor.battery_to_home",
+                }
+            ],
+            "can only be used once in a battery",
+            id="energy_statistic_twice",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_to_home": "sensor.battery_to_home"},
+                }
+            ],
+            "can only be used once in a battery",
+            id="energy_and_power_statistic_shared",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {
+                        **BATTERY_DIRECTIONS_POWER,
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+            "only one configuration method",
+            id="direction_and_inverted_power",
+        ),
+        pytest.param(
+            [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": {"stat_rate_to_home": "external:battery_power"},
+                }
+            ],
+            "Battery direction power must be an entity",
+            id="external_direction_power",
+        ),
+        pytest.param(
+            [{**GRID, "power_config": {"stat_rate_to_home": "sensor.power"}}],
+            "not a valid option",
+            id="grid_with_direction_power",
+        ),
+        pytest.param(
+            [
+                BATTERY_TOTALS,
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "stat_energy_to_home": "sensor.battery_energy_from",
+                },
+            ],
+            "sensor.battery_energy_from is used in multiple batteries",
+            id="direction_is_other_battery_total",
+        ),
+        pytest.param(
+            [
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+                {"type": "battery", **BATTERY_DIRECTIONS_ENERGY},
+            ],
+            "sensor.battery_from_grid is used in multiple batteries",
+            id="directions_shared_by_batteries",
+        ),
+        pytest.param(
+            [
+                {
+                    **BATTERY_TOTALS,
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                },
+                {
+                    "type": "battery",
+                    "stat_energy_from_grid": "sensor.other_from_grid",
+                    "stat_energy_to_home": "sensor.other_to_home",
+                    "power_config": {"stat_rate_to_home": "sensor.battery_discharge"},
+                },
+            ],
+            "sensor.battery_discharge is used in multiple batteries",
+            id="direction_power_is_other_battery_power",
+        ),
+    ],
+)
+async def test_battery_measurement_schema_invalid(
+    sources: list[dict[str, Any]], message: str
+) -> None:
+    """Test invalid battery measurements are rejected."""
+    with pytest.raises(probatio.Invalid, match=message):
+        ENERGY_SOURCE_SCHEMA(sources)
+
+
+@pytest.mark.parametrize(
+    ("power_config", "stat_rate"),
+    [
+        pytest.param(
+            BATTERY_DIRECTIONS_POWER,
+            "sensor.energy_battery_battery_from_grid_power_battery_from_solar_power"
+            "_battery_to_home_power_battery_to_grid_power_net_power",
+            id="all_directions",
+        ),
+        pytest.param(
+            {
+                "stat_rate_to_grid": "sensor.battery_to_grid_power",
+                "stat_rate_from_solar": "sensor.battery_from_solar_power",
+            },
+            "sensor.energy_battery_battery_from_solar_power_battery_to_grid_power"
+            "_net_power",
+            id="subset_in_slot_order",
+        ),
+    ],
+)
+async def test_battery_power_config_directions_sets_stat_rate(
+    hass: HomeAssistant, power_config: dict[str, str], stat_rate: str
+) -> None:
+    """Test a battery with direction power sensors gets the generated net power."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    **BATTERY_DIRECTIONS_ENERGY,
+                    "power_config": power_config,
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == stat_rate

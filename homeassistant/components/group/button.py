@@ -1,16 +1,14 @@
 """Platform allowing several button entities to be grouped into one single button."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     PLATFORM_SCHEMA as BUTTON_PLATFORM_SCHEMA,
-    SERVICE_PRESS,
     ButtonEntity,
+    ButtonService,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,6 +26,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import GroupEntityStateAttribute
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Button group"
@@ -37,9 +36,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = BUTTON_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(BUTTON_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -110,20 +109,24 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         """Initialize a button group."""
         self._entity_ids = entity_ids
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+        self._attr_extra_state_attributes = {
+            GroupEntityStateAttribute.ENTITY_ID: entity_ids
+        }
         self._attr_unique_id = unique_id
 
+    @override
     async def async_press(self) -> None:
         """Forward the press to all buttons in the group."""
         await self.hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
+            ButtonService.PRESS,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the button group state."""
         # Set group as unavailable if all members are unavailable or missing

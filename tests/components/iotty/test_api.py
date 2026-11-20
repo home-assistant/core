@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 from aiohttp import ClientSession
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.iotty import api
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_api_create_fail(
@@ -32,7 +31,7 @@ async def test_api_create_ok(
     aiohttp_client_session: None,
     local_oauth_impl: ClientSession,
 ) -> None:
-    """Test API creation. We're checking that we can create an IottyProxy without raising."""
+    """Test we can create an IottyProxy without raising."""
 
     mock_config_entry.add_to_hass(hass)
     assert mock_config_entry.data["auth_implementation"] is not None

@@ -1,14 +1,12 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
-from typing import Any
+from typing import Any, override
 
 import oasatelematics
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -42,9 +40,9 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_ROUTE_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_STOP_ID): cv.string,
+        probatio.Required(CONF_ROUTE_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -84,6 +82,7 @@ class OASATelematicsSensor(SensorEntity):
         self._times: list[dict[str, Any]] | None = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         params = {}

@@ -1,17 +1,18 @@
 """The FiveM update coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from fivem import FiveM, FiveMServerOfflineError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailedUnreachable,
+)
 
 from .const import (
     ATTR_PLAYERS_LIST,
@@ -60,12 +61,13 @@ class FiveMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.version = info["version"]
         self.game_name = info["vars"]["gamename"]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get server data from 3rd party library and update properties."""
         try:
             server = await self._fivem.get_server()
         except FiveMServerOfflineError as err:
-            raise UpdateFailed from err
+            raise UpdateFailedUnreachable from err
 
         players_list: list[str] = [player.name for player in server.players]
         players_list.sort()

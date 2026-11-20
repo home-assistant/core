@@ -1,11 +1,9 @@
 """Support notifications through TTS service."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -16,7 +14,12 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_LANGUAGE, ATTR_MEDIA_PLAYER_ENTITY_ID, ATTR_MESSAGE, DOMAIN
+from .const import (
+    ATTR_LANGUAGE,
+    DOMAIN,
+    TextToSpeechService,
+    TextToSpeechServiceArgument,
+)
 
 CONF_MEDIA_PLAYER = "media_player"
 CONF_TTS_SERVICE = "tts_service"
@@ -24,17 +27,19 @@ ENTITY_LEGACY_PROVIDER_GROUP = "entity_or_legacy_provider"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_TTS_SERVICE, CONF_ENTITY_ID),
+PLATFORM_SCHEMA = probatio.All(
+    probatio.AtLeastOne(CONF_TTS_SERVICE, CONF_ENTITY_ID),
     NOTIFY_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Exclusive(CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP): cv.entity_id,
-            vol.Exclusive(
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Exclusive(
+                CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP
+            ): cv.entity_id,
+            probatio.Exclusive(
                 CONF_ENTITY_ID, ENTITY_LEGACY_PROVIDER_GROUP
             ): cv.entities_domain(DOMAIN),
-            vol.Required(CONF_MEDIA_PLAYER): cv.entity_id,
-            vol.Optional(ATTR_LANGUAGE): cv.string,
+            probatio.Required(CONF_MEDIA_PLAYER): cv.entity_id,
+            probatio.Optional(ATTR_LANGUAGE): cv.string,
         }
     ),
 )
@@ -64,12 +69,13 @@ class TTSNotificationService(BaseNotificationService):
         self._media_player = config[CONF_MEDIA_PLAYER]
         self._language = config.get(ATTR_LANGUAGE)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call TTS service to speak the notification."""
         _LOGGER.debug("%s '%s' on %s", self._tts_service, message, self._media_player)
 
-        data = {
-            ATTR_MESSAGE: message,
+        data: dict[str, Any] = {
+            TextToSpeechServiceArgument.MESSAGE: message,
         }
         service_name = ""
 
@@ -78,10 +84,12 @@ class TTSNotificationService(BaseNotificationService):
             service_name = self._tts_service
         elif self._target:
             data[ATTR_ENTITY_ID] = self._target
-            data[ATTR_MEDIA_PLAYER_ENTITY_ID] = self._media_player
-            service_name = "speak"
+            data[TextToSpeechServiceArgument.MEDIA_PLAYER_ENTITY_ID] = (
+                self._media_player
+            )
+            service_name = TextToSpeechService.SPEAK
         if self._language:
-            data[ATTR_LANGUAGE] = self._language
+            data[TextToSpeechServiceArgument.LANGUAGE] = self._language
 
         await self.hass.services.async_call(
             DOMAIN,

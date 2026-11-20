@@ -7,10 +7,9 @@ from zoneinfo import ZoneInfo
 
 from israelrailapi.api import TrainRoute
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, DOMAIN
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_START: "באר יעקב",
@@ -24,7 +23,7 @@ SOURCE_DEST = "באר יעקב אשקלון"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.israel_rail.async_setup_entry", return_value=True
+        "homeassistant.components.israel_rail.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -71,21 +70,23 @@ def get_train_route(
     dest_platform: str = "2",
     origin_station: str = "3500",
     destination_station: str = "3700",
+    departure_delay: int | None = None,
 ) -> TrainRoute:
     """Build a TrainRoute of the israelrail API."""
-    return TrainRoute(
-        [
-            {
-                "orignStation": origin_station,
-                "destinationStation": destination_station,
-                "departureTime": departure_time,
-                "arrivalTime": arrival_time,
-                "originPlatform": origin_platform,
-                "destPlatform": dest_platform,
-                "trainNumber": train_number,
-            }
+    train_data: dict = {
+        "orignStation": origin_station,
+        "destinationStation": destination_station,
+        "departureTime": departure_time,
+        "arrivalTime": arrival_time,
+        "originPlatform": origin_platform,
+        "destPlatform": dest_platform,
+        "trainNumber": train_number,
+    }
+    if departure_delay is not None:
+        train_data["etaDiffTimes"] = [
+            {"stationId": origin_station, "difMin": departure_delay}
         ]
-    )
+    return TrainRoute([train_data])
 
 
 TRAINS = [

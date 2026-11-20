@@ -1,0 +1,90 @@
+{
+  "Id": "sha256:ec3f0931a6e6b6855d76b2d7b0be30e81860baccd891b2e243280bf1cd8ad710",
+  "RepoTags": [
+    "example:1.0",
+    "example:latest",
+    "example:stable",
+    "internal.registry.example.com:5000/example:1.0"
+  ],
+  "RepoDigests": [
+    "example@sha256:afcc7f1ac1b49db317a7196c902e61c6c3c4607d63599ee1a82d702d249a0ccb",
+    "internal.registry.example.com:5000/example@sha256:b69959407d21e8a062e0416bf13405bb2b71ed7a84dde4158ebafacfa06f5578"
+  ],
+  "Parent": "",
+  "Comment": "",
+  "Created": "2022-02-04T21:20:12.497794809Z",
+  "Container": "65974bc86f1770ae4bff79f651ebdbce166ae9aada632ee3fa9af3a264911735",
+  "ContainerConfig": {
+    "Hostname": "439f4e91bd1d",
+    "Domainname": "string",
+    "User": "string",
+    "AttachStdin": false,
+    "AttachStdout": true,
+    "AttachStderr": true,
+    "ExposedPorts": {
+      "80/tcp": {},
+      "443/tcp": {}
+    },
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [],
+    "Cmd": [],
+    "Healthcheck": {},
+    "ArgsEscaped": false,
+    "Image": "example-image:1.0",
+    "Volumes": {},
+    "WorkingDir": "/public/",
+    "Entrypoint": [],
+    "NetworkDisabled": true,
+    "MacAddress": "string",
+    "OnBuild": [],
+    "Labels": {},
+    "StopSignal": "SIGTERM",
+    "StopTimeout": 10,
+    "Shell": []
+  },
+  "DockerVersion": "20.10.7",
+  "Author": "",
+  "Config": {
+    "Hostname": "",
+    "Domainname": "",
+    "User": "web:web",
+    "AttachStdin": false,
+    "AttachStdout": false,
+    "AttachStderr": false,
+    "ExposedPorts": {},
+    "Tty": false,
+    "OpenStdin": false,
+    "StdinOnce": false,
+    "Env": [],
+    "Cmd": [],
+    "Healthcheck": {},
+    "ArgsEscaped": true,
+    "Image": "",
+    "Volumes": {},
+    "WorkingDir": "/public/",
+    "Entrypoint": [],
+    "OnBuild": [],
+    "Labels": {},
+    "StopSignal": "SIGTERM",
+    "Shell": []
+  },
+  "Architecture": "arm",
+  "Variant": "v7",
+  "Os": "linux",
+  "OsVersion": "",
+  "Size": 1239828,
+  "VirtualSize": 1239828,
+  "GraphDriver": {
+    "Name": "overlay2",
+    "Data": {}
+  },
+  "RootFS": {
+    "Type": "layers",
+    "Layers": []
+  },
+  "Metadata": {
+    "LastTagTime": "2022-02-28T14:40:02.623929178Z"
+  }
+}

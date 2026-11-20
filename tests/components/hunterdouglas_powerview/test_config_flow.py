@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant import config_entries
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA, MOCK_SERIAL
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
@@ -156,7 +155,7 @@ async def test_form_homekit_and_dhcp(
     assert result3["type"] is FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub", "mock_setup_entry")
 @pytest.mark.parametrize(
     ("homekit_source", "homekit_discovery", "api_version"), HOMEKIT_DATA
 )
@@ -165,7 +164,6 @@ async def test_form_homekit_and_dhcp(
 )
 async def test_discovered_by_homekit_and_dhcp(
     hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
     homekit_source: str,
     homekit_discovery: ZeroconfServiceInfo,
     api_version: int,

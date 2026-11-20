@@ -1,13 +1,12 @@
 """The Aprilaire coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyaprilaire.client
-from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
+from pyaprilaire.client import AprilaireResponseError, NackError, ResponseTimeoutError
+from pyaprilaire.const import MODELS, Attribute
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -32,14 +31,15 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
-        unique_id: str | None,
+        config_entry: AprilaireConfigEntry | None,
         host: str,
         port: int,
     ) -> None:
         """Initialize the coordinator."""
 
         self.hass = hass
-        self.unique_id = unique_id
+        self.config_entry = config_entry
+        self.unique_id = config_entry.unique_id if config_entry else None
         self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -48,7 +48,6 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             host,
             port,
             self.async_set_updated_data,
-            _LOGGER,
             RECONNECT_INTERVAL,
             RETRY_CONNECTION_INTERVAL,
         )
@@ -57,6 +56,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             self.data = self.client.data
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -86,25 +86,17 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         self.async_update_listeners()
 
-        new_device_info = self.create_device_info(data)
+        new_device_info = self.create_device_info(self.data)
 
         if (
-            old_device_info is not None
+            self.config_entry is not None
+            and old_device_info is not None
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
-            device_registry = dr.async_get(self.hass)
-
-            device = device_registry.async_get_device(old_device_info["identifiers"])
-
-            if device is not None:
-                new_device_info.pop("identifiers", None)
-                new_device_info.pop("connections", None)
-
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    **new_device_info,  # type: ignore[misc]
-                )
+            dr.async_get(self.hass).async_get_or_create_from_info(
+                config_entry_id=self.config_entry.entry_id, device_info=new_device_info
+            )
 
     async def start_listen(self):
         """Start listening for data."""
@@ -120,34 +112,42 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         """Wait for the client to be ready."""
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
-            await self.client.read_mac_address()
+            try:
+                data = await self.client.read_mac_address_and_wait(WAIT_TIMEOUT)
+            except ResponseTimeoutError:
+                _LOGGER.error(
+                    "Timed out after %d seconds waiting for the MAC address",
+                    WAIT_TIMEOUT,
+                )
+                await ready_callback(False)
 
-            data = await self.client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 2, WAIT_TIMEOUT
-            )
+                return False
+            except NackError as err:
+                _LOGGER.error("Thermostat rejected the MAC address request: %s", err)
+                await ready_callback(False)
+
+                return False
 
             if not data or Attribute.MAC_ADDRESS not in data:
-                _LOGGER.error("Missing MAC address")
+                _LOGGER.error("MAC address missing from the thermostat response")
                 await ready_callback(False)
 
                 return False
 
         if not self.data or Attribute.THERMOSTAT_MODES not in self.data:
-            await self.client.read_thermostat_iaq_available()
-
-            await self.client.wait_for_response(
-                FunctionalDomain.CONTROL, 7, WAIT_TIMEOUT
-            )
+            try:
+                await self.client.read_thermostat_iaq_available_and_wait(WAIT_TIMEOUT)
+            except AprilaireResponseError as err:
+                _LOGGER.debug("Failed to read thermostat/IAQ available: %s", err)
 
         if (
             not self.data
             or Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS not in self.data
         ):
-            await self.client.read_sensors()
-
-            await self.client.wait_for_response(
-                FunctionalDomain.SENSORS, 2, WAIT_TIMEOUT
-            )
+            try:
+                await self.client.read_sensors_and_wait(WAIT_TIMEOUT)
+            except AprilaireResponseError as err:
+                _LOGGER.debug("Failed to read sensors: %s", err)
 
         await self.client.read_thermostat_status()
 
@@ -195,20 +195,20 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
+            hw_version=self.get_hw_version(data),
         )
 
         model_number = data.get(Attribute.MODEL_NUMBER)
         if model_number is not None:
-            device_info["model"] = MODELS.get(model_number, f"Unknown ({model_number})")
-
-        device_info["hw_version"] = self.get_hw_version(data)
+            device_info.model = MODELS.get(model_number, f"Unknown ({model_number})")
 
         firmware_major_revision = data.get(Attribute.FIRMWARE_MAJOR_REVISION)
         firmware_minor_revision = data.get(Attribute.FIRMWARE_MINOR_REVISION)
         if firmware_major_revision is not None:
-            device_info["sw_version"] = (
+            device_info.sw_version = (
                 str(firmware_major_revision)
                 if firmware_minor_revision is None
                 else f"{firmware_major_revision}.{firmware_minor_revision:02}"

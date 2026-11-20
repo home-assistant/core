@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 import W800rf32 as w800
 
 from homeassistant.const import (
@@ -22,8 +22,9 @@ W800RF32_DEVICE = "w800rf32_{}"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.Schema({probatio.Required(CONF_DEVICE): cv.string})},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

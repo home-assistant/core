@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -22,8 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -96,7 +96,7 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
 async def test_options_reconfigure(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test that updating the options of the Jewish Calendar integration triggers a value update."""
+    """Test updating Jewish Calendar options triggers a value update."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

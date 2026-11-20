@@ -1,7 +1,5 @@
 """Tests for frontend PR download functionality."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,12 +12,11 @@ from aiogithubapi import (
 )
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.frontend import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_pr_download_success(

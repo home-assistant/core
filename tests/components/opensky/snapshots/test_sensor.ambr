@@ -2,10 +2,10 @@
 # name: test_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
-      'friendly_name': 'OpenSky',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'flights',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by the OpenSky Network (https://opensky-network.org)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenSky',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'flights',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.opensky',
@@ -18,10 +18,10 @@
 # name: test_sensor_altitude
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
-      'friendly_name': 'OpenSky',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'flights',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Information provided by the OpenSky Network (https://opensky-network.org)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenSky',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'flights',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.opensky',

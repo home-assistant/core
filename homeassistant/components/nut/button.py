@@ -1,8 +1,7 @@
 """Provides a switch for switchable NUT outlets."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -12,6 +11,7 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import outlet_numbers_from_status
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
@@ -30,23 +30,25 @@ async def async_setup_entry(
     coordinator = pynut_data.coordinator
     status = coordinator.data
 
-    # Dynamically add outlet button types
-    if (num_outlets := status.get("outlet.count")) is None:
+    outlet_numbers = outlet_numbers_from_status(status)
+    if not outlet_numbers:
         return
 
     data = pynut_data.data
     unique_id = pynut_data.unique_id
     valid_button_types: dict[str, ButtonEntityDescription] = {}
-    for outlet_num in range(1, int(num_outlets) + 1):
-        outlet_num_str = str(outlet_num)
-        outlet_name: str = status.get(f"outlet.{outlet_num_str}.name") or outlet_num_str
+    for outlet_num in sorted(outlet_numbers):
+        outlet_name: str = (
+            status.get(f"outlet.{outlet_num}.name")
+            or status.get(f"outlet.{outlet_num}.desc")
+            or str(outlet_num)
+        )
         valid_button_types |= {
-            f"outlet.{outlet_num_str}.load.cycle": ButtonEntityDescription(
-                key=f"outlet.{outlet_num_str}.load.cycle",
+            f"outlet.{outlet_num}.load.cycle": ButtonEntityDescription(
+                key=f"outlet.{outlet_num}.load.cycle",
                 translation_key="outlet_number_load_cycle",
                 translation_placeholders={"outlet_name": outlet_name},
                 device_class=ButtonDeviceClass.RESTART,
-                entity_registry_enabled_default=True,
             ),
         }
 
@@ -60,6 +62,7 @@ async def async_setup_entry(
 class NUTButton(NUTBaseEntity, ButtonEntity):
     """Representation of a button entity for NUT."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         name_list = self.entity_description.key.split(".")

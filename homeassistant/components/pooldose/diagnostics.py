@@ -1,13 +1,11 @@
 """Diagnostics support for Pooldose."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import PooldoseConfigEntry
+from .coordinator import PooldoseConfigEntry
 
 TO_REDACT = {
     "IP",

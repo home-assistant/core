@@ -1,75 +1,91 @@
 """Support to keep track of user controlled buttons which can be used in automations."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 import logging
-from typing import Self, cast
+from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.button import SERVICE_PRESS, ButtonEntity
-from homeassistant.const import (
-    ATTR_EDITABLE,
-    CONF_ICON,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-DOMAIN = "input_button"
+from .const import (
+    DATA_INPUT_BUTTON,
+    DOMAIN,
+    InputButtonEntityStateAttribute,
+    InputButtonService,
+)
+from .entity import InputButton
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
+            probatio.Any(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
                 },
                 None,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_PRESS",
+    "STORAGE_FIELDS",
+    "InputButtonEntityStateAttribute",
+    "InputButtonService",
+]
 
 
 class InputButtonStorageCollection(collection.DictStorageCollection):
     """Input button collection stored in storage."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
+    CREATE_UPDATE_SCHEMA = probatio.Schema(STORAGE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict[str, str]:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
+
+
+@dataclass(slots=True)
+class InputButtonData:
+    """Runtime data for the input_button integration."""
+
+    component: EntityComponent[InputButton]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -102,81 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all input buttons and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [
-                {CONF_ID: id_, **(conf or {})}
-                for id_, conf in conf.get(DOMAIN, {}).items()
-            ]
-        )
+    hass.data[DATA_INPUT_BUTTON] = InputButtonData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(SERVICE_PRESS, None, "_async_press_action")
-
+    async_setup_services(hass)
     return True
-
-
-# pylint: disable-next=hass-enforce-class-module
-class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
-    """Representation of a button."""
-
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
-
-    _attr_should_poll = False
-    editable: bool
-
-    def __init__(self, config: ConfigType) -> None:
-        """Initialize a button."""
-        self._config = config
-        self._attr_unique_id = config[CONF_ID]
-
-    @classmethod
-    def from_storage(cls, config: ConfigType) -> Self:
-        """Return entity instance initialized from storage."""
-        button = cls(config)
-        button.editable = True
-        return button
-
-    @classmethod
-    def from_yaml(cls, config: ConfigType) -> Self:
-        """Return entity instance initialized from yaml."""
-        button = cls(config)
-        button.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        button.editable = False
-        return button
-
-    @property
-    def name(self) -> str | None:
-        """Return name of the button."""
-        return self._config.get(CONF_NAME)
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to be used for this entity."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, bool]:
-        """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self.editable}
-
-    async def async_press(self) -> None:
-        """Press the button.
-
-        Left empty intentionally.
-        The input button itself doesn't trigger anything.
-        """
-
-    async def async_update_config(self, config: ConfigType) -> None:
-        """Handle when the config is updated."""
-        self._config = config
-        self.async_write_ha_state()

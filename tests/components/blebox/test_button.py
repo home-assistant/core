@@ -1,22 +1,22 @@
 """Blebox button entities tests."""
 
 import logging
-from unittest.mock import PropertyMock
+from unittest.mock import Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
 
-from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 
 from .conftest import async_setup_entity, mock_feature
 
-query_icon_matching = [
-    ("up", "mdi:arrow-up-circle"),
-    ("down", "mdi:arrow-down-circle"),
-    ("fav", "mdi:heart-circle"),
-    ("open", "mdi:arrow-up-circle"),
-    ("close", "mdi:arrow-down-circle"),
+query_translation_key_matching = [
+    ("up", "up", "button.my_tvliftbox_up", "My tvLiftBox Up"),
+    ("down", "down", "button.my_tvliftbox_down", "My tvLiftBox Down"),
+    ("fav", "fav", "button.my_tvliftbox_favorite", "My tvLiftBox Favorite"),
+    ("open", "open", "button.my_tvliftbox_open", "My tvLiftBox Open"),
+    ("close", "close", "button.my_tvliftbox_close", "My tvLiftBox Close"),
+    ("unknown_action", None, "button.my_tvliftbox", "My tvLiftBox"),
 ]
 
 
@@ -36,9 +36,10 @@ def tv_lift_box_fixture(caplog: pytest.LogCaptureFixture):
     product = feature.product
     type(product).name = PropertyMock(return_value="My tvLiftBox")
     type(product).model = PropertyMock(return_value="tvLiftBox")
+    type(product).product = PropertyMock(return_value="tvLiftBox")
     type(product)._query_string = PropertyMock(return_value="open_or_stop")
 
-    return (feature, "button.my_tvliftbox_tvliftbox_open_or_stop")
+    return (feature, "button.my_tvliftbox")
 
 
 async def test_tvliftbox_init(
@@ -53,19 +54,70 @@ async def test_tvliftbox_init(
 
     assert entry.unique_id == "BleBox-tvLiftBox-4a3fdaad90aa-open_or_stop"
 
-    assert state.name == "My tvLiftBox tvLiftBox-open_or_stop"
+    assert state.name == "My tvLiftBox"
 
 
-@pytest.mark.parametrize("input", query_icon_matching)
-async def test_get_icon(
-    input, tvliftbox, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test if proper icon is returned."""
+@pytest.fixture(name="gatebox_second_output")
+def gatebox_second_output_fixture(caplog: pytest.LogCaptureFixture):
+    """Return a gateBox second output button entity mock."""
     caplog.set_level(logging.ERROR)
 
-    feature_mock, entity_id = tvliftbox
-    feature_mock.query_string = input[0]
-    _ = await async_setup_entity(hass, entity_id)
+    feature = mock_feature(
+        "buttons",
+        blebox_uniapi.button.Button,
+        unique_id="BleBox-gateBox-1afe34d27e4f-second_output",
+        full_name="gateBox-second_output",
+        query_string="second_output",
+    )
+
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My gateBox")
+    type(product).type = PropertyMock(return_value="gateBox")
+    type(product).model = PropertyMock(return_value="gateBox")
+
+    return (feature, "button.my_gatebox_second_output")
+
+
+async def test_gatebox_second_output_init(
+    hass: HomeAssistant,
+    gatebox_second_output: tuple[Mock, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test gateBox second output button initialisation."""
+    caplog.set_level(logging.ERROR)
+
+    _, entity_id = gatebox_second_output
+    entry = await async_setup_entity(hass, entity_id)
     state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_ICON] == input[1]
+    assert entry.unique_id == "BleBox-gateBox-1afe34d27e4f-second_output"
+    assert entry.translation_key == "second_output"
+    assert state.name == "My gateBox Second output"
+
+
+@pytest.mark.parametrize(
+    ("query_string", "expected_translation_key", "expected_entity_id", "expected_name"),
+    query_translation_key_matching,
+    ids=[q[0] for q in query_translation_key_matching],
+)
+async def test_button_translation_key(
+    query_string: str,
+    expected_translation_key: str | None,
+    expected_entity_id: str,
+    expected_name: str,
+    tvliftbox: tuple[blebox_uniapi.button.Button, str],
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the correct translation_key is assigned based on query_string."""
+    caplog.set_level(logging.ERROR)
+
+    feature_mock, _ = tvliftbox
+    feature_mock.query_string = query_string
+    entity = await async_setup_entity(hass, expected_entity_id)
+    assert entity is not None
+    assert entity.translation_key == expected_translation_key
+
+    state = hass.states.get(expected_entity_id)
+    assert state is not None
+    assert state.name == expected_name

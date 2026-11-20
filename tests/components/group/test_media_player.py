@@ -7,36 +7,19 @@ import pytest
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_VOLUME_SET,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_UP,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
@@ -45,6 +28,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform, entity_registry as er
@@ -105,7 +89,8 @@ async def test_state_reporting(hass: HomeAssistant) -> None:
     Otherwise, the group state is idle if all group members are idle.
     Otherwise, the group state is paused if all group members are paused.
     Otherwise, the group state is playing if all group members are playing.
-    Otherwise, the group state is on if at least one group member is not off, unavailable or unknown.
+    Otherwise, the group state is on if at least one group member is
+    not off, unavailable or unknown.
     Otherwise, the group state is off.
     """
     await async_setup_component(
@@ -282,8 +267,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     assert hass.states.get("media_player.media_group").state == STATE_PLAYING
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
 
@@ -294,8 +279,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.TURN_ON,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -305,8 +290,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -316,8 +301,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -329,8 +314,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     assert hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_TRACK] == 1
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -338,8 +323,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -347,11 +332,11 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.media_group",
-            ATTR_MEDIA_CONTENT_TYPE: "some_type",
-            ATTR_MEDIA_CONTENT_ID: "some_id",
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "some_type",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "some_id",
         },
     )
     await hass.async_block_till_done()
@@ -371,10 +356,10 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_SEEK,
+        MediaPlayerService.MEDIA_SEEK,
         {
-            ATTR_ENTITY_ID: "media_player.media_group",
-            ATTR_MEDIA_SEEK_POSITION: 100,
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
         },
     )
     await hass.async_block_till_done()
@@ -392,10 +377,10 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     )
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_VOLUME_SET,
+        MediaPlayerService.VOLUME_SET,
         {
-            ATTR_ENTITY_ID: "media_player.media_group",
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -415,8 +400,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -435,8 +420,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -467,8 +452,11 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     )
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.media_group", ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -497,8 +485,11 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     )
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: "media_player.media_group", ATTR_MEDIA_SHUFFLE: True},
+        MediaPlayerService.SHUFFLE_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.SHUFFLE: True,
+        },
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -518,8 +509,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.CLEAR_PLAYLIST,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -528,8 +519,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.kitchen"},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: "media_player.kitchen"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -538,8 +529,8 @@ async def test_service_calls(hass: HomeAssistant, mock_media_seek: Mock) -> None
     assert hass.states.get("media_player.living_room").state == STATE_PLAYING
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: "media_player.media_group"},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: "media_player.media_group"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -590,8 +581,8 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
             MEDIA_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "media_player.group_1"},
+            MediaPlayerService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "media_player.group_1"},
             blocking=True,
         )
 
@@ -634,13 +625,13 @@ async def test_service_play_media_kwargs(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.media_group",
-            ATTR_MEDIA_CONTENT_TYPE: "some_type",
-            ATTR_MEDIA_CONTENT_ID: "some_id",
-            ATTR_MEDIA_ANNOUNCE: "true",
-            ATTR_MEDIA_EXTRA: {
+            TargetKey.ENTITY_ID: "media_player.media_group",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "some_type",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "some_id",
+            MediaPlayerServiceArgument.ANNOUNCE: "true",
+            MediaPlayerServiceArgument.EXTRA: {
                 "volume": 20,
             },
         },
@@ -656,3 +647,27 @@ async def test_service_play_media_kwargs(hass: HomeAssistant) -> None:
     mp_living_room.play_media.assert_called_with(
         "some_type", "some_id", announce=True, extra={"volume": 20}
     )
+
+
+async def test_state_listener_removed_with_entity(hass: HomeAssistant) -> None:
+    """Test the member state listener is removed when the group is removed."""
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["media_player.player_1", "media_player.player_2"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity = hass.data[MEDIA_DOMAIN].get_entity("media_player.media_group")
+    await entity.async_remove()
+
+    assert entity.state is None
+    hass.states.async_set("media_player.player_1", STATE_ON)
+    await hass.async_block_till_done()
+
+    assert entity.state is None

@@ -1,8 +1,6 @@
 """Support for LG soundbars."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import temescal
 
@@ -18,6 +16,53 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
+
+EQUIVALENT_FUNCTIONS = (
+    ("Optical/HDMI ARC", "E-ARC", "ARC", "LG Optical", "Optical", "Optical2"),
+    ("HDMI", "HDMI2", "HDMI3"),
+    ("USB", "USB2"),
+    ("Bluetooth", "Portable"),
+    ("Wi-Fi", "Chromecast", "Spotify"),
+)
+
+
+def _display_name(names: list[str], index: int) -> str:
+    """Return the display name for an index.
+
+    The temescal name tables stopped being maintained when the library was
+    archived in 2023, so newer models report indices past the end of them.
+    Naming those keeps them selectable instead of silently dropping them.
+    """
+    if index < len(names):
+        return names[index]
+
+    return f"Unknown ({index})"
+
+
+def _offered_names(names: list[str], offered: list[int]) -> list[str]:
+    """Return the display names of the offered indices."""
+    return sorted(_display_name(names, index) for index in offered)
+
+
+def _index_for_name(names: list[str], offered: list[int], name: str) -> int:
+    """Return the index a display name refers to.
+
+    Indices the library cannot name are only known through the offered list, so
+    they are resolved from there; anything else resolves against the library.
+    """
+    for index in offered:
+        if _display_name(names, index) == name:
+            return index
+
+    return names.index(name)
+
+
+def _offered_equivalent(function: str, offered: list[int]) -> str | None:
+    """Return an offered function from the same group as the given one."""
+    group = next((names for names in EQUIVALENT_FUNCTIONS if function in names), ())
+    return next(
+        (name for name in group if temescal.functions.index(name) in offered), None
+    )
 
 
 async def async_setup_entry(
@@ -41,7 +86,9 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
-    _attr_state = MediaPlayerState.OFF
+    # Default to ON to ensure compatibility with models
+    # that don't send a powerstatus message
+    _attr_state = MediaPlayerState.ON
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -79,12 +126,14 @@ class LGDevice(MediaPlayerEntity):
         self._treble = 0
         self._device = None
         self._support_play_control = False
-        self._device_on = False
+        # Starts out matching the ON default of _attr_state, for the same reason
+        self._device_on = True
         self._stream_type = 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)}, name=host
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""
         await self.hass.async_add_executor_job(self._connect)
@@ -166,9 +215,11 @@ class LGDevice(MediaPlayerEntity):
                 # Ask device for current play info when stream type changed.
                 self._device.get_play()
             if data["i_stream_type"] == 0:
-                # If the stream type is 0 (aka the soundbar is used as an actual soundbar)
-                # the last track info should be cleared and the state should only be on or off,
-                # as all playing/paused are not applicable in this mode
+                # If the stream type is 0 (aka the soundbar
+                # is used as an actual soundbar) the last
+                # track info should be cleared and the
+                # state should only be on or off, as all
+                # playing/paused are not applicable
                 self._attr_media_image_url = None
                 self._attr_media_artist = None
                 self._attr_media_title = None
@@ -200,6 +251,7 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_play()
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         if self._volume_max != 0:
@@ -207,67 +259,78 @@ class LGDevice(MediaPlayerEntity):
         return 0
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
 
     @property
+    @override
     def sound_mode(self):
         """Return the current sound mode."""
-        if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
+        if self._equaliser == -1:
             return None
-        return temescal.equalisers[self._equaliser]
+        return _display_name(temescal.equalisers, self._equaliser)
 
     @property
+    @override
     def sound_mode_list(self):
         """Return the available sound modes."""
-        return sorted(
-            temescal.equalisers[equaliser]
-            for equaliser in self._equalisers
-            if equaliser < len(temescal.equalisers)
-        )
+        return _offered_names(temescal.equalisers, self._equalisers)
 
     @property
+    @override
     def source(self):
         """Return the current input source."""
-        if self._function == -1 or self._function >= len(temescal.functions):
+        if self._function == -1:
             return None
-        return temescal.functions[self._function]
+        function = _display_name(temescal.functions, self._function)
+        if self._function in self._functions:
+            return function
+        return _offered_equivalent(function, self._functions) or function
 
     @property
+    @override
     def source_list(self):
         """List of available input sources."""
-        return sorted(
-            temescal.functions[function]
-            for function in self._functions
-            if function < len(temescal.functions)
-        )
+        return _offered_names(temescal.functions, self._functions)
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = volume * self._volume_max
         self._device.set_volume(int(volume))
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._device.set_mute(mute)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.set_func(temescal.functions.index(source))
+        self._device.set_func(
+            _index_for_name(temescal.functions, self._functions, source)
+        )
 
+    @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
-        self._device.set_eq(temescal.equalisers.index(sound_mode))
+        self._device.set_eq(
+            _index_for_name(temescal.equalisers, self._equalisers, sound_mode)
+        )
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._set_power(True)
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         self._set_power(False)
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         if self._support_play_control:
@@ -275,6 +338,7 @@ class LGDevice(MediaPlayerEntity):
                 {"cmd": "set", "data": {"i_play_ctrl": 0}, "msg": "PLAY_INFO"}
             )
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         if self._support_play_control:

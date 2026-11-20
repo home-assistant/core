@@ -1,7 +1,5 @@
 """The Immich integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -18,11 +16,11 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up immich integration."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> None:
     """Set up Immich from a config entry."""
 
     coordinator = ImmichDataUpdateCoordinator(hass, entry)
@@ -31,9 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

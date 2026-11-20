@@ -12,22 +12,22 @@ from aiotedee.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
     SERVICE_OPEN,
-    SERVICE_UNLOCK,
+    LockService,
     LockState,
 )
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -35,9 +35,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 async def test_locks(
@@ -63,9 +60,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_LOCK,
+        LockService.LOCK,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -78,9 +75,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_UNLOCK,
+        LockService.UNLOCK,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -93,9 +90,9 @@ async def test_lock_service_calls(
 
     await hass.services.async_call(
         LOCK_DOMAIN,
-        SERVICE_OPEN,
+        LockService.OPEN,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b",
+            TargetKey.ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
@@ -134,13 +131,16 @@ async def test_lock_without_pullspring(
 
     with pytest.raises(
         ServiceNotSupported,
-        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
+        match=(
+            "Entity lock.lock_2c3d does not support action"
+            f" {LOCK_DOMAIN}.{SERVICE_OPEN}"
+        ),
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_OPEN,
+            LockService.OPEN,
             {
-                ATTR_ENTITY_ID: "lock.lock_2c3d",
+                TargetKey.ENTITY_ID: "lock.lock_2c3d",
             },
             blocking=True,
         )
@@ -158,9 +158,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_LOCK,
+            LockService.LOCK,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -170,9 +170,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_UNLOCK,
+            LockService.UNLOCK,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -182,9 +182,9 @@ async def test_lock_errors(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             LOCK_DOMAIN,
-            SERVICE_OPEN,
+            LockService.OPEN,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b",
+                TargetKey.ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )

@@ -5,19 +5,43 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockUser, flush_store
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import AITaskPreferences
-from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DATA_PREFERENCES
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components.ai_task import (
+    AITaskPreferences,
+    async_is_automatic_evaluation_enabled,
+)
+from homeassistant.components.ai_task.const import (
+    DATA_MEDIA_SOURCE,
+    DATA_PREFERENCES,
+    DOMAIN,
+)
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import selector
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
-from tests.common import flush_store
+
+async def test_automatic_evaluation_without_setup(hass: HomeAssistant) -> None:
+    """Automatic evaluation is disabled when AI Task has not been set up."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_automatic_evaluation_preference(hass: HomeAssistant) -> None:
+    """The public helper reflects the default and subsequent preference changes."""
+    assert async_is_automatic_evaluation_enabled(hass) is False
+
+    preferences = hass.data[DATA_PREFERENCES]
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    assert async_is_automatic_evaluation_enabled(hass) is True
+
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    assert async_is_automatic_evaluation_enabled(hass) is False
 
 
 async def test_preferences_storage_load(
@@ -28,10 +52,19 @@ async def test_preferences_storage_load(
     await preferences.async_load()
 
     # Initial state should be None for entity IDs
-    for key in AITaskPreferences.KEYS:
-        assert getattr(preferences, key) is None, f"Initial {key} should be None"
+    assert preferences.as_dict() == {
+        "gen_data_entity_id": None,
+        "gen_image_entity_id": None,
+        "evaluate_entity_id": None,
+        "allow_automatic_evaluation": False,
+    }
 
-    new_values = {key: f"ai_task.test_{key}" for key in AITaskPreferences.KEYS}
+    new_values = {
+        "gen_data_entity_id": "ai_task.data",
+        "gen_image_entity_id": "ai_task.image",
+        "evaluate_entity_id": "ai_task.decision",
+        "allow_automatic_evaluation": True,
+    }
 
     preferences.async_set_preferences(**new_values)
 
@@ -83,6 +116,7 @@ async def test_generate_data_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate data service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -95,7 +129,7 @@ async def test_generate_data_service(
         ),
     ):
         result = await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_data",
             {
                 "task_name": "Test Name",
@@ -104,9 +138,11 @@ async def test_generate_data_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     assert result["data"] == "Mock result"
+    assert hass.states.get(TEST_ENTITY_ID).context is context
 
     assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
@@ -130,7 +166,7 @@ async def test_generate_data_service_structure_fields(
 ) -> None:
     """Test the entity can generate structured data with a top level object schema."""
     result = await hass.services.async_call(
-        "ai_task",
+        DOMAIN,
         "generate_data",
         {
             "task_name": "Profile Generation",
@@ -138,7 +174,9 @@ async def test_generate_data_service_structure_fields(
             "entity_id": TEST_ENTITY_ID,
             "structure": {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "required": True,
                     "selector": {"text": {}},
                 },
@@ -156,7 +194,8 @@ async def test_generate_data_service_structure_fields(
         blocking=True,
         return_response=True,
     )
-    # Arbitrary data returned by the mock entity (not determined by above schema in test)
+    # Arbitrary data returned by the mock entity
+    # (not determined by above schema in test)
     assert result["data"] == {
         "name": "Tracy Chen",
         "age": 30,
@@ -166,19 +205,19 @@ async def test_generate_data_service_structure_fields(
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
     assert task.instructions == "Please generate a profile for a new user"
     assert task.structure
-    assert isinstance(task.structure, vol.Schema)
+    assert isinstance(task.structure, probatio.Schema)
     schema = list(task.structure.schema.items())
     assert len(schema) == 2
 
     name_key, name_value = schema[0]
     assert name_key == "name"
-    assert isinstance(name_key, vol.Required)
+    assert isinstance(name_key, probatio.Required)
     assert name_key.description == "First and last name of the user such as Alice Smith"
     assert isinstance(name_value, selector.TextSelector)
 
     age_key, age_value = schema[1]
     assert age_key == "age"
-    assert isinstance(age_key, vol.Optional)
+    assert isinstance(age_key, probatio.Optional)
     assert age_key.description == "Age of the user"
     assert isinstance(age_value, selector.NumberSelector)
     assert age_value.config["min"] == 0
@@ -191,17 +230,21 @@ async def test_generate_data_service_structure_fields(
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {"invalid-selector": {}},
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"Unknown selector type invalid-selector.*",
         ),
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {
                         "text": {
                             "extra-config": False,
@@ -209,41 +252,47 @@ async def test_generate_data_service_structure_fields(
                     },
                 },
             },
-            vol.Invalid,
-            r"extra keys not allowed.*",
+            probatio.Invalid,
+            r"not a valid option.*",
         ),
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                 },
             },
-            vol.Invalid,
+            probatio.Invalid,
             r"required key not provided.*selector.*",
         ),
-        (12345, vol.Invalid, r"xpected a dictionary.*"),
-        ("name", vol.Invalid, r"xpected a dictionary.*"),
-        (["name"], vol.Invalid, r"xpected a dictionary.*"),
+        (12345, probatio.Invalid, r"xpected a mapping.*"),
+        ("name", probatio.Invalid, r"xpected a mapping.*"),
+        (["name"], probatio.Invalid, r"xpected a mapping.*"),
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": {"text": {}},
                     "extra-fields": "Some extra fields",
                 },
             },
-            vol.Invalid,
-            r"extra keys not allowed .*",
+            probatio.Invalid,
+            r"not a valid option .*",
         ),
         (
             {
                 "name": {
-                    "description": "First and last name of the user such as Alice Smith",
+                    "description": (
+                        "First and last name of the user such as Alice Smith"
+                    ),
                     "selector": "invalid-schema",
                 },
             },
-            vol.Invalid,
-            r"xpected a dictionary for dictionary.",
+            probatio.Invalid,
+            r"xpected a dictionary.*",
         ),
     ],
     ids=(
@@ -267,7 +316,7 @@ async def test_generate_data_service_invalid_structure(
     """Test the entity can generate structured data."""
     with pytest.raises(expected_exception, match=expected_error):
         await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_data",
             {
                 "task_name": "Profile Generation",
@@ -300,6 +349,7 @@ async def test_generate_image_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate image service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -309,7 +359,7 @@ async def test_generate_image_service(
         return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
     ) as mock_upload_media:
         result = await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_image",
             {
                 "task_name": "Test Image",
@@ -318,9 +368,11 @@ async def test_generate_image_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     mock_upload_media.assert_called_once()
+    assert hass.states.get(TEST_ENTITY_ID).context is context
     assert "image_data" not in result
     assert (
         result["media_source_id"]
@@ -344,11 +396,11 @@ async def test_generate_image_service_no_entity(
 ) -> None:
     """Test the generate image service with no entity specified."""
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="No entity_id provided and no preferred entity set",
     ):
         await hass.services.async_call(
-            "ai_task",
+            DOMAIN,
             "generate_image",
             {
                 "task_name": "Test Image",
@@ -357,3 +409,133 @@ async def test_generate_image_service_no_entity(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_preferences_existing_storage(hass: HomeAssistant) -> None:
+    """Existing installations do not opt in to automatic evaluation on upgrade."""
+    preferences = AITaskPreferences(hass)
+    await preferences._store.async_save(
+        {"gen_data_entity_id": "ai_task.data", "evaluate_entity_id": "ai_task.decision"}
+    )
+    await preferences.async_load()
+    assert preferences.gen_data_entity_id == "ai_task.data"
+    assert preferences.evaluate_entity_id == "ai_task.decision"
+    assert preferences.allow_automatic_evaluation is False
+
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    await flush_store(preferences._store)
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    await flush_store(preferences._store)
+
+    loaded = AITaskPreferences(hass)
+    await loaded.async_load()
+    assert loaded.allow_automatic_evaluation is False
+    assert loaded.evaluate_entity_id == "ai_task.decision"
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_explicit_entity_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+) -> None:
+    """Reject an explicit entity before resolving attachments or calling a provider."""
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "entity_id": TEST_ENTITY_ID,
+            },
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    assert err.value.entity_id == TEST_ENTITY_ID
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+@pytest.mark.parametrize("domain", ["camera", "image"])
+@pytest.mark.parametrize("entity_selection", [{}, {"entity_id": TEST_ENTITY_ID}])
+async def test_generate_service_attachment_permission(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_ai_task_entity: MockAITaskEntity,
+    service: str,
+    domain: str,
+    entity_selection: dict[str, str],
+) -> None:
+    """Camera and image attachments require read permission for either task choice."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {TEST_ENTITY_ID: {"control": True}}}}
+    )
+    attachment_entity_id = f"{domain}.test"
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                "task_name": "Test",
+                "instructions": "Test prompt",
+                "attachments": [
+                    {
+                        "media_content_id": f"media-source://{domain}/{attachment_entity_id}",
+                        "media_content_type": "image/jpeg",
+                    }
+                ],
+            }
+            | entity_selection,
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+    assert err.value.entity_id == attachment_entity_id
+    resolve.assert_not_called()
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+    assert not mock_ai_task_entity.mock_generate_image_tasks
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+async def test_generate_service_default_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service: str,
+) -> None:
+    """Read-only users can use the configured default task entity."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        gen_data_entity_id=TEST_ENTITY_ID, gen_image_entity_id=TEST_ENTITY_ID
+    )
+    context = Context(user_id=hass_read_only_user.id)
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/test.png",
+    ):
+        result = await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"task_name": "Test", "instructions": "Test prompt"},
+            blocking=True,
+            return_response=True,
+            context=context,
+        )
+    assert result
+    assert hass.states.get(TEST_ENTITY_ID).context is context

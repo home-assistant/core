@@ -1,14 +1,13 @@
 """Time platform for Nintendo parental controls."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
+from pynintendoparental.device import Device
 from pynintendoparental.exceptions import BedtimeOutOfRangeError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -25,7 +24,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +92,12 @@ class NintendoParentalControlsTimeEntity(NintendoDevice, TimeEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the time."""
         return self.entity_description.value_fn(self._device)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the value."""
         try:

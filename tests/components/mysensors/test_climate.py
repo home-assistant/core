@@ -1,7 +1,5 @@
 """Provide tests for mysensors climate platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from unittest.mock import MagicMock, call
 
@@ -10,17 +8,15 @@ from mysensors.sensor import Sensor
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, TargetKey
 from homeassistant.core import HomeAssistant
 
 
@@ -44,8 +40,11 @@ async def test_hvac_node_auto(
     # Test set hvac mode auto
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.AUTO},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
 
@@ -69,11 +68,11 @@ async def test_hvac_node_auto(
     # Test set low/high target temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_HIGH: 22.0,
-            ATTR_TARGET_TEMP_LOW: 20.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 22.0,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 20.0,
         },
         blocking=True,
     )
@@ -99,10 +98,10 @@ async def test_hvac_node_auto(
     # Test set fan mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: "Max",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: "Max",
         },
         blocking=True,
     )
@@ -124,8 +123,11 @@ async def test_hvac_node_auto(
     # Test set hvac mode off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -161,8 +163,11 @@ async def test_hvac_node_heat(
     # Test set hvac mode heat
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -185,10 +190,10 @@ async def test_hvac_node_heat(
     # Test set low/high target temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: 20.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: 20.0,
         },
         blocking=True,
     )
@@ -211,10 +216,10 @@ async def test_hvac_node_heat(
     # Test set fan mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: "Min",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: "Min",
         },
         blocking=True,
     )
@@ -236,8 +241,11 @@ async def test_hvac_node_heat(
     # Test set hvac mode off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -273,8 +281,11 @@ async def test_hvac_node_cool(
     # Test set hvac mode cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -297,10 +308,10 @@ async def test_hvac_node_cool(
     # Test set low/high target temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TEMPERATURE: 20.0,
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.TEMPERATURE: 20.0,
         },
         blocking=True,
     )
@@ -323,10 +334,10 @@ async def test_hvac_node_cool(
     # Test set fan mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_FAN_MODE: "Auto",
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.FAN_MODE: "Auto",
         },
         blocking=True,
     )
@@ -348,8 +359,11 @@ async def test_hvac_node_cool(
     # Test set hvac mode off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 
@@ -384,8 +398,11 @@ async def test_hvac_node_only_hvac(
     # Test set hvac mode heat
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+        },
         blocking=True,
     )
 
@@ -406,8 +423,11 @@ async def test_hvac_node_only_hvac(
     # Test set hvac mode cool
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
 
@@ -428,8 +448,11 @@ async def test_hvac_node_only_hvac(
     # Test set hvac mode off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: entity_id,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
 

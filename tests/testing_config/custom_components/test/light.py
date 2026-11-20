@@ -5,13 +5,13 @@ Call init before using it in your tests to ensure clean test data.
 
 from typing import Any, Literal
 
+from pytest_homeassistant.common import MockToggleEntity
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from tests.common import MockToggleEntity
 
 ENTITIES = []
 
@@ -98,6 +98,6 @@ class MockLight(MockToggleEntity, LightEntity):
             ]:
                 setattr(self, key, value)
             if key == "white":
-                setattr(self, "brightness", value)
+                self.brightness = value
             if key in TURN_ON_ARG_TO_COLOR_MODE:
                 self._attr_color_mode = TURN_ON_ARG_TO_COLOR_MODE[key]

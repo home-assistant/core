@@ -1,7 +1,5 @@
 """Hass.io Add-on ingress service."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from functools import lru_cache
@@ -18,11 +16,11 @@ from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import Undefined
 from homeassistant.util.async_ import create_eager_task
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
+from .handler import SupervisorConnection, get_supervisor_connection
 from .http import should_compress
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,12 +50,9 @@ DISABLED_TIMEOUT = ClientTimeout(total=None)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
-    """Auth setup."""
-    websession = async_get_clientsession(hass)
-
-    hassio_ingress = HassIOIngress(host, websession)
-    hass.http.register_view(hassio_ingress)
+def async_setup_ingress_view(hass: HomeAssistant) -> None:
+    """Set up the Hass.io ingress HTTP view."""
+    hass.http.register_view(HassIOIngress(get_supervisor_connection(hass)))
 
 
 class HassIOIngress(HomeAssistantView):
@@ -67,11 +62,10 @@ class HassIOIngress(HomeAssistantView):
     url = "/api/hassio_ingress/{token}/{path:.*}"
     requires_auth = False
 
-    def __init__(self, host: str, websession: aiohttp.ClientSession) -> None:
+    def __init__(self, connection: SupervisorConnection) -> None:
         """Initialize a Hass.io ingress view."""
-        self._host = host
-        self._websession = websession
-        self._url = URL(f"http://{host}")
+        self._websession = connection.session
+        self._url = connection.base_url
 
     @lru_cache
     def _create_url(self, token: str, path: str) -> URL:
@@ -198,7 +192,8 @@ class HassIOIngress(HomeAssistantView):
             # otherwise aiohttp < 3.9.0 may generate an invalid "0\r\n\r\n" chunk
             # This also avoids setting content_type for empty responses.
             if must_be_empty_body(request.method, result.status):
-                # If upstream contains content-type, preserve it (e.g. for HEAD requests)
+                # If upstream contains content-type, preserve it
+                # (e.g. for HEAD requests)
                 # Note: This still is omitting content-length. We can't simply forward
                 # the upstream length since the proxy might change the body length
                 # (e.g. due to compression).
@@ -211,9 +206,9 @@ class HassIOIngress(HomeAssistantView):
 
             # Simple request
             content_length_int = 0
-            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            content_length = result.headers.get(hdrs.CONTENT_LENGTH, Undefined)
             if (
-                content_length is not UNDEFINED
+                content_length is not Undefined
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):

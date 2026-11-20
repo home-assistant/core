@@ -3,28 +3,24 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.text.condition import CONF_VALUE
-from homeassistant.const import (
-    CONF_CONDITION,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import (
-    async_from_config as async_condition_from_config,
-)
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
+)
+
+from homeassistant.components.text.condition import CONDITIONS, CONF_VALUE
+from homeassistant.const import CONF_CONDITION, CONF_OPTIONS, CONF_TARGET, TargetKey
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import (
+    async_from_config as async_condition_from_config,
 )
 
 
@@ -40,12 +36,37 @@ async def target_input_texts(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_text")
 
 
-@pytest.mark.parametrize("condition", ["text.is_equal_to"])
-async def test_text_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_equal_to": TargetSupport.STANDARD,
+}
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("text.is_equal_to", {"value": "hello"}, True, True),
+    ],
+)
+async def test_text_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the text conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that text conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 CONDITION_STATES_ANY = [
@@ -67,7 +88,6 @@ CONDITION_STATES_ALL = [
 ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("text"),
@@ -98,7 +118,6 @@ async def test_text_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_text"),
@@ -129,7 +148,6 @@ async def test_input_text_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("text"),
@@ -160,7 +178,6 @@ async def test_text_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_text"),
@@ -194,7 +211,6 @@ async def test_input_text_condition_behavior_all(
 # --- Cross-domain test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_text_condition_fires_for_both_domains(
     hass: HomeAssistant,
 ) -> None:
@@ -211,15 +227,15 @@ async def test_text_condition_fires_for_both_domains(
         {
             CONF_CONDITION: "text.is_equal_to",
             CONF_TARGET: {
-                CONF_ENTITY_ID: [entity_id_text, entity_id_input_text],
+                TargetKey.ENTITY_ID: [entity_id_text, entity_id_input_text],
             },
             CONF_OPTIONS: {"behavior": "all", CONF_VALUE: "hello"},
         },
     )
 
-    assert checker(hass) is True
+    assert checker.async_check() is True
 
     # Change input_text to non-matching - all behavior should fail
     hass.states.async_set(entity_id_input_text, "world")
     await hass.async_block_till_done()
-    assert checker(hass) is False
+    assert checker.async_check() is False

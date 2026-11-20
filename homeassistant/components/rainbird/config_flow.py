@@ -1,16 +1,14 @@
 """Config flow for Rain Bird."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
@@ -18,7 +16,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
-from . import RainbirdConfigEntry
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -27,21 +24,22 @@ from .const import (
     TIMEOUT_SECONDS,
 )
 from .coordinator import async_create_clientsession
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): selector.TextSelector(),
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(CONF_HOST): selector.TextSelector(),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
 )
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): selector.TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -64,6 +62,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RainbirdConfigEntry,
     ) -> RainBirdOptionsFlowHandler:
@@ -99,6 +98,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -205,9 +205,9 @@ class RainBirdOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         ATTR_DURATION,
                         default=self.config_entry.options[ATTR_DURATION],
                     ): cv.positive_int,

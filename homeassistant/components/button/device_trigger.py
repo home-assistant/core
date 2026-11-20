@@ -1,11 +1,10 @@
 """Provides device triggers for Button."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers.state import (
+    StateTriggerArgument,
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
 )
@@ -27,8 +26,8 @@ TRIGGER_TYPES = {"pressed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -58,9 +57,9 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    state_config = {
-        CONF_PLATFORM: "state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     state_config = await async_validate_state_trigger_config(hass, state_config)

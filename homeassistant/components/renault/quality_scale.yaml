@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -41,13 +47,13 @@ rules:
     status: exempt
     comment: Discovery not possible
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
-  dynamic-devices: todo
+  docs-use-cases: done
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytile.errors import InvalidAuthError, TileError
 
 from homeassistant.components.tile.const import DOMAIN
@@ -13,12 +14,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
 
-from tests.common import MockConfigEntry
 
-
-async def test_full_flow(
-    hass: HomeAssistant, mock_pytile: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_pytile: AsyncMock) -> None:
     """Test a full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -49,10 +47,10 @@ async def test_full_flow(
         (TileError, {"base": "unknown"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_entry(
     hass: HomeAssistant,
     mock_pytile: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     errors: dict[str, str],
 ) -> None:
@@ -109,11 +107,9 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_pytile: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pytile: AsyncMock
 ) -> None:
     """Test that the reauth step works."""
     mock_config_entry.add_to_hass(hass)
@@ -136,10 +132,10 @@ async def test_step_reauth(
         (TileError, {"base": "unknown"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reauth_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_pytile: AsyncMock,
     exception: Exception,
     errors: dict[str, str],

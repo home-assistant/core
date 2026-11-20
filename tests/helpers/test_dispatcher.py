@@ -195,8 +195,8 @@ async def test_callback_exception_gets_logged(
     async_dispatcher_send(hass, "test", "bad")
 
     assert (
-        f"Exception in functools.partial({bad_handler}) when dispatching 'test': ('bad',)"
-        in caplog.text
+        f"Exception in functools.partial({bad_handler})"
+        " when dispatching 'test': ('bad',)" in caplog.text
     )
 
 

@@ -1,10 +1,12 @@
 """StarLine base entity."""
 
-from __future__ import annotations
+from typing import override
+
+from starline import StarlineDevice
 
 from homeassistant.helpers.entity import Entity
 
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount
 
 
 class StarlineEntity(Entity):
@@ -20,10 +22,12 @@ class StarlineEntity(Entity):
         self._account = account
         self._device = device
         self._key = key
-        self._attr_unique_id = f"starline-{key}-{device.device_id}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"starline-{key}-{device.device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = account.device_info(device)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._account.api.available
@@ -32,6 +36,7 @@ class StarlineEntity(Entity):
         """Read new state data."""
         self.schedule_update_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()

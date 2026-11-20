@@ -1,6 +1,6 @@
 """Test floor template functions."""
 
-from __future__ import annotations
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -10,7 +10,6 @@ from homeassistant.helpers import (
     floor_registry as fr,
 )
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render_to_info
 
 
@@ -87,6 +86,7 @@ async def test_floor_id(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_hex.id
@@ -158,6 +158,7 @@ async def test_floor_name(
         "5678",
         config_entry=config_entry,
         device_id=device_entry.id,
+        original_name="Light",
     )
     device_entry = device_registry.async_update_device(
         device_entry.id, area_id=area_entry_hex.id

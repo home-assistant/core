@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_entities[switch.tx_nr7100_mute_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute center',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute center',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_center',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute front left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_left',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute front right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_right',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 1 left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 1 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_left',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -239,7 +239,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 1 right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 1 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_right',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -289,7 +289,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 2 left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 2 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_left',
@@ -307,9 +307,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -339,7 +339,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 2 right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 2 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_right',
@@ -357,9 +357,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -389,7 +389,7 @@
 # name: test_entities[switch.tx_nr7100_mute_subwoofer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute subwoofer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute subwoofer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_subwoofer',
@@ -407,9 +407,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -439,7 +439,7 @@
 # name: test_entities[switch.tx_nr7100_mute_subwoofer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute subwoofer 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute subwoofer 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_subwoofer_2',
@@ -457,9 +457,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -489,7 +489,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround back left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround back left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_left',
@@ -507,9 +507,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -539,7 +539,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround back right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround back right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_right',
@@ -557,9 +557,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -589,7 +589,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_left',
@@ -607,9 +607,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': None,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
@@ -639,7 +639,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_right',

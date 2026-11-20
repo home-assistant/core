@@ -1,11 +1,10 @@
 """Tests for the Concord232 alarm control panel platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests
 
 from homeassistant.components.alarm_control_panel import (
@@ -26,8 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 VALID_CONFIG = {
     ALARM_DOMAIN: {
@@ -239,7 +236,7 @@ async def test_update_state_armed(
     # Trigger update
     freezer.tick(10)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("alarm_control_panel.test_alarm")
     assert state.state == expected_state
@@ -261,7 +258,7 @@ async def test_update_connection_error(
 
     freezer.tick(10)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Unable to connect to" in caplog.text
 

@@ -3,6 +3,14 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -25,15 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -149,19 +148,17 @@ def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveE
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.VALVE]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(config_entry, [Platform.VALVE])
-        return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
@@ -254,7 +251,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent2)
     await hass.async_block_till_done()
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and valve position
     assert is_open(hass, ent1)
     assert is_opening(hass, ent2, 0, True)
     ent2.finish_movement()
@@ -265,7 +263,8 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent2)
     await hass.async_block_till_done()
 
-    # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
+    # entities should be in correct state depending on
+    # the SUPPORT_STOP feature and valve position
     assert is_closed(hass, ent1)
     assert not is_opening(hass, ent2)
     assert not is_closed(hass, ent2, 100)

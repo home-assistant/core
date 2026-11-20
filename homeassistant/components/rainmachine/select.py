@@ -1,13 +1,11 @@
 """Support for RainMachine selects."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -110,7 +108,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: FreezeProtectionSelectDescription,
         unit_system: UnitSystem,
@@ -131,6 +129,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
 
         self._attr_options = list(self._label_to_api_value_map)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         try:
@@ -141,6 +140,7 @@ class FreezeProtectionTemperatureSelect(RainMachineEntity, SelectEntity):
             raise HomeAssistantError(f"Error while setting {self.name}: {err}") from err
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         raw_value = self.coordinator.data[self.entity_description.data_key]

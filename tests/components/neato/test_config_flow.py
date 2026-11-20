@@ -4,6 +4,9 @@ from unittest.mock import patch
 
 from pybotvac.neato import Neato
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.application_credentials import (
@@ -15,10 +18,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -41,7 +40,7 @@ async def test_full_flow(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -75,7 +74,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.neato.async_setup_entry", return_value=True
+        "homeassistant.components.neato.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -93,7 +92,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
     # Should fail
     result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -150,7 +149,7 @@ async def test_reauth(
 
     # Update entry
     with patch(
-        "homeassistant.components.neato.async_setup_entry", return_value=True
+        "homeassistant.components.neato.async_setup_entry", return_value=None
     ) as mock_setup:
         result3 = await hass.config_entries.flow.async_configure(result2["flow_id"])
         await hass.async_block_till_done()

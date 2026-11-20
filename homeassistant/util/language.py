@@ -1,7 +1,5 @@
 """Helper methods for language selection in Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import math
@@ -51,6 +49,11 @@ def preferred_regions(
 
 def is_region(language: str, region: str | None) -> bool:
     """Return true if region is not known to be a script/code instead."""
+    language = language.casefold()
+    if region is not None:
+        # Script subtags are case-insensitive
+        region = region.title()
+
     if language == "es":
         return region != "419"
 
@@ -91,6 +94,10 @@ class Dialect:
         if self.region is not None:
             # Regions are upper-cased
             self.region = self.region.upper()
+
+        if self.code is not None:
+            # Scripts are title-cased
+            self.code = self.code.title()
 
     def score(
         self, dialect: Dialect, country: str | None = None
@@ -150,7 +157,11 @@ class Dialect:
 
             # More preferred regions are at the front.
             # Add 2 to boost above a weak match where no regions are set.
-            return (2 + (len(pref_regions) - region_idx), 0)
+            # Prefer the same script/code (sr-RS over sr-Latn-RS for sr).
+            return (
+                2 + (len(pref_regions) - region_idx),
+                int(is_exact_language_and_code),
+            )
         except ValueError:
             # Region was not in preferred list
             pass
@@ -168,12 +179,15 @@ class Dialect:
 
         if len(parts) > 1:
             region_or_code = parts[1]
-            if is_region(language, region_or_code):
+            subtags = SEPARATOR_RE.split(region_or_code, maxsplit=1)
+            if is_region(language, subtags[0]):
                 # US, GB, etc.
                 region = region_or_code
             else:
-                # Hant, 419, etc.
-                code = region_or_code
+                # Hant, 419, etc., optionally followed by a region (zh-Hant-TW)
+                code = subtags[0]
+                if len(subtags) > 1:
+                    region = subtags[1]
 
         return Dialect(
             language=language,
@@ -185,7 +199,10 @@ class Dialect:
 def matches(
     target: str, supported: Iterable[str], country: str | None = None
 ) -> list[str]:
-    """Return a sorted list of matching language tags based on a target tag and country hint."""
+    """Return a sorted list of matching language tags.
+
+    Based on a target tag and country hint.
+    """
     if target == MATCH_ALL:
         return list(supported)
 

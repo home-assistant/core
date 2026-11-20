@@ -1,9 +1,7 @@
 """Support for Adax energy sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,9 +15,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AdaxConfigEntry
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
-from .coordinator import AdaxCloudCoordinator
+from .coordinator import AdaxCloudCoordinator, AdaxConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -97,6 +94,7 @@ class AdaxSensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -106,6 +104,7 @@ class AdaxSensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value of the sensor."""
         return self.coordinator.data[self._device_id].get(

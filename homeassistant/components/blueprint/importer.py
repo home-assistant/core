@@ -1,14 +1,12 @@
 """Import logic for blueprint."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from dataclasses import dataclass
 import html
 import re
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.core import HomeAssistant
@@ -35,13 +33,13 @@ WEBSITE_PATTERN = re.compile(
     r"^https://(?P<subdomain>[a-z0-9-]+)\.home-assistant\.io/(?P<path>.+).yaml$"
 )
 
-COMMUNITY_TOPIC_SCHEMA = vol.Schema(
+COMMUNITY_TOPIC_SCHEMA = probatio.Schema(
     {
         "slug": str,
         "title": str,
         "post_stream": {"posts": [{"updated_at": cv.datetime, "cooked": str}]},
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -146,7 +144,7 @@ async def fetch_blueprint_from_community_post(
 ) -> ImportedBlueprint:
     """Get blueprints from a community post url.
 
-    Method can raise aiohttp client exceptions, vol.Invalid.
+    Method can raise aiohttp client exceptions, probatio.Invalid.
 
     Caller needs to implement own timeout.
     """

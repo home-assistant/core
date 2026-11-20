@@ -8,13 +8,14 @@ from eq3btsmart import Thermostat
 from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
+from .const import DOMAIN, SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
 from .models import Eq3Config, Eq3ConfigEntryData
 
 PLATFORMS = [
@@ -31,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 type Eq3ConfigEntry = ConfigEntry[Eq3ConfigEntryData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry setup."""
 
     mac_address: str | None = entry.unique_id
@@ -49,7 +50,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
 
     if device is None:
         raise ConfigEntryNotReady(
-            f"[{eq3_config.mac_address}] Device could not be found"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "mac_address": eq3_config.mac_address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    mac_address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     thermostat = Thermostat(device)
@@ -63,16 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
         hass, _async_run_thermostat(hass, entry), entry.entry_id
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:
     """Handle config entry unload."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.thermostat.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.thermostat.async_disconnect()
 
 
 async def update_listener(hass: HomeAssistant, entry: Eq3ConfigEntry) -> None:

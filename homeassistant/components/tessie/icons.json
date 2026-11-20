@@ -78,6 +78,12 @@
       "boombox": {
         "default": "mdi:volume-high"
       },
+      "disable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug-off"
+      },
+      "enable_keep_accessory_power_mode": {
+        "default": "mdi:power-plug"
+      },
       "enable_keyless_driving": {
         "default": "mdi:car-key"
       },
@@ -95,6 +101,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "default": "mdi:sun-thermometer"
+      },
       "primary": {
         "state_attributes": {
           "preset_mode": {
@@ -290,6 +299,11 @@
       },
       "vehicle_state_valet_mode": {
         "default": "mdi:bow-tie"
+      }
+    },
+    "text": {
+      "navigation_destination": {
+        "default": "mdi:map-marker"
       }
     }
   }

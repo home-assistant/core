@@ -6,11 +6,10 @@ import threading
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import extract_stack_to_frame
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import loop as haloop
-
-from tests.common import extract_stack_to_frame
 
 
 def banned_function():
@@ -43,7 +42,7 @@ def patch_get_current_frame(stack: list[Mock]) -> Generator[None]:
 
 
 async def test_raise_for_blocking_call_async() -> None:
-    """Test raise_for_blocking_call detects when called from event loop without integration context."""
+    """Test raise_for_blocking_call detects without integration context."""
     with pytest.raises(RuntimeError):
         haloop.raise_for_blocking_call(banned_function)
 
@@ -51,7 +50,7 @@ async def test_raise_for_blocking_call_async() -> None:
 async def test_raise_for_blocking_call_async_non_strict_core(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test non_strict_core raise_for_blocking_call detects from event loop without integration context."""
+    """Test non_strict_core raise_for_blocking_call without integration."""
     stack = [
         Mock(
             filename="/home/paulus/homeassistant/core.py",
@@ -79,7 +78,7 @@ async def test_raise_for_blocking_call_async_non_strict_core(
     )
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
 
     warnings = [
@@ -98,7 +97,7 @@ async def test_raise_for_blocking_call_async_non_strict_core(
     assert len(warnings) == 0
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
 
     # no expensive traceback on debug
@@ -108,7 +107,7 @@ async def test_raise_for_blocking_call_async_non_strict_core(
 async def test_raise_for_blocking_call_async_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test raise_for_blocking_call detects and raises when called from event loop from integration context."""
+    """Test raise_for_blocking_call detects and raises from integration context."""
     stack = [
         Mock(
             filename="/home/paulus/homeassistant/core.py",
@@ -141,14 +140,14 @@ async def test_raise_for_blocking_call_async_integration(
     )
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
 
 
 async def test_raise_for_blocking_call_async_integration_non_strict(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test raise_for_blocking_call detects when called from event loop from integration context."""
+    """Test raise_for_blocking_call detects from integration context."""
     stack = [
         Mock(
             filename="/home/paulus/homeassistant/core.py",
@@ -188,7 +187,7 @@ async def test_raise_for_blocking_call_async_integration_non_strict(
     )
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
     warnings = [
         record for record in caplog.get_records("call") if record.levelname == "WARNING"
@@ -206,7 +205,7 @@ async def test_raise_for_blocking_call_async_integration_non_strict(
     assert len(warnings) == 0
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
     # no expensive traceback on debug
     assert "Traceback (most recent call last)" not in caplog.text
@@ -215,7 +214,7 @@ async def test_raise_for_blocking_call_async_integration_non_strict(
 async def test_raise_for_blocking_call_async_custom(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test raise_for_blocking_call detects when called from event loop with custom component context."""
+    """Test raise_for_blocking_call detects from custom component context."""
     stack = [
         Mock(
             filename="/home/paulus/homeassistant/core.py",
@@ -250,7 +249,7 @@ async def test_raise_for_blocking_call_async_custom(
     )
     assert (
         "For developers, please see "
-        "https://developers.home-assistant.io/docs/asyncio_blocking_operations/#banned_function"
+        "https://contributors.home-assistant.io/core/internals/blocking-operations/#banned_function"
     ) in caplog.text
 
 

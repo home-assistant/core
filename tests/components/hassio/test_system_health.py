@@ -1,26 +1,58 @@
 """Test hassio system health."""
 
 import asyncio
+from ipaddress import IPv4Address, IPv4Network
 import os
-from unittest.mock import patch
+from pathlib import Path
+from unittest.mock import Mock, patch
 
-from aiohttp import ClientError
+from aiohasupervisor.models import (
+    AddonStage,
+    AddonState,
+    DockerNetwork,
+    HostInfo,
+    InstalledAddon,
+    InterfaceMethod,
+    InterfaceType,
+    IPv4,
+    LogLevel,
+    NetworkInfo,
+    NetworkInterface,
+    OSInfo,
+    RootInfo,
+    SupervisorInfo,
+    SupervisorState,
+    UpdateChannel,
+)
+from aiohttp import ClientError, hdrs, web
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from yarl import URL
 
+from homeassistant.components.hassio.const import (
+    DATA_ADDONS_LIST,
+    DATA_HOST_INFO,
+    DATA_INFO,
+    DATA_NETWORK_INFO,
+    DATA_OS_INFO,
+    DATA_SUPERVISOR_INFO,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers.http import current_request
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures(
     "supervisor_root_info", "host_info", "os_info", "supervisor_info"
 )
 async def test_hassio_system_health(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
@@ -30,47 +62,153 @@ async def test_hassio_system_health(
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
-    hass.data["hassio_info"] = {
-        "channel": "stable",
-        "supervisor": "2020.11.1",
-        "docker": "19.0.3",
-        "hassos": True,
-    }
-    hass.data["hassio_host_info"] = {
-        "operating_system": "Home Assistant OS 5.9",
-        "agent_version": "1337",
-        "disk_total": "32.0",
-        "disk_used": "30.0",
-        "dt_synchronized": True,
-        "virtualization": "qemu",
-    }
-    hass.data["hassio_os_info"] = {"board": "odroid-n2"}
-    hass.data["hassio_supervisor_info"] = {
-        "healthy": True,
-        "supported": True,
-    }
-    hass.data["hassio_addons_info"] = {
-        "test": {
-            "name": "Awesome Addon",
-            "slug": "test",
-            "version": "1.0.0",
-        }
-    }
-    hass.data["hassio_addons_list"] = [
-        {
-            "slug": "test",
-            "name": "Awesome Addon",
-            "version": "1.0.0",
-        }
+    hass.data[DATA_INFO] = RootInfo(
+        supervisor="2020.11.1",
+        homeassistant=None,
+        hassos="5.9",
+        docker="19.0.3",
+        hostname=None,
+        operating_system=None,
+        features=[],
+        machine=None,
+        machine_id=None,
+        arch="aarch64",
+        state=SupervisorState.RUNNING,
+        supported_arch=[],
+        supported=True,
+        channel=UpdateChannel.STABLE,
+        logging=LogLevel.INFO,
+        timezone="Etc/UTC",
+    )
+    hass.data[DATA_HOST_INFO] = HostInfo(
+        agent_version="1337",
+        apparmor_version=None,
+        chassis="vm",
+        virtualization="qemu",
+        cpe=None,
+        deployment=None,
+        disk_free=1.6,
+        disk_total=32.0,
+        disk_used=30.0,
+        disk_life_time=25.0,
+        features=[],
+        hostname=None,
+        llmnr_hostname=None,
+        kernel="4.19.0",
+        operating_system="Home Assistant OS 5.9",
+        timezone=None,
+        dt_utc=None,
+        dt_synchronized=True,
+        use_ntp=None,
+        startup_time=None,
+        boot_timestamp=None,
+        broadcast_llmnr=None,
+        broadcast_mdns=None,
+    )
+    hass.data[DATA_OS_INFO] = OSInfo(
+        version="5.9",
+        version_pending=None,
+        version_latest="5.9",
+        update_available=False,
+        board="odroid-n2",
+        boot=None,
+        data_disk=None,
+        boot_slots={},
+    )
+    hass.data[DATA_SUPERVISOR_INFO] = SupervisorInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        channel=UpdateChannel.STABLE,
+        arch="aarch64",
+        supported=True,
+        healthy=True,
+        ip_address=IPv4Address("172.30.32.2"),
+        timezone=None,
+        logging=LogLevel.INFO,
+        debug=False,
+        debug_block=False,
+        diagnostics=None,
+        auto_update=True,
+        country=None,
+        detect_blocking_io=False,
+        feature_flags={},
+    )
+    hass.data[DATA_ADDONS_LIST] = [
+        InstalledAddon(
+            detached=False,
+            advanced=False,
+            available=True,
+            build=False,
+            description="",
+            homeassistant=None,
+            icon=False,
+            logo=False,
+            name="Awesome Addon",
+            repository="core",
+            slug="test",
+            stage=AddonStage.STABLE,
+            update_available=False,
+            url=None,
+            version_latest="1.0.0",
+            version="1.0.0",
+            state=AddonState.STARTED,
+        )
     ]
-    hass.data["hassio_network_info"] = {
-        "host_internet": True,
-        "supervisor_internet": True,
-        "interfaces": [
-            {"primary": False, "ipv4": {"nameservers": ["9.9.9.9"]}},
-            {"primary": True, "ipv4": {"nameservers": ["1.1.1.1"]}},
+    hass.data[DATA_NETWORK_INFO] = NetworkInfo(
+        interfaces=[
+            NetworkInterface(
+                interface="eth0",
+                type=InterfaceType.ETHERNET,
+                enabled=True,
+                connected=True,
+                primary=False,
+                mac="aa:bb:cc:dd:ee:01",
+                ipv4=IPv4(
+                    method=InterfaceMethod.AUTO,
+                    ready=True,
+                    address=[],
+                    nameservers=[IPv4Address("9.9.9.9")],
+                    gateway=None,
+                    route_metric=None,
+                ),
+                ipv6=None,
+                wifi=None,
+                vlan=None,
+                mdns=None,
+                llmnr=None,
+            ),
+            NetworkInterface(
+                interface="eth1",
+                type=InterfaceType.ETHERNET,
+                enabled=True,
+                connected=True,
+                primary=True,
+                mac="aa:bb:cc:dd:ee:02",
+                ipv4=IPv4(
+                    method=InterfaceMethod.AUTO,
+                    ready=True,
+                    address=[],
+                    nameservers=[IPv4Address("1.1.1.1")],
+                    gateway=None,
+                    route_metric=None,
+                ),
+                ipv6=None,
+                wifi=None,
+                vlan=None,
+                mdns=None,
+                llmnr=None,
+            ),
         ],
-    }
+        docker=DockerNetwork(
+            interface="hassio",
+            address=IPv4Network("172.30.32.0/23"),
+            gateway=IPv4Address("172.30.32.1"),
+            dns=IPv4Address("172.30.32.3"),
+        ),
+        host_internet=True,
+        supervisor_internet=True,
+    )
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         info = await get_system_health_info(hass, "hassio")
@@ -84,6 +222,7 @@ async def test_hassio_system_health(
         "board": "odroid-n2",
         "disk_total": "32.0 GB",
         "disk_used": "30.0 GB",
+        "disk_life_time": "25 %",
         "docker_version": "19.0.3",
         "healthy": True,
         "host_connectivity": True,
@@ -105,7 +244,8 @@ async def test_hassio_system_health(
     "supervisor_root_info", "host_info", "os_info", "supervisor_info"
 )
 async def test_hassio_system_health_with_issues(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test hassio system health."""
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", text="")
@@ -115,14 +255,90 @@ async def test_hassio_system_health_with_issues(
     assert await async_setup_component(hass, "system_health", {})
     await hass.async_block_till_done()
 
-    hass.data["hassio_info"] = {"channel": "stable"}
-    hass.data["hassio_host_info"] = {}
-    hass.data["hassio_os_info"] = {}
-    hass.data["hassio_supervisor_info"] = {
-        "healthy": False,
-        "supported": False,
-    }
-    hass.data["hassio_network_info"] = {}
+    hass.data[DATA_INFO] = RootInfo(
+        supervisor="1.0.0",
+        homeassistant=None,
+        hassos=None,
+        docker="19.0.3",
+        hostname=None,
+        operating_system=None,
+        features=[],
+        machine=None,
+        machine_id=None,
+        arch="aarch64",
+        state=SupervisorState.RUNNING,
+        supported_arch=[],
+        supported=True,
+        channel=UpdateChannel.STABLE,
+        logging=LogLevel.INFO,
+        timezone="Etc/UTC",
+    )
+    hass.data[DATA_HOST_INFO] = HostInfo(
+        agent_version=None,
+        apparmor_version=None,
+        chassis="vm",
+        virtualization=None,
+        cpe=None,
+        deployment=None,
+        disk_free=1.6,
+        disk_total=100.0,
+        disk_used=98.4,
+        disk_life_time=None,
+        features=[],
+        hostname=None,
+        llmnr_hostname=None,
+        kernel=None,
+        operating_system=None,
+        timezone=None,
+        dt_utc=None,
+        dt_synchronized=None,
+        use_ntp=None,
+        startup_time=None,
+        boot_timestamp=None,
+        broadcast_llmnr=None,
+        broadcast_mdns=None,
+    )
+    hass.data[DATA_OS_INFO] = OSInfo(
+        version=None,
+        version_pending=None,
+        version_latest=None,
+        update_available=False,
+        board=None,
+        boot=None,
+        data_disk=None,
+        boot_slots={},
+    )
+    hass.data[DATA_SUPERVISOR_INFO] = SupervisorInfo(
+        version="1.0.0",
+        version_latest="1.0.0",
+        update_available=False,
+        channel=UpdateChannel.STABLE,
+        arch="aarch64",
+        supported=False,
+        healthy=False,
+        ip_address=IPv4Address("172.30.32.2"),
+        timezone=None,
+        logging=LogLevel.INFO,
+        debug=False,
+        debug_block=False,
+        diagnostics=None,
+        auto_update=True,
+        country=None,
+        detect_blocking_io=False,
+        feature_flags={},
+    )
+    hass.data[DATA_NETWORK_INFO] = NetworkInfo(
+        interfaces=[],
+        docker=DockerNetwork(
+            interface="hassio",
+            address=IPv4Network("172.30.32.0/23"),
+            gateway=IPv4Address("172.30.32.1"),
+            dns=IPv4Address("172.30.32.3"),
+        ),
+        host_internet=None,
+        supervisor_internet=False,
+    )
+    hass.data[DATA_ADDONS_LIST] = []
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         info = await get_system_health_info(hass, "hassio")
@@ -143,3 +359,97 @@ async def test_hassio_system_health_with_issues(
         "error": "unreachable",
         "type": "failed",
     }
+
+
+@pytest.mark.usefixtures("hassio_unix_socket_env")
+async def test_hassio_system_health_unix_socket(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_unix_socket: tuple[Path, list[web.Request]],
+) -> None:
+    """Test Supervisor is pinged over its Unix socket when one is used."""
+    aioclient_mock.get("https://version.home-assistant.io/None.json", text="")
+    _, requests = supervisor_unix_socket
+
+    hass.config.components.add("hassio")
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        info = await get_system_health_info(hass, "hassio")
+
+    for key, val in info.items():
+        if asyncio.iscoroutine(val):
+            info[key] = await val
+
+    assert info["supervisor_api"] == "ok"
+    assert len(requests) == 1
+    assert requests[0].path == "/supervisor/ping"
+
+
+def _mock_request(host: str, url_host: str) -> Mock:
+    """Return a request with a Host header and the host the URL resolved to."""
+    # They differ when a trusted proxy sets X-Forwarded-Host
+    return Mock(
+        headers=CIMultiDictProxy(CIMultiDict({hdrs.HOST: host})),
+        url=URL(f"http://{url_host}"),
+    )
+
+
+@pytest.mark.parametrize(
+    ("current", "expected"),
+    [
+        pytest.param(
+            _mock_request("homeassistant.local:8123", "homeassistant.local:8123"),
+            {
+                "type": "failed",
+                "error": "unreachable",
+                "more_info": "http://homeassistant.local:4357",
+            },
+            id="internal",
+        ),
+        pytest.param(
+            _mock_request("homeassistant.local:8123", "ha.example.com"),
+            {
+                "type": "failed",
+                "error": "unreachable",
+                "more_info": "http://homeassistant.local:4357",
+            },
+            id="internal_forwarded_host",
+        ),
+        pytest.param(
+            _mock_request("ha.example.com", "ha.example.com"),
+            {"type": "failed", "error": "unreachable"},
+            id="external",
+        ),
+        pytest.param(
+            None,
+            {"type": "failed", "error": "unreachable"},
+            id="no_request",
+        ),
+    ],
+)
+async def test_hassio_system_health_observer_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    current: Mock | None,
+    expected: dict[str, str],
+) -> None:
+    """Test the observer link is only given on an internal request."""
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", exc=ClientError)
+    aioclient_mock.get("https://version.home-assistant.io/None.json", text="")
+    await async_process_ha_core_config(
+        hass, {"internal_url": "http://homeassistant.local:8123"}
+    )
+    hass.config.components.add("hassio")
+    assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
+
+    token = current_request.set(current)
+    try:
+        with patch.dict(os.environ, MOCK_ENVIRON):
+            info = await get_system_health_info(hass, "hassio")
+        assert await info["supervisor_api"] == expected
+        assert await info["version_api"] == "ok"
+    finally:
+        current_request.reset(token)

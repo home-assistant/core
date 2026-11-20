@@ -1,30 +1,40 @@
 """Tests for the Duco fan platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError, DucoError
+from duco_connectivity import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanService,
+    FanServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import async_fire_coordinator_update, setup_platform_integration
 
 _FAN_ENTITY = "fan.living"
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> MockConfigEntry:
+    """Set up only the fan platform for testing."""
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.FAN])
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -57,8 +67,6 @@ async def test_fan_set_state(
     expected_duco_state: str,
 ) -> None:
     """Test that fan service calls map to the correct Duco ventilation state."""
-    mock_duco_client.async_set_ventilation_state = AsyncMock()
-
     await hass.services.async_call(
         FAN_DOMAIN,
         service,
@@ -66,29 +74,36 @@ async def test_fan_set_state(
         blocking=True,
     )
 
-    mock_duco_client.async_set_ventilation_state.assert_called_once_with(
+    mock_duco_client.async_set_ventilation_state.assert_awaited_once_with(
         1, expected_duco_state
     )
+    mock_duco_client.async_get_node_info.assert_awaited_once_with(1)
+    assert mock_duco_client.async_get_nodes.await_count == 1
 
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "exception",
-    [DucoConnectionError("Connection refused"), DucoError("Unexpected error")],
+    ("exception", "match"),
+    [
+        (DucoConnectionError("Connection refused"), "Failed to set ventilation state"),
+        (DucoError("Unexpected error"), "Failed to set ventilation state"),
+        (DucoRateLimitError(), "daily write limit"),
+    ],
 )
 async def test_fan_set_state_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     exception: Exception,
+    match: str,
 ) -> None:
     """Test that a HomeAssistantError is raised on API failure."""
     mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
-    with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
+    with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            FanService.SET_PERCENTAGE,
+            {TargetKey.ENTITY_ID: _FAN_ENTITY, FanServiceArgument.PERCENTAGE: 100},
             blocking=True,
         )
 
@@ -104,9 +119,7 @@ async def test_coordinator_update_marks_unavailable(
         side_effect=DucoConnectionError("offline")
     )
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_FAN_ENTITY)
     assert state is not None

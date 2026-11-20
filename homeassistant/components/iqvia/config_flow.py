@@ -1,12 +1,10 @@
-"""Config flow to configure the IQVIA component."""
+"""Config flow to configure the IQVIA integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
+import probatio
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client
@@ -21,8 +19,9 @@ class IqviaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data_schema = vol.Schema({vol.Required(CONF_ZIP_CODE): str})
+        self.data_schema = probatio.Schema({probatio.Required(CONF_ZIP_CODE): str})
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

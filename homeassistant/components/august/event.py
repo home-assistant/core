@@ -1,10 +1,8 @@
 """Support for august events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from yalexs.activity import Activity
 from yalexs.doorbell import DoorbellDetail
@@ -18,7 +16,8 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
+from .data import AugustData
 from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,
@@ -84,6 +83,7 @@ class AugustEventEntity(AugustDescriptionEntity, EventEntity):
     _last_activity: Activity | None = None
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Update from data."""
         self._attr_available = retrieve_online_state(self._data, self._detail)

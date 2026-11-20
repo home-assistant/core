@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import (
@@ -13,7 +14,11 @@ from total_connect_client.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import DOMAIN
 
@@ -44,6 +49,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data."""
         await self.hass.async_add_executor_job(self.sync_update_data)
@@ -59,7 +65,7 @@ class TotalConnectDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 "TotalConnect authentication failed during operation."
             ) from exception
         except ServiceUnavailable as exception:
-            raise UpdateFailed(
+            raise UpdateFailedUnreachable(
                 "Error connecting to TotalConnect or the service is unavailable. "
                 "Check https://status.resideo.com/ for outages."
             ) from exception

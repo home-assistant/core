@@ -2,18 +2,17 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
@@ -24,7 +23,7 @@ async def test_diagnostics(
 ) -> None:
     """Test diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
     with patch.multiple(
@@ -47,11 +46,11 @@ async def test_device_diagnostics(
 ) -> None:
     """Test device diagnostics."""
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "rts://1234-5678-6867/16756006"), init_integration.entry_id
     )
     assert device is not None
 
@@ -75,13 +74,12 @@ async def test_device_diagnostics_execution_history_subsystem(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test execution history matching ignores subsystem suffix."""
-
     diagnostic_data = await async_load_json_object_fixture(
-        hass, "setup/setup_tahoma_switch.json", DOMAIN
+        hass, "diagnostics/cloud_somfy_tahoma_switch_europe.json", DOMAIN
     )
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "rts://1234-5678-6867/16756006")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "rts://1234-5678-6867/16756006"), init_integration.entry_id
     )
     assert device is not None
 

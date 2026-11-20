@@ -1,11 +1,10 @@
 """Test the Nina sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pynina import Warning
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -13,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_single_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -77,7 +74,7 @@ async def test_sensors_with_area_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA sensors with a restrictive area filter."""
+    """Test NINA sensors with a restrictive area filter."""
     await setup_single_platform(
         hass,
         mock_config_entry_area_filter,

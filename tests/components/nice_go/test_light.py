@@ -5,26 +5,26 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from nice_go import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    LightService,
 )
 from homeassistant.components.nice_go.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 async def test_data(
@@ -50,8 +50,8 @@ async def test_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_garage_2_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_garage_2_light"},
         blocking=True,
     )
 
@@ -67,8 +67,8 @@ async def test_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_garage_1_light"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.test_garage_1_light"},
         blocking=True,
     )
 
@@ -175,7 +175,7 @@ async def test_auth_failed_error(
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that if an auth failed error occurs, the integration attempts a token refresh and a retry before throwing an error."""
+    """Test auth failure triggers token refresh and retry."""
 
     await setup_integration(hass, mock_config_entry, [Platform.LIGHT])
 
@@ -199,8 +199,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning on the light"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.test_garage_1_light"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.test_garage_1_light"},
             blocking=True,
         )
 
@@ -210,8 +210,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning off the light"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.test_garage_2_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.test_garage_2_light"},
             blocking=True,
         )
 
@@ -222,8 +222,8 @@ async def test_auth_failed_error(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_garage_1_light"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.test_garage_1_light"},
         blocking=True,
     )
 
@@ -235,16 +235,16 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error while turning on the light"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.test_garage_1_light"},
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.test_garage_1_light"},
             blocking=True,
         )
 
     with pytest.raises(HomeAssistantError, match="Error while turning off the light"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.test_garage_2_light"},
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.test_garage_2_light"},
             blocking=True,
         )
 

@@ -3,20 +3,22 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.comelit.const import (
@@ -24,13 +26,11 @@ from homeassistant.components.comelit.const import (
     PRESET_MODE_MANUAL,
     SCAN_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_TEMPERATURE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.climate0"
 
@@ -103,7 +103,7 @@ async def test_climate_data_update(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -142,8 +142,8 @@ async def test_climate_set_temperature(
     # Test set temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 23},
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -169,8 +169,11 @@ async def test_climate_set_temperature_when_off(
     # Switch climate off
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -181,8 +184,8 @@ async def test_climate_set_temperature_when_off(
     # Test set temperature
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 23},
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -206,8 +209,11 @@ async def test_climate_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -231,8 +237,11 @@ async def test_climate_hvac_mode_when_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -242,8 +251,11 @@ async def test_climate_hvac_mode_when_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        ClimateService.SET_HVAC_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.HVAC_MODE: HVACMode.COOL,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -268,8 +280,11 @@ async def test_climate_preset_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_AUTO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_MODE_AUTO,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -296,8 +311,8 @@ async def test_climate_preset_mode_when_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
+        ClimateService.TURN_OFF,
+        {TargetKey.ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -307,8 +322,11 @@ async def test_climate_preset_mode_when_off(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_MODE_AUTO},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: PRESET_MODE_AUTO,
+        },
         blocking=True,
     )
     mock_serial_bridge.set_clima_status.assert_called()
@@ -331,7 +349,7 @@ async def test_climate_remove_stale(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,

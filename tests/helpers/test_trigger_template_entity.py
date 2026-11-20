@@ -5,9 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
-    async_parse_date_datetime,
-)
+from homeassistant.components.sensor.helpers import async_parse_date_datetime  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -50,7 +48,11 @@ _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
             "{{ x - 4 }}",
             template._SENTINEL,
             template._SENTINEL,
-            "Error parsing value for test.entity: 'x' is undefined (value: 1, template: {{ x - 4 }})",
+            (
+                "Error parsing value for test.entity:"
+                " 'x' is undefined"
+                " (value: 1, template: {{ x - 4 }})"
+            ),
         ),
     ],
 )
@@ -93,7 +95,8 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         "picture": template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
     }
@@ -249,8 +252,8 @@ async def test_attribute_order(
     assert entity.extra_state_attributes == {"beer": 1, "more_beer": 2}
 
     assert (
-        "Error rendering attributes.no_beer template for test.entity: UndefinedError: 'sad' is undefined"
-        in caplog.text
+        "Error rendering attributes.no_beer template for"
+        " test.entity: UndefinedError: 'sad' is undefined" in caplog.text
     )
 
 
@@ -267,7 +270,8 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         CONF_PICTURE: template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
         CONF_AVAILABILITY: template.Template('{{ has_value("test.entity") }}', hass),
@@ -296,14 +300,20 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
     assert entity.some_other_key == {"test_key": "test_data"}
 
 
+@pytest.mark.parametrize(
+    "device_class",
+    [SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME],
+)
 async def test_manual_trigger_sensor_entity_with_date(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: SensorDeviceClass,
 ) -> None:
     """Test manual trigger template entity when availability template isn't used."""
     config = {
         CONF_NAME: template.Template("test_entity", hass),
         CONF_STATE: template.Template("{{ as_datetime(value) }}", hass),
-        CONF_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
+        CONF_DEVICE_CLASS: device_class,
     }
 
     class TestEntity(ManualTriggerSensorEntity):
@@ -328,4 +338,29 @@ async def test_manual_trigger_sensor_entity_with_date(
         "2025-01-01T00:00:00+00:00", entity.entity_id, entity.device_class
     )
     assert entity.state == "2025-01-01T00:00:00+00:00"
-    assert entity.device_class == SensorDeviceClass.TIMESTAMP
+    assert entity.device_class == device_class
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    [None, SensorDeviceClass.TEMPERATURE, SensorDeviceClass.TIMESTAMP],
+)
+async def test_manual_trigger_sensor_entity_with_none(
+    hass: HomeAssistant,
+    device_class: SensorDeviceClass | None,
+) -> None:
+    """Test manual trigger sensor entity sets native value to None for "None"."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_DEVICE_CLASS: device_class,
+    }
+    entity = ManualTriggerSensorEntity(hass, config)
+    entity.entity_id = "test.entity"
+    entity._attr_native_value = "previous"
+
+    value = ValueTemplate("{{ none }}", hass).async_render_as_value_template(
+        entity.entity_id, {"value": "abc"}, None
+    )
+    entity._set_native_value_with_possible_timestamp(value)
+
+    assert entity.native_value is None

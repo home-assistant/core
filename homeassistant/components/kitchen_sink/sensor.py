@@ -1,21 +1,93 @@
 """Demo platform that has a couple of fake sensors."""
 
-from __future__ import annotations
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, StateType, UndefinedType
+from homeassistant.helpers.typing import StateType
 
-from . import DOMAIN
+from .const import DOMAIN
 from .device import async_create_device
+
+
+@dataclass(frozen=True, kw_only=True)
+class DemoSensorEntityDescription(SensorEntityDescription):
+    """Describes a demo sensor."""
+
+    device_unique_id: str
+    device_name: str
+    state: StateType
+
+
+OUTLET_SENSORS = (
+    DemoSensorEntityDescription(
+        key="outlet_1_power",
+        device_unique_id="outlet_1",
+        device_name="Outlet 1",
+        state=50,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    DemoSensorEntityDescription(
+        key="outlet_2_power",
+        device_unique_id="outlet_2",
+        device_name="Outlet 2",
+        state=1500,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+)
+
+STATISTICS_ISSUE_SENSORS = (
+    DemoSensorEntityDescription(
+        key="statistics_issue_1",
+        name="Issue 1",
+        device_unique_id="statistics_issues",
+        device_name="Statistics issues",
+        state=100,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    DemoSensorEntityDescription(
+        key="statistics_issue_2",
+        name="Issue 2",
+        device_unique_id="statistics_issues",
+        device_name="Statistics issues",
+        state=100,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="dogs",
+    ),
+    DemoSensorEntityDescription(
+        key="statistics_issue_3",
+        name="Issue 3",
+        device_unique_id="statistics_issues",
+        device_name="Statistics issues",
+        state=100,
+        native_unit_of_measurement=UnitOfPower.WATT,
+    ),
+    DemoSensorEntityDescription(
+        key="statistics_issue_5",
+        name="Issue 5",
+        device_unique_id="statistics_issues",
+        device_name="Statistics issues",
+        state=100,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        native_unit_of_measurement=DEGREE,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -33,70 +105,17 @@ async def async_setup_entry(
         "2_ch_power_strip",
     )
 
+    parent_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
+    )
+
     async_add_entities(
         [
-            DemoSensor(
-                device_unique_id="outlet_1",
-                unique_id="outlet_1_power",
-                device_name="Outlet 1",
-                entity_name=UNDEFINED,
-                state=50,
-                device_class=SensorDeviceClass.POWER,
-                state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=UnitOfPower.WATT,
-                via_device="2_ch_power_strip",
+            *(
+                DemoSensor(description, parent_device_id=parent_device_id)
+                for description in OUTLET_SENSORS
             ),
-            DemoSensor(
-                device_unique_id="outlet_2",
-                unique_id="outlet_2_power",
-                device_name="Outlet 2",
-                entity_name=UNDEFINED,
-                state=1500,
-                device_class=SensorDeviceClass.POWER,
-                state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=UnitOfPower.WATT,
-                via_device="2_ch_power_strip",
-            ),
-            DemoSensor(
-                device_unique_id="statistics_issues",
-                unique_id="statistics_issue_1",
-                device_name="Statistics issues",
-                entity_name="Issue 1",
-                state=100,
-                device_class=None,
-                state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement=UnitOfPower.WATT,
-            ),
-            DemoSensor(
-                device_unique_id="statistics_issues",
-                unique_id="statistics_issue_2",
-                device_name="Statistics issues",
-                entity_name="Issue 2",
-                state=100,
-                device_class=None,
-                state_class=SensorStateClass.MEASUREMENT,
-                unit_of_measurement="dogs",
-            ),
-            DemoSensor(
-                device_unique_id="statistics_issues",
-                unique_id="statistics_issue_3",
-                device_name="Statistics issues",
-                entity_name="Issue 3",
-                state=100,
-                device_class=None,
-                state_class=None,
-                unit_of_measurement=UnitOfPower.WATT,
-            ),
-            DemoSensor(
-                device_unique_id="statistics_issues",
-                unique_id="statistics_issue_5",
-                device_name="Statistics issues",
-                entity_name="Issue 5",
-                state=100,
-                device_class=SensorDeviceClass.WIND_DIRECTION,
-                state_class=SensorStateClass.MEASUREMENT_ANGLE,
-                unit_of_measurement=DEGREE,
-            ),
+            *(DemoSensor(description) for description in STATISTICS_ISSUE_SENSORS),
         ]
     )
 
@@ -106,14 +125,13 @@ async def async_setup_entry(
         async_add_entities(
             [
                 DemoSensor(
-                    device_unique_id=subentry_id,
-                    unique_id=subentry_id,
-                    device_name=subentry.title,
-                    entity_name=None,
-                    state=subentry.data["state"],
-                    device_class=None,
-                    state_class=None,
-                    unit_of_measurement=None,
+                    DemoSensorEntityDescription(
+                        key=subentry_id,
+                        name=None,
+                        device_unique_id=subentry_id,
+                        device_name=subentry.title,
+                        state=subentry.data["state"],
+                    )
                 )
             ],
             config_subentry_id=subentry_id,
@@ -123,34 +141,30 @@ async def async_setup_entry(
 class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
+    entity_description: DemoSensorEntityDescription
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_device_info: DeviceInfo | ChildDeviceInfo
 
     def __init__(
         self,
+        description: DemoSensorEntityDescription,
         *,
-        device_unique_id: str,
-        unique_id: str,
-        device_name: str,
-        entity_name: str | None | UndefinedType,
-        state: StateType,
-        device_class: SensorDeviceClass | None,
-        state_class: SensorStateClass | None,
-        unit_of_measurement: str | None,
-        via_device: str | None = None,
+        parent_device_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_device_class = device_class
-        if entity_name is not UNDEFINED:
-            self._attr_name = entity_name
-        self._attr_native_unit_of_measurement = unit_of_measurement
-        self._attr_native_value = state
-        self._attr_state_class = state_class
-        self._attr_unique_id = unique_id
+        self.entity_description = description
+        self._attr_native_value = description.state
+        self._attr_unique_id = description.key
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_unique_id)},
-            name=device_name,
-        )
-        if via_device:
-            self._attr_device_info["via_device"] = (DOMAIN, via_device)
+        if parent_device_id is not None:
+            self._attr_device_info = ChildDeviceInfo(
+                identifiers={(DOMAIN, description.device_unique_id)},
+                name=description.device_name,
+                parent_device_id=parent_device_id,
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, description.device_unique_id)},
+                name=description.device_name,
+            )

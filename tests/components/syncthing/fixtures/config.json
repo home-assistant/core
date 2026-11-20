@@ -1,0 +1,14 @@
+{
+  "folders": [
+    {
+      "id": "test-folder",
+      "label": "Test Folder"
+    }
+  ],
+  "devices": [
+    {
+      "deviceID": "YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW",
+      "name": "This Device"
+    }
+  ]
+}

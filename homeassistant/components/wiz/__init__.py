@@ -1,12 +1,9 @@
 """WiZ Platform integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
 from pywizlight import PilotParser, wizlight
-from pywizlight.bulb import PIR_SOURCE
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
@@ -20,6 +17,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
+    OCCUPANCY_SOURCES,
     SIGNAL_WIZ_PIR,
     WIZ_CONNECT_EXCEPTIONS,
 )
@@ -60,7 +58,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: WizConfigEntry) -> 
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
     """Set up the wiz integration from a config entry."""
     ip_address = entry.data[CONF_HOST]
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
@@ -70,15 +68,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
         await bulb.getMac()
     except WIZ_CONNECT_EXCEPTIONS as err:
         await bulb.async_close()
-        raise ConfigEntryNotReady(f"{ip_address}: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"ip_address": ip_address},
+        ) from err
 
     if bulb.mac != entry.unique_id:
         # The ip address of the bulb has changed and its likely offline
         # and another WiZ device has taken the IP. Avoid setting up
         # since its the wrong device. As soon as the device comes back
         # online the ip will get updated and setup will proceed.
+        await bulb.async_close()
         raise ConfigEntryNotReady(
-            "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "mac": str(bulb.mac),
+                "ip_address": ip_address,
+                "expected_mac": str(entry.unique_id),
+            },
         )
 
     coordinator = WizCoordinator(hass, entry, bulb)
@@ -101,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
         """Receive a push update."""
         _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
         coordinator.async_set_updated_data(coordinator.data)
-        if state.get_source() == PIR_SOURCE:
+        if state.get_source() in OCCUPANCY_SOURCES:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
 
     await bulb.start_push(_async_push_update)
@@ -111,11 +120,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WizConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.bulb.async_close()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.bulb.async_close()

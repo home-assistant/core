@@ -1,13 +1,16 @@
 """Fixtures for LaMetric integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from demetriek import CloudDevice, Device
+from demetriek import AuthChallenge, CloudDevice, Device
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_array_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -18,8 +21,6 @@ from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +51,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.lametric.async_setup_entry", return_value=True
+        "homeassistant.components.lametric.async_setup_entry", return_value=None
     ):
         yield
 
@@ -67,6 +68,32 @@ def mock_lametric_cloud() -> Generator[MagicMock]:
             for cloud_device in load_json_array_fixture("cloud_devices.json", DOMAIN)
         ]
         yield lametric
+
+
+@pytest.fixture
+def mock_lametric_local_auth() -> Generator[MagicMock]:
+    """Return a mocked LaMetric local auth client.
+
+    It answers like a real device: the challenge is in progress at first,
+    and resolved once the button on the device is pressed.
+    """
+    with (
+        patch(
+            "homeassistant.components.lametric.config_flow.LaMetricLocalAuth",
+            autospec=True,
+        ) as local_auth_mock,
+        patch("homeassistant.components.lametric.config_flow.BUTTON_POLL_INTERVAL", 0),
+    ):
+        local_auth = local_auth_mock.return_value
+        local_auth.supported.return_value = True
+        local_auth.request_challenge.return_value = AuthChallenge(
+            challenge_id="mock-challenge", duration=60, state="in-progress"
+        )
+        local_auth.challenge.return_value = AuthChallenge(
+            challenge_id="mock-challenge", duration=60, state="resolved"
+        )
+        local_auth.api_key.return_value = "mock-local-api-key"
+        yield local_auth
 
 
 @pytest.fixture
@@ -94,6 +121,8 @@ def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
         lametric.device.return_value = Device.from_json(
             load_fixture(f"{device_fixture}.json", DOMAIN)
         )
+        # The device answers a display write with its display state.
+        lametric.display.return_value = lametric.device.return_value.display
         yield lametric
 
 

@@ -4,10 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.accuweather.const import DOMAIN
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -33,6 +35,7 @@ def mock_accuweather_client() -> Generator[AsyncMock]:
         client.async_get_daily_forecast.return_value = daily_forecast
         client.async_get_hourly_forecast.return_value = hourly_forecast
         client.location_key = "0123456"
+        client.location_name = "Test location"
         client.requests_remaining = 10
 
         yield client

@@ -1,6 +1,9 @@
 """Support for Palazzetti sensors."""
 
 from dataclasses import dataclass
+from typing import override
+
+from pypalazzetti.temperature import TemperatureDescriptionKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -8,7 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfLength, UnitOfMass, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfLength,
+    UnitOfMass,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -20,11 +28,14 @@ from .entity import PalazzettiEntity
 
 @dataclass(frozen=True, kw_only=True)
 class PropertySensorEntityDescription(SensorEntityDescription):
-    """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
+    """Describes a Palazzetti sensor entity.
+
+    Read from a `PalazzettiClient` property.
+    """
 
     client_property: str
     property_map: dict[StateType, str] | None = None
-    presence_flag: None | str = None
+    presence_flag: str | None = None
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
@@ -52,8 +63,24 @@ PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
         translation_key="pellet_level",
         presence_flag="has_pellet_level",
         client_property="pellet_level",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
+
+TEMPERATURE_ENTITY_CONFIG: dict[
+    TemperatureDescriptionKey, tuple[EntityCategory | None, bool]
+] = {
+    TemperatureDescriptionKey.ROOM_TEMP: (None, True),
+    TemperatureDescriptionKey.TANK_WATER_TEMP: (None, True),
+    TemperatureDescriptionKey.RETURN_WATER_TEMP: (EntityCategory.DIAGNOSTIC, True),
+    TemperatureDescriptionKey.AIR_OUTLET_TEMP: (EntityCategory.DIAGNOSTIC, True),
+    TemperatureDescriptionKey.WOOD_COMBUSTION_TEMP: (EntityCategory.DIAGNOSTIC, True),
+    TemperatureDescriptionKey.T1_HYDRO_TEMP: (EntityCategory.DIAGNOSTIC, False),
+    TemperatureDescriptionKey.T2_HYDRO_TEMP: (EntityCategory.DIAGNOSTIC, False),
+}
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -65,20 +92,26 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    sensors = [
-        PalazzettiSensor(
-            coordinator,
-            PropertySensorEntityDescription(
-                key=sensor.description_key.value,
-                device_class=SensorDeviceClass.TEMPERATURE,
-                native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                state_class=SensorStateClass.MEASUREMENT,
-                translation_key=sensor.description_key.value,
-                client_property=sensor.state_property,
-            ),
+    sensors = []
+    for sensor in coordinator.client.list_temperatures():
+        entity_category, enabled_default = TEMPERATURE_ENTITY_CONFIG.get(
+            sensor.description_key, (None, True)
         )
-        for sensor in coordinator.client.list_temperatures()
-    ]
+        sensors.append(
+            PalazzettiSensor(
+                coordinator,
+                PropertySensorEntityDescription(
+                    key=sensor.description_key.value,
+                    device_class=SensorDeviceClass.TEMPERATURE,
+                    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                    state_class=SensorStateClass.MEASUREMENT,
+                    translation_key=sensor.description_key.value,
+                    client_property=sensor.state_property,
+                    entity_category=entity_category,
+                    entity_registry_enabled_default=enabled_default,
+                ),
+            )
+        )
 
     sensors.extend(
         [
@@ -109,6 +142,7 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
 

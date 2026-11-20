@@ -4,21 +4,22 @@ from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateService,
+    ClimateServiceArgument,
+)
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
-
-TEST_PLATFORM = CLIMATE_DOMAIN
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.CLIMATE,)])
 
 ENTITY_ID = "climate.freezer"
-SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
 @pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
@@ -90,9 +91,9 @@ async def test_set_target(
     """Test the climate can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
+        CLIMATE_DOMAIN,
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: -17},
         blocking=True,
     )
     mock_miele_client.set_target_temperature.assert_called_once_with(
@@ -115,9 +116,9 @@ async def test_api_failure(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: -17},
+            CLIMATE_DOMAIN,
+            ClimateService.SET_TEMPERATURE,
+            {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: -17},
             blocking=True,
         )
     mock_miele_client.set_target_temperature.assert_called_once()

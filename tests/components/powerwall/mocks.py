@@ -5,11 +5,14 @@ import json
 import os
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import load_fixture
 from tesla_powerwall import (
+    ApiError,
     BatteryResponse,
     DeviceType,
     GridStatus,
     MetersAggregatesResponse,
+    OperationMode,
     Powerwall,
     PowerwallStatusResponse,
     SiteInfoResponse,
@@ -18,8 +21,6 @@ from tesla_powerwall import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonValueType
-
-from tests.common import load_fixture
 
 MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 
@@ -48,6 +49,9 @@ async def _mock_powerwall_with_fixtures(
         device_type=DeviceType(device_type.result()["device_type"]),
         serial_numbers=["TG0123456789AB", "TG9876543210BA"],
         backup_reserve_percentage=15.0,
+        max_charge_power=7000,
+        max_discharge_power=8380,
+        operation_mode=OperationMode.SELF_CONSUMPTION,
         batteries=[
             BatteryResponse.from_dict(battery) for battery in batteries.result()
         ],
@@ -65,6 +69,9 @@ async def _mock_powerwall_return_value(
     device_type=None,
     serial_numbers=None,
     backup_reserve_percentage=None,
+    max_charge_power=None,
+    max_discharge_power=None,
+    operation_mode=None,
     batteries=None,
 ):
     powerwall_mock = MagicMock(Powerwall)
@@ -81,6 +88,11 @@ async def _mock_powerwall_return_value(
     powerwall_mock.get_backup_reserve_percentage.return_value = (
         backup_reserve_percentage
     )
+    powerwall_mock.get_instantaneous_max_charge_power.return_value = max_charge_power
+    powerwall_mock.get_instantaneous_max_discharge_power.return_value = (
+        max_discharge_power
+    )
+    powerwall_mock.get_operation_mode.return_value = operation_mode
     powerwall_mock.is_grid_services_active.return_value = grid_services_active
     powerwall_mock.get_gateway_din.return_value = MOCK_GATEWAY_DIN
     powerwall_mock.get_batteries.return_value = batteries
@@ -99,6 +111,35 @@ async def _mock_powerwall_site_name(hass: HomeAssistant, site_name: str) -> Magi
     site_info_resp.site_name = site_name
     powerwall_mock.get_site_info.return_value = site_info_resp
     powerwall_mock.get_gateway_din.return_value = MOCK_GATEWAY_DIN
+
+    return powerwall_mock
+
+
+async def _mock_powerwall_restricted(hass: HomeAssistant) -> MagicMock:
+    """Mock a PW3-style restricted gateway.
+
+    Only the three guaranteed endpoints work; everything else raises a 404
+    ``ApiError``.
+    """
+    meters = await _async_load_json_fixture(hass, "meters.json")
+
+    powerwall_mock = MagicMock(Powerwall)
+    powerwall_mock.__aenter__.return_value = powerwall_mock
+    powerwall_mock.get_charge.return_value = 47.34587394586
+    powerwall_mock.get_meters.return_value = MetersAggregatesResponse.from_dict(meters)
+    powerwall_mock.is_grid_services_active.return_value = True
+    powerwall_mock.get_grid_status.return_value = GridStatus.CONNECTED
+
+    not_found = ApiError("GET request to /api/status returned error 404")
+    powerwall_mock.get_gateway_din.side_effect = not_found
+    powerwall_mock.get_status.side_effect = not_found
+    powerwall_mock.get_site_info.side_effect = not_found
+    powerwall_mock.get_device_type.side_effect = not_found
+    powerwall_mock.get_serial_numbers.side_effect = not_found
+    powerwall_mock.get_batteries.side_effect = not_found
+    powerwall_mock.get_sitemaster.side_effect = not_found
+    powerwall_mock.get_backup_reserve_percentage.side_effect = not_found
+    powerwall_mock.set_island_mode.side_effect = not_found
 
     return powerwall_mock
 

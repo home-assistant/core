@@ -1,11 +1,10 @@
 """Fixtures for version integration."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.version.const import (
@@ -18,8 +17,6 @@ from homeassistant.components.version.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_VERSION: Final = "1970.1.0"
 MOCK_VERSION_DATA: Final = {"source": "local", "channel": "stable"}

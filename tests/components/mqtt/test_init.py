@@ -1,21 +1,43 @@
 """The tests for the MQTT component setup and helpers."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from datetime import datetime, timedelta
 from functools import partial
 import json
+import logging
 import time
 from typing import Any, TypedDict
 from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from paho.mqtt.client import MQTTMessage, Properties
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockMqttReasonCode,
+    MockUser,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import core as ha
-from homeassistant.components import mqtt
+from homeassistant.components import binary_sensor, mqtt, sensor
 from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt.client import MQTT
+from homeassistant.components.mqtt.const import DOMAIN, MqttService, MqttServiceArgument
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
@@ -27,12 +49,19 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    SERVICE_RELOAD,
+    CONF_PORT,
+    CONF_PROTOCOL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    __version__ as HA_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+    UnknownUser,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -45,23 +74,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
+from homeassistant.util.json import json_loads
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockMqttReasonCode,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.sensor.common import MockSensor
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 class _DebugDeviceInfo(TypedDict, total=False):
@@ -107,7 +122,12 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
             "command_topic": "test/select",
             "name": "Test Select",
             "options": ["milk", "beer"],
-            "command_template": '{"option": "{{ value }}", "entity_id": "{{ entity_id }}", "name": "{{ name }}", "this_object_state": "{{ this.state }}"}',
+            "command_template": (
+                '{"option": "{{ value }}",'
+                ' "entity_id": "{{ entity_id }}",'
+                ' "name": "{{ name }}",'
+                ' "this_object_state": "{{ this.state }}"}'
+            ),
         }
     ],
 )
@@ -138,9 +158,15 @@ async def test_command_template_variables(
 
     mqtt_mock.async_publish.assert_called_once_with(
         topic,
-        '{"option": "beer", "entity_id": "select.test_select", "name": "Test Select", "this_object_state": "milk"}',
+        (
+            '{"option": "beer",'
+            ' "entity_id": "select.test_select",'
+            ' "name": "Test Select",'
+            ' "this_object_state": "milk"}'
+        ),
         0,
         False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("select.test_select")
@@ -168,6 +194,124 @@ async def test_command_template_fails(hass: HomeAssistant) -> None:
     with pytest.raises(MqttCommandTemplateException) as exc:
         cmd_tpl.async_render(None)
     assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
+
+
+SHARED_TOPIC = "test-topic/json"
+
+
+def _shared_topic_sensor(index: int) -> dict[str, Any]:
+    """Return a sensor with value and availability template on SHARED_TOPIC."""
+    return {
+        "name": f"sensor{index}",
+        "state_topic": SHARED_TOPIC,
+        "value_template": f"{{{{ value_json.v{index} }}}}",
+        "availability_topic": SHARED_TOPIC,
+        "availability_template": "{{ 'online' if value_json is defined else 'offline' }}",
+    }
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: [_shared_topic_sensor(index) for index in range(5)],
+                binary_sensor.DOMAIN: [
+                    {
+                        "name": "flag",
+                        "state_topic": SHARED_TOPIC,
+                        "value_template": "{{ 'ON' if value_json.v0 else 'OFF' }}",
+                    }
+                ],
+            }
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    ("payload", "sensor_states", "flag_state"),
+    [
+        pytest.param(
+            '{"v0": 1, "v1": 2, "v2": 3, "v3": 4, "v4": 5}',
+            ["1", "2", "3", "4", "5"],
+            "on",
+            id="json",
+        ),
+        pytest.param("null", [""] * 5, "off", id="null"),
+        pytest.param("not json", ["unavailable"] * 5, "unknown", id="not_json"),
+    ],
+)
+async def test_subscribers_share_one_payload_parse(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    payload: str,
+    sensor_states: list[str],
+    flag_state: str,
+) -> None:
+    """One message to six entities with eleven templates is parsed once."""
+    await mqtt_mock_entry()
+    with (
+        patch(
+            "homeassistant.components.mqtt.models.json_loads", wraps=json_loads
+        ) as models_json_loads,
+        patch(
+            "homeassistant.helpers.template.json_loads", wraps=json_loads
+        ) as template_json_loads,
+    ):
+        async_fire_mqtt_message(hass, SHARED_TOPIC, payload)
+        await hass.async_block_till_done()
+        assert models_json_loads.call_count == 1
+        template_json_loads.assert_not_called()
+
+        # The parse is dropped after dispatch, debug info keeps the payload
+        stored = hass.data[mqtt.DATA_MQTT].debug_info_entities["sensor.sensor0"][
+            "subscriptions"
+        ][SHARED_TOPIC]["messages"][-1]
+        mqtt.MqttValueTemplate(
+            template.Template("{{ value }}", hass=hass)
+        ).async_render_with_possible_json_value(stored.payload)
+        assert models_json_loads.call_count == 2
+
+    assert [
+        hass.states.get(f"sensor.sensor{index}").state for index in range(5)
+    ] == sensor_states
+    assert hass.states.get("binary_sensor.flag").state == flag_state
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "static",
+                    "state_topic": SHARED_TOPIC,
+                    "value_template": "fixed",
+                }
+            }
+        }
+    ],
+)
+async def test_static_value_template_does_not_parse(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """A value template without template code does not parse the payload."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.models.json_loads", wraps=json_loads
+    ) as models_json_loads:
+        async_fire_mqtt_message(hass, SHARED_TOPIC, '{"v": 1}')
+        await hass.async_block_till_done()
+    models_json_loads.assert_not_called()
+    assert hass.states.get("sensor.static").state == "fixed"
+
+
+async def test_value_template_bytearray_changed_in_place(hass: HomeAssistant) -> None:
+    """A bytearray payload changed in place is parsed again."""
+    val_tpl = mqtt.MqttValueTemplate(template.Template("{{ value_json.v }}", hass=hass))
+    payload = bytearray(b'{"v": 1}')
+    assert val_tpl.async_render_with_possible_json_value(payload) == "1"
+    payload[6:7] = b"2"
+    assert val_tpl.async_render_with_possible_json_value(payload) == "2"
 
 
 async def test_value_template_value(hass: HomeAssistant) -> None:
@@ -215,11 +359,18 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
+        template_state_calls.return_value.entity_id = "select.test"
         tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
         assert template_state_calls.call_count == 1
+
+        # The cached this follows an entity_id change
+        entity.entity_id = "select.renamed"
+        val_tpl3.async_render_with_possible_json_value("call3")
+        assert template_state_calls.call_count == 2
+        template_state_calls.assert_called_with(hass, "select.renamed")
 
 
 async def test_value_template_fails(hass: HomeAssistant) -> None:
@@ -254,10 +405,10 @@ async def test_service_call_without_topic_does_not_publish(
 ) -> None:
     """Test the service call if topic is missing."""
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            DOMAIN,
+            MqttService.PUBLISH,
             {},
             blocking=True,
         )
@@ -268,17 +419,19 @@ async def test_service_call_mqtt_entry_does_not_publish(
     hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test the service call if topic is missing."""
-    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     with pytest.raises(
         ServiceValidationError,
-        match='Cannot publish to topic "test_topic", make sure MQTT is set up correctly',
+        match=(
+            'Cannot publish to topic "test_topic", make sure MQTT is set up correctly'
+        ),
     ):
         await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            DOMAIN,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test_topic",
-                mqtt.ATTR_PAYLOAD: "payload",
+                MqttServiceArgument.TOPIC: "test_topic",
+                MqttServiceArgument.PAYLOAD: "payload",
             },
             blocking=True,
         )
@@ -292,20 +445,17 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     If a wildcard topic is rendered, then fail.
     """
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            DOMAIN,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
-                mqtt.ATTR_PAYLOAD: "payload",
+                MqttServiceArgument.TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
+                MqttServiceArgument.PAYLOAD: "payload",
             },
             blocking=True,
         )
-    assert (
-        str(exc.value) == "Wildcards cannot be used in topic names "
-        "for dictionary value @ data['topic']"
-    )
+    assert str(exc.value) == "Wildcards cannot be used in topic names at 'topic'"
     assert not mqtt_mock.async_publish.called
 
 
@@ -338,12 +488,12 @@ async def test_mqtt_publish_action_call_with_raw_data(
     """
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        DOMAIN,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: attr_payload,
-            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: attr_payload,
+            MqttServiceArgument.EVALUATE_PAYLOAD: evaluate_payload,
         },
         blocking=True,
     )
@@ -354,23 +504,23 @@ async def test_mqtt_publish_action_call_with_raw_data(
         "homeassistant.components.mqtt.models.literal_eval"
     ) as literal_eval_mock:
         await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            DOMAIN,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: attr_payload,
+                MqttServiceArgument.TOPIC: "test/topic",
+                MqttServiceArgument.PAYLOAD: attr_payload,
             },
             blocking=True,
         )
         literal_eval_mock.assert_not_called()
 
         await hass.services.async_call(
-            mqtt.DOMAIN,
-            mqtt.SERVICE_PUBLISH,
+            DOMAIN,
+            MqttService.PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: attr_payload,
-                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+                MqttServiceArgument.TOPIC: "test/topic",
+                MqttServiceArgument.PAYLOAD: attr_payload,
+                MqttServiceArgument.EVALUATE_PAYLOAD: evaluate_payload,
             },
             blocking=True,
         )
@@ -386,13 +536,13 @@ async def test_service_call_with_ascii_qos_retain_flags(
     """
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        DOMAIN,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD: "",
-            mqtt.ATTR_QOS: "2",
-            mqtt.ATTR_RETAIN: "no",
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "",
+            MqttServiceArgument.QOS: "2",
+            MqttServiceArgument.RETAIN: "no",
         },
         blocking=True,
     )
@@ -405,12 +555,12 @@ async def test_service_call_with_ascii_qos_retain_flags(
 
     # Test service call without payload
     await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
+        DOMAIN,
+        MqttService.PUBLISH,
         {
-            mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_QOS: "2",
-            mqtt.ATTR_RETAIN: "no",
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.QOS: "2",
+            MqttServiceArgument.RETAIN: "no",
         },
         blocking=True,
     )
@@ -431,8 +581,9 @@ async def test_publish_function_with_bad_encoding_conditions(
         hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
     )
     assert (
-        "Can't pass-through payload for publishing test-payload on some-topic with no encoding set, need 'bytes' got <class 'str'>"
-        in caplog.text
+        "Can't pass-through payload for publishing test-payload"
+        " on some-topic with no encoding set, need 'bytes'"
+        " got <class 'str'>" in caplog.text
     )
     caplog.clear()
     await mqtt.async_publish(
@@ -444,52 +595,111 @@ async def test_publish_function_with_bad_encoding_conditions(
         encoding="invalid_encoding",
     )
     assert (
-        "Can't encode payload for publishing test-payload on some-topic with encoding invalid_encoding"
-        in caplog.text
+        "Can't encode payload for publishing test-payload on"
+        " some-topic with encoding invalid_encoding" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    ("interval_data", "interval"),
+    [
+        ({"days": 1, "hours": 0, "minutes": 0, "seconds": 10}, 86410),
+        ({"days": 1, "seconds": 10}, 86410),
+        ({"seconds": 86410}, 86410),
+    ],
+)
+async def test_publish_action_with_message_expiry_interval(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    interval_data: dict[str, float],
+    interval: int,
+) -> None:
+    """Test the publish action message expiry interval option."""
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.services.async_call(
+        DOMAIN,
+        MqttService.PUBLISH,
+        {
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "bla",
+            MqttServiceArgument.QOS: 2,
+            MqttServiceArgument.RETAIN: False,
+            MqttServiceArgument.MESSAGE_EXPIRY_INTERVAL: interval_data,
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == "bla"
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+    assert mqtt_mock.async_publish.call_args[1]["message_expiry_interval"] == interval
+
+
+@pytest.mark.parametrize(("qos", "retain"), [(None, None), (0, None), (None, False)])
+async def test_publish_api_with_falback_to_none(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    qos: int | None,
+    retain: bool | None,
+) -> None:
+    """Test MQTT publish API function with None as fallback for QoS or Retain."""
+    mqtt_mock = await mqtt_mock_entry()
+    await mqtt.async_publish(hass, "some-topic", "test-payload", qos=qos, retain=retain)
+    assert (
+        "Detected code that that calls the MQTT publish API with `None` for "
+        "qos or retain. The `qos` argument must be an `int`, and the `retain` "
+        "argument must be a `bool`." in caplog.text
+    )
+    async_publish_mock: MagicMock = mqtt_mock.async_publish
+    assert len(async_publish_mock.mock_calls) == 1
+    assert async_publish_mock.mock_calls[0][1][0] == "some-topic"
+    assert async_publish_mock.mock_calls[0][1][1] == "test-payload"
+    assert async_publish_mock.mock_calls[0][1][2] == 0
+    assert async_publish_mock.mock_calls[0][1][3] is False
 
 
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ud800")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\udfff")
     # Topic MUST NOT be empty
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("")
     # Topic MUST NOT be longer than 65535 encoded bytes.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("ü" * 32768)
     # UTF-8 MUST NOT include null character
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("bad\0one")
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
     # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u0001")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u001f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u007f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u009f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdd0")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdef")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\uffff")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001fffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001ffff")
 
 
@@ -497,24 +707,24 @@ def test_validate_subscribe_topic() -> None:
     """Test invalid subscribe topics."""
     mqtt.valid_subscribe_topic("#")
     mqtt.valid_subscribe_topic("sport/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/#/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/bar#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/#/bar")
 
     mqtt.valid_subscribe_topic("+")
     mqtt.valid_subscribe_topic("+/tennis/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+1")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("bad+topic")
     mqtt.valid_subscribe_topic("sport/+/player1")
     mqtt.valid_subscribe_topic("/finance")
@@ -524,18 +734,46 @@ def test_validate_subscribe_topic() -> None:
 
 def test_validate_publish_topic() -> None:
     """Test invalid publish topics."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub/+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("1#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("bad+topic")
     mqtt.valid_publish_topic("//")
 
     # Topic names beginning with $ SHOULD NOT be used, but can
     mqtt.valid_publish_topic("$SYS/")
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("utf-8", id="utf-8"),
+        pytest.param("UTF8", id="alias"),
+        pytest.param("latin-1", id="latin-1"),
+        pytest.param("", id="raw"),
+    ],
+)
+def test_validate_encoding(encoding: str) -> None:
+    """Test valid payload encodings are passed through."""
+    assert mqtt.util.valid_encoding(encoding) == encoding
+
+
+@pytest.mark.parametrize(
+    "encoding",
+    [
+        pytest.param("unknown-encoding", id="unknown"),
+        pytest.param("rot13", id="not_a_text_encoding"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_validate_invalid_encoding(encoding: str | None) -> None:
+    """Test invalid payload encodings are rejected."""
+    with pytest.raises(probatio.Invalid):
+        mqtt.util.valid_encoding(encoding)
 
 
 def test_entity_device_info_schema() -> None:
@@ -581,7 +819,7 @@ def test_entity_device_info_schema() -> None:
         }
     )
     # no identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
@@ -591,13 +829,13 @@ def test_entity_device_info_schema() -> None:
             }
         )
     # empty identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
         )
 
     # not a valid URL
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
@@ -630,7 +868,7 @@ def test_entity_device_info_schema() -> None:
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "sensor": [
                     {
                         "name": "test-sensor",
@@ -690,6 +928,30 @@ async def test_receiving_non_utf8_message_gets_logged(
     )
 
 
+async def test_receiving_message_with_unknown_encoding_gets_logged(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a subscription with an unknown encoding does not block other subscribers."""
+    await mqtt_mock_entry()
+    await mqtt.async_subscribe(hass, "#", record_calls, encoding="unknown-encoding")
+    # A wildcard keeps registration order, so this subscriber is served after "#"
+    await mqtt.async_subscribe(hass, "+", record_calls)
+
+    async_fire_mqtt_message(hass, "test-topic", b"payload")
+
+    await hass.async_block_till_done()
+    assert (
+        "Can't decode payload b'payload' on test-topic with encoding unknown-encoding"
+        in caplog.text
+    )
+    assert len(recorded_calls) == 1
+    assert recorded_calls[0].payload == "payload"
+
+
 async def test_receiving_message_with_non_utf8_topic_gets_logged(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -699,11 +961,6 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     """Test receiving a non utf8 encoded topic."""
     await mqtt_mock_entry()
     await mqtt.async_subscribe(hass, "test-topic", record_calls)
-
-    # Local import to avoid processing MQTT modules when running a testcase
-    # which does not use MQTT.
-
-    from paho.mqtt.client import MQTTMessage  # noqa: PLC0415
 
     from homeassistant.components.mqtt.models import MqttData  # noqa: PLC0415
 
@@ -725,6 +982,8 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
 
 
 @pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
 async def test_reload_entry_with_restored_subscriptions(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
@@ -734,13 +993,13 @@ async def test_reload_entry_with_restored_subscriptions(
     """Test reloading the config entry with with subscriptions restored."""
     # Setup the MQTT entry
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
-    hass.config.components.add(mqtt.DOMAIN)
+    hass.config.components.add(DOMAIN)
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await hass.config_entries.async_setup(entry.entry_id)
 
@@ -797,10 +1056,193 @@ async def test_reload_entry_with_restored_subscriptions(
 
 
 @pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_after_reload(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test unsubscribing a subscription that was restored after a reload."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+    original_client = hass.data[mqtt.DATA_MQTT].client
+
+    # Reload twice, so the subscription is restored from a restored subscription
+    for _ in range(2):
+        with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+            mock_debouncer.clear()
+            assert await hass.config_entries.async_reload(entry.entry_id)
+            await mock_debouncer.wait()
+
+    # The paho mock does not call on_disconnect when the client disconnects
+    original_client.connected = False
+
+    async_fire_mqtt_message(hass, message_topic, "before-unsub")
+    assert len(recorded_calls) == 1
+
+    mqtt_client_mock.unsubscribe.reset_mock()
+    mock_debouncer.clear()
+    unsub()
+    await mock_debouncer.wait()
+    mqtt_client_mock.unsubscribe.assert_called_once_with([topic])
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert len(recorded_calls) == 1
+
+    with pytest.raises(HomeAssistantError, match="twice"):
+        unsub()
+
+
+@pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_while_entry_unloaded(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test a subscription removed while the entry is unloaded is not restored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    unsub()
+
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert not recorded_calls
+
+
+@pytest.mark.parametrize(
+    ("topic", "message_topic"),
+    [
+        pytest.param("test-topic", "test-topic", id="simple"),
+        pytest.param("wild/+/card", "wild/any/card", id="wildcard"),
+    ],
+)
+@pytest.mark.usefixtures("mqtt_client_mock")
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+async def test_unsubscribe_before_subscriptions_are_restored(
+    hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
+    record_calls: MessageCallbackType,
+    recorded_calls: list[ReceiveMessage],
+    topic: str,
+    message_topic: str,
+) -> None:
+    """Test unsubscribing while the reloaded client is not started yet."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    hass.config.components.add(DOMAIN)
+    with patch("homeassistant.config.load_yaml_config_file", return_value={}):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    mock_debouncer.clear()
+    unsub = await mqtt.async_subscribe(hass, topic, record_calls)
+    await mock_debouncer.wait()
+
+    original_init_client = MQTT.async_init_client
+    init_started = asyncio.Event()
+    resume_init = asyncio.Event()
+
+    async def _paused_init_client(self: MQTT) -> None:
+        init_started.set()
+        await resume_init.wait()
+        await original_init_client(self)
+
+    with (
+        patch("homeassistant.config.load_yaml_config_file", return_value={}),
+        patch.object(MQTT, "async_init_client", _paused_init_client),
+    ):
+        reload_task = hass.async_create_task(
+            hass.config_entries.async_reload(entry.entry_id)
+        )
+        await init_started.wait()
+        # The new client is set, but the saved subscriptions are not restored yet
+        unsub()
+        resume_init.set()
+        assert await reload_task
+        await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, message_topic, "after-unsub")
+    assert not recorded_calls
+
+
+@pytest.mark.usefixtures("mqtt_client_mock")
+async def test_reload_without_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading without a valid config entry set up."""
+    # Setup the MQTT integration without entry
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
+    assert (
+        "Skipped reloading MQTT integration, the MQTT config entry is not enabled"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "light": {
                     "platform": "mqtt",
                     "name": "test",
@@ -816,12 +1258,12 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "extra keys not allowed @ data['platform'] for manually configured MQTT light item"
-        in caplog.text
+        "not a valid option at 'platform'"
+        " for manually configured MQTT light item" in caplog.text
     )
 
 
-@pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {"light": {"name": "test"}}}])
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {"light": {"name": "test"}}}])
 async def test_setup_manual_mqtt_with_invalid_config(
     mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -834,7 +1276,7 @@ async def test_setup_manual_mqtt_with_invalid_config(
 async def test_default_entry_setting_are_applied(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test if the MQTT component loads when config entry data not has all default settings."""
+    """Test MQTT loads when config entry lacks all default settings."""
     data = (
         '{ "device":{"identifiers":["0AFFD2"]},'
         '  "state_topic": "foobar/sensor",'
@@ -843,13 +1285,13 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={"broker": "test-broker", "port": 1234},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
-    hass.config.components.add(mqtt.DOMAIN)
+    hass.config.components.add(DOMAIN)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -859,7 +1301,9 @@ async def test_default_entry_setting_are_applied(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), entry.entry_id
+    )
     assert device_entry is not None
 
 
@@ -1010,18 +1454,99 @@ async def test_dump_service(
     mopen = mock_open()
 
     await hass.services.async_call(
-        "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
+        "mqtt",
+        MqttService.DUMP,
+        {MqttServiceArgument.TOPIC: "bla/#", MqttServiceArgument.DURATION: 3},
+        blocking=True,
     )
     async_fire_mqtt_message(hass, "bla/1", "test1")
     async_fire_mqtt_message(hass, "bla/2", "test2")
 
-    with patch("homeassistant.components.mqtt.open", mopen):
+    with patch("homeassistant.components.mqtt.services.open", mopen):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
     writes = mopen.return_value.writelines.mock_calls
     assert len(writes) == 1
     assert writes[0][1][0] == ["bla/1,test1\n", "bla/2,test2\n"]
+
+
+ADMIN_SERVICE_CALLS = [
+    pytest.param(
+        MqttService.PUBLISH,
+        {
+            MqttServiceArgument.TOPIC: "test/topic",
+            MqttServiceArgument.PAYLOAD: "payload",
+        },
+        id="publish",
+    ),
+    pytest.param(
+        MqttService.DUMP,
+        {MqttServiceArgument.TOPIC: "bla/#", MqttServiceArgument.DURATION: 3},
+        id="dump",
+    ),
+]
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_admin(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_admin_user: MockUser,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test an admin user can call the action."""
+    await mqtt_mock_entry()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        service,
+        service_data,
+        blocking=True,
+        context=ha.Context(user_id=hass_admin_user.id),
+    )
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_non_admin(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass_read_only_user: MockUser,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a non-admin user cannot call the action."""
+    await mqtt_mock_entry()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            service,
+            service_data,
+            blocking=True,
+            context=ha.Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(("service", "service_data"), ADMIN_SERVICE_CALLS)
+async def test_admin_service_as_unknown_user(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test a user that no longer exists cannot call the action."""
+    await mqtt_mock_entry()
+
+    with pytest.raises(UnknownUser):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            service,
+            service_data,
+            blocking=True,
+            context=ha.Context(user_id="i-am-not-a-user"),
+        )
 
 
 async def test_mqtt_ws_remove_discovered_device(
@@ -1045,17 +1570,23 @@ async def test_mqtt_ws_remove_discovered_device(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify device entry is cleared
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
-    assert device_entry is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
+        )
+        is None
+    )
 
 
 async def test_mqtt_ws_get_device_debug_info(
@@ -1088,7 +1619,9 @@ async def test_mqtt_ws_get_device_debug_info(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
@@ -1100,7 +1633,7 @@ async def test_mqtt_ws_get_device_debug_info(
     expected_result = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.mqtt_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -1141,7 +1674,9 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     await hass.async_block_till_done()
 
     # Verify device entry is created
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device_entry is not None
 
     small_png = (
@@ -1161,7 +1696,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     expected_result = {
         "entities": [
             {
-                "entity_id": "camera.mqtt_camera",
+                "entity_id": "camera.mqtt_mqtt_camera",
                 "subscriptions": [
                     {
                         "topic": "foobar/image",
@@ -1250,7 +1785,9 @@ async def test_debug_info_multiple_devices(
     for dev in devices:
         domain = dev["domain"]
         device_id = dev["config"]["device"]["identifiers"][0]
-        device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            ("mqtt", device_id), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+        )
         assert device is not None
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1277,7 +1814,7 @@ async def test_debug_info_multiple_entities_triggers(
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test we get correct debug_info for a device with multiple entities and triggers."""
+    """Test debug_info for a device with multiple entities."""
     await mqtt_mock_entry()
     config: list[_DebugInfo] = [
         {
@@ -1333,7 +1870,9 @@ async def test_debug_info_multiple_entities_triggers(
         await hass.async_block_till_done()
 
     device_id = config[0]["config"]["device"]["identifiers"][0]
-    device = device_registry.async_get_device(identifiers={("mqtt", device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", device_id), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
     debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 2
@@ -1387,7 +1926,7 @@ async def test_debug_info_non_mqtt(
         )
 
     assert await async_setup_component(
-        hass, mqtt.DOMAIN, {mqtt.DOMAIN: {domain: {"platform": "test"}}}
+        hass, DOMAIN, {DOMAIN: {domain: {"platform": "test"}}}
     )
 
     debug_info_data = debug_info.info_for_device(hass, device_entry.id)
@@ -1414,7 +1953,9 @@ async def test_debug_info_wildcard(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1463,7 +2004,9 @@ async def test_debug_info_same_topic(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1515,7 +2058,9 @@ async def test_debug_info_qos_retain(
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device_by_identifier(
+        ("mqtt", "helloworld"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
     assert device is not None
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1651,39 +2196,86 @@ async def test_subscribe_connection_status(
     assert mqtt_connected_calls_async[1] is False
 
 
+@pytest.mark.parametrize(
+    (
+        "topic",
+        "payload",
+        "qos",
+        "retain",
+        "message_expiry_interval",
+        "expected_properties_json",
+    ),
+    [
+        ("just_in_time", "published", 0, False, None, {}),
+        (
+            "also_just_in_time",
+            "just_published",
+            1,
+            False,
+            30,
+            {"MessageExpiryInterval": 30},
+        ),
+    ],
+)
 async def test_unload_config_entry(
     hass: HomeAssistant,
+    mock_debouncer: asyncio.Event,
     mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
+    topic: str,
+    payload: str,
+    qos: int,
+    retain: bool,
+    message_expiry_interval: int | None,
+    expected_properties_json: dict[str, Any],
 ) -> None:
     """Test unloading the MQTT entry."""
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker"},
+        domain=DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker", CONF_PROTOCOL: "5"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, mqtt.DOMAIN, {})
-    assert hass.services.has_service(mqtt.DOMAIN, "dump")
-    assert hass.services.has_service(mqtt.DOMAIN, "publish")
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert hass.services.has_service(DOMAIN, "dump")
+    assert hass.services.has_service(DOMAIN, "publish")
+    # Make sure the debouncer finishes
+    await mock_debouncer.wait()
 
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
     # Publish just before unloading to test await cleanup
     mqtt_client_mock.reset_mock()
-    mqtt.publish(hass, "just_in_time", "published", qos=0, retain=False)
+    mqtt.publish(
+        hass,
+        topic,
+        payload,
+        qos=qos,
+        retain=retain,
+        message_expiry_interval=message_expiry_interval,
+    )
     await hass.async_block_till_done()
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
     new_mqtt_config_entry = mqtt_config_entry
-    mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
+
+    assert len(mqtt_client_mock.publish.mock_calls) == 1
+    mock_call = mqtt_client_mock.publish.mock_calls[0]
+    mock_call_args = mock_call[1]
+    assert mock_call_args[0] == topic
+    assert mock_call_args[1] == payload
+    assert mock_call_args[2] == qos
+    assert mock_call_args[3] is retain
+    assert isinstance(mock_call_args[4], Properties)
+    assert mock_call_args[4].json() == expected_properties_json
+
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.services.has_service(mqtt.DOMAIN, "dump")
-    assert hass.services.has_service(mqtt.DOMAIN, "publish")
+    assert hass.services.has_service(DOMAIN, "dump")
+    assert hass.services.has_service(DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
 
 
@@ -1691,9 +2283,9 @@ async def test_publish_or_subscribe_without_valid_config_entry(
     hass: HomeAssistant, record_calls: MessageCallbackType
 ) -> None:
     """Test internal publish function with bad use cases."""
-    assert await async_setup_component(hass, mqtt.DOMAIN, {})
-    assert hass.services.has_service(mqtt.DOMAIN, "dump")
-    assert hass.services.has_service(mqtt.DOMAIN, "publish")
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert hass.services.has_service(DOMAIN, "dump")
+    assert hass.services.has_service(DOMAIN, "publish")
     with pytest.raises(HomeAssistantError):
         await mqtt.async_publish(
             hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
@@ -1726,11 +2318,17 @@ async def test_disabling_and_enabling_entry(
 ) -> None:
     """Test disabling and enabling the config entry."""
     await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
     # Late discovery of a mqtt entity
-    config_tag = '{"topic": "0AFFD2/tag_scanned", "value_template": "{{ value_json.PN532.UID }}"}'
-    config_alarm_control_panel = '{"name": "test_new", "state_topic": "home/alarm", "command_topic": "home/alarm/set"}'
+    config_tag = (
+        '{"topic": "0AFFD2/tag_scanned",'
+        ' "value_template": "{{ value_json.PN532.UID }}"}'
+    )
+    config_alarm_control_panel = (
+        '{"name": "test_new", "state_topic": "home/alarm",'
+        ' "command_topic": "home/alarm/set"}'
+    )
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
     with patch(
@@ -1760,8 +2358,8 @@ async def test_disabling_and_enabling_entry(
         in caplog.text
     )
     assert (
-        "MQTT integration is disabled, skipping setup of discovered item MQTT alarm_control_panel"
-        in caplog.text
+        "MQTT integration is disabled, skipping setup of"
+        " discovered item MQTT alarm_control_panel" in caplog.text
     )
     assert (
         "MQTT integration is disabled, skipping setup of discovered item MQTT light"
@@ -1787,7 +2385,7 @@ async def test_disabling_and_enabling_entry(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     "light": [
                         {
                             "name": "test1",
@@ -1806,7 +2404,7 @@ async def test_disabling_and_enabling_entry(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     "light": [
                         {
                             "name": "test1",
@@ -1842,7 +2440,7 @@ async def test_setup_manual_items_with_unique_ids(
     caplog.clear()
     await hass.services.async_call(
         "mqtt",
-        SERVICE_RELOAD,
+        MqttService.RELOAD,
         {},
         blocking=True,
     )
@@ -1893,8 +2491,8 @@ async def test_link_config_entry(
     entity_names = ["test_manual", "test_discovery"]
 
     # Check if both entities were linked to the MQTT config entry
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    mqtt_platforms = async_get_platforms(hass, mqtt.DOMAIN)
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    mqtt_platforms = async_get_platforms(hass, DOMAIN)
 
     @callback
     def _check_entities() -> int:
@@ -1910,7 +2508,7 @@ async def test_link_config_entry(
     assert _check_entities() == 2
 
     # reload entry and assert again
-    with patch("homeassistant.components.mqtt.async_client.AsyncMQTTClient"):
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient"):
         await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1926,7 +2524,7 @@ async def test_link_config_entry(
     # reload manual configured items and assert again
     await hass.services.async_call(
         "mqtt",
-        SERVICE_RELOAD,
+        MqttService.RELOAD,
         {},
         blocking=True,
     )
@@ -1974,12 +2572,12 @@ async def test_reload_config_entry(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.test_discovery") is not None
 
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     @callback
     def _check_entities() -> int:
         entities: list[Entity] = []
-        mqtt_platforms = async_get_platforms(hass, mqtt.DOMAIN)
+        mqtt_platforms = async_get_platforms(hass, DOMAIN)
         for mqtt_platform in mqtt_platforms:
             assert mqtt_platform.config_entry is entry
             entities += (entity for entity in mqtt_platform.entities.values())
@@ -2056,7 +2654,7 @@ async def test_reload_config_entry(
     ):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -2084,6 +2682,51 @@ async def test_reload_config_entry(
     assert state.state == "manual2_update_after_reload"
     assert (state := hass.states.get("sensor.test_manual3")) is not None
     assert state.state is STATE_UNAVAILABLE
+
+
+async def test_reload_config_entry_with_tag_and_device_trigger(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test reloading the entry with a discovered tag and device trigger."""
+    # The tag and device_automation integrations are normally loaded by
+    # default_config, they do not support unloading a forwarded config entry
+    assert await async_setup_component(hass, "tag", {})
+    assert await async_setup_component(hass, "device_automation", {})
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    device = {"identifiers": ["0AFFD2"]}
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/tag/0AFFD2/config",
+        json.dumps({"topic": "test-topic/tag_scanned", "device": device}),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/0AFFD2/action/config",
+        json.dumps(
+            {
+                "automation_type": "trigger",
+                "topic": "test-topic/action",
+                "type": "action",
+                "subtype": "click",
+                "device": device,
+            }
+        ),
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/sensor/0AFFD2/config",
+        json.dumps({"state_topic": "test-topic/sensor", "device": device}),
+    )
+    await hass.async_block_till_done()
+    assert {"tag", "device_automation", "sensor"} <= hass.data[
+        mqtt.DATA_MQTT
+    ].platforms_loaded
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -2116,7 +2759,7 @@ async def test_reload_with_invalid_config(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 "mqtt",
-                SERVICE_RELOAD,
+                MqttService.RELOAD,
                 {},
                 blocking=True,
             )
@@ -2152,7 +2795,7 @@ async def test_reload_with_empty_config(
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -2203,7 +2846,7 @@ async def test_reload_with_new_platform_config(
     with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
         await hass.services.async_call(
             "mqtt",
-            SERVICE_RELOAD,
+            MqttService.RELOAD,
             {},
             blocking=True,
         )
@@ -2277,8 +2920,9 @@ async def test_multi_platform_discovery(
             assert state is not None
     for platform in non_entity_configs:
         assert (
-            device_registry.async_get_device(
-                identifiers={("mqtt", f"{platform}_0AFFD2")}
+            device_registry.async_get_device_by_identifier(
+                ("mqtt", f"{platform}_0AFFD2"),
+                hass.config_entries.async_entries(DOMAIN)[0].entry_id,
             )
             is not None
         )
@@ -2313,16 +2957,14 @@ async def test_mqtt_integration_level_imports(attr: str) -> None:
 
 @pytest.mark.usefixtures("mqtt_client_mock")
 @pytest.mark.parametrize(
-    "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
+    "hass_config", [{DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
 )
 async def test_yaml_config_without_entry(
     hass: HomeAssistant, hass_config: ConfigType, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test a repair issue is created for YAML setup without an active config entry."""
-    await async_setup_component(hass, mqtt.DOMAIN, hass_config)
-    issue = issue_registry.async_get_issue(
-        mqtt.DOMAIN, "yaml_setup_without_active_setup"
-    )
+    await async_setup_component(hass, DOMAIN, hass_config)
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_setup_without_active_setup")
     assert issue is not None
     assert (
         issue.learn_more_url == "https://www.home-assistant.io/integrations/mqtt/"
@@ -2331,7 +2973,7 @@ async def test_yaml_config_without_entry(
 
 
 @pytest.mark.parametrize(
-    "hass_config", [{mqtt.DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
+    "hass_config", [{DOMAIN: {"sensor": {"state_topic": "test-topic"}}}]
 )
 async def test_yaml_config_with_active_mqtt_config_entry(
     hass: HomeAssistant,
@@ -2341,9 +2983,303 @@ async def test_yaml_config_with_active_mqtt_config_entry(
 ) -> None:
     """Test no repair issue is created for YAML setup with an active config entry."""
     await mqtt_mock_entry()
-    issue = issue_registry.async_get_issue(
-        mqtt.DOMAIN, "yaml_setup_without_active_setup"
-    )
+    issue = issue_registry.async_get_issue(DOMAIN, "yaml_setup_without_active_setup")
     state = hass.states.get("sensor.mqtt_sensor")
     assert state is not None
     assert issue is None
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PORT: 1883,
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1.1",
+            CONF_PORT: 1883,
+        },
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            CONF_PROTOCOL: "3.1",
+            CONF_PORT: 1883,
+        },
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_successful_migration_to_v5(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the silent MQTT protocol migration is successful."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with caplog.at_level(logging.INFO):
+        await mqtt_mock_entry()
+        assert len(events) == 0
+        assert (
+            "The MQTT protocol version was successfully updated to version 5"
+            in caplog.text
+        )
+        entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.data[mqtt.CONF_PROTOCOL] == mqtt.PROTOCOL_5
+
+
+@pytest.mark.parametrize("mock_v5_protocol_check", [False])
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "current_protocol"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1.1",
+                CONF_PORT: 1883,
+            },
+            "3.1.1",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PROTOCOL: "3.1",
+                CONF_PORT: 1883,
+            },
+            "3.1",
+        ),
+    ],
+    ids=[
+        "entry_without_protocol_without_port",
+        "entry_without_protocol_with_port",
+        "entry_with_protocol_3.1.1",
+        "entry_with_protocol_3.1",
+    ],
+)
+async def test_mqtt_protocol_failed_migration_to_v5(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    current_protocol: str,
+) -> None:
+    """Test failed silent MQTT protocol migration creates a repair issue."""
+    assert await async_setup_component(hass, "repairs", {})
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await mqtt_mock_entry()
+    assert len(events) == 1
+    assert events[0].data["issue_id"] == "protocol_5_migration"
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, "protocol_5_migration")
+    assert issue is not None
+    assert issue.translation_key == "protocol_5_migration"
+    assert issue.translation_placeholders == {
+        "broker": "mock-broker",
+        "protocol": current_protocol,
+    }
+    assert (
+        "The MQTT protocol version was successfully updated to version 5"
+        not in caplog.text
+    )
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert issue.config_entry_id == entry.entry_id
+    assert entry.data.get(mqtt.CONF_PROTOCOL, mqtt.PROTOCOL_311) == current_protocol
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "protocol_5_migration") is None
+
+
+INVALID_SENSOR_1 = {
+    "name": "test_1",
+    "state_topic": "test-topic",
+    "device_class": "energy",
+    "unit_of_measurement": "ppm",
+}
+INVALID_SENSOR_2 = {**INVALID_SENSOR_1, "name": "test_2"}
+VALID_SENSOR_2 = {**INVALID_SENSOR_2, "unit_of_measurement": "kWh"}
+# The ids are stable across restarts
+INVALID_SENSOR_1_ISSUE_ID = "invalid_platform_config_06215595fdd907a0"
+INVALID_SENSOR_2_ISSUE_ID = "invalid_platform_config_b05cc844b0025242"
+OTHER_ISSUE_ID = "01JQ0000000000000000000000"
+
+
+async def _disable_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    await hass.config_entries.async_set_disabled_by(entry_id, ConfigEntryDisabler.USER)
+
+
+async def _remove_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    await hass.config_entries.async_remove(entry_id)
+
+
+def _create_other_mqtt_issue(hass: HomeAssistant) -> None:
+    """Create an mqtt issue outside the scope of invalid platform config issues."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        OTHER_ISSUE_ID,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="subentry_migration_yaml",
+        translation_placeholders={"name": "test"},
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{DOMAIN: {"sensor": [INVALID_SENSOR_1, INVALID_SENSOR_2]}}]
+)
+async def test_entry_reload_keeps_invalid_platform_config_issues(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test entry reload keeps issues of still invalid items and deletes stale ones."""
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    _create_other_mqtt_issue(hass)
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, INVALID_SENSOR_2_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={DOMAIN: {"sensor": [INVALID_SENSOR_1, VALID_SENSOR_2]}},
+    ):
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == HA_VERSION
+    # The still invalid item's issue is neither removed nor re-created
+    assert [event.data for event in events] == [
+        {"action": "remove", "domain": DOMAIN, "issue_id": INVALID_SENSOR_2_ISSUE_ID}
+    ]
+
+
+@pytest.mark.parametrize(
+    "hass_config", [{DOMAIN: {"sensor": [INVALID_SENSOR_1, INVALID_SENSOR_2]}}]
+)
+async def test_reload_service_invalid_platform_config_issues(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the reload service keeps issues when it fails and deletes stale ones."""
+    await mqtt_mock_entry()
+    _create_other_mqtt_issue(hass)
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    # The reload service rejects a config with invalid items
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            return_value={DOMAIN: {"sensor": [INVALID_SENSOR_1, VALID_SENSOR_2]}},
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, INVALID_SENSOR_2_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version == HA_VERSION
+    assert events == []
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={DOMAIN: {"sensor": [VALID_SENSOR_2]}},
+    ):
+        await hass.services.async_call(DOMAIN, MqttService.RELOAD, {}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert set(issue_registry.issues) == {(DOMAIN, OTHER_ISSUE_ID)}
+
+
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {"sensor": INVALID_SENSOR_1}}])
+@pytest.mark.parametrize(
+    ("unload", "expected_dismissed_versions"),
+    [
+        # Core hides the issues of a disabled entry, keeping them keeps the ignore
+        pytest.param(
+            _disable_config_entry,
+            {
+                (DOMAIN, INVALID_SENSOR_1_ISSUE_ID): HA_VERSION,
+                (DOMAIN, OTHER_ISSUE_ID): None,
+            },
+            id="disable",
+        ),
+        pytest.param(
+            _remove_config_entry, {(DOMAIN, OTHER_ISSUE_ID): None}, id="remove"
+        ),
+    ],
+)
+async def test_invalid_platform_config_issues_on_entry_disable_or_remove(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    issue_registry: ir.IssueRegistry,
+    unload: Callable[[HomeAssistant, str], Coroutine[Any, Any, None]],
+    expected_dismissed_versions: dict[tuple[str, str], str | None],
+) -> None:
+    """Test issues of invalid items are kept when the entry is disabled.
+
+    They are deleted when the entry is removed.
+    """
+    await mqtt_mock_entry()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    _create_other_mqtt_issue(hass)
+    assert set(issue_registry.issues) == {
+        (DOMAIN, INVALID_SENSOR_1_ISSUE_ID),
+        (DOMAIN, OTHER_ISSUE_ID),
+    }
+    issue = issue_registry.async_get_issue(DOMAIN, INVALID_SENSOR_1_ISSUE_ID)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+    ir.async_ignore_issue(hass, DOMAIN, INVALID_SENSOR_1_ISSUE_ID, True)
+
+    await unload(hass, entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert {
+        key: issue.dismissed_version for key, issue in issue_registry.issues.items()
+    } == expected_dismissed_versions

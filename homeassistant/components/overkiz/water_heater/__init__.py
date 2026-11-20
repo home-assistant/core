@@ -1,7 +1,5 @@
 """Support for Overkiz water heater devices."""
 
-from __future__ import annotations
-
 from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.const import Platform
@@ -10,8 +8,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
 from ..entity import OverkizEntity
+from .atlantic_domestic_hot_water_production_io_component import (
+    AtlanticDomesticHotWaterProductionIOComponent,
+)
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
+)
+from .atlantic_domestic_hot_water_production_v2_ce_flat_c2_io_component import (
+    AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent,
 )
 from .atlantic_domestic_hot_water_production_v2_io_component import (
     AtlanticDomesticHotWaterProductionV2IOComponent,
@@ -19,6 +23,8 @@ from .atlantic_domestic_hot_water_production_v2_io_component import (
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
 from .hitachi_dhw import HitachiDHW
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -54,7 +60,22 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 }
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
-    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
-    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
-    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
+    "io:AtlanticDomesticHotWaterProductionIOComponent": (
+        AtlanticDomesticHotWaterProductionIOComponent
+    ),
+    "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": (
+        AtlanticDomesticHotWaterProductionMBLComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2IOComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2IOComponent
+    ),
+    "io:AtlanticDomesticHotWaterProductionV2_MURAL_IOComponent": (
+        AtlanticDomesticHotWaterProductionV2IOComponent
+    ),
 }

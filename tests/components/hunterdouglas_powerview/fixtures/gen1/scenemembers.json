@@ -1,0 +1,551 @@
+{
+  "sceneMemberIds": [
+    64407, 13542, 43466, 881, 51360, 27003, 32733, 58908, 41516, 52855, 2125,
+    18781, 2697, 59661, 58301, 38062, 46934, 60041, 56318, 42923, 19317, 62337,
+    17806, 64046, 61754, 35188, 57585, 44607, 5621, 64848, 5692, 41162, 56783,
+    38058, 46346, 6358, 61891, 12137, 45552, 57019, 20718, 43661, 58875, 53326,
+    61328, 400, 45652, 52292, 19246, 30009
+  ],
+  "sceneMemberData": [
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 64407,
+      "sceneId": 61648,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 13542,
+      "sceneId": 14067,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 43466,
+      "sceneId": 24626,
+      "shadeId": 40836,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 0,
+        "posKind1": 1
+      },
+      "id": 881,
+      "sceneId": 28856,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 40,
+        "posKind2": 2,
+        "position2": 9679
+      },
+      "id": 51360,
+      "sceneId": 61648,
+      "shadeId": 17062,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 0,
+        "posKind1": 1
+      },
+      "id": 27003,
+      "sceneId": 48043,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 32733,
+      "sceneId": 36482,
+      "shadeId": 65396,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 58908,
+      "sceneId": 61648,
+      "shadeId": 13542,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 0,
+        "posKind1": 1
+      },
+      "id": 41516,
+      "sceneId": 48043,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 52855,
+      "sceneId": 61648,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 2125,
+      "sceneId": 36482,
+      "shadeId": 13542,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 18781,
+      "sceneId": 44767,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 30334
+      },
+      "id": 2697,
+      "sceneId": 959,
+      "shadeId": 40836,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 59661,
+      "sceneId": 48756,
+      "shadeId": 13542,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 58301,
+      "sceneId": 24626,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 27
+      },
+      "id": 38062,
+      "sceneId": 24626,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 40,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 46934,
+      "sceneId": 24626,
+      "shadeId": 13028,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 60041,
+      "sceneId": 48043,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 56318,
+      "sceneId": 24626,
+      "shadeId": 5359,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 16
+      },
+      "id": 42923,
+      "sceneId": 24626,
+      "shadeId": 13542,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 19317,
+      "sceneId": 59103,
+      "shadeId": 40836,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 180,
+        "posKind2": 2,
+        "position2": 6300
+      },
+      "id": 62337,
+      "sceneId": 19525,
+      "shadeId": 13028,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 44624
+      },
+      "id": 17806,
+      "sceneId": 61648,
+      "shadeId": 40836,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 64046,
+      "sceneId": 49070,
+      "shadeId": 5359,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 160
+      },
+      "id": 61754,
+      "sceneId": 25458,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 65535,
+        "posKind1": 1
+      },
+      "id": 35188,
+      "sceneId": 61648,
+      "shadeId": 40458,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 57585,
+      "sceneId": 61648,
+      "shadeId": 65396,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 44607,
+      "sceneId": 64679,
+      "shadeId": 40458,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 5621,
+      "sceneId": 59188,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 64848,
+      "sceneId": 61648,
+      "shadeId": 5359,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 0,
+        "posKind1": 1,
+        "posKind2": 2,
+        "position2": 46745
+      },
+      "id": 5692,
+      "sceneId": 61648,
+      "shadeId": 49782,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 41162,
+      "sceneId": 61648,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 56783,
+      "sceneId": 6789,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 47,
+        "posKind2": 2,
+        "position2": 9570
+      },
+      "id": 38058,
+      "sceneId": 22498,
+      "shadeId": 17062,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 46346,
+      "sceneId": 24626,
+      "shadeId": 40458,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 6358,
+      "sceneId": 3455,
+      "shadeId": 49782,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 23
+      },
+      "id": 61891,
+      "sceneId": 24626,
+      "shadeId": 65396,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 67
+      },
+      "id": 12137,
+      "sceneId": 24626,
+      "shadeId": 37688,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 45552,
+      "sceneId": 3455,
+      "shadeId": 13028,
+      "type": 0
+    },
+    {
+      "positions": {
+        "position1": 65535,
+        "posKind1": 1
+      },
+      "id": 57019,
+      "sceneId": 59188,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 0
+      },
+      "id": 20718,
+      "sceneId": 24626,
+      "shadeId": 49782,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 65535
+      },
+      "id": 43661,
+      "sceneId": 59188,
+      "shadeId": 49988,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 58875,
+      "sceneId": 48756,
+      "shadeId": 65396,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0
+      },
+      "id": 53326,
+      "sceneId": 51159,
+      "shadeId": 40458,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 480
+      },
+      "id": 61328,
+      "sceneId": 24626,
+      "shadeId": 17062,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 0,
+        "posKind2": 2,
+        "position2": 480
+      },
+      "id": 400,
+      "sceneId": 49070,
+      "shadeId": 17062,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 8,
+        "posKind2": 2,
+        "position2": 6361
+      },
+      "id": 45652,
+      "sceneId": 19525,
+      "shadeId": 49782,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 16,
+        "posKind2": 2,
+        "position2": 47522
+      },
+      "id": 52292,
+      "sceneId": 61648,
+      "shadeId": 13028,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind1": 1,
+        "position1": 64138
+      },
+      "id": 19246,
+      "sceneId": 59968,
+      "shadeId": 26355,
+      "type": 0
+    },
+    {
+      "positions": {
+        "posKind2": 2,
+        "position1": 0,
+        "position2": 0,
+        "posKind1": 1
+      },
+      "id": 30009,
+      "sceneId": 22498,
+      "shadeId": 5359,
+      "type": 0
+    }
+  ]
+}

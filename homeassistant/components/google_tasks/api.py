@@ -116,7 +116,8 @@ class AsyncConfigEntryAuth:
         def response_handler(_, response, exception: HttpError) -> None:
             if exception is not None:
                 raise GoogleTasksApiError(
-                    f"Google Tasks API responded with error ({exception.reason or exception.status_code})"
+                    "Google Tasks API responded with error"
+                    f" ({exception.reason or exception.status_code})"
                 ) from exception
             if response:
                 data = json.loads(response)
@@ -151,9 +152,13 @@ class AsyncConfigEntryAuth:
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> Any:
         try:
             result = await self._hass.async_add_executor_job(request.execute)
-        except (HttpError, ServerNotFoundError) as err:
+        except HttpError as err:
             raise GoogleTasksApiError(
-                f"Google Tasks API responded with: {err.reason or err.status_code})"
+                f"Google Tasks API responded with: {err.reason or err.status_code}"
+            ) from err
+        except ServerNotFoundError as err:
+            raise GoogleTasksApiError(
+                f"Unable to reach the Google Tasks API: {err}"
             ) from err
         if result:
             _raise_if_error(result)

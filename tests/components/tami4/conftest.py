@@ -1,18 +1,17 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
 from collections.abc import Generator
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from Tami4EdgeAPI.device import Device
 from Tami4EdgeAPI.device_metadata import DeviceMetadata
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def create_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -95,11 +94,11 @@ def mock_get_device(
 
     water_quality = WaterQuality(
         uv=UV(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(time.time()),
             installed=True,
         ),
         filter=Filter(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(time.time()),
             milli_litters_passed=1000,
             installed=True,
         ),
@@ -131,7 +130,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
 
     with patch(
-        "homeassistant.components.tami4.async_setup_entry", return_value=True
+        "homeassistant.components.tami4.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

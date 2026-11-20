@@ -1,20 +1,31 @@
 """Integration to integrate Keymitt BLE devices with Home Assistant."""
 
-from __future__ import annotations
-
 from microbot import MicroBotApiClient
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import MicroBotConfigEntry, MicroBotDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[str] = [Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Keymitt MicroBot Push integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> None:
     """Set up this integration using UI."""
     token: str = entry.data[CONF_ACCESS_TOKEN]
     bdaddr: str = entry.data[CONF_ADDRESS]
@@ -34,9 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(coordinator.async_start())
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MicroBotConfigEntry) -> None:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

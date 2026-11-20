@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "current_tariff_period": {
+        "default": "mdi:cash-clock"
+      },
+      "tomorrow_color": {
+        "default": "mdi:calendar-arrow-right"
+      }
+    }
+  }
+}

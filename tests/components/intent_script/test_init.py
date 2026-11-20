@@ -3,20 +3,21 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service, get_fixture_path
 
 from homeassistant import config as hass_config
-from homeassistant.components.intent_script import DOMAIN
-from homeassistant.const import ATTR_FRIENDLY_NAME, SERVICE_RELOAD
+from homeassistant.components.intent_script.const import DOMAIN
+from homeassistant.components.intent_script.services import IntentScriptService
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ACTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
     floor_registry as fr,
     intent,
+    script,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service, get_fixture_path
 
 
 async def test_intent_script(hass: HomeAssistant) -> None:
@@ -25,7 +26,7 @@ async def test_intent_script(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorld": {
@@ -77,7 +78,7 @@ async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorldWaitResponse": {
@@ -134,7 +135,7 @@ async def test_intent_script_service_response(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorldServiceResponse": {
@@ -164,7 +165,7 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "HelloWorld": {
@@ -178,7 +179,11 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
                     },
                     "speech": {
                         "type": "ssml",
-                        "text": '<speak><amazon:effect name="whispered">Good morning {{ name }}</amazon:effect></speak>',
+                        "text": (
+                            '<speak><amazon:effect name="whispered">'
+                            "Good morning {{ name }}"
+                            "</amazon:effect></speak>"
+                        ),
                     },
                     "reprompt": {"text": "{{ null }}"},
                 }
@@ -193,9 +198,9 @@ async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data["hello"] == "Paulus"
 
-    assert (
-        response.speech["ssml"]["speech"]
-        == '<speak><amazon:effect name="whispered">Good morning Paulus</amazon:effect></speak>'
+    assert response.speech["ssml"]["speech"] == (
+        '<speak><amazon:effect name="whispered">'
+        "Good morning Paulus</amazon:effect></speak>"
     )
 
     assert not (response.reprompt)
@@ -215,7 +220,7 @@ async def test_intent_script_targets(
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "Targets": {
@@ -328,7 +333,7 @@ async def test_intent_script_action_validation(
 
     await async_setup_component(
         hass,
-        "intent_script",
+        DOMAIN,
         {
             "intent_script": {
                 "ChooseWithRegistryIdIntent": {
@@ -339,9 +344,10 @@ async def test_intent_script_action_validation(
                                     "conditions": [
                                         {
                                             "condition": "state",
-                                            # Use entity registry ID instead of entity_id
-                                            # This requires async_validate_actions_config
-                                            # to resolve to the actual entity_id
+                                            # Use entity registry ID
+                                            # instead of entity_id.
+                                            # async_validate_actions_config
+                                            # resolves to actual entity_id
                                             "entity_id": entry.id,
                                             "state": "on",
                                         }
@@ -364,7 +370,8 @@ async def test_intent_script_action_validation(
                     ],
                     "speech": {"text": "Done"},
                 },
-                # This intent has an invalid entity registry ID and should fail validation
+                # This intent has an invalid entity registry ID
+                # and should fail validation
                 "InvalidIntent": {
                     "action": [
                         {
@@ -391,7 +398,11 @@ async def test_intent_script_action_validation(
     )
 
     # Verify that the invalid intent logged an error
-    assert "Failed to validate actions for intent InvalidIntent" in caplog.text
+    assert (
+        "Failed to validate actions for intent InvalidIntent: "
+        f"Unknown entity registry entry {non_existent_registry_id} "
+        "at 'action[0].choose[0].conditions[0]'"
+    ) in caplog.text
 
     # The invalid intent should not be registered
     with pytest.raises(intent.UnknownIntent):
@@ -423,7 +434,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     config = {"intent_script": {"NewIntent1": {"speech": {"text": "HelloWorld123"}}}}
 
-    await async_setup_component(hass, "intent_script", config)
+    await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     intents = hass.data.get(intent.DATA_KEY)
@@ -436,7 +447,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -452,7 +463,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RELOAD,
+            IntentScriptService.RELOAD,
             {},
             blocking=True,
         )
@@ -462,3 +473,40 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert len(intents) == 0
     assert intents.get("NewIntent1") is None
     assert intents.get("NewIntent2") is None
+
+
+async def test_reload_unloads_scripts(hass: HomeAssistant) -> None:
+    """Test that reloading intent scripts unloads the action scripts."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "intent_script": {
+                "TestIntent": {
+                    "action": {"service": "test.service"},
+                }
+            }
+        },
+    )
+
+    existing_intents = hass.data[DOMAIN]
+    action_script = existing_intents["TestIntent"][CONF_ACTION]
+    assert isinstance(action_script, script.Script)
+
+    yaml_path = get_fixture_path("configuration_no_entry.yaml", "intent_script")
+    with (
+        patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path),
+        patch.object(
+            action_script, "async_stop", wraps=action_script.async_stop
+        ) as stop_mock,
+        patch.object(
+            action_script, "async_unload", wraps=action_script.async_unload
+        ) as unload_mock,
+    ):
+        await hass.services.async_call(
+            DOMAIN, IntentScriptService.RELOAD, blocking=True
+        )
+        await hass.async_block_till_done()
+
+    stop_mock.assert_called_once()
+    unload_mock.assert_called_once()

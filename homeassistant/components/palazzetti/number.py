@@ -1,11 +1,12 @@
 """Number platform for Palazzetti settings."""
 
-from __future__ import annotations
+from typing import override
 
 from pypalazzetti.exceptions import CommunicationError, ValidationError
 from pypalazzetti.fan import FanType
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -13,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -38,6 +41,7 @@ async def async_setup_entry(
 class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
     """Representation of Palazzetti number entity for Combustion power."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "combustion_power"
     _attr_device_class = NumberDeviceClass.POWER_FACTOR
     _attr_native_min_value = 1
@@ -53,10 +57,12 @@ class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}-combustion_power"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the setting entity."""
         return self.coordinator.client.power_mode
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         try:
@@ -80,6 +86,7 @@ class PalazzettiCombustionPowerEntity(PalazzettiEntity, NumberEntity):
 class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
     """Representation of Palazzetti number entity for Combustion power."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = NumberDeviceClass.WIND_SPEED
     _attr_native_step = 1
 
@@ -98,10 +105,12 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the setting entity."""
         return self.coordinator.client.current_fan_speed(self.fan)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         try:

@@ -1,9 +1,7 @@
 """Const for conversation integration."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -12,7 +10,7 @@ if TYPE_CHECKING:
 
     from .entity import ConversationEntity
 
-DOMAIN = "conversation"
+DOMAIN: Final = "conversation"
 HOME_ASSISTANT_AGENT = "conversation.home_assistant"
 
 ATTR_TEXT = "text"
@@ -21,7 +19,6 @@ ATTR_AGENT_ID = "agent_id"
 ATTR_CONVERSATION_ID = "conversation_id"
 
 SERVICE_PROCESS = "process"
-SERVICE_RELOAD = "reload"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
 
@@ -51,3 +48,19 @@ class ChatLogEventType(StrEnum):
     UPDATED = "updated"
     DELETED = "deleted"
     CONTENT_ADDED = "content_added"
+
+
+class ConversationService(StrEnum):
+    """Store keys for conversation services."""
+
+    PROCESS = "process"
+    RELOAD = "reload"
+
+
+class ConversationServiceArgument(StrEnum):
+    """Store keys for conversation service arguments."""
+
+    AGENT_ID = "agent_id"
+    CONVERSATION_ID = "conversation_id"
+    LANGUAGE = "language"
+    TEXT = "text"

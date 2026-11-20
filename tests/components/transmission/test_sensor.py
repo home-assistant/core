@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.transmission.const import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensors(
@@ -72,6 +71,11 @@ async def test_stats_sensors(
     state = hass.states.get("sensor.transmission_total_ratio")
     assert state is not None
     assert float(state.state) == pytest.approx(0.8, rel=1e-3)
+
+    # Free disk space: 40 GiB = 40.0 GiB
+    state = hass.states.get("sensor.transmission_available_disk_space")
+    assert state is not None
+    assert float(state.state) == pytest.approx(40.0, rel=1e-3)
 
 
 def test_get_state_combinations() -> None:

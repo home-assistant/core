@@ -4,9 +4,10 @@ from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import async_get_agent, default_agent
+from homeassistant.components.conversation import DOMAIN, async_get_agent, default_agent
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -14,13 +15,11 @@ from homeassistant.setup import async_setup_component
 
 from . import MockAgent
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_ulid() -> Generator[Mock]:
     """Mock the ulid library."""
-    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+    with patch("homeassistant.helpers.chat_session.secure_ulid_now") as mock_ulid_now:
         mock_ulid_now.return_value = "mock-ulid"
         yield mock_ulid_now
 
@@ -75,7 +74,7 @@ async def sl_setup(hass: HomeAssistant):
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {conversation.DOMAIN: {}})
+    assert await async_setup_component(hass, DOMAIN, {conversation.DOMAIN: {}})
 
     # Disable fuzzy matching by default for tests
     agent = async_get_agent(hass)

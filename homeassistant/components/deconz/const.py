@@ -43,7 +43,6 @@ PLATFORMS = [
 ]
 
 ATTR_DARK = "dark"
-ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"

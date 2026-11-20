@@ -7,15 +7,13 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.components.music_assistant.number import (
-    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
-)
+from homeassistant.components.music_assistant.number import PLAYER_OPTIONS_NUMBER
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -57,10 +55,10 @@ async def test_number_set_action(
     # test within range
     await hass.services.async_call(
         NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
+        NumberService.SET_VALUE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_VALUE: option_value,
+            TargetKey.ENTITY_ID: entity_id,
+            NumberServiceArgument.VALUE: option_value,
         },
         blocking=True,
     )
@@ -77,10 +75,10 @@ async def test_number_set_action(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
+            NumberService.SET_VALUE,
             {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: 20,
+                TargetKey.ENTITY_ID: entity_id,
+                NumberServiceArgument.VALUE: 20,
             },
             blocking=True,
         )
@@ -134,20 +132,36 @@ async def test_ignored(
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id=config_entry.entry_id
     )
-    # we only have two non read-only player options, bass and treble
-    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 2
+    # we only have three non read-only player options, bass, treble and balance
+    assert sum(1 for entry in registry_entries if entry.domain == NUMBER_DOMAIN) == 3
+
+
+async def test_disabled_by_default(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a player option disabled by default is registered disabled."""
+    entity_id = "number.test_player_1_balance"
+
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None
 
 
 async def test_name_translation_availability(
     hass: HomeAssistant,
 ) -> None:
-    """Verify, that the list of available translation keys is reflected in strings.json."""
+    """Verify available translation keys are in strings.json."""
     # verify, that PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER matches strings.json
     translations = await async_get_translations(
         hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]
     )
     prefix = f"component.{DOMAIN}.entity.{Platform.NUMBER.value}."
-    for translation_key in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER:
+    for translation_key in PLAYER_OPTIONS_NUMBER:
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )

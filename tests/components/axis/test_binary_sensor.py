@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, RtspEventMock
-
-from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -64,14 +63,18 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -85,7 +88,9 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -100,7 +105,9 @@ from tests.common import snapshot_platform
         ),
         (
             {
-                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8",
+                "topic": (
+                    "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario8"
+                ),
                 "data_type": "active",
                 "data_value": "1",
             }
@@ -149,7 +156,9 @@ async def test_binary_sensors(
             "data_value": "1",
         },
         {
-            "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1ScenarioANY",
+            "topic": (
+                "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1ScenarioANY"
+            ),
             "data_type": "active",
             "data_value": "1",
         },

@@ -39,7 +39,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
+)
 
 
 async def test_generic_numeric_sensor(
@@ -129,7 +133,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
@@ -168,7 +172,7 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is None
 
 
@@ -205,7 +209,7 @@ async def test_generic_numeric_sensor_state_class_measurement_angle(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is None
 
 
@@ -236,12 +240,39 @@ async def test_generic_numeric_sensor_device_class_timestamp(
     assert state.state == "2023-06-22T18:43:52+00:00"
 
 
+async def test_generic_numeric_sensor_device_class_uptime(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a sensor entity that uses uptime (epoch)."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            device_class="uptime",
+        )
+    ]
+    states = [SensorState(key=1, state=1687459432.466624)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "2023-06-22T18:43:52+00:00"
+
+
 async def test_generic_numeric_sensor_legacy_last_reset_convert(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a state class of measurement with last reset type of auto is converted to total increasing."""
+    """Test measurement with last_reset auto converts to total_increasing."""
     entity_info = [
         SensorInfo(
             object_id="mysensor",
@@ -536,3 +567,55 @@ async def test_suggested_display_precision_by_device_class(
     assert float(
         async_rounded_state(hass, "sensor.test_my_sensor", state)
     ) == pytest.approx(round(state_value, expected_precision))
+
+
+async def test_sensor_state_class_and_unit_removed_by_firmware_update(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test a firmware update that drops the state class and unit clears them.
+
+    The entity is updated in place on reconnect, so values the new firmware
+    no longer sets must not carry over from the old static info.
+    """
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            state_class=ESPHomeSensorStateClass.MEASUREMENT,
+            unit_of_measurement="W",
+        )
+    ]
+    states = [SensorState(key=1, state=50)]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "W"
+
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        [
+            SensorInfo(
+                object_id="mysensor",
+                key=1,
+                name="my sensor",
+                state_class=ESPHomeSensorStateClass.NONE,
+                unit_of_measurement="",
+            )
+        ],
+        states=[SensorState(key=1, state=51)],
+    )
+
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "51"
+    assert ATTR_STATE_CLASS not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

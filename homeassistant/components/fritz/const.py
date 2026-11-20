@@ -1,6 +1,7 @@
 """Constants for the FRITZ!Box Tools integration."""
 
 from enum import StrEnum
+import logging
 from typing import Literal
 
 from fritzconnection.core.exceptions import (
@@ -16,6 +17,8 @@ from fritzconnection.core.exceptions import (
 from requests.exceptions import ConnectionError
 
 from homeassistant.const import Platform
+
+LOGGER = logging.getLogger(__package__)
 
 
 class MeshRoles(StrEnum):
@@ -66,8 +69,6 @@ SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
 
 BUTTON_TYPE_WOL = "WakeOnLan"
 
-UPTIME_DEVIATION = 5
-
 FRITZ_EXCEPTIONS = (
     ConnectionError,
     FritzActionError,
@@ -82,3 +83,4 @@ FRITZ_AUTH_EXCEPTIONS = (FritzAuthorizationError, FritzSecurityError)
 
 
 CONNECTION_TYPE_LAN = "LAN"
+CONNECTION_TYPE_WLAN = "WLAN"

@@ -1,13 +1,15 @@
 """Tests for the UniFi Access event platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from unifi_access_api.models.websocket import (
+    DeviceUpdate,
+    DeviceUpdateData,
+    DeviceUpdateDoor,
     HwDoorbell,
     HwDoorbellData,
     InsightsAdd,
@@ -21,6 +23,11 @@ from unifi_access_api.models.websocket import (
     LogEvent,
     LogSource,
     LogTarget,
+    RemoteView,
+    RemoteViewData,
+    V2DeviceLocationState,
+    V2DeviceUpdate,
+    V2DeviceUpdateData,
     V2LocationUpdate,
     V2LocationUpdateData,
     WebsocketMessage,
@@ -31,8 +38,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FRONT_DOOR_DOORBELL_ENTITY = "event.front_door_doorbell"
 FRONT_DOOR_ACCESS_ENTITY = "event.front_door_access"
@@ -194,6 +199,7 @@ async def test_access_event(
     assert state.attributes["actor"] == actor
     assert state.attributes["authentication"] == authentication
     assert state.attributes["result"] == result
+    assert "direction" not in state.attributes
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
@@ -455,6 +461,7 @@ async def test_logs_add_access_granted(
     assert state.attributes["actor"] == "John Doe"
     assert state.attributes["authentication"] == "NFC"
     assert state.attributes["result"] == "ACCESS"
+    assert "direction" not in state.attributes
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
@@ -607,6 +614,7 @@ async def test_logs_add_no_device_config_target_ignored(
 
     log_msg = LogAdd(
         event="access.logs.add",
+        door_id="door-001",  # enriched door_id must not bypass missing device_config
         data=LogAddData(
             source=LogSource(
                 target=[
@@ -777,3 +785,858 @@ async def test_logs_add_device_mapping_pruned_on_refresh(
 
     # door-001 entity was removed when the door disappeared
     assert hass.states.get(FRONT_DOOR_ACCESS_ENTITY) is None
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_doorbell_ring_by_device_id(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.remote_view fires doorbell ring when device_id is in the mapping."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="hub-device-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_doorbell_ring_by_door_name_fallback(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test remote_view falls back to door_name when device_id is unmapped."""
+    handlers = _get_ws_handlers(mock_client)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="unknown-device", door_name="Front Door"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_remote_view_unknown_device_and_door_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test remote_view is ignored when device_id and door_name are unknown."""
+    handlers = _get_ws_handlers(mock_client)
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="unknown-device", door_name="Unknown Door"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_device_mapping_via_device_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test remote_view resolves device_id populated by data.device.update."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(
+            unique_id="intercom-device-001",
+            door=DeviceUpdateDoor(unique_id="door-001"),
+        ),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="intercom-device-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_remote_view_device_mapping_via_v2_device_update(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test remote_view resolves device_id from data.v2.device.update."""
+    handlers = _get_ws_handlers(mock_client)
+
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="intercom-v2-001",
+            location_states=[V2DeviceLocationState(location_id="door-001")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="intercom-v2-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "ring"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_v2_device_update_multiple_location_states_maps_to_first_door(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test device with multiple location_states maps to the first valid door only."""
+    handlers = _get_ws_handlers(mock_client)
+
+    # Device has two location_states; should be mapped to the first door (door-001).
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="hub-multi-001",
+            location_states=[
+                V2DeviceLocationState(location_id="door-001"),
+                V2DeviceLocationState(location_id="door-002"),
+            ],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="hub-multi-001"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    # Should ring front door (door-001), not back door (door-002)
+    front_state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert front_state is not None
+    assert front_state.attributes["event_type"] == "ring"
+    assert front_state.state == "2025-01-01T00:00:00.000+00:00"
+
+    back_state = hass.states.get(BACK_DOOR_DOORBELL_ENTITY)
+    assert back_state is not None
+    assert back_state.state == "unknown"
+
+
+async def test_device_update_without_door_does_not_map(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.device.update without a door does not populate the mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(unique_id="orphan-device"),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    # Sending a remote_view for that device should not fire a doorbell event
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id="orphan-device"),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_device_update_empty_unique_id_does_not_pollute_mapping(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.device.update with empty unique_id does not create mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    device_update_msg = DeviceUpdate(
+        event="access.data.device.update",
+        data=DeviceUpdateData(
+            unique_id="",
+            door=DeviceUpdateDoor(unique_id="door-001"),
+        ),
+    )
+    await handlers["access.data.device.update"](device_update_msg)
+    await hass.async_block_till_done()
+
+    # An empty device_id must not accidentally resolve via the empty-string key
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id=""),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_v2_device_update_empty_id_does_not_pollute_mapping(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test access.data.v2.device.update with empty id does not create mapping."""
+    handlers = _get_ws_handlers(mock_client)
+
+    v2_device_update_msg = V2DeviceUpdate(
+        event="access.data.v2.device.update",
+        data=V2DeviceUpdateData(
+            id="",
+            location_states=[V2DeviceLocationState(location_id="door-001")],
+        ),
+    )
+    await handlers["access.data.v2.device.update"](v2_device_update_msg)
+    await hass.async_block_till_done()
+
+    # The empty-string device id must not produce an entry in _device_to_door
+    remote_view_msg = RemoteView(
+        event="access.remote_view",
+        data=RemoteViewData(device_id=""),
+    )
+    await handlers["access.remote_view"](remote_view_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_DOORBELL_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_uah_door_via_enriched_door_id(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR access event resolved via library-enriched door_id."""
+    handlers = _get_ws_handlers(mock_client)
+
+    # UAH-DOOR: device MAC is not in coordinator's _device_to_door,
+    # but the library has enriched msg.door_id via its MAC→door map.
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                actor=LogActor(display_name="Jane Doe"),
+                event=LogEvent(result="ACCESS"),
+                authentication=LogAuthentication(credential_provider="NFC"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["actor"] == "Jane Doe"
+    assert state.attributes["authentication"] == "NFC"
+    assert state.attributes["result"] == "ACCESS"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_uah_door_access_denied(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR access_denied event resolved via library-enriched door_id."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                event=LogEvent(result="BLOCKED"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_denied"
+    assert state.attributes["result"] == "BLOCKED"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+async def test_logs_add_uah_door_unknown_door_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test UAH-DOOR event is ignored when door_id is not a known door."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        door_id="door-unknown",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="uah-door-mac-aa:bb:cc:dd:ee:ff",
+                        display_name="UAH Door Reader",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_logs_add_no_device_and_no_enriched_door_id_ignored(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test logs.add is ignored when neither device mapping nor door_id resolves."""
+    handlers = _get_ws_handlers(mock_client)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="unknown-device",
+                        display_name="Unknown",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_insights_add_direction(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test direction attribute is included in access event when present."""
+    handlers = _get_ws_handlers(mock_client)
+
+    insights_msg = InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                opened_direction=[InsightsMetadataEntry(display_name="entry")],
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](insights_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["direction"] == "entry"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_logs_add_direction(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test direction attribute is included in event from logs.add."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    log_msg = LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                    LogTarget(
+                        type="device_config",
+                        id="door_entry_method",
+                        display_name="entry",
+                    ),
+                ],
+                event=LogEvent(result="ACCESS"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](log_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    assert state.attributes["direction"] == "entry"
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+def _make_insights_add(
+    event_object_id: str = "hub-001",
+    result: str = "ACCESS",
+    actor: str = "John Doe",
+    auth_id: str = "auth-001",
+    published: int = 1700000000,
+) -> InsightsAdd:
+    """Build an access.logs.insights.add message for the front door."""
+    return InsightsAdd(
+        event="access.logs.insights.add",
+        event_object_id=event_object_id,
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result=result,
+            published=published,
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                actor=InsightsMetadataEntry(display_name=actor),
+                authentication=InsightsMetadataEntry(id=auth_id, display_name="FACE"),
+            ),
+        ),
+    )
+
+
+def _make_logs_add(
+    event_object_id: str = "hub-001",
+    result: str = "ACCESS",
+    actor: str = "John Doe",
+    auth_id: str | None = "auth-001",
+    published: int | None = 1700000000,
+    device_id: str = "hub-device-001",
+) -> LogAdd:
+    """Build an access.logs.add message for the front door."""
+    return LogAdd(
+        event="access.logs.add",
+        event_object_id=event_object_id,
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id=device_id,
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name=actor),
+                event=LogEvent(
+                    type="access.door.unlock", result=result, published=published
+                ),
+                authentication=LogAuthentication(
+                    credential_provider="FACE", issuer=auth_id
+                ),
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("first_event", "second_event"),
+    [
+        pytest.param(
+            "access.logs.insights.add",
+            "access.logs.add",
+            id="insights-first",
+        ),
+        pytest.param(
+            "access.logs.add",
+            "access.logs.insights.add",
+            id="logs-first",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_duplicate_access_event_dispatched_once(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    first_event: str,
+    second_event: str,
+) -> None:
+    """Test a door event sent as both insights.add and logs.add dispatches once."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    messages = {
+        "access.logs.insights.add": _make_insights_add(),
+        "access.logs.add": _make_logs_add(),
+    }
+    await handlers[first_event](messages[first_event])
+    await handlers[second_event](messages[second_event])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.attributes["event_type"] == "access_granted"
+    # A single dispatch keeps the first trigger's timestamp; a suppressed
+    # duplicate would have advanced it by one millisecond.
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.parametrize(
+    ("insights", "logs"),
+    [
+        pytest.param(
+            _make_insights_add(published=1700000000),
+            _make_logs_add(published=1700000001),
+            id="different-published",
+        ),
+        pytest.param(
+            _make_insights_add(actor="John Doe"),
+            _make_logs_add(actor="Jane Doe"),
+            id="different-actor",
+        ),
+        pytest.param(
+            _make_insights_add(auth_id="auth-001"),
+            _make_logs_add(auth_id="auth-002"),
+            id="different-auth",
+        ),
+        pytest.param(
+            _make_insights_add(event_object_id="hub-001"),
+            _make_logs_add(event_object_id="hub-002"),
+            id="different-hub",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_distinct_access_events_not_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    insights: InsightsAdd,
+    logs: LogAdd,
+) -> None:
+    """Test access events differing in one key field are both dispatched."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    await handlers["access.logs.insights.add"](insights)
+    await handlers["access.logs.add"](logs)
+    await hass.async_block_till_done()
+
+    # Both dispatches reach the entity, advancing its timestamp by one millisecond.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_same_second_different_doors_not_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test two events for different doors in the same second are both dispatched."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    await handlers["access.data.v2.location.update"](
+        V2LocationUpdate(
+            event="access.data.v2.location.update",
+            data=V2LocationUpdateData(
+                id="door-002",
+                location_type="door",
+                name="Back Door",
+                device_ids=["hub-device-002"],
+            ),
+        )
+    )
+
+    await handlers["access.logs.add"](_make_logs_add())
+    await handlers["access.logs.add"](_make_logs_add(device_id="hub-device-002"))
+    await hass.async_block_till_done()
+
+    # Each door's event entity sees a single dispatch.
+    front_state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert front_state is not None
+    assert front_state.state == "2025-01-01T00:00:00.000+00:00"
+    back_state = hass.states.get(BACK_DOOR_ACCESS_ENTITY)
+    assert back_state is not None
+    assert back_state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_unusable_insights_copy_does_not_suppress_logs(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test an insights event without a door does not shadow its logs.add copy."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    doorless_insights = InsightsAdd(
+        event="access.logs.insights.add",
+        event_object_id="hub-001",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            published=1700000000,
+            metadata=InsightsMetadata.model_construct(
+                actor=InsightsMetadataEntry(display_name="John Doe"),
+                authentication=InsightsMetadataEntry(
+                    id="auth-001", display_name="FACE"
+                ),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](doorless_insights)
+    await handlers["access.logs.add"](_make_logs_add())
+    await hass.async_block_till_done()
+
+    # Only the logs.add copy dispatches, so the entity sees one trigger.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_unusable_logs_copy_does_not_suppress_insights(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a logs.add event without a resolvable door does not shadow insights."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    doorless_logs = LogAdd(
+        event="access.logs.add",
+        event_object_id="hub-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(type="user", id="user-001", display_name="John Doe"),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(
+                    type="access.door.unlock", result="ACCESS", published=1700000000
+                ),
+                authentication=LogAuthentication(
+                    credential_provider="FACE", issuer="auth-001"
+                ),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.add"](doorless_logs)
+    await handlers["access.logs.insights.add"](_make_insights_add())
+    await hass.async_block_till_done()
+
+    # Only the insights copy dispatches, so the entity sees one trigger.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_null_issuer_still_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a logs.add event without an issuer still matches its insights copy."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    issuerless_logs = LogAdd(
+        event="access.logs.add",
+        event_object_id="hub-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(
+                    type="access.door.unlock", result="ACCESS", published=1700000000
+                ),
+                authentication=LogAuthentication(credential_provider="FACE"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](_make_insights_add(auth_id=""))
+    await handlers["access.logs.add"](issuerless_logs)
+    await hass.async_block_till_done()
+
+    # The empty issuer matches the insights auth id, so only one trigger fires.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_none_insights_auth_id_still_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test an insights event with a null auth id still matches its logs copy."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    null_auth_insights = InsightsAdd(
+        event="access.logs.insights.add",
+        event_object_id="hub-001",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result="ACCESS",
+            published=1700000000,
+            metadata=InsightsMetadata.model_construct(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                actor=InsightsMetadataEntry(display_name="John Doe"),
+                authentication=InsightsMetadataEntry.model_construct(
+                    id=None, display_name="FACE"
+                ),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](null_auth_insights)
+    await handlers["access.logs.add"](_make_logs_add(auth_id=None))
+    await hass.async_block_till_done()
+
+    # Both null auth values normalize to the same key, so only one trigger fires.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_missing_published_not_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test events without a published timestamp are never suppressed."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    await handlers["access.logs.add"](_make_logs_add(published=None))
+    await handlers["access.logs.add"](_make_logs_add(published=None))
+    await hass.async_block_till_done()
+
+    # Neither event is suppressed, so the entity sees two triggers.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"
+
+
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+async def test_access_event_redelivered_after_window(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test an identical event is dispatched again once the dedup window has passed."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    # A negative window expires every recorded event immediately
+    with patch(
+        "homeassistant.components.unifi_access.coordinator._ACCESS_EVENT_DEDUP_WINDOW",
+        -1.0,
+    ):
+        for _ in range(2):
+            await handlers["access.logs.add"](_make_logs_add())
+            await hass.async_block_till_done()
+
+    # Both dispatches reach the entity, advancing its timestamp.
+    state = hass.states.get(FRONT_DOOR_ACCESS_ENTITY)
+    assert state is not None
+    assert state.state == "2025-01-01T00:00:00.001+00:00"

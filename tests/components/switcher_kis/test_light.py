@@ -6,15 +6,8 @@ from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import DeviceState
 import pytest
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightService
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -89,7 +82,10 @@ async def test_light(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light",
     ) as mock_set_light:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 2
@@ -102,7 +98,10 @@ async def test_light(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light"
     ) as mock_set_light:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
         assert mock_api.call_count == 4
@@ -130,7 +129,10 @@ async def test_light_ignore_previous_async_state(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light"
     ) as mock_set_light:
         await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
 
     # Push old state and makge sure it is ignored
@@ -196,24 +198,18 @@ async def test_light_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                LightService.TURN_ON,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(DeviceState.ON, light_id)
+        # A single failed command must not flap the entity unavailable.
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF
 
-    # Make device available again
-    mock_bridge.mock_callbacks([device])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    # Test error response during turn on
+    # Test error response during turn on - the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light",
         return_value=SwitcherBaseResponse(None),
@@ -221,12 +217,12 @@ async def test_light_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: entity_id},
+                LightService.TURN_ON,
+                {TargetKey.ENTITY_ID: entity_id},
                 blocking=True,
             )
 
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(DeviceState.ON, light_id)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF

@@ -1,7 +1,5 @@
 """Helper to track the current http request."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
@@ -18,7 +16,7 @@ from aiohttp.web_exceptions import (
     HTTPUnauthorized,
 )
 from aiohttp.web_urldispatcher import AbstractResource, AbstractRoute
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -28,6 +26,10 @@ from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, format_unserializabl
 from .json import find_paths_unserializable_data, json_bytes, json_dumps
 
 _LOGGER = logging.getLogger(__name__)
+
+# Responses smaller than this fit within a single network packet, so
+# compressing them wastes event-loop CPU without reducing round-trips.
+MIN_COMPRESSED_RESPONSE_SIZE: Final = 1024
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
@@ -61,13 +63,14 @@ def request_handler_factory(
             # Import here to avoid circular dependency with network.py
             from .network import NoURLAvailableError, get_url  # noqa: PLC0415
 
+            # Get the current request header to include as resource metadata
+            # endpoint for RFC9728.
             try:
                 url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
             raise HTTPUnauthorized(
-                # Include resource metadata endpoint for RFC9728
                 headers={
                     "WWW-Authenticate": (
                         f'Bearer resource_metadata="{url_prefix}'
@@ -84,12 +87,16 @@ def request_handler_factory(
                 authenticated,
             )
 
+        # Set before the handler, decorators like RequestDataValidator read the body
+        if view.max_body_size is not None:
+            request._client_max_size = view.max_body_size  # noqa: SLF001
+
         try:
             if is_coroutinefunction:
                 result = await handler(request, **request.match_info)
             else:
                 result = handler(request, **request.match_info)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
             raise HTTPInternalServerError from err
@@ -128,6 +135,8 @@ class HomeAssistantView:
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
+    # Maximum request body size in bytes, None keeps the server default
+    max_body_size: int | None = None
 
     @staticmethod
     def context(request: web.Request) -> Context:
@@ -161,7 +170,8 @@ class HomeAssistantView:
             headers=headers,
             zlib_executor_size=32768,
         )
-        response.enable_compression()
+        if len(msg) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
         return response
 
     def json_message(

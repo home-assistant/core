@@ -1,8 +1,7 @@
 """Sensors for AirPatrol integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,8 +13,7 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirPatrolConfigEntry
-from .coordinator import AirPatrolDataUpdateCoordinator
+from .coordinator import AirPatrolConfigEntry, AirPatrolDataUpdateCoordinator
 from .entity import AirPatrolEntity
 
 PARALLEL_UPDATES = 0
@@ -82,6 +80,7 @@ class AirPatrolSensor(AirPatrolEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if value := self.climate_data.get(self.entity_description.data_field):

@@ -4,6 +4,6 @@ from datetime import timedelta
 import logging
 
 DOMAIN = "fluss"
-LOGGER = logging.getLogger(__name__)
-UPDATE_INTERVAL = 60  # seconds
-UPDATE_INTERVAL_TIMEDELTA = timedelta(seconds=UPDATE_INTERVAL)
+LOGGER = logging.getLogger(__package__)
+UPDATE_INTERVAL = timedelta(minutes=30)
+COMMAND_REFRESH_COOLDOWN = 10

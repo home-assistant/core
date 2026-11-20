@@ -1,19 +1,12 @@
 """Config flow for Frontier Silicon Media Player integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
-from afsapi import (
-    AFSAPI,
-    ConnectionError as FSConnectionError,
-    InvalidPinException,
-    NotImplementedException,
-)
-import voluptuous as vol
+from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, InvalidPinError
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
@@ -29,17 +22,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
-STEP_DEVICE_CONFIG_DATA_SCHEMA = vol.Schema(
+STEP_DEVICE_CONFIG_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(
-            CONF_PIN,
+        probatio.Required(
+            probatio.Secret(CONF_PIN),
             default=DEFAULT_PIN,
         ): str,
     }
@@ -59,6 +52,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _webfsapi_url: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,17 +60,9 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            device_url = (
-                f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
-            )
-            try:
-                self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
-            except FSConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_validate_device_url(user_input)
+            if not errors:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 return await self._async_step_device_config_if_needed()
 
         data_schema = self.add_suggested_values_to_schema(
@@ -86,6 +72,65 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    async def _async_validate_device_url(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        """Resolve the webfsapi URL of the device and return any errors."""
+        device_url = f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/device"
+        try:
+            self._webfsapi_url = await AFSAPI.get_webfsapi_endpoint(device_url)
+        except FSConnectionError:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device address."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input:
+            errors = await self._async_validate_device_url(user_input)
+            if not errors:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
+                afsapi = AFSAPI(self._webfsapi_url, reconfigure_entry.data[CONF_PIN])
+                try:
+                    unique_id = await afsapi.get_radio_id()
+                except FSNotImplementedError:
+                    unique_id = None
+                except FSConnectionError:
+                    errors["base"] = "cannot_connect"
+                except InvalidPinError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                if not errors:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_WEBFSAPI_URL: self._webfsapi_url},
+                    )
+
+        webfsapi_url = urlparse(reconfigure_entry.data[CONF_WEBFSAPI_URL])
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA,
+            user_input
+            or {
+                CONF_HOST: webfsapi_url.hostname,
+                CONF_PORT: webfsapi_url.port or DEFAULT_PORT,
+            },
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=data_schema, errors=errors
+        )
+
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -116,12 +161,12 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
         afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
         try:
             await afsapi.get_friendly_name()
-        except InvalidPinException:
+        except InvalidPinError:
             return self.async_abort(reason="invalid_auth")
 
         try:
             unique_id = await afsapi.get_radio_id()
-        except NotImplementedException:
+        except FSNotImplementedError:
             unique_id = None
 
         await self.async_set_unique_id(unique_id)
@@ -136,7 +181,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_device_config_if_needed(self) -> ConfigFlowResult:
         """Most users will not have changed the default PIN on their radio.
 
-        We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
+        We try to use this default PIN, and only if this fails
+        ask for it via `async_step_device_config`
         """
 
         try:
@@ -144,7 +190,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             afsapi = AFSAPI(self._webfsapi_url, DEFAULT_PIN)
 
             self._name = await afsapi.get_friendly_name()
-        except InvalidPinException:
+        except InvalidPinError:
             # Ask for a PIN
             return await self.async_step_device_config()
 
@@ -152,7 +198,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             unique_id = await afsapi.get_radio_id()
-        except NotImplementedException:
+        except FSNotImplementedError:
             unique_id = None
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -162,12 +208,14 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
+        """Allow the user to confirm adding the device.
+
+        Used when the default PIN could successfully be used.
+        """
 
         if user_input is not None:
             return await self._async_create_entry()
 
-        self._set_confirm_only()
         return self.async_show_form(
             step_id="confirm", description_placeholders={"name": self._name}
         )
@@ -201,7 +249,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except FSConnectionError:
             errors["base"] = "cannot_connect"
-        except InvalidPinException:
+        except InvalidPinError:
             errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -215,7 +263,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 unique_id = await afsapi.get_radio_id()
-            except NotImplementedException:
+            except FSNotImplementedError:
                 unique_id = None
             await self.async_set_unique_id(unique_id, raise_on_progress=False)
             self._abort_if_unique_id_configured()

@@ -1,9 +1,8 @@
 """Button platform for IronOS integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from pynecil import CharSetting
 
@@ -12,8 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IronOSConfigEntry
-from .coordinator import IronOSCoordinators
+from .coordinator import IronOSConfigEntry, IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -79,6 +77,7 @@ class IronOSButtonEntity(IronOSBaseEntity, ButtonEntity):
 
         self.settings = coordinators.settings
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
 

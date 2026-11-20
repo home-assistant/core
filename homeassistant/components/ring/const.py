@@ -1,7 +1,5 @@
 """The Ring constants."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Final
 
@@ -16,7 +14,6 @@ DOMAIN = "ring"
 DEFAULT_ENTITY_NAMESPACE = "ring"
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.EVENT,

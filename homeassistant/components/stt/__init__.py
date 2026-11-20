@@ -1,12 +1,8 @@
 """Provide functionality to STT."""
 
-from __future__ import annotations
-
-from abc import abstractmethod
-from collections.abc import AsyncIterable
 from dataclasses import asdict
 import logging
-from typing import Any, final
+from typing import Any
 
 from aiohttp import web
 from aiohttp.hdrs import istr
@@ -15,19 +11,18 @@ from aiohttp.web_exceptions import (
     HTTPNotFound,
     HTTPUnsupportedMediaType,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
-from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util import language as language_util
 
 from .const import (
     DATA_COMPONENT,
@@ -40,22 +35,32 @@ from .const import (
     AudioSampleRates,
     SpeechResultState,
 )
+from .entity import SpeechToTextEntity
 from .legacy import (
     Provider,
     async_default_provider,
     async_get_provider,
     async_setup_legacy,
 )
-from .models import SpeechMetadata, SpeechResult
+from .models import (
+    DEFAULT_AUDIO_PROCESSING,
+    PartialSpeechResult,
+    SpeechAudioProcessing,
+    SpeechMetadata,
+    SpeechResult,
+)
 
 __all__ = [
+    "DEFAULT_AUDIO_PROCESSING",
     "DOMAIN",
     "AudioBitRates",
     "AudioChannels",
     "AudioCodecs",
     "AudioFormats",
     "AudioSampleRates",
+    "PartialSpeechResult",
     "Provider",
+    "SpeechAudioProcessing",
     "SpeechMetadata",
     "SpeechResult",
     "SpeechResultState",
@@ -68,6 +73,11 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+# Audio is read from the request body in chunks of at most 4096 bytes because
+# line-based iteration raises LineTooLong on binary audio without newline bytes.
+# At 16 kHz/16-bit/mono, 4096 bytes represents up to 128 ms of audio.
+AUDIO_CHUNK_SIZE = 4096
 
 
 @callback
@@ -143,105 +153,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class SpeechToTextEntity(RestoreEntity):
-    """Represent a single STT provider."""
-
-    _attr_should_poll = False
-    __last_processed: str | None = None
-
-    @property
-    @final
-    def state(self) -> str | None:
-        """Return the state of the provider entity."""
-        if self.__last_processed is None:
-            return None
-        return self.__last_processed
-
-    @property
-    @abstractmethod
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-
-    @property
-    @abstractmethod
-    def supported_formats(self) -> list[AudioFormats]:
-        """Return a list of supported formats."""
-
-    @property
-    @abstractmethod
-    def supported_codecs(self) -> list[AudioCodecs]:
-        """Return a list of supported codecs."""
-
-    @property
-    @abstractmethod
-    def supported_bit_rates(self) -> list[AudioBitRates]:
-        """Return a list of supported bit rates."""
-
-    @property
-    @abstractmethod
-    def supported_sample_rates(self) -> list[AudioSampleRates]:
-        """Return a list of supported sample rates."""
-
-    @property
-    @abstractmethod
-    def supported_channels(self) -> list[AudioChannels]:
-        """Return a list of supported channels."""
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the provider entity is added to hass."""
-        await super().async_internal_added_to_hass()
-        state = await self.async_get_last_state()
-        if (
-            state is not None
-            and state.state is not None
-            and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-        ):
-            self.__last_processed = state.state
-
-    @final
-    async def internal_async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
-    ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming content is allowed!
-        """
-        self.__last_processed = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self.async_process_audio_stream(metadata=metadata, stream=stream)
-
-    @abstractmethod
-    async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
-    ) -> SpeechResult:
-        """Process an audio stream to STT service.
-
-        Only streaming content is allowed!
-        """
-
-    @callback
-    def check_metadata(self, metadata: SpeechMetadata) -> bool:
-        """Check if given metadata supported by this provider."""
-        if (
-            metadata.language not in self.supported_languages
-            or metadata.format not in self.supported_formats
-            or metadata.codec not in self.supported_codecs
-            or metadata.bit_rate not in self.supported_bit_rates
-            or metadata.sample_rate not in self.supported_sample_rates
-            or metadata.channel not in self.supported_channels
-        ):
-            return False
-        return True
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class SpeechToTextView(HomeAssistantView):
@@ -281,7 +205,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await stt_provider.async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(AUDIO_CHUNK_SIZE)
             )
         else:
             # Check format
@@ -290,7 +214,7 @@ class SpeechToTextView(HomeAssistantView):
 
             # Process audio stream
             result = await provider_entity.internal_async_process_audio_stream(
-                metadata, request.content
+                metadata, request.content.iter_chunked(AUDIO_CHUNK_SIZE)
             )
 
         # Return result
@@ -410,8 +334,8 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
 @websocket_api.websocket_command(
     {
         "type": "stt/engine/list",
-        vol.Optional("language"): str,
-        vol.Optional("country"): str,
+        probatio.Optional("language"): str,
+        probatio.Optional("country"): str,
     }
 )
 @callback

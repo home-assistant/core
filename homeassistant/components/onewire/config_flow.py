@@ -1,13 +1,11 @@
 """Config flow for 1-Wire component."""
 
-from __future__ import annotations
-
 from copy import deepcopy
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerConnectionError
 from aio_ownet.proxy import OWServerStatelessProxy
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -34,10 +32,10 @@ from .const import (
 )
 from .onewirehub import OneWireConfigEntry
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -59,6 +57,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _discovery_data: dict[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -107,6 +106,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -120,6 +120,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -157,6 +158,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OneWireConfigEntry,
     ) -> OnewireOptionsFlowHandler:
@@ -228,13 +230,13 @@ class OnewireOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="device_selection",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         INPUT_ENTRY_CLEAR_OPTIONS,
                         default=False,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         INPUT_ENTRY_DEVICE_SELECTION,
                         default=self._get_current_configured_sensors(),
                         description="Multiselect with list of devices to choose from",
@@ -255,14 +257,14 @@ class OnewireOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(data=self.options)
 
         self.current_device, onewire_id = self.devices_to_configure.popitem()
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     OPTION_ENTRY_SENSOR_PRECISION,
                     default=self._get_current_setting(
                         onewire_id, OPTION_ENTRY_SENSOR_PRECISION, "temperature"
                     ),
-                ): vol.In(PRECISION_MAPPING_FAMILY_28),
+                ): probatio.In(PRECISION_MAPPING_FAMILY_28),
             }
         )
 

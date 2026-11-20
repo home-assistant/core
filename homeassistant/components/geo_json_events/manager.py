@@ -1,7 +1,5 @@
 """Entity manager for generic GeoJSON events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging
@@ -34,7 +32,7 @@ class GeoJsonFeedEntityManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: GeoJsonConfigEntry,
     ) -> None:
         """Initialize the GeoJSON Feed Manager."""
         self._hass: HomeAssistant = hass

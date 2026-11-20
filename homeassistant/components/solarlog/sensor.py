@@ -1,10 +1,9 @@
 """Platform for solarlog sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from solarlog_cli.solarlog_models import (
     BatteryData,
@@ -29,7 +28,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import SolarlogConfigEntry
+from .coordinator import (
+    SolarLogBasicDataCoordinator,
+    SolarlogConfigEntry,
+    SolarLogDeviceDataCoordinator,
+)
 from .entity import (
     SolarLogBasicCoordinatorEntity,
     SolarLogInverterEntity,
@@ -263,8 +266,9 @@ SOLARLOG_BASIC_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, .
     ),
 )
 
-"""SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that may require longer timeout and
-therefore are retrieved with different DataUpdateCoordinator."""
+"""SOLARLOG_LONGTIME_SENSOR_TYPES represent data points that
+may require longer timeout and therefore are retrieved with
+different DataUpdateCoordinator."""
 SOLARLOG_LONGTIME_SENSOR_TYPES: tuple[SolarLogLongtimeSensorEntityDescription, ...] = (
     SolarLogLongtimeSensorEntityDescription(
         key="self_consumption_year",
@@ -336,39 +340,46 @@ async def async_setup_entry(
 ) -> None:
     """Add solarlog entry."""
 
-    solarLogIntegrationData: SolarlogIntegrationData = entry.runtime_data
+    solar_log_integration_data: SolarlogIntegrationData = entry.runtime_data
 
     entities: list[SensorEntity] = [
         SolarLogBasicCoordinatorSensor(
-            solarLogIntegrationData.basic_data_coordinator, sensor
+            solar_log_integration_data.basic_data_coordinator, sensor
         )
         for sensor in SOLARLOG_BASIC_SENSOR_TYPES
     ]
 
-    if solarLogIntegrationData.longtime_data_coordinator is not None:
+    if solar_log_integration_data.longtime_data_coordinator is not None:
         entities.extend(
             SolarLogLongtimeCoordinatorSensor(
-                solarLogIntegrationData.longtime_data_coordinator, sensor
+                solar_log_integration_data.longtime_data_coordinator, sensor
             )
             for sensor in SOLARLOG_LONGTIME_SENSOR_TYPES
         )
 
-        # add battery sensors only if respective data is available (otherwise no battery attached to solarlog)
-        if solarLogIntegrationData.basic_data_coordinator.data.battery_data is not None:
+        # add battery sensors only if respective data is
+        # available (otherwise no battery attached to solarlog)
+        if (
+            solar_log_integration_data.basic_data_coordinator.data.battery_data
+            is not None
+            and solar_log_integration_data.device_data_coordinator is not None
+        ):
             entities.extend(
                 SolarLogBatterySensor(
-                    solarLogIntegrationData.basic_data_coordinator, sensor
+                    solar_log_integration_data.basic_data_coordinator,
+                    solar_log_integration_data.device_data_coordinator,
+                    sensor,
                 )
                 for sensor in SOLARLOG_BATTERY_SENSOR_TYPES
             )
 
-        if solarLogIntegrationData.device_data_coordinator is not None:
-            device_data = solarLogIntegrationData.device_data_coordinator.data
+        if solar_log_integration_data.device_data_coordinator is not None:
+            device_data = solar_log_integration_data.device_data_coordinator.data
 
             if device_data:
                 entities.extend(
                     SolarLogInverterSensor(
-                        solarLogIntegrationData.device_data_coordinator,
+                        solar_log_integration_data.device_data_coordinator,
                         sensor,
                         device_id,
                     )
@@ -379,15 +390,15 @@ async def async_setup_entry(
             def _async_add_new_device(device_id: int) -> None:
                 async_add_entities(
                     SolarLogInverterSensor(
-                        solarLogIntegrationData.device_data_coordinator,
+                        solar_log_integration_data.device_data_coordinator,
                         sensor,
                         device_id,
                     )
                     for sensor in SOLARLOG_INVERTER_SENSOR_TYPES
-                    if solarLogIntegrationData.device_data_coordinator is not None
+                    if solar_log_integration_data.device_data_coordinator is not None
                 )
 
-            solarLogIntegrationData.device_data_coordinator.new_device_callbacks.append(
+            solar_log_integration_data.device_data_coordinator.new_device_callbacks.append(
                 _async_add_new_device
             )
 
@@ -400,6 +411,7 @@ class SolarLogBasicCoordinatorSensor(SolarLogBasicCoordinatorEntity, SensorEntit
     entity_description: SolarLogCoordinatorSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
@@ -414,6 +426,7 @@ class SolarLogLongtimeCoordinatorSensor(
     entity_description: SolarLogLongtimeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state for this sensor."""
 
@@ -425,13 +438,46 @@ class SolarLogBatterySensor(SolarLogBasicCoordinatorEntity, SensorEntity):
 
     entity_description: SolarLogBatterySensorEntityDescription
 
+    def __init__(
+        self,
+        coordinator: SolarLogBasicDataCoordinator,
+        device_coordinator: SolarLogDeviceDataCoordinator,
+        description: SolarLogBatterySensorEntityDescription,
+    ) -> None:
+        """Initialize the SolarLog battery sensor."""
+        super().__init__(coordinator, description)
+        self.device_coordinator = device_coordinator
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to device updates to keep battery data fresh."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.device_coordinator.async_add_listener(self._handle_coordinator_update)
+        )
+
     @property
+    @override
+    def available(self) -> bool:
+        """Return if the basic and device coordinators are available."""
+        return super().available and self.device_coordinator.last_update_success
+
+    @override
+    async def async_update(self) -> None:
+        """Request a device data refresh."""
+        if not self.enabled:
+            return
+
+        await self.device_coordinator.async_request_refresh()
+
+    @property
+    @override
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-        if (
-            battery_data
-            := self.coordinator.config_entry.runtime_data.basic_data_coordinator.data.battery_data
-        ) is None:
+        basic_data = (
+            self.coordinator.config_entry.runtime_data.basic_data_coordinator.data
+        )
+        if (battery_data := basic_data.battery_data) is None:
             return None
         return self.entity_description.value_fn(battery_data)
 
@@ -442,6 +488,7 @@ class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
     entity_description: SolarLogInverterSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
 

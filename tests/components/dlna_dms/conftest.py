@@ -1,7 +1,5 @@
 """Fixtures for DLNA DMS tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from typing import Final, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal
@@ -9,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, se
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
@@ -19,8 +18,6 @@ from homeassistant.components.dlna_dms.dms import DlnaDmsData
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE_HOST: Final = "192.88.99.21"
 MOCK_DEVICE_BASE_URL: Final = f"http://{MOCK_DEVICE_HOST}"
@@ -152,7 +149,7 @@ async def device_source_mock(
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
 ) -> AsyncGenerator[None]:
-    """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
+    """Set up a DmsDeviceSource in a connected state and cleanup at completion."""
     config_entry_mock.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id)
     await hass.async_block_till_done()

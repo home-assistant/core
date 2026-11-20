@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from igloohome_api import GetDeviceInfoResponse, GetDevicesResponse, LinkedDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.igloohome.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 GET_DEVICE_INFO_RESPONSE_LOCK = GetDeviceInfoResponse(
     id="123456",
@@ -50,14 +49,14 @@ GET_DEVICE_INFO_RESPONSE_BRIDGE_NO_LINKED_DEVICE = GetDeviceInfoResponse(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.igloohome.async_setup_entry", return_value=True
+        "homeassistant.components.igloohome.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
 async def mock_auth() -> Generator[AsyncMock]:
-    """Set up the mock usages of the igloohome_api.Auth class. Defaults to always successfully operate."""
+    """Set up mock igloohome_api.Auth class, defaulting to success."""
     with patch(
         "homeassistant.components.igloohome.config_flow.IgloohomeAuth.async_get_access_token",
         return_value="mock_access_token",

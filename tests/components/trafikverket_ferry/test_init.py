@@ -1,9 +1,8 @@
 """Test for Trafikverket Ferry component Init."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.models import FerryStopModel
 
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
@@ -11,8 +10,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

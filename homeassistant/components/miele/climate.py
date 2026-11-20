@@ -1,11 +1,9 @@
 """Platform for Miele integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aiohttp import ClientResponseError
 from pymiele import MieleDevice, MieleTemperature
@@ -170,16 +168,11 @@ class MieleClimate(MieleEntity, ClimateEntity):
 
     entity_description: MieleClimateDescription
     _attr_precision = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_hvac_modes = [HVACMode.COOL]
     _attr_hvac_mode = HVACMode.COOL
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return cast(float, self.entity_description.value_fn(self.device))
 
     def __init__(
         self,
@@ -217,12 +210,20 @@ class MieleClimate(MieleEntity, ClimateEntity):
         self._attr_unique_id = f"{device_id}-{description.key}-{description.zone}"
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return cast(float, self.entity_description.value_fn(self.device))
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
 
         return cast(float | None, self.entity_description.target_fn(self.device))
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum target temperature."""
         if len(self.action.target_temperature) < self.entity_description.zone:
@@ -233,6 +234,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
         )
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum target temperature."""
         if len(self.action.target_temperature) < self.entity_description.zone:
@@ -242,6 +244,7 @@ class MieleClimate(MieleEntity, ClimateEntity):
             self.action.target_temperature[self.entity_description.zone - 1].min,
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         try:

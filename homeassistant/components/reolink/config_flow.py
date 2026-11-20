@@ -1,22 +1,21 @@
 """Config flow for the Reolink camera component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -34,20 +33,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    ACCOUNT_DEVICE_REOLINK_URL,
+    CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
 from .exceptions import (
     PasswordIncompatible,
     ReolinkException,
+    ReolinkSetupException,
     ReolinkWebhookException,
     UserNotAdmin,
 )
@@ -73,9 +76,9 @@ class ReolinkOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_PROTOCOL,
                         default=self.config_entry.options[CONF_PROTOCOL],
                     ): selector.SelectSelector(
@@ -116,6 +119,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
@@ -153,6 +157,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -241,6 +246,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -279,6 +285,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_privacy()
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginAccountDeviceError:
+                errors["base"] = "account_device"
+                placeholders["reolink_account_device_link"] = ACCOUNT_DEVICE_REOLINK_URL
             except LoginFirmwareError:
                 errors["base"] = "update_needed"
                 placeholders["current_firmware"] = host.api.sw_version
@@ -297,6 +306,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
                 )
                 errors["base"] = "webhook_exception"
+            except ReolinkSetupException:
+                errors[CONF_HOST] = "no_mac_address"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"
@@ -312,21 +323,34 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USE_HTTPS] = host.api.use_https
                 user_input[CONF_BC_PORT] = host.api.baichuan.port
                 user_input[CONF_BC_ONLY] = host.api.baichuan_only
+                user_input[CONF_BC_CONNECT] = host.api.baichuan.connection_type.value
+                user_input[CONF_UID] = host.api.uid
                 user_input[CONF_SUPPORTS_PRIVACY_MODE] = host.api.supported(
                     None, "privacy_mode"
                 )
 
                 mac_address = format_mac(host.api.mac_address)
-                await self.async_set_unique_id(mac_address, raise_on_progress=False)
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
-                        entry=self._get_reauth_entry(), data=user_input
+                existing_entry = await self.async_set_unique_id(
+                    mac_address, raise_on_progress=False
+                )
+                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                    entry = (
+                        self._get_reauth_entry()
+                        if self.source == SOURCE_REAUTH
+                        else self._get_reconfigure_entry()
                     )
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch()
+                    # a device moved to its other network interface reports a new
+                    # MAC address, its UID tells it is still the same device
+                    same_device = (
+                        host.api.supported(None, "UID")
+                        and entry.data.get(CONF_UID) == host.api.uid
+                    )
+                    if not same_device:
+                        self._abort_if_unique_id_mismatch()
+                    if existing_entry is not None and existing_entry is not entry:
+                        return self.async_abort(reason="already_configured")
                     return self.async_update_reload_and_abort(
-                        entry=self._get_reconfigure_entry(), data=user_input
+                        entry=entry, data=user_input, unique_id=mac_address
                     )
                 self._abort_if_unique_id_configured()
 
@@ -336,24 +360,28 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     options=DEFAULT_OPTIONS,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=self._username): str,
-                vol.Required(CONF_PASSWORD, default=self._password): str,
+                probatio.Required(CONF_USERNAME, default=self._username): str,
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD), default=self._password
+                ): str,
             }
         )
         if self._host is None or self.source == SOURCE_RECONFIGURE or errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Required(CONF_HOST, default=self._host): str,
+                    probatio.Required(CONF_HOST, default=self._host): str,
                 }
             )
         if errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Optional(CONF_PORT): cv.port,
-                    vol.Required(CONF_USE_HTTPS, default=False): bool,
-                    vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
+                    probatio.Required(CONF_USE_HTTPS, default=False): bool,
+                    probatio.Required(
+                        CONF_BC_PORT, default=DEFAULT_BC_PORT
+                    ): probatio.Port(),
                 }
             )
 

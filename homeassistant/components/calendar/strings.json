@@ -1,6 +1,7 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_event_active": {
@@ -8,6 +9,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::calendar::common::condition_for_name%]"
         }
       },
       "name": "Calendar event is active"
@@ -57,20 +61,6 @@
         }
       },
       "title": "Detected use of deprecated action calendar.list_events"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_offset_type": {
-      "options": {
-        "after": "After",
-        "before": "Before"
-      }
     }
   },
   "services": {
@@ -134,29 +124,21 @@
   "title": "Calendar",
   "triggers": {
     "event_ended": {
-      "description": "Triggers when a calendar event ends.",
+      "description": "Triggers when one or more calendar events end.",
       "fields": {
         "offset": {
-          "description": "Offset from the end of the event.",
+          "description": "Time to trigger before or after the end of the event.",
           "name": "Offset"
-        },
-        "offset_type": {
-          "description": "Whether to trigger before or after the end of the event, if an offset is defined.",
-          "name": "Offset type"
         }
       },
       "name": "Calendar event ended"
     },
     "event_started": {
-      "description": "Triggers when a calendar event starts.",
+      "description": "Triggers when one or more calendar events start.",
       "fields": {
         "offset": {
-          "description": "Offset from the start of the event.",
+          "description": "Time to trigger before or after the start of the event.",
           "name": "Offset"
-        },
-        "offset_type": {
-          "description": "Whether to trigger before or after the start of the event, if an offset is defined.",
-          "name": "Offset type"
         }
       },
       "name": "Calendar event started"

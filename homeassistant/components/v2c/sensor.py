@@ -1,10 +1,9 @@
 """Support for V2C EVSE sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pytrydan import TrydanData
 from pytrydan.models.trydan import SlaveCommunicationState
@@ -15,13 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    EntityCategory,
-    UnitOfElectricPotential,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfTime,
-)
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -54,15 +47,6 @@ TRYDAN_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.charge_power,
-    ),
-    V2CSensorEntityDescription(
-        key="voltage_installation",
-        translation_key="voltage_installation",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        value_fn=lambda evse_data: evse_data.voltage_installation,
-        entity_registry_enabled_default=False,
     ),
     V2CSensorEntityDescription(
         key="charge_energy",
@@ -146,7 +130,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up V2C sensor platform."""
     coordinator = config_entry.runtime_data
-
     async_add_entities(
         V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_SENSORS
@@ -169,6 +152,7 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.data)

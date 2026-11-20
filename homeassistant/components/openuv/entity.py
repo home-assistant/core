@@ -1,7 +1,5 @@
 """Support for UV data from openuv.io."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,7 +8,7 @@ from .const import DOMAIN
 from .coordinator import OpenUvCoordinator
 
 
-class OpenUvEntity(CoordinatorEntity):
+class OpenUvEntity(CoordinatorEntity[OpenUvCoordinator]):
     """Define a generic OpenUV entity."""
 
     _attr_has_entity_name = True

@@ -1,7 +1,5 @@
 """Home Assistant Connect ZBT-2 switch entities."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
@@ -51,4 +49,5 @@ class BetaFirmwareSwitch(BaseBetaFirmwareSwitch):
             model=HARDWARE_NAME,
             manufacturer="Nabu Casa",
             serial_number=serial_number,
+            via_device_id=config_entry.runtime_data.via_device_id,
         )

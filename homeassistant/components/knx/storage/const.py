@@ -19,6 +19,9 @@ CONF_GA_TIME: Final = "ga_time"
 
 CONF_GA_STEP: Final = "ga_step"
 
+# Button
+CONF_GA_SEND: Final = "ga_send"
+
 # Climate
 CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"
 CONF_GA_HUMIDITY_CURRENT: Final = "ga_humidity_current"
@@ -80,3 +83,19 @@ CONF_ALWAYS_CALLBACK: Final = "always_callback"
 
 # Text
 CONF_GA_TEXT: Final = "ga_text"
+
+# Weather
+CONF_GA_TEMPERATURE: Final = "ga_temperature"
+CONF_GA_BRIGHTNESS_SOUTH: Final = "ga_brightness_south"
+CONF_GA_BRIGHTNESS_NORTH: Final = "ga_brightness_north"
+CONF_GA_BRIGHTNESS_WEST: Final = "ga_brightness_west"
+CONF_GA_BRIGHTNESS_EAST: Final = "ga_brightness_east"
+CONF_GA_WIND_SPEED: Final = "ga_wind_speed"
+CONF_GA_WIND_BEARING: Final = "ga_wind_bearing"
+CONF_GA_RAIN_ALARM: Final = "ga_rain_alarm"
+CONF_GA_FROST_ALARM: Final = "ga_frost_alarm"
+CONF_GA_WIND_ALARM: Final = "ga_wind_alarm"
+CONF_GA_DAY_NIGHT: Final = "ga_day_night"
+CONF_INVERT_DAY_NIGHT: Final = "invert_day_night"
+CONF_GA_AIR_PRESSURE: Final = "ga_air_pressure"
+CONF_GA_HUMIDITY: Final = "ga_humidity"

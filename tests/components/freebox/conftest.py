@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from freebox_api.exceptions import HttpRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -21,11 +22,11 @@ from .const import (
     DATA_LAN_GET_INTERFACES,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
+    DATA_SWITCH_GET_PORT_STATS,
+    DATA_SWITCH_GET_STATUS,
     DATA_SYSTEM_GET_CONFIG,
     DATA_WIFI_GET_GLOBAL_CONFIG,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -85,6 +86,10 @@ def mock_router(mock_device_registry_devices):
         instance.connection.get_status = AsyncMock(
             return_value=DATA_CONNECTION_GET_STATUS
         )
+        instance.switch.get_status = AsyncMock(return_value=DATA_SWITCH_GET_STATUS)
+        instance.switch.get_port_stats = AsyncMock(
+            return_value=DATA_SWITCH_GET_PORT_STATS
+        )
         # switch
         instance.wifi.get_global_config = AsyncMock(
             return_value=DATA_WIFI_GET_GLOBAL_CONFIG
@@ -107,13 +112,15 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
 
     router().lan.get_interfaces = AsyncMock(
         side_effect=HttpRequestError(
-            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
+            "Request failed (APIResponse:"
+            f" {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(
-            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
+            "Request failed (APIResponse:"
+            f" {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 

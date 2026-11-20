@@ -1,8 +1,18 @@
 {
   "entity": {
+    "select": {
+      "room_priority": {
+        "default": "mdi:home-thermometer"
+      }
+    },
     "sensor": {
       "setpoint_status": {
         "default": "mdi:thermostat"
+      }
+    },
+    "switch": {
+      "emergency_heat": {
+        "default": "mdi:heat-wave"
       }
     }
   },

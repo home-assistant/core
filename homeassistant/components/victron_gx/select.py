@@ -1,7 +1,7 @@
 """Support for Victron GX select entities."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -65,16 +65,16 @@ class VictronSelect(VictronBaseEntity, SelectEntity):
         self._attr_current_option = VictronSelect._normalize_value(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_current_option = VictronSelect._normalize_value(value)
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        if TYPE_CHECKING:
-            assert isinstance(self._metric, VictronVenusWritableMetric)
         _LOGGER.debug("Setting select %s to %s", self._attr_unique_id, option)
-        self._metric.set(option)
+        self._set_metric_value(option)
 
     @staticmethod
     def _normalize_value(value: Any) -> Any:

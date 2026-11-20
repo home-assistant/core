@@ -1,7 +1,5 @@
 """Diagnostics support for Tuya."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.helpers.diagnostics import customer_device_as_dict
@@ -10,10 +8,10 @@ from tuya_sharing import CustomerDevice
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
+from .coordinator import TuyaConfigEntry
 
 _REDACTED_DPCODES = {
     DPCode.ALARM_MESSAGE,
@@ -31,7 +29,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: TuyaConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: TuyaConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     return _async_get_diagnostics(hass, entry, device)
@@ -41,7 +39,7 @@ async def async_get_device_diagnostics(
 def _async_get_diagnostics(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
-    device: DeviceEntry | None = None,
+    device: AnyDeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     manager = entry.runtime_data.manager
@@ -60,11 +58,11 @@ def _async_get_diagnostics(
 
     if device:
         tuya_device_id = next(iter(device.identifiers))[1]
-        data |= _async_device_as_dict(hass, manager.device_map[tuya_device_id])
+        data |= _async_device_as_dict(hass, entry, manager.device_map[tuya_device_id])
     else:
         data.update(
             devices=[
-                _async_device_as_dict(hass, device)
+                _async_device_as_dict(hass, entry, device)
                 for device in manager.device_map.values()
             ]
         )
@@ -74,7 +72,7 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, device: CustomerDevice
+    hass: HomeAssistant, entry: TuyaConfigEntry, device: CustomerDevice
 ) -> dict[str, Any]:
     """Represent a Tuya device as a dictionary."""
 
@@ -89,7 +87,9 @@ def _async_device_as_dict(
     # Gather information how this Tuya device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
-    hass_device = device_registry.async_get_device(identifiers={(DOMAIN, device.id)})
+    hass_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device.id), entry.entry_id
+    )
     if hass_device:
         data["home_assistant"] = {
             "name": hass_device.name,

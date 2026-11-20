@@ -1,7 +1,5 @@
 """Test the DLNA DMS config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import dataclasses
 import logging
@@ -10,6 +8,7 @@ from unittest.mock import Mock, patch
 
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dlna_dms.const import CONF_SOURCE_ID, DOMAIN
@@ -34,8 +33,6 @@ from .conftest import (
     MOCK_SOURCE_ID,
     NEW_DEVICE_LOCATION,
 )
-
-from tests.common import MockConfigEntry
 
 WRONG_DEVICE_TYPE: Final = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
@@ -78,7 +75,7 @@ def mock_setup_entry() -> Generator[Mock]:
     """Avoid setting up the entire integration."""
     with patch(
         "homeassistant.components.dlna_dms.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
@@ -112,6 +109,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
         CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == MOCK_DEVICE_USN
 
 
 async def test_user_flow_no_devices(
@@ -158,6 +156,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == MOCK_DEVICE_USN
 
 
 async def test_ssdp_flow_unavailable(
@@ -308,6 +307,7 @@ async def test_duplicate_name(
         CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_2",
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == new_device_usn
 
 
 async def test_ssdp_flow_upnp_udn(

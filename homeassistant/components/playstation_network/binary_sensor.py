@@ -1,10 +1,9 @@
 """Binary Sensor platform for PlayStation Network integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -15,10 +14,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkData,
     PlaystationNetworkUserDataCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
+from .helpers import PlaystationNetworkData
 
 PARALLEL_UPDATES = 0
 
@@ -70,6 +69,7 @@ class PlaystationNetworkBinarySensorEntity(
     coordinator: PlaystationNetworkUserDataCoordinator
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
 

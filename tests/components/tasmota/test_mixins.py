@@ -6,14 +6,13 @@ from unittest.mock import call
 
 from hatasmota.const import CONF_MAC
 from hatasmota.utils import config_get_state_online, get_topic_tele_will
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.core import HomeAssistant
 
 from .test_common import DEFAULT_CONFIG
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_availability_poll_state_once(
@@ -52,8 +51,20 @@ async def test_availability_poll_state_once(
     await hass.async_block_till_done()
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call(poll_topic_relay, poll_payload_relay, 0, False),
-            call(poll_topic_switch, poll_payload_switch, 0, False),
+            call(
+                poll_topic_relay,
+                poll_payload_relay,
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
+            call(
+                poll_topic_switch,
+                poll_payload_switch,
+                0,
+                False,
+                message_expiry_interval=None,
+            ),
         ],
         any_order=True,
     )

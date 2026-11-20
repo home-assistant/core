@@ -1,9 +1,8 @@
 """Support for 1-Wire binary sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import os
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,12 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B
 from .entity import OneWireEntity
-from .onewirehub import (
-    SIGNAL_NEW_DEVICE_CONNECTED,
-    OneWireConfigEntry,
-    OneWireHub,
-    OWDeviceDescription,
-)
+from .model import OWDeviceDescription
+from .onewirehub import SIGNAL_NEW_DEVICE_CONNECTED, OneWireConfigEntry, OneWireHub
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server
@@ -151,6 +146,7 @@ class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         if (state := self._state) is None:

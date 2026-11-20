@@ -1,0 +1,10 @@
+{
+  "dataPoints": [
+    {
+      "dailyRestingHeartRate": {
+        "beatsPerMinute": 65,
+        "date": { "year": 2026, "month": 6, "day": 29 }
+      }
+    }
+  ]
+}

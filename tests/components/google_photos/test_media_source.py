@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
 from homeassistant.components.media_player import BrowseError
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +53,7 @@ async def test_no_config_entries(
 async def test_no_read_scopes(
     hass: HomeAssistant,
 ) -> None:
-    """Test a media source with only write scopes configured so no media source exists."""
+    """Test media source with only write scopes has no media source."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
     assert browse.identifier is None

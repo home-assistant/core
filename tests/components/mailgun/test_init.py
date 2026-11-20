@@ -5,16 +5,16 @@ import hmac
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components import mailgun, webhook
+from homeassistant.components.mailgun import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 API_KEY = "abc123"
 
@@ -42,7 +42,7 @@ async def webhook_id_with_api_key(hass: HomeAssistant) -> str:
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "mailgun", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM, result
 
@@ -62,7 +62,7 @@ async def webhook_id_without_api_key(hass: HomeAssistant) -> str:
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "mailgun", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM, result
 

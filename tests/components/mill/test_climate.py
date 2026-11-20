@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 from mill import Heater
 from mill_local import OperationMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import mill
 from homeassistant.components.climate import (
@@ -21,8 +22,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 HEATER_ID = "dev_id"
 HEATER_NAME = "heater_name"
@@ -174,7 +173,8 @@ async def functional_cloud_heater(
     def heater_control(device_id: str, power_status: bool):
         assert device_id == HEATER_ID, "set_temperature called with wrong device_id"
 
-        # power_status gives the "do we want to heat, Y/N", while is_heating is based on temperature and internal state and whatnot.
+        # power_status gives the "do we want to heat, Y/N", while
+        # is_heating is based on temperature and internal state.
         cloud_heater.power_status = power_status
 
         calculate_heating()
@@ -225,7 +225,7 @@ async def local_heater_set_target_temperature(
 async def local_heater_set_mode_control_individually(
     mock_mill_local: MagicMock, local_heater: MagicMock
 ):
-    """Gets mock for the local heater `set_operation_mode_control_individually` method."""
+    """Get mock for set_operation_mode_control_individually."""
     return mock_mill_local.set_operation_mode_control_individually
 
 
@@ -359,13 +359,15 @@ async def functional_local_heater(
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: TEST_SET_TEMPERATURE, ATTR_HVAC_MODE: HVACMode.COOL},
             pytest.raises(HomeAssistantError),
-            # MillHeater will set the temperature before calling async_handle_set_hvac_mode,
-            #   meaning an invalid HVAC mode will raise only after the temperature is set.
+            # MillHeater will set the temperature before calling
+            # async_handle_set_hvac_mode, meaning an invalid HVAC mode
+            # will raise only after the temperature is set.
             [],
             [call(HEATER_ID, float(TEST_SET_TEMPERATURE))],
             HVACMode.OFF,
-            # likewise, in this test, it hasn't had the chance to update its ambient temperature,
-            # because the exception is raised before a refresh can be requested from the coordinator
+            # likewise, in this test, it hasn't had the chance to update
+            # its ambient temperature, because the exception is raised
+            # before a refresh can be requested from the coordinator
             {ATTR_TEMPERATURE: TEST_AMBIENT_TEMPERATURE},
         ),
     ],
@@ -386,7 +388,7 @@ async def test_cloud_heater(
     after_state: HVACMode,
     after_attrs: dict,
 ) -> None:
-    """Tests setting HVAC mode (directly or through set_temperature) for a cloud heater."""
+    """Tests setting HVAC mode for a cloud heater."""
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state is not None
@@ -511,14 +513,16 @@ async def test_cloud_heater(
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: TEST_SET_TEMPERATURE, ATTR_HVAC_MODE: HVACMode.COOL},
             pytest.raises(HomeAssistantError),
-            # LocalMillHeater will set the temperature before calling async_handle_set_hvac_mode,
-            #   meaning an invalid HVAC mode will raise only after the temperature is set.
+            # LocalMillHeater will set the temperature before calling
+            # async_handle_set_hvac_mode, meaning an invalid HVAC mode
+            # will raise only after the temperature is set.
             [],
             [],
             [call(float(TEST_SET_TEMPERATURE))],
             HVACMode.OFF,
-            # likewise, in this test, it hasn't had the chance to update its ambient temperature,
-            # because the exception is raised before a refresh can be requested from the coordinator
+            # likewise, in this test, it hasn't had the chance to update
+            # its ambient temperature, because the exception is raised
+            # before a refresh can be requested from the coordinator
             {ATTR_TEMPERATURE: TEST_AMBIENT_TEMPERATURE},
         ),
     ],
@@ -540,7 +544,7 @@ async def test_local_heater(
     after_state: HVACMode,
     after_attrs: dict,
 ) -> None:
-    """Tests setting HVAC mode (directly or through set_temperature) for a local heater."""
+    """Tests setting HVAC mode for a local heater."""
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state is not None

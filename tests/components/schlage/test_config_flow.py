@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from pyschlage.exceptions import Error as PyschlageError, NotAuthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.schlage.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockSchlageConfigEntry
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -53,6 +52,7 @@ async def test_form(
         "username": "test-username",
         "password": "test-password",
     }
+    assert result2["result"].unique_id == "abc123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -101,6 +101,17 @@ async def test_form_invalid_auth(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> None:
     """Test we handle unknown error."""
@@ -119,6 +130,17 @@ async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> N
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "test-username",
+            "password": "test-password",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(
@@ -152,7 +174,6 @@ async def test_reauth(
 async def test_reauth_invalid_auth(
     hass: HomeAssistant,
     mock_added_config_entry: MockSchlageConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_pyschlage_auth: Mock,
 ) -> None:
     """Test reauth flow."""
@@ -175,6 +196,16 @@ async def test_reauth_invalid_auth(
     mock_pyschlage_auth.authenticate.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_pyschlage_auth.authenticate.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"password": "new-password"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauth_wrong_account(

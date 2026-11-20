@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC
 
 from . import get_data
 from .const import HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -36,7 +35,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_slide_api() -> Generator[AsyncMock]:
-    """Build a fixture for the SlideLocalApi that connects successfully and returns one device."""
+    """Build a fixture for the SlideLocalApi that connects successfully."""
 
     with (
         patch(
@@ -57,6 +56,6 @@ def mock_slide_api() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.slide_local.async_setup_entry", return_value=True
+        "homeassistant.components.slide_local.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry

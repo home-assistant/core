@@ -2,13 +2,12 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import (
-    ATTR_SERIAL_NUMBER,
     CONF_TYPE,
     PERCENTAGE,
     EntityCategory,
@@ -17,7 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
+from .const import CONF_SERIAL_NUMBER
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
 
 
@@ -67,7 +67,7 @@ async def async_setup_entry(
         LektricoNumber(
             description,
             coordinator,
-            f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
+            f"{entry.data[CONF_TYPE]}_{entry.data[CONF_SERIAL_NUMBER]}",
         )
         for description in NUMBERS
     )
@@ -90,10 +90,12 @@ class LektricoNumber(LektricoEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.coordinator.device, int(value))

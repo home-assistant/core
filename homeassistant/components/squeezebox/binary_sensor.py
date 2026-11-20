@@ -1,8 +1,7 @@
 """Binary sensor platform for Squeezebox integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,7 +14,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SqueezeboxConfigEntry, SqueezeBoxPlayerUpdateCoordinator
+from . import SqueezeboxConfigEntry
 from .const import (
     PLAYER_SENSOR_ALARM_ACTIVE,
     PLAYER_SENSOR_ALARM_SNOOZE,
@@ -24,6 +23,7 @@ from .const import (
     STATUS_SENSOR_NEEDSRESTART,
     STATUS_SENSOR_RESCAN,
 )
+from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import LMSStatusEntity, SqueezeboxEntity
 
 # Coordinator is used to centralize the data updates
@@ -98,6 +98,7 @@ class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
     """LMS Status based sensor from LMS via coordinator."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """LMS Status directly from coordinator data."""
         return bool(self.coordinator.data[self.entity_description.key])
@@ -119,6 +120,7 @@ class SqueezeboxBinarySensorEntity(SqueezeboxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return getattr(self.coordinator.player, self.entity_description.key, None)

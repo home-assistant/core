@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from chess_com_api import ChessComAPIError, ChessComClient, Player, PlayerStats
 
@@ -11,6 +12,8 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +48,7 @@ class ChessCoordinator(DataUpdateCoordinator[ChessData]):
         )
         self.client = ChessComClient(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> ChessData:
         """Update data from Chess.com."""
         try:
@@ -53,5 +57,9 @@ class ChessCoordinator(DataUpdateCoordinator[ChessData]):
                 self.config_entry.data[CONF_USERNAME]
             )
         except ChessComAPIError as err:
-            raise UpdateFailed(f"Error communicating with Chess.com: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return ChessData(player=player, stats=stats)

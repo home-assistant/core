@@ -4,15 +4,28 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO
+from homeassistant.components.airq.const import DOMAIN
+
+from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO, TEST_USER_DATA
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Create a mock config entry for air-Q."""
+    return MockConfigEntry(
+        data=TEST_USER_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DEVICE_INFO["id"],
+    )
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.airq.async_setup_entry", return_value=True
+        "homeassistant.components.airq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

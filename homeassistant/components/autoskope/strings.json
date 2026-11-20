@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -31,14 +30,14 @@
         },
         "description": "Enter your Autoskope credentials.",
         "sections": {
-          "advanced_settings": {
+          "additional_settings": {
             "data": {
               "host": "API endpoint"
             },
             "data_description": {
               "host": "The URL of your Autoskope API endpoint. Only change this if you use a white-label portal."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         },
         "title": "Connect to Autoskope"

@@ -3,24 +3,16 @@
 from datetime import timedelta
 
 from bond_async import Action, DeviceType
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
@@ -31,8 +23,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def shades(name: str):
@@ -97,8 +87,8 @@ async def test_open_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_open, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -115,8 +105,8 @@ async def test_close_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_close, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -133,8 +123,8 @@ async def test_stop_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_hold, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -151,8 +141,8 @@ async def test_tilt_open_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_open, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.OPEN_TILT,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -170,8 +160,8 @@ async def test_tilt_close_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_close, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.CLOSE_TILT,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -193,8 +183,8 @@ async def test_tilt_stop_cover(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_hold, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.STOP_TILT,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -216,8 +206,8 @@ async def test_tilt_and_open(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_open, patch_bond_device_state():
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.name_1"},
+            CoverService.OPEN_TILT,
+            {TargetKey.ENTITY_ID: "cover.name_1"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -227,7 +217,7 @@ async def test_tilt_and_open(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_open_cover(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports cover is open."""
+    """Tests that update sets correct state when Bond API reports cover is open."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
     with patch_bond_device_state(return_value={"open": 1}):
@@ -238,7 +228,7 @@ async def test_update_reports_open_cover(hass: HomeAssistant) -> None:
 
 
 async def test_update_reports_closed_cover(hass: HomeAssistant) -> None:
-    """Tests that update command sets correct state when Bond API reports cover is closed."""
+    """Tests that update sets correct state when Bond API reports cover is closed."""
     await setup_platform(hass, COVER_DOMAIN, shades("name-1"))
 
     with patch_bond_device_state(return_value={"open": 0}):
@@ -270,8 +260,8 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 100},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: "cover.name_1", CoverServiceArgument.POSITION: 100},
             blocking=True,
         )
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
@@ -288,8 +278,8 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 0},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: "cover.name_1", CoverServiceArgument.POSITION: 0},
             blocking=True,
         )
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
@@ -306,8 +296,8 @@ async def test_set_position_cover(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 60},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: "cover.name_1", CoverServiceArgument.POSITION: 60},
             blocking=True,
         )
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))

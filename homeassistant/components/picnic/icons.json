@@ -25,6 +25,9 @@
       "last_order_total_price": {
         "default": "mdi:cash-marker"
       },
+      "next_delivery_estimated_arrival": {
+        "default": "mdi:clock-fast"
+      },
       "next_delivery_eta_end": {
         "default": "mdi:clock-end"
       },

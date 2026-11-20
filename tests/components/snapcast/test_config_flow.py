@@ -4,14 +4,13 @@ import socket
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.snapcast.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_CONNECTION = {CONF_HOST: "127.0.0.1", CONF_PORT: 1705}
 
@@ -45,12 +44,9 @@ async def test_full_flow(
         (ConnectionRefusedError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_server: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_server: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we get the form and handle errors and successful connection."""
 

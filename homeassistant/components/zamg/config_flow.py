@@ -1,10 +1,8 @@
 """Config Flow for the zamg integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 from zamg import ZamgData
 from zamg.exceptions import ZamgApiError, ZamgNoDataError
 
@@ -21,6 +19,7 @@ class ZamgConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _client: ZamgData | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -42,9 +41,11 @@ class ZamgConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("config_flow: closest station = %s", closest_station_id)
             user_input = {}
 
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_STATION_ID, default=closest_station_id): vol.In(
+                    probatio.Required(
+                        CONF_STATION_ID, default=closest_station_id
+                    ): probatio.In(
                         {
                             station: f"{stations[station][2]} ({station})"
                             for station in stations

@@ -1,16 +1,13 @@
 """Coordinator for the iAlarm integration."""
 
-from __future__ import annotations
-
 import asyncio
+from datetime import timedelta
 import logging
+from typing import override
 
-from pyialarm import IAlarm
+from pyasyncialarm import IAlarm
 
-from homeassistant.components.alarm_control_panel import (
-    SCAN_INTERVAL,
-    AlarmControlPanelState,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, IALARM_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 type IAlarmConfigEntry = ConfigEntry[IAlarmDataUpdateCoordinator]
 
@@ -48,17 +47,14 @@ class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _update_data(self) -> None:
-        """Fetch data from iAlarm via sync functions."""
-        status = self.ialarm.get_status()
-        _LOGGER.debug("iAlarm status: %s", status)
-
-        self.state = IALARM_TO_HASS.get(status)
-
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarm."""
         try:
             async with asyncio.timeout(10):
-                await self.hass.async_add_executor_job(self._update_data)
+                status = await self.ialarm.get_status()
         except ConnectionError as error:
             raise UpdateFailed(error) from error
+        _LOGGER.debug("iAlarm status: %s", status)
+
+        self.state = IALARM_TO_HASS.get(status["status_value"])

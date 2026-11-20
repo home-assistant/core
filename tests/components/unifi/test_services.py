@@ -3,19 +3,17 @@
 from typing import Any
 from unittest.mock import PropertyMock, patch
 
+import aiounifi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
-from homeassistant.components.unifi.services import (
-    SERVICE_RECONNECT_CLIENT,
-    SERVICE_REMOVE_CLIENTS,
-)
+from homeassistant.components.unifi.services import UnifiService
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.parametrize(
@@ -42,7 +40,7 @@ async def test_reconnect_client(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
+        UnifiService.RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
     )
@@ -50,18 +48,21 @@ async def test_reconnect_client(
 
 
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_reconnect_non_existant_device(
+async def test_reconnect_non_existent_device(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Verify no call is made if device does not exist."""
+    """Verify ServiceValidationError is raised if device does not exist."""
     aioclient_mock.clear_requests()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
-        service_data={ATTR_DEVICE_ID: "device_entry.id"},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            UnifiService.RECONNECT_CLIENT,
+            service_data={ATTR_DEVICE_ID: "device_entry.id"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_device_not_found"
     assert aioclient_mock.call_count == 0
 
 
@@ -71,7 +72,7 @@ async def test_reconnect_device_without_mac(
     aioclient_mock: AiohttpClientMocker,
     config_entry_setup: MockConfigEntry,
 ) -> None:
-    """Verify no call is made if device does not have a known mac."""
+    """Verify ServiceValidationError is raised if device does not have a known mac."""
     aioclient_mock.clear_requests()
 
     device_entry = device_registry.async_get_or_create(
@@ -79,12 +80,15 @@ async def test_reconnect_device_without_mac(
         connections={("other connection", "not mac")},
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
-        service_data={ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            UnifiService.RECONNECT_CLIENT,
+            service_data={ATTR_DEVICE_ID: device_entry.id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_no_mac"
     assert aioclient_mock.call_count == 0
 
 
@@ -116,7 +120,7 @@ async def test_reconnect_client_hub_unavailable(
         ws_mock.return_value = False
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RECONNECT_CLIENT,
+            UnifiService.RECONNECT_CLIENT,
             service_data={ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
         )
@@ -138,7 +142,7 @@ async def test_reconnect_client_unknown_mac(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
+        UnifiService.RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
     )
@@ -164,7 +168,7 @@ async def test_reconnect_wired_client(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
+        UnifiService.RECONNECT_CLIENT,
         service_data={ATTR_DEVICE_ID: device_entry.id},
         blocking=True,
     )
@@ -213,7 +217,7 @@ async def test_remove_clients(
         f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
-    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, UnifiService.REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.mock_calls[0][2] == {
         "cmd": "forget-sta",
         "macs": ["00:00:00:00:00:00", "00:00:00:00:00:01"],
@@ -244,7 +248,9 @@ async def test_remove_clients_hub_unavailable(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
         ws_mock.return_value = False
-        await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+        await hass.services.async_call(
+            DOMAIN, UnifiService.REMOVE_CLIENTS, blocking=True
+        )
     assert aioclient_mock.call_count == 0
 
 
@@ -266,7 +272,7 @@ async def test_remove_clients_no_call_on_empty_list(
 ) -> None:
     """Verify no call is made if no fitting client has been added to the list."""
     aioclient_mock.clear_requests()
-    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, UnifiService.REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
 
 
@@ -295,17 +301,71 @@ async def test_services_handle_unloaded_config_entry(
 
     aioclient_mock.clear_requests()
 
-    await hass.services.async_call(DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
+    await hass.services.async_call(DOMAIN, UnifiService.REMOVE_CLIENTS, blocking=True)
     assert aioclient_mock.call_count == 0
 
+
+@pytest.mark.parametrize(
+    "client_payload", [[{"is_wired": False, "mac": "00:00:00:00:00:01"}]]
+)
+async def test_reconnect_client_request_failed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Verify HomeAssistantError is raised when API request fails."""
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_setup.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, clients_all_payload[0]["mac"])},
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])},
     )
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_RECONNECT_CLIENT,
-        service_data={ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-    )
-    assert aioclient_mock.call_count == 0
+
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UnifiService.RECONNECT_CLIENT,
+            service_data={ATTR_DEVICE_ID: device_entry.id},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "reconnect_client_request_failed"
+
+
+@pytest.mark.parametrize(
+    "clients_all_payload",
+    [
+        [
+            {
+                "first_seen": 100,
+                "last_seen": 500,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+async def test_remove_clients_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    clients_all_payload: list[dict[str, Any]],
+) -> None:
+    """Verify HomeAssistantError is raised when API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, UnifiService.REMOVE_CLIENTS, blocking=True
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "remove_clients_request_failed"

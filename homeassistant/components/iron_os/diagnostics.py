@@ -1,13 +1,11 @@
 """Diagnostics platform for IronOS integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from . import IronOSConfigEntry
+from .coordinator import IronOSConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

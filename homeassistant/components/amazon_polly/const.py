@@ -1,8 +1,8 @@
 """Constants for the Amazon Polly text to speech service."""
 
-from __future__ import annotations
-
 from typing import Final
+
+DOMAIN: Final = "amazon_polly"
 
 CONF_REGION: Final = "region_name"
 CONF_ACCESS_KEY_ID: Final = "aws_access_key_id"

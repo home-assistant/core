@@ -9,8 +9,10 @@ from hatasmota.utils import (
     get_topic_tele_state,
     get_topic_tele_will,
 )
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -32,9 +34,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.common import async_fire_mqtt_message
 from tests.components.fan import common
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_controlling_state_via_mqtt(
@@ -126,7 +126,7 @@ async def test_sending_mqtt_commands(
     # Turn the fan on and verify MQTT message is sent
     await common.async_turn_on(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -137,35 +137,35 @@ async def test_sending_mqtt_commands(
     # Turn the fan off and verify MQTT message is sent
     await common.async_turn_off(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 15)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "1", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "1", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 50)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Set speed percentage and verify MQTT message is sent
     await common.async_set_percentage(hass, "fan.tasmota", 90)
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False, message_expiry_interval=None
     )
 
     # Test the last known fan speed is restored
@@ -179,7 +179,7 @@ async def test_sending_mqtt_commands(
     # Then turn the fan off and get a fan state update
     await common.async_turn_off(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":0}')
@@ -188,10 +188,11 @@ async def test_sending_mqtt_commands(
     assert state.attributes["percentage"] == 0
     mqtt_mock.async_publish.reset_mock()
 
-    # Finally, turn the fan on again and verify MQTT message is sent with last known speed
+    # Finally, turn the fan on again and verify MQTT message is sent
+    # with last known speed
     await common.async_turn_on(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
-        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -222,7 +223,7 @@ async def test_invalid_fan_speed_percentage(
     # Set an unsupported speed and verify MQTT message is not sent
     with pytest.raises(MultipleInvalid) as excinfo:
         await common.async_set_percentage(hass, "fan.tasmota", 101)
-    assert "value must be at most 100" in str(excinfo.value)
+    assert "expected a percentage between 0 and 100" in str(excinfo.value)
     mqtt_mock.async_publish.assert_not_called()
 
 

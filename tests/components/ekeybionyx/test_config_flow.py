@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -22,9 +24,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import dummy_systems
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -123,7 +122,7 @@ async def test_full_flow(
     }
 
     with patch(
-        "homeassistant.components.ekeybionyx.async_setup_entry", return_value=True
+        "homeassistant.components.ekeybionyx.async_setup_entry", return_value=None
     ) as mock_setup:
         flow5 = await hass.config_entries.flow.async_configure(
             flow2["flow_id"],
@@ -138,7 +137,9 @@ async def test_full_flow(
             {
                 "webhook_id": "1234567890",
                 "name": "Test",
-                "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+                "auth": (
+                    "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7"
+                ),
                 "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
             }
         ]
@@ -248,6 +249,7 @@ async def test_no_available_webhooks(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@patch("homeassistant.components.ekeybionyx.config_flow.DELETION_POLL_INTERVAL", 0)
 async def test_cleanup(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

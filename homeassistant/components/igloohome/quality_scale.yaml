@@ -14,9 +14,15 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -30,10 +36,7 @@ rules:
 
   # Silver
   config-entry-unloading: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      Integration has no actions and is a read-only platform.
+  action-exceptions: done
   docs-configuration-parameters: todo
   docs-installation-parameters: done
   entity-unavailable: done

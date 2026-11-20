@@ -1,8 +1,6 @@
 """Support for radiotherm switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -34,6 +32,7 @@ class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
 
     @callback
+    @override
     def _process_data(self) -> None:
         """Update and validate the data from the thermostat."""
         data = self.data.tstat
@@ -50,10 +49,12 @@ class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         await self._async_set_hold(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable permanent hold."""
         await self._async_set_hold(False)

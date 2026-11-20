@@ -1,9 +1,7 @@
 """Light platform for zcc integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
@@ -28,11 +26,15 @@ async def async_setup_entry(
     api = config_entry.runtime_data
 
     lights: list[ZimiLight | ZimiDimmer] = [
-        ZimiLight(device, api) for device in api.lights if device.type != "dimmer"
+        ZimiLight(hass, device, api, config_entry.entry_id)
+        for device in api.lights
+        if device.type != "dimmer"
     ]
 
     lights.extend(
-        ZimiDimmer(device, api) for device in api.lights if device.type == "dimmer"
+        ZimiDimmer(hass, device, api, config_entry.entry_id)
+        for device in api.lights
+        if device.type == "dimmer"
     )
 
     async_add_entities(lights)
@@ -41,19 +43,27 @@ async def async_setup_entry(
 class ZimiLight(ZimiEntity, LightEntity):
     """Representation of a Zimi Light."""
 
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: ControlPointDevice,
+        api: ControlPoint,
+        config_entry_id: str,
+    ) -> None:
         """Initialize a ZimiLight."""
 
-        super().__init__(device, api)
+        super().__init__(hass, device, api, config_entry_id)
 
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._device.is_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
@@ -63,6 +73,7 @@ class ZimiLight(ZimiEntity, LightEntity):
 
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
 
@@ -76,12 +87,19 @@ class ZimiLight(ZimiEntity, LightEntity):
 class ZimiDimmer(ZimiLight):
     """Zimi Light supporting dimming."""
 
-    def __init__(self, device: ControlPointDevice, api: ControlPoint) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: ControlPointDevice,
+        api: ControlPoint,
+        config_entry_id: str,
+    ) -> None:
         """Initialize a ZimiDimmer."""
-        super().__init__(device, api)
+        super().__init__(hass, device, api, config_entry_id)
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on (with optional brightness)."""
 
@@ -96,6 +114,7 @@ class ZimiDimmer(ZimiLight):
         await self._device.set_brightness(brightness)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return round(self._device.brightness * 255 / 100)

@@ -1,12 +1,23 @@
 """Weather platform for Meteo.lt integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -18,12 +29,35 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
 from .coordinator import MeteoLtConfigEntry, MeteoLtUpdateCoordinator
+
+_CONDITION_MAP: dict[str, str] = {
+    "partly-cloudy": ATTR_CONDITION_PARTLYCLOUDY,
+    "cloudy-with-sunny-intervals": ATTR_CONDITION_PARTLYCLOUDY,
+    "cloudy": ATTR_CONDITION_CLOUDY,
+    "thunder": ATTR_CONDITION_LIGHTNING,
+    "isolated-thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "heavy-rain-with-thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "light-rain": ATTR_CONDITION_RAINY,
+    "rain": ATTR_CONDITION_RAINY,
+    "heavy-rain": ATTR_CONDITION_POURING,
+    "light-sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "freezing-rain": ATTR_CONDITION_SNOWY_RAINY,
+    "hail": ATTR_CONDITION_HAIL,
+    "light-snow": ATTR_CONDITION_SNOWY,
+    "snow": ATTR_CONDITION_SNOWY,
+    "heavy-snow": ATTR_CONDITION_SNOWY,
+    "fog": ATTR_CONDITION_FOG,
+}
 
 
 async def async_setup_entry(
@@ -65,50 +99,73 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             model=MODEL,
         )
 
+    def _map_condition(self, condition_code: str | None, datetime_str: str) -> str:
+        """Map a meteo.lt condition code to a Home Assistant condition string."""
+        if condition_code is None:
+            return ATTR_CONDITION_EXCEPTIONAL
+        if condition_code == "clear":
+            dt = dt_util.parse_datetime(datetime_str)
+            return (
+                ATTR_CONDITION_SUNNY
+                if sun.is_up(self.hass, dt)
+                else ATTR_CONDITION_CLEAR_NIGHT
+            )
+        return _CONDITION_MAP.get(condition_code, ATTR_CONDITION_EXCEPTIONAL)
+
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_conditions.temperature
 
     @property
+    @override
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
         return self.coordinator.data.current_conditions.apparent_temperature
 
     @property
+    @override
     def humidity(self) -> int | None:
         """Return the humidity."""
         return self.coordinator.data.current_conditions.humidity
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_conditions.pressure
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_conditions.wind_speed
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return the wind bearing."""
         return self.coordinator.data.current_conditions.wind_bearing
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return self.coordinator.data.current_conditions.wind_gust_speed
 
     @property
+    @override
     def cloud_coverage(self) -> int | None:
         """Return the cloud coverage."""
         return self.coordinator.data.current_conditions.cloud_coverage
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data.current_conditions.condition
+        cc = self.coordinator.data.current_conditions
+        return self._map_condition(cc.condition_code, cc.datetime)
 
     def _convert_forecast_data(
         self, forecast_data: Any, include_templow: bool = False
@@ -119,7 +176,9 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             native_temperature=forecast_data.temperature,
             native_templow=forecast_data.temperature_low if include_templow else None,
             native_apparent_temperature=forecast_data.apparent_temperature,
-            condition=forecast_data.condition,
+            condition=self._map_condition(
+                forecast_data.condition_code, forecast_data.datetime
+            ),
             native_precipitation=forecast_data.precipitation,
             precipitation_probability=None,  # Not provided by API
             native_wind_speed=forecast_data.wind_speed,
@@ -127,9 +186,11 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             cloud_coverage=forecast_data.cloud_coverage,
         )
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
-        # Using hourly data to create daily summaries, since daily data is not provided directly
+        # Using hourly data to create daily summaries, since
+        # daily data is not provided directly
         if not self.coordinator.data:
             return None
 
@@ -160,7 +221,9 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
                 native_temperature=max_temp,
                 native_templow=min_temp,
                 native_apparent_temperature=midday_forecast.apparent_temperature,
-                condition=midday_forecast.condition,
+                condition=self._map_condition(
+                    midday_forecast.condition_code, midday_forecast.datetime
+                ),
                 # Calculate precipitation: sum if any values, else None
                 native_precipitation=(
                     sum(
@@ -180,6 +243,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
 
         return daily_forecasts
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
         if not self.coordinator.data:

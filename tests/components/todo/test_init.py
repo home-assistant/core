@@ -1,11 +1,17 @@
 """Tests for the todo integration."""
 
-import datetime
+import dataclasses
+import datetime as dt
+from datetime import timedelta
 from typing import Any
 import zoneinfo
 
+from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -20,9 +26,10 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
     TodoServices,
+    serialize_todo_item,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -33,7 +40,8 @@ from homeassistant.setup import async_setup_component
 
 from . import create_mock_platform
 
-from tests.typing import WebSocketGenerator
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
 
 ITEM_1 = {
     "uid": "1",
@@ -44,9 +52,8 @@ ITEM_2 = {
     "uid": "2",
     "summary": "Item #2",
     "status": "completed",
+    "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
-TEST_OFFSET = "-06:00"
 
 
 async def test_unload_entry(
@@ -81,7 +88,7 @@ async def test_list_todo_items(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {"supported_features": 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 15}
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -130,7 +137,7 @@ async def test_get_items_service(
         DOMAIN,
         TodoServices.GET_ITEMS,
         service_data,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
         return_response=True,
     )
@@ -181,7 +188,7 @@ async def test_add_item_service(
         DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: new_item_name},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -208,7 +215,7 @@ async def test_add_item_service_raises(
             DOMAIN,
             TodoServices.ADD_ITEM,
             {ATTR_ITEM: "New item"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -216,9 +223,9 @@ async def test_add_item_service_raises(
 @pytest.mark.parametrize(
     ("item_data", "expected_exception", "expected_error"),
     [
-        ({}, vol.Invalid, "required key not provided"),
-        ({ATTR_ITEM: ""}, vol.Invalid, "length of value must be at least 1"),
-        ({ATTR_ITEM: "    "}, vol.Invalid, "length of value must be at least 1"),
+        ({}, probatio.Invalid, "required key not provided"),
+        ({ATTR_ITEM: ""}, probatio.Invalid, "value must not be empty"),
+        ({ATTR_ITEM: "    "}, probatio.Invalid, "value must not be empty"),
         (
             {ATTR_ITEM: "Submit forms", ATTR_DESCRIPTION: "Submit tax forms"},
             ServiceValidationError,
@@ -255,7 +262,7 @@ async def test_add_item_service_invalid_input(
             DOMAIN,
             TodoServices.ADD_ITEM,
             item_data,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -271,7 +278,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.date(2023, 11, 13),
+                due=dt.date(2023, 11, 13),
             ),
         ),
         (
@@ -283,7 +290,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 17, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 17, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -292,7 +299,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 11, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 11, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -301,7 +308,7 @@ async def test_add_item_service_invalid_input(
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 0, 00, 00, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 0, 00, 00, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -324,6 +331,7 @@ async def test_add_item_service_extended_fields(
 ) -> None:
     """Test adding an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -331,7 +339,7 @@ async def test_add_item_service_extended_fields(
         DOMAIN,
         TodoServices.ADD_ITEM,
         {ATTR_ITEM: "New item", **item_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -362,7 +370,7 @@ async def test_update_todo_item_service_by_id(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -387,7 +395,7 @@ async def test_update_todo_item_service_by_id_status_only(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -412,7 +420,7 @@ async def test_update_todo_item_service_by_id_rename(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", "rename": "Updated item"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -437,7 +445,7 @@ async def test_update_todo_item_service_raises(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", "rename": "Updated item", "status": "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -447,7 +455,7 @@ async def test_update_todo_item_service_raises(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "1", "rename": "Updated item", "status": "completed"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -464,7 +472,7 @@ async def test_update_todo_item_service_by_summary(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Item #1", "rename": "Something else", "status": "completed"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -489,7 +497,7 @@ async def test_update_todo_item_service_by_summary_only_status(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "Item #1", "rename": "Something else"},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -515,7 +523,7 @@ async def test_update_todo_item_service_by_summary_not_found(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "Item #7", "status": "completed"},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -523,12 +531,12 @@ async def test_update_todo_item_service_by_summary_not_found(
 @pytest.mark.parametrize(
     ("item_data", "expected_error"),
     [
-        ({}, r"required key not provided @ data\['item'\]"),
-        ({"status": "needs_action"}, r"required key not provided @ data\['item'\]"),
-        ({"item": "Item #1"}, "must contain at least one of"),
+        ({}, r"required key not provided at 'item'"),
+        ({"status": "needs_action"}, r"required key not provided at 'item'"),
+        ({"item": "Item #1"}, "at least one of"),
         (
             {"item": "", "status": "needs_action"},
-            "length of value must be at least 1",
+            "value must not be empty",
         ),
     ],
 )
@@ -542,12 +550,12 @@ async def test_update_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(vol.Invalid, match=expected_error):
+    with pytest.raises(probatio.Invalid, match=expected_error):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
             item_data,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -555,9 +563,9 @@ async def test_update_item_service_invalid_input(
 @pytest.mark.parametrize(
     ("update_data"),
     [
-        ({"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
-        ({"due_date": "2023-11-13"}),
-        ({"description": "Submit revised draft"}),
+        ({ATTR_DUE_DATETIME: f"2023-11-13T17:00:00{TEST_OFFSET}"}),
+        ({ATTR_DUE_DATE: "2023-11-13"}),
+        ({ATTR_DESCRIPTION: "Submit revised draft"}),
     ],
 )
 async def test_update_todo_item_field_unsupported(
@@ -574,7 +582,7 @@ async def test_update_todo_item_field_unsupported(
             DOMAIN,
             TodoServices.UPDATE_ITEM,
             {ATTR_ITEM: "1", **update_data},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -589,7 +597,7 @@ async def test_update_todo_item_field_unsupported(
                 uid="1",
                 summary="Item #1",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.date(2023, 11, 13),
+                due=dt.date(2023, 11, 13),
             ),
         ),
         (
@@ -599,7 +607,7 @@ async def test_update_todo_item_field_unsupported(
                 uid="1",
                 summary="Item #1",
                 status=TodoItemStatus.NEEDS_ACTION,
-                due=datetime.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+                due=dt.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),
             ),
         ),
         (
@@ -623,6 +631,7 @@ async def test_update_todo_item_extended_fields(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -630,7 +639,7 @@ async def test_update_todo_item_extended_fields(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", **update_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -645,36 +654,36 @@ async def test_update_todo_item_extended_fields(
     [
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": "Submit revised draft"},
+            {ATTR_DESCRIPTION: "Submit revised draft"},
             TodoItem(uid="1", summary="Summary", description="Submit revised draft"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": ""},
+            {ATTR_DESCRIPTION: ""},
             TodoItem(uid="1", summary="Summary", description=""),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": datetime.date(2024, 1, 2)},
-            TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 2)),
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
+            {ATTR_DUE_DATE: dt.date(2024, 1, 2)},
+            TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 2)),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": None},
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
+            {ATTR_DUE_DATE: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
-            [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_datetime": datetime.datetime(2024, 1, 1, 10, 0, 0)},
+            [TodoItem(uid="1", summary="Summary", due=dt.date(2024, 1, 1))],
+            {ATTR_DUE_DATETIME: dt.datetime(2024, 1, 1, 10, 0, 0)},
             TodoItem(
                 uid="1",
                 summary="Summary",
-                due=datetime.datetime(
+                due=dt.datetime(
                     2024, 1, 1, 10, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="America/Regina")
                 ),
             ),
@@ -684,10 +693,10 @@ async def test_update_todo_item_extended_fields(
                 TodoItem(
                     uid="1",
                     summary="Summary",
-                    due=datetime.datetime(2024, 1, 1, 10, 0, 0),
+                    due=dt.datetime(2024, 1, 1, 10, 0, 0),
                 )
             ],
-            {"due_datetime": None},
+            {ATTR_DUE_DATETIME: None},
             TodoItem(uid="1", summary="Summary"),
         ),
     ],
@@ -709,6 +718,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= (
         TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
@@ -720,7 +730,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "1", **update_data},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -742,7 +752,7 @@ async def test_remove_todo_item_service_by_id(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["1", "2"]},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -765,7 +775,7 @@ async def test_remove_todo_item_service_raises(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["1", "2"]},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -778,14 +788,12 @@ async def test_remove_todo_item_service_invalid_input(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(
-        vol.Invalid, match=r"required key not provided @ data\['item'\]"
-    ):
+    with pytest.raises(probatio.Invalid, match=r"required key not provided at 'item'"):
         await hass.services.async_call(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -802,7 +810,7 @@ async def test_remove_todo_item_service_by_summary(
         DOMAIN,
         TodoServices.REMOVE_ITEM,
         {ATTR_ITEM: ["Item #1"]},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -824,7 +832,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
             DOMAIN,
             TodoServices.REMOVE_ITEM,
             {ATTR_ITEM: ["Item #7"]},
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -974,7 +982,7 @@ async def test_unsupported_service(
             DOMAIN,
             service_name,
             payload,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -1014,7 +1022,7 @@ async def test_remove_completed_items_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
 
@@ -1028,7 +1036,7 @@ async def test_remove_completed_items_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.REMOVE_COMPLETED_ITEMS,
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
     test_entity.async_delete_todo_items.assert_not_called()
@@ -1047,7 +1055,7 @@ async def test_remove_completed_items_service_raises(
         await hass.services.async_call(
             DOMAIN,
             TodoServices.REMOVE_COMPLETED_ITEMS,
-            target={ATTR_ENTITY_ID: "todo.entity1"},
+            target={TargetKey.ENTITY_ID: "todo.entity1"},
             blocking=True,
         )
 
@@ -1094,7 +1102,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
         ]
     }
@@ -1122,7 +1130,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
             {
                 "summary": "Item #3",
@@ -1142,6 +1150,48 @@ async def test_subscribe(
     assert event_message == {
         "items": [],
     }
+
+
+async def test_subscribe_new_subscriber_does_not_notify_existing(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test a new subscriber does not push an update to existing subscribers."""
+
+    await create_mock_platform(hass, [test_entity])
+
+    client1 = await hass_ws_client(hass)
+    await client1.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client1.receive_json()
+    assert msg["success"]
+    # Initial push to the first subscriber
+    msg = await client1.receive_json()
+    assert msg["type"] == "event"
+
+    # A second client subscribes and receives its own initial push
+    client2 = await hass_ws_client(hass)
+    await client2.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client2.receive_json()
+    assert msg["success"]
+    msg = await client2.receive_json()
+    assert msg["type"] == "event"
+
+    # The first client must not receive a leaked event from the second
+    # subscription; the next message it gets is the pong for its own ping.
+    await client1.send_json_auto_id({"type": "ping"})
+    msg = await client1.receive_json()
+    assert msg["type"] == "pong"
 
 
 async def test_subscribe_entity_does_not_exist(
@@ -1169,12 +1219,41 @@ async def test_subscribe_entity_does_not_exist(
     }
 
 
+def test_serialize_todo_item_matches_asdict() -> None:
+    """Test the shallow serialization is equivalent to dataclasses.asdict.
+
+    The websocket subscriber path uses the cheaper shallow serialize_todo_item
+    instead of dataclasses.asdict. This equivalence only holds while TodoItem
+    stays a flat dataclass of immutable values.
+    """
+    item = TodoItem(
+        summary="Item #1",
+        uid="1",
+        status=TodoItemStatus.COMPLETED,
+        due=dt.date(2023, 11, 17),
+        description="A description",
+        completed=dt.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+    )
+    assert serialize_todo_item(item) == dataclasses.asdict(item)
+
+
+def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
+    """Guard the TodoItem fields and their types against changes.
+
+    A change here means the flat-immutable-dataclass assumption behind
+    serialize_todo_item must be re-checked (see test_serialize_todo_item_matches_asdict).
+    """
+    assert {
+        field.name: str(field.type) for field in dataclasses.fields(TodoItem)
+    } == snapshot
+
+
 @pytest.mark.parametrize(
     ("item_data", "expected_item_data"),
     [
-        ({"due": datetime.date(2023, 11, 17)}, {"due": "2023-11-17"}),
+        ({"due": dt.date(2023, 11, 17)}, {"due": "2023-11-17"}),
         (
-            {"due": datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE)},
+            {"due": dt.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE)},
             {"due": f"2023-11-17T17:00:00{TEST_OFFSET}"},
         ),
         ({"description": "Some description"}, {"description": "Some description"}),
@@ -1217,7 +1296,7 @@ async def test_list_todo_items_extended_fields(
         DOMAIN,
         "get_items",
         {},
-        target={ATTR_ENTITY_ID: "todo.entity1"},
+        target={TargetKey.ENTITY_ID: "todo.entity1"},
         blocking=True,
         return_response=True,
     )
@@ -1237,6 +1316,7 @@ async def test_async_subscribe_updates(
     hass: HomeAssistant, test_entity: TodoListEntity
 ) -> None:
     """Test async_subscribe_updates delivers list updates to listeners."""
+    test_entity._attr_todo_items = []
     await create_mock_platform(hass, [test_entity])
 
     received_updates: list[list[TodoItem] | None] = []
@@ -1247,10 +1327,15 @@ async def test_async_subscribe_updates(
     unsub = test_entity.async_subscribe_updates(listener)
 
     # Trigger an update
+    test_entity._attr_todo_items = [
+        TodoItem(summary="Item #1", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(summary="Item #2", uid="2", status=TodoItemStatus.COMPLETED),
+    ]
     test_entity.async_write_ha_state()
 
     assert len(received_updates) == 1
     items = received_updates[0]
+    assert items is not None
     assert len(items) == 2
     assert isinstance(items[0], TodoItem)
     assert items[0].summary == "Item #1"
@@ -1297,5 +1382,61 @@ async def test_async_subscribe_updates(
 
     # Unsubscribe and verify no more updates
     unsub()
+    test_entity._attr_todo_items = []
     test_entity.async_write_ha_state()
     assert len(received_updates) == 4
+
+
+async def test_subscribe_duplicate_state_write_does_not_broadcast(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entity: TodoListEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that unchanged items on update interval do not broadcast duplicates."""
+    await create_mock_platform(hass, [test_entity])
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": test_entity.entity_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    subscription_id = msg["id"]
+
+    # Initial update
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert len(msg["event"]["items"]) == 2
+
+    # Advance time to trigger the entity platform's polling update interval (60s)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The update interval ran, but items did not change: no broadcast should occur.
+    # The next message received should be the pong for our ping.
+    await client.send_json_auto_id({"type": "ping"})
+    msg = await client.receive_json()
+    assert msg["type"] == "pong"
+
+    # Now update items and advance time again
+    assert test_entity.todo_items is not None
+    test_entity._attr_todo_items = [
+        *test_entity.todo_items,
+        TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Items changed, so a broadcast should now occur
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert len(msg["event"]["items"]) == 3

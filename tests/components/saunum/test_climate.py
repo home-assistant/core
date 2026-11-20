@@ -1,12 +1,15 @@
 """Test the Saunum climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from freezegun.api import FrozenDateTimeFactory
 from pysaunum import SaunumException
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -20,10 +23,11 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
-    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -37,12 +41,11 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -125,8 +128,11 @@ async def test_hvac_mode_door_open_validation(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_HVAC_MODE: HVACMode.HEAT},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.saunum_leil",
+                ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
+            },
             blocking=True,
         )
 
@@ -298,8 +304,11 @@ async def test_fan_mode_service_call(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_FAN_MODE: FAN_LOW},
+        ClimateService.SET_FAN_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.saunum_leil",
+            ClimateServiceArgument.FAN_MODE: FAN_LOW,
+        },
         blocking=True,
     )
 
@@ -314,8 +323,11 @@ async def test_preset_mode_service_call(
     """Test setting preset mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "type_2"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.saunum_leil",
+            ClimateServiceArgument.PRESET_MODE: "type_2",
+        },
         blocking=True,
     )
 
@@ -366,8 +378,11 @@ async def test_fan_mode_validation_error(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_FAN_MODE: FAN_LOW},
+            ClimateService.SET_FAN_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.saunum_leil",
+                ClimateServiceArgument.FAN_MODE: FAN_LOW,
+            },
             blocking=True,
         )
 
@@ -389,8 +404,11 @@ async def test_preset_mode_validation_error(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "type_2"},
+            ClimateService.SET_PRESET_MODE,
+            {
+                TargetKey.ENTITY_ID: "climate.saunum_leil",
+                ClimateServiceArgument.PRESET_MODE: "type_2",
+            },
             blocking=True,
         )
 
@@ -458,8 +476,11 @@ async def test_preset_mode_attributes_custom_names(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.saunum_leil", ATTR_PRESET_MODE: "Steam Room"},
+        ClimateService.SET_PRESET_MODE,
+        {
+            TargetKey.ENTITY_ID: "climate.saunum_leil",
+            ClimateServiceArgument.PRESET_MODE: "Steam Room",
+        },
         blocking=True,
     )
     mock_saunum_client.async_set_sauna_type.assert_called_once_with(2)
@@ -500,8 +521,8 @@ async def test_preset_mode_options_update(
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_LOW},
             blocking=True,
         )
 
@@ -531,8 +552,8 @@ async def test_fan_mode_error_handling(
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_MODE: FAN_LOW},
+            ClimateService.SET_FAN_MODE,
+            {TargetKey.ENTITY_ID: entity_id, ClimateServiceArgument.FAN_MODE: FAN_LOW},
             blocking=True,
         )
 

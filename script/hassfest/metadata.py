@@ -2,9 +2,9 @@
 
 import tomllib
 
-from homeassistant.const import REQUIRED_PYTHON_VER, __version__
+from hassfest.model import Config, Integration
 
-from .model import Config, Integration
+from homeassistant.const import REQUIRED_PYTHON_VER, __version__
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
@@ -25,7 +25,8 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
         if data["project"]["requires-python"] != required_py_version:
             config.add_error(
                 "metadata",
-                f"'project.requires-python' value doesn't match '{required_py_version}'",
+                "'project.requires-python' value doesn't"
+                f" match '{required_py_version}'",
             )
     except KeyError:
         config.add_error("metadata", "No 'options.python_requires' key found!")

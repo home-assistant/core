@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from gios import ApiError
 from gios.model import GiosSensors
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gios.const import DOMAIN, SCAN_INTERVAL
@@ -15,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +46,7 @@ async def test_availability_api_error(
     mock_gios: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    """Ensure entities are marked unavailable when service errors."""
     state = hass.states.get("sensor.home_pm2_5")
     assert state
     assert state.state == "4"

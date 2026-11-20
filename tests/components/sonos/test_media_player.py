@@ -1,9 +1,9 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+import logging
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from freezegun import freeze_time
 import pytest
@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from soco.exceptions import SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,29 +21,28 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     RepeatMode,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.components.sonos.const import (
+    ATTR_QUEUE_POSITION,
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
@@ -52,31 +52,16 @@ from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
 )
-from homeassistant.components.sonos.services import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_QUEUE_POSITION,
-    ATTR_VOLUME,
-    SERVICE_GET_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SNAPSHOT,
-    SERVICE_UPDATE_ALARM,
-)
+from homeassistant.components.sonos.services import SonosService, SonosServiceArgument
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
-    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -87,6 +72,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
@@ -102,8 +88,8 @@ async def test_device_registry(
     hass: HomeAssistant, device_registry: DeviceRegistry, async_autosetup_sonos, soco
 ) -> None:
     """Test sonos device registered in the device registry."""
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
@@ -126,12 +112,12 @@ async def test_device_registry_not_portable(
     async_setup_sonos,
     soco,
 ) -> None:
-    """Test non-portable sonos device registered in the device registry to ensure area suggested."""
+    """Test non-portable sonos device has area suggested."""
     soco.get_battery_info.return_value = {}
     await async_setup_sonos()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
@@ -246,12 +232,12 @@ async def test_play_media_library(
     sock_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: media_content_type,
-            ATTR_MEDIA_CONTENT_ID: media_content_id,
-            ATTR_MEDIA_ENQUEUE: enqueue,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_content_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
+            MediaPlayerServiceArgument.ENQUEUE: enqueue,
         },
         blocking=True,
     )
@@ -314,14 +300,77 @@ async def test_play_media_library_content_error(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_content_type,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            OSError("Network down"),
+            "call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "Network down",
+            },
+            id="generic-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 701 received", "701", ""),
+            "upnp_call_failed",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 701 received",
+                "error_code": "701",
+            },
+            id="upnp-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 800 received", "800", ""),
+            "upnp_call_failed_music_service_unavailable",
+            {
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 800 received",
+                "error_code": "800",
+            },
+            id="upnp-error-800-music-service-unavailable",
+        ),
+    ],
+)
+async def test_play_media_error_translation(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    error: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test play_media surfaces translated error details for failures."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.play_uri.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "track",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _track_url,
+                MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
@@ -336,12 +385,12 @@ async def test_play_media_lib_track_play(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "track",
-            ATTR_MEDIA_CONTENT_ID: _track_url,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "track",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _track_url,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
     )
@@ -365,12 +414,12 @@ async def test_play_media_lib_track_next(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "track",
-            ATTR_MEDIA_CONTENT_ID: _track_url,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "track",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _track_url,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
     )
@@ -393,12 +442,12 @@ async def test_play_media_lib_track_replace(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "track",
-            ATTR_MEDIA_CONTENT_ID: _track_url,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "track",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _track_url,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
     )
@@ -416,12 +465,12 @@ async def test_play_media_lib_track_add(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "track",
-            ATTR_MEDIA_CONTENT_ID: _track_url,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "track",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _track_url,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
     )
@@ -432,6 +481,135 @@ async def test_play_media_lib_track_add(
         == LONG_SERVICE_TIMEOUT
     )
     assert soco_mock.play_from_queue.call_count == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "enqueue",
+        "expected_play_uri_calls",
+        "expected_add_uri_calls",
+        "expected_play_from_queue_calls",
+    ),
+    [
+        pytest.param(
+            MediaPlayerEnqueue.REPLACE,
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    force_radio=False,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            [],
+            id="replace",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.ADD,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="add",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.NEXT,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [],
+            id="next",
+        ),
+        pytest.param(
+            MediaPlayerEnqueue.PLAY,
+            [],
+            [
+                call(
+                    "http://example.com/audio/stream",
+                    position=1,
+                    timeout=LONG_SERVICE_TIMEOUT,
+                    mime_type="audio/mpeg",
+                )
+            ],
+            [call(9)],
+            id="play",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_media_source_passes_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    enqueue: MediaPlayerEnqueue,
+    expected_play_uri_calls: list[Any],
+    expected_add_uri_calls: list[Any],
+    expected_play_from_queue_calls: list[Any],
+) -> None:
+    """Test media source MIME type is passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://test/audio",
+                MediaPlayerServiceArgument.ENQUEUE: enqueue,
+            },
+            blocking=True,
+        )
+
+    assert soco_mock.play_uri.call_args_list == expected_play_uri_calls
+    assert soco_mock.add_uri_to_queue.call_args_list == expected_add_uri_calls
+    assert soco_mock.play_from_queue.call_args_list == expected_play_from_queue_calls
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_play_radio_media_source_does_not_pass_mime_type(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test radio media source MIME type is not passed to SoCo."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    with patch(
+        "homeassistant.components.sonos.media_player.media_source.async_resolve_media",
+        return_value=PlayMedia(
+            url="http://example.com/audio/stream", mime_type="audio/mpeg"
+        ),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            MediaPlayerService.PLAY_MEDIA,
+            {
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "media-source://radio_browser/station",
+            },
+            blocking=True,
+        )
+
+    soco_mock.play_uri.assert_called_once_with(
+        "http://example.com/audio/stream", force_radio=True
+    )
 
 
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
@@ -447,13 +625,13 @@ async def test_play_media_share_link_add(
     """Tests playing a share link with enqueue option add."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: _share_link,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
-            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _share_link,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
+            MediaPlayerServiceArgument.EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -471,6 +649,28 @@ async def test_play_media_share_link_add(
     )
 
 
+@pytest.mark.usefixtures("soco_factory", "async_autosetup_sonos")
+async def test_play_media_spotify_media_browser_url(
+    hass: HomeAssistant, soco_sharelink: MagicMock
+) -> None:
+    """Tests playing a Spotify media browser URL when Spotify is set up."""
+    hass.config.components.add("spotify")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.PLAY_MEDIA,
+        {
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "spotify://playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: f"spotify://01J5TX5A0FF6G5V0QJX6HBC94T/{_share_link}",
+        },
+        blocking=True,
+    )
+    assert soco_sharelink.add_share_link_to_queue.call_count == 1
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].args[0] == _share_link
+    )
+
+
 async def test_play_media_share_link_next(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -480,12 +680,12 @@ async def test_play_media_share_link_next(
     """Tests playing a share link with enqueue option next."""
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: _share_link,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _share_link,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
     )
@@ -516,12 +716,12 @@ async def test_play_media_share_link_play(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: _share_link,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _share_link,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
     )
@@ -550,12 +750,12 @@ async def test_play_media_share_link_replace(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: _share_link,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: _share_link,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
     )
@@ -615,11 +815,11 @@ async def test_play_media_music_library_playlist(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: media_content_id,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
         },
         blocking=True,
     )
@@ -647,11 +847,11 @@ async def test_play_media_music_library_playlist_dne(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: "playlist",
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
         )
@@ -669,11 +869,11 @@ async def test_play_sonos_playlist(
     # Test a successful call
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "playlist",
-            ATTR_MEDIA_CONTENT_ID: "sample playlist",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "sample playlist",
         },
         blocking=True,
     )
@@ -693,11 +893,11 @@ async def test_play_sonos_playlist(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: "playlist",
-                ATTR_MEDIA_CONTENT_ID: media_content_id,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "playlist",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
         )
@@ -722,6 +922,7 @@ async def test_play_sonos_playlist(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_line_in_tv(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -733,10 +934,10 @@ async def test_select_source_line_in_tv(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_INPUT_SOURCE: source,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.SOURCE: source,
         },
         blocking=True,
     )
@@ -753,29 +954,78 @@ async def test_select_source_line_in_tv(
                 "play_uri": 1,
                 "play_uri_uri": "x-sonosapi-radio:ST%3aetc",
                 "play_uri_title": "James Taylor Radio",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="100c2068ST%3a1683194971234567890" parentID="10fe2064myStations" restricted="true"><dc:title>James Taylor Radio</dc:title><upnp:class>object.item.audioItem.audioBroadcast.#station</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON60423_X_#Svc60423-99999999-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="100c2068ST%3a1683194971234567890"'
+                    ' parentID="10fe2064myStations" restricted="true">'
+                    "<dc:title>James Taylor Radio</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBroadcast"
+                    ".#station</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON60423_X_#Svc60423-99999999-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
         (
             "66 - Watercolors",
             {
                 "play_uri": 1,
-                "play_uri_uri": "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc",
+                "play_uri_uri": (
+                    "x-sonosapi-hls:Api%3atune%3aliveAudio%3ajazzcafe%3aetc"
+                ),
                 "play_uri_title": "66 - Watercolors",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="10090120Api%3atune%3aliveAudio%3ajazzcafe%3ae4b5402c-9999-9999-9999-4bc8e2cdccce" parentID="10086064live%3f93b0b9cb-9999-9999-9999-bcf75971fcfe" restricted="false"><dc:title>66 - Watercolors</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON9479_X_#Svc9479-99999999-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="10090120Api%3atune%3aliveAudio%3ajazzcafe'
+                    '%3ae4b5402c-9999-9999-9999-4bc8e2cdccce"'
+                    ' parentID="10086064live%3f93b0b9cb-9999-9999-9999'
+                    '-bcf75971fcfe" restricted="false">'
+                    "<dc:title>66 - Watercolors</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBroadcast"
+                    "</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON9479_X_#Svc9479-99999999-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
         (
             "American Tall Tales",
             {
                 "play_uri": 1,
-                "play_uri_uri": "x-rincon-cpcontainer:101340c8reftitle%C9F27_com?sid=239&flags=16584&sn=5",
+                "play_uri_uri": (
+                    "x-rincon-cpcontainer:101340c8reftitle"
+                    "%C9F27_com?sid=239&flags=16584&sn=5"
+                ),
                 "play_uri_title": "American Tall Tales",
-                "play_uri_meta": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="101340c8reftitleC9F27_com" parentID="101340c8reftitleC9F27_com" restricted="true"><dc:title>American Tall Tales</dc:title><upnp:class>object.item.audioItem.audioBook</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON61191_X_#Svc6-0-Token</desc></item></DIDL-Lite>',
+                "play_uri_meta": (
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+                    ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+                    ' xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"'
+                    ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="101340c8reftitleC9F27_com"'
+                    ' parentID="101340c8reftitleC9F27_com" restricted="true">'
+                    "<dc:title>American Tall Tales</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBook</upnp:class>"
+                    '<desc id="cdudn"'
+                    ' nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
+                    "SA_RINCON61191_X_#Svc6-0-Token"
+                    "</desc></item></DIDL-Lite>"
+                ),
             },
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_uri(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -787,10 +1037,10 @@ async def test_select_source_play_uri(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_INPUT_SOURCE: source,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.SOURCE: source,
         },
         blocking=True,
     )
@@ -817,6 +1067,7 @@ async def test_select_source_play_uri(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_queue(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -828,10 +1079,10 @@ async def test_select_source_play_queue(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_INPUT_SOURCE: source,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.SOURCE: source,
         },
         blocking=True,
     )
@@ -848,6 +1099,7 @@ async def test_select_source_play_queue(
     soco_mock.play_from_queue.assert_called_with(0)
 
 
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_error(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -857,10 +1109,10 @@ async def test_select_source_error(
     with pytest.raises(ServiceValidationError) as sve:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_SELECT_SOURCE,
+            MediaPlayerService.SELECT_SOURCE,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_INPUT_SOURCE: "invalid_source",
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.SOURCE: "invalid_source",
             },
             blocking=True,
         )
@@ -878,10 +1130,10 @@ async def test_shuffle_set(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_SHUFFLE: True,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.SHUFFLE: True,
         },
         blocking=True,
     )
@@ -889,10 +1141,10 @@ async def test_shuffle_set(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_SHUFFLE: False,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.SHUFFLE: False,
         },
         blocking=True,
     )
@@ -939,10 +1191,10 @@ async def test_repeat_set(
     assert soco.play_mode == "NORMAL"
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
         },
         blocking=True,
     )
@@ -950,10 +1202,10 @@ async def test_repeat_set(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_REPEAT: RepeatMode.ONE,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ONE,
         },
         blocking=True,
     )
@@ -961,10 +1213,10 @@ async def test_repeat_set(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_REPEAT: RepeatMode.OFF,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -1018,11 +1270,11 @@ async def test_play_media_favorite_item_id(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
-            ATTR_MEDIA_CONTENT_ID: "FV:2/4",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "favorite_item_id",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "FV:2/4",
         },
         blocking=True,
     )
@@ -1040,11 +1292,11 @@ async def test_play_media_favorite_item_id(
     with pytest.raises(ValueError) as sve:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
-                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_ID",
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "favorite_item_id",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "UNKNOWN_ID",
             },
             blocking=True,
         )
@@ -1080,9 +1332,12 @@ async def test_service_snapshot_restore(
     ) as mock_snapshot:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SNAPSHOT,
+            SonosService.SNAPSHOT,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                TargetKey.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1093,9 +1348,12 @@ async def test_service_snapshot_restore(
     ) as mock_restore:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_RESTORE,
+            SonosService.RESTORE,
             {
-                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+                TargetKey.ENTITY_ID: [
+                    "media_player.living_room",
+                    "media_player.bedroom",
+                ],
             },
             blocking=True,
         )
@@ -1112,9 +1370,9 @@ async def test_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_UP,
+        MediaPlayerService.VOLUME_UP,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
     )
@@ -1122,9 +1380,9 @@ async def test_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_DOWN,
+        MediaPlayerService.VOLUME_DOWN,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
     )
@@ -1132,8 +1390,11 @@ async def test_volume(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.57},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.57,
+        },
         blocking=True,
     )
     # SoCo uses 0..100 for its range.
@@ -1223,13 +1484,13 @@ async def test_play_media_announce(
     # Test the success path
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_CONTENT_ID: content_id,
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {"volume": volume},
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {"volume": volume},
         },
         blocking=True,
     )
@@ -1240,16 +1501,17 @@ async def test_play_media_announce(
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
     with pytest.raises(
-        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+        HomeAssistantError,
+        match="An error occurred while communicating with the Sonos speaker",
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: "music",
-                ATTR_MEDIA_CONTENT_ID: content_id,
-                ATTR_MEDIA_ANNOUNCE: True,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
             },
             blocking=True,
         )
@@ -1266,12 +1528,12 @@ async def test_play_media_announce(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: "music",
-                ATTR_MEDIA_CONTENT_ID: content_id,
-                ATTR_MEDIA_ANNOUNCE: True,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
             },
             blocking=True,
         )
@@ -1286,17 +1548,72 @@ async def test_play_media_announce(
 
     await hass.services.async_call(
         MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "music",
-            ATTR_MEDIA_CONTENT_ID: content_id,
-            ATTR_MEDIA_ANNOUNCE: True,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
         },
         blocking=True,
     )
     assert sonos_websocket.play_clip.call_count == 1
     soco.play_uri.assert_called_with(content_id, force_radio=False)
+
+
+@pytest.mark.parametrize(
+    ("content_id", "expect_warning"),
+    [
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.mp3",
+            False,
+            id="mp3_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.wav",
+            False,
+            id="wav_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.flac",
+            True,
+            id="flac_warns_and_plays",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123",
+            False,
+            id="no_extension_no_warning",
+        ),
+    ],
+)
+async def test_play_media_announce_format_warning(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+    content_id: str,
+    expect_warning: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that announce logs a warning for unsupported file formats."""
+    caplog.clear()
+    caplog.set_level(
+        logging.WARNING, logger="homeassistant.components.sonos.media_player"
+    )
+    await hass.services.async_call(
+        MP_DOMAIN,
+        MediaPlayerService.PLAY_MEDIA,
+        {
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "music",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: content_id,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    warning_logged = "only supports MP3 and WAV" in caplog.text
+    assert warning_logged == expect_warning
 
 
 async def test_media_get_queue(
@@ -1310,9 +1627,9 @@ async def test_media_get_queue(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_QUEUE,
+        SonosService.GET_QUEUE,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
+            TargetKey.ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
         return_response=True,
@@ -1321,16 +1638,26 @@ async def test_media_get_queue(
     assert result == snapshot
 
 
+FAVORITE_TITLES = [
+    "66 - Watercolors",
+    "Les P'tits Bateaux",
+    "James Taylor Radio",
+    "1984",
+    "American Tall Tales",
+    "sample playlist",
+]
+
+
 @pytest.mark.parametrize(
     ("speaker_model", "source_list"),
     [
-        ("Sonos Arc Ultra", [SOURCE_TV]),
-        ("Sonos Arc", [SOURCE_TV]),
-        ("Sonos Playbar", [SOURCE_TV]),
-        ("Sonos Connect", [SOURCE_LINEIN]),
-        ("Sonos Play:5", [SOURCE_LINEIN]),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
-        ("Sonos Era", None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Arc", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Playbar", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Connect", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Play:5", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Era", FAVORITE_TITLES),
     ],
     indirect=["speaker_model"],
 )
@@ -1338,11 +1665,69 @@ async def test_media_source_list(
     hass: HomeAssistant,
     async_autosetup_sonos,
     speaker_model: str,
-    source_list: list[str] | None,
+    source_list: list[str],
 ) -> None:
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "expected_sources", "expected_after_clear"),
+    [
+        ("Model Name", FAVORITE_TITLES, None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES], [SOURCE_TV]),
+        (
+            "Sonos Amp",
+            [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES],
+            [SOURCE_LINEIN, SOURCE_TV],
+        ),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_source_list_favorites_cleared(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    speaker_model: str,
+    expected_sources: list[str],
+    expected_after_clear: list[str] | None,
+) -> None:
+    """Test source_list and SELECT_SOURCE update when favorites are cleared."""
+    entity_id = "media_player.zone_a"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_sources
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+    # Clear favorites via the music library mock
+    empty_favorites = SearchResult([], "favorites", 0, 0, 2)
+    soco.music_library.get_sonos_favorites.return_value = empty_favorites
+    soco.music_library.get_music_library_information.side_effect = None
+    soco.music_library.get_music_library_information.return_value = SearchResult(
+        [], "sonos_playlists", 0, 0, 0
+    )
+
+    # Trigger a favorites cache update via the content directory event
+    service = soco.contentDirectory
+    subscription = service.subscribe.return_value
+    favorites_event = SonosMockEvent(
+        soco,
+        service,
+        {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"},
+    )
+    subscription.callback(event=favorites_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_after_clear
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) == (
+        expected_after_clear is not None
+    )
 
 
 async def test_service_update_alarm(
@@ -1354,14 +1739,14 @@ async def test_service_update_alarm(
 
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_UPDATE_ALARM,
+        SonosService.UPDATE_ALARM,
         {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_ALARM_ID: 14,
-            ATTR_TIME: "07:15:00",
-            ATTR_VOLUME: 0.25,
-            ATTR_INCLUDE_LINKED_ZONES: True,
-            ATTR_ENABLED: True,
+            TargetKey.ENTITY_ID: "media_player.zone_a",
+            SonosServiceArgument.ALARM_ID: 14,
+            SonosServiceArgument.TIME: "07:15:00",
+            SonosServiceArgument.VOLUME: 0.25,
+            SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+            SonosServiceArgument.ENABLED: True,
         },
         blocking=True,
     )
@@ -1395,14 +1780,14 @@ async def test_service_update_alarm_dne(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_UPDATE_ALARM,
+            SonosService.UPDATE_ALARM,
             {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_ALARM_ID: 99,
-                ATTR_TIME: "07:15:00",
-                ATTR_VOLUME: 0.25,
-                ATTR_INCLUDE_LINKED_ZONES: True,
-                ATTR_ENABLED: True,
+                TargetKey.ENTITY_ID: "media_player.zone_a",
+                SonosServiceArgument.ALARM_ID: 99,
+                SonosServiceArgument.TIME: "07:15:00",
+                SonosServiceArgument.VOLUME: 0.25,
+                SonosServiceArgument.INCLUDE_LINKED_ZONES: True,
+                SonosServiceArgument.ENABLED: True,
             },
             blocking=True,
         )
@@ -1429,7 +1814,7 @@ async def test_position_updates(
     assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # updated_at should be recent
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert updated_at == datetime.now(UTC)
+    assert updated_at == dt_util.utcnow()
 
     # Position only updated by 1 second; should not update attributes
     new_track_info = current_track_info.copy()
@@ -1459,7 +1844,7 @@ async def test_position_updates(
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
         assert state.attributes[ATTR_MEDIA_POSITION] == 70
-        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == datetime.now(UTC)
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == dt_util.utcnow()
 
 
 @pytest.mark.parametrize(

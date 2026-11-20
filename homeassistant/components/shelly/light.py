@@ -1,9 +1,7 @@
 """Light for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_BULB, RPC_GENERATIONS
@@ -151,6 +149,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @property
+    @override
     def is_on(self) -> bool:
         """If light is on."""
         if self.control_result:
@@ -177,6 +176,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return "white"
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         if self.mode == "color":
@@ -190,6 +190,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return percentage_to_brightness(cast(int, self.block.brightness))
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.mode == "color":
@@ -206,6 +207,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         if self.control_result:
@@ -219,6 +221,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
         if self.control_result:
@@ -229,6 +232,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return (*self.rgb_color, cast(int, white))
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the CT color value in kelvin."""
         color_temp = cast(int, self.block.colorTemp)
@@ -241,6 +245,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         )
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         if self.coordinator.model == MODEL_BULB:
@@ -249,6 +254,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         return list(STANDARD_RGB_EFFECTS.values())
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         if self.control_result:
@@ -261,6 +267,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
 
         return STANDARD_RGB_EFFECTS[cast(int, effect_index)]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         if self.block.type == "relay":
@@ -340,6 +347,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         self.control_result = await self.set_state(**params)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         params: dict[str, Any] = {"turn": "off"}
@@ -354,6 +362,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """When device updates, clear control & mode result that overrides state."""
         self.control_result = None
@@ -384,30 +393,36 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """If light is on."""
         return bool(self.status["output"])
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return percentage_to_brightness(self.status["brightness"])
 
     @property
-    def rgb_color(self) -> tuple[int, int, int]:
+    @override
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
         return cast(tuple, self.status["rgb"])
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
         return (*self.status["rgb"], self.status["white"])
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the CT color value in Kelvin."""
         return cast(int, self.status["ct"])
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         params: dict[str, Any] = {"id": self._id, "on": True}
@@ -430,6 +445,9 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
             params["rgb"] = list(kwargs[ATTR_RGBW_COLOR][:-1])
             params["white"] = kwargs[ATTR_RGBW_COLOR][-1]
 
+        if ATTR_EFFECT in kwargs:
+            params["effect"] = kwargs[ATTR_EFFECT]
+
         if self.status.get("mode") is not None:
             if ATTR_COLOR_TEMP_KELVIN in kwargs:
                 params["mode"] = "cct"
@@ -438,6 +456,7 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
 
         await self.call_rpc(f"{self._component}.Set", params)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         params: dict[str, Any] = {"id": self._id, "on": False}
@@ -506,12 +525,53 @@ class RpcShellyRgbCctLight(RpcShellyLightBase):
     _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self.status["mode"] == "cct":
             return ColorMode.COLOR_TEMP
 
         return ColorMode.RGB
+
+
+class RpcShellyLedStrip(RpcShellyLightBase):
+    """Entity that controls a LED strip on RPC based Shelly devices."""
+
+    _component = "LedStrip"
+
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.EFFECT
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """If light is on."""
+        return bool(self.status["on"])
+
+    @property
+    @override
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the rgb color value, None if the device has not reported it."""
+        if (rgb := self.status.get("rgb")) is None:
+            return None
+
+        return cast(tuple[int, int, int], tuple(rgb))
+
+    @property
+    @override
+    def effect_list(self) -> list[str]:
+        """Return the list of supported effects."""
+        if self.coordinator.device.initialized:
+            return list(self.coordinator.device.config[self.key]["effects"])
+
+        return []
+
+    @property
+    @override
+    def effect(self) -> str:
+        """Return the current effect."""
+        return cast(str, self.status["effect"])
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
@@ -567,6 +627,12 @@ LIGHTS: Final = {
         key="rgbw",
         sub_key="output",
         entity_class=RpcShellyRgbwLight,
+    ),
+    "ledstrip": RpcEntityDescription(
+        key="ledstrip",
+        sub_key="on",
+        translation_key="ledstrip",
+        entity_class=RpcShellyLedStrip,
     ),
 }
 

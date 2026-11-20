@@ -3,20 +3,13 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_numerical_condition_above_below_all,
@@ -24,6 +17,15 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.moisture.condition import CONDITIONS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
 
 _MOISTURE_UNIT_ATTRS = {ATTR_UNIT_OF_MEASUREMENT: "%"}
 
@@ -40,22 +42,46 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
+_MOISTURE_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_detected": TargetSupport.STANDARD,
+    "is_not_detected": TargetSupport.STANDARD,
+    "is_value": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
-    "condition",
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "moisture.is_detected",
-        "moisture.is_not_detected",
-        "moisture.is_value",
+        ("moisture.is_detected", {}, True, True),
+        ("moisture.is_not_detected", {}, True, True),
+        ("moisture.is_value", _MOISTURE_THRESHOLD, True, True),
     ],
 )
-async def test_moisture_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
+async def test_moisture_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the moisture conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+    """Test that moisture conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -100,7 +126,6 @@ async def test_moisture_binary_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -145,7 +170,6 @@ async def test_moisture_binary_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -181,7 +205,6 @@ async def test_moisture_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),

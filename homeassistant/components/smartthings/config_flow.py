@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import SmartThings
 
@@ -24,15 +24,18 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(REQUESTED_SCOPES)}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -44,6 +47,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
         if not set(data[CONF_TOKEN]["scope"].split()) >= set(SCOPES):
@@ -64,7 +68,8 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data={**data, CONF_LOCATION_ID: location.location_id},
             )
 
-        if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
+        entry = self._get_reauth_entry()
+        if CONF_TOKEN not in entry.data:
             if entry.data[OLD_DATA][CONF_LOCATION_ID] != location.location_id:
                 return self.async_abort(reason="reauth_location_mismatch")
             return self.async_update_reload_and_abort(

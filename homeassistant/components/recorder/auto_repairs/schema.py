@@ -1,7 +1,5 @@
 """Schema repairs."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
@@ -11,9 +9,10 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
+from homeassistant.helpers.recorder import session_scope
+
 from ..const import SupportedDialect
 from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE, MYSQL_COLLATE
-from ..util import session_scope
 
 if TYPE_CHECKING:
     from .. import Recorder
@@ -87,7 +86,10 @@ def _validate_table_schema_has_correct_collation(
     instance: Recorder,
     table_object: type[DeclarativeBase],
 ) -> set[str]:
-    """Ensure the table has the correct collation to avoid union errors with mixed collations."""
+    """Ensure the table has the correct collation.
+
+    This avoids union errors with mixed collations.
+    """
     schema_errors: set[str] = set()
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
@@ -225,7 +227,8 @@ def _check_columns(
             continue
         schema_errors.add(f"{table_name}.{supports}")
         _LOGGER.error(
-            "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
+            "Column %s in database table %s does not support"
+            " %s (stored=%s != expected=%s)",
             column,
             table_name,
             supports,
@@ -243,9 +246,7 @@ def correct_db_schema_utf8(
         f"{table_name}.4-byte UTF-8" in schema_errors
         or f"{table_name}.{MYSQL_COLLATE}" in schema_errors
     ):
-        from ..migration import (  # noqa: PLC0415
-            _correct_table_character_set_and_collation,
-        )
+        from ..migration import _correct_table_character_set_and_collation  # noqa: PLC0415
 
         _correct_table_character_set_and_collation(table_name, instance.get_session)
 

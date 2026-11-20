@@ -1,5 +1,8 @@
 """The tests for the PG LAB Electronics cover."""
 
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components import cover
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -18,9 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import get_device_discovery_payload, send_discovery_message
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 COVER_FEATURES = (
     cover.CoverEntityFeature.OPEN
@@ -144,18 +144,18 @@ async def test_cover_mqtt_state_by_calling_service(
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_OPEN_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "OPEN", 0, False
+        "pglab/test/shutter/0/set", "OPEN", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_STOP_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "STOP", 0, False
+        "pglab/test/shutter/0/set", "STOP", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     await call_service(hass, "cover.test_shutter_0", SERVICE_CLOSE_COVER)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/shutter/0/set", "CLOSE", 0, False
+        "pglab/test/shutter/0/set", "CLOSE", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()

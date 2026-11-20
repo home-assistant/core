@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.androidtv_remote.config_flow import (
@@ -22,8 +23,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
@@ -287,8 +286,10 @@ async def test_user_flow_pairing_connection_closed(
 ) -> None:
     """Test async_finish_pairing raises ConnectionClosed.
 
-    This is when the user canceled pairing on the Android TV itself before calling async_finish_pairing.
-    We call async_start_pairing again which succeeds and we have a chance to enter a new PIN.
+    This is when the user canceled pairing on the Android TV
+    itself before calling async_finish_pairing. We call
+    async_start_pairing again which succeeds and we have a
+    chance to enter a new PIN.
     """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -358,7 +359,9 @@ async def test_user_flow_pairing_connection_closed_followed_by_cannot_connect(
     mock_unload_entry: AsyncMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test async_finish_pairing raises ConnectionClosed and then async_start_pairing raises CannotConnect.
+    """Test async_finish_pairing raises ConnectionClosed.
+
+    Then async_start_pairing raises CannotConnect.
 
     This is when the user unplugs the Android TV before calling async_finish_pairing.
     We call async_start_pairing again which fails with CannotConnect so we abort.
@@ -478,7 +481,10 @@ async def test_user_flow_already_configured_host_not_changed_no_reload_entry(
     mock_unload_entry: AsyncMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test we abort the user flow if already configured and no reload if host not changed."""
+    """Test we abort user flow if already configured.
+
+    No reload if host not changed.
+    """
     host = "1.2.3.4"
     name = "My Android TV"
     mac = "1A:2B:3C:4D:5E:6F"
@@ -743,7 +749,10 @@ async def test_zeroconf_flow_already_configured_host_changed_reloads_entry(
     mock_unload_entry: AsyncMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test we abort the zeroconf flow if already configured and reload if host or name changed."""
+    """Test we abort zeroconf flow if already configured.
+
+    Reload if host or name changed.
+    """
     host = "1.2.3.4"
     name = "My Android TV"
     mac = "1A:2B:3C:4D:5E:6F"
@@ -799,7 +808,10 @@ async def test_zeroconf_flow_already_configured_host_not_changed_no_reload_entry
     mock_unload_entry: AsyncMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test we abort the zeroconf flow if already configured and no reload if host and name not changed."""
+    """Test we abort zeroconf flow if already configured.
+
+    No reload if host and name not changed.
+    """
     host = "1.2.3.4"
     name = "My Android TV"
     mac = "1A:2B:3C:4D:5E:6F"
@@ -870,13 +882,16 @@ async def test_zeroconf_flow_abort_if_mac_is_missing(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_flow_already_configured_zeroconf_has_multiple_invalid_ip_addresses(
+async def test_zeroconf_flow_configured_zeroconf_invalid_ips(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_unload_entry: AsyncMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test we abort the zeroconf flow if already configured and zeroconf has invalid ip addresses."""
+    """Test we abort zeroconf flow if already configured.
+
+    Zeroconf has invalid ip addresses.
+    """
     host = "1.2.3.4"
     name = "My Android TV"
     mac = "1A:2B:3C:4D:5E:6F"
@@ -1045,6 +1060,19 @@ async def test_reauth_flow_cannot_connect(
     await hass.async_block_till_done()
     assert len(mock_unload_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
+
+    mock_api.async_start_pairing = AsyncMock(return_value=None)
+    mock_api.async_finish_pairing = AsyncMock(return_value=None)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "123456"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_options_flow(

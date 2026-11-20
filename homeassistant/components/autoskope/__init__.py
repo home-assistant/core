@@ -1,7 +1,5 @@
 """The Autoskope integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth
@@ -17,7 +15,7 @@ from .coordinator import AutoskopeConfigEntry, AutoskopeDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) -> None:
     """Set up Autoskope from a config entry."""
     session = async_create_clientsession(hass, cookie_jar=aiohttp.CookieJar())
 
@@ -44,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

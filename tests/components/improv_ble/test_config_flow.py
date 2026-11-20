@@ -13,6 +13,12 @@ from improv_ble_client import (
     errors as improv_ble_errors,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import improv_ble
@@ -31,13 +37,6 @@ from . import (
     IMPROV_BLE_DISCOVERY_INFO,
     NOT_IMPROV_BLE_DISCOVERY_INFO,
     PROVISIONED_IMPROV_BLE_DISCOVERY_INFO,
-)
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info_bleak,
 )
 
 IMPROV_BLE = "homeassistant.components.improv_ble"
@@ -334,7 +333,8 @@ async def test_bluetooth_rediscovery_after_successful_provision(
     assert result["reason"] == "provision_successful"
 
     # Now inject the same device again (simulating factory reset)
-    # The match history was cleared after successful provision, so it should be rediscovered
+    # The match history was cleared after successful provision,
+    # so it should be rediscovered
     inject_bluetooth_service_info_bleak(hass, IMPROV_BLE_DISCOVERY_INFO)
     await hass.async_block_till_done()
 
@@ -876,7 +876,7 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
         ),
     ],
 )
-async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
+async def test_provision_retry(hass: HomeAssistant, exc: Exception, error: str) -> None:
     """Test bluetooth flow with error."""
     flow_id = await _test_provision_error(hass, exc)
 
@@ -884,6 +884,27 @@ async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
     assert result["errors"] == {"base": error}
+
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=None,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.PROVISIONING_TIMEOUT", 0.0000001),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ssid": "MyWIFI", "password": "secret"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "provision_successful"
 
 
 async def test_provision_fails_invalid_data(
@@ -898,8 +919,8 @@ async def test_provision_fails_invalid_data(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_improv_data"
     assert (
-        "Received invalid improv via BLE data '000000000000' from device with bluetooth address 'AA:BB:CC:DD:EE:F0'"
-        in caplog.text
+        "Received invalid improv via BLE data '000000000000'"
+        " from device with bluetooth address 'AA:BB:CC:DD:EE:F0'" in caplog.text
     )
 
 
@@ -1105,6 +1126,91 @@ async def test_flow_chaining_with_redirect_url(hass: HomeAssistant) -> None:
     # Should use next_flow instead of redirect URL
     assert result["reason"] == "provision_successful"
     assert result["next_flow"] == (FlowType.CONFIG_FLOW, esphome_flow_id)
+
+
+@pytest.mark.parametrize(
+    ("redirect_url", "expected_reason"),
+    [
+        pytest.param(None, "provision_successful", id="no_redirect_url"),
+        pytest.param(
+            "http://blabla.local", "provision_successful_url", id="redirect_url"
+        ),
+    ],
+)
+async def test_flow_chaining_next_flow_gone(
+    hass: HomeAssistant, redirect_url: str | None, expected_reason: str
+) -> None:
+    """Test the next flow is aborted before provisioning completes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=IMPROV_BLE_DISCOVERY_INFO,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Confirm bluetooth setup
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+
+    # Start provisioning
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.can_identify",
+            return_value=False,
+            new_callable=PropertyMock,
+        ),
+        patch(f"{IMPROV_BLE}.config_flow.ImprovBLEClient.ensure_connected"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ADDRESS: IMPROV_BLE_DISCOVERY_INFO.address},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "provision"
+
+    with (
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
+            return_value=False,
+        ),
+        patch(
+            f"{IMPROV_BLE}.config_flow.ImprovBLEClient.provision",
+            return_value=redirect_url,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"ssid": "TestNetwork", "password": "secret"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "provisioning"
+        assert result["step_id"] == "do_provision"
+
+        # Yield to allow the background task to create the future
+        await asyncio.sleep(0)  # task is created with eager_start=False
+
+        # Create a dummy target flow using a different device address
+        target_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_BLUETOOTH},
+            data=IMPROV_BLE_DISCOVERY_INFO_TARGET1,
+        )
+        next_config_flow_id = target_result["flow_id"]
+
+        # Simulate another integration registering a flow which it then aborts,
+        # for example because the device is already configured
+        improv_ble.async_register_next_flow(
+            hass, IMPROV_BLE_DISCOVERY_INFO.address, next_config_flow_id
+        )
+        hass.config_entries.flow.async_abort(next_config_flow_id)
+
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert "next_flow" not in result
 
 
 async def test_flow_chaining_future_already_done(

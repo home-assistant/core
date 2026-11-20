@@ -1,7 +1,5 @@
 """Constants for the Seko Pooldose integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import UnitOfTemperature, UnitOfVolume, UnitOfVolumeFlowRate
 
 DOMAIN = "pooldose"

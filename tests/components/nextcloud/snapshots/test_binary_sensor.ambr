@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Avatars enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Avatars enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Debug enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Debug enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -139,7 +139,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Filelocking enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Filelocking enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -189,7 +189,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
@@ -207,9 +207,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -239,7 +239,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
@@ -257,9 +257,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nextcloud', '1234567890abcdef')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -289,7 +289,7 @@
 # name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Previews enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Previews enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',

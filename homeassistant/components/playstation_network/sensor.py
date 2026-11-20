@@ -1,11 +1,10 @@
 """Sensor platform for PlayStation Network integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,12 +21,11 @@ from homeassistant.util import dt as dt_util
 from .coordinator import (
     PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkData,
     PlaystationNetworkFriendDataCoordinator,
     PlaystationNetworkUserDataCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
-from .helpers import get_game_title_info
+from .helpers import PlaystationNetworkData, get_game_title_info
 
 PARALLEL_UPDATES = 0
 
@@ -195,12 +193,14 @@ class PlaystationNetworkSensorBaseEntity(
     coordinator: PlayStationNetworkBaseCoordinator
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if self.entity_description.key is PlaystationNetworkSensor.ONLINE_ID and (
@@ -215,6 +215,7 @@ class PlaystationNetworkSensorBaseEntity(
         return super().entity_picture
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
 

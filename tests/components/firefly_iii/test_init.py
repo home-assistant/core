@@ -8,13 +8,12 @@ from pyfirefly.exceptions import (
     FireflyTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -35,4 +34,4 @@ async def test_setup_exceptions(
     """Test the _async_setup."""
     mock_firefly_client.get_about.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state

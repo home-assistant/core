@@ -3,6 +3,12 @@
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
+)
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -17,13 +23,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_get_device_automation_capabilities,
-    async_get_device_automations,
-)
 
 
 @pytest.mark.parametrize(
@@ -169,11 +168,11 @@ async def test_get_trigger_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        entity_entry.entity_id, "attributes", {"supported_features": 15}
     )
 
     triggers = await async_get_device_automations(
@@ -208,11 +207,11 @@ async def test_get_trigger_capabilities_legacy(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        entity_entry.entity_id, "attributes", {"supported_features": 15}
     )
 
     triggers = await async_get_device_automations(
@@ -446,8 +445,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert (
-        service_calls[5].data["some"]
-        == f"armed_vacation - device - {entry.entity_id} - armed_night - armed_vacation - None"
+        service_calls[5].data["some"] == f"armed_vacation - device - {entry.entity_id}"
+        f" - armed_night - armed_vacation - None"
     )
 
 

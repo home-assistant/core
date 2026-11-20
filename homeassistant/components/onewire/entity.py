@@ -1,15 +1,16 @@
 """Support for 1-Wire entities."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerError
 from aio_ownet.proxy import OWServerStatelessProxy
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,6 @@ class OneWireEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        self._last_update_success = True
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
@@ -37,6 +37,7 @@ class OneWireEntity(Entity):
         self._owproxy = owproxy
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
@@ -45,19 +46,26 @@ class OneWireEntity(Entity):
 
     async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
-        await self._owproxy.write(self._device_file, value)
+        try:
+            await self._owproxy.write(self._device_file, value)
+        except OWServerError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"device_file": self._device_file},
+            ) from exc
 
     async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
             state = await self._owproxy.read(self._device_file)
         except OWServerError as exc:
-            if self._last_update_success:
+            if self._attr_available:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)
-                self._last_update_success = False
+                self._attr_available = False
             self._state = None
         else:
-            if not self._last_update_success:
-                self._last_update_success = True
-                _LOGGER.debug("Fetching %s data recovered", self.name)
+            if not self._attr_available:
+                self._attr_available = True
+                _LOGGER.info("Fetching %s data recovered", self.name)
             self._state = state.decode("ascii").strip()

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import (
     Device,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -14,11 +15,14 @@ from bsblan import (
     StaticState,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
-from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -33,8 +37,31 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1],
         },
         unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_dual_circuit() -> MockConfigEntry:
+    """Return a mocked config entry with dual heating circuits."""
+    return MockConfigEntry(
+        title="BSBLAN Setup",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+            CONF_HEATING_CIRCUITS: [1, 2],
+        },
+        unique_id="00:80:41:19:69:90",
+        version=1,
+        minor_version=3,
     )
 
 
@@ -42,7 +69,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.bsblan.async_setup_entry", return_value=True
+        "homeassistant.components.bsblan.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -80,7 +107,17 @@ def mock_bsblan() -> Generator[MagicMock]:
         bsblan.hot_water_schedule.return_value = HotWaterSchedule.model_validate_json(
             load_fixture("dhw_schedule.json", DOMAIN)
         )
+        bsblan.heating_schedule.return_value = (
+            HeatingTimeSwitchPrograms.model_validate_json(
+                load_fixture("heating_schedule.json", DOMAIN)
+            )
+        )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
+        # Default to a modern JSON-API version (>= v2) so setup uses the full
+        # feature set and does not raise the outdated-firmware repair issue.
+        bsblan.json_api_version = "3.0"
+        # Default: single circuit (for config flow tests)
+        bsblan.get_available_circuits.return_value = [1]
 
         yield bsblan

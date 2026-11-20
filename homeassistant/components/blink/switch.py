@@ -1,8 +1,6 @@
 """Support for Blink Motion detection switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from blinkpy.auth import UnauthorizedError
 
@@ -69,6 +67,7 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             model=self._camera.camera_type,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
@@ -83,8 +82,10 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
+        self._camera.motion_enabled = True
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
@@ -99,9 +100,11 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
+        self._camera.motion_enabled = False
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if Camera Motion is enabled."""
         return self._camera.motion_enabled

@@ -1,15 +1,14 @@
 """Sensors flow for Withings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from aiowithings import (
     Activity,
     Device,
+    DeviceModel,
     Goals,
     MeasurementPosition,
     MeasurementType,
@@ -158,13 +157,15 @@ MEASUREMENT_SENSORS: dict[
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
-        key="diastolic_blood_pressure_mmhg",
-        measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
-        translation_key="diastolic_blood_pressure",
-        native_unit_of_measurement=UnitOfPressure.MMHG,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
+    MeasurementType.DIASTOLIC_BLOOD_PRESSURE: (
+        WithingsMeasurementSensorEntityDescription(
+            key="diastolic_blood_pressure_mmhg",
+            measurement_type=MeasurementType.DIASTOLIC_BLOOD_PRESSURE,
+            translation_key="diastolic_blood_pressure",
+            native_unit_of_measurement=UnitOfPressure.MMHG,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        )
     ),
     MeasurementType.SYSTOLIC_BLOOD_PRESSURE: WithingsMeasurementSensorEntityDescription(
         key="systolic_blood_pressure_mmhg",
@@ -235,34 +236,60 @@ MEASUREMENT_SENSORS: dict[
         key="vascular_age",
         measurement_type=MeasurementType.VASCULAR_AGE,
         translation_key="vascular_age",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.METABOLIC_AGE: WithingsMeasurementSensorEntityDescription(
+        key="metabolic_age",
+        measurement_type=MeasurementType.METABOLIC_AGE,
+        translation_key="metabolic_age",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
         key="visceral_fat",
         measurement_type=MeasurementType.VISCERAL_FAT,
         translation_key="visceral_fat_index",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_feet",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
-        translation_key="electrodermal_activity_feet",
-        native_unit_of_measurement=PERCENTAGE,
+    MeasurementType.BASAL_METABOLIC_RATE: WithingsMeasurementSensorEntityDescription(
+        key="basal_metabolic_rate",
+        measurement_type=MeasurementType.BASAL_METABOLIC_RATE,
+        translation_key="basal_metabolic_rate",
+        native_unit_of_measurement="kcal/day",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_left_foot",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
-        translation_key="electrodermal_activity_left_foot",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_feet",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+            translation_key="electrodermal_activity_feet",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        )
     ),
-    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
-        key="electrodermal_activity_right_foot",
-        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
-        translation_key="electrodermal_activity_right_foot",
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_left_foot",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+            translation_key="electrodermal_activity_left_foot",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        )
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: (
+        WithingsMeasurementSensorEntityDescription(
+            key="electrodermal_activity_right_foot",
+            measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+            translation_key="electrodermal_activity_right_foot",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        )
     ),
 }
 
@@ -669,6 +696,7 @@ class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     value_fn: Callable[[Device], StateType]
+    exists_fn: Callable[[Device], bool] = lambda _: True
 
 
 DEVICE_SENSORS = [
@@ -678,6 +706,8 @@ DEVICE_SENSORS = [
         options=["low", "medium", "high"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda device: device.battery,
+        # The Aura Sensor V2 is a wired Sleep Analyzer, so it has no battery
+        exists_fn=lambda device: device.model is not DeviceModel.AURA_SENSOR_V2,
     )
 ]
 
@@ -844,31 +874,53 @@ async def async_setup_entry(
         if new_devices:
             device_registry = dr.async_get(hass)
             for device_id in new_devices:
-                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
-                    if any(
-                        (
-                            config_entry := hass.config_entries.async_get_entry(
-                                config_entry_id
-                            )
+                # The same sub-device can be reported by several config entries, each
+                # owning its own device registry entry. Its sensors share a unique id
+                # across config entries, so only create them if no other loaded config
+                # entry already provides them.
+                if any(
+                    (
+                        config_entry := hass.config_entries.async_get_entry(
+                            device.config_entry_id
                         )
-                        and config_entry.state == ConfigEntryState.LOADED
-                        for config_entry_id in device.config_entries
-                    ):
-                        continue
-                async_add_entities(
+                    )
+                    and config_entry.state is ConfigEntryState.LOADED
+                    for device in device_registry.async_get_devices(
+                        identifiers={(DOMAIN, device_id)}
+                    )
+                ):
+                    continue
+                withings_device = device_coordinator.data[device_id]
+                if device_entities := [
                     WithingsDeviceSensor(device_coordinator, description, device_id)
                     for description in DEVICE_SENSORS
-                )
+                    if description.exists_fn(withings_device)
+                ]:
+                    async_add_entities(device_entities)
+                else:
+                    # Register devices without sensors, so they still show up
+                    device_registry.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, device_id)},
+                        manufacturer="Withings",
+                        name=withings_device.raw_model,
+                        model=withings_device.raw_model,
+                        via_device_id=dr.async_get_device_id_by_identifier(
+                            hass,
+                            (DOMAIN, str(entry.unique_id)),
+                            config_entry_id=entry.entry_id,
+                        ),
+                    )
                 current_devices.add(device_id)
 
         if old_devices:
             device_registry = dr.async_get(hass)
             for device_id in old_devices:
-                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
-                    device_registry.async_update_device(
-                        device.id, remove_config_entry_id=entry.entry_id
-                    )
-                    current_devices.remove(device_id)
+                if device := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device_id), entry.entry_id
+                ):
+                    device_registry.async_remove_device(device.id)
+                current_devices.remove(device_id)
 
     device_coordinator.async_add_listener(_async_device_listener)
 
@@ -876,7 +928,8 @@ async def async_setup_entry(
 
     if not entities:
         LOGGER.warning(
-            "No data found for Withings entry %s, sensors will be added when new data is available",
+            "No data found for Withings entry %s, sensors"
+            " will be added when new data is available",
             entry.title,
         )
 
@@ -910,6 +963,7 @@ class WithingsMeasurementSensor(
     """Implementation of a Withings measurement sensor."""
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the entity."""
         return self.coordinator.data[
@@ -920,6 +974,7 @@ class WithingsMeasurementSensor(
         ]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
@@ -941,6 +996,7 @@ class WithingsSleepSensor(
     """Implementation of a Withings sleep sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -957,9 +1013,9 @@ class WithingsGoalsSensor(
     """Implementation of a Withings goals sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        assert self.coordinator.data
         return self.entity_description.value_fn(self.coordinator.data)
 
 
@@ -972,6 +1028,7 @@ class WithingsActivitySensor(
     """Implementation of a Withings activity sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -979,6 +1036,7 @@ class WithingsActivitySensor(
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def last_reset(self) -> datetime:
         """These values reset every day."""
         return dt_util.start_of_local_day()
@@ -993,6 +1051,7 @@ class WithingsWorkoutSensor(
     """Implementation of a Withings workout sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         if not self.coordinator.data:
@@ -1016,6 +1075,7 @@ class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.device)

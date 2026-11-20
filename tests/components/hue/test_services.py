@@ -2,8 +2,10 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import hue
-from homeassistant.components.hue import bridge
+from homeassistant.components.hue import DOMAIN, bridge
 from homeassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_component
-
-from tests.common import MockConfigEntry
 
 GROUP_RESPONSE = {
     "group_1": {
@@ -209,7 +209,7 @@ async def test_hue_multi_bridge_activate_scene_all_respond(
         hue.services, "hue_activate_scene_v2", return_value=True
     ) as mock_hue_activate_scene2:
         await hass.services.async_call(
-            "hue",
+            DOMAIN,
             "hue_activate_scene",
             {"group_name": "Group 1", "scene_name": "Cozy dinner"},
             blocking=True,
@@ -246,7 +246,7 @@ async def test_hue_multi_bridge_activate_scene_one_responds(
         hue.services, "hue_activate_scene_v2", return_value=False
     ) as mock_hue_activate_scene2:
         await hass.services.async_call(
-            "hue",
+            DOMAIN,
             "hue_activate_scene",
             {"group_name": "Group 1", "scene_name": "Cozy dinner"},
             blocking=True,
@@ -281,7 +281,7 @@ async def test_hue_multi_bridge_activate_scene_zero_responds(
         hue.services, "hue_activate_scene_v2", return_value=False
     ) as mock_hue_activate_scene2:
         await hass.services.async_call(
-            "hue",
+            DOMAIN,
             "hue_activate_scene",
             {"group_name": "Non existing group", "scene_name": "Non existing Scene"},
             blocking=True,

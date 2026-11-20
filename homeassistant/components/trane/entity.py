@@ -1,12 +1,11 @@
 """Base entity for the Trane Local integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from steamloop import ThermostatConnection, Zone
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -23,6 +22,7 @@ class TraneEntity(Entity):
         """Initialize the entity."""
         self._conn = conn
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register event callback when added to hass."""
         self.async_on_remove(self._conn.add_event_callback(self._handle_event))
@@ -38,6 +38,7 @@ class TraneZoneEntity(TraneEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         conn: ThermostatConnection,
         entry_id: str,
         zone_id: str,
@@ -53,10 +54,13 @@ class TraneZoneEntity(TraneEntity):
             manufacturer=MANUFACTURER,
             name=zone_name,
             suggested_area=zone_name,
-            via_device=(DOMAIN, entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, entry_id), config_entry_id=entry_id
+            ),
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the zone is available."""
         return self._zone_id in self._conn.state.zones

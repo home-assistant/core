@@ -3,20 +3,23 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 # Apply setup_integration fixture to all tests in this module
 pytestmark = pytest.mark.usefixtures("setup_integration")
@@ -68,7 +71,8 @@ async def test_light_device_association(
     assert device_entry.name == mock_light.name
 
 
-# This test is not light specific, it just uses the light platform to test the base entity class.
+# This test is not light specific, it just uses the light platform
+# to test the base entity class.
 async def test_entity_callbacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -181,8 +185,8 @@ async def test_light_turn_on_with_brightness_uses_set_intensity(
     # Call turn_on with brightness=51 (20% when normalized)
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id, ATTR_BRIGHTNESS: 51},
+        LightService.TURN_ON,
+        {"entity_id": entity_id, LightServiceArgument.BRIGHTNESS: 51},
         blocking=True,
     )
 
@@ -211,7 +215,7 @@ async def test_light_turn_on_without_brightness_calls_turn_on(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -233,7 +237,7 @@ async def test_light_turn_off_calls_turn_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
+        LightService.TURN_OFF,
         {"entity_id": entity_id},
         blocking=True,
     )

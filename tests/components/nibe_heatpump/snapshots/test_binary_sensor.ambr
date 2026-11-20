@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nibe_heatpump', 'mock_entry_unique_id')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -39,7 +39,7 @@
 # name: test_update[Model.F1255-49239-OFF][binary_sensor.eb101_installed_49239-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 EB101 Installed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 EB101 Installed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eb101_installed_49239',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('nibe_heatpump', 'mock_entry_unique_id')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
@@ -89,7 +89,7 @@
 # name: test_update[Model.F1255-49239-ON][binary_sensor.eb101_installed_49239-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 EB101 Installed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 EB101 Installed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eb101_installed_49239',

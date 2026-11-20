@@ -1,11 +1,10 @@
 """The Media Source implementation for the Jellyfin integration."""
 
-from __future__ import annotations
-
+from functools import partial
 import logging
 import mimetypes
 import os
-from typing import Any
+from typing import Any, override
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -54,11 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
-    # Currently only a single Jellyfin server is supported
-    entry: JellyfinConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    coordinator = entry.runtime_data
-
-    return JellyfinSource(hass, coordinator.api_client, entry)
+    return JellyfinSource(hass)
 
 
 class JellyfinSource(MediaSource):
@@ -66,21 +61,29 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(
-        self, hass: HomeAssistant, client: JellyfinClient, entry: JellyfinConfigEntry
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
-
         self.hass = hass
+        self.entry: JellyfinConfigEntry
+        self.client: JellyfinClient
+        self.api: Any
+        self.url: str
+
+    def _ensure_loaded(self) -> None:
+        """Ensure the Jellyfin integration is loaded and set up instance state."""
+        if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
+            raise BrowseError("Jellyfin integration not loaded")
+        entry: JellyfinConfigEntry = entries[0]
         self.entry = entry
+        self.client = entry.runtime_data.api_client
+        self.api = self.client.jellyfin
+        self.url = jellyfin_url(self.client, "")
 
-        self.client = client
-        self.api = client.jellyfin
-        self.url = jellyfin_url(client, "")
-
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
+        self._ensure_loaded()
         media_item = await self.hass.async_add_executor_job(
             self.api.get_item, item.identifier
         )
@@ -88,13 +91,16 @@ class JellyfinSource(MediaSource):
         stream_url = self._get_stream_url(media_item)
         mime_type = _media_mime_type(media_item)
 
-        # Media Sources without a mime type have been filtered out during library creation
+        # Media Sources without a mime type have been filtered
+        # out during library creation
         assert mime_type is not None
 
         return PlayMedia(stream_url, mime_type)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
+        self._ensure_loaded()
         if not item.identifier:
             return await self._build_libraries()
 
@@ -188,8 +194,16 @@ class JellyfinSource(MediaSource):
         return result
 
     async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
-        """Return all artists in the music library."""
-        artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
+        """Return all album artists in the music library.
+
+        Artists are not necessarily parents of their albums in Jellyfin (for
+        example when albums are not stored in an artist folder), so the album
+        artists endpoint is used instead of looking up MusicArtist children.
+        """
+        result = await self.hass.async_add_executor_job(
+            partial(self.api.get_album_artists, parent_id=library_id)
+        )
+        artists: list[dict[str, Any]] = result["Items"]
         artists = sorted(
             artists,
             # Sort by whether an artist has an name first, then by name
@@ -222,13 +236,15 @@ class JellyfinSource(MediaSource):
 
         if include_children:
             result.children_media_class = MediaClass.ALBUM
-            result.children = await self._build_albums(artist_id)
+            result.children = await self._build_albums(artist_id, "AlbumArtistIds")
 
         return result
 
-    async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
+    async def _build_albums(
+        self, parent_id: str, parent_key: str = "ParentId"
+    ) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
-        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
+        albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM, parent_key)
         albums = sorted(
             albums,
             # Sort by whether an album has an name first, then by name
@@ -498,12 +514,12 @@ class JellyfinSource(MediaSource):
         )
 
     async def _get_children(
-        self, parent_id: str, item_type: str
+        self, parent_id: str, item_type: str, parent_key: str = "ParentId"
     ) -> list[dict[str, Any]]:
         """Return all children for the parent_id whose item type is item_type."""
         params = {
             "Recursive": "true",
-            "ParentId": parent_id,
+            parent_key: parent_id,
             "IncludeItemTypes": item_type,
         }
         if item_type in PLAYABLE_ITEM_TYPES:

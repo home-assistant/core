@@ -4,14 +4,13 @@ from unittest.mock import AsyncMock
 
 from pyairobotrest.exceptions import AirobotAuthError, AirobotConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airobot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -85,12 +84,13 @@ async def test_unload_entry(
 async def test_device_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry entry."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "T01A1B2C3")}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "T01A1B2C3"), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

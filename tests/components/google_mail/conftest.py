@@ -7,6 +7,8 @@ from unittest.mock import patch
 
 from httplib2 import Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -16,9 +18,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.google_mail.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 
@@ -33,7 +32,10 @@ SCOPES = [
 ]
 SENSOR = "sensor.example_gmail_com_vacation_end_date"
 TITLE = "example@gmail.com"
-TOKEN = "homeassistant.components.google_mail.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+TOKEN = (
+    "homeassistant.components.google_mail"
+    ".api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+)
 
 
 @pytest.fixture(name="scopes")

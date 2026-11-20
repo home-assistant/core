@@ -1,19 +1,17 @@
 """STT constante."""
 
-from __future__ import annotations
-
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import SpeechToTextEntity
+    from .entity import SpeechToTextEntity
     from .legacy import Provider
 
-DOMAIN = "stt"
+DOMAIN: Final = "stt"
 DATA_COMPONENT: HassKey[EntityComponent[SpeechToTextEntity]] = HassKey(DOMAIN)
 DATA_PROVIDERS: HassKey[dict[str, Provider]] = HassKey(f"{DOMAIN}_providers")
 

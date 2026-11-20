@@ -1,11 +1,10 @@
 """Update coordinator for the Bluetooth integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import logging
 
 from habluetooth import BluetoothScanningMode
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -16,7 +15,7 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange, BluetoothServiceInfoBleak
+from .models import BluetoothChange
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -32,6 +31,8 @@ class BasePassiveBluetoothCoordinator(ABC):
         address: str,
         mode: BluetoothScanningMode,
         connectable: bool,
+        scan_interval: float | None = None,
+        scan_duration: float | None = None,
     ) -> None:
         """Initialize the coordinator."""
         self.hass = hass
@@ -40,6 +41,8 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.connectable = connectable
         self._on_stop: list[CALLBACK_TYPE] = []
         self.mode = mode
+        self._scan_interval = scan_interval
+        self._scan_duration = scan_duration
         self._last_unavailable_time = 0.0
         self._last_name = address
         # Subclasses are responsible for setting _available to True
@@ -94,6 +97,8 @@ class BasePassiveBluetoothCoordinator(ABC):
                     address=self.address, connectable=self.connectable
                 ),
                 self.mode,
+                scan_interval=self._scan_interval,
+                scan_duration=self._scan_duration,
             )
         )
         self._on_stop.append(

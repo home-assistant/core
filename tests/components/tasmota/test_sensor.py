@@ -1,7 +1,7 @@
 """The tests for the Tasmota sensor platform."""
 
 import copy
-import datetime
+import datetime as dt
 from datetime import timedelta
 import json
 from unittest.mock import Mock, patch
@@ -13,6 +13,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -37,9 +39,6 @@ from .test_common import (
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
 )
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 BAD_LIST_SENSOR_CONFIG_3 = {
     "sn": {
@@ -184,6 +183,32 @@ TEMPERATURE_SENSOR_CONFIG = {
     }
 }
 
+# Three phase energy meter which also reports totals over all phases
+THREE_PHASE_ENERGY_SENSOR_CONFIG = {
+    "sn": {
+        "Time": "2026-11-02T21:21:16",
+        "ENERGY": {
+            "TotalStartTime": "2026-10-26T15:51:39",
+            "Total": 1749.746,
+            "Yesterday": 21.747,
+            "Today": 12.946,
+            "TodaySumImport": 0.000,
+            "TodaySumExport": 0.000,
+            "ExportActive": [1184.800, 1057.966, 986.676],
+            "ExportActiveTotal": 3229.442,
+            "Period": [3, 1, 3],
+            "Power": [174, 38, 130],
+            "PowerTotal": 341,
+            "ApparentPower": [198, 122, 198],
+            "ReactivePower": [-56, -98, -106],
+            "Factor": [0.88, 0.31, 0.65],
+            "Frequency": 50,
+            "Voltage": [230, 232, 230],
+            "Current": [0.860, 0.525, 0.863],
+        },
+    }
+}
+
 
 @pytest.mark.parametrize(
     ("sensor_config", "entity_ids", "messages"),
@@ -201,7 +226,8 @@ TEMPERATURE_SENSOR_CONFIG = {
             ["sensor.tasmota_tx23_speed_act", "sensor.tasmota_tx23_dir_card"],
             (
                 '{"TX23":{"Speed":{"Act":"12.3"},"Dir": {"Card": "WSW"}}}',
-                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},"Dir": {"Card": "ESE"}}}}',
+                '{"StatusSNS":{"TX23":{"Speed":{"Act":"23.4"},'
+                '"Dir": {"Card": "ESE"}}}}',
             ),
         ),
         (
@@ -239,8 +265,10 @@ TEMPERATURE_SENSOR_CONFIG = {
             LIST_SENSOR_CONFIG_2,
             ["sensor.tasmota_energy_total_0", "sensor.tasmota_energy_total_1"],
             (
-                '{"ENERGY":{"Total":[1.2, 3.4],"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],"TotalStartTime":"2018-11-23T16:33:47"}}}',
+                '{"ENERGY":{"Total":[1.2, 3.4],'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":{"Total":[5.6, 7.8],'
+                '"TotalStartTime":"2018-11-23T16:33:47"}}}',
             ),
         ),
         # Test dict Total sensors
@@ -251,8 +279,11 @@ TEMPERATURE_SENSOR_CONFIG = {
                 "sensor.tasmota_energy_total_phase2",
             ],
             (
-                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},"TotalStartTime":"2018-11-23T15:33:47"}}',
-                '{"StatusSNS":{"ENERGY":{"Total":{"Phase1":5.6, "Phase2":7.8},"TotalStartTime":"2018-11-23T15:33:47"}}}',
+                '{"ENERGY":{"Total":{"Phase1":1.2, "Phase2":3.4},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}',
+                '{"StatusSNS":{"ENERGY":'
+                '{"Total":{"Phase1":5.6, "Phase2":7.8},'
+                '"TotalStartTime":"2018-11-23T15:33:47"}}}',
             ),
         ),
         (
@@ -292,7 +323,8 @@ TEMPERATURE_SENSOR_CONFIG = {
                 ),
             ),
         ),
-        # Test we automatically set state class to measurement on unknown numerical sensors
+        # Test we automatically set state class to measurement on
+        # unknown numerical sensors
         (
             DEFAULT_SENSOR_CONFIG_UNKNOWN,
             [
@@ -305,6 +337,18 @@ TEMPERATURE_SENSOR_CONFIG = {
                 '{"SENSOR1":{"Unknown":20.5},"SENSOR2":{"Unknown":20.5},"SENSOR3":{"Unknown":20.5},"SENSOR4":{"Unknown":20.5}}',
                 '{"StatusSNS":{"SENSOR1":{"Unknown":20},"SENSOR2":{"Unknown":20},"SENSOR3":{"Unknown":20},"SENSOR4":{"Unknown":20}}}',
             ),
+        ),
+        pytest.param(
+            THREE_PHASE_ENERGY_SENSOR_CONFIG,
+            [
+                "sensor.tasmota_energy_exportactivetotal",
+                "sensor.tasmota_energy_powertotal",
+            ],
+            (
+                '{"ENERGY":{"ExportActiveTotal":3229.442,"PowerTotal":341}}',
+                '{"StatusSNS":{"ENERGY":{"ExportActiveTotal":3230.1,"PowerTotal":-120}}}',
+            ),
+            id="three_phase_totals",
         ),
     ],
 )
@@ -764,7 +808,7 @@ async def test_single_shot_status_sensor_state_via_mqtt(
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
-@patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=datetime.datetime))
+@patch.object(hatasmota.status_sensor, "datetime", Mock(wraps=dt.datetime))
 async def test_restart_time_status_sensor_state_via_mqtt(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -804,7 +848,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Test polled state update
-    utc_now = datetime.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
+    utc_now = dt.datetime(2020, 11, 11, 8, 0, 0, tzinfo=dt_util.UTC)
     hatasmota.status_sensor.datetime.now.return_value = utc_now
     async_fire_mqtt_message(
         hass,

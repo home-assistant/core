@@ -8,15 +8,12 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
@@ -119,8 +116,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 77},
+            CoverService.SET_POSITION,
+            {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 77},
             blocking=True,
         )
 
@@ -140,8 +137,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -160,8 +157,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -180,8 +177,8 @@ async def test_cover(
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -238,24 +235,18 @@ async def test_cover_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 44},
+                CoverService.SET_POSITION,
+                {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 44},
                 blocking=True,
             )
 
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(44, cover_id)
+        # A single failed command must not flap the entity unavailable.
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == CoverState.OPEN
 
-    # Make device available again
-    mock_bridge.mock_callbacks([device])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == CoverState.OPEN
-
-    # Test error response during set position
+    # Test error response during set position - the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position",
         return_value=SwitcherBaseResponse(None),
@@ -263,15 +254,15 @@ async def test_cover_control_fail(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 COVER_DOMAIN,
-                SERVICE_SET_COVER_POSITION,
-                {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 27},
+                CoverService.SET_POSITION,
+                {TargetKey.ENTITY_ID: entity_id, CoverServiceArgument.POSITION: 27},
                 blocking=True,
             )
 
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(27, cover_id)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE2, DEVICE3]], indirect=True)

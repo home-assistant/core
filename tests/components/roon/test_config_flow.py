@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 class RoonApiMock:
@@ -85,7 +85,7 @@ async def test_successful_discovery_and_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -114,7 +114,7 @@ async def test_successful_discovery_and_auth(hass: HomeAssistant) -> None:
 
 
 async def test_unsuccessful_discovery_user_form_and_auth(hass: HomeAssistant) -> None:
-    """Test unsuccessful discover, user adding the host via the form and then successful auth."""
+    """Test unsuccessful discover then user form entry with auth."""
 
     with (
         patch(
@@ -127,7 +127,7 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass: HomeAssistant) ->
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -221,7 +221,7 @@ async def test_successful_discovery_no_auth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -241,6 +241,23 @@ async def test_successful_discovery_no_auth(hass: HomeAssistant) -> None:
 
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch(
+            "homeassistant.components.roon.config_flow.RoonApi",
+            return_value=RoonApiMock(),
+        ),
+        patch(
+            "homeassistant.components.roon.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unexpected_exception(hass: HomeAssistant) -> None:
     """Test successful discover, and unexpected exception during auth."""
@@ -256,7 +273,7 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.roon.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -275,3 +292,20 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.roon.config_flow.RoonApi",
+            return_value=RoonApiMock(),
+        ),
+        patch(
+            "homeassistant.components.roon.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input={}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

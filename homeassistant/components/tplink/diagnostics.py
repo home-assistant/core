@@ -1,14 +1,12 @@
 """Diagnostics support for TPLink."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry
 
 TO_REDACT = {
     # Entry fields

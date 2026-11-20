@@ -1,8 +1,6 @@
 """Switcher integration Light platform."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
@@ -72,6 +70,7 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
         self.control_result: bool | None = None
         self._update_data()
 
+    @override
     def _update_data(self) -> None:
         """Update data from device."""
         if self.control_result is not None:
@@ -80,14 +79,16 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
             return
 
         data = cast(SwitcherLight, self.coordinator.data)
-        self._attr_is_on = bool(data.light[self._light_id] == DeviceState.ON)
+        self._attr_is_on = bool(data.light[self._light_id] is DeviceState.ON)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._async_call_api(API_SET_LIGHT, DeviceState.ON, self._light_id)
         self._attr_is_on = self.control_result = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_call_api(API_SET_LIGHT, DeviceState.OFF, self._light_id)

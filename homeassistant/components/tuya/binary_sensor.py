@@ -1,11 +1,10 @@
 """Support for Tuya binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.binary_sensor import (
-    TuyaBinarySensorDefinition,
+    BinarySensorDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -20,13 +19,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
-from .entity import TuyaEntity
+from .coordinator import TuyaConfigEntry
+from .entity import TuyaEntity, TuyaEntityDescription
 
 
 @dataclass(frozen=True)
-class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
+class TuyaBinarySensorEntityDescription(
+    TuyaEntityDescription, BinarySensorEntityDescription
+):
     """Describes a Tuya binary sensor."""
 
     # DPCode, to use. If None, the key will be used as DPCode
@@ -91,6 +92,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="tankfull",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_FULL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="FULL",
+            translation_key="tankfull",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="defrost",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
@@ -99,12 +108,68 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             translation_key="defrost",
         ),
         TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_COIL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="COIL",
+            translation_key="coil_freeze",
+        ),
+        TuyaBinarySensorEntityDescription(
             key="wet",
             dpcode=DPCode.FAULT,
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             bitmap_key="wet",
             translation_key="wet",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_Cleaning",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="Cleaning",
+            translation_key="filter_cleaning",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_E1",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="E1",
+            translation_key="temp_error",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CL",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CL",
+            translation_key="low_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_CH",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="CH",
+            translation_key="high_temp",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_LO",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="LO",
+            translation_key="low_humidity",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=f"{DPCode.FAULT}_MOTOR",
+            dpcode=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            bitmap_key="MOTOR",
+            translation_key="motor_fault",
         ),
     ),
     DeviceCategory.CWWSQ: (
@@ -182,11 +247,53 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.DLQ: (
+        *(
+            TuyaBinarySensorEntityDescription(
+                key=f"{DPCode.FAULT}_{label}",
+                dpcode=DPCode.FAULT,
+                bitmap_key=label,
+                translation_key=translation_key,
+                device_class=BinarySensorDeviceClass.PROBLEM,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+            for label, translation_key in (
+                ("short_circuit_alarm", "short_circuit"),
+                ("surge_alarm", "surge"),
+                ("overload_alarm", "overload"),
+                ("leakagecurr_alarm", "leakage_current_alarm"),
+                ("temp_dif_fault", "temperature_difference"),
+                ("fire_alarm", "fire"),
+                ("high_power_alarm", "high_power"),
+                ("self_test_alarm", "self_test"),
+                ("ov_cr", "overcurrent"),
+                ("unbalance_alarm", "current_unbalance"),
+                ("ov_vol", "overvoltage"),
+                ("undervoltage_alarm", "undervoltage"),
+                ("miss_phase_alarm", "phase_loss"),
+                ("outage_alarm", "power_outage"),
+                ("magnetism_alarm", "magnetic_interference"),
+                ("credit_alarm", "low_credit"),
+                ("no_balance_alarm", "no_credit"),
+                ("leakage_early_warning", "leakage_current_early_warning"),
+                ("overcur_early_warning", "overcurrent_early_warning"),
+                ("overvol_early_warning", "overvoltage_early_warning"),
+                ("overpow_early_warning", "overpower_early_warning"),
+                ("undvol_early_warning", "undervoltage_early_warning"),
+                ("higtemp_early_warning", "high_temperature_early_warning"),
+            )
+        ),
+    ),
     DeviceCategory.HPS: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             on_value={"presence", "small_move", "large_move", "peaceful"},
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DROP_STATE,
+            translation_key="fall",
+            on_value="drop",
         ),
     ),
     DeviceCategory.JQBJ: (
@@ -205,14 +312,7 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    DeviceCategory.LDCG: (
-        TuyaBinarySensorEntityDescription(
-            key=DPCode.TEMPER_ALARM,
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        TAMPER_BINARY_SENSOR,
-    ),
+    DeviceCategory.LDCG: (TAMPER_BINARY_SENSOR,),
     DeviceCategory.MC: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.STATUS,
@@ -307,6 +407,20 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             device_class=BinarySensorDeviceClass.SAFETY,
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    DeviceCategory.SP: (
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_BLOCK_STATUS,
+            translation_key="feed_blocked",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        TuyaBinarySensorEntityDescription(
+            # Pet feeders with a camera are reported as "sp"
+            key=DPCode.FEED_STUCK_STATUS,
+            translation_key="food_stuck",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
     ),
     DeviceCategory.VOC: (
         TuyaBinarySensorEntityDescription(
@@ -434,17 +548,19 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        definition: TuyaBinarySensorDefinition,
+        definition: BinarySensorDefinition,
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.binary_sensor_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from compit_inext_api.consts import CompitParameter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import ATTR_TEMPERATURE
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
-
-from tests.common import MockConfigEntry
 
 
 async def test_water_heater_entities_snapshot(
@@ -43,7 +42,7 @@ async def test_water_heater_unknown_temperature(
     mock_connector: MagicMock,
     mock_return_value: Any,
 ) -> None:
-    """Test that water heater shows unknown temperature when get_current_value returns invalid values."""
+    """Test water heater shows unknown temp for invalid values."""
     mock_connector.get_current_value.side_effect = lambda device_id, parameter_code: (
         mock_return_value
     )

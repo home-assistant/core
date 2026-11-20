@@ -1,7 +1,5 @@
 """The tests the cover command line platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import os
@@ -10,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
@@ -17,47 +16,23 @@ from homeassistant.components.command_line.cover import CommandCover
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SCAN_INTERVAL,
+    CoverService,
     CoverState,
 )
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_STOP_COVER,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
-from tests.common import async_fire_time_changed
 
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "cover",
-        {
-            "cover": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
+async def test_no_poll_when_cover_has_no_command_state(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that the cover does not polls when there's no state command."""
 
     with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
@@ -70,7 +45,8 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
                 ]
             },
         )
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert not mock_subprocess_run.called
 
@@ -91,15 +67,19 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
     ],
 )
 async def test_poll_when_cover_has_command_state(
-    hass: HomeAssistant, load_yaml_integration: None
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the cover polls when there's a state  command."""
 
     with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_subprocess_run.assert_called_once_with(
             "echo state",
+            stdin=None,
             close_fds=False,
             stdout=-1,
         )
@@ -135,8 +115,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -145,8 +125,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -155,8 +135,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.STOP,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -185,7 +165,10 @@ async def test_move_cover_failure(
     """Test command failure."""
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test"},
+        blocking=True,
     )
     assert "Command failed" in caplog.text
     assert "return code 1" in caplog.text
@@ -241,7 +224,9 @@ async def test_unique_id(
 
 
 async def test_updating_to_often(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling updating when command already running."""
 
@@ -282,37 +267,42 @@ async def test_updating_to_often(
 
     assert not called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
 
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     wait_till_event.set()
 
     # Finish processing update
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     assert (
-        "Updating Command Line Cover Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Cover Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
 async def test_updating_manually(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling manual updating using homeassistant udate_entity service."""
     await setup.async_setup_component(hass, HA_DOMAIN, {})
@@ -347,7 +337,8 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert called
     called.clear()
@@ -438,7 +429,12 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                             "command_close": f"echo 0 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "name": "Test",
-                            "icon": '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}',
+                            "icon": (
+                                "{% if this.attributes.icon=="
+                                '"mdi:icon2" %} mdi:icon1'
+                                " {% else %} mdi:icon2"
+                                " {% endif %}"
+                            ),
                         }
                     }
                 ]
@@ -447,15 +443,15 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")
@@ -464,8 +460,8 @@ async def test_icon_template(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test"},
             blocking=True,
         )
         entity_state = hass.states.get("cover.test")

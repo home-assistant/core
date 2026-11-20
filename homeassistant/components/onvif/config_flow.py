@@ -1,20 +1,18 @@
 """Config flow for ONVIF."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
-import voluptuous as vol
+import probatio
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
 from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
-from zeep.exceptions import Fault
+from zeep.exceptions import Fault, TransportError, XMLParseError, XMLSyntaxError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
@@ -23,7 +21,6 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
 )
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -37,7 +34,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -45,6 +42,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_ENABLE_WEBHOOKS,
     CONF_HARDWARE,
+    CONF_MORE_OPTIONS,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
@@ -52,7 +50,7 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     LOGGER,
 )
-from .device import get_device
+from .device import ONVIFConfigEntry, get_device, get_mac_address
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -112,18 +110,21 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ONVIFConfigEntry,
     ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
-        self.device_id = None
+        self.device_id: str | None = None
         self.devices: list[dict[str, Any]] = []
+        self.discovered_name: str | None = None
         self.onvif_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -135,7 +136,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("auto", default=True): bool}),
+            data_schema=probatio.Schema(
+                {probatio.Required("auto", default=True): bool}
+            ),
         )
 
     async def async_step_reauth(
@@ -166,16 +169,81 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=username): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=username): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device connection."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self.onvif_config = reconfigure_entry.data | user_input
+            # An earlier attempt in this flow may have reached a different device
+            self.device_id = None
+            errors, description_placeholders = await self.async_setup_profiles(
+                configure_unique_id=False
+            )
+            if not errors:
+                if not self._is_same_device(reconfigure_entry):
+                    return self.async_abort(reason="unique_id_mismatch")
+                result = self.async_update_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+                # The update listener only handles options, so reload explicitly
+                self.hass.config_entries.async_schedule_reload(
+                    reconfigure_entry.entry_id
+                )
+                return result
+
+        suggested_values = {
+            key: value
+            for key, value in (user_input or reconfigure_entry.data).items()
+            if key != CONF_PASSWORD
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Optional(CONF_USERNAME, default=""): str,
+                        probatio.Optional(
+                            probatio.Secret(CONF_PASSWORD), default=""
+                        ): str,
+                    }
+                ),
+                suggested_values,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    @callback
+    def _is_same_device(self, entry: ONVIFConfigEntry) -> bool:
+        """Return whether the reached device belongs to the config entry."""
+        if self.device_id == entry.unique_id:
+            return True
+        # Entries created from WS-Discovery are keyed on the scope MAC, while
+        # their devices are registered with the MAC or serial the camera reports.
+        return any(
+            (DOMAIN, self.device_id) in device.identifiers
+            for device in dr.async_entries_for_config_entry(
+                dr.async_get(self.hass), entry.entry_id
+            )
+        )
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -184,14 +252,16 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         mac = discovery_info.macaddress
         registry = dr.async_get(self.hass)
         if not (
-            device := registry.async_get_device(
+            devices := registry.async_get_devices(
                 connections={(dr.CONNECTION_NETWORK_MAC, mac)}
             )
         ):
             return self.async_abort(reason="no_devices_found")
-        for entry_id in device.config_entries:
+        for device in devices:
             if (
-                not (entry := hass.config_entries.async_get_entry(entry_id))
+                not (
+                    entry := hass.config_entries.async_get_entry(device.config_entry_id)
+                )
                 or entry.domain != DOMAIN
                 or entry.state is ConfigEntryState.LOADED
             ):
@@ -199,7 +269,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if hass.config_entries.async_update_entry(
                 entry, data=entry.data | {CONF_HOST: discovery_info.ip}
             ):
-                hass.async_create_task(self.hass.config_entries.async_reload(entry_id))
+                hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
         return self.async_abort(reason="already_configured")
 
     async def async_step_device(
@@ -217,8 +289,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             for device in self.devices:
                 if device[CONF_HOST] == user_input[CONF_HOST]:
                     self.device_id = device[CONF_DEVICE_ID]
+                    self.discovered_name = device[CONF_NAME]
                     self.onvif_config = {
-                        CONF_NAME: device[CONF_NAME],
                         CONF_HOST: device[CONF_HOST],
                         CONF_PORT: device[CONF_PORT],
                     }
@@ -247,7 +319,9 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="device",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(devices)}),
+                data_schema=probatio.Schema(
+                    {probatio.Optional(CONF_HOST): probatio.In(devices)}
+                ),
             )
 
         return await self.async_step_configure()
@@ -260,6 +334,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         if user_input:
             self.onvif_config = user_input
+            if self.discovered_name:
+                self.onvif_config[CONF_NAME] = self.discovered_name
             errors, description_placeholders = await self.async_setup_profiles()
             if not errors:
                 title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
@@ -274,13 +350,18 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="configure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
-                    vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
-                    vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,
-                    vol.Optional(CONF_USERNAME, default=conf(CONF_USERNAME, "")): str,
-                    vol.Optional(CONF_PASSWORD, default=conf(CONF_PASSWORD, "")): str,
+                    probatio.Required(CONF_HOST, default=conf(CONF_HOST)): str,
+                    probatio.Required(
+                        CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)
+                    ): int,
+                    probatio.Optional(
+                        CONF_USERNAME, default=conf(CONF_USERNAME, "")
+                    ): str,
+                    probatio.Optional(
+                        probatio.Secret(CONF_PASSWORD), default=conf(CONF_PASSWORD, "")
+                    ): str,
                 }
             ),
             errors=errors,
@@ -307,39 +388,50 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await device.update_xaddrs()
             device_mgmt = await device.create_devicemgmt_service()
+            device_info = None
+            if CONF_NAME not in self.onvif_config:
+                try:
+                    device_info = await device_mgmt.GetDeviceInformation()
+                except (XMLParseError, XMLSyntaxError, TransportError) as err:
+                    LOGGER.debug(
+                        "%s: Could not get device information: %s",
+                        self.onvif_config[CONF_HOST],
+                        err,
+                    )
+                    self.onvif_config[CONF_NAME] = self.onvif_config[CONF_HOST]
+                else:
+                    self.onvif_config[CONF_NAME] = (
+                        f"{device_info.Manufacturer} {device_info.Model}"
+                    )
             # Get the MAC address to use as the unique ID for the config flow
             if not self.device_id:
                 try:
                     network_interfaces = await device_mgmt.GetNetworkInterfaces()
-                    interface = next(
-                        filter(lambda interface: interface.Enabled, network_interfaces),
-                        None,
-                    )
-                    if interface:
-                        self.device_id = interface.Info.HwAddress
+                    self.device_id = get_mac_address(network_interfaces)
                 except Fault as fault:
                     if "not implemented" not in fault.message:
                         raise
                     LOGGER.debug(
                         "%s: Could not get network interfaces: %s",
-                        self.onvif_config[CONF_NAME],
+                        self.onvif_config[CONF_HOST],
                         stringify_onvif_error(fault),
                     )
             # If no network interfaces are exposed, fallback to serial number
             if not self.device_id:
-                device_info = await device_mgmt.GetDeviceInformation()
+                device_info = device_info or await device_mgmt.GetDeviceInformation()
                 self.device_id = device_info.SerialNumber
 
             if not self.device_id:
                 raise AbortFlow(reason="no_mac")
 
             if configure_unique_id:
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 await self.async_set_unique_id(self.device_id, raise_on_progress=False)
+                # pylint: disable-next=home-assistant-flow-call-in-try
                 self._abort_if_unique_id_configured(
                     updates={
                         CONF_HOST: self.onvif_config[CONF_HOST],
                         CONF_PORT: self.onvif_config[CONF_PORT],
-                        CONF_NAME: self.onvif_config[CONF_NAME],
                         CONF_USERNAME: self.onvif_config[CONF_USERNAME],
                         CONF_PASSWORD: self.onvif_config[CONF_PASSWORD],
                     }
@@ -349,8 +441,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             profiles = await media_service.GetProfiles()
         except AttributeError:  # Likely an empty document or 404 from the wrong port
             LOGGER.debug(
-                "%s: No ONVIF service found at %s:%s",
-                self.onvif_config[CONF_NAME],
+                "No ONVIF service found at %s:%s",
                 self.onvif_config[CONF_HOST],
                 self.onvif_config[CONF_PORT],
                 exc_info=True,
@@ -362,13 +453,13 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_auth_error(err):
                 LOGGER.debug(
                     "%s: Could not authenticate with camera: %s",
-                    self.onvif_config[CONF_NAME],
+                    self.onvif_config[CONF_HOST],
                     stringified_error,
                 )
                 return {CONF_PASSWORD: "auth_failed"}, description_placeholders
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
-                self.onvif_config[CONF_NAME],
+                self.onvif_config[CONF_HOST],
                 stringified_error,
                 exc_info=True,
             )
@@ -376,7 +467,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         except GET_CAPABILITIES_EXCEPTIONS as err:
             LOGGER.debug(
                 "%s: Could not determine camera capabilities: %s",
-                self.onvif_config[CONF_NAME],
+                self.onvif_config[CONF_HOST],
                 stringify_onvif_error(err),
                 exc_info=True,
             )
@@ -396,7 +487,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 class OnvifOptionsFlowHandler(OptionsFlow):
     """Handle ONVIF options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ONVIFConfigEntry) -> None:
         """Initialize ONVIF options flow."""
         self.options = dict(config_entry.options)
 
@@ -409,53 +500,51 @@ class OnvifOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the ONVIF devices options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
-            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input[CONF_ENABLE_WEBHOOKS]
+            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = more_options.get(
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
-            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
-                CONF_ENABLE_WEBHOOKS,
-                self.config_entry.options.get(
-                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
-                ),
-            )
             return self.async_create_entry(title="", data=self.options)
 
-        advanced_options = {}
-        if self.show_advanced_options:
-            advanced_options[
-                vol.Optional(
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=self.config_entry.options.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                    ),
-                )
-            ] = bool
         return self.async_show_form(
             step_id="onvif_devices",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EXTRA_ARGUMENTS,
                         default=self.config_entry.options.get(
                             CONF_EXTRA_ARGUMENTS, DEFAULT_ARGUMENTS
                         ),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RTSP_TRANSPORT,
                         default=self.config_entry.options.get(
                             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
                         ),
-                    ): vol.In(RTSP_TRANSPORTS),
-                    vol.Optional(
+                    ): probatio.In(RTSP_TRANSPORTS),
+                    probatio.Optional(
                         CONF_ENABLE_WEBHOOKS,
                         default=self.config_entry.options.get(
                             CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                         ),
                     ): bool,
-                    **advanced_options,
+                    probatio.Required(CONF_MORE_OPTIONS): section(
+                        probatio.Schema(
+                            {
+                                probatio.Optional(
+                                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                                    default=self.config_entry.options.get(
+                                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                                    ),
+                                ): bool,
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
                 }
             ),
         )

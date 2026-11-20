@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def rgetattr(obj: object, attr: str) -> object | str | None:
-    """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
+    """Return nested attribute from a dotted path string."""
     _this_func = rgetattr
     sp = attr.split(".", 1)
     if len(sp) == 1:
@@ -56,7 +56,7 @@ def is_outlet(device: VeSyncBaseDevice) -> TypeGuard[VeSyncOutlet]:
 
 
 def is_wall_switch(device: VeSyncBaseDevice) -> TypeGuard[VeSyncWallSwitch]:
-    """Check if the device represents a wall switch, note this doessn't include dimming switches."""
+    """Check if the device represents a wall switch."""
     if device.product_type != ProductTypes.SWITCH:
         return False
 

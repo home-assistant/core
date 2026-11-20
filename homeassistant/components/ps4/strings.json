@@ -27,7 +27,6 @@
         "data": {
           "code": "[%key:common::config_flow::data::pin%]",
           "ip_address": "[%key:common::config_flow::data::ip%]",
-          "name": "[%key:common::config_flow::data::name%]",
           "region": "Region"
         },
         "data_description": {
@@ -43,6 +42,11 @@
           "ip_address": "Leave blank if selecting auto-discovery."
         }
       }
+    }
+  },
+  "exceptions": {
+    "region_migration_failed": {
+      "message": "Region codes have changed for the PlayStation 4 integration, remove and re-add the integration"
     }
   },
   "services": {

@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the co2signal integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioelectricitymaps import (
     ElectricityMaps,
@@ -51,6 +50,7 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
         """Return entry ID."""
         return self.config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> HomeAssistantCarbonIntensityResponse:
         """Fetch the latest data from the source."""
 
@@ -61,4 +61,8 @@ class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityRes
         except ElectricityMapsInvalidTokenError as err:
             raise ConfigEntryAuthFailed from err
         except ElectricityMapsError as err:
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

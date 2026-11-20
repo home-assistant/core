@@ -1,17 +1,14 @@
 """Diagnostics support for Anthropic."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from anthropic import __title__, __version__
 
-from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_API_KEY
+from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.const import CONF_API_KEY, CONF_PROMPT
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
-    CONF_PROMPT,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
     CONF_WEB_SEARCH_REGION,
@@ -21,7 +18,7 @@ from .const import (
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 
 TO_REDACT = {
@@ -56,7 +53,7 @@ async def async_get_config_entry_diagnostics(
             for subentry in entry.subentries.values()
         },
         "entities": {
-            entity_entry.entity_id: entity_entry.extended_dict
+            entity_entry.entity_id: entity_entry_as_dict(entity_entry)
             for entity_entry in er.async_entries_for_config_entry(
                 er.async_get(hass), entry.entry_id
             )

@@ -1,11 +1,9 @@
 """Config flow for zeversolar integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import zeversolar
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -16,9 +14,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
     },
 )
 
@@ -28,6 +26,7 @@ class ZeverSolarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

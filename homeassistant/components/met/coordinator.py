@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for Met.no integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any, Self
+from typing import Any, Self, override
 
 import metno
 
@@ -14,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
 )
@@ -57,8 +56,8 @@ class MetWeatherData:
             longitude = self.hass.config.longitude
             elevation = self.hass.config.elevation
         else:
-            latitude = self._config[CONF_LATITUDE]
-            longitude = self._config[CONF_LONGITUDE]
+            latitude = self._config[CONF_LOCATION][CONF_LATITUDE]
+            longitude = self._config[CONF_LOCATION][CONF_LONGITUDE]
             elevation = self._config[CONF_ELEVATION]
 
         coordinates = {
@@ -112,6 +111,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> MetWeatherData:
         """Fetch data from Met."""
         try:

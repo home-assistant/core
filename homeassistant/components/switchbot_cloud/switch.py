@@ -1,17 +1,16 @@
 """Support for SwitchBot switch."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import AFTER_COMMAND_REFRESH, DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
@@ -19,11 +18,11 @@ from .entity import SwitchBotCloudEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudSwitch] = []
     for device, coordinator in data.devices.switches:
         if device.device_type == "Relay Switch 2PM":
@@ -45,28 +44,35 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_name = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_api_command(CommonCommands.ON)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_api_command(CommonCommands.OFF)
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-        self._attr_is_on = self.coordinator.data.get("power") == PowerState.ON.value
+        power_state = self.coordinator.data.get("power")
+        self._attr_is_on = (
+            power_state.lower() == PowerState.ON.value if power_state else None
+        )
 
 
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
 
@@ -80,6 +86,7 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot relay switch."""
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
@@ -110,6 +117,7 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
             name=f"{device.device_name} Channel {channel}",
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._api.send_command(
@@ -118,6 +126,7 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._api.send_command(
@@ -126,6 +135,7 @@ class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:

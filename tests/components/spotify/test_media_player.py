@@ -1,38 +1,46 @@
 """Tests for the Spotify media player platform."""
 
+from dataclasses import replace
 from datetime import timedelta
+import json
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from mashumaro.exceptions import MissingField
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from spotifyaio import (
     PlaybackState,
+    Playlist,
     RepeatMode as SpotifyRepeatMode,
     SpotifyConnectionError,
     SpotifyNotFoundError,
+    SpotifyRateLimitError,
 )
+from spotifyaio.models import Devices, ProductType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
-    ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
     MediaPlayerEntityFeature,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
 )
 from homeassistant.components.spotify import DOMAIN
+from homeassistant.components.spotify.media_player import SUPPORT_SPOTIFY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
@@ -40,24 +48,14 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_SET,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -121,6 +119,73 @@ async def test_restricted_device(
     assert (
         state.attributes["supported_features"] == MediaPlayerEntityFeature.SELECT_SOURCE
     )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_device_without_volume_support(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test volume set is not supported when the device doesn't support volume."""
+    mock_spotify.return_value.get_playback.return_value.device.supports_volume = False
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert (
+        state.attributes["supported_features"]
+        == SUPPORT_SPOTIFY & ~MediaPlayerEntityFeature.VOLUME_SET
+    )
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    ("product", "supported_features", "model"),
+    [
+        pytest.param(
+            ProductType.PREMIUM, SUPPORT_SPOTIFY, "Spotify premium", id="premium"
+        ),
+        pytest.param(
+            ProductType.FREE, MediaPlayerEntityFeature(0), "Spotify free", id="free"
+        ),
+        pytest.param(None, SUPPORT_SPOTIFY, None, id="unknown"),
+    ],
+)
+async def test_product(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    product: ProductType | None,
+    supported_features: MediaPlayerEntityFeature,
+    model: str | None,
+) -> None:
+    """Test the supported features and device model per Spotify product."""
+    mock_spotify.return_value.get_current_user.return_value.product = product
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.attributes["supported_features"] == supported_features
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1112264111"), mock_config_entry.entry_id
+    )
+    assert device
+    assert device.model == model
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_unknown_volume(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Spotify media player with an unknown device volume."""
+    mock_spotify.return_value.get_playback.return_value.device.volume_percent = None
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("media_player.spotify_spotify_1")
+    assert state
+    assert state.state == MediaPlayerState.PLAYING
+    assert ATTR_MEDIA_VOLUME_LEVEL not in state.attributes
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -195,14 +260,23 @@ async def test_normal_playlist(
 
 
 @pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(SpotifyConnectionError(), id="connection"),
+        pytest.param(SpotifyRateLimitError(), id="rate-limit"),
+        pytest.param(MissingField("name", str, Playlist), id="missing-playlist-name"),
+    ],
+)
 async def test_fetching_playlist_does_not_fail(
     hass: HomeAssistant,
     mock_spotify: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    error: SpotifyConnectionError | SpotifyRateLimitError | MissingField,
 ) -> None:
     """Test failing fetching playlist does not fail update."""
-    mock_spotify.return_value.get_playlist.side_effect = SpotifyConnectionError
+    mock_spotify.return_value.get_playlist.side_effect = error
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
@@ -215,6 +289,62 @@ async def test_fetching_playlist_does_not_fail(
     await hass.async_block_till_done()
 
     assert mock_spotify.return_value.get_playlist.call_count == 2
+
+
+@pytest.mark.usefixtures("setup_credentials")
+@pytest.mark.parametrize("items_key", ["tracks", "items"])
+async def test_playlist_item_schema_error_does_not_block_setup(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    items_key: str,
+) -> None:
+    """Test playlist deserialization failures do not block setup or playback."""
+    playlist_data = await async_load_json_object_fixture(hass, "playlist.json", DOMAIN)
+    playlist_items = playlist_data.pop("tracks")
+    for playlist_item in playlist_items["items"]:
+        playlist_item["item"] = playlist_item.pop("track")
+    playlist_items["items"][0]["added_at"] = "invalid"
+    playlist_data[items_key] = playlist_items
+    playlist_json = json.dumps(playlist_data)
+
+    def parse_playlist(_playlist_id: str) -> Playlist:
+        """Deserialize the response during the coordinator's playlist lookup."""
+        return Playlist.from_json(playlist_json)
+
+    client = mock_spotify.return_value
+    client.get_playlist.side_effect = parse_playlist
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["media_title"] == client.get_playback.return_value.item.name
+    assert "media_playlist" not in state.attributes
+    client.get_playlist.assert_called_once()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert "media_playlist" not in state.attributes
+    assert client.get_playlist.call_count == 2
+    # Deserialization exceptions contain the entire playlist and must not be logged.
+    assert "has invalid value" not in caplog.text
+
+    client.get_playlist.side_effect = None
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+    assert state.attributes["media_playlist"] == "Spotify Web API Testing playlist"
+    assert client.get_playlist.call_count == 3
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -305,8 +435,11 @@ async def test_repeat_mode(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_REPEAT_SET,
-            {ATTR_ENTITY_ID: "media_player.spotify_spotify_1", ATTR_MEDIA_REPEAT: mode},
+            MediaPlayerService.REPEAT_SET,
+            {
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.REPEAT: mode,
+            },
             blocking=True,
         )
         mock_spotify.return_value.set_repeat.assert_called_once_with(spotify_mode)
@@ -324,10 +457,10 @@ async def test_shuffle(
     for shuffle in (True, False):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_SHUFFLE_SET,
+            MediaPlayerService.SHUFFLE_SET,
             {
-                ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-                ATTR_MEDIA_SHUFFLE: shuffle,
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.SHUFFLE: shuffle,
             },
             blocking=True,
         )
@@ -345,10 +478,10 @@ async def test_volume_level(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
+        MediaPlayerService.VOLUME_SET,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
         },
         blocking=True,
     )
@@ -365,10 +498,10 @@ async def test_seek(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
+        MediaPlayerService.MEDIA_SEEK,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_SEEK_POSITION: 100,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
         },
         blocking=True,
     )
@@ -395,12 +528,12 @@ async def test_play_media_in_queue(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
     )
@@ -465,11 +598,11 @@ async def test_play_media(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: media_type,
-            ATTR_MEDIA_CONTENT_ID: media_id,
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: media_type,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: media_id,
         },
         blocking=True,
     )
@@ -489,12 +622,12 @@ async def test_add_unsupported_media_to_queue(
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-                ATTR_MEDIA_CONTENT_TYPE: "spotify://playlist",
-                ATTR_MEDIA_CONTENT_ID: "spotify:playlist:74Yus6IHfa3tWZzXXAYtS2",
-                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+                TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: "spotify://playlist",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "spotify:playlist:74Yus6IHfa3tWZzXXAYtS2",
+                MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
             },
             blocking=True,
         )
@@ -510,11 +643,11 @@ async def test_play_unsupported_media(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.COMPOSER,
-            ATTR_MEDIA_CONTENT_ID: "spotify:track:3oRoMXsP2NRzm51lldj1RO",
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.COMPOSER,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: "spotify:track:3oRoMXsP2NRzm51lldj1RO",
         },
         blocking=True,
     )
@@ -532,10 +665,10 @@ async def test_select_source(
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_SOURCE,
+        MediaPlayerService.SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.spotify_spotify_1",
-            ATTR_INPUT_SOURCE: "DESKTOP-BKC5SIK",
+            TargetKey.ENTITY_ID: "media_player.spotify_spotify_1",
+            MediaPlayerServiceArgument.SOURCE: "DESKTOP-BKC5SIK",
         },
         blocking=True,
     )
@@ -600,7 +733,8 @@ async def test_fallback_show_image(
     assert state
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=16ff384dbae94fea"
+        == "/api/media_player_proxy/media_player.spotify_spotify_1"
+        "?token=mock-token&cache=16ff384dbae94fea"
     )
 
 
@@ -779,3 +913,64 @@ async def test_smart_polling_interval_handles_paused(
 
     mock_spotify.return_value.get_playback.assert_called_once()
     mock_spotify.return_value.get_playback.reset_mock()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_playing_without_item(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test playback that is reported as playing without an item."""
+    mock_spotify.return_value.get_playback.return_value.item = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_spotify.return_value.get_playback.return_value.is_playing is True
+    assert mock_spotify.return_value.get_playback.return_value.progress_ms is not None
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.state == MediaPlayerState.PLAYING
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_source_list_is_stable(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the source list does not change when Spotify reorders the devices."""
+    devices = Devices.from_json(
+        await async_load_fixture(hass, "devices.json", DOMAIN)
+    ).devices
+    second_device = replace(devices[0], device_id="second-device", name="Kitchen")
+    mock_spotify.return_value.get_devices.return_value = [devices[0], second_device]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    source_list = state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert set(source_list) == {"DESKTOP-BKC5SIK", "Kitchen"}
+
+    # The Spotify API does not guarantee an order, so the same devices can come
+    # back the other way around on the next poll.
+    mock_spotify.return_value.get_devices.return_value = [second_device, devices[0]]
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("media_player.spotify_spotify_1"))
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list

@@ -31,7 +31,8 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "protocol": "Protocol"
         },
         "data_description": {
           "host": "Hostname or IP address of your Iskra device."
@@ -120,7 +121,7 @@
   "selector": {
     "protocol": {
       "options": {
-        "modbus_tcp": "Modbus TCP",
+        "modbus_tcp": "[%key:component::modbus::common::modbus_tcp%]",
         "rest_api": "REST API"
       }
     }

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiopvapi.helpers.constants import ATTR_NAME
 from aiopvapi.resources.shade import BaseShade
@@ -122,33 +122,31 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int:
         """Get the current value of the sensor."""
         return self.entity_description.native_value_fn(self._shade)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return native unit of measurement of sensor."""
         return self.entity_description.native_unit_fn(self._shade)
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         return self.entity_description.device_class_fn(self._shade)
 
-    # pylint: disable-next=hass-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_update_shade_from_group)
-        )
-
     @callback
-    def _async_update_shade_from_group(self) -> None:
+    @override
+    def _handle_coordinator_update(self) -> None:
         """Update with new data from the coordinator."""
         self._shade.raw_data = self.data.get_raw_data(self._shade.id)
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Refresh sensor entity."""
         async with self.coordinator.radio_operation_lock:

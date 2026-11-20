@@ -11,7 +11,7 @@
       "service": "mdi:dialpad"
     },
     "alarm_toggle_chime": {
-      "service": "mdi:abc"
+      "service": "mdi:bell-ring"
     }
   }
 }

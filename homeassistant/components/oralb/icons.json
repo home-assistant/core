@@ -37,8 +37,7 @@
           "sector_1": "mdi:circle-slice-2",
           "sector_2": "mdi:circle-slice-4",
           "sector_3": "mdi:circle-slice-6",
-          "sector_4": "mdi:circle-slice-8",
-          "success": "mdi:check-circle-outline"
+          "sector_4": "mdi:circle-slice-8"
         }
       },
       "toothbrush_state": {

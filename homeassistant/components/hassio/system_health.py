@@ -1,12 +1,13 @@
 """Provide info to system health."""
 
-from __future__ import annotations
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
-import os
-from typing import Any
+from yarl import URL
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .coordinator import (
     get_addons_list,
@@ -16,9 +17,10 @@ from .coordinator import (
     get_os_info,
     get_supervisor_info,
 )
+from .exceptions import HassioNotReadyError
+from .handler import get_supervisor_connection
 
-SUPERVISOR_PING = "http://{ip_address}/supervisor/ping"
-OBSERVER_URL = "http://{ip_address}:4357"
+OBSERVER_PORT = 4357
 
 
 @callback
@@ -29,17 +31,45 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
+def _get_supervisor_data_if_available(
+    hass: HomeAssistant, get_info_dict: Callable[[HomeAssistant], dict[str, Any]]
+) -> dict[str, Any]:
+    """Get data from supervisor if available."""
+    try:
+        return get_info_dict(hass)
+    except HassioNotReadyError:
+        return {}
+
+
+def _get_observer_url(hass: HomeAssistant) -> str | None:
+    """Return the observer URL on the host the user reached Home Assistant at."""
+    # The observer is published on the host, only reachable on the local network.
+    # Same check as is_internal_request, but returns the internal URL it matched.
+    try:
+        internal_url = get_url(
+            hass, allow_external=False, allow_cloud=False, require_current_request=True
+        )
+    except NoURLAvailableError:
+        return None
+    host = URL(internal_url).host
+    if TYPE_CHECKING:
+        assert host is not None
+    return str(URL.build(scheme="http", host=host, port=OBSERVER_PORT))
+
+
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    ip_address = os.environ["SUPERVISOR"]
-    info = get_info(hass) or {}
-    host_info = get_host_info(hass) or {}
-    supervisor_info = get_supervisor_info(hass)
-    network_info = get_network_info(hass) or {}
-    addons_list = get_addons_list(hass) or []
+    info = _get_supervisor_data_if_available(hass, get_info)
+    host_info = _get_supervisor_data_if_available(hass, get_host_info)
+    supervisor_info = _get_supervisor_data_if_available(hass, get_supervisor_info)
+    network_info = _get_supervisor_data_if_available(hass, get_network_info)
+    try:
+        addons_list = get_addons_list(hass)
+    except HassioNotReadyError:
+        addons_list = []
 
     healthy: bool | dict[str, str]
-    if supervisor_info is not None and supervisor_info.get("healthy"):
+    if supervisor_info and supervisor_info.get("healthy"):
         healthy = True
     else:
         healthy = {
@@ -48,7 +78,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         }
 
     supported: bool | dict[str, str]
-    if supervisor_info is not None and supervisor_info.get("supported"):
+    if supervisor_info and supervisor_info.get("supported"):
         supported = True
     else:
         supported = {
@@ -83,15 +113,20 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     }
 
     if info.get("hassos") is not None:
-        os_info = get_os_info(hass) or {}
+        os_info = get_os_info(hass)
         information["board"] = os_info.get("board")
 
+    if (disk_life_time := host_info.get("disk_life_time")) is not None:
+        information["disk_life_time"] = f"{disk_life_time:.0f} %"
+
+    connection = get_supervisor_connection(hass)
     # Not using aiohasupervisor for ping call below intentionally. Given system health
     # context, it seems preferable to do this check with minimal dependencies
     information["supervisor_api"] = system_health.async_check_can_reach_url(
         hass,
-        SUPERVISOR_PING.format(ip_address=ip_address),
-        OBSERVER_URL.format(ip_address=ip_address),
+        str(connection.base_url.with_path("/supervisor/ping")),
+        _get_observer_url(hass),
+        session=connection.session,
     )
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,

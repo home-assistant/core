@@ -5,6 +5,7 @@ import sys
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
@@ -43,8 +44,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_mock_service
 
 
 async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
@@ -1398,7 +1397,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     supported_color_modes,
     state_props,
 ) -> None:
-    """Test lights with RGBW/RGBWW that preserves brightness when switching to color temp."""
+    """Test RGBW/RGBWW lights preserve brightness on color temp switch."""
     entity_id = "light.demo"
 
     hass.states.async_set(

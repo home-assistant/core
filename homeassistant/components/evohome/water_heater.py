@@ -1,13 +1,16 @@
 """Support for WaterHeater entities of the Evohome integration."""
 
-from __future__ import annotations
-
+from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
-from evohomeasync2.schemas.const import DhwState as EvoDhwState, ZoneMode as EvoZoneMode
+from evohomeasync2.const import (
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+    DhwState as EvoDhwState,
+    ZoneMode as EvoZoneMode,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -25,8 +28,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import EVOHOME_DATA
-from .coordinator import EvoDataUpdateCoordinator
+from .const import EVOHOME_DATA, NEXT_SP_FROM
+from .coordinator import EvoLocationCoordinator
 from .entity import EvoChild
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,11 +42,12 @@ EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: ConfigType,
+    _: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create a DHW controller."""
+    """Set up the water heater platform for Evohome."""
+
     if discovery_info is None:
         return
 
@@ -68,35 +72,54 @@ async def async_setup_platform(
 class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""
 
-    _attr_name = "DHW controller"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_supported_features = (
         WaterHeaterEntityFeature.AWAY_MODE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     _evo_device: evo.HotWater
     _evo_id_attr = "dhw_id"
     _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
-        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
+        self, coordinator: EvoLocationCoordinator, evo_device: evo.HotWater
     ) -> None:
         """Initialize an evohome-compatible DHW controller."""
 
         super().__init__(coordinator, evo_device)
-        self._evo_id = evo_device.id
 
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
-            PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
+            PRECISION_TENTHS if coordinator.account.client_v1 else PRECISION_WHOLE
         )
 
+    async def async_set_dhw_override(
+        self, state: bool, duration: timedelta | None = None
+    ) -> None:
+        """Override the DHW zone's on/off state permanently or for a duration."""
+
+        if duration is None:
+            until = None  # indefinitely, aka permanent override
+        elif duration.total_seconds() == 0:
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
+        else:
+            until = dt_util.utcnow() + duration
+
+        if state:
+            await self.coordinator.call_client_api(self._evo_device.set_on(until=until))
+        else:
+            await self.coordinator.call_client_api(
+                self._evo_device.set_off(until=until)
+            )
+
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operating mode (Auto, On, or Off)."""
         if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
@@ -104,12 +127,14 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         return EVO_STATE_TO_HA[self._evo_device.state]
 
     @property
+    @override
     def is_away_mode_on(self) -> bool | None:
         """Return True if away mode is on."""
         is_off = EVO_STATE_TO_HA[self._evo_device.state] == STATE_OFF
         is_permanent = self._evo_device.mode == EvoZoneMode.PERMANENT_OVERRIDE
         return is_off and is_permanent
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller.
 
@@ -118,9 +143,8 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         if operation_mode == STATE_AUTO:
             await self.coordinator.call_client_api(self._evo_device.reset())
         else:
-            await self._update_schedule()
-            until = self.setpoints.get("next_sp_from")
-            until = dt_util.as_utc(until) if until else None
+            await self.coordinator.async_ensure_schedule(self._evo_device)
+            until = self.setpoints.get(NEXT_SP_FROM)
 
             if operation_mode == STATE_ON:
                 await self.coordinator.call_client_api(
@@ -131,18 +155,22 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
                     self._evo_device.set_off(until=until)
                 )
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.coordinator.call_client_api(self._evo_device.set_off())
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.coordinator.call_client_api(self._evo_device.reset())
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.coordinator.call_client_api(self._evo_device.set_on())
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.call_client_api(self._evo_device.set_off())

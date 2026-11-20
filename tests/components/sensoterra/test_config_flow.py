@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from jwt import DecodeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensoterra.customerapi import InvalidAuth as StInvalidAuth, Timeout as StTimeout
 
 from homeassistant.components.sensoterra.const import DOMAIN
@@ -14,13 +15,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID
 
-from tests.common import MockConfigEntry
 
-
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_customer_api_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_customer_api_client: AsyncMock
 ) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -43,6 +41,7 @@ async def test_full_flow(
         CONF_TOKEN: API_TOKEN,
         CONF_EMAIL: API_EMAIL,
     }
+    assert result["result"].unique_id == "39"
 
     assert len(mock_customer_api_client.mock_calls) == 1
 
@@ -80,9 +79,9 @@ async def test_form_unique_id(
         (DecodeError("Bad API token"), "invalid_access_token"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_customer_api_client: AsyncMock,
     exception: Exception,
     error: str,

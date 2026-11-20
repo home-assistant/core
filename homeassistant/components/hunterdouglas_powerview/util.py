@@ -1,13 +1,13 @@
 """Coordinate data for powerview devices."""
 
-from __future__ import annotations
-
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import DOMAIN
 from .model import PowerviewAPI, PowerviewDeviceInfo
 
 
@@ -30,3 +30,8 @@ async def async_connect_hub(
         hub_address=hub.ip,
     )
     return PowerviewAPI(hub, pv_request, info)
+
+
+def get_shade_ids(device: dr.DeviceEntry) -> set[str]:
+    """Return the Powerview identifiers on a device as strings."""
+    return {str(ident) for domain, ident in device.identifiers if domain == DOMAIN}

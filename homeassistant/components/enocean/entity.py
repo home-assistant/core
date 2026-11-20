@@ -1,7 +1,11 @@
 """Representation of an EnOcean device."""
 
-from enocean_async import EURID, Address, BaseAddress, ERP1Telegram, SenderAddress
-from enocean_async.esp3.packet import ESP3Packet, ESP3PacketType
+from typing import override
+
+from enocean_async import EURID, BaseAddress, SenderAddress
+from enocean_async.address import Address
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3Packet, ESP3PacketType
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -12,7 +16,9 @@ from .const import LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 def combine_hex(dev_id: list[int]) -> int:
     """Combine list of integer values to one big integer.
 
-    This function replaces the previously used function from the enocean library and is considered tech debt that will have to be replaced.
+    This function replaces the previously used function from the
+    enocean library and is considered tech debt that will have
+    to be replaced.
     """
     value = 0
     for byte in dev_id:
@@ -28,14 +34,15 @@ class EnOceanEntity(Entity):
         self.address: SenderAddress | None = None
 
         try:
-            address = Address.from_bytelist(dev_id)
-            if address.is_eurid():
-                self.address = EURID.from_number(address.to_number())
-            elif address.is_base_address():
-                self.address = BaseAddress.from_number(address.to_number())
+            address = Address(dev_id)
+            if address.is_eurid:
+                self.address = EURID(int(address))
+            elif address.is_base_address:
+                self.address = BaseAddress(int(address))
         except ValueError:
             self.address = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -58,7 +65,10 @@ class EnOceanEntity(Entity):
     def send_command(
         self, data: list[int], optional: list[int], packet_type: ESP3PacketType
     ) -> None:
-        """Send a command via the EnOcean dongle, if data and optional are valid bytes; otherwise, ignore."""
+        """Send a command via the EnOcean dongle.
+
+        If data and optional are valid bytes; otherwise, ignore.
+        """
         try:
             packet = ESP3Packet(packet_type, data=bytes(data), optional=bytes(optional))
             dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)

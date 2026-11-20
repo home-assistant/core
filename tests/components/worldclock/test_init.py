@@ -1,11 +1,9 @@
 """Test Worldclock component setup process."""
 
-from __future__ import annotations
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) -> None:

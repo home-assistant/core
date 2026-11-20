@@ -1,12 +1,10 @@
 """Support for Pure Energie sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -92,7 +90,6 @@ class PureEnergieSensorEntity(
     ) -> None:
         """Initialize Pure Energie sensor."""
         super().__init__(coordinator=entry.runtime_data)
-        self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
         self._attr_unique_id = (
             f"{entry.runtime_data.data.device.n2g_id}_{description.key}"
@@ -107,6 +104,7 @@ class PureEnergieSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

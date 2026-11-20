@@ -1,7 +1,5 @@
 """Mathematical and statistical functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from functools import wraps
 import math
@@ -10,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import jinja2
 from jinja2 import pass_environment
+from typing_extensions import Sentinel as sentinel
 
 from homeassistant.helpers.template.helpers import raise_no_default
 
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
 # Sentinel object for default parameter
-_SENTINEL = object()
+_SENTINEL = sentinel("_SENTINEL")
 
 
 class MathExtension(BaseTemplateExtension):
@@ -93,14 +92,14 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get logarithm of the value with a specific base."""
         try:
             base_float = float(base)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("log", base)
             return default
         try:
             value_float = float(value)
             return math.log(value_float, base_float)
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError, ZeroDivisionError:
             if default is _SENTINEL:
                 raise_no_default("log", value)
             return default
@@ -110,7 +109,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get sine of the value."""
         try:
             return math.sin(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("sin", value)
             return default
@@ -120,7 +119,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get cosine of the value."""
         try:
             return math.cos(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("cos", value)
             return default
@@ -130,7 +129,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get tangent of the value."""
         try:
             return math.tan(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("tan", value)
             return default
@@ -140,7 +139,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get arc sine of the value."""
         try:
             return math.asin(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("asin", value)
             return default
@@ -150,7 +149,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get arc cosine of the value."""
         try:
             return math.acos(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("acos", value)
             return default
@@ -160,7 +159,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get arc tangent of the value."""
         try:
             return math.atan(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("atan", value)
             return default
@@ -169,8 +168,10 @@ class MathExtension(BaseTemplateExtension):
     def arc_tangent2(*args: Any, default: Any = _SENTINEL) -> Any:
         """Filter and function to calculate four quadrant arc tangent of y / x.
 
-        The parameters to atan2 may be passed either in an iterable or as separate arguments
-        The default value may be passed either as a positional or in a keyword argument
+        The parameters to atan2 may be passed either in an
+        iterable or as separate arguments. The default value
+        may be passed either as a positional or in a keyword
+        argument.
         """
         try:
             if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
@@ -183,7 +184,7 @@ class MathExtension(BaseTemplateExtension):
                 default = args[2]
 
             return math.atan2(float(args[0]), float(args[1]))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("atan2", args)
             return default
@@ -193,7 +194,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter and function to get square root of the value."""
         try:
             return math.sqrt(float(value))
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("sqrt", value)
             return default
@@ -209,8 +210,9 @@ class MathExtension(BaseTemplateExtension):
         if len(args) == 0:
             raise TypeError("average expected at least 1 argument, got 0")
 
-        # If first argument is iterable and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is iterable and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if isinstance(args[0], Iterable):
             average_list = args[0]
             if len(args) > 1 and default is _SENTINEL:
@@ -238,8 +240,9 @@ class MathExtension(BaseTemplateExtension):
         if len(args) == 0:
             raise TypeError("median expected at least 1 argument, got 0")
 
-        # If first argument is a list or tuple and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is a list or tuple and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if isinstance(args[0], Iterable):
             median_list = args[0]
             if len(args) > 1 and default is _SENTINEL:
@@ -267,8 +270,9 @@ class MathExtension(BaseTemplateExtension):
         if not args:
             raise TypeError("statistical_mode expected at least 1 argument, got 0")
 
-        # If first argument is a list or tuple and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is a list or tuple and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if len(args) == 1 and isinstance(args[0], Iterable):
             mode_list = args[0]
         elif isinstance(args[0], list | tuple):
@@ -341,7 +345,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter to convert value to float and add it."""
         try:
             return float(value) + amount
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("add", value)
             return default
@@ -351,7 +355,7 @@ class MathExtension(BaseTemplateExtension):
         """Filter to convert value to float and multiply it."""
         try:
             return float(value) * amount
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("multiply", value)
             return default
@@ -377,7 +381,7 @@ class MathExtension(BaseTemplateExtension):
                 # if method is common or something else, use common rounding
                 value = round(float(value), precision)
             return int(value) if precision == 0 else value
-        except ValueError, TypeError:
+        except ValueError, TypeError, OverflowError:
             if default is _SENTINEL:
                 raise_no_default("round", value)
             return default
@@ -403,7 +407,8 @@ class MathExtension(BaseTemplateExtension):
     def wrap(value: Any, min_value: Any, max_value: Any) -> Any:
         """Filter and function to wrap a value within a range.
 
-        Wraps value cyclically within [min_value, max_value) (inclusive min, exclusive max).
+        Wraps value cyclically within [min_value, max_value)
+        (inclusive min, exclusive max).
         """
         try:
             value_num = float(value)
@@ -416,9 +421,13 @@ class MathExtension(BaseTemplateExtension):
             ) from err
         try:
             range_size = max_value_num - min_value_num
-            return ((value_num - min_value_num) % range_size) + min_value_num
+            result = ((value_num - min_value_num) % range_size) + min_value_num
         except ZeroDivisionError:  # be lenient: if the range is empty, just clamp
             return min_value_num
+        # Values just below min can round up to max; max wraps to min.
+        if range_size > 0 and result >= max_value_num:
+            return min_value_num
+        return result
 
     @staticmethod
     def remap(
@@ -439,7 +448,8 @@ class MathExtension(BaseTemplateExtension):
         the specified number of discrete steps.
 
         The edges parameter controls how out-of-bounds input values are handled:
-        - "none": No special handling; values outside the input range are extrapolated into the output range.
+        - "none": No special handling; values outside the
+          input range are extrapolated into the output range.
         - "clamp": Values outside the input range are clamped to the nearest boundary.
         - "wrap": Values outside the input range are wrapped around cyclically.
         - "mirror": Values outside the input range are mirrored back into the range.
@@ -475,7 +485,7 @@ class MathExtension(BaseTemplateExtension):
             period = math.floor(offset / range_size)
             position_in_period = offset - (period * range_size)
 
-            if (period < 0) or (period % 2 != 0):
+            if period % 2 != 0:
                 position_in_period = range_size - position_in_period
 
             value_num = in_min_num + position_in_period
@@ -484,11 +494,18 @@ class MathExtension(BaseTemplateExtension):
         steps = max(steps, 0)
 
         if not steps and (in_min_num == out_min_num and in_max_num == out_max_num):
-            return value_num  # No remapping needed. Save some cycles and floating-point precision.
+            # No remapping needed. Save some cycles and
+            # floating-point precision.
+            return value_num
 
         normalized = (value_num - in_min_num) / (in_max_num - in_min_num)
 
         if steps:
             normalized = round(normalized * steps) / steps
 
-        return out_min_num + (normalized * (out_max_num - out_min_num))
+        result = out_min_num + (normalized * (out_max_num - out_min_num))
+        if edges == "clamp":
+            # Rounding in the linear map can overshoot the output bounds.
+            low, high = sorted((out_min_num, out_max_num))
+            return max(low, min(high, result))
+        return result

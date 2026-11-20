@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for Ista EcoTrend integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 
@@ -40,6 +38,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.ista = ista
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the ista EcoTrend coordinator."""
 
@@ -54,11 +53,10 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
-                translation_placeholders={
-                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },
+                translation_placeholders={"email": self.config_entry.data[CONF_EMAIL]},
             ) from e
 
+    @override
     async def _async_update_data(self):
         """Fetch ista EcoTrend data."""
 
@@ -73,9 +71,7 @@ class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_exception",
-                translation_placeholders={
-                    CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
-                },
+                translation_placeholders={"email": self.config_entry.data[CONF_EMAIL]},
             ) from e
 
     def get_consumption_data(self) -> dict[str, Any]:

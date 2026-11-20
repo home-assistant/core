@@ -1,12 +1,11 @@
 """Fixtures for the Twente Milieu integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from twentemilieu import WasteType
 
 from homeassistant.components.twentemilieu.const import (
@@ -17,8 +16,6 @@ from homeassistant.components.twentemilieu.const import (
 )
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -41,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.twentemilieu.async_setup_entry", return_value=True
+        "homeassistant.components.twentemilieu.async_setup_entry", return_value=None
     ):
         yield
 

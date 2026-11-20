@@ -1,11 +1,12 @@
 """Common fixtures for the Aquacell tests."""
 
 from collections.abc import Generator
-from datetime import datetime
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquacell import AquacellApi, Softener
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.aquacell.const import (
     CONF_REFRESH_TOKEN_CREATION_TIME,
@@ -15,21 +16,19 @@ from homeassistant.const import CONF_EMAIL
 
 from . import TEST_CONFIG_ENTRY, TEST_CONFIG_ENTRY_WITHOUT_BRAND
 
-from tests.common import MockConfigEntry, load_json_array_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.aquacell.async_setup_entry", return_value=True
+        "homeassistant.components.aquacell.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
 
 @pytest.fixture
 def mock_aquacell_api() -> Generator[MagicMock]:
-    """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
+    """Build a fixture for the Aquacell API that returns a softener."""
     with (
         patch(
             "homeassistant.components.aquacell.AquacellApi",
@@ -47,7 +46,7 @@ def mock_aquacell_api() -> Generator[MagicMock]:
             "aquacell/get_all_softeners_one_softener.json"
         )
 
-        softeners = [Softener(softener) for softener in softeners_dict]
+        softeners = [Softener.from_dict(softener) for softener in softeners_dict]
         mock_aquacell_api.get_all_softeners.return_value = softeners
 
         yield mock_aquacell_api
@@ -73,7 +72,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
         data={
             **TEST_CONFIG_ENTRY,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
         },
     )
 
@@ -87,6 +86,6 @@ def mock_config_entry_without_brand() -> MockConfigEntry:
         unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
         data={
             **TEST_CONFIG_ENTRY_WITHOUT_BRAND,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: time.time(),
         },
     )

@@ -10,16 +10,21 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant.components import automation
+from homeassistant.components.automation import DOMAIN
+from homeassistant.components.automation.const import AutomationService
 from homeassistant.components.blueprint import models
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(automation.__file__).parent / "blueprints"
 
@@ -81,7 +86,7 @@ async def test_notify_leaving_zone(
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {
@@ -141,8 +146,8 @@ async def test_notify_leaving_zone(
 
         # Verify trigger works
         await hass.services.async_call(
-            "automation",
-            "trigger",
+            DOMAIN,
+            AutomationService.TRIGGER,
             {"entity_id": "automation.automation_0"},
             blocking=True,
         )
@@ -159,7 +164,7 @@ async def test_motion_light(hass: HomeAssistant) -> None:
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {
@@ -228,8 +233,8 @@ async def test_motion_light(hass: HomeAssistant) -> None:
 
     # Verify trigger works
     await hass.services.async_call(
-        "automation",
-        "trigger",
+        DOMAIN,
+        AutomationService.TRIGGER,
         {"entity_id": "automation.automation_0"},
     )
     for _ in range(25):

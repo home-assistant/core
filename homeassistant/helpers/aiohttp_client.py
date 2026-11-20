@@ -1,7 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
@@ -11,20 +9,20 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import aiohttp
 from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
@@ -159,6 +157,10 @@ async def _async_is_blocked_host(
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
 
+# aiohttp's 8190 byte default is too small for some servers, e.g. GitHub's
+# release download redirects carry a ~9 KiB Content-Security-Policy header.
+MAXIMUM_HEADER_SIZE = 65536
+
 
 class HassAsyncDNSResolver(AsyncDualMDNSResolver):
     """Home Assistant AsyncDNSResolver.
@@ -171,6 +173,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
         """Close the resolver."""
         await super().close()
 
+    @override
     async def close(self) -> None:
         """Close the resolver."""
 
@@ -178,6 +181,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
 
+    @override
     async def json(
         self,
         *args: Any,
@@ -214,7 +218,6 @@ class ChunkAsyncStreamIterator:
 
 
 @callback
-@bind_hass
 def async_get_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
@@ -244,7 +247,6 @@ def async_get_clientsession(
 
 
 @callback
-@bind_hass
 def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
@@ -292,6 +294,9 @@ def _async_create_clientsession(
         *kwargs.pop("middlewares", ()),
     )
 
+    kwargs.setdefault("max_line_size", MAXIMUM_HEADER_SIZE)
+    kwargs.setdefault("max_field_size", MAXIMUM_HEADER_SIZE)
+
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
         json_serialize=json_dumps,
@@ -303,8 +308,10 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
+    default_headers = CIMultiDict(clientsession.headers)
+    default_headers[USER_AGENT] = SERVER_SOFTWARE
     clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
-        {USER_AGENT: SERVER_SOFTWARE},
+        default_headers
     )
 
     clientsession.close = warn_use(  # type: ignore[method-assign]
@@ -318,7 +325,6 @@ def _async_create_clientsession(
     return clientsession
 
 
-@bind_hass
 async def async_aiohttp_proxy_web(
     hass: HomeAssistant,
     request: web.BaseRequest,
@@ -351,7 +357,6 @@ async def async_aiohttp_proxy_web(
         req.close()
 
 
-@bind_hass
 async def async_aiohttp_proxy_stream(
     hass: HomeAssistant,
     request: web.BaseRequest,

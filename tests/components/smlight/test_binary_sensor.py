@@ -6,6 +6,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pysmlight.const import Events
 from pysmlight.sse import MessageEvent
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smlight.const import SCAN_INTERNET_INTERVAL
@@ -15,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import get_mock_event_function
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = [
     pytest.mark.usefixtures(

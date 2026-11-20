@@ -1,7 +1,5 @@
 """The tests for the Google speech platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -10,6 +8,8 @@ from unittest.mock import MagicMock, patch
 
 from gtts import gTTSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import tts
@@ -22,9 +22,7 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.tts.common import retrieve_media
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)

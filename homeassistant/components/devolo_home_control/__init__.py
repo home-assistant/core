@@ -1,10 +1,7 @@
 """The devolo_home_control integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
-from functools import partial
 import logging
 from typing import Any
 
@@ -17,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, PLATFORMS
 
@@ -28,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: DevoloHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Set up the devolo account from a config entry."""
     mydevolo = configure_mydevolo(entry.data)
 
@@ -49,22 +46,9 @@ async def async_setup_entry(
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
     entry.runtime_data = []
-    offline_gateways = 0
-    for gateway_id in gateway_ids:
-        try:
-            entry.runtime_data.append(
-                await hass.async_add_executor_job(
-                    partial(
-                        HomeControl,
-                        gateway_id=gateway_id,
-                        mydevolo_instance=mydevolo,
-                        zeroconf_instance=zeroconf_instance,
-                    )
-                )
-            )
-        except GatewayOfflineError:
-            offline_gateways += 1
-            _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
+    offline_gateways = await hass.async_add_executor_job(
+        connect_gateways, entry.runtime_data, gateway_ids, mydevolo, zeroconf_instance
+    )
     if len(gateway_ids) == offline_gateways:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -73,27 +57,26 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: DevoloHomeControlConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await asyncio.gather(
-        *(
-            hass.async_add_executor_job(gateway.websocket_disconnect)
-            for gateway in entry.runtime_data
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        await asyncio.gather(
+            *(
+                hass.async_add_executor_job(gateway.websocket_disconnect)
+                for gateway in entry.runtime_data
+            )
         )
-    )
-    return unload
 
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: DevoloHomeControlConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True
@@ -108,7 +91,10 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
 
 
 def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
-    """Check if the credentials are valid and return user's gateway IDs as long as mydevolo is not in maintenance mode."""
+    """Check credentials and return user's gateway IDs.
+
+    Raises if mydevolo is in maintenance mode.
+    """
     if not mydevolo.credentials_valid():
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -121,3 +107,30 @@ def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
         )
 
     return mydevolo.get_gateway_ids()
+
+
+def connect_gateways(
+    gateways: list[HomeControl],
+    gateway_ids: list[str],
+    mydevolo: Mydevolo,
+    zeroconf_instance: zeroconf.HaZeroconf,
+) -> int:
+    """Connect to the gateways and return the number of offline gateways.
+
+    Each connected gateway is added to *gateways* right away, so a shutdown
+    during setup can disconnect it.
+    """
+    offline_gateways = 0
+    for gateway_id in gateway_ids:
+        try:
+            gateways.append(
+                HomeControl(
+                    gateway_id=gateway_id,
+                    mydevolo_instance=mydevolo,
+                    zeroconf_instance=zeroconf_instance,
+                )
+            )
+        except GatewayOfflineError:
+            offline_gateways += 1
+            _LOGGER.info("Central unit %s cannot be reached locally", gateway_id)
+    return offline_gateways

@@ -1,28 +1,41 @@
 """Test the repairs websocket API."""
 
-from __future__ import annotations
-
+from collections.abc import Iterator
+from contextlib import contextmanager
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
 
+import orjson
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
-from homeassistant.components.repairs.const import DOMAIN
-from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, mock_platform
-from tests.typing import (
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    async_capture_events,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
     WebSocketGenerator,
 )
+
+from homeassistant import data_entry_flow
+from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs.const import DOMAIN
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigFlow,
+)
+from homeassistant.const import __version__ as ha_version
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 DEFAULT_ISSUES = [
     {
@@ -86,6 +99,10 @@ EXPECTED_DATA = {
     "issue_1": None,
     "issue_2": {"blah": "bleh"},
     "abort_issue1": None,
+    "issue_3": None,
+    "invalid_flow": None,
+    "unknown_entry": None,
+    "unknown_entry_via_form": None,
 }
 
 
@@ -109,7 +126,9 @@ class MockFixFlow(RepairsFlow):
         if user_input is not None:
             return self.async_create_entry(data={})
 
-        return self.async_show_form(step_id="custom_step", data_schema=vol.Schema({}))
+        return self.async_show_form(
+            step_id="custom_step", data_schema=probatio.Schema({})
+        )
 
 
 class MockFixFlowAbort(RepairsFlow):
@@ -137,6 +156,13 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
 
         if issue_id == "abort_issue1":
             return MockFixFlowAbort()
+        if issue_id in [
+            "issue_3",
+            "invalid_flow",
+            "unknown_entry",
+            "unknown_entry_via_form",
+        ]:
+            return MockFixFlowNextFlow()
         return MockFixFlow()
 
     mock_platform(
@@ -173,6 +199,10 @@ async def test_dismiss_issue(
     )
     msg = await client.receive_json()
     assert not msg["success"]
+    assert msg["error"] == {
+        "code": "unknown_issue",
+        "message": "Issue 'no_such_issue' not found",
+    }
 
     await client.send_json(
         {
@@ -373,6 +403,199 @@ async def test_fix_issue(
     assert msg["result"] == {"issues": []}
 
 
+@contextmanager
+def mock_core_config_flow() -> Iterator[None]:
+    """Mock a config flow."""
+
+    class CompConfigFlow(ConfigFlow):
+        """Config flow with options and subentries flow."""
+
+        async def async_step_user(self, user_input=None):
+            return self.async_show_form(step_id="user")
+
+        async def async_step_reconfigure(self, user_input=None):
+            return self.async_show_form(step_id="reconfigure")
+
+    with mock_config_flow("comp", CompConfigFlow):
+        yield
+
+
+class MockFixFlowNextFlow(RepairsFlow):
+    """Mock flow fix supporting `next_flow`."""
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+
+        assert self.issue_id in EXPECTED_DATA
+
+        mock_integration(self.hass, MockModule("comp"))
+        mock_platform(self.hass, "comp.config_flow", None)
+
+        entries = self.hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        mock_entry: MockConfigEntry = entries[0]
+        if self.issue_id == "unknown_entry_via_form":
+            return await self.async_step_user()
+
+        with mock_core_config_flow():
+            flow_type: str = FlowType.CONFIG_FLOW
+            match self.issue_id:
+                case "issue_3":
+                    next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+                case "invalid_flow":
+                    flow_type = "fake_flow_type"
+                    next_flow = {"flow_id": "fake_flow_id"}
+                case "unknown_entry":
+                    next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+                    # Remove the entry to trigger UnknownEntry error.
+                    await self.hass.config_entries.async_remove(mock_entry.entry_id)
+            return self.async_create_entry(
+                data={},
+                next_flow=(
+                    flow_type,
+                    next_flow["flow_id"],
+                ),
+            )
+
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle an UnknownEntry error via a form.
+
+        Test RepairsFlowResourceView.post error handling.
+        """
+        if user_input:
+            entries = self.hass.config_entries.async_entries("comp")
+            mock_entry: MockConfigEntry = entries[0]
+            next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+            await self.hass.config_entries.async_remove(mock_entry.entry_id)
+            return self.async_create_entry(
+                data={}, next_flow=(FlowType.CONFIG_FLOW, next_flow["flow_id"])
+            )
+        return self.async_show_form(step_id="user")
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+async def test_fix_issue_next_flow(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test next_flow RepairFlows."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issues = [{**DEFAULT_ISSUES[0], "issue_id": "issue_3"}]
+    await create_issues(hass, ws_client, issues=issues)
+
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+    )
+    mock_entry.add_to_hass(hass)
+
+    url = "/api/repairs/issues/fix"
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_3"}
+    )
+
+    assert resp.status == HTTPStatus.OK, (
+        f"Error: {resp.status} cause {await resp.text()}"
+    )
+
+    data = await resp.json()
+
+    _, next_flow_id = data["next_flow"]
+
+    assert data == {
+        "description_placeholders": None,
+        "flow_id": ANY,
+        "handler": "fake_integration",
+        "description": None,
+        "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+        "next_flow": [
+            FlowType.CONFIG_FLOW,
+            next_flow_id,
+        ],
+        "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+    }
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+async def test_fix_issue_next_flow_errors(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test next_flow RepairFlows."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issues = [
+        {
+            **DEFAULT_ISSUES[0],
+            "issue_id": "invalid_flow",
+        },
+        {
+            **DEFAULT_ISSUES[0],
+            "issue_id": "unknown_entry",
+        },
+        {
+            **DEFAULT_ISSUES[0],
+            "issue_id": "unknown_entry_via_form",
+        },
+    ]
+    await create_issues(hass, ws_client, issues=issues)
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+    )
+    mock_entry.add_to_hass(hass)
+
+    url = "/api/repairs/issues/fix"
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "invalid_flow"}
+    )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    data = await resp.json()
+    assert "Invalid next_flow FlowType" in data["message"]
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "unknown_entry"}
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.json()
+    assert "not found in next_flow" in data["message"]
+
+    # Re add removed mock entry
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+    )
+    mock_entry.add_to_hass(hass)
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "unknown_entry_via_form"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    assert data["type"] == "form"
+    resp = await client.post(f"{url}/{data['flow_id']}", json={"submit": "True"})
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.json()
+    assert "not found in next_flow" in data["message"]
+
+
 async def test_fix_issue_unauth(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_admin_user: MockUser
 ) -> None:
@@ -546,6 +769,109 @@ async def test_list_issues(
             for issue in issues
         ]
     }
+
+
+async def _async_list_issue_ids(client: MockHAClientWebSocket) -> dict[str, bool]:
+    """Return listed issue ids mapped to their ignored flag."""
+    await client.send_json_auto_id({"type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    return {issue["issue_id"]: issue["ignored"] for issue in msg["result"]["issues"]}
+
+
+@pytest.fixture
+def mock_test_config_flow() -> Iterator[None]:
+    """Mock a config flow for the test domain."""
+    with mock_config_flow("test", ConfigFlow):
+        yield
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.usefixtures("mock_test_config_flow")
+async def test_list_issues_hides_disabled_config_entry_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test issues of a disabled config entry are hidden until it's re-enabled."""
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+    hass.config.components.add("test")
+    entry = MockConfigEntry(domain="test", state=ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    for issue_id, config_entry_id in (
+        ("entry_issue", entry.entry_id),
+        ("other_entry_issue", other_entry.entry_id),
+        ("no_entry_issue", None),
+    ):
+        ir.async_create_issue(
+            hass,
+            "test",
+            issue_id,
+            config_entry_id=config_entry_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="abc_123",
+        )
+    ir.async_ignore_issue(hass, "test", "entry_issue", True)
+
+    client = await hass_ws_client(hass)
+    assert await _async_list_issue_ids(client) == {
+        "entry_issue": True,
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    assert await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    # Let the frontend refresh the issue list
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "test", "issue_id": "entry_issue"}
+    ]
+
+    assert await _async_list_issue_ids(client) == {
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+    # Hidden issues are kept in the registry and can still be accessed directly
+    assert issue_registry.async_get_issue("test", "entry_issue").dismissed_version == (
+        ha_version
+    )
+    await client.send_json_auto_id(
+        {"type": "repairs/get_issue_data", "domain": "test", "issue_id": "entry_issue"}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    events.clear()
+    assert await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert [event.data for event in events] == [
+        {"action": "update", "domain": "test", "issue_id": "entry_issue"}
+    ]
+
+    assert await _async_list_issue_ids(client) == {
+        "entry_issue": True,
+        "other_entry_issue": False,
+        "no_entry_issue": False,
+    }
+    assert issue_registry.async_get_issue("test", "entry_issue").dismissed_version == (
+        ha_version
+    )
 
 
 @pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])

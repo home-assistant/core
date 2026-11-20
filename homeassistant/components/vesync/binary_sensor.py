@@ -1,10 +1,9 @@
 """Binary Sensor for VeSync."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -18,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import rgetattr
+from .common import is_air_fryer, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -52,6 +51,12 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         exists_fn=(
             lambda device: rgetattr(device, "state.water_tank_lifted") is not None
         ),
+    ),
+    VeSyncBinarySensorEntityDescription(
+        key="sync_chambers",
+        translation_key="sync_chambers",
+        is_on=lambda device: device.state.sync_chambers,
+        exists_fn=lambda device: is_air_fryer(device) and device.is_dual_chamber,
     ),
 )
 
@@ -113,6 +118,7 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on(self.device)

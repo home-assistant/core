@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from wled import Device as WLEDDevice, Releases
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.wled.async_setup_entry", return_value=True
+        "homeassistant.components.wled.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -60,6 +60,8 @@ def mock_wled_releases() -> Generator[MagicMock]:
         wled_releases = wled_releases_mock.return_value
         wled_releases.releases.return_value = Releases(
             beta="1.0.0b5",
+            nightly=None,
+            repo="wled/WLED",
             stable="0.99.0",
         )
 
@@ -83,6 +85,7 @@ def mock_wled(
         )
         wled.connected = False
         wled.host = "127.0.0.1"
+        wled.firmware_available.return_value = True
 
         yield wled
 

@@ -1,10 +1,8 @@
 """Support for Traccar server binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from pytraccar import DeviceModel
 
@@ -88,6 +86,7 @@ class TraccarServerBinarySensor[_T](TraccarServerEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on or not."""
         return self.entity_description.value_fn(

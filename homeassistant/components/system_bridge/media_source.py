@@ -1,12 +1,18 @@
 """System Bridge Media Source Implementation."""
 
-from __future__ import annotations
+from typing import override
 
+from systembridgeconnector.exceptions import (
+    AuthenticationException,
+    BadRequestException,
+    ConnectionErrorException,
+)
+from systembridgeconnector.http_client import HTTPClient
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
 
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     MEDIA_CLASS_MAP,
     MEDIA_MIME_TYPES,
@@ -14,13 +20,37 @@ from homeassistant.components.media_source import (
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry
+
+
+def _get_loaded_entry(
+    hass: HomeAssistant,
+    entry_id: str,
+    error: type[BrowseError | Unresolvable],
+) -> SystemBridgeConfigEntry:
+    """Return a loaded System Bridge config entry by id."""
+    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
+        raise error(
+            translation_domain=DOMAIN,
+            translation_key="entry_not_loaded",
+            translation_placeholders={"entry_id": entry_id},
+        )
+    return entry
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -40,21 +70,20 @@ class SystemBridgeSource(MediaSource):
         self.name = "System Bridge"
         self.hass: HomeAssistant = hass
 
+    @override
     async def async_resolve_media(
         self,
         item: MediaSourceItem,
     ) -> PlayMedia:
         """Resolve media to a url."""
         entry_id, path, mime_type = item.identifier.split("~~", 2)
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise ValueError("Invalid entry")
-        path_split = path.split("/", 1)
+        entry = _get_loaded_entry(self.hass, entry_id, Unresolvable)
+        base, file_path = path.split("/", 1)
         return PlayMedia(
-            f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
-            mime_type,
+            await _async_build_file_url(self.hass, entry, base, file_path), mime_type
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -64,21 +93,14 @@ class SystemBridgeSource(MediaSource):
             return self._build_bridges()
 
         if "~~" not in item.identifier:
-            entry = self.hass.config_entries.async_get_entry(item.identifier)
-            if entry is None:
-                raise ValueError("Invalid entry")
-            coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
-                entry.entry_id
-            )
+            entry = _get_loaded_entry(self.hass, item.identifier, BrowseError)
+            coordinator = entry.runtime_data
             directories = await coordinator.websocket_client.get_directories()
             return _build_root_paths(entry, directories)
 
         entry_id, path = item.identifier.split("~~", 1)
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise ValueError("Invalid entry")
-
-        coordinator = self.hass.data[DOMAIN].get(entry.entry_id)
+        entry = _get_loaded_entry(self.hass, entry_id, BrowseError)
+        coordinator = entry.runtime_data
 
         path_split = path.split("/", 1)
 
@@ -122,18 +144,36 @@ class SystemBridgeSource(MediaSource):
         )
 
 
-def _build_base_url(
-    entry: ConfigEntry,
+async def _async_build_file_url(
+    hass: HomeAssistant, entry: SystemBridgeConfigEntry, base: str, path: str
 ) -> str:
-    """Build base url for System Bridge media."""
-    return (
-        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-        f"/api/media/file/data?token={entry.data[CONF_TOKEN]}"
+    """Build the URL for a System Bridge media file.
+
+    The URL goes to players such as cast devices, so System Bridge signs it
+    for this file rather than it carrying the key.
+    """
+    http_client = HTTPClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+    try:
+        return await http_client.media_file_url(base, path)
+    except (
+        AuthenticationException,
+        BadRequestException,
+        ConnectionErrorException,
+    ) as exception:
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="media_url_failed",
+            translation_placeholders={"path": path},
+        ) from exception
 
 
 def _build_root_paths(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_directories: list[MediaDirectory],
 ) -> BrowseMediaSource:
     """Build base categories for System Bridge media."""
@@ -164,7 +204,7 @@ def _build_root_paths(
 
 
 def _build_media_items(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_files: MediaFiles,
     path: str,
     identifier: str,
@@ -209,7 +249,7 @@ def _build_media_item(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
         media_class=media_class,
-        media_content_type=media_file.content_type,
+        media_content_type=media_file.content_type or "",
         title=media_file.name,
         can_play=not media_file.is_directory,
         can_expand=media_file.is_directory,

@@ -1,10 +1,8 @@
 """Thermopro button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData, ThermoProDevice
 
@@ -14,7 +12,6 @@ from homeassistant.components.bluetooth import (
     async_track_unavailable,
 )
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -25,6 +22,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import now
 
+from . import ThermoProConfigEntry
 from .const import DOMAIN, SIGNAL_AVAILABILITY_UPDATED, SIGNAL_DATA_UPDATED
 
 PARALLEL_UPDATES = 1  # one connection at a time
@@ -59,7 +57,7 @@ MODELS_THAT_SUPPORT_BUTTONS = {"TP358", "TP393"}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ThermoProConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the thermopro button platform."""
@@ -127,6 +125,7 @@ class ThermoProButtonEntity(ButtonEntity):
             connections={(dr.CONNECTION_BLUETOOTH, address)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect availability dispatcher."""
         await super().async_added_to_hass()
@@ -152,6 +151,7 @@ class ThermoProButtonEntity(ButtonEntity):
         self._attr_available = available
         self.async_write_ha_state()
 
+    @override
     async def async_press(self) -> None:
         """Execute the press action for the entity."""
         await self.entity_description.press_action_fn(self.hass, self._address)

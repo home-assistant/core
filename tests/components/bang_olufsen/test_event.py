@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
+from mozart_api.models import (
+    BeolinkSelf,
+    BeoRemoteButton,
+    ButtonEvent,
+    PairedRemoteResponse,
+)
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,7 +17,10 @@ from homeassistant.components.bang_olufsen.const import (
     DEVICE_BUTTON_EVENTS,
     EVENT_TRANSLATION_MAP,
 )
-from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
+from homeassistant.components.event import (
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -20,6 +29,10 @@ from .conftest import mock_websocket_connection
 from .const import (
     TEST_BATTERY,
     TEST_BUTTON_EVENT_ENTITY_ID,
+    TEST_FRIENDLY_NAME_3,
+    TEST_FRIENDLY_NAME_4,
+    TEST_JID_3,
+    TEST_JID_4,
     TEST_REMOTE_KEY_EVENT_ENTITY_ID,
     TEST_SERIAL_NUMBER_3,
     TEST_SERIAL_NUMBER_4,
@@ -31,8 +44,6 @@ from .util import (
     get_premiere_entity_ids,
     get_remote_entity_ids,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def _check_button_event_creation(
@@ -67,7 +78,11 @@ async def test_button_event_creation_balance(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
 ) -> None:
-    """Test button event entities are created when using a Balance (Most devices support all buttons like the Balance)."""
+    """Test button event entities are created.
+
+    Uses a Balance (Most devices support all buttons
+    like the Balance).
+    """
 
     await _check_button_event_creation(
         hass,
@@ -86,7 +101,10 @@ async def test_no_button_and_remote_key_event_creation_core(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test button event entities are not created when using a Beoconnect Core with no Beoremote One connected."""
+    """Test button event entities are not created.
+
+    Uses a Beoconnect Core with no Beoremote One connected.
+    """
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
         items=[]
     )
@@ -108,7 +126,13 @@ async def test_button_event_creation_premiere(
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Bluetooth and Microphone button event entities are not created when using a Beosound Premiere."""
+    """Test Bluetooth and Microphone button event entities.
+
+    These are not created when using a Beosound Premiere.
+    """
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3
+    )
 
     await _check_button_event_creation(
         hass,
@@ -132,6 +156,9 @@ async def test_button_event_creation_a5(
 ) -> None:
     """Test Microphone button event entity is not created when using a Beosound A5."""
     mock_mozart_client.get_battery_state.return_value = TEST_BATTERY
+    mock_mozart_client.get_beolink_self.return_value = BeolinkSelf(
+        friendly_name=TEST_FRIENDLY_NAME_4, jid=TEST_JID_4
+    )
 
     await _check_button_event_creation(
         hass,
@@ -161,7 +188,9 @@ async def test_button(
 
     assert (states := hass.states.get(TEST_BUTTON_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
-    assert states.attributes[ATTR_EVENT_TYPES] == list(DEVICE_BUTTON_EVENTS)
+    assert states.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == list(
+        DEVICE_BUTTON_EVENTS
+    )
 
     # Check button reacts as expected to WebSocket events
     notification_callback = mock_mozart_client.get_button_notifications.call_args[0][0]
@@ -172,7 +201,7 @@ async def test_button(
     assert (states := hass.states.get(TEST_BUTTON_EVENT_ENTITY_ID))
     assert states.state is not None
     assert (
-        states.attributes[ATTR_EVENT_TYPE]
+        states.attributes[EventEntityStateAttribute.EVENT_TYPE]
         == EVENT_TRANSLATION_MAP["shortPress (Release)"]
     )
 
@@ -196,7 +225,9 @@ async def test_remote_key(
 
     assert (states := hass.states.get(TEST_REMOTE_KEY_EVENT_ENTITY_ID))
     assert states.state is STATE_UNKNOWN
-    assert states.attributes[ATTR_EVENT_TYPES] == list(BEO_REMOTE_KEY_EVENTS)
+    assert states.attributes[EventEntityCapabilityAttribute.EVENT_TYPES] == list(
+        BEO_REMOTE_KEY_EVENTS
+    )
 
     # Check button reacts as expected to WebSocket events
     notification_callback = (
@@ -208,4 +239,7 @@ async def test_remote_key(
 
     assert (states := hass.states.get(TEST_REMOTE_KEY_EVENT_ENTITY_ID))
     assert states.state is not None
-    assert states.attributes[ATTR_EVENT_TYPE] == EVENT_TRANSLATION_MAP["KeyPress"]
+    assert (
+        states.attributes[EventEntityStateAttribute.EVENT_TYPE]
+        == EVENT_TRANSLATION_MAP["KeyPress"]
+    )

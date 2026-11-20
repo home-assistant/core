@@ -1,11 +1,9 @@
 """Todo platform for the Habitica integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from aiohttp import ClientError
@@ -76,6 +74,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
         super().__init__(coordinator, self.entity_description)
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
         if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
@@ -112,6 +111,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
     ) -> None:
@@ -150,6 +150,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 translation_placeholders={"pos": str(pos)},
             ) from e
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
         refresh_required = False
@@ -259,6 +260,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
     )
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
 
@@ -289,6 +291,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
             ),
         )
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a Habitica todo."""
         if TYPE_CHECKING:
@@ -335,6 +338,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
     )
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem]:
         """Return the dailies.
 
@@ -342,7 +346,8 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         which is a calculated value based on recurrence of the task.
         If a task is a yesterdaily, the due date is the last time
         a new day has been started. This allows to check off dailies from yesterday,
-        that have been completed but forgotten to mark as completed before resetting the dailies.
+        that have been completed but forgotten to mark as completed
+        before resetting the dailies.
         Changes of the date input field in Home Assistant will be ignored.
         """
         if TYPE_CHECKING:

@@ -1,22 +1,19 @@
 """The tests for group recorder."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import group
-from homeassistant.components.group import ATTR_AUTO, ATTR_ENTITY_ID, ATTR_ORDER
+from homeassistant.components.group.const import GroupEntityStateAttribute
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -53,7 +50,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
     for entity_states in states.values():
         for state in entity_states:
             if split_entity_id(state.entity_id)[0] == group.DOMAIN:
-                assert ATTR_AUTO not in state.attributes
+                assert GroupEntityStateAttribute.AUTO not in state.attributes
                 assert ATTR_ENTITY_ID not in state.attributes
-                assert ATTR_ORDER not in state.attributes
+                assert GroupEntityStateAttribute.ORDER not in state.attributes
                 assert ATTR_FRIENDLY_NAME in state.attributes

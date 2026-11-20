@@ -2,12 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from elgato import ElgatoError
+from elgato import ElgatoConnectionError, ElgatoError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -48,8 +48,8 @@ async def test_buttons(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -65,13 +65,28 @@ async def test_buttons(
 
     with pytest.raises(
         HomeAssistantError,
-        match="An error occurred while communicating with the Elgato Light",
+        match="An unknown error occurred while communicating with the Elgato device",
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )
 
     assert len(mocked_method.mock_calls) == 2
+
+    mocked_method.side_effect = ElgatoConnectionError
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Elgato device",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert len(mocked_method.mock_calls) == 3

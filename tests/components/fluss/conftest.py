@@ -1,16 +1,13 @@
 """Shared test fixtures for Fluss+ integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -27,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.fluss.async_setup_entry", return_value=True
+        "homeassistant.components.fluss.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -48,8 +45,19 @@ def mock_api_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.async_get_devices.return_value = {
             "devices": [
-                {"deviceId": "2a303030sdj1", "deviceName": "Device 1"},
-                {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
+                {
+                    "deviceId": "2a303030sdj1",
+                    "deviceName": "Device 1",
+                    "userPermissions": {"canUseWiFi": True},
+                },
+                {
+                    "deviceId": "ape93k9302j2",
+                    "deviceName": "Device 2",
+                    "userPermissions": {"canUseWiFi": True},
+                },
             ]
+        }
+        client.async_get_device_status.return_value = {
+            "status": {"internetConnected": True}
         }
         yield client

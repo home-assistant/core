@@ -1,7 +1,5 @@
 """Support for IPMA sensors."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import asdict, dataclass
@@ -16,13 +14,15 @@ from pyipma.uv import UV
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
 
 from . import IpmaConfigEntry
 from .const import MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
+
+WARNING_SEVERITY = {"green": 0, "yellow": 1, "orange": 2, "red": 3}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,11 +57,20 @@ async def async_retrieve_uvi(
 async def async_retrieve_warning(
     location: Location, api: IPMA_API
 ) -> tuple[Any, dict[str, str]]:
-    """Retrieve Warning."""
+    """Retrieve the most severe warning currently in effect."""
     warnings = await location.warnings(api)
-    if len(warnings):
-        return warnings[0].awarenessLevelID, {
-            k: str(v) for k, v in asdict(warnings[0]).items()
+    if warnings is None:
+        return None, {}
+    # IPMA publishes naive timestamps in UTC
+    now = dt_util.utcnow().replace(tzinfo=None)
+    active = sorted(
+        (w for w in warnings if w.startTime <= now < w.endTime),
+        key=lambda w: WARNING_SEVERITY[w.awarenessLevelID],
+        reverse=True,
+    )
+    if active:
+        return active[0].awarenessLevelID, {
+            k: str(v) for k, v in asdict(active[0]).items()
         }
     return "green", {}
 
@@ -114,7 +123,11 @@ class IPMASensor(SensorEntity, IPMADevice):
         """Initialize the IPMA Sensor."""
         IPMADevice.__init__(self, api, location)
         self.entity_description = description
-        self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{self._location.station_latitude},"
+            f" {self._location.station_longitude},"
+            f" {self.entity_description.key}"
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:

@@ -1,9 +1,8 @@
 """Coordinator for the Duck DNS integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError
 
@@ -48,11 +47,12 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
         self.session = async_get_clientsession(hass)
         self.failed = 0
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Duck DNS."""
 
         retry_after = BACKOFF_INTERVALS[
-            min(self.failed, len(BACKOFF_INTERVALS))
+            min(self.failed, len(BACKOFF_INTERVALS) - 1)
         ].total_seconds()
 
         try:
@@ -66,7 +66,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={
-                        CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN],
+                        "domain": self.config_entry.data[CONF_DOMAIN],
                     },
                     retry_after=retry_after,
                 )
@@ -76,7 +76,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
                 translation_placeholders={
-                    CONF_DOMAIN: self.config_entry.data[CONF_DOMAIN],
+                    "domain": self.config_entry.data[CONF_DOMAIN],
                 },
                 retry_after=retry_after,
             ) from e

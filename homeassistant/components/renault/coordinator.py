@@ -1,27 +1,35 @@
 """Proxy to handle account communication with Renault servers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
     KamereonResponseException,
     NotSupportedException,
     QuotaLimitException,
 )
-from renault_api.kamereon.models import KamereonVehicleDataAttributes
+from renault_api.kamereon.models import (
+    KamereonVehicleDataAttributes,
+    KamereonVehiclesLink,
+)
+from renault_api.renault_account import RenaultAccount
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN, VEHICLE_LIST_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
+
+_LOGGER = logging.getLogger(__name__)
 
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
@@ -62,12 +70,16 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
         self._has_already_worked = False
         self._hub = hub
 
+    @override
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
 
         if self._hub.is_throttled():
             if not self._has_already_worked:
-                raise UpdateFailed("Renault hub currently throttled: init skipped")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="throttled",
+                )
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator. last_update_success should still be ok
@@ -85,7 +97,10 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
             if not self._has_already_worked:
                 self.update_interval = None
                 self.access_denied = True
-            raise UpdateFailed(f"This endpoint is denied: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="endpoint_denied",
+            ) from err
 
         except QuotaLimitException as err:
             # The data we got is not bad per see, initiate cooldown for all coordinators
@@ -95,22 +110,38 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
                 self.logger.warning("Renault API throttled")
                 return self.data
 
-            raise UpdateFailed(f"Renault API throttled: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="throttled",
+            ) from err
 
         except NotSupportedException as err:
             # Disable because the vehicle does not support this Renault endpoint.
             self.update_interval = None
             self.not_supported = True
-            raise UpdateFailed(f"This endpoint is not supported: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="endpoint_not_supported",
+            ) from err
+
+        except NotAuthenticatedException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
 
         except KamereonResponseException as err:
             # Other Renault errors.
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
 
         self._has_already_worked = True
         self.assumed_state = False
         return data
 
+    @override
     async def async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup.
 
@@ -118,3 +149,58 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
         but only updating the `access_denied` and `not_supported` flags.
         """
         await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
+
+
+class RenaultVehicleListCoordinator(DataUpdateCoordinator[list[KamereonVehiclesLink]]):
+    """Handle the list of vehicles linked to the Kamereon account."""
+
+    config_entry: RenaultConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RenaultConfigEntry,
+        hub: RenaultHub,
+        account: RenaultAccount,
+    ) -> None:
+        """Initialise coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{account.account_id} vehicles",
+            update_interval=VEHICLE_LIST_SCAN_INTERVAL,
+        )
+        self._account = account
+        self._hub = hub
+
+    @override
+    async def _async_update_data(self) -> list[KamereonVehiclesLink]:
+        """Fetch the latest vehicle list from the source."""
+        if self._hub.is_throttled():
+            return self.data
+
+        try:
+            async with _PARALLEL_SEMAPHORE:
+                vehicles = await self._account.get_vehicles()
+
+        except QuotaLimitException as err:
+            self._hub.set_throttled()
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="throttled",
+            ) from err
+
+        except NotAuthenticatedException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
+
+        except KamereonResponseException as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+
+        return vehicles.vehicleLinks or []

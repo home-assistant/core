@@ -1,9 +1,11 @@
 """Tests for the SolarEdge config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import (
@@ -19,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry
 
 NAME = "solaredge site 1 2 3"
 
@@ -147,6 +147,7 @@ async def test_user_both_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_abort_if_already_setup(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -158,9 +159,15 @@ async def test_abort_if_already_setup(
 
     # Should fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -169,22 +176,38 @@ async def test_abort_if_already_setup(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_SITE_ID: "already_configured"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "test",
+            CONF_SITE_ID: "other_site_id",
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_ignored_entry_does_not_cause_error(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test an ignored entry does not cause and error and we can still create an new entry."""
+    """Test an ignored entry does not cause an error on new entry."""
     MockConfigEntry(
-        domain="solaredge",
+        domain=DOMAIN,
         data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},
         source=SOURCE_IGNORE,
     ).add_to_hass(hass)
 
     # Should not fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -199,6 +222,7 @@ async def test_ignored_entry_does_not_cause_error(
     assert data[CONF_API_KEY] == "test"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test error when no authentication method is provided."""
     result = await hass.config_entries.flow.async_init(
@@ -210,6 +234,16 @@ async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) ->
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "auth_missing"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: NAME,
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -238,9 +272,14 @@ async def test_api_key_errors(
         CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -406,4 +445,77 @@ async def test_reconfigure_flow_web_login_and_errors(
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
     }
+    assert mock_setup_entry.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        pytest.param(
+            {
+                CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
+                CONF_SECTION_WEB_AUTH: {
+                    CONF_USERNAME: USERNAME,
+                    CONF_PASSWORD: PASSWORD,
+                },
+            },
+            {
+                CONF_SITE_ID: SITE_ID,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+            id="clear_api_key",
+        ),
+        pytest.param(
+            {
+                CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+                CONF_SECTION_WEB_AUTH: {CONF_USERNAME: "", CONF_PASSWORD: ""},
+            },
+            {CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+            id="clear_web_login",
+        ),
+    ],
+)
+async def test_reconfigure_flow_removes_credentials(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    solaredge_api: Mock,
+    solaredge_web_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test credentials can be removed via the reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        data={
+            CONF_SITE_ID: SITE_ID,
+            CONF_API_KEY: API_KEY,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reconfigure"
+
+    schema = result["data_schema"].schema
+    api_schema = schema[CONF_SECTION_API_AUTH].schema.schema
+    web_schema = schema[CONF_SECTION_WEB_AUTH].schema.schema
+    assert get_schema_suggested_value(api_schema, CONF_API_KEY) == API_KEY
+    assert get_schema_suggested_value(web_schema, CONF_USERNAME) == USERNAME
+    assert get_schema_suggested_value(web_schema, CONF_PASSWORD) == PASSWORD
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reconfigure_successful"
+
+    await hass.async_block_till_done()
+
+    assert entry.data == expected_data
     assert mock_setup_entry.call_count == 1

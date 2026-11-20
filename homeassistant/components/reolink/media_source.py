@@ -1,11 +1,9 @@
 """Expose Reolink IP camera VODs as media sources."""
 
-from __future__ import annotations
-
 import datetime as dt
 import logging
+from typing import override
 
-from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
 from reolink_aio.typings import VOD_trigger
 
@@ -24,11 +22,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .util import get_host
-from .views import async_generate_playback_proxy_url
+from .views import async_generate_playback_proxy_url, async_generate_thumbnail_url
 
 _LOGGER = logging.getLogger(__name__)
 
 VOD_SPLIT_TIME = dt.timedelta(minutes=5)
+THUMBNAIL_OFFSET = dt.timedelta(seconds=5)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
@@ -59,13 +58,18 @@ class ReolinkVODMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = ["UNKNOWN"]
         if item.identifier is not None:
             identifier = item.identifier.split("|", 6)
         if identifier[0] != "FILE":
-            raise Unresolvable(f"Unknown media item '{item.identifier}'.")
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="unknown_media_item",
+                translation_placeholders={"identifier": str(item.identifier)},
+            )
 
         _, config_entry_id, channel_str, stream_res, filename, start_time, end_time = (
             identifier
@@ -75,17 +79,15 @@ class ReolinkVODMediaSource(MediaSource):
         host = get_host(self.hass, config_entry_id)
 
         def get_vod_type() -> VodRequestType:
-            if filename.endswith((".mp4", ".vref")) or host.api.is_hub:
-                if host.api.is_nvr:
-                    return VodRequestType.DOWNLOAD
-                return VodRequestType.PLAYBACK
             if host.api.is_nvr:
                 return VodRequestType.NVR_DOWNLOAD
+            if filename.endswith((".mp4", ".vref")):
+                return VodRequestType.PLAYBACK
             return VodRequestType.RTMP
 
         vod_type = get_vod_type()
 
-        if vod_type == VodRequestType.NVR_DOWNLOAD:
+        if vod_type is VodRequestType.NVR_DOWNLOAD:
             filename = f"{start_time}_{end_time}"
 
         if vod_type in {
@@ -114,6 +116,7 @@ class ReolinkVODMediaSource(MediaSource):
         stream_url = stream_url.replace("master_", "")
         return PlayMedia(stream_url, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -174,7 +177,11 @@ class ReolinkVODMediaSource(MediaSource):
                 event,
             )
 
-        raise Unresolvable(f"Unknown media item '{item.identifier}' during browsing.")
+        raise Unresolvable(
+            translation_domain=DOMAIN,
+            translation_key="unknown_media_item",
+            translation_placeholders={"identifier": str(item.identifier)},
+        )
 
     async def _async_generate_root(self) -> BrowseMediaSource:
         """Return all available reolink cameras as root browsing structure."""
@@ -207,14 +214,15 @@ class ReolinkVODMediaSource(MediaSource):
                     ch = host.api.channel_for_uid(ch_id)
 
                 if not host.api.supported(int(ch), "replay") or not host.api.hdd_info:
-                    # playback stream not supported by this camera or no storage installed
+                    # playback stream not supported by this
+                    # camera or no storage installed
                     continue
 
                 device_name = device.name
                 if device.name_by_user is not None:
                     device_name = device.name_by_user
 
-                if host.api.model in DUAL_LENS_MODELS:
+                if host.api.is_dual_lens:
                     device_name = f"{device_name} lens {ch}"
 
                 children.append(
@@ -244,7 +252,7 @@ class ReolinkVODMediaSource(MediaSource):
     async def _async_generate_resolution_select(
         self, config_entry_id: str, channel: int
     ) -> BrowseMediaSource:
-        """Allow the user to select the high or low playback resolution, (low loads faster)."""
+        """Allow the user to select the high or low playback resolution."""
         host = get_host(self.hass, config_entry_id)
 
         main_enc = await host.api.get_encoding(channel, "main")
@@ -255,53 +263,36 @@ class ReolinkVODMediaSource(MediaSource):
                 host.api.camera_name(channel),
             )
 
+        # some cameras only have a main stream, no sub stream
+        streams = [("main", "High resolution")]
+        if host.api.supported(channel, "sub"):
+            streams.insert(0, ("sub", "Low resolution"))
+        if host.api.supported(channel, "autotrack_stream"):
+            if host.api.supported(channel, "sub"):
+                streams.append(("autotrack_sub", "Telephoto low resolution"))
+            streams.append(("autotrack_main", "Telephoto high resolution"))
+
+        if len(streams) == 1:
+            # only one resolution available, skip the resolution select
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, streams[0][0]
+            )
+
         children = [
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|sub",
+                identifier=f"RES|{config_entry_id}|{channel}|{stream}",
                 media_class=MediaClass.CHANNEL,
                 media_content_type=MediaType.PLAYLIST,
-                title="Low resolution",
+                title=stream_title,
                 can_play=False,
                 can_expand=True,
-            ),
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|main",
-                media_class=MediaClass.CHANNEL,
-                media_content_type=MediaType.PLAYLIST,
-                title="High resolution",
-                can_play=False,
-                can_expand=True,
-            ),
+            )
+            for stream, stream_title in streams
         ]
 
-        if host.api.supported(channel, "autotrack_stream"):
-            children.extend(
-                [
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
-                        media_class=MediaClass.CHANNEL,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Telephoto low resolution",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                    BrowseMediaSource(
-                        domain=DOMAIN,
-                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
-                        media_class=MediaClass.CHANNEL,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Telephoto high resolution",
-                        can_play=False,
-                        can_expand=True,
-                    ),
-                ]
-            )
-
         title = host.api.camera_name(channel)
-        if host.api.model in DUAL_LENS_MODELS:
+        if host.api.is_dual_lens:
             title = f"{host.api.camera_name(channel)} lens {channel}"
 
         return BrowseMediaSource(
@@ -351,7 +342,7 @@ class ReolinkVODMediaSource(MediaSource):
         ]
 
         title = f"{host.api.camera_name(channel)} {res_name(stream)}"
-        if host.api.model in DUAL_LENS_MODELS:
+        if host.api.is_dual_lens:
             title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)}"
 
         return BrowseMediaSource(
@@ -418,12 +409,20 @@ class ReolinkVODMediaSource(MediaSource):
                 for trigger in triggers
             )
 
+        # A battery camera starts recording at the event, without pre-recording.
+        thumbnail_offset = (
+            dt.timedelta()
+            if host.api.supported(channel, "battery")
+            else THUMBNAIL_OFFSET
+        )
+
         for file in vod_files:
             file_name = f"{file.start_time.time()} {file.duration}"
             if file.triggers != file.triggers.NONE:
                 file_name += " " + " ".join(
                     str(trigger.name).title() for trigger in file.triggers
                 )
+            thumbnail_time = file.start_time + min(thumbnail_offset, file.duration / 2)
 
             children.append(
                 BrowseMediaSource(
@@ -434,14 +433,24 @@ class ReolinkVODMediaSource(MediaSource):
                     title=file_name,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=async_generate_thumbnail_url(
+                        config_entry_id,
+                        channel,
+                        stream,
+                        thumbnail_time.strftime("%Y%m%d%H%M%S"),
+                    ),
                 )
             )
 
         title = (
             f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
         )
-        if host.api.model in DUAL_LENS_MODELS:
-            title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)} {year}/{month}/{day}"
+        if host.api.is_dual_lens:
+            title = (
+                f"{host.api.camera_name(channel)} lens"
+                f" {channel} {res_name(stream)}"
+                f" {year}/{month}/{day}"
+            )
         if event:
             title = f"{title} {event.title()}"
 

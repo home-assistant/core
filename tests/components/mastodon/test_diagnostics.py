@@ -3,15 +3,14 @@
 from unittest.mock import AsyncMock
 
 from mastodon.Mastodon import MastodonNotFoundError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
@@ -36,7 +35,7 @@ async def test_entry_diagnostics_fallback_to_instance_v1(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test config entry diagnostics with fallback to instance_v1 when instance_v2 raises MastodonNotFoundError."""
+    """Test diagnostics fallback to instance_v1 when instance_v2 raises error."""
     mock_mastodon_client.instance_v2.side_effect = MastodonNotFoundError(
         "Instance v2 not found"
     )

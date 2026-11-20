@@ -1,4 +1,4 @@
-"""Errors for the Plex component."""
+"""Errors for the Plex integration."""
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -13,6 +13,10 @@ class NoServersFound(PlexException):
 
 class ServerNotSpecified(PlexException):
     """Multiple servers linked to account without choice provided."""
+
+
+class ServerNotFound(PlexException):
+    """Requested server not found on Plex account."""
 
 
 class ShouldUpdateConfigEntry(PlexException):

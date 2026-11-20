@@ -77,10 +77,18 @@ async def test_categorized_hidden_entities(
     assert not msg["payload"]["endpoints"]
 
 
-async def test_serialize_discovery(hass: HomeAssistant) -> None:
+async def test_serialize_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we can serialize a discovery."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
+    entity_entry = entity_registry.async_get_or_create(
+        "switch", "test", "bla", suggested_object_id="bla"
+    )
+    entity_registry.async_update_entity(
+        entity_entry.entity_id, aliases=["Alexa Switch"]
+    )
     hass.states.async_set("switch.bla", "on", {"friendly_name": "Boop Woz"})
 
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
@@ -89,6 +97,7 @@ async def test_serialize_discovery(hass: HomeAssistant) -> None:
     msg = msg["event"]
     endpoint = msg["payload"]["endpoints"][0]
 
+    assert endpoint["friendlyName"] == "Alexa Switch"
     assert endpoint["additionalAttributes"] == {
         "manufacturer": "Home Assistant",
         "model": "switch",
@@ -313,7 +322,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": ["on", "auto"],
                 "operation_mode": "auto",
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             True,
         ),
@@ -323,7 +334,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": ["on"],
                 "operation_mode": None,
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             True,
         ),
@@ -333,7 +346,9 @@ async def test_serialize_discovery_recovers(
             {
                 "operation_list": [],
                 "operation_mode": None,
-                "supported_features": water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value,
+                "supported_features": (
+                    water_heater.WaterHeaterEntityFeature.OPERATION_MODE.value
+                ),
             },
             False,
         ),
@@ -346,10 +361,12 @@ async def test_mode_controller_is_omitted_if_no_modes_are_set(
     state_attributes: dict[str, Any],
     mode_controller_exists: bool,
 ) -> None:
-    """Test we do not generate an invalid discovery with AlexaModeController during serialize discovery.
+    """Test we do not generate an invalid AlexaModeController discovery.
 
-    AlexModeControllers need at least 2 modes. If one mode is set, an extra mode will be added for compatibility.
-    If no modes are offered, the mode controller should be omitted to prevent schema validations.
+    AlexModeControllers need at least 2 modes. If one mode is
+    set, an extra mode will be added for compatibility. If no
+    modes are offered, the mode controller should be omitted to
+    prevent schema validations.
     """
     request = get_new_request("Alexa.Discovery", "Discover")
 

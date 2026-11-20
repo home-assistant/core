@@ -1,5 +1,14 @@
 {
   "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:store",
+        "state": {
+          "off": "mdi:store-off",
+          "on": "mdi:store"
+        }
+      }
+    },
     "sensor": {
       "diesel": {
         "default": "mdi:gas-station"
@@ -10,6 +19,11 @@
       "e5": {
         "default": "mdi:gas-station"
       }
+    }
+  },
+  "services": {
+    "get_opening_times": {
+      "service": "mdi:clock-outline"
     }
   }
 }

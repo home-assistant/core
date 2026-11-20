@@ -1,7 +1,5 @@
 """The Hypontech Cloud integration."""
 
-from __future__ import annotations
-
 from hyponcloud import AuthenticationError, HyponCloud, RequestError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -9,18 +7,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_OEM, DEFAULT_OEM
 from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> None:
     """Set up Hypontech Cloud from a config entry."""
     session = async_get_clientsession(hass)
     hypontech_cloud = HyponCloud(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         session,
+        oem=int(entry.data.get(CONF_OEM, DEFAULT_OEM)),
     )
     try:
         await hypontech_cloud.connect()
@@ -39,9 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

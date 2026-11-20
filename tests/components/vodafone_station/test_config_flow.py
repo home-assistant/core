@@ -9,6 +9,7 @@ from aiovodafone.exceptions import (
     ModelNotSupported,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.vodafone_station.const import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_HOST, TEST_PASSWORD, TEST_TYPE, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_user(
@@ -72,10 +71,10 @@ async def test_user(
         (ConnectionResetError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exception_connection(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -151,10 +150,10 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_successful(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test starting a reauthentication flow."""
@@ -183,10 +182,10 @@ async def test_reauth_successful(
         (ConnectionResetError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_not_successful(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
@@ -223,10 +222,10 @@ async def test_reauth_not_successful(
     assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test options flow."""
@@ -245,10 +244,10 @@ async def test_options_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_successful(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the host can be reconfigured."""
@@ -288,10 +287,10 @@ async def test_reconfigure_successful(
         (ConnectionResetError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_fails(
     hass: HomeAssistant,
     mock_vodafone_station_router: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,

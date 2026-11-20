@@ -4,20 +4,20 @@ from datetime import timedelta
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -25,9 +25,10 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCXG-9VE-N2IUAIWI"
+uid = (
+    "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU"
+    "-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCXG-9VE-N2IUAIWI"
+)
 
 
 async def test_climate_get_state(
@@ -37,7 +38,9 @@ async def test_climate_get_state(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test states of the climate."""
-    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device_by_identifier(
+        ("freedompro", uid), init_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -109,8 +112,11 @@ async def test_climate_set_off(
     ) as mock_put_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+            },
             blocking=True,
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"heatingCoolingState": 0}')
@@ -139,8 +145,11 @@ async def test_climate_set_unsupported_hvac_mode(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.AUTO},
+            ClimateService.SET_HVAC_MODE,
+            {
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            },
             blocking=True,
         )
 
@@ -166,11 +175,11 @@ async def test_climate_set_temperature(
     ) as mock_put_state:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
+            ClimateService.SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: [entity_id],
-                ATTR_HVAC_MODE: HVACMode.OFF,
-                ATTR_TEMPERATURE: 25,
+                TargetKey.ENTITY_ID: [entity_id],
+                ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
+                ClimateServiceArgument.TEMPERATURE: 25,
             },
             blocking=True,
         )
@@ -210,11 +219,11 @@ async def test_climate_set_temperature_unsupported_hvac_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_HVAC_MODE: HVACMode.AUTO,
-            ATTR_TEMPERATURE: 25,
+            TargetKey.ENTITY_ID: [entity_id],
+            ClimateServiceArgument.HVAC_MODE: HVACMode.AUTO,
+            ClimateServiceArgument.TEMPERATURE: 25,
         },
         blocking=True,
     )

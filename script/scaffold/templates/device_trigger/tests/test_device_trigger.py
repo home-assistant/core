@@ -1,5 +1,6 @@
 """The tests for NEW_NAME device triggers."""
 
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -9,8 +10,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -73,10 +72,13 @@ async def test_if_fires_on_state_change(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "turn_on - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
-                                "{{ trigger.id}}"
+                                "turn_on"
+                                " - {{ trigger.platform}}"
+                                " - {{ trigger.entity_id}}"
+                                " - {{ trigger.from_state.state}}"
+                                " - {{ trigger.to_state.state}}"
+                                " - {{ trigger.for }}"
+                                " - {{ trigger.id}}"
                             )
                         },
                     },
@@ -93,10 +95,13 @@ async def test_if_fires_on_state_change(
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "turn_off - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }} - "
-                                "{{ trigger.id}}"
+                                "turn_off"
+                                " - {{ trigger.platform}}"
+                                " - {{ trigger.entity_id}}"
+                                " - {{ trigger.from_state.state}}"
+                                " - {{ trigger.to_state.state}}"
+                                " - {{ trigger.for }}"
+                                " - {{ trigger.id}}"
                             )
                         },
                     },

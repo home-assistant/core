@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('pyload', 'XXXXXXXXXXXXXX')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,7 +39,7 @@
 # name: test_state[button.pyload_abort_all_running_downloads-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Abort all running downloads',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Abort all running downloads',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_abort_all_running_downloads',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('pyload', 'XXXXXXXXXXXXXX')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -89,7 +89,7 @@
 # name: test_state[button.pyload_delete_finished_files_packages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Delete finished files/packages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Delete finished files/packages',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_delete_finished_files_packages',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('pyload', 'XXXXXXXXXXXXXX')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -139,7 +139,7 @@
 # name: test_state[button.pyload_restart_all_failed_files-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Restart all failed files',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Restart all failed files',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_restart_all_failed_files',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('pyload', 'XXXXXXXXXXXXXX')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -189,7 +189,7 @@
 # name: test_state[button.pyload_restart_pyload_core-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'pyLoad Restart pyload core',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'pyLoad Restart pyload core',
     }),
     'context': <ANY>,
     'entity_id': 'button.pyload_restart_pyload_core',

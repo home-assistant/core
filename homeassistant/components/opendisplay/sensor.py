@@ -1,9 +1,8 @@
 """Sensor platform for OpenDisplay devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from opendisplay import voltage_to_percent
 from opendisplay.models.advertisement import AdvertisementData
@@ -99,6 +98,7 @@ class OpenDisplaySensorEntity(OpenDisplayEntity, SensorEntity):
     entity_description: OpenDisplaySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the sensor value."""
         if self.coordinator.data is None:

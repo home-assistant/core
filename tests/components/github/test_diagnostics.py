@@ -3,14 +3,14 @@
 from unittest.mock import AsyncMock
 
 from aiogithubapi import GitHubException
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
@@ -18,6 +18,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     github_client: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     await setup_integration(hass, mock_config_entry)
@@ -27,14 +28,7 @@ async def test_entry_diagnostics(
         mock_config_entry,
     )
 
-    assert result["options"]["repositories"] == ["octocat/Hello-World"]
-    assert result["rate_limit"] == {
-        "resources": {"core": {"remaining": 100, "limit": 100}}
-    }
-    assert (
-        result["repositories"]["octocat/Hello-World"]["full_name"]
-        == "octocat/Hello-World"
-    )
+    assert result == snapshot
 
 
 async def test_entry_diagnostics_exception(

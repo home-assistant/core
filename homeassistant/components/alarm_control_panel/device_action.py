@@ -1,34 +1,30 @@
 """Provides device automations for Alarm control panel."""
 
-from __future__ import annotations
-
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
-    ATTR_CODE,
     ATTR_ENTITY_ID,
     CONF_CODE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
-from .const import AlarmControlPanelEntityFeature
+from .const import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
+    AlarmControlPanelService,
+    AlarmControlPanelServiceArgument,
+)
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",
@@ -41,9 +37,9 @@ ACTION_TYPES: Final[set[str]] = {
 
 _ACTION_SCHEMA: Final = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional(CONF_CODE): cv.string,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional(CONF_CODE): cv.string,
     }
 )
 
@@ -100,20 +96,20 @@ async def async_call_action_from_config(
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
     if CONF_CODE in config:
-        service_data[ATTR_CODE] = config[CONF_CODE]
+        service_data[AlarmControlPanelServiceArgument.CODE] = config[CONF_CODE]
 
     if config[CONF_TYPE] == "arm_away":
-        service = SERVICE_ALARM_ARM_AWAY
+        service = AlarmControlPanelService.ARM_AWAY
     elif config[CONF_TYPE] == "arm_home":
-        service = SERVICE_ALARM_ARM_HOME
+        service = AlarmControlPanelService.ARM_HOME
     elif config[CONF_TYPE] == "arm_night":
-        service = SERVICE_ALARM_ARM_NIGHT
+        service = AlarmControlPanelService.ARM_NIGHT
     elif config[CONF_TYPE] == "arm_vacation":
-        service = SERVICE_ALARM_ARM_VACATION
+        service = AlarmControlPanelService.ARM_VACATION
     elif config[CONF_TYPE] == "disarm":
-        service = SERVICE_ALARM_DISARM
+        service = AlarmControlPanelService.DISARM
     elif config[CONF_TYPE] == "trigger":
-        service = SERVICE_ALARM_TRIGGER
+        service = AlarmControlPanelService.TRIGGER
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
@@ -122,18 +118,22 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
-    # We need to refer to the state directly because ATTR_CODE_ARM_REQUIRED is not a
+    # We need to refer to the state directly because CODE_ARM_REQUIRED is not a
     # capability attribute
     registry = er.async_get(hass)
     entity_id = er.async_resolve_entity_id(registry, config[CONF_ENTITY_ID])
     state = hass.states.get(entity_id) if entity_id else None
-    code_required = state.attributes.get(ATTR_CODE_ARM_REQUIRED) if state else False
+    code_required = (
+        state.attributes.get(AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED)
+        if state
+        else False
+    )
 
     if config[CONF_TYPE] == "trigger" or (
         config[CONF_TYPE] != "disarm" and not code_required
     ):
         return {}
 
-    return {"extra_fields": vol.Schema({vol.Optional(CONF_CODE): str})}
+    return {"extra_fields": probatio.Schema({probatio.Optional(CONF_CODE): str})}

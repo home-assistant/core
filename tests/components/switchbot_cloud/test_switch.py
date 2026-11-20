@@ -2,20 +2,20 @@
 
 from unittest.mock import patch
 
+import pytest
 from switchbot_api import Device
+from switchbot_api.exceptions import (
+    SwitchBotConnectionError,
+    SwitchBotDeviceOfflineError,
+    SwitchBotError,
+)
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, TargetKey
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import configure_integration
 
@@ -44,13 +44,19 @@ async def test_relay_switch(
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -93,13 +99,19 @@ async def test_switchmode_bot(
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_ON
 
     with patch.object(SwitchBotAPI, "send_command"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     assert hass.states.get(entity_id).state == STATE_OFF
 
@@ -162,7 +174,10 @@ async def test_switch_relay_2pm_turn_on(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called_once()
 
@@ -191,7 +206,10 @@ async def test_switch_relay_2pm_turn_off(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )
     mock_send_command.assert_called_once()
 
@@ -217,3 +235,47 @@ async def test_switch_relay_2pm_coordination_is_none(
 
     entity_id = "switch.relay_switch_1_channel_1"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("api_error", "translation_key"),
+    [
+        (SwitchBotDeviceOfflineError("offline"), "device_offline"),
+        (SwitchBotConnectionError("conn"), "connection_error"),
+        (SwitchBotError("boom"), "command_failed"),
+    ],
+)
+async def test_switch_api_error_is_translated(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    api_error: Exception,
+    translation_key: str,
+) -> None:
+    """Library exceptions are translated to HomeAssistantError so script flags work."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-id-1",
+            deviceName="relay-switch-1",
+            deviceType="Relay Switch 1",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch.object(SwitchBotAPI, "send_command", side_effect=api_error),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.relay_switch_1"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.__cause__ is api_error

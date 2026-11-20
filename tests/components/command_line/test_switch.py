@@ -1,7 +1,5 @@
 """The tests for the Command line switch platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import json
@@ -11,6 +9,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
@@ -19,40 +18,22 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SCAN_INTERVAL
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SCAN_INTERVAL,
+    SwitchService,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "switch",
-        {
-            "switch": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:
@@ -82,8 +63,8 @@ async def test_state_integration_yaml(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -93,8 +74,8 @@ async def test_state_integration_yaml(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -119,7 +100,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if value=="1" %} mdi:on'
+                                " {% else %} mdi:off {% endif %}"
                             ),
                             "name": "Test",
                         }
@@ -135,8 +117,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -147,8 +129,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -194,8 +176,8 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -206,8 +188,8 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -245,8 +227,8 @@ async def test_state_code(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -256,8 +238,8 @@ async def test_state_code(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
 
@@ -346,7 +328,9 @@ async def test_name_is_set_correctly(hass: HomeAssistant) -> None:
 
 
 async def test_switch_command_state_fail(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch failures are handled correctly."""
     await setup.async_setup_component(
@@ -367,7 +351,8 @@ async def test_switch_command_state_fail(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
@@ -376,8 +361,8 @@ async def test_switch_command_state_fail(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.test"},
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.test"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -390,7 +375,9 @@ async def test_switch_command_state_fail(
 
 
 async def test_switch_command_state_code_exceptions(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
@@ -413,20 +400,24 @@ async def test_switch_command_state_code_exceptions(
         )
         await hass.async_block_till_done()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.called
         assert "Timeout for command" in caplog.text
 
     with mock_asyncio_subprocess_run(returncode=127) as run:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.called
         assert "Error trying to exec command" in caplog.text
 
 
 async def test_switch_command_state_value_exceptions(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
@@ -450,13 +441,15 @@ async def test_switch_command_state_value_exceptions(
         )
         await hass.async_block_till_done()
 
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
     with mock_asyncio_subprocess_run(returncode=127) as run:
-        async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert run.call_count == 1
         assert "Command failed (with return code 127)" in caplog.text
@@ -531,7 +524,10 @@ async def test_command_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}, blocking=True
+        SWITCH_DOMAIN,
+        SwitchService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "switch.test"},
+        blocking=True,
     )
     assert "return code 33" in caplog.text
 
@@ -552,7 +548,10 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
+                                "{% if this.attributes.icon=="
+                                '"mdi:icon2" %} mdi:icon1'
+                                " {% else %} mdi:icon2"
+                                " {% endif %}"
                             ),
                             "name": "Test",
                         }
@@ -564,7 +563,10 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test")=="off" %} mdi:off {% else %} mdi:on {% endif %}'
+                                '{% if states("switch.test")=='
+                                '"off" %} mdi:off'
+                                " {% else %} mdi:on"
+                                " {% endif %}"
                             ),
                             "name": "Test2",
                         },
@@ -581,14 +583,14 @@ async def test_templating(hass: HomeAssistant) -> None:
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test"},
             blocking=True,
         )
         await hass.services.async_call(
             SWITCH_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.test2"},
+            SwitchService.TURN_ON,
+            {TargetKey.ENTITY_ID: "switch.test2"},
             blocking=True,
         )
 
@@ -601,7 +603,9 @@ async def test_templating(hass: HomeAssistant) -> None:
 
 
 async def test_updating_to_often(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling updating when command already running."""
 
@@ -643,37 +647,42 @@ async def test_updating_to_often(
 
     assert not called
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert called
     called.clear()
 
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
     wait_till_event.clear()
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await asyncio.sleep(0)
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     wait_till_event.set()
 
     # Finish processing update
     await hass.async_block_till_done()
     assert called
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
 async def test_updating_manually(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handling manual updating using homeassistant udate_entity service."""
     await setup.async_setup_component(hass, HA_DOMAIN, {})
@@ -709,7 +718,8 @@ async def test_updating_manually(
         )
         await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert called
     called.clear()

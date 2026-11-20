@@ -1,20 +1,22 @@
 """Tests for the AdGuard Home switch entity."""
 
 from collections.abc import Callable
-import logging
 from typing import Any
 from unittest.mock import AsyncMock
 
-from adguardhome import AdGuardHomeError
+from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.adguard.const import DOMAIN
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
+from homeassistant.helpers.entity_component import async_update_entity
 
 
 @pytest.fixture
@@ -111,6 +113,8 @@ async def test_switch_actions(
     call_assertion: Callable[[AsyncMock], Any],
 ) -> None:
     """Test the adguard switch actions."""
+    mock_adguard.status.reset_mock()
+
     await hass.services.async_call(
         "switch",
         service,
@@ -119,6 +123,9 @@ async def test_switch_actions(
     )
 
     call_assertion(mock_adguard)
+
+    # The new state is fetched right away, instead of on the next poll.
+    mock_adguard.status.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -137,20 +144,37 @@ async def test_switch_actions(
 async def test_switch_action_failed(
     hass: HomeAssistant,
     mock_adguard: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
     service: str,
     expected_message: str,
 ) -> None:
     """Test the adguard switch actions."""
-    caplog.set_level(logging.ERROR)
-
     mock_adguard.enable_protection.side_effect = AdGuardHomeError("Boom")
     mock_adguard.disable_protection.side_effect = AdGuardHomeError("Boom")
 
-    await hass.services.async_call(
-        "switch",
-        service,
-        {ATTR_ENTITY_ID: "switch.adguard_home_protection"},
-        blocking=True,
-    )
-    assert expected_message in caplog.text
+    with pytest.raises(HomeAssistantError, match=expected_message):
+        await hass.services.async_call(
+            "switch",
+            service,
+            {ATTR_ENTITY_ID: "switch.adguard_home_protection"},
+            blocking=True,
+        )
+
+
+async def test_switch_authentication_failed(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test credentials rejected while running make the switch ask for new ones."""
+    mock_adguard.parental.enabled.side_effect = AdGuardHomeAuthenticationError("Nope")
+
+    await async_update_entity(hass, "switch.adguard_home_parental_control")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.adguard_home_parental_control")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

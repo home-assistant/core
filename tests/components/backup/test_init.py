@@ -4,16 +4,16 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
+from homeassistant.components.backup.services import BackupService
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntryState
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceNotFound, Unauthorized
 
 from .common import setup_backup_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("supervisor_client")
@@ -40,7 +40,7 @@ async def test_create_service(
     ) as generate_backup:
         await hass.services.async_call(
             DOMAIN,
-            "create",
+            BackupService.CREATE,
             blocking=True,
             service_data=service_data,
         )
@@ -63,7 +63,7 @@ async def test_create_service_with_hassio(hass: HomeAssistant) -> None:
     await setup_backup_integration(hass, with_hassio=True)
 
     with pytest.raises(ServiceNotFound):
-        await hass.services.async_call(DOMAIN, "create", blocking=True)
+        await hass.services.async_call(DOMAIN, BackupService.CREATE, blocking=True)
 
 
 @pytest.mark.parametrize(
@@ -137,7 +137,7 @@ async def test_create_automatic_service(
     ) as generate_backup:
         await hass.services.async_call(
             DOMAIN,
-            "create_automatic",
+            BackupService.CREATE_AUTOMATIC,
             blocking=True,
             service_data=service_data,
         )
@@ -157,3 +157,30 @@ async def test_setup_entry(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("service", "with_hassio"),
+    [
+        (BackupService.CREATE, False),
+        (BackupService.CREATE_AUTOMATIC, False),
+        (BackupService.CREATE_AUTOMATIC, True),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
+async def test_services_require_admin(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service: str,
+    with_hassio: bool,
+) -> None:
+    """Test backup services require admin."""
+    await setup_backup_integration(hass, with_hassio=with_hassio)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            context=Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )

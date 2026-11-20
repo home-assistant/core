@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from total_connect_client.location import TotalConnectLocation
 from total_connect_client.zone import TotalConnectZone
@@ -75,6 +76,7 @@ class TotalConnectZoneBypassButton(TotalConnectZoneEntity, ButtonEntity):
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, zone, location_id, "bypass")
 
+    @override
     def press(self) -> None:
         """Press the bypass button."""
         self._zone.bypass()
@@ -96,6 +98,7 @@ class TotalConnectPanelButton(TotalConnectLocationEntity, ButtonEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{location.location_id}_{entity_description.key}"
 
+    @override
     def press(self) -> None:
         """Press the button."""
         self.entity_description.press_fn(self._location)

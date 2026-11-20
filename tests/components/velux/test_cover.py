@@ -1,8 +1,14 @@
 """Tests for the Velux cover platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
+from pyvlx.const import Velocity
 from pyvlx.exception import PyVLXException
 from pyvlx.opening_device import (
     Awning,
@@ -14,34 +20,29 @@ from pyvlx.opening_device import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
+    CoverService,
+    CoverServiceArgument,
 )
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import update_callback_entity
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 # Apply setup_integration fixture to all tests in this module
 pytestmark = pytest.mark.usefixtures("setup_integration")
@@ -158,7 +159,7 @@ async def test_cover_closed(
 # Window command tests
 
 
-async def test_window_open_close_stop_services(
+async def test_window_open_close_stop_services_no_speed(
     hass: HomeAssistant, mock_window: AsyncMock
 ) -> None:
     """Verify open/close/stop services map to device calls with no wait."""
@@ -166,19 +167,116 @@ async def test_window_open_close_stop_services(
     entity_id = "cover.test_window"
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": entity_id}, blocking=True
     )
-    mock_window.open.assert_awaited_once_with(wait_for_completion=False)
+    mock_window.open.assert_awaited_once_with(velocity=None, wait_for_completion=False)
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": entity_id}, blocking=True
     )
-    mock_window.close.assert_awaited_once_with(wait_for_completion=False)
+    mock_window.close.assert_awaited_once_with(velocity=None, wait_for_completion=False)
 
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.STOP, {"entity_id": entity_id}, blocking=True
     )
     mock_window.stop.assert_awaited_once_with(wait_for_completion=False)
+
+
+@pytest.mark.parametrize(
+    ("speed", "velocity"),
+    [
+        pytest.param("slow", Velocity.SILENT, id="slow"),
+        pytest.param("fast", Velocity.FAST, id="fast"),
+        pytest.param("silent", Velocity.SILENT, id="deprecated_silent"),
+        pytest.param("default", None, id="deprecated_default"),
+    ],
+)
+async def test_window_services_with_speed(
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+    speed: str,
+    velocity: Velocity | None,
+) -> None:
+    """Verify the speed is mapped to the device velocity."""
+
+    entity_id = "cover.test_window"
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {"entity_id": entity_id, CoverServiceArgument.SPEED: speed},
+        blocking=True,
+    )
+    mock_window.open.assert_awaited_once_with(
+        velocity=velocity, wait_for_completion=False
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.CLOSE,
+        {"entity_id": entity_id, CoverServiceArgument.SPEED: speed},
+        blocking=True,
+    )
+    mock_window.close.assert_awaited_once_with(
+        velocity=velocity, wait_for_completion=False
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.SET_POSITION,
+        {
+            "entity_id": entity_id,
+            CoverServiceArgument.SPEED: speed,
+            CoverServiceArgument.POSITION: 50,
+        },
+        blocking=True,
+    )
+    mock_window.set_position.assert_awaited_once_with(
+        ANY,
+        velocity=velocity,
+        wait_for_completion=False,
+    )
+
+
+@pytest.mark.parametrize("speed", ["silent", "default"])
+@pytest.mark.usefixtures("mock_window")
+async def test_deprecated_speed_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a deprecated speed creates a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {"entity_id": "cover.test_window", CoverServiceArgument.SPEED: speed},
+        blocking=True,
+    )
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_speed_{speed}")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.6.0"
+    assert issue.translation_placeholders == {"entity_id": "cover.test_window"}
+    assert len(issue_registry.issues) == 1
+
+
+@pytest.mark.parametrize("speed", ["slow", "fast"])
+@pytest.mark.usefixtures("mock_window")
+async def test_standard_speed_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    speed: str,
+) -> None:
+    """Verify using a standard speed does not create a repair issue."""
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        CoverService.OPEN,
+        {"entity_id": "cover.test_window", CoverServiceArgument.SPEED: speed},
+        blocking=True,
+    )
+
+    assert len(issue_registry.issues) == 0
 
 
 async def test_window_set_cover_position_inversion(
@@ -191,8 +289,8 @@ async def test_window_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -201,6 +299,7 @@ async def test_window_set_cover_position_inversion(
     position_obj = args[0]
     assert position_obj.position_percent == 70
     assert kwargs.get("wait_for_completion") is False
+    assert kwargs.get("velocity") is None
 
 
 async def test_window_current_position_and_opening_closing_states(
@@ -235,6 +334,48 @@ async def test_window_current_position_and_opening_closing_states(
     assert state.state == STATE_CLOSING
 
 
+async def test_window_current_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """While moving, current_position follows the position estimated by pyvlx."""
+
+    entity_id = "cover.test_window"
+
+    # reported device position is 30, estimated position is 60 -> 40
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = None
+    mock_window.get_position.return_value = MagicMock(
+        position_percent=60, closed=False, known=True
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") == 40
+
+
+async def test_window_unknown_position_while_moving(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """An unknown reported position stays unknown while the cover moves."""
+
+    entity_id = "cover.test_window"
+
+    # pyvlx cannot estimate from an unknown position and raises
+    mock_window.position.known = False
+    mock_window.is_closing = True
+    mock_window.get_position.side_effect = PyVLXException(
+        "Position::percent_out_of_range"
+    )
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_CLOSING
+    assert state.attributes.get("current_position") is None
+
+
 # Dual roller shutter command tests
 async def test_dual_roller_shutter_open_close_services(
     hass: HomeAssistant, mock_dual_roller_shutter: AsyncMock
@@ -247,50 +388,50 @@ async def test_dual_roller_shutter_open_close_services(
 
     # Open upper part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": upper_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": upper_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
-        curtain="upper", wait_for_completion=False
+        curtain="upper", velocity=None, wait_for_completion=False
     )
 
     # Open lower part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": lower_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": lower_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
-        curtain="lower", wait_for_completion=False
+        curtain="lower", velocity=None, wait_for_completion=False
     )
 
     # Open dual
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {"entity_id": dual_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.OPEN, {"entity_id": dual_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.open.assert_awaited_with(
-        curtain="dual", wait_for_completion=False
+        curtain="dual", velocity=None, wait_for_completion=False
     )
 
     # Close upper part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": upper_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": upper_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
-        curtain="upper", wait_for_completion=False
+        curtain="upper", velocity=None, wait_for_completion=False
     )
 
     # Close lower part
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": lower_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": lower_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
-        curtain="lower", wait_for_completion=False
+        curtain="lower", velocity=None, wait_for_completion=False
     )
 
     # Close dual
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": dual_entity_id}, blocking=True
+        COVER_DOMAIN, CoverService.CLOSE, {"entity_id": dual_entity_id}, blocking=True
     )
     mock_dual_roller_shutter.close.assert_awaited_with(
-        curtain="dual", wait_for_completion=False
+        curtain="dual", velocity=None, wait_for_completion=False
     )
 
 
@@ -303,8 +444,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -319,8 +460,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -335,8 +476,8 @@ async def test_dual_shutter_set_cover_position_inversion(
     # Call with position 30 (=70% for device)
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": entity_id, ATTR_POSITION: 30},
+        CoverService.SET_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.POSITION: 30},
         blocking=True,
     )
 
@@ -406,7 +547,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
+        CoverService.OPEN_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -414,7 +555,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
+        CoverService.CLOSE_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -422,7 +563,7 @@ async def test_blind_open_close_stop_tilt_services(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER_TILT,
+        CoverService.STOP_TILT,
         {"entity_id": entity_id},
         blocking=True,
     )
@@ -438,8 +579,8 @@ async def test_blind_set_cover_tilt_position_inversion(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {"entity_id": entity_id, ATTR_TILT_POSITION: 25},
+        CoverService.SET_TILT_POSITION,
+        {"entity_id": entity_id, CoverServiceArgument.TILT_POSITION: 25},
         blocking=True,
     )
 
@@ -475,6 +616,77 @@ async def test_non_blind_has_no_tilt_position(
     assert "current_tilt_position" not in state.attributes
 
 
+# Unknown position tests
+
+
+async def test_window_unknown_position(
+    hass: HomeAssistant, mock_window: AsyncMock
+) -> None:
+    """When the device position is not known, state and position must be unknown."""
+
+    entity_id = "cover.test_window"
+
+    mock_window.position.known = False
+    await update_callback_entity(hass, mock_window)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+
+@pytest.mark.parametrize(
+    ("unknown_attr", "unknown_entity_id"),
+    [
+        ("position", "cover.test_dual_roller_shutter"),
+        ("position_upper_curtain", "cover.test_dual_roller_shutter_upper_shutter"),
+        ("position_lower_curtain", "cover.test_dual_roller_shutter_lower_shutter"),
+    ],
+)
+async def test_dual_roller_shutter_unknown_position(
+    hass: HomeAssistant,
+    mock_dual_roller_shutter: AsyncMock,
+    unknown_attr: str,
+    unknown_entity_id: str,
+) -> None:
+    """Each part falls back to unknown when only its position is unknown."""
+
+    all_entity_ids = {
+        "cover.test_dual_roller_shutter",
+        "cover.test_dual_roller_shutter_upper_shutter",
+        "cover.test_dual_roller_shutter_lower_shutter",
+    }
+
+    getattr(mock_dual_roller_shutter, unknown_attr).known = False
+    await update_callback_entity(hass, mock_dual_roller_shutter)
+
+    state = hass.states.get(unknown_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("current_position") is None
+
+    for entity_id in all_entity_ids - {unknown_entity_id}:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state != STATE_UNKNOWN
+        assert state.attributes.get("current_position") == 70
+
+
+async def test_blind_unknown_tilt_position(
+    hass: HomeAssistant, mock_blind: AsyncMock
+) -> None:
+    """Tilt position must be None when the orientation is not known."""
+
+    entity_id = "cover.test_blind"
+
+    mock_blind.orientation.known = False
+    await update_callback_entity(hass, mock_blind)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("current_tilt_position") is None
+
+
 # Exception handling tests
 
 
@@ -500,7 +712,7 @@ async def test_cover_command_exception_handling(
     ):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )

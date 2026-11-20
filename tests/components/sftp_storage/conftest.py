@@ -6,27 +6,23 @@ from unittest.mock import patch
 
 from asyncssh import generate_private_key
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DEFAULT_PKEY_NAME,
     DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ulid import ulid
 
 from .asyncssh_mock import SSHClientConnectionMock, async_context_manager
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 

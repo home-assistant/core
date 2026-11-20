@@ -1,10 +1,8 @@
 """Fully Kiosk Browser sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,8 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import FullyKioskConfigEntry
-from .coordinator import FullyKioskDataUpdateCoordinator
+from .coordinator import FullyKioskConfigEntry, FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
@@ -156,6 +153,7 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         super().__init__(coordinator)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         extra_state_attributes: dict[str, Any] = {}
         value = self.coordinator.data.get(self.entity_description.key)

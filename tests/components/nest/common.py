@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass
@@ -27,6 +25,8 @@ CLIENT_SECRET = "some-client-secret"
 CLOUD_PROJECT_ID = "cloud-id-9876"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 SUBSCRIPTION_NAME = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
+TOPIC_NAME = "projects/cloud-id-9876/topics/some-topic"
+LEGACY_TOPIC_NAME = f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
 
 
 @dataclass

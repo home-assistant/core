@@ -1,7 +1,5 @@
 """Describe assist_pipeline logbook events."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
@@ -23,10 +21,9 @@ def async_describe_events(
     @callback
     def async_describe_logbook_event(event: Event) -> dict[str, str]:
         """Describe logbook event."""
-        device: dr.DeviceEntry | None = None
-        device_name: str = "Unknown device"
+        device_name = "Unknown device"
 
-        device = device_registry.devices[event.data[ATTR_DEVICE_ID]]
+        device = device_registry.async_get(event.data[ATTR_DEVICE_ID])
         if device:
             device_name = device.name_by_user or device.name or "Unknown device"
 

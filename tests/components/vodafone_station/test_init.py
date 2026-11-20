@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.vodafone_station.const import (
     CONF_DEVICE_DETAILS,
@@ -16,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import TEST_HOST, TEST_PASSWORD, TEST_TYPE, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_reload_config_entry_with_options(
@@ -90,3 +90,21 @@ async def test_migrate_entry(
         DEVICE_TYPE: TEST_TYPE,
         DEVICE_URL: TEST_URL,
     }
+
+
+async def test_migrate_future_version_returns_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration failure for downgraded future config entry version."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_entry.data,
+        entry_id=mock_config_entry.entry_id,
+        version=2,
+        minor_version=0,
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

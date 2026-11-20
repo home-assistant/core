@@ -4,7 +4,6 @@
 CONF_COMMAND_TOPIC = "drop_command_topic"
 CONF_DATA_TOPIC = "drop_data_topic"
 CONF_DEVICE_DESC = "device_desc"
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_TYPE = "device_type"
 CONF_HUB_ID = "drop_hub_id"
 CONF_DEVICE_NAME = "name"

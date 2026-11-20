@@ -1,8 +1,6 @@
 """TOLO Sauna fan controls."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -34,22 +32,26 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         """Initialize TOLO fan entity."""
         super().__init__(coordinator, entry)
 
-        self._attr_unique_id = f"{entry.entry_id}_fan"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{entry.entry_id}_fan"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if sauna fan is running."""
         return self.coordinator.data.status.fan_on
 
-    def turn_on(
+    @override
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on sauna fan."""
-        self.coordinator.client.set_fan_on(True)
+        await self._async_send_command(lambda client: client.set_fan_on(True))
 
-    def turn_off(self, **kwargs: Any) -> None:
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
-        self.coordinator.client.set_fan_on(False)
+        await self._async_send_command(lambda client: client.set_fan_on(False))

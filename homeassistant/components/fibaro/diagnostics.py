@@ -1,7 +1,5 @@
 """Diagnostics support for fibaro integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -9,9 +7,10 @@ from pyfibaro.fibaro_device import DeviceModel
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
-from . import CONF_IMPORT_PLUGINS, FibaroConfigEntry
+from . import FibaroConfigEntry
+from .const import CONF_IMPORT_PLUGINS
 
 TO_REDACT = {"password"}
 
@@ -36,7 +35,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: FibaroConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: FibaroConfigEntry, device: AnyDeviceEntry
 ) -> Mapping[str, Any]:
     """Return diagnostics for a device."""
     controller = config_entry.runtime_data
@@ -51,6 +50,6 @@ async def async_get_device_diagnostics(
     filtered_devices = [
         device
         for device in devices
-        if ha_device_id in (device.fibaro_id, device.parent_fibaro_id)
+        if ha_device_id in (str(device.fibaro_id), str(device.parent_fibaro_id))
     ]
     return _create_diagnostics_data(config_entry, filtered_devices)

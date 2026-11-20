@@ -1,33 +1,34 @@
 """Support for Rituals Perfume Genie sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from pyrituals import Diffuser
+from ritualsgenie import RitualsGenieHub, RitualsGenieSensors, Sensor
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
-from .entity import DiffuserEntity
+from .coordinator import RitualsConfigEntry
+from .entity import DiffuserSensorsEntity, async_add_diffusers
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class RitualsSensorEntityDescription(SensorEntityDescription):
     """Class describing Rituals sensor entities."""
 
-    has_fn: Callable[[Diffuser], bool] = lambda _: True
-    value_fn: Callable[[Diffuser], int | str]
+    has_fn: Callable[[RitualsGenieHub], bool] = lambda _: True
+    sensor: Sensor
+    value_fn: Callable[[RitualsGenieSensors], int | str | None]
 
 
 ENTITY_DESCRIPTIONS = (
@@ -35,53 +36,69 @@ ENTITY_DESCRIPTIONS = (
         key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        value_fn=lambda diffuser: diffuser.battery_percentage,
-        has_fn=lambda diffuser: diffuser.has_battery,
+        sensor=Sensor.BATTERY,
+        value_fn=lambda sensors: sensors.battery_percentage,
+        has_fn=lambda hub: hub.has_battery,
     ),
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
-        value_fn=lambda diffuser: diffuser.fill,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        sensor=Sensor.FILL,
+        value_fn=lambda sensors: sensors.fill_percentage,
+        has_fn=lambda hub: Sensor.FILL in hub.supported_sensors,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
-        value_fn=lambda diffuser: diffuser.perfume,
+        sensor=Sensor.PERFUME,
+        value_fn=lambda sensors: sensors.perfume_name,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",
         translation_key="wifi_percentage",
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda diffuser: diffuser.wifi_percentage,
+        entity_registry_enabled_default=False,
+        sensor=Sensor.WIFI,
+        value_fn=lambda sensors: sensors.wifi_percentage,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RitualsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        RitualsSensorEntity(coordinator, description)
-        for coordinator in coordinators.values()
-        for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(coordinator.diffuser)
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsSensorEntity(
+                runtime_data.sensors[hublot], description, description.sensor
+            )
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+            if description.has_fn(runtime_data.hubs.data[hublot])
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
-class RitualsSensorEntity(DiffuserEntity, SensorEntity):
+class RitualsSensorEntity(DiffuserSensorsEntity, SensorEntity):
     """Representation of a diffuser sensor."""
 
     entity_description: RitualsSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self) -> str | int:
+    @override
+    def native_value(self) -> str | int | None:
         """Return the sensor value."""
-        return self.entity_description.value_fn(self.coordinator.diffuser)
+        if self.coordinator.data is None:
+            return None
+
+        return self.entity_description.value_fn(self.coordinator.data)

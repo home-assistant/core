@@ -1,7 +1,5 @@
 """The ntfy integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiontfy import Ntfy
@@ -16,7 +14,7 @@ from aiontfy.update import UpdateChecker
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -49,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> None:
     """Set up ntfy from a config entry."""
 
     session = async_get_clientsession(hass, entry.data.get(CONF_VERIFY_SSL, True))
@@ -94,11 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
 
     entry.runtime_data = NtfyRuntimeData(coordinator, version)
 
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=coordinator.device_info
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    return True
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: NtfyConfigEntry) -> None:
@@ -106,6 +106,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: NtfyConfigEntry) ->
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

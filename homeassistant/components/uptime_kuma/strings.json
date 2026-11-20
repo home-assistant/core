@@ -1,15 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_data": "Invalid data received, check the URL",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "version_unsupported": "Uptime Kuma 2.0.0 or newer is required"
     },
     "step": {
       "hassio_confirm": {
@@ -118,7 +117,10 @@
           "mongodb": "MongoDB",
           "mqtt": "MQTT",
           "mysql": "MySQL/MariaDB",
+          "ntp": "NTP",
+          "oracledb": "Oracle Database",
           "ping": "Ping",
+          "pm2": "PM2 Process",
           "port": "TCP port",
           "postgres": "PostgreSQL",
           "push": "Push",
@@ -126,6 +128,7 @@
           "radius": "RADIUS",
           "real_browser": "HTTP(s) - Browser engine",
           "redis": "Redis",
+          "sftp": "SFTP",
           "sip_options": "SIP OPTIONS Ping",
           "smtp": "SMTP",
           "snmp": "SNMP",
@@ -164,6 +167,9 @@
     },
     "request_failed_exception": {
       "message": "Connection to Uptime Kuma failed"
+    },
+    "unsupported_version": {
+      "message": "Uptime Kuma versions older than 2.0.0 are no longer supported. Please upgrade to Uptime Kuma 2.0.0 or newer to use this integration."
     },
     "update_check_failed": {
       "message": "Failed to check for latest Uptime Kuma update"

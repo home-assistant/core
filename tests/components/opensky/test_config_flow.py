@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_opensky.exceptions import OpenSkyUnauthenticatedError
 
 from homeassistant.components.opensky.const import (
@@ -14,6 +15,7 @@ from homeassistant.components.opensky.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_PASSWORD,
     CONF_RADIUS,
@@ -24,10 +26,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
 
-
-async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -37,9 +38,11 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_RADIUS: 10,
-            CONF_LATITUDE: 0.0,
-            CONF_LONGITUDE: 0.0,
+            CONF_LOCATION: {
+                CONF_RADIUS: 10,
+                CONF_LATITUDE: 0.0,
+                CONF_LONGITUDE: 0.0,
+            },
             CONF_ALTITUDE: 0,
         },
     )
@@ -74,9 +77,9 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_failures(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     opensky_client: AsyncMock,
     config_entry: MockConfigEntry,
     user_input: dict[str, Any],
@@ -122,11 +125,9 @@ async def test_options_flow_failures(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    opensky_client: AsyncMock,
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, opensky_client: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test options flow."""
     await setup_integration(hass, config_entry)

@@ -1,10 +1,8 @@
 """Tests for the Cync integration."""
 
-from __future__ import annotations
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

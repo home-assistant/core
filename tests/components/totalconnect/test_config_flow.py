@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import (
@@ -18,12 +20,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import setup_integration
 from .const import LOCATION_ID, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry
 
-
-async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     """Test user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -53,9 +52,8 @@ async def test_full_flow(
     assert result["result"].unique_id == USERNAME
 
 
-async def test_login_errors(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_login_errors(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     """Test login errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -90,11 +88,9 @@ async def test_login_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_usercode_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: AsyncMock,
-    mock_location: AsyncMock,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_location: AsyncMock
 ) -> None:
     """Test user step with usercode errors."""
     result = await hass.config_entries.flow.async_init(
@@ -129,11 +125,9 @@ async def test_usercode_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_locations(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: AsyncMock,
-    mock_location: AsyncMock,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_location: AsyncMock
 ) -> None:
     """Test no locations found."""
 
@@ -174,11 +168,9 @@ async def test_abort_if_already_setup(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test login errors."""
     mock_config_entry.add_to_hass(hass)
@@ -197,11 +189,9 @@ async def test_reauth(
     assert mock_config_entry.data[CONF_PASSWORD] == "abc"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test login errors."""
     mock_config_entry.add_to_hass(hass)
@@ -231,11 +221,9 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test config flow options."""
     await setup_integration(hass, mock_config_entry)

@@ -1,10 +1,8 @@
 """Coordinator for the mütesync integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import mutesync
 
@@ -44,6 +42,7 @@ class MutesyncUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get data from the mütesync client."""
         async with asyncio.timeout(2.5):

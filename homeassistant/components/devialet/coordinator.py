@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from devialet import DevialetApi
 
@@ -36,6 +37,7 @@ class DevialetCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()

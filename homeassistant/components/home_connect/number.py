@@ -1,7 +1,7 @@
 """Provides number entities for Home Connect."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
@@ -109,6 +109,12 @@ NUMBER_OPTIONS = (
         translation_key="start_in_relative",
     ),
     NumberEntityDescription(
+        key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+        translation_key="setpoint_temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_step=1,
+    ),
+    NumberEntityDescription(
         key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY,
         translation_key="fill_quantity",
         device_class=NumberDeviceClass.VOLUME,
@@ -165,6 +171,7 @@ async def async_setup_entry(
 class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
     """Number setting class for Home Connect."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
         _LOGGER.debug(
@@ -221,11 +228,13 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         else:
             self._attr_native_step = 0.1 if setting.type == "Double" else 1
 
+    @override
     def update_native_value(self) -> None:
         """Update status when an event for the entity is received."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
         self._attr_native_value = cast(float, data.value)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -243,10 +252,12 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
 class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     """Number option class for Home Connect."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
         await self.async_set_option(value)
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_native_value = cast(float | None, self.option_value)

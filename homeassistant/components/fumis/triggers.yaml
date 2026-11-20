@@ -1,0 +1,9 @@
+fuel_became_low:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            - integration: fumis
+          multiple: true

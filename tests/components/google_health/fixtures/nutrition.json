@@ -1,0 +1,48 @@
+{
+  "rollupDataPoints": [
+    {
+      "nutritionLog": {
+        "energy": {
+          "kcalSum": 1800.0
+        },
+        "energyFromFat": {
+          "kcalSum": 585.0
+        },
+        "totalFat": {
+          "gramsSum": 65.0
+        },
+        "totalCarbohydrate": {
+          "gramsSum": 210.5
+        },
+        "nutrients": [
+          {
+            "nutrient": "PROTEIN",
+            "quantity": {
+              "gramsSum": 95.2
+            }
+          },
+          {
+            "nutrient": "DIETARY_FIBER",
+            "quantity": {
+              "gramsSum": 28.4
+            }
+          },
+          {
+            "nutrient": "SUGAR",
+            "quantity": {
+              "gramsSum": 42.1
+            }
+          },
+          {
+            "nutrient": "SODIUM",
+            "quantity": {
+              "gramsSum": 1.85
+            }
+          }
+        ]
+      },
+      "civilStartTime": { "date": { "year": 2026, "month": 6, "day": 28 } },
+      "civilEndTime": { "date": { "year": 2026, "month": 6, "day": 29 } }
+    }
+  ]
+}

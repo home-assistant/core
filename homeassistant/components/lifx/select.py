@@ -1,33 +1,38 @@
 """Select sensor entities for LIFX integration."""
 
-from __future__ import annotations
-
-from aiolifx_themes.themes import ThemeLibrary
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_THEME, INFRARED_BRIGHTNESS, INFRARED_BRIGHTNESS_VALUES_MAP
+from .const import INFRARED_BRIGHTNESS, INFRARED_LEVELS
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
-from .util import lifx_features
+from .util import THEME_OPTIONS, THEME_SELECT_OPTIONS
 
-THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
+PARALLEL_UPDATES = 1
 
 INFRARED_BRIGHTNESS_ENTITY = SelectEntityDescription(
     key=INFRARED_BRIGHTNESS,
     translation_key="infrared_brightness",
     entity_category=EntityCategory.CONFIG,
-    options=list(INFRARED_BRIGHTNESS_VALUES_MAP.values()),
+    options=list(INFRARED_LEVELS),
 )
 
 THEME_ENTITY = SelectEntityDescription(
-    key=ATTR_THEME,
+    key="theme",
     translation_key="theme",
     entity_category=EntityCategory.CONFIG,
-    options=THEME_NAMES,
+    options=THEME_SELECT_OPTIONS,
+)
+
+MOOD_ENTITY = SelectEntityDescription(
+    key="mood",
+    translation_key="mood",
+    entity_category=EntityCategory.CONFIG,
+    options=THEME_OPTIONS,
 )
 
 
@@ -41,16 +46,21 @@ async def async_setup_entry(
 
     entities: list[LIFXEntity] = []
 
-    if lifx_features(coordinator.device)["infrared"]:
+    if coordinator.data.capabilities.has_infrared:
         entities.append(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
     if (
-        lifx_features(coordinator.device)["multizone"] is True
-        or lifx_features(coordinator.device)["matrix"] is True
+        coordinator.data.capabilities.has_multizone
+        or coordinator.data.capabilities.has_matrix
     ):
-        entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
+        entities.extend(
+            (
+                LIFXThemeSelectEntity(coordinator, THEME_ENTITY),
+                LIFXMoodSelectEntity(coordinator, MOOD_ENTITY),
+            )
+        )
 
     async_add_entities(entities)
 
@@ -64,29 +74,23 @@ class LIFXInfraredBrightnessSelectEntity(LIFXEntity, SelectEntity):
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the IR brightness config entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_current_option = coordinator.current_infrared_brightness
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle coordinator updates."""
         self._attr_current_option = self.coordinator.current_infrared_brightness
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the infrared brightness value."""
         await self.coordinator.async_set_infrared_brightness(option)
 
 
 class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
-    """Theme entity for LIFX multizone devices."""
+    """Theme entity for LIFX multizone and matrix devices."""
 
     def __init__(
         self,
@@ -94,23 +98,40 @@ class LIFXThemeSelectEntity(LIFXEntity, SelectEntity):
         description: SelectEntityDescription,
     ) -> None:
         """Initialise the theme selection entity."""
-
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
-        self._attr_current_option = None
+        super().__init__(coordinator, description)
+        self._attr_current_option = coordinator.current_theme
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
-    @callback
+    @override
     def _async_update_attrs(self) -> None:
-        """Update attrs from coordinator data."""
-        self._attr_current_option = self.coordinator.last_used_theme
+        """Show the theme the library says the light still shows."""
+        self._attr_current_option = self.coordinator.current_theme
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Paint the selected theme onto the device."""
-        await self.coordinator.async_apply_theme(option.lower())
+        await self.coordinator.async_apply_theme(option)
+
+
+class LIFXMoodSelectEntity(LIFXEntity, SelectEntity):
+    """Mood entity for LIFX multizone and matrix devices."""
+
+    def __init__(
+        self,
+        coordinator: LIFXUpdateCoordinator,
+        description: SelectEntityDescription,
+    ) -> None:
+        """Initialise the Mood selection entity."""
+        super().__init__(coordinator, description)
+        self._attr_current_option = coordinator.current_mood
+
+    @callback
+    @override
+    def _async_update_attrs(self) -> None:
+        """Show the Mood the library says the light still shows."""
+        self._attr_current_option = self.coordinator.current_mood
+
+    @override
+    async def async_select_option(self, option: str) -> None:
+        """Apply the selected Mood to the device."""
+        await self.coordinator.async_apply_mood(option)

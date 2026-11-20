@@ -1,21 +1,25 @@
 """Config flow for Met Office integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from datapoint.exceptions import APIException
 from datapoint.Manager import Manager
+import probatio
 from requests import HTTPError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LOCATION,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import DOMAIN
 
@@ -58,23 +62,25 @@ async def validate_input(
 class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Met Office weather integration."""
 
-    VERSION = 1
+    VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            location = user_input[CONF_LOCATION]
             await self.async_set_unique_id(
-                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
+                f"{location[CONF_LATITUDE]}_{location[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 
             result = await validate_input(
                 self.hass,
-                latitude=user_input[CONF_LATITUDE],
-                longitude=user_input[CONF_LONGITUDE],
+                latitude=location[CONF_LATITUDE],
+                longitude=location[CONF_LONGITUDE],
                 api_key=user_input[CONF_API_KEY],
             )
 
@@ -86,15 +92,21 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): str,
-                vol.Required(
-                    CONF_LATITUDE, default=self.hass.config.latitude
-                ): cv.latitude,
-                vol.Required(
-                    CONF_LONGITUDE, default=self.hass.config.longitude
-                ): cv.longitude,
+        data_schema = self.add_suggested_values_to_schema(
+            probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                    probatio.Required(CONF_LOCATION): LocationSelector(
+                        LocationSelectorConfig(radius=False)
+                    ),
+                },
+            ),
+            user_input
+            or {
+                CONF_LOCATION: {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
             },
         )
 
@@ -120,8 +132,8 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             result = await validate_input(
                 self.hass,
-                latitude=entry.data[CONF_LATITUDE],
-                longitude=entry.data[CONF_LONGITUDE],
+                latitude=entry.data[CONF_LOCATION][CONF_LATITUDE],
+                longitude=entry.data[CONF_LOCATION][CONF_LONGITUDE],
                 api_key=user_input[CONF_API_KEY],
             )
 
@@ -135,9 +147,9 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
             description_placeholders={

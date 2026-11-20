@@ -1,12 +1,12 @@
 """Home Assistant Hardware integration helpers."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import logging
 from typing import TYPE_CHECKING, Protocol, TypedDict
+
+from yarl import URL
 
 from homeassistant.components.usb import (
     USBDevice,
@@ -15,9 +15,9 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.helpers import device_registry as dr
 
-from . import DATA_COMPONENT
-from .const import HARDWARE_INTEGRATION_DOMAINS
+from .const import DATA_COMPONENT, HARDWARE_INTEGRATION_DOMAINS
 
 if TYPE_CHECKING:
     from .util import FirmwareInfo
@@ -218,7 +218,8 @@ class HardwareInfoDispatcher:
         if self._active_firmware_updates[device] != source_domain:
             current_domain = self._active_firmware_updates[device]
             raise ValueError(
-                f"Firmware update for {device} is owned by {current_domain}, not {source_domain}"
+                f"Firmware update for {device} is owned by"
+                f" {current_domain}, not {source_domain}"
             )
 
         del self._active_firmware_updates[device]
@@ -276,6 +277,33 @@ def async_unregister_firmware_update_in_progress(
 def async_is_firmware_update_in_progress(hass: HomeAssistant, device: str) -> bool:
     """Check if a firmware update is in progress for a device."""
     return hass.data[DATA_COMPONENT].is_firmware_update_in_progress(device)
+
+
+@hass_callback
+def async_get_serial_port_via_device_id(hass: HomeAssistant, device: str) -> str | None:
+    """Return the ID of the device a serial port is connected through, if any."""
+    if not device.startswith("esphome-hass://"):
+        return None
+
+    # ESPHome serial proxy URLs are `esphome-hass://esphome/<entry_id>?<filters>`
+    esphome_entry_id = URL(device).path.removeprefix("/")
+
+    # ESPHome sub-devices are linked to the main device with `via_device_id`
+    esphome_devices = [
+        device_entry
+        for device_entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), esphome_entry_id
+        )
+        if device_entry.via_device_id is None
+    ]
+
+    # The ESPHome config entry can be removed while a serial port user sets up
+    if not esphome_devices:
+        return None
+
+    [esphome_device] = esphome_devices
+
+    return esphome_device.id
 
 
 @asynccontextmanager

@@ -1,10 +1,8 @@
 """Config flow for Google Translate text-to-speech integration."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -18,10 +16,12 @@ from .const import (
     SUPPORT_TLD,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_TLD, default=DEFAULT_TLD): probatio.In(SUPPORT_TLD),
     }
 )
 
@@ -31,6 +31,7 @@ class GoogleTranslateConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

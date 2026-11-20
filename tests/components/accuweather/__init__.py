@@ -1,9 +1,9 @@
 """Tests for AccuWeather."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -16,7 +16,6 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
             "api_key": "32-character-string-1234567890qw",
             "latitude": 55.55,
             "longitude": 122.12,
-            "name": "Home",
         },
     )
 

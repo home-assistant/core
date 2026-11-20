@@ -1,8 +1,7 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -14,7 +13,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature, UnitOfTime
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,23 +21,19 @@ from . import ThinqConfigEntry
 from .entity import ThinQEntity
 
 NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
-    ThinQProperty.FAN_SPEED: NumberEntityDescription(
-        key=ThinQProperty.FAN_SPEED,
-        translation_key=ThinQProperty.FAN_SPEED,
-    ),
     ThinQProperty.LAMP_BRIGHTNESS: NumberEntityDescription(
         key=ThinQProperty.LAMP_BRIGHTNESS,
         translation_key=ThinQProperty.LAMP_BRIGHTNESS,
     ),
     ThinQProperty.LIGHT_STATUS: NumberEntityDescription(
         key=ThinQProperty.LIGHT_STATUS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.LIGHT_STATUS,
     ),
     ThinQProperty.TARGET_HUMIDITY: NumberEntityDescription(
         key=ThinQProperty.TARGET_HUMIDITY,
         device_class=NumberDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.TARGET_HUMIDITY,
     ),
     ThinQProperty.TARGET_TEMPERATURE: NumberEntityDescription(
@@ -92,23 +87,20 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
         TIMER_NUMBER_DESC[ThinQProperty.RELATIVE_HOUR_TO_STOP],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
+    DeviceType.AIR_PURIFIER: (
+        TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
+    ),
     DeviceType.AIR_PURIFIER_FAN: (
         NUMBER_DESC[ThinQProperty.WIND_TEMPERATURE],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
     DeviceType.DRYER: WASHER_NUMBERS,
-    DeviceType.HOOD: (
-        NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
-        NUMBER_DESC[ThinQProperty.FAN_SPEED],
-    ),
+    DeviceType.HOOD: (NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],),
     DeviceType.HUMIDIFIER: (
         NUMBER_DESC[ThinQProperty.TARGET_HUMIDITY],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
-    DeviceType.MICROWAVE_OVEN: (
-        NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
-        NUMBER_DESC[ThinQProperty.FAN_SPEED],
-    ),
+    DeviceType.MICROWAVE_OVEN: (NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],),
     DeviceType.OVEN: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.REFRIGERATOR: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.STYLER: (TIMER_NUMBER_DESC[TimerProperty.RELATIVE_HOUR_TO_STOP_WM],),
@@ -139,18 +131,16 @@ async def async_setup_entry(
     """Set up an entry for number platform."""
     entities: list[ThinQNumberEntity] = []
     for coordinator in entry.runtime_data.coordinators.values():
-        if (
-            descriptions := DEVICE_TYPE_NUMBER_MAP.get(
-                coordinator.api.device.device_type
-            )
-        ) is not None:
-            for description in descriptions:
-                entities.extend(
-                    ThinQNumberEntity(coordinator, description, property_id)
-                    for property_id in coordinator.api.get_active_idx(
-                        description.key, ActiveMode.READ_WRITE
-                    )
+        descriptions = DEVICE_TYPE_NUMBER_MAP.get(coordinator.api.device.device_type)
+        if descriptions is None:
+            continue
+        for description in descriptions:
+            entities.extend(
+                ThinQNumberEntity(coordinator, description, property_id)
+                for property_id in coordinator.api.get_active_idx(
+                    description.key, ActiveMode.READ_WRITE
                 )
+            )
 
     if entities:
         async_add_entities(entities)
@@ -161,6 +151,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
 
     _attr_mode = NumberMode.BOX
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -204,6 +195,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
             self.native_step,
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if self.step.is_integer():

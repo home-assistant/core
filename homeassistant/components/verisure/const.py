@@ -16,9 +16,16 @@ CONF_LOCK_DEFAULT_CODE = "lock_default_code"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_LOCK_CODE_DIGITS = 4
 
-SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
-SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
-SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
+# vsure cookies are valid for ~15 minutes; refresh before expiry.
+COOKIE_REFRESH_INTERVAL = timedelta(minutes=10)
+
+# Exponential backoff when Verisure returns AUT_00021 / rate limits.
+RATE_LIMIT_BACKOFF = (
+    timedelta(minutes=5),
+    timedelta(minutes=15),
+    timedelta(minutes=30),
+    timedelta(hours=1),
+)
 
 # Mapping of device types to a human readable name
 DEVICE_TYPE_NAME = {

@@ -1,13 +1,12 @@
 """Platform for Miele light entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientResponseError
+from pymiele import MieleDevice
 
 from homeassistant.components.light import (
     ColorMode,
@@ -21,7 +20,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import AMBIENT_LIGHT, DOMAIN, LIGHT, LIGHT_OFF, LIGHT_ON, MieleAppliance
 from .coordinator import MieleConfigEntry
-from .entity import MieleDevice, MieleEntity
+from .entity import MieleEntity
 
 PARALLEL_UPDATES = 1
 
@@ -113,14 +112,17 @@ class MieleLight(MieleEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return current on/off state."""
         return self.entity_description.value_fn(self.device) == LIGHT_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         await self.async_turn_light(LIGHT_ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.async_turn_light(LIGHT_OFF)

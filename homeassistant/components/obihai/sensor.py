@@ -1,8 +1,7 @@
 """Support for Obihai Sensors."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
+from typing import override
 
 from requests.exceptions import RequestException
 
@@ -14,7 +13,7 @@ from . import ObihaiConfigEntry
 from .connectivity import ObihaiConnection
 from .const import LOGGER, OBIHAI
 
-SCAN_INTERVAL = datetime.timedelta(seconds=5)
+SCAN_INTERVAL = dt.timedelta(seconds=5)
 
 
 async def async_setup_entry(
@@ -55,6 +54,7 @@ class ObihaiServiceSensors(SensorEntity):
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def icon(self) -> str:
         """Return an icon."""
 

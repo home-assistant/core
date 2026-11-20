@@ -1,11 +1,9 @@
 """Xbox Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.titlehub.models import Image, Title, TitleFields
 
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -19,10 +17,9 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .binary_sensor import profile_pic
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry
-from .entity import to_https
+from .entity import profile_pic, to_https
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +73,7 @@ class XboxMediaSourceIdentifier:
             self.title_id, _, self.media_type = (self.title_id).partition(SEPARATOR)
             self.media_type, _, self.media_id = (self.media_type).partition(SEPARATOR)
 
+    @override
     def __str__(self) -> str:
         """Build identifier."""
 
@@ -94,6 +92,7 @@ class XboxSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         identifier = XboxMediaSourceIdentifier(item)
@@ -161,9 +160,10 @@ class XboxSource(MediaSource):
                         )
                     )
                 else:
-                    screenshot_response = await client.screenshots.get_recent_community_screenshots_by_title_id(
-                        identifier.title_id
+                    get_community = (
+                        client.screenshots.get_recent_community_screenshots_by_title_id
                     )
+                    screenshot_response = await get_community(identifier.title_id)
             except TimeoutException as e:
                 raise Unresolvable(
                     translation_domain=DOMAIN,
@@ -220,6 +220,7 @@ class XboxSource(MediaSource):
             translation_key="media_not_found",
         )
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
@@ -423,7 +424,10 @@ class XboxSource(MediaSource):
             identifier=str(identifier),
             media_class=MEDIA_CLASS_MAP[identifier.media_type],
             media_content_type=MediaClass.DIRECTORY,
-            title=f"Xbox / {entry.title} / {game.name} / {MAP_TITLE[identifier.media_type]}",
+            title=(
+                f"Xbox / {entry.title} / {game.name}"
+                f" / {MAP_TITLE[identifier.media_type]}"
+            ),
             can_play=False,
             can_expand=True,
             children=[
@@ -559,7 +563,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,
@@ -603,7 +608,8 @@ class XboxSource(MediaSource):
                 title=(
                     f"{screenshot.user_caption}"
                     f"{' | ' if screenshot.user_caption else ''}"
-                    f"{dt_util.get_age(screenshot.date_taken)} | {screenshot.resolution_height}p"
+                    f"{dt_util.get_age(screenshot.date_taken)}"
+                    f" | {screenshot.resolution_height}p"
                 ),
                 can_play=True,
                 can_expand=False,

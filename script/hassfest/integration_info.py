@@ -1,9 +1,7 @@
 """Write integration constants."""
 
-from __future__ import annotations
-
-from .model import Config, Integration, IntegrationType
-from .serializer import format_python
+from hassfest.model import Config, Integration, IntegrationType
+from hassfest.serializer import format_python
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

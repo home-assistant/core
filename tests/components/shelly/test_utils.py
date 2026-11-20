@@ -22,23 +22,22 @@ from homeassistant.components.shelly.const import (
     GEN1_RELEASE_URL,
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
-    UPTIME_DEVIATION,
+    WALL_DISPLAY_RELEASE_URL,
 )
 from homeassistant.components.shelly.utils import (
     ShellyReceiver,
     get_block_device_sleep_period,
     get_block_input_triggers,
     get_block_number_of_channels,
-    get_device_uptime,
     get_host,
     get_release_url,
     get_rpc_channel_name,
     get_rpc_input_triggers,
     get_rpc_sub_device_name,
+    get_version_from_fw_id,
     is_block_momentary_input,
     mac_address_from_name,
 )
-from homeassistant.util import dt as dt_util
 
 DEVICE_BLOCK_ID = 4
 
@@ -148,19 +147,6 @@ async def test_get_block_device_sleep_period(
     assert get_block_device_sleep_period(settings) == sleep_period
 
 
-@pytest.mark.freeze_time("2019-01-10 18:43:00+00:00")
-async def test_get_device_uptime() -> None:
-    """Test block test get device uptime."""
-    assert get_device_uptime(
-        55, dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00"))
-
-    assert get_device_uptime(
-        55 - UPTIME_DEVIATION,
-        dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:42:00+00:00")),
-    ) == dt_util.as_utc(dt_util.parse_datetime("2019-01-10 18:43:05+00:00"))
-
-
 async def test_get_block_input_triggers(
     mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -265,7 +251,7 @@ async def test_get_rpc_input_triggers(
         (1, MODEL_MOTION, False, None),
         (1, MODEL_1, False, GEN1_RELEASE_URL),
         (1, MODEL_1, True, None),
-        (2, MODEL_WALL_DISPLAY, False, None),
+        (2, MODEL_WALL_DISPLAY, False, WALL_DISPLAY_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, False, GEN2_RELEASE_URL),
         (2, MODEL_PLUS_2PM_V2, True, GEN2_BETA_RELEASE_URL),
     ],
@@ -277,6 +263,19 @@ def test_get_release_url(
     result = get_release_url(gen, model, beta)
 
     assert result is expected
+
+
+@pytest.mark.parametrize(
+    ("fw_id", "expected"),
+    [
+        ("20260724-105432/v1.5.0@aa8644cc", "v1.5.0"),
+        ("20241004-125638/main@4b7c4712+", "main"),
+        ("1.11.0", None),
+    ],
+)
+def test_get_version_from_fw_id(fw_id: str, expected: str | None) -> None:
+    """Test get_version_from_fw_id()."""
+    assert get_version_from_fw_id(fw_id) == expected
 
 
 @pytest.mark.parametrize(
@@ -325,14 +324,14 @@ async def test_shelly_receiver_get() -> None:
 @pytest.mark.parametrize(
     ("key", "expected"),
     [
-        ("switch:0", "Test name Output 0"),
-        ("switch:1", "Test name Output 1"),
-        ("cover:0", "Test name Cover 0"),
-        ("light:0", "Test name Light 0"),
-        ("rgb:0", "Test name RGB light 0"),
-        ("rgbw:1", "Test name RGBW light 1"),
-        ("cct:0", "Test name CCT light 0"),
-        ("em1:0", "Test name Energy Meter 0"),
+        ("switch:0", "Output 0"),
+        ("switch:1", "Output 1"),
+        ("cover:0", "Cover 0"),
+        ("light:0", "Light 0"),
+        ("rgb:0", "RGB light 0"),
+        ("rgbw:1", "RGBW light 1"),
+        ("cct:0", "CCT light 0"),
+        ("em1:0", "Energy Meter 0"),
     ],
 )
 async def test_get_rpc_sub_device_name(
@@ -368,5 +367,5 @@ async def test_get_rpc_sub_device_name_with_emeter_phase(
     config = {"em:0": {"name": None}}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
-    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Phase A"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Phase B"

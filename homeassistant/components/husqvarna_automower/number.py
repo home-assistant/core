@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
@@ -13,12 +13,10 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,
-    _work_area_translation_key,
     handle_sending_exception,
 )
 
@@ -86,7 +84,6 @@ class WorkAreaNumberEntityDescription(NumberEntityDescription):
     """Describes Automower work area number entity."""
 
     value_fn: Callable[[WorkArea], int]
-    translation_key_fn: Callable[[int, str], str]
     set_value_fn: Callable[
         [AutomowerDataUpdateCoordinator, str, float, int], Awaitable[Any]
     ]
@@ -95,7 +92,7 @@ class WorkAreaNumberEntityDescription(NumberEntityDescription):
 WORK_AREA_NUMBER_TYPES: tuple[WorkAreaNumberEntityDescription, ...] = (
     WorkAreaNumberEntityDescription(
         key="cutting_height_work_area",
-        translation_key_fn=_work_area_translation_key,
+        translation_key="cutting_height",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.cutting_height,
@@ -171,11 +168,13 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
     @handle_sending_exception()
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(
@@ -199,23 +198,17 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         super().__init__(mower_id, coordinator, work_area_id)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{work_area_id}_{description.key}"
-        self._attr_translation_placeholders = {
-            "work_area": self.work_area_attributes.name
-        }
 
     @property
-    def translation_key(self) -> str:
-        """Return the translation key of the work area."""
-        return self.entity_description.translation_key_fn(
-            self.work_area_id, self.entity_description.key
-        )
-
-    @property
-    def native_value(self) -> float:
+    @override
+    def native_value(self) -> float | None:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self.work_area_attributes)
+        if (work_area := self.work_area_attributes) is None:
+            return None
+        return self.entity_description.value_fn(work_area)
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(

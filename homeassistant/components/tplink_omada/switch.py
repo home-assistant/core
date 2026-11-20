@@ -1,15 +1,14 @@
 """Support for TPLink Omada device toggle options."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Generic, TypeVar
+from typing import Any, override
 
 from tplink_omada_client import (
     GatewayPortSettings,
     OmadaSiteClient,
+    OmadaVpnPolicy,
     PortProfileOverrides,
     SwitchPortSettings,
 )
@@ -28,21 +27,25 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import Undefined
 
 from . import OmadaConfigEntry
-from .controller import OmadaGatewayCoordinator, OmadaSwitchPortCoordinator
-from .coordinator import OmadaCoordinator
-from .entity import OmadaDeviceEntity
-
-TPort = TypeVar("TPort")
-TDevice = TypeVar("TDevice", bound="OmadaDevice")
-TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
+from .const import DOMAIN
+from .coordinator import (
+    OmadaCoordinator,
+    OmadaGatewayCoordinator,
+    OmadaSwitchPortCoordinator,
+    OmadaVpnPoliciesCoordinator,
+)
+from .entity import OmadaDeviceEntity, get_switch_port_base_name
 
 PARALLEL_UPDATES = 0
 
@@ -62,7 +65,7 @@ async def async_setup_entry(
         omada_client = controller.omada_client
         switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
-        await coordinator.async_request_refresh()
+        await coordinator.async_refresh()
 
         entities: list[Entity] = []
         entities.extend(
@@ -74,7 +77,7 @@ async def async_setup_entry(
                 port,
                 port.port_id,
                 desc,
-                port_name=_get_switch_port_base_name(port),
+                port_name=get_switch_port_base_name(port),
             )
             for port in coordinator.data.values()
             for desc in SWITCH_PORT_DETAILS_SWITCHES
@@ -82,7 +85,8 @@ async def async_setup_entry(
         )
         async_add_entities(entities)
 
-    # Register switch port entities for switches that are connected, such that we can determine the port information
+    # Register switch port entities for switches that are
+    # connected, so we can determine the port information
     await controller.async_register_device_entities(
         device_filter=lambda d: (
             d.type == "switch" and d.status_category == DeviceStatusCategory.CONNECTED
@@ -124,20 +128,40 @@ async def async_setup_entry(
         entity_callback=_create_gateway_port_entities,
     )
 
+    gateway_coordinator = controller.gateway_coordinator
+    vpn_coordinator = controller.vpn_policies_coordinator
+    if gateway_coordinator and vpn_coordinator:
+        gateway = next(iter(gateway_coordinator.data.values()))
+        known_policy_keys: set[str] = set()
 
-def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
-    """Get display name for a switch port."""
+        @callback
+        def _async_add_vpn_entities() -> None:
+            new_policies = [
+                policy
+                for policy_key, policy in vpn_coordinator.data.items()
+                if policy_key not in known_policy_keys
+            ]
+            if not new_policies:
+                return
+            known_policy_keys.update(policy.unique_id for policy in new_policies)
+            async_add_entities(
+                OmadaVpnSwitch(vpn_coordinator, gateway, policy)
+                for policy in new_policies
+            )
 
-    if port.name == f"Port{port.port}":
-        return str(port.port)
-    return f"{port.port} ({port.name})"
+        config_entry.async_on_unload(
+            vpn_coordinator.async_add_listener(_async_add_vpn_entities)
+        )
+        _async_add_vpn_entities()
 
 
 @dataclass(frozen=True, kw_only=True)
-class OmadaDevicePortSwitchEntityDescription(
-    SwitchEntityDescription, Generic[TCoordinator, TDevice, TPort]
-):
-    """Entity description for a toggle switch derived from a network port on an Omada device."""
+class OmadaDevicePortSwitchEntityDescription[
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
+    TPort,
+](SwitchEntityDescription):
+    """Entity description for a port toggle on an Omada device."""
 
     exists_func: Callable[[TDevice, TPort], bool] = lambda _, p: True
     coordinator_update_func: Callable[[TCoordinator, TDevice, TPort], TPort | None]
@@ -151,7 +175,7 @@ class OmadaSwitchPortSwitchEntityDescription(
         OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
     ]
 ):
-    """Entity description for a toggle switch for a feature of a Port on an Omada Switch."""
+    """Entity description for a switch port feature toggle."""
 
     coordinator_update_func: Callable[
         [OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails],
@@ -165,7 +189,7 @@ class OmadaGatewayPortConfigSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
     ]
 ):
-    """Entity description for a toggle switch for a configuration of a Port on an Omada Gateway."""
+    """Entity description for a gateway port config toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig],
@@ -183,7 +207,7 @@ class OmadaGatewayPortStatusSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
     ]
 ):
-    """Entity description for a toggle switch for a status of a Port on an Omada Gateway."""
+    """Entity description for a gateway port status toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus],
@@ -264,12 +288,15 @@ GATEWAY_PORT_CONFIG_SWITCHES: list[OmadaGatewayPortConfigSwitchEntityDescription
 ]
 
 
-class OmadaDevicePortSwitchEntity(
+class OmadaDevicePortSwitchEntity[
+    TCoordinator: OmadaCoordinator[Any],
+    TDevice: OmadaDevice,
+    TPort,
+](
     OmadaDeviceEntity[TCoordinator],
     SwitchEntity,
-    Generic[TCoordinator, TDevice, TPort],
 ):
-    """Generic toggle switch entity for a Netork Port of an Omada Device."""
+    """Generic toggle switch entity for a Network Port of an Omada Device."""
 
     entity_description: OmadaDevicePortSwitchEntityDescription[
         TCoordinator, TDevice, TPort
@@ -294,15 +321,25 @@ class OmadaDevicePortSwitchEntity(
         self._attr_unique_id = f"{device.mac}_{port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name or port_id}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._do_update()
 
     async def _async_turn_on_off(self, enable: bool) -> None:
-        updated_details = await self.entity_description.set_func(
-            self.coordinator.omada_client, self._device, self._port_details, enable
-        )
+        try:
+            updated_details = await self.entity_description.set_func(
+                self.coordinator.omada_client,
+                self._device,
+                self._port_details,
+                enable,
+            )
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex
 
         if updated_details:
             self._port_details = updated_details
@@ -312,15 +349,18 @@ class OmadaDevicePortSwitchEntity(
             await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_turn_on_off(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_turn_on_off(False)
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return bool(
@@ -338,7 +378,78 @@ class OmadaDevicePortSwitchEntity(
             self._attr_is_on = self.entity_description.update_func(self._port_details)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()
         self.async_write_ha_state()
+
+
+class OmadaVpnSwitch(
+    OmadaDeviceEntity[OmadaVpnPoliciesCoordinator],
+    SwitchEntity,
+):
+    """Switch entity for enabling and disabling an Omada VPN policy."""
+
+    _attr_translation_key = "vpn_policy"
+
+    def __init__(
+        self,
+        coordinator: OmadaVpnPoliciesCoordinator,
+        gateway: OmadaGateway,
+        policy: OmadaVpnPolicy,
+    ) -> None:
+        """Initialize the VPN policy switch."""
+        super().__init__(coordinator, gateway)
+        self._policy_id = policy.policy_id
+        self._policy_key = policy.unique_id
+        self._attr_unique_id = f"{gateway.mac}_vpn_{policy.unique_id}"
+        self._attr_name = policy.name
+        self._attr_is_on = policy.enabled
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return true if the VPN policy still exists on the controller."""
+        return super().available and self._policy_key in self.coordinator.data
+
+    @property
+    @override
+    def name(self) -> str | Undefined | None:
+        """Return the current name of the VPN policy."""
+        if policy := self.coordinator.data.get(self._policy_key):
+            return policy.name
+        return super().name
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if policy := self.coordinator.data.get(self._policy_key):
+            self._attr_is_on = policy.enabled
+        super()._handle_coordinator_update()
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable the VPN policy."""
+        await self._async_set_enabled(True)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable the VPN policy."""
+        await self._async_set_enabled(False)
+
+    async def _async_set_enabled(self, enabled: bool) -> None:
+        try:
+            await self.coordinator.omada_client.set_vpn_policy_enabled(
+                self._policy_id, enabled
+            )
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_action_failed",
+            ) from ex
+
+        self._attr_is_on = enabled
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

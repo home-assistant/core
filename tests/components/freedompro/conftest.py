@@ -1,27 +1,24 @@
 """Fixtures for Freedompro integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .const import DEVICES, DEVICES_STATE
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.freedompro.async_setup_entry", return_value=True
+        "homeassistant.components.freedompro.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

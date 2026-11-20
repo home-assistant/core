@@ -1,13 +1,16 @@
 """Tests for the AWS S3 sensor platform."""
 
-from __future__ import annotations
-
 import json
 from unittest.mock import AsyncMock
 
 from botocore.exceptions import BotoCoreError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aws_s3.coordinator import SCAN_INTERVAL
@@ -17,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensor(
@@ -63,10 +64,9 @@ async def test_sensor_availability(
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
     assert state.state == STATE_UNAVAILABLE
 
-    mock_client.get_paginator.return_value.paginate.side_effect = None
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.side_effect = None
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -95,9 +95,8 @@ async def test_calculate_backups_size(
     expected_pagination_call: dict,
 ) -> None:
     """Test the total size of backups calculation with and without prefix."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get("sensor.bucket_test_total_size_of_backups"))
@@ -107,9 +106,11 @@ async def test_calculate_backups_size(
     metadata_content = json.dumps(mock_agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
+    mock_client.get_object.side_effect = None
     mock_client.get_object.return_value = {"Body": mock_body}
 
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {"Key": "backup.tar"},

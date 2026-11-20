@@ -84,8 +84,17 @@
       "precip_minutes_local_yesterday_final": {
         "name": "Nearcast precipitation duration yesterday"
       },
+      "relative_humidity": {
+        "name": "Relative humidity"
+      },
       "sea_level_pressure": {
         "name": "Pressure sea level"
+      },
+      "solar_radiation": {
+        "name": "Solar radiation"
+      },
+      "uv_index": {
+        "name": "UV index"
       },
       "wet_bulb_globe_temperature": {
         "name": "Wet bulb globe temperature"
@@ -98,9 +107,6 @@
       },
       "wind_chill": {
         "name": "Wind chill"
-      },
-      "wind_direction": {
-        "name": "Wind direction"
       },
       "wind_gust": {
         "name": "Wind gust"

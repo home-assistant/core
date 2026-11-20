@@ -1,10 +1,9 @@
 """Device automation helpers for entity."""
 
-from __future__ import annotations
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import CONF_ENTITY_ID, CONF_FOR, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -24,9 +23,9 @@ ENTITY_TRIGGERS = [
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In([CONF_CHANGED_STATES]),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In([CONF_CHANGED_STATES]),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -39,13 +38,13 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     to_state = None
-    state_config = {
-        CONF_PLATFORM: "state",
-        state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_TO: to_state,
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+        StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
@@ -92,10 +91,10 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
     return {
-        "extra_fields": vol.Schema(
-            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        "extra_fields": probatio.Schema(
+            {probatio.Optional(CONF_FOR): cv.positive_time_period_dict}
         )
     }

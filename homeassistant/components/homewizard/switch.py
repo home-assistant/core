@@ -1,10 +1,8 @@
 """Creates HomeWizard switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
@@ -41,18 +39,24 @@ SWITCHES = [
         name=None,
         device_class=SwitchDeviceClass.OUTLET,
         create_fn=lambda x: x.device.supports_state(),
-        available_fn=lambda x: x.state is not None and not x.state.switch_lock,
-        is_on_fn=lambda x: x.state.power_on if x.state else None,
-        set_fn=lambda api, active: api.state(power_on=active),
+        available_fn=lambda x: (
+            x.system is not None
+            and x.system.power_on is not None
+            and not x.system.switch_lock
+        ),
+        is_on_fn=lambda x: x.system.power_on if x.system else None,
+        set_fn=lambda api, active: api.system(power_on=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
         translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
         create_fn=lambda x: x.device.supports_state(),
-        available_fn=lambda x: x.state is not None,
-        is_on_fn=lambda x: x.state.switch_lock if x.state else None,
-        set_fn=lambda api, active: api.state(switch_lock=active),
+        available_fn=lambda x: (
+            x.system is not None and x.system.switch_lock is not None
+        ),
+        is_on_fn=lambda x: x.system.switch_lock if x.system else None,
+        set_fn=lambda api, active: api.system(switch_lock=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
@@ -95,6 +99,7 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -102,17 +107,20 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @homewizard_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_fn(self.coordinator.api, True)
         await self.coordinator.async_refresh()
 
     @homewizard_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.coordinator.api, False)

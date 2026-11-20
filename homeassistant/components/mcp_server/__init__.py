@@ -1,13 +1,11 @@
 """The Model Context Protocol Server integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import http
-from .const import DOMAIN
+from .const import CONF_ALL_LLM_APIS, CONF_READ_ONLY, CONF_REQUIRE_ADMIN, DOMAIN
 from .session import SessionManager
 from .types import MCPServerConfigEntry
 
@@ -25,16 +23,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
+    """Migrate a config entry."""
+    if entry.version == 1 and entry.minor_version == 1:
+        # 1.1 -> 1.2: Endpoints served before this option existed stay open.
+        # A disabled config entry migrates only once enabled, so keep the
+        # choice the options flow may have saved in the meantime.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_REQUIRE_ADMIN: False, **entry.data},
+            minor_version=2,
+        )
+
+    if entry.version == 1 and entry.minor_version == 2:
+        # 1.2 -> 1.3: Existing entries keep serving their selected LLM APIs.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_ALL_LLM_APIS: False, **entry.data},
+            minor_version=3,
+        )
+
+    if entry.version == 1 and entry.minor_version == 3:
+        # 1.3 -> 1.4: Existing entries keep exposing all tools.
+        hass.config_entries.async_update_entry(
+            entry,
+            data={CONF_READ_ONLY: False, **entry.data},
+            minor_version=4,
+        )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
     """Set up Model Context Protocol Server from a config entry."""
 
     entry.runtime_data = SessionManager()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MCPServerConfigEntry) -> None:
     """Unload a config entry."""
     session_manager = entry.runtime_data
     session_manager.close()
-    return True

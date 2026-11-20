@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the emoncms integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pyemoncms import EmoncmsClient
 
@@ -35,6 +35,7 @@ class EmoncmsCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
         )
         self.emoncms_client = emoncms_client
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API endpoint."""
         data = await self.emoncms_client.async_request("/feed/list.json")

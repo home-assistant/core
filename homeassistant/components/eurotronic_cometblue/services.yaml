@@ -1,0 +1,215 @@
+get_schedule:
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
+
+set_schedule:
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
+  fields:
+    monday:
+      example: |
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    tuesday:
+      example: |
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    wednesday:
+      example: |
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    thursday:
+      example: |
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    friday:
+      example: []
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    saturday:
+      example: |
+        - from: 09:00:00
+          to: 12:00:00
+        - from: 17:00:00
+          to: 19:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+    sunday:
+      example: |
+        - from: 07:00:00
+          to: 09:00:00
+        - from: 10:00:00
+          to: 12:00:00
+        - from: 13:00:00
+          to: 17:00:00
+        - from: 20:00:00
+          to: 23:00:00
+      required: false
+      selector:
+        object:
+          label_field: From
+          description_field: To
+          multiple: true
+          fields:
+            from:
+              label: From
+              required: false
+              selector:
+                time:
+            to:
+              label: To
+              required: false
+              selector:
+                time:
+
+set_holiday:
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
+  fields:
+    from:
+      example: 2023-12-24 17:00:00
+      required: true
+      selector:
+        datetime:
+    to:
+      example: 2023-12-31 23:30:00
+      required: true
+      selector:
+        datetime:
+    temperature:
+      example: 20
+      required: true
+      selector:
+        number:
+          min: 8
+          max: 28
+          step: 0.5
+          unit_of_measurement: °C

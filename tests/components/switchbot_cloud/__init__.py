@@ -1,12 +1,11 @@
 """Tests for the SwitchBot Cloud integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
 from switchbot_api import Device
 
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -57,6 +56,13 @@ STANDING_FAN_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
+BATTERY_CIRCULATOR_FAN_2_PRO_INFO = Device(
+    version="V1.0",
+    deviceId="device-id-1",
+    deviceName="device-1",
+    deviceType="Battery Circulator Fan 2 Pro",
+    hubDeviceId="test-hub-id",
+)
 
 METER_INFO = Device(
     version="V1.0",
@@ -111,5 +117,21 @@ HUMIDIFIER2_INFO = Device(
     deviceId="humidifier2-id-1",
     deviceName="humidifier2-1",
     deviceType="Humidifier2",
+    hubDeviceId="test-hub-id",
+)
+
+LOCK_ULTRA_INFO = Device(
+    version="V1.0",
+    deviceId="lock-id-1",
+    deviceName="Lock Ultra",
+    deviceType="Smart Lock Ultra",
+    hubDeviceId="test-hub-id",
+)
+
+AI_ART_FRAME_DEVICE = Device(
+    version="V1.0",
+    deviceId="AABBCCDDEEFF",
+    deviceName="test-art-frame",
+    deviceType="AI Art Frame",
     hubDeviceId="test-hub-id",
 )

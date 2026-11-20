@@ -1,11 +1,9 @@
 """Config flow for PEGELONLINE."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiopegelonline import CONNECT_ERRORS, PegelOnline
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -40,6 +38,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._stations: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -78,9 +77,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="select_station",
                 description_placeholders={"stations_count": str(len(self._stations))},
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_STATION): SelectSelector(
+                        probatio.Required(CONF_STATION): SelectSelector(
                             SelectSelectorConfig(
                                 options=stations, mode=SelectSelectorMode.DROPDOWN
                             )
@@ -106,9 +105,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_LOCATION,
                         default=user_input.get(
                             CONF_LOCATION,
@@ -118,7 +117,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                             },
                         ),
                     ): LocationSelector(),
-                    vol.Required(
+                    probatio.Required(
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): NumberSelector(
                         NumberSelectorConfig(

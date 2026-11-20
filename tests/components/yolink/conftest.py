@@ -1,11 +1,11 @@
 """Provide common fixtures for the YoLink integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from yolink.home_manager import YoLinkHome
 
 from homeassistant.components.application_credentials import (
@@ -17,11 +17,15 @@ from homeassistant.components.yolink.api import ConfigEntryAuth
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 CLIENT_ID = "12345"
 CLIENT_SECRET = "6789"
 DOMAIN = "yolink"
+
+
+@pytest.fixture
+def water_meter_report() -> dict[str, Any]:
+    """Return a redacted YS5018 water meter report."""
+    return load_json_object_fixture("ys5018_report.json", DOMAIN)
 
 
 @pytest.fixture

@@ -9,6 +9,9 @@ from mcstatus.responses import (
     LegacyStatusResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -20,10 +23,6 @@ from .const import (
     TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
@@ -49,7 +48,8 @@ async def test_config_entry_diagnostics(
 ) -> None:
     """Test fetching of the config entry diagnostics."""
 
-    # Use 'request' fixture to access 'mock_config_entry' fixture, as it cannot be used directly in 'parametrize'.
+    # Use 'request' fixture to access 'mock_config_entry' fixture,
+    # as it cannot be used directly in 'parametrize'.
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 

@@ -4,8 +4,12 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ColorMode
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, Platform
+from homeassistant.components.light import (
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightService,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,7 +25,7 @@ async def test_light_entity(
     """Tests lights entity."""
 
     device_name = "Light Controller"
-    entity_key = "light.light_controller_test_entity_name"
+    entity_key = "light.test_entity_room_light_controller_test_entity_name"
     entity_type = "light"
 
     mock_api.lights = [
@@ -40,24 +44,18 @@ async def test_light_entity(
     state = hass.states.get(entity_key)
     assert state == snapshot
 
-    services = hass.services.async_services()
-
-    assert SERVICE_TURN_ON in services[entity_type]
-
     await hass.services.async_call(
-        entity_type,
-        SERVICE_TURN_ON,
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
 
     assert mock_api.lights[0].turn_on.called
 
-    assert SERVICE_TURN_OFF in services[entity_type]
-
     await hass.services.async_call(
-        entity_type,
-        SERVICE_TURN_OFF,
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )
@@ -74,9 +72,8 @@ async def test_dimmer_entity(
     """Tests dimmer entity."""
 
     device_name = "Light Controller"
-    entity_key = "light.light_controller_test_entity_name"
+    entity_key = "light.test_entity_room_light_controller_test_entity_name"
     entity_type = "dimmer"
-    entity_type_override = "light"
 
     mock_api.lights = [
         mock_api_device(device_name=device_name, entity_type=entity_type)
@@ -94,24 +91,18 @@ async def test_dimmer_entity(
     state = hass.states.get(entity_key)
     assert state == snapshot
 
-    services = hass.services.async_services()
-
-    assert SERVICE_TURN_ON in services[entity_type_override]
-
     await hass.services.async_call(
-        entity_type_override,
-        SERVICE_TURN_ON,
+        LIGHT_DOMAIN,
+        LightService.TURN_ON,
         {"entity_id": entity_key},
         blocking=True,
     )
 
     assert mock_api.lights[0].set_brightness.called
 
-    assert SERVICE_TURN_OFF in services[entity_type_override]
-
     await hass.services.async_call(
-        entity_type_override,
-        SERVICE_TURN_OFF,
+        LIGHT_DOMAIN,
+        LightService.TURN_OFF,
         {"entity_id": entity_key},
         blocking=True,
     )

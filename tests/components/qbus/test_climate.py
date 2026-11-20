@@ -4,27 +4,26 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message, async_fire_time_changed
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_PRESET_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntity,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
 from homeassistant.components.qbus.climate import STATE_REQUEST_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_mqtt_message, async_fire_time_changed
-from tests.typing import MqttMockHAClient
 
 _CURRENT_TEMPERATURE = 21.5
 _SET_TEMPERATURE = 20.5
@@ -33,14 +32,25 @@ _REGIME = "COMFORT"
 _PAYLOAD_CLIMATE_STATE_TEMP = (
     f'{{"id":"UL20","properties":{{"setTemp":{_SET_TEMPERATURE}}},"type":"event"}}'
 )
-_PAYLOAD_CLIMATE_STATE_TEMP_FULL = f'{{"id":"UL20","properties":{{"currRegime":"MANUEEL","currTemp":{_CURRENT_TEMPERATURE},"setTemp":{_SET_TEMPERATURE}}},"type":"state"}}'
+_PAYLOAD_CLIMATE_STATE_TEMP_FULL = (
+    f'{{"id":"UL20","properties":{{"currRegime":"MANUEEL",'
+    f'"currTemp":{_CURRENT_TEMPERATURE},'
+    f'"setTemp":{_SET_TEMPERATURE}}},"type":"state"}}'
+)
 
 _PAYLOAD_CLIMATE_STATE_PRESET = (
     f'{{"id":"UL20","properties":{{"currRegime":"{_REGIME}"}},"type":"event"}}'
 )
-_PAYLOAD_CLIMATE_STATE_PRESET_FULL = f'{{"id":"UL20","properties":{{"currRegime":"{_REGIME}","currTemp":{_CURRENT_TEMPERATURE},"setTemp":22.0}},"type":"state"}}'
+_PAYLOAD_CLIMATE_STATE_PRESET_FULL = (
+    f'{{"id":"UL20","properties":{{"currRegime":"{_REGIME}",'
+    f'"currTemp":{_CURRENT_TEMPERATURE},'
+    f'"setTemp":22.0}},"type":"state"}}'
+)
 
-_PAYLOAD_CLIMATE_SET_TEMP = f'{{"id": "UL20", "type": "state", "properties": {{"setTemp": {_SET_TEMPERATURE}}}}}'
+_PAYLOAD_CLIMATE_SET_TEMP = (
+    f'{{"id": "UL20", "type": "state", "properties":'
+    f' {{"setTemp": {_SET_TEMPERATURE}}}}}'
+)
 _PAYLOAD_CLIMATE_SET_PRESET = (
     '{"id": "UL20", "type": "state", "properties": {"currRegime": "COMFORT"}}'
 )
@@ -49,7 +59,7 @@ _TOPIC_CLIMATE_STATE = "cloudapp/QBUSMQTTGW/UL1/UL20/state"
 _TOPIC_CLIMATE_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL20/setState"
 _TOPIC_GET_STATE = "cloudapp/QBUSMQTTGW/getState"
 
-_CLIMATE_ENTITY_ID = "climate.living_th"
+_CLIMATE_ENTITY_ID = "climate.living_living_th"
 
 
 async def test_climate(
@@ -63,16 +73,20 @@ async def test_climate(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_TEMPERATURE: _SET_TEMPERATURE,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.TEMPERATURE: _SET_TEMPERATURE,
         },
         blocking=True,
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_CLIMATE_SET_STATE, _PAYLOAD_CLIMATE_SET_TEMP, 0, False
+        _TOPIC_CLIMATE_SET_STATE,
+        _PAYLOAD_CLIMATE_SET_TEMP,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate a partial state response
@@ -110,16 +124,20 @@ async def test_climate(
     mqtt_mock.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
+        ClimateService.SET_PRESET_MODE,
         {
-            ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-            ATTR_PRESET_MODE: _REGIME,
+            TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+            ClimateServiceArgument.PRESET_MODE: _REGIME,
         },
         blocking=True,
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_CLIMATE_SET_STATE, _PAYLOAD_CLIMATE_SET_PRESET, 0, False
+        _TOPIC_CLIMATE_SET_STATE,
+        _PAYLOAD_CLIMATE_SET_PRESET,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate a partial state response
@@ -208,10 +226,10 @@ async def test_climate_with_unknown_preset(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            ClimateService.SET_PRESET_MODE,
             {
-                ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID,
-                ATTR_PRESET_MODE: "What is cooler than being cool?",
+                TargetKey.ENTITY_ID: _CLIMATE_ENTITY_ID,
+                ClimateServiceArgument.PRESET_MODE: "What is cooler than being cool?",
             },
             blocking=True,
         )
@@ -223,6 +241,6 @@ def _wait_and_assert_state_request(
     mqtt_mock.reset_mock()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(STATE_REQUEST_DELAY))
     mqtt_mock.async_publish.assert_has_calls(
-        [call(_TOPIC_GET_STATE, '["UL20"]', 0, False)],
+        [call(_TOPIC_GET_STATE, '["UL20"]', 0, False, message_expiry_interval=None)],
         any_order=True,
     )

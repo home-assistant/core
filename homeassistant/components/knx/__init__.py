@@ -1,34 +1,46 @@
 """The KNX integration."""
 
-from __future__ import annotations
-
 import contextlib
+import logging
 from pathlib import Path
 from typing import Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions import XKNXException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_EXPOSE,
     CONF_KNX_KNXKEY_FILENAME,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_BACKEND_SQLITE,
+    KNX_TELEGRAM_DB_PATH_SQLITE,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
 from .expose import create_combined_knx_exposure
 from .knx_module import KNXModule
+from .llm_api import async_register_llm_api
 from .project import STORAGE_KEY as PROJECT_STORAGE_KEY
 from .schema import (
     BinarySensorSchema,
@@ -53,15 +65,16 @@ from .schema import (
 )
 from .services import async_setup_services
 from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY
-from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY
 from .websocket import register_panel
 
 _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 
-CONFIG_SCHEMA = vol.Schema(
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
@@ -86,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -100,7 +113,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Load a config entry."""
     # `_KNX_YAML_CONFIG` is only set in async_setup.
     # It's None when reloading the integration or no `knx` key in configuration.yaml
@@ -120,9 +133,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[KNX_MODULE_KEY] = knx_module
 
-    knx_module.ui_time_server_controller.start(
-        knx_module.xknx, knx_module.config_store.get_time_server_config()
-    )
+    entry.async_on_unload(async_register_llm_api(hass, knx_module))
+
+    if (time_server := knx_module.config_store.get_time_server()) is not None:
+        knx_module.ui_time_server_controller.start(knx_module.xknx, time_server)
     knx_module.ui_expose_controller.start(
         hass, knx_module.xknx, knx_module.config_store.get_exposes()
     )
@@ -137,23 +151,71 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry,
         {
-            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
-            *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
+            # always forward sensor for system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # forward all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # forward yaml-only managed platforms on demand
+            *configured_platforms_yaml,
         },
     )
 
     await register_panel(hass)
 
-    return True
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        new_data = {**entry.data}
+        new_options = {**entry.options}
+        new_data.pop("telegram_log_size", None)
+
+        for key in (
+            CONF_KNX_STATE_UPDATER,
+            CONF_KNX_RATE_LIMIT,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+        ):
+            if key in new_data:
+                new_options[key] = new_data.pop(key)
+
+        new_options.setdefault(
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_DB_RETENTION_DEFAULT
+        )
+        new_options.setdefault(
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
+        )
+        new_options.setdefault(CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER)
+        new_options.setdefault(CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT)
+
+        new_options[CONF_KNX_TELEGRAM_DB_BACKEND] = KNX_TELEGRAM_BACKEND_SQLITE
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=2, minor_version=2
+        )
+        _LOGGER.info("Migration to version 2 successful")
+
+    if entry.version == 2 and entry.minor_version < 2:
+        # version 2.2 introduced in 2026.8
+        new_options = {**entry.options}
+        if CONF_KNX_TELEGRAM_DB_BACKEND not in new_options:
+            new_options[CONF_KNX_TELEGRAM_DB_BACKEND] = KNX_TELEGRAM_BACKEND_SQLITE
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, minor_version=2
+        )
+        _LOGGER.info("Migration to version 2.2 successful")
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unloading the KNX platforms."""
     knx_module = hass.data.get(KNX_MODULE_KEY)
     if not knx_module:
         #  if not loaded directly return
-        return True
+        return
 
     for exposure in knx_module.yaml_exposures:
         exposure.async_remove()
@@ -167,19 +229,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for platform in SUPPORTED_PLATFORMS_YAML
         if platform in knx_module.config_yaml
     }
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry,
         {
-            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
-            *configured_platforms_yaml,  # unload yaml-only managed platforms if configured,
+            # always unload system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # unload all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # unload yaml-only managed platforms if configured
+            *configured_platforms_yaml,
         },
     )
-    if unload_ok:
-        await knx_module.stop()
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
+    await knx_module.stop()
+    hass.data.pop(DOMAIN)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -195,7 +259,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
+            (storage_dir / KNX_TELEGRAM_DB_PATH_SQLITE).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-wal").unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-shm").unlink()
+
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()
 
@@ -205,14 +274,21 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     knx_module = hass.data[KNX_MODULE_KEY]
-    if not device_entry.identifiers.isdisjoint(
-        knx_module.interface_device.device_info["identifiers"]
-    ):
+    if device_entry.id == knx_module.interface_device.device.id:
         # can not remove interface device
+        return False
+    ui_unique_ids = knx_module.config_store.get_entity_uids()
+    entity_registry = er.async_get(hass)
+    if any(
+        entity.config_entry_id == config_entry.entry_id
+        and entity.unique_id not in ui_unique_ids
+        for entity in er.async_entries_for_device(entity_registry, device_entry.id)
+    ):
+        # device still has YAML-configured KNX entities; it would be recreated after reload
         return False
     for entity in knx_module.config_store.get_entity_entries():
         if entity.device_id == device_entry.id:

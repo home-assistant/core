@@ -1,14 +1,12 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import contextlib
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
+import probatio
 from propcache.api import under_cached_property
-import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
@@ -47,6 +45,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
+from .validators import log_validation_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,19 +122,9 @@ class _TemplateAttribute:
 
         try:
             validated = self.validator(result)
-        except vol.Invalid as ex:
-            _LOGGER.error(
-                (
-                    "Error validating template result '%s' "
-                    "from template '%s' "
-                    "for attribute '%s' in entity %s "
-                    "validation message '%s'"
-                ),
-                result,
-                self.template,
-                self._attribute,
-                self._entity.entity_id,
-                ex.msg,
+        except probatio.Invalid as ex:
+            log_validation_error(
+                result, self.template, self._attribute, self._entity.entity_id, ex
             )
             assert self.on_update
             self.on_update(None)
@@ -163,8 +152,9 @@ class TemplateEntity(AbstractTemplateEntity):
         AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
-        self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
+        self._writing_render_state = False
+        self._render_states: list[State] = []
         self._attr_unique_id = unique_id
         self._preview_callback: (
             Callable[
@@ -179,7 +169,6 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")
@@ -193,6 +182,7 @@ class TemplateEntity(AbstractTemplateEntity):
                 self.entity_id = None  # type: ignore[assignment]
 
             @under_cached_property
+            @override
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -209,12 +199,14 @@ class TemplateEntity(AbstractTemplateEntity):
             CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
         )
 
-        # Render name, icon, and picture early. name is rendered early because it influences
-        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # Render name, icon, and picture early. name is
+        # rendered early because it influences the
+        # entity_id. icon and picture are rendered early
+        # to ensure they are populated even
         # if the entity renders unavailable.
         self._attr_name = None
         for option, attribute, validator in (
-            (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),
+            (CONF_ICON, "_attr_icon", probatio.Or(cv.whitespace, cv.icon)),
             (CONF_PICTURE, "_attr_entity_picture", cv.string),
             (CONF_NAME, "_attr_name", cv.string),
         ):
@@ -258,6 +250,7 @@ class TemplateEntity(AbstractTemplateEntity):
         )
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -268,9 +261,11 @@ class TemplateEntity(AbstractTemplateEntity):
         """Create a this variable for the entity."""
         entity_id = self.entity_id
         if self._preview_callback:
-            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # During config flow, the registry entry and
+            # entity_id will be None. In this scenario,
             # a temporary entity_id is created.
-            # During option flow, the preview entity_id will be None, however the registry entry
+            # During option flow, the preview entity_id
+            # will be None, however the registry entry
             # will contain the target entity_id.
             if self.registry_entry:
                 entity_id = self.registry_entry.entity_id
@@ -281,6 +276,8 @@ class TemplateEntity(AbstractTemplateEntity):
 
         return TemplateStateFromEntityId(self.hass, entity_id)
 
+    @callback
+    @override
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
@@ -290,6 +287,7 @@ class TemplateEntity(AbstractTemplateEntity):
             self.hass, {"this": self._get_this_variable()}
         )
 
+    @override
     def setup_state_template(
         self,
         attribute: str,
@@ -298,9 +296,11 @@ class TemplateEntity(AbstractTemplateEntity):
     ) -> None:
         """Set up a template that manages the main state of the entity.
 
-        Requires _state_option to be set on the inheriting class. _state_option represents
-        the configuration option that derives the state. E.g. Template weather entities main state option
-        is 'condition', where switch is 'state'.
+        Requires _state_option to be set on the inheriting
+        class. _state_option represents the configuration
+        option that derives the state. E.g. Template weather
+        entities main state option is 'condition', where
+        switch is 'state'.
         """
 
         @callback
@@ -326,7 +326,8 @@ class TemplateEntity(AbstractTemplateEntity):
 
         if self._state_option is None:
             raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+                f"{self.__class__.__name__} does not implement"
+                " '_state_option' for 'setup_state_template'."
             )
 
         self.add_template(
@@ -336,6 +337,7 @@ class TemplateEntity(AbstractTemplateEntity):
             none_on_template_error=False,
         )
 
+    @override
     def setup_template(
         self,
         option: str,
@@ -420,8 +422,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
         entity_id = event and event.data["entity_id"]
 
-        if entity_id and entity_id == self.entity_id:
-            self._self_ref_update_count += 1
+        if event and entity_id == self.entity_id:
+            new_state = event.data["new_state"]
+            # Only count states written by a render, rate limited renders run later
+            if self._writing_render_state:
+                self._add_render_state(new_state)
+                self._self_ref_update_count += 1
+            elif any(new_state is state for state in self._render_states):
+                self._self_ref_update_count += 1
+            else:
+                self._self_ref_update_count = 1
         else:
             self._self_ref_update_count = 0
 
@@ -447,11 +457,50 @@ class TemplateEntity(AbstractTemplateEntity):
                     errors.append(update.result)
 
         if not self._preview_callback:
-            self.async_write_ha_state()
+            self._async_write_render_state()
             return
 
         if errors:
             self._preview_callback(None, None, None, str(errors[-1]))
+            return
+
+        self._async_preview_update()
+
+    @callback
+    def _async_write_render_state(self) -> None:
+        """Write a state resulting from a template render.
+
+        Use this instead of async_write_ha_state for any write caused by a
+        render, including deferred ones like delays, otherwise loops through
+        that write are treated as external updates and not detected.
+        """
+        # Outside of an event dispatch, the bus delivers our own state change
+        # synchronously during this write, before the new state can be recorded
+        writing_render_state = self._writing_render_state
+        self._writing_render_state = True
+        try:
+            self.async_write_ha_state()
+        finally:
+            self._writing_render_state = writing_render_state
+        self._add_render_state(self.hass.states.get(self.entity_id))
+
+    @callback
+    def _add_render_state(self, state: State | None) -> None:
+        """Remember a state written by a render for loop detection."""
+        if state is None or any(state is known for known in self._render_states):
+            return
+        self._render_states.append(state)
+        # A loop is stopped after this many renders, older states can't be pending
+        del self._render_states[: -(len(self._template_attrs) + 1)]
+
+    @callback
+    def _async_preview_update(self) -> None:
+        """Send an updated state to the preview callback."""
+        if not self._preview_callback:
+            return
+
+        if not self._template_result_info:
+            self._preview_callback(None, None, None, "Preview not ready")
             return
 
         try:
@@ -460,7 +509,6 @@ class TemplateEntity(AbstractTemplateEntity):
         except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
-            assert self._template_result_info
             self._preview_callback(
                 calculated_state.state,
                 calculated_state.attributes,
@@ -503,9 +551,17 @@ class TemplateEntity(AbstractTemplateEntity):
             log_fn=log_fn,
             has_super_template=has_availability_template,
         )
-        self.async_on_remove(result_info.async_remove)
         self._template_result_info = result_info
+        # Started again on entity_id changes, register the cleanup only once
+        if self._async_remove_template_result_info not in (self._on_remove or ()):
+            self.async_on_remove(self._async_remove_template_result_info)
         result_info.async_refresh()
+
+    @callback
+    def _async_remove_template_result_info(self) -> None:
+        """Stop tracking the templates."""
+        if self._template_result_info is not None:
+            self._template_result_info.async_remove()
 
     @callback
     def _async_setup_templates(self) -> None:
@@ -515,6 +571,29 @@ class TemplateEntity(AbstractTemplateEntity):
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
+
+        # Handle attributes as a template.
+        elif (template := self._attributes_template) is not None:
+
+            def _update_attributes(result: dict | TemplateError) -> None:
+                if isinstance(result, TemplateError):
+                    self._attr_extra_state_attributes = {}
+                    return
+
+                try:
+                    self._attr_extra_state_attributes = probatio.All(
+                        dict,
+                        validate_attributes(self.entity_id, self._blocked_attributes),
+                    )(result)
+                except probatio.Invalid as err:
+                    log_validation_error(
+                        result, template, CONF_ATTRIBUTES, self.entity_id, err
+                    )
+                    self._attr_extra_state_attributes = {}
+
+            self.add_template_attribute(
+                CONF_ATTRIBUTES, template, on_update=_update_attributes
+            )
 
         # Iterate all dynamic templates and add listeners.
         for entity_template in self._templates.values():
@@ -545,7 +624,8 @@ class TemplateEntity(AbstractTemplateEntity):
             """Suppress redundant template render errors.
 
             Preview entities render templates at least 3 times before the preview entity
-            is created. If template contains an error, each render will produce an error.
+            is created. If template contains an error,
+            each render will produce an error.
             Instead of overwhelming the client with errors, suppress them and raise
             a single error through the self._handle_results method.
             """
@@ -558,11 +638,35 @@ class TemplateEntity(AbstractTemplateEntity):
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
+    @override
+    def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
+        """Restore an attribute from the last value."""
+        setattr(self, attr, restored_value)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
         self._async_setup_templates()
 
         async_at_start(self.hass, self._async_template_startup)
+        await self.async_restore_last_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-track the templates, `this` was bound to the old entity_id.
+
+        The state is written first, `this.state` must exist when rendering.
+        """
+        super().async_entity_id_changed(old_entity_id)
+        self.async_write_ha_state()
+        if self._template_result_info is None:
+            # Not started yet, the startup will use the new entity_id
+            return
+        self._template_result_info.async_remove()
+        self._async_template_startup(None)
 
     async def async_update(self) -> None:
         """Call for forced update."""

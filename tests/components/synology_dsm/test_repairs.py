@@ -1,10 +1,14 @@
 """Test repairs for synology dsm."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import ANY, MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -25,12 +29,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import ANY, MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -43,7 +43,10 @@ def mock_dsm_with_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -107,6 +110,7 @@ async def test_create_issue(
     hass: HomeAssistant,
     setup_dsm_with_filestation: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the issue is created."""
     ws_client = await hass_ws_client(hass)
@@ -120,6 +124,19 @@ async def test_create_issue(
     assert issue["domain"] == DOMAIN
     assert issue["issue_id"] == "missing_backup_setup_my_serial"
     assert issue["translation_key"] == "missing_backup_setup"
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    issue_entry = issue_registry.async_get_issue(
+        DOMAIN, "missing_backup_setup_my_serial"
+    )
+    assert issue_entry is not None
+    assert issue_entry.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "missing_backup_setup_my_serial") is None
+    )
 
 
 async def test_missing_backup_ignore(
@@ -172,7 +189,7 @@ async def test_missing_backup_success(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the missing backup location setup repair flow is fully processed by the user."""
+    """Test missing backup location repair flow is fully processed."""
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
     entries = hass.config_entries.async_entries(DOMAIN)

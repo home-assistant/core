@@ -3,27 +3,29 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    LightService,
+    LightServiceArgument,
 )
-from homeassistant.components.unifi.const import CONF_SITE_ID
+from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
@@ -31,9 +33,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEVICE_WITH_LED = {
     "board_rev": 3,
@@ -154,8 +153,8 @@ async def test_light_turn_on_off(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.device_with_led_led"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.device_with_led_led"},
         blocking=True,
     )
 
@@ -165,8 +164,8 @@ async def test_light_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.device_with_led_led"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.device_with_led_led"},
         blocking=True,
     )
 
@@ -190,10 +189,10 @@ async def test_light_set_brightness(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.device_with_led_led",
-            ATTR_BRIGHTNESS: 127,
+            TargetKey.ENTITY_ID: "light.device_with_led_led",
+            LightServiceArgument.BRIGHTNESS: 127,
         },
         blocking=True,
     )
@@ -218,10 +217,10 @@ async def test_light_set_rgb_color(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.device_with_led_led",
-            ATTR_RGB_COLOR: (255, 0, 0),
+            TargetKey.ENTITY_ID: "light.device_with_led_led",
+            LightServiceArgument.RGB_COLOR: (255, 0, 0),
         },
         blocking=True,
     )
@@ -246,11 +245,11 @@ async def test_light_set_brightness_and_color(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
+        LightService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.device_with_led_led",
-            ATTR_RGB_COLOR: (0, 255, 0),
-            ATTR_BRIGHTNESS: 191,
+            TargetKey.ENTITY_ID: "light.device_with_led_led",
+            LightServiceArgument.RGB_COLOR: (0, 255, 0),
+            LightServiceArgument.BRIGHTNESS: 191,
         },
         blocking=True,
     )
@@ -374,8 +373,8 @@ async def test_light_onoff_mode_turn_on_off(
     )
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.device_led_no_rgb_led"},
+        LightService.TURN_OFF,
+        {TargetKey.ENTITY_ID: "light.device_led_no_rgb_led"},
         blocking=True,
     )
 
@@ -388,8 +387,8 @@ async def test_light_onoff_mode_turn_on_off(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.device_led_no_rgb_led"},
+        LightService.TURN_ON,
+        {TargetKey.ENTITY_ID: "light.device_led_no_rgb_led"},
         blocking=True,
     )
 
@@ -406,7 +405,7 @@ async def test_light_onoff_mode_turn_on_off(
 async def test_light_rgb_vs_onoff_modes(
     hass: HomeAssistant,
 ) -> None:
-    """Test that RGB and ONOFF modes are correctly assigned based on device capabilities."""
+    """Test RGB and ONOFF modes are assigned based on device capabilities."""
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 2
 
     # Device with LED ring support should have RGB mode
@@ -426,3 +425,51 @@ async def test_light_rgb_vs_onoff_modes(
     assert onoff_light.attributes.get("color_mode") == "onoff"
     assert onoff_light.attributes.get("brightness") is None
     assert onoff_light.attributes.get("rgb_color") is None
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED]])
+async def test_light_turn_on_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn on API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            LightService.TURN_ON,
+            {TargetKey.ENTITY_ID: "light.device_with_led_led"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED]])
+async def test_light_turn_off_request_failed(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify HomeAssistantError is raised when turn off API request fails."""
+    with (
+        patch.object(
+            config_entry_setup.runtime_data.api,
+            "request",
+            side_effect=aiounifi.AiounifiException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            LightService.TURN_OFF,
+            {TargetKey.ENTITY_ID: "light.device_with_led_led"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "action_request_failed"

@@ -10,11 +10,10 @@ import pytest
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
+    MediaPlayerService,
 )
 from homeassistant.components.sonos.const import LONG_SERVICE_TIMEOUT
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -46,7 +45,7 @@ async def test_media_player_join(
         caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
                 "entity_id": "media_player.living_room",
                 "group_members": ["media_player.bedroom"],
@@ -54,8 +53,8 @@ async def test_media_player_join(
             blocking=False,
         )
         await join_complete_event.wait()
-        # Fire the ZGS event to update the speaker grouping as the join method is waiting
-        # for the speakers to be regrouped.
+        # Fire the ZGS event to update the speaker grouping as
+        # the join method is waiting for the speakers to be regrouped.
         group_speakers(soco_living_room, soco_bedroom)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -78,7 +77,7 @@ async def test_media_player_join_bad_entity(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
                 "entity_id": "media_player.living_room",
                 "group_members": "media_player.bad_entity",
@@ -103,7 +102,7 @@ async def test_media_player_join_entity_no_speaker(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
                 "entity_id": "media_player.living_room",
                 "group_members": bad_media_player.entity_id,
@@ -144,7 +143,7 @@ async def test_media_player_join_timeout(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
                 "entity_id": "media_player.living_room",
                 "group_members": ["media_player.bedroom"],
@@ -180,8 +179,8 @@ async def test_media_player_unjoin_timeout(
     ):
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_UNJOIN,
-            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            MediaPlayerService.UNJOIN,
+            {TargetKey.ENTITY_ID: "media_player.bedroom"},
             blocking=True,
         )
     assert soco_bedroom.unjoin.call_count == 1
@@ -212,7 +211,7 @@ async def test_media_player_unjoin(
         caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_UNJOIN,
+            MediaPlayerService.UNJOIN,
             {"entity_id": "media_player.bedroom"},
             blocking=False,
         )
@@ -240,7 +239,7 @@ async def test_media_player_unjoin_already_unjoined(
         caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_UNJOIN,
+            MediaPlayerService.UNJOIN,
             {"entity_id": "media_player.bedroom"},
             blocking=True,
         )
@@ -286,8 +285,8 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
         caplog.clear()
         await hass.services.async_call(
             MP_DOMAIN,
-            SERVICE_UNJOIN,
-            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            MediaPlayerService.UNJOIN,
+            {TargetKey.ENTITY_ID: "media_player.bedroom"},
             blocking=False,
         )
         await unjoin_complete_event.wait()

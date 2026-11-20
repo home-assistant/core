@@ -1,12 +1,10 @@
 """Coordinator for the Casper Glow integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
-from bleak import BleakError
 from bluetooth_data_tools import monotonic_time_coarse
-from pycasperglow import CasperGlow
+from pycasperglow import CasperGlow, CasperGlowError
 
 from homeassistant.components.bluetooth import (
     BluetoothChange,
@@ -76,13 +74,14 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         """Poll device state."""
         await self.device.query_state()
 
+    @override
     async def _async_poll(self) -> None:
         """Poll the device and log availability changes."""
         assert self._last_service_info
 
         try:
             await self._async_poll_data(self._last_service_info)
-        except BleakError as exc:
+        except CasperGlowError as exc:
             if self.last_poll_successful:
                 _LOGGER.info("%s is unavailable: %s", self.title, exc)
                 self.last_poll_successful = False
@@ -102,6 +101,7 @@ class CasperGlowCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         self._async_handle_bluetooth_poll()
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,

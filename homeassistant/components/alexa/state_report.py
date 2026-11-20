@@ -1,9 +1,8 @@
 """Alexa state report code."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 import logging
@@ -12,8 +11,13 @@ from uuid import uuid4
 
 import aiohttp
 
-from homeassistant.components import event
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -53,6 +57,25 @@ DEFAULT_TIMEOUT = 10
 TO_REDACT = {"correlationToken", "token"}
 
 
+def valid_doorbell_timestamp(entity_id: str, event_state: str) -> bool:
+    """Check if doorbell event timestamp is valid."""
+    if event_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+    try:
+        timestamp = datetime.fromisoformat(event_state)
+    except ValueError:
+        _LOGGER.debug(
+            "Unable to parse ISO timestamp from state for %s. Got %s",
+            entity_id,
+            event_state,
+        )
+        return False
+    else:
+        if (dt_util.utcnow() - timestamp) < timedelta(seconds=30):
+            return True
+        return False
+
+
 class AlexaDirective:
     """An incoming Alexa directive."""
 
@@ -86,7 +109,8 @@ class AlexaDirective:
         Will raise AlexaInvalidEndpointError if the endpoint in the request is
         malformed or nonexistent.
         """
-        _endpoint_id: str = self._directive[API_ENDPOINT]["endpointId"]
+        # A malformed request can contain a non-string endpointId
+        _endpoint_id = str(self._directive[API_ENDPOINT]["endpointId"])
         self.entity_id = _endpoint_id.replace("#", ".")
 
         entity: State | None = hass.states.get(self.entity_id)
@@ -270,6 +294,7 @@ async def async_enable_proactive_mode(
         return old_extra_arg is not None and old_extra_arg != new_extra_arg
 
     checker = await create_checker(hass, DOMAIN, extra_significant_check)
+    logged_exposure: dict[str, bool] = {}
 
     @callback
     def _async_entity_state_filter(data: EventStateChangedData) -> bool:
@@ -283,11 +308,20 @@ async def async_enable_proactive_mode(
             return False
 
         changed_entity = data["entity_id"]
-        if not smart_home_config.should_expose(changed_entity):
-            _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
-            return False
+        should_expose = smart_home_config.should_expose(changed_entity)
+        if (
+            _LOGGER.isEnabledFor(logging.DEBUG)
+            and logged_exposure.get(changed_entity) != should_expose
+        ):
+            logged_exposure[changed_entity] = should_expose
+            if should_expose:
+                _LOGGER.debug("Exposing %s", changed_entity)
+            else:
+                _LOGGER.debug(
+                    "Not exposing %s because filtered by config", changed_entity
+                )
 
-        return True
+        return should_expose
 
     async def _async_entity_state_listener(
         event_: Event[EventStateChangedData],
@@ -317,9 +351,17 @@ async def async_enable_proactive_mode(
 
         if should_doorbell:
             old_state = data["old_state"]
-            if new_state.domain == event.DOMAIN or (
+            if (
+                new_state.domain == EVENT_DOMAIN
+                and valid_doorbell_timestamp(new_state.entity_id, new_state.state)
+                and (old_state is None or old_state.state != STATE_UNAVAILABLE)
+                and (old_state is None or old_state.state != new_state.state)
+            ) or (
                 new_state.state == STATE_ON
-                and (old_state is None or old_state.state != STATE_ON)
+                and (
+                    old_state is None
+                    or old_state.state not in (STATE_ON, STATE_UNAVAILABLE)
+                )
             ):
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity
@@ -561,7 +603,7 @@ async def async_send_doorbell_event_message(
         )
         _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == HTTPStatus.ACCEPTED:
+    if response.status in (HTTPStatus.ACCEPTED, HTTPStatus.NO_CONTENT):
         return
 
     response_json = json_loads_object(response_text)

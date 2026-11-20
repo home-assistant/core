@@ -5,18 +5,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from easyenergy import Electricity, Gas
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.easyenergy.async_setup_entry", return_value=True
+        "homeassistant.components.easyenergy.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -39,11 +38,18 @@ async def mock_easyenergy(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         "homeassistant.components.easyenergy.coordinator.EasyEnergy", autospec=True
     ) as easyenergy_mock:
         client = easyenergy_mock.return_value
-        client.energy_prices.return_value = Electricity.from_dict(
-            await async_load_json_array_fixture(hass, "today_energy.json", DOMAIN)
+        energy_data = await async_load_json_object_fixture(
+            hass, "today_energy.json", DOMAIN
         )
+        client.energy_prices.return_value = Electricity.from_dict(
+            energy_data["prices"],
+            price_key="priceIncVat",
+            return_price_key="priceIncVat",
+        )
+        gas_data = await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
         client.gas_prices.return_value = Gas.from_dict(
-            await async_load_json_array_fixture(hass, "today_gas.json", DOMAIN)
+            gas_data["prices"],
+            price_key="priceIncVat",
         )
         yield client
 

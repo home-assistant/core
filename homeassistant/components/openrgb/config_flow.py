@@ -1,34 +1,31 @@
 """Config flow for the OpenRGB integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from openrgb import OpenRGBClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import Undefined
 
 from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): str,
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
-STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 
@@ -43,8 +40,15 @@ async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
     await hass.async_add_executor_job(_try_connect, host, port)
 
 
+def _default_title(host: str) -> str:
+    """Return the default config entry title for a host."""
+    return f"OpenRGB ({host})"
+
+
 class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRGB."""
+
+    VERSION = 2
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -73,6 +77,12 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    title=(
+                        _default_title(host)
+                        if reconfigure_entry.title
+                        == _default_title(reconfigure_entry.data[CONF_HOST])
+                        else Undefined
+                    ),
                     data_updates={CONF_HOST: host, CONF_PORT: port},
                 )
 
@@ -88,13 +98,13 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            name = user_input[CONF_NAME]
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
@@ -113,12 +123,8 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=name,
-                    data={
-                        CONF_NAME: name,
-                        CONF_HOST: host,
-                        CONF_PORT: port,
-                    },
+                    title=_default_title(host),
+                    data={CONF_HOST: host, CONF_PORT: port},
                 )
 
         return self.async_show_form(

@@ -1,15 +1,14 @@
 """Tests for calendar platform of Holiday integration."""
 
 from datetime import datetime, timedelta
+import logging
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays import CATHOLIC
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
-from homeassistant.components.calendar import (
-    DOMAIN as CALENDAR_DOMAIN,
-    SERVICE_GET_EVENTS,
-)
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN, CalendarService
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
     CONF_PROVINCE,
@@ -17,10 +16,9 @@ from homeassistant.components.holiday.const import (
 )
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -51,7 +49,7 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -89,7 +87,7 @@ async def test_holiday_calendar_entity(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.united_states_ak",
             "end_date_time": dt_util.now() + timedelta(days=1),
@@ -137,7 +135,7 @@ async def test_default_language(
     # Test French calendar with English language
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -166,7 +164,7 @@ async def test_default_language(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.france_bl",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -213,7 +211,7 @@ async def test_no_language(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.albania",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -310,7 +308,7 @@ async def test_language_not_exist(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.norge",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -338,7 +336,7 @@ async def test_language_not_exist(
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.norge",
             "end_date_time": dt_util.now() + timedelta(hours=1),
@@ -387,7 +385,7 @@ async def test_categories(
 
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.germany",
             "end_date_time": dt_util.now() + timedelta(days=2),
@@ -411,7 +409,7 @@ async def test_categories(
     freezer.move_to(datetime(2025, 12, 23, 12, tzinfo=zone))
     response = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
             "entity_id": "calendar.germany",
             "end_date_time": dt_util.now() + timedelta(days=2),
@@ -431,3 +429,45 @@ async def test_categories(
             ]
         }
     }
+
+
+async def test_no_update_when_disabled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a disabled calendar entity does not trigger updates."""
+    zone = await dt_util.async_get_time_zone("US/Hawaii")
+    freezer.move_to(datetime(2023, 1, 1, 0, 1, 1, tzinfo=zone))
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
+        title="United States, AK",
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await async_setup_component(hass, "calendar", {})
+    await hass.async_block_till_done()
+
+    entity_id = "calendar.united_states_ak"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.entity"):
+        freezer.move_to(datetime(2023, 1, 2, 0, 1, 1, tzinfo=zone))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert (
+        "incorrectly being triggered for updates while it is disabled"
+        not in caplog.text
+    )

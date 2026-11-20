@@ -1,15 +1,14 @@
 """Config flow to configure the MJPEG IP Camera integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
+from urllib.parse import urlparse
 
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from requests.exceptions import HTTPError, Timeout
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -19,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -33,37 +31,38 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
 
 @callback
-def async_get_schema(
-    defaults: Mapping[str, Any], show_name: bool = False
-) -> vol.Schema:
+def async_get_schema(defaults: Mapping[str, Any]) -> probatio.Schema:
     """Return MJPEG IP Camera schema."""
-    schema = {
-        vol.Required(CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)): str,
-        vol.Optional(
-            CONF_STILL_IMAGE_URL,
-            description={"suggested_value": defaults.get(CONF_STILL_IMAGE_URL)},
-        ): str,
-        vol.Optional(
-            CONF_USERNAME,
-            description={"suggested_value": defaults.get(CONF_USERNAME)},
-        ): str,
-        vol.Optional(
-            CONF_PASSWORD,
-            default=defaults.get(CONF_PASSWORD, ""),
-        ): str,
-        vol.Optional(
-            CONF_VERIFY_SSL,
-            default=defaults.get(CONF_VERIFY_SSL, True),
-        ): bool,
-    }
-
-    if show_name:
-        schema = {
-            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
-            **schema,
+    return probatio.Schema(
+        {
+            probatio.Required(
+                CONF_MJPEG_URL, default=defaults.get(CONF_MJPEG_URL)
+            ): str,
+            probatio.Optional(
+                CONF_STILL_IMAGE_URL,
+                description={"suggested_value": defaults.get(CONF_STILL_IMAGE_URL)},
+            ): str,
+            probatio.Optional(
+                CONF_USERNAME,
+                description={"suggested_value": defaults.get(CONF_USERNAME)},
+            ): str,
+            probatio.Optional(
+                probatio.Secret(CONF_PASSWORD),
+                default=defaults.get(CONF_PASSWORD, ""),
+            ): str,
+            probatio.Optional(
+                CONF_VERIFY_SSL,
+                default=defaults.get(CONF_VERIFY_SSL, True),
+            ): bool,
         }
+    )
 
-    return vol.Schema(schema)
+
+def _title_from_url(url: str) -> str:
+    """Return a title from the host, port and path of the stream URL."""
+    parsed = urlparse(url)
+    host = f"{parsed.hostname}:{parsed.port}" if parsed.port else parsed.hostname
+    return f"{host}{parsed.path.rstrip('/')}"
 
 
 def validate_url(
@@ -107,6 +106,11 @@ async def async_validate_input(
     hass: HomeAssistant, user_input: dict[str, Any]
 ) -> tuple[dict[str, str], str]:
     """Manage MJPEG IP Camera options."""
+    return await hass.async_add_executor_job(_validate_input, user_input)
+
+
+def _validate_input(user_input: dict[str, Any]) -> tuple[dict[str, str], str]:
+    """Validate the stream and still image URLs."""
     errors = {}
     field = "base"
     authentication = HTTP_BASIC_AUTHENTICATION
@@ -114,8 +118,7 @@ async def async_validate_input(
         for field in (CONF_MJPEG_URL, CONF_STILL_IMAGE_URL):
             if not (url := user_input.get(field)):
                 continue
-            authentication = await hass.async_add_executor_job(
-                validate_url,
+            authentication = validate_url(
                 url,
                 user_input.get(CONF_USERNAME),
                 user_input[CONF_PASSWORD],
@@ -137,12 +140,14 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MJPEGOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MJPEGOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,7 +164,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
                 # Storing data in option, to allow for changing them later
                 # using an options flow.
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, user_input[CONF_MJPEG_URL]),
+                    title=_title_from_url(user_input[CONF_MJPEG_URL]),
                     data={},
                     options={
                         CONF_AUTHENTICATION: authentication,
@@ -175,7 +180,7 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=async_get_schema(user_input, show_name=True),
+            data_schema=async_get_schema(user_input),
             errors=errors,
         )
 
@@ -201,7 +206,6 @@ class MJPEGOptionsFlowHandler(OptionsFlow):
 
                 if not errors:
                     return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, user_input[CONF_MJPEG_URL]),
                         data={
                             CONF_AUTHENTICATION: authentication,
                             CONF_MJPEG_URL: user_input[CONF_MJPEG_URL],

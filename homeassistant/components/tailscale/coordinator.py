@@ -1,31 +1,40 @@
 """DataUpdateCoordinator for the Tailscale integration."""
 
-from __future__ import annotations
+from typing import override
 
 from tailscale import Device, Tailscale, TailscaleAuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_TAILNET, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import (
+    CONF_OAUTH_CLIENT_ID,
+    CONF_OAUTH_CLIENT_SECRET,
+    CONF_TAILNET,
+    DOMAIN,
+    LOGGER,
+    SCAN_INTERVAL,
+)
+
+type TailscaleConfigEntry = ConfigEntry[TailscaleDataUpdateCoordinator]
 
 
 class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """The Tailscale Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TailscaleConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TailscaleConfigEntry) -> None:
         """Initialize the Tailscale coordinator."""
         session = async_get_clientsession(hass)
         self.tailscale = Tailscale(
             session=session,
-            api_key=config_entry.data[CONF_API_KEY],
+            oauth_client_id=config_entry.data[CONF_OAUTH_CLIENT_ID],
+            oauth_client_secret=config_entry.data[CONF_OAUTH_CLIENT_SECRET],
             tailnet=config_entry.data[CONF_TAILNET],
         )
         self.previous_devices: set[str] = set()
@@ -38,6 +47,7 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale and remove stale devices from HA."""
         try:
@@ -64,7 +74,9 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         device_registry = dr.async_get(self.hass)
 
         for device_id in stale_device_ids:
-            device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+            device = device_registry.async_get_device_by_identifier(
+                (DOMAIN, device_id), self.config_entry.entry_id
+            )
             if device:
                 LOGGER.debug("Removing stale device: %s", device_id)
                 device_registry.async_remove_device(device.id)

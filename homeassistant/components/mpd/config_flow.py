@@ -3,22 +3,22 @@
 from asyncio import timeout
 from contextlib import suppress
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import mpd
 from mpd.asyncio import MPDClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN, LOGGER
 
-SCHEMA = vol.Schema(
+SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=6600): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Optional(CONF_PORT, default=6600): int,
     }
 )
 
@@ -26,6 +26,7 @@ SCHEMA = vol.Schema(
 class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Music Player Daemon config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -43,15 +44,25 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.connect(user_input[CONF_HOST], user_input[CONF_PORT])
                     if CONF_PASSWORD in user_input:
                         await client.password(user_input[CONF_PASSWORD])
-                    with suppress(mpd.ConnectionError):
-                        client.disconnect()
+                    # MPD greets before authenticating, so only a read proves access.
+                    await client.status()
             except (
                 TimeoutError,
                 gaierror,
                 mpd.ConnectionError,
+                mpd.ProtocolError,
                 OSError,
             ):
                 errors["base"] = "cannot_connect"
+            except mpd.CommandError as err:
+                if err.errno in (
+                    mpd.FailureResponseCode.PASSWORD,
+                    mpd.FailureResponseCode.PERMISSION,
+                ):
+                    errors["base"] = "invalid_auth"
+                else:
+                    LOGGER.warning("Unexpected MPD error: %s", err)
+                    errors["base"] = "unknown"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
@@ -60,6 +71,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Music Player Daemon",
                     data=user_input,
                 )
+            finally:
+                with suppress(mpd.ConnectionError):
+                    client.disconnect()
 
         return self.async_show_form(
             step_id="user",

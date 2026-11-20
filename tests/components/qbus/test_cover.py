@@ -2,30 +2,20 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import async_fire_mqtt_message
 from qbusmqttapi.state import QbusMqttShutterState
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-)
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_mqtt_message
 
 _PAYLOAD_UDS_STATE_CLOSED = '{"id":"UL30","properties":{"state":"down"},"type":"state"}'
 _PAYLOAD_UDS_STATE_OPENED = '{"id":"UL30","properties":{"state":"up"},"type":"state"}'
@@ -60,9 +50,9 @@ _TOPIC_UDS_STATE = "cloudapp/QBUSMQTTGW/UL1/UL30/state"
 _TOPIC_POS_STATE = "cloudapp/QBUSMQTTGW/UL1/UL32/state"
 _TOPIC_SLAT_STATE = "cloudapp/QBUSMQTTGW/UL1/UL31/state"
 
-_ENTITY_ID_UDS = "cover.curtains"
-_ENTITY_ID_POS = "cover.blinds"
-_ENTITY_ID_SLAT = "cover.slats"
+_ENTITY_ID_UDS = "cover.guest_bedroom_curtains"
+_ENTITY_ID_POS = "cover.kitchen_blinds"
+_ENTITY_ID_SLAT = "cover.living_slats"
 
 
 async def test_cover_up_down_stop(
@@ -79,8 +69,8 @@ async def test_cover_up_down_stop(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_UDS},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_UDS},
         blocking=True,
     )
 
@@ -97,8 +87,8 @@ async def test_cover_up_down_stop(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_UDS},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_UDS},
         blocking=True,
     )
 
@@ -115,8 +105,8 @@ async def test_cover_up_down_stop(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_UDS},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_UDS},
         blocking=True,
     )
 
@@ -146,8 +136,8 @@ async def test_cover_position(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_POS},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_POS},
         blocking=True,
     )
 
@@ -165,8 +155,8 @@ async def test_cover_position(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: _ENTITY_ID_POS, ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_POS, CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
 
@@ -184,8 +174,8 @@ async def test_cover_position(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_POS},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_POS},
         blocking=True,
     )
 
@@ -219,8 +209,8 @@ async def test_cover_slats(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: _ENTITY_ID_SLAT},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_SLAT},
         blocking=True,
     )
 
@@ -240,8 +230,8 @@ async def test_cover_slats(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: _ENTITY_ID_SLAT},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_SLAT},
         blocking=True,
     )
 
@@ -259,8 +249,8 @@ async def test_cover_slats(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: _ENTITY_ID_SLAT, ATTR_TILT_POSITION: 75},
+        CoverService.SET_TILT_POSITION,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_SLAT, CoverServiceArgument.TILT_POSITION: 75},
         blocking=True,
     )
 
@@ -278,8 +268,8 @@ async def test_cover_slats(
     mock_publish_state.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: _ENTITY_ID_SLAT},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: _ENTITY_ID_SLAT},
         blocking=True,
     )
 

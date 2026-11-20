@@ -1,7 +1,5 @@
 """Common methods used across tests for Bond."""
 
-from __future__ import annotations
-
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any
@@ -9,14 +7,13 @@ from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import DeviceType
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def ceiling_fan_with_breeze(name: str):

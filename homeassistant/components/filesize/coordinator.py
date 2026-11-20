@@ -1,11 +1,10 @@
 """Coordinator for monitoring the size of a file."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 import os
 import pathlib
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH
@@ -57,10 +56,12 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 
+    @override
     async def _async_setup(self) -> None:
         """Set up path."""
         self.path = await self.hass.async_add_executor_job(self._get_full_path)
 
+    @override
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""
         statinfo = await self.hass.async_add_executor_job(self._update)

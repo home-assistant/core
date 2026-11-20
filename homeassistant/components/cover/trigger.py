@@ -1,12 +1,17 @@
 """Provides triggers for covers."""
 
 from collections.abc import Mapping
+from typing import override
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
+from homeassistant.helpers.trigger import (
+    EntityTriggerBase,
+    NotTriggeredReasonReporter,
+    Trigger,
+)
 
-from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
+from .const import DOMAIN, CoverDeviceClass, CoverEntityStateAttribute
 from .models import CoverDomainSpec
 
 
@@ -22,15 +27,19 @@ class CoverTriggerBase(EntityTriggerBase):
             return state.attributes.get(domain_spec.value_source)
         return state.state
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the state matches the target cover state."""
         domain_spec = self._domain_specs[state.domain]
         return self._get_value(state) == domain_spec.target_value
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the transition is valid for a cover state change."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
+        """Check that the relevant cover value changed."""
         if (from_value := self._get_value(from_state)) is None:
             return False
         return from_value != self._get_value(to_state)
@@ -47,7 +56,9 @@ def make_cover_opened_trigger(
         _domain_specs = {
             domain: CoverDomainSpec(
                 device_class=dc,
-                value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
                 target_value=False if domain == DOMAIN else STATE_ON,
             )
             for domain, dc in device_classes.items()
@@ -67,7 +78,9 @@ def make_cover_closed_trigger(
         _domain_specs = {
             domain: CoverDomainSpec(
                 device_class=dc,
-                value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
+                value_source=(
+                    CoverEntityStateAttribute.IS_CLOSED if domain == DOMAIN else None
+                ),
                 target_value=True if domain == DOMAIN else STATE_OFF,
             )
             for domain, dc in device_classes.items()

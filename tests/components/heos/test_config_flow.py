@@ -12,6 +12,7 @@ from pyheos import (
     NetworkType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import (
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MockHeos
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_aborts_already_setup(
@@ -62,7 +61,11 @@ async def test_cannot_connect_shows_error_form(
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -72,6 +75,12 @@ async def test_cannot_connect_shows_error_form(
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
 
+    controller.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_create_entry_when_host_valid(
     hass: HomeAssistant, controller: MockHeos
@@ -80,7 +89,11 @@ async def test_create_entry_when_host_valid(
     data = {CONF_HOST: "127.0.0.1"}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=data
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=data
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
@@ -114,6 +127,7 @@ async def test_manual_setup_with_discovery_in_progress(
         user_result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
     assert user_result["type"] is FlowResultType.CREATE_ENTRY
+    assert user_result["result"].unique_id == DOMAIN
 
     # Discovery flow is removed
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -182,7 +196,7 @@ async def test_discovery_aborts_same_system(
     config_entry: MockConfigEntry,
     system: HeosSystem,
 ) -> None:
-    """Test discovery does not update when current host is part of discovered's system."""
+    """Test discovery does not update when current host is in discovered system."""
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
@@ -244,6 +258,34 @@ async def test_discovery_updates(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == "127.0.0.2"
+
+
+async def test_discovery_does_not_update_while_connected(
+    hass: HomeAssistant,
+    discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery keeps the current host while connected to it."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.mock_set_connection_state(ConnectionState.CONNECTED)
+
+    # A device that has just rejoined the network reports an incomplete host list,
+    # without the configured host, and the player that is momentarily missing is
+    # not in the player list either.
+    controller.mock_set_players({1: controller.players[1]})
+    host = HeosHost("Player", "Model", None, None, "127.0.0.2", NetworkType.WIRED, True)
+    controller.get_system_info.return_value = HeosSystem(None, host, [host])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_zeroconf_discovery(
@@ -313,7 +355,7 @@ async def test_zeroconf_discovery_aborts_same_system(
     config_entry: MockConfigEntry,
     system: HeosSystem,
 ) -> None:
-    """Test discovery does not update when current host is part of discovered's system."""
+    """Test discovery does not update when current host is in discovered system."""
     config_entry.add_to_hass(hass)
     assert config_entry.data[CONF_HOST] == "127.0.0.1"
 
@@ -562,7 +604,7 @@ async def test_options_flow_missing_one_param_recovers(
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:
-    """Test options flow signs-in after recovering from only username or password being entered."""
+    """Test options flow signs-in after recovering from partial credentials."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.mock_set_connection_state(ConnectionState.CONNECTED)
@@ -783,7 +825,7 @@ async def test_reauth_flow_missing_one_param_recovers(
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:
-    """Test reauth flow signs-in after recovering from only username or password being entered."""
+    """Test reauth flow signs-in after recovering from partial credentials."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.mock_set_connection_state(ConnectionState.CONNECTED)

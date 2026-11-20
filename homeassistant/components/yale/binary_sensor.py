@@ -1,12 +1,11 @@
 """Support for Yale binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import override
 
 from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
@@ -24,7 +23,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import YaleConfigEntry, YaleData
+from . import YaleConfigEntry
+from .data import YaleData
 from .entity import YaleDescriptionEntity
 from .util import (
     retrieve_ding_activity,
@@ -124,6 +124,7 @@ class YaleDoorBinarySensor(YaleDescriptionEntity, BinarySensorEntity):
     description: BinarySensorEntityDescription
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         if door_activity := self._get_latest({ActivityType.DOOR_OPERATION}):
@@ -144,6 +145,7 @@ class YaleDoorbellBinarySensor(YaleDescriptionEntity, BinarySensorEntity):
     _check_for_off_update_listener: Callable[[], None] | None = None
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
@@ -166,7 +168,7 @@ class YaleDoorbellBinarySensor(YaleDescriptionEntity, BinarySensorEntity):
             self.async_write_ha_state()
 
     def _schedule_update_to_recheck_turn_off_sensor(self) -> None:
-        """Schedule an update to recheck the sensor to see if it is ready to turn off."""
+        """Schedule an update to recheck if sensor is ready to turn off."""
         # If the sensor is already off there is nothing to do
         if not self.is_on:
             return
@@ -182,6 +184,7 @@ class YaleDoorbellBinarySensor(YaleDescriptionEntity, BinarySensorEntity):
         self._check_for_off_update_listener()
         self._check_for_off_update_listener = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When removing cancel any scheduled updates."""
         self._cancel_any_pending_updates()

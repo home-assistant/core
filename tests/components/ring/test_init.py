@@ -1,10 +1,12 @@
 """The tests for the Ring component."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ring
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -20,13 +22,11 @@ from homeassistant.components.ring.coordinator import RingConfigEntry, RingEvent
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HARDWARE_ID
 from .device_mocks import FRONT_DOOR_DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, mock_ring_client) -> None:
@@ -41,6 +41,20 @@ async def test_setup_entry(
 ) -> None:
     """Test setup entry."""
     assert mock_added_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    # device_id "aacdef987654" is the Front Door doorbell's MAC.
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aacdef987654"), mock_added_config_entry.entry_id
+    )
+    assert device_entry == snapshot
 
 
 async def test_setup_entry_device_update(
@@ -508,10 +522,9 @@ async def test_no_listen_start(
     ]
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migrate_create_device_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test migration creates new device id created."""
     entry = MockConfigEntry(

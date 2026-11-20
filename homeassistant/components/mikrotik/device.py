@@ -1,7 +1,5 @@
 """Network client device class."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any
 
@@ -25,6 +23,13 @@ class Device:
     def name(self) -> str:
         """Return device name."""
         return str(self._params.get("host-name", self.mac))
+
+    @property
+    def host_name(self) -> str | None:
+        """Return the DHCP host name, if the client has one."""
+        if (host_name := self._params.get("host-name")) is None or host_name == "":
+            return None
+        return str(host_name)
 
     @property
     def ip_address(self) -> str | None:

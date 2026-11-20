@@ -1,9 +1,7 @@
 """Helper for groups."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from propcache.api import cached_property
 
@@ -46,6 +44,13 @@ class Group:
         entity = self._entity
         del get_group_entities(entity.hass)[entity.entity_id]
 
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Called when the entity's entity_id has been changed."""
+        entity = self._entity
+        group_entities = get_group_entities(entity.hass)
+        group_entities[entity.entity_id] = group_entities.pop(old_entity_id)
+
 
 class GenericGroup(Group):
     """Generic entity group.
@@ -59,6 +64,7 @@ class GenericGroup(Group):
         self._member_entity_ids = member_entity_ids
 
     @cached_property
+    @override
     def member_entity_ids(self) -> list[str]:
         """Return the list of member entity IDs."""
         return self._member_entity_ids
@@ -81,6 +87,7 @@ class IntegrationSpecificGroup(Group):
         self._member_unique_ids = member_unique_ids
 
     @cached_property
+    @override
     def member_entity_ids(self) -> list[str]:
         """Return the list of member entity IDs."""
         entity_registry = er.async_get(self._entity.hass)
@@ -112,6 +119,7 @@ class IntegrationSpecificGroup(Group):
             del self.member_entity_ids
 
     @callback
+    @override
     def async_added_to_hass(self) -> None:
         """Called when the entity is added to hass."""
         super().async_added_to_hass()
@@ -157,8 +165,13 @@ def get_group_entities(hass: HomeAssistant) -> dict[str, Entity]:
     return {}
 
 
-def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
+def expand_entity_ids(
+    hass: HomeAssistant, entity_ids: Iterable[Any], *, include_groups: bool = False
+) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
+
+    With include_groups, the group entity ids are kept alongside their members,
+    nested groups included.
 
     Async friendly.
     """
@@ -182,9 +195,13 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
+            if include_groups and entity_id not in found_ids:
+                found_ids.append(entity_id)
             found_ids.extend(
                 ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
+                for ent_id in expand_entity_ids(
+                    hass, child_entities, include_groups=include_groups
+                )
                 if ent_id not in found_ids
             )
         # If entity_id points at an old-style group, expand it
@@ -193,9 +210,13 @@ def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[st
             if entity_id in child_entities:
                 child_entities = list(child_entities)
                 child_entities.remove(entity_id)
+            if include_groups and entity_id not in found_ids:
+                found_ids.append(entity_id)
             found_ids.extend(
                 ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
+                for ent_id in expand_entity_ids(
+                    hass, child_entities, include_groups=include_groups
+                )
                 if ent_id not in found_ids
             )
         elif entity_id not in found_ids:

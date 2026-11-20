@@ -6,9 +6,9 @@ from gotailwind import TailwindError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
 from homeassistant.components.tailwind.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,8 +40,8 @@ async def test_number_entities(
     assert len(mock_tailwind.identify.mock_calls) == 0
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: state.entity_id},
+        ButtonService.PRESS,
+        {TargetKey.ENTITY_ID: state.entity_id},
         blocking=True,
     )
 
@@ -54,11 +54,14 @@ async def test_number_entities(
     # Test error handling
     mock_tailwind.identify.side_effect = TailwindError("Some error")
 
-    with pytest.raises(HomeAssistantError, match="Some error") as excinfo:
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Tailwind device",
+    ) as excinfo:
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: state.entity_id},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: state.entity_id},
             blocking=True,
         )
 

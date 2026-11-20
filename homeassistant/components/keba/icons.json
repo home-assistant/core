@@ -7,7 +7,7 @@
       "service": "mdi:lock-open"
     },
     "disable": {
-      "service": "mdi:fash-off"
+      "service": "mdi:flash-off"
     },
     "enable": {
       "service": "mdi:flash"

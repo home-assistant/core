@@ -1,21 +1,36 @@
 """Test the backups for OneDrive for Business."""
 
-from __future__ import annotations
-
-from collections.abc import AsyncGenerator
+import asyncio
+from collections.abc import AsyncGenerator, AsyncIterator
+from dataclasses import replace
 from io import StringIO
+from json import dumps
+from typing import Any
 from unittest.mock import Mock, patch
 
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     HashMismatchError,
     OneDriveException,
+    UploadSessionExpired,
 )
 from onedrive_personal_sdk.models.items import File
+from onedrive_personal_sdk.models.upload import FileInfo
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    async_get_manager,
+)
 from homeassistant.components.onedrive_for_business.backup import (
+    METADATA_DOWNLOAD_CONCURRENCY,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.onedrive_for_business.const import (
@@ -28,9 +43,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -55,22 +67,34 @@ async def test_agents_info(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test backup agent info."""
+    """Test backup agent info following config entry unload and setup."""
     client = await hass_ws_client(hass)
+    local_agent = {"agent_id": "backup.local", "name": "local"}
+    onedrive_agent = {
+        "agent_id": f"{DOMAIN}.{mock_config_entry.unique_id}",
+        "name": mock_config_entry.title,
+    }
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
-
     assert response["success"]
-    assert response["result"] == {
-        "agents": [
-            {"agent_id": "backup.local", "name": "local"},
-            {
-                "agent_id": f"{DOMAIN}.{mock_config_entry.unique_id}",
-                "name": mock_config_entry.title,
-            },
-        ],
-    }
+    assert response["result"] == {"agents": [local_agent, onedrive_agent]}
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent]}
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"agents": [local_agent, onedrive_agent]}
 
 
 async def test_agents_list_backups(
@@ -89,7 +113,7 @@ async def test_agents_list_backups(
         {
             "addons": [],
             "agents": {
-                "onedrive_for_business.mock_drive_id": {
+                "onedrive_for_business.MOCK_DRIVE_ID": {
                     "protected": False,
                     "size": 34519040,
                 }
@@ -124,6 +148,49 @@ async def test_agents_list_backups_with_download_failure(
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == []
+
+
+async def test_agents_list_backups_downloads_metadata_concurrently(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+    mock_backup_file: File,
+    mock_metadata_file: File,
+) -> None:
+    """Test metadata files are downloaded concurrently, up to the limit."""
+    backup_ids = [f"backup_{i}" for i in range(METADATA_DOWNLOAD_CONCURRENCY + 2)]
+    mock_onedrive_client.list_drive_items.return_value = [
+        file
+        for backup_id in backup_ids
+        for file in (
+            replace(mock_backup_file, id=f"{backup_id}_tar", name=f"{backup_id}.tar"),
+            replace(
+                mock_metadata_file, id=backup_id, name=f"{backup_id}.metadata.json"
+            ),
+        )
+    ]
+    in_flight = max_in_flight = 0
+
+    async def download_drive_item(item_id: str) -> Mock:
+        nonlocal in_flight, max_in_flight
+        in_flight += 1
+        max_in_flight = max(max_in_flight, in_flight)
+        await asyncio.sleep(0)
+        in_flight -= 1
+        metadata = dumps({**BACKUP_METADATA, "backup_id": item_id})
+        return Mock(read=AsyncMock(return_value=metadata.encode()))
+
+    mock_onedrive_client.download_drive_item.side_effect = download_drive_item
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert {backup["backup_id"] for backup in response["result"]["backups"]} == set(
+        backup_ids
+    )
+    assert max_in_flight == METADATA_DOWNLOAD_CONCURRENCY
 
 
 async def test_agents_get_backup(
@@ -205,7 +272,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
@@ -290,6 +357,90 @@ async def test_agents_upload_corrupt_upload(
     assert "Hash validation failed, backup file might be corrupt" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "metadata_uploads", "error_logged"),
+    [
+        pytest.param([UploadSessionExpired(), None], 1, False, id="retry_succeeds"),
+        pytest.param(UploadSessionExpired(), 0, True, id="retry_fails"),
+    ],
+)
+async def test_agents_upload_session_expired(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: list[Exception | None] | Exception,
+    metadata_uploads: int,
+    error_logged: bool,
+) -> None:
+    """Test the upload is retried once with a new session when it expires."""
+    mock_large_file_upload_client.side_effect = side_effect
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_large_file_upload_client.call_count == 2
+    assert mock_onedrive_client.upload_file.call_count == metadata_uploads
+    assert (
+        "Error during backup in async_upload_backup: UploadSessionExpired"
+        in caplog.text
+    ) is error_logged
+
+
+async def test_agents_upload_retry_reopens_stream(
+    hass: HomeAssistant,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the retry after an expired session uploads the full backup again."""
+    content = [b"chunk1", b"chunk2", b"chunk3"]
+    received: list[bytes] = []
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            for chunk in content:
+                yield chunk
+
+        return stream()
+
+    async def upload(_token_function: Any, file: FileInfo, **kwargs: Any) -> None:
+        if not received:
+            received.append(await anext(file.content_stream))
+            raise UploadSessionExpired
+        received.append(b"".join([chunk async for chunk in file.content_stream]))
+
+    mock_large_file_upload_client.side_effect = upload
+    agent = async_get_manager(hass).backup_agents[
+        f"{DOMAIN}.{mock_config_entry.unique_id}"
+    ]
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=AgentBackup.from_dict(BACKUP_METADATA),
+        on_progress=Mock(),
+    )
+
+    assert received == [b"chunk1", b"chunk1chunk2chunk3"]
+
+
 async def test_agents_upload_metadata_upload_failed(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -369,13 +520,14 @@ async def test_error_on_agents_download(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("side_effect", "error", "translation_key"),
     [
         (
             OneDriveException(),
             "Backup operation failed",
+            "agent_operation_failed",
         ),
-        (TimeoutError(), "Backup operation timed out"),
+        (TimeoutError(), "Backup operation timed out", "agent_operation_timed_out"),
     ],
 )
 async def test_delete_error(
@@ -385,6 +537,7 @@ async def test_delete_error(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
+    translation_key: str,
 ) -> None:
     """Test error during delete."""
     mock_onedrive_client.delete_drive_item.side_effect = AsyncMock(
@@ -402,8 +555,16 @@ async def test_delete_error(
     response = await client.receive_json()
 
     assert response["success"]
+    agent_id = f"{DOMAIN}.{mock_config_entry.unique_id}"
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error}
+        "agent_error_translations": {
+            agent_id: {
+                "translation_domain": "backup",
+                "translation_key": translation_key,
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {agent_id: error},
     }
 
 
@@ -425,7 +586,7 @@ async def test_agents_delete_not_found_does_not_throw(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_backup_not_found(
@@ -463,7 +624,9 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication error"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": (
+            "Authentication with the backup location failed"
+        )
     }
 
     await hass.async_block_till_done()

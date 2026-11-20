@@ -2,6 +2,10 @@
 # Describes the format for available services
 
 set_system_mode:
+  target:
+    entity:
+      integration: evohome
+      domain: climate
   fields:
     mode:
       required: true
@@ -26,8 +30,6 @@ set_system_mode:
         duration:
           enable_second: false
 
-reset_system:
-
 refresh_system:
 
 set_zone_override:
@@ -51,10 +53,18 @@ set_zone_override:
         duration:
           enable_second: false
 
-clear_zone_override:
+set_dhw_override:
   target:
     entity:
       integration: evohome
-      domain: climate
-      supported_features:
-        - climate.ClimateEntityFeature.TARGET_TEMPERATURE
+      domain: water_heater
+  fields:
+    state:
+      required: true
+      selector:
+        boolean:
+    duration:
+      example: "02:15"
+      selector:
+        duration:
+          enable_second: false

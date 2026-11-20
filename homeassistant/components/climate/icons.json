@@ -18,10 +18,10 @@
     "is_on": {
       "condition": "mdi:power-on"
     },
-    "target_humidity": {
+    "is_target_humidity": {
       "condition": "mdi:water-percent"
     },
-    "target_temperature": {
+    "is_target_temperature": {
       "condition": "mdi:thermometer"
     }
   },

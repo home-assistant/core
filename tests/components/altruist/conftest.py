@@ -1,15 +1,14 @@
 """Altruist tests configuration."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, Mock, patch
 
 from altruistclient import AltruistDeviceModel, AltruistError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
-from homeassistant.components.altruist.const import CONF_HOST, DOMAIN
-
-from tests.common import MockConfigEntry, load_fixture
+from homeassistant.components.altruist.const import DOMAIN
+from homeassistant.const import CONF_HOST
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.altruist.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -60,11 +59,11 @@ def mock_altruist_client(mock_altruist_device: Mock) -> Generator[AsyncMock]:
         mock_instance = AsyncMock()
         mock_instance.device = mock_altruist_device
         mock_instance.device_id = mock_altruist_device.id
-        mock_instance.sensor_names = json.loads(
-            load_fixture("sensor_names.json", DOMAIN)
+        mock_instance.sensor_names = load_json_array_fixture(
+            "sensor_names.json", DOMAIN
         )
-        mock_instance.fetch_data.return_value = json.loads(
-            load_fixture("real_data.json", DOMAIN)
+        mock_instance.fetch_data.return_value = load_json_array_fixture(
+            "real_data.json", DOMAIN
         )
 
         mock_client_class.from_ip_address = AsyncMock(return_value=mock_instance)

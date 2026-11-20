@@ -1,6 +1,7 @@
 """Support for Firmata binary sensor input."""
 
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN
@@ -47,15 +48,18 @@ async def async_setup_entry(
 class FirmataBinarySensor(FirmataPinEntity, BinarySensorEntity):
     """Representation of a binary sensor on a Firmata board."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a binary sensor."""
         await self._api.start_pin(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop reporting a binary sensor."""
         await self._api.stop_pin()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if binary sensor is on."""
         return self._api.is_on

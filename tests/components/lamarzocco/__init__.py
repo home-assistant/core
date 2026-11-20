@@ -1,12 +1,20 @@
 """Mock inputs for tests."""
 
-from pylamarzocco.const import ModelName
+from unittest.mock import AsyncMock, MagicMock
 
+from pylamarzocco.const import ModelName
+from pylamarzocco.models import (
+    ThingDashboardConfig,
+    ThingSchedulingSettings,
+    ThingSettings,
+    ThingStatistics,
+)
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
+from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 HOST_SELECTION = {
     CONF_HOST: "192.168.1.1",
@@ -37,6 +45,44 @@ async def async_init_integration(
     await hass.async_block_till_done()
 
 
+def configure_machine_mock(
+    machine_mock: MagicMock, model: ModelName, serial_number: str
+) -> None:
+    """Configure a mocked LaMarzoccoMachine for the given model and serial."""
+    if model == ModelName.LINEA_MINI:
+        config = load_json_object_fixture("config_mini.json", DOMAIN)
+    elif model == ModelName.LINEA_MICRA:
+        config = load_json_object_fixture("config_micra.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config_gs3.json", DOMAIN)
+    schedule = load_json_object_fixture("schedule.json", DOMAIN)
+    settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
+
+    machine_mock.serial_number = serial_number
+    machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
+    machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
+    machine_mock.settings = ThingSettings.from_dict(settings)
+    machine_mock.statistics = ThingStatistics.from_dict(statistics)
+    machine_mock.dashboard.model_name = model
+    machine_mock.to_dict.return_value = {
+        "serial_number": machine_mock.serial_number,
+        "dashboard": machine_mock.dashboard.to_dict(),
+        "schedule": machine_mock.schedule.to_dict(),
+        "settings": machine_mock.settings.to_dict(),
+    }
+    machine_mock.connect_dashboard_websocket = AsyncMock()
+    machine_mock.websocket = MagicMock()
+    machine_mock.websocket.connected = True
+    machine_mock.websocket.disconnect = AsyncMock()
+    machine_mock.bluetooth_shot_counter_active = False
+    machine_mock.bluetooth_connected = True
+    machine_mock.register_bluetooth_connection_callback.return_value = MagicMock(
+        return_value=None
+    )
+    machine_mock.connect_bluetooth_shot_counter.return_value = True
+
+
 def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServiceInfo:
     """Return a mocked BluetoothServiceInfo."""
     if model in (ModelName.GS3_AV, ModelName.GS3_MP):
@@ -56,4 +102,12 @@ def get_bluetooth_service_info(model: ModelName, serial: str) -> BluetoothServic
     )
 
 
-MOCK_INSTALLATION_KEY = '{"secret": "K9ZW2vlMSb3QXmhySx4pxAbTHujWj3VZ01Jn3D/sO98=", "private_key": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg8iotE8El786F6kHuEL8GyYhjDB7oo06vNhQwtewF37yhRANCAAQCLb9lHskiavvfkI4H2B+WsdkusfgBBFuFNRrGV8bqPMra1TK5myb/ecdZfHJBBJrcbdt90QMDmXQm5L3muXXe", "installation_id": "4e966f3f-2abc-49c4-a362-3cd3346f1a87"}'
+MOCK_INSTALLATION_KEY = (
+    '{"secret": "K9ZW2vlMSb3QXmhySx4pxAbTHujWj3VZ01Jn3D/sO98=",'
+    ' "private_key":'
+    ' "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg8iotE8El786F'
+    "6kHuEL8GyYhjDB7oo06vNhQwtewF37yhRANCAAQCLb9lHskiavvfkI4H2B"
+    "+WsdkusfgBBFuFNRrGV8bqPMra1TK5myb/ecdZfHJBBJrcbdt90QMDmXQm5L3"
+    'muXXe",'
+    ' "installation_id": "4e966f3f-2abc-49c4-a362-3cd3346f1a87"}'
+)

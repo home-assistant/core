@@ -1,25 +1,23 @@
 """Config flow for Plex."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
+from urllib.parse import urlparse
 
 from aiohttp import web_response
 import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexauth import PlexAuth
+import probatio
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -41,7 +39,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
-    AUTOMATIC_SETUP_STRING,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -52,15 +49,14 @@ from .const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    MANUAL_SETUP_STRING,
     PLEX_SERVER_CONFIG,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified
-from .helpers import get_plex_server
+from .errors import NoServersFound, ServerNotFound, ServerNotSpecified
+from .helpers import PlexConfigEntry, get_plex_server
 from .server import PlexServer
 
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
@@ -100,8 +96,9 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: PlexConfigEntry,
     ) -> PlexOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
@@ -114,44 +111,26 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         self._manual = False
         self._reauth_config: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["website_auth", "manual_setup"],
+        )
+
+    async def async_step_website_auth(
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return await self._async_step_plex_website_auth()
-        if self.show_advanced_options:
-            return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
-            description_placeholders={"plex_server_url": "[plex.tv](https://plex.tv)"},
-        )
-
-    async def async_step_user_advanced(
-        self,
-        user_input: dict[str, str] | None = None,
-        errors: dict[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle an advanced mode flow initialized by the user."""
-        if user_input is not None:
-            if user_input.get("setup_method") == MANUAL_SETUP_STRING:
-                self._manual = True
-                return await self.async_step_manual_setup()
-            return await self._async_step_plex_website_auth()
-
-        data_schema = vol.Schema(
-            {
-                vol.Required("setup_method", default=AUTOMATIC_SETUP_STRING): vol.In(
-                    [AUTOMATIC_SETUP_STRING, MANUAL_SETUP_STRING]
-                )
-            }
-        )
-        return self.async_show_form(
-            step_id="user_advanced", data_schema=data_schema, errors=errors
-        )
+        """Handle website authentication."""
+        if errors:
+            return self.async_show_form(step_id="website_auth", errors=errors)
+        return await self._async_step_plex_website_auth()
 
     async def async_step_manual_setup(
         self,
@@ -159,6 +138,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Begin manual configuration."""
+        self._manual = True
         if user_input is not None and errors is None:
             user_input.pop(CONF_URL, None)
             if host := user_input.get(CONF_HOST):
@@ -173,24 +153,24 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         previous_input = user_input or {}
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_HOST,
                     description={"suggested_value": previous_input.get(CONF_HOST)},
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT, default=previous_input.get(CONF_PORT, DEFAULT_PORT)
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_SSL, default=previous_input.get(CONF_SSL, DEFAULT_SSL)
                 ): bool,
-                vol.Required(
+                probatio.Required(
                     CONF_VERIFY_SSL,
                     default=previous_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                 ): bool,
-                vol.Optional(
-                    CONF_TOKEN,
+                probatio.Optional(
+                    probatio.Secret(CONF_TOKEN),
                     description={"suggested_value": previous_input.get(CONF_TOKEN)},
                 ): str,
             }
@@ -216,6 +196,11 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         except NoServersFound:
             _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
+        except ServerNotFound:
+            _LOGGER.debug(
+                "Plex server not found on Plex account: %s", plex_server.server_choice
+            )
+            errors["base"] = "server_not_found"
         except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
             _LOGGER.error("Invalid credentials provided, config not created")
             errors[CONF_TOKEN] = "faulty_credentials"
@@ -242,7 +227,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_manual_setup(
                     user_input=server_config, errors=errors
                 )
-            return await self.async_step_user(errors=errors)
+            return await self.async_step_website_auth(errors=errors)
 
         server_id = plex_server.machine_identifier
         url = plex_server.url_in_use
@@ -279,6 +264,78 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=url, data=data)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the server address."""
+        entry = self._get_reconfigure_entry()
+        server_config = entry.data[PLEX_SERVER_CONFIG]
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            prefix = "https" if user_input[CONF_SSL] else "http"
+            new_server_config = {
+                **server_config,
+                CONF_URL: f"{prefix}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+            }
+            plex_server = PlexServer(self.hass, new_server_config)
+            try:
+                await self.hass.async_add_executor_job(plex_server.connect)
+            except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
+                errors["base"] = "faulty_credentials"
+            except requests.exceptions.SSLError:
+                errors["base"] = "ssl_error"
+            except plexapi.exceptions.NotFound, requests.exceptions.ConnectionError:
+                errors[CONF_HOST] = "not_found"
+            except Exception:
+                _LOGGER.exception("Unknown error connecting to Plex server")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(plex_server.machine_identifier)
+                self._abort_if_unique_id_mismatch()
+                url = plex_server.url_in_use
+                if not url.startswith("https"):
+                    new_server_config.pop(CONF_VERIFY_SSL)
+                result = self.async_update_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_SERVER: plex_server.friendly_name,
+                        PLEX_SERVER_CONFIG: {**new_server_config, CONF_URL: url},
+                    },
+                )
+                # The update listener only applies options, it does not reload.
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return result
+        else:
+            parsed_url = urlparse(server_config[CONF_URL])
+            host = parsed_url.hostname
+            if host and ":" in host:
+                host = f"[{host}]"
+            ssl = parsed_url.scheme == "https"
+            user_input = {
+                CONF_HOST: host,
+                CONF_PORT: parsed_url.port or (443 if ssl else 80),
+                CONF_SSL: ssl,
+                CONF_VERIFY_SSL: server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                        probatio.Required(CONF_SSL): bool,
+                        probatio.Required(CONF_VERIFY_SSL): bool,
+                    }
+                ),
+                user_input,
+            ),
+            errors=errors,
+        )
+
     async def async_step_select_server(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -303,12 +360,17 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_server",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_SERVER_IDENTIFIER): vol.In(available_servers)}
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_SERVER_IDENTIFIER): probatio.In(
+                        available_servers
+                    )
+                }
             ),
             errors={},
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
@@ -385,7 +447,7 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 class PlexOptionsFlowHandler(OptionsFlow):
     """Handle Plex options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: PlexConfigEntry) -> None:
         """Initialize Plex options flow."""
         self.options = deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
@@ -442,20 +504,20 @@ class PlexOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="plex_mp_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
                     ): cv.multi_select(available_accounts),
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=plex_server.option_ignore_new_shared_users,
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         CONF_IGNORE_PLEX_WEB_CLIENTS,
                         default=plex_server.option_ignore_plexweb_clients,
                     ): bool,

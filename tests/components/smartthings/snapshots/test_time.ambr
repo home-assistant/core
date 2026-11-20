@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,7 +39,7 @@
 # name: test_all_entities[da_ks_hood_01001][time.range_hood_do_not_disturb_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Do not disturb end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Do not disturb end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.range_hood_do_not_disturb_end_time',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -89,7 +89,7 @@
 # name: test_all_entities[da_ks_hood_01001][time.range_hood_do_not_disturb_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Do not disturb start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Do not disturb start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.range_hood_do_not_disturb_start_time',
@@ -107,9 +107,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', '01b28624-5907-c8bc-0325-8ad23f03a637')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -139,7 +139,7 @@
 # name: test_all_entities[da_rvc_map_01011][time.robot_vacuum_do_not_disturb_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Do not disturb end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Do not disturb end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.robot_vacuum_do_not_disturb_end_time',
@@ -157,9 +157,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('smartthings', '01b28624-5907-c8bc-0325-8ad23f03a637')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -189,7 +189,7 @@
 # name: test_all_entities[da_rvc_map_01011][time.robot_vacuum_do_not_disturb_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Do not disturb start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Do not disturb start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.robot_vacuum_do_not_disturb_start_time',

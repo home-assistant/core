@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -66,12 +66,14 @@ class OpenThermSwitch(OpenThermEntity, SwitchEntity):
     _attr_entity_registry_enabled_default = False
     entity_description: OpenThermSwitchEntityDescription
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         value = await self.entity_description.turn_off_action(self._gateway)
         self._attr_is_on = bool(value) if value is not None else None
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         value = await self.entity_description.turn_on_action(self._gateway)

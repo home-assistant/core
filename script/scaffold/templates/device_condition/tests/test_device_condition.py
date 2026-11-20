@@ -1,7 +1,6 @@
 """The tests for NEW_NAME device conditions."""
 
-from __future__ import annotations
-
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -11,8 +10,6 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_conditions(
@@ -75,7 +72,11 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_on"
+                                " - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -93,7 +94,11 @@ async def test_if_state(hass: HomeAssistant, service_calls: list[ServiceCall]) -
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_off"
+                                " - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

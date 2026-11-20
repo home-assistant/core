@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
+from typing import override
 
 from volvocarsapi.models import VolvoCarsApiBaseModel
 
@@ -55,7 +56,8 @@ class VolvoBaseEntity(Entity):
         model = (
             f"{vehicle.description.model} ({vehicle.model_year})"
             if vehicle.fuel_type == "NONE"
-            else f"{vehicle.description.model} {vehicle.fuel_type} ({vehicle.model_year})"
+            else f"{vehicle.description.model}"
+            f" {vehicle.fuel_type} ({vehicle.model_year})"
         )
 
         self._attr_device_info = DeviceInfo(
@@ -83,6 +85,7 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator], VolvoBaseEntity):
         self._update_state(coordinator.get_api_field(description.api_field))
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         api_field = self.coordinator.get_api_field(self.entity_description.api_field)
@@ -90,6 +93,7 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator], VolvoBaseEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.api_field:

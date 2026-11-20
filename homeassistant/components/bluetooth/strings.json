@@ -48,8 +48,20 @@
     "step": {
       "init": {
         "data": {
-          "passive": "Passive scanning"
+          "mode": "Scanning mode"
+        },
+        "data_description": {
+          "mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly."
         }
+      }
+    }
+  },
+  "selector": {
+    "mode": {
+      "options": {
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     }
   }

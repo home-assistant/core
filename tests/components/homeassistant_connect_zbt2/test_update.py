@@ -1,6 +1,7 @@
 """Test Connect ZBT-2 firmware update entity."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
-
-from tests.common import MockConfigEntry
 
 UPDATE_ENTITY_ID = "update.home_assistant_connect_zbt_2_80b54eefae18_firmware"
 
@@ -72,7 +71,9 @@ async def test_zbt2_update_entity(hass: HomeAssistant) -> None:
         FirmwareInfo(
             device=USB_DATA_ZBT2.device,
             firmware_type=ApplicationType.SPINEL,
-            firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+            firmware_version=(
+                "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57"
+            ),
             owners=[],
             source="otbr",
         ),

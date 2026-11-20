@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import snapshot_platform
 import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import snapshot_platform
 
 
 async def test_sensors(
@@ -26,8 +25,10 @@ async def test_sensors(
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
-    # Unload the config entry after taking a snapshot is required because the integration may cache
-    # DNS results or keep references to the original gethostbyname, so unloading ensures the patch
-    # is effective for subsequent tests and avoids DNS lookups
+    # Unload the config entry after taking a snapshot is required
+    # because the integration may cache DNS results or keep
+    # references to the original gethostbyname, so unloading
+    # ensures the patch is effective for subsequent tests and
+    # avoids DNS lookups
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

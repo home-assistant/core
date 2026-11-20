@@ -1,7 +1,5 @@
 """The test for the Coolmaster climate platform."""
 
-from __future__ import annotations
-
 from pycoolmasternet_async import SWING_MODES
 import pytest
 
@@ -9,7 +7,6 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
@@ -17,22 +14,18 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACMode,
 )
 from homeassistant.components.coolmaster.climate import FAN_MODES
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -227,10 +220,10 @@ async def test_set_temperature(
     assert hass.states.get("climate.l1_100").attributes[ATTR_TEMPERATURE] == 20
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_TEMPERATURE: 30,
+            TargetKey.ENTITY_ID: "climate.l1_100",
+            ClimateServiceArgument.TEMPERATURE: 30,
         },
         blocking=True,
     )
@@ -249,10 +242,10 @@ async def test_set_fan_mode(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
+        ClimateService.SET_FAN_MODE,
         {
-            ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_FAN_MODE: target_fan_mode,
+            TargetKey.ENTITY_ID: "climate.l1_100",
+            ClimateServiceArgument.FAN_MODE: target_fan_mode,
         },
         blocking=True,
     )
@@ -270,10 +263,10 @@ async def test_set_swing_mode(
     assert hass.states.get("climate.l1_101").attributes[ATTR_SWING_MODE] == "horizontal"
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_SWING_MODE,
+        ClimateService.SET_SWING_MODE,
         {
-            ATTR_ENTITY_ID: "climate.l1_101",
-            ATTR_SWING_MODE: "vertical",
+            TargetKey.ENTITY_ID: "climate.l1_101",
+            ClimateServiceArgument.SWING_MODE: "vertical",
         },
         blocking=True,
     )
@@ -289,10 +282,10 @@ async def test_set_swing_mode_error(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
+            ClimateService.SET_SWING_MODE,
             {
-                ATTR_ENTITY_ID: "climate.l1_101",
-                ATTR_SWING_MODE: "",
+                TargetKey.ENTITY_ID: "climate.l1_101",
+                ClimateServiceArgument.SWING_MODE: "",
             },
             blocking=True,
         )
@@ -306,10 +299,10 @@ async def test_set_hvac_mode(
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.l1_100",
-            ATTR_HVAC_MODE: HVACMode.HEAT,
+            TargetKey.ENTITY_ID: "climate.l1_100",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -325,10 +318,10 @@ async def test_set_hvac_mode_off(
     assert hass.states.get("climate.l1_101").state == HVACMode.HEAT
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
+        ClimateService.SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.l1_101",
-            ATTR_HVAC_MODE: HVACMode.OFF,
+            TargetKey.ENTITY_ID: "climate.l1_101",
+            ClimateServiceArgument.HVAC_MODE: HVACMode.OFF,
         },
         blocking=True,
     )
@@ -344,9 +337,9 @@ async def test_turn_on(
     assert hass.states.get("climate.l1_100").state == HVACMode.OFF
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_ON,
+        ClimateService.TURN_ON,
         {
-            ATTR_ENTITY_ID: "climate.l1_100",
+            TargetKey.ENTITY_ID: "climate.l1_100",
         },
         blocking=True,
     )
@@ -362,9 +355,9 @@ async def test_turn_off(
     assert hass.states.get("climate.l1_101").state == HVACMode.HEAT
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_TURN_OFF,
+        ClimateService.TURN_OFF,
         {
-            ATTR_ENTITY_ID: "climate.l1_101",
+            TargetKey.ENTITY_ID: "climate.l1_101",
         },
         blocking=True,
     )

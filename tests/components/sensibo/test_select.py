@@ -1,26 +1,23 @@
 """The test for the sensibo select platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
-    SERVICE_SELECT_OPTION,
+    SelectService,
+    SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -47,7 +44,7 @@ async def test_select(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "dim"
 
 
@@ -73,7 +70,7 @@ async def test_select_set_option(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_set_ac_state_property.return_value = {
@@ -85,12 +82,15 @@ async def test_select_set_option(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "dim",
+            },
             blocking=True,
         )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_get_devices_data.return_value.parsed[
@@ -115,12 +115,15 @@ async def test_select_set_option(
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+            SelectService.SELECT_OPTION,
+            {
+                TargetKey.ENTITY_ID: state.entity_id,
+                SelectServiceArgument.OPTION: "dim",
+            },
             blocking=True,
         )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "on"
 
     mock_client.async_set_ac_state_property.return_value = {
@@ -129,12 +132,15 @@ async def test_select_set_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "dim"},
+        SelectService.SELECT_OPTION,
+        {
+            TargetKey.ENTITY_ID: state.entity_id,
+            SelectServiceArgument.OPTION: "dim",
+        },
         blocking=True,
     )
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == "dim"
 
     mock_client.async_get_devices_data.return_value.parsed[
@@ -149,5 +155,5 @@ async def test_select_set_option(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("select.kitchen_light")
+    state = hass.states.get("select.kitchen_kitchen_light")
     assert state.state == STATE_UNAVAILABLE

@@ -1,36 +1,35 @@
 """Support for System Bridge binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT
+from homeassistant.const import CONF_PORT, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry, SystemBridgeDataUpdateCoordinator
 from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
+PARALLEL_UPDATES = 0
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, kw_only=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
 
-    value_fn: Callable = round
+    value_fn: Callable
 
 
 def camera_in_use(data: SystemBridgeData) -> bool | None:
     """Return if any camera is in use."""
-    if data.system.camera_usage is not None:
+    if data.system is not None and data.system.camera_usage is not None:
         return len(data.system.camera_usage) > 0
     return None
 
@@ -42,6 +41,15 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         value_fn=camera_in_use,
     ),
     SystemBridgeBinarySensorEntityDescription(
+        key="locked",
+        translation_key="locked",
+        device_class=BinarySensorDeviceClass.LOCK,
+        # The lock device class is on when unlocked
+        value_fn=lambda data: (
+            None if data.system.locked is None else not data.system.locked
+        ),
+    ),
+    SystemBridgeBinarySensorEntityDescription(
         key="pending_reboot",
         translation_key="pending_reboot",
         value_fn=lambda data: data.system.pending_reboot,
@@ -49,6 +57,7 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
         device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.system.version_newer_available,
     ),
 )
@@ -57,18 +66,25 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda data: data.battery.is_charging,
+        value_fn=lambda data: data.battery.is_charging if data.battery else None,
     ),
+)
+
+AC_CONNECTED_BINARY_SENSOR_TYPE = SystemBridgeBinarySensorEntityDescription(
+    key="ac_connected",
+    translation_key="ac_connected",
+    device_class=BinarySensorDeviceClass.PLUG,
+    value_fn=lambda data: data.battery.ac_connected if data.battery else None,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up System Bridge binary sensor based on a config entry."""
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
@@ -83,6 +99,14 @@ async def async_setup_entry(
         entities.extend(
             SystemBridgeBinarySensor(coordinator, description, entry.data[CONF_PORT])
             for description in BATTERY_BINARY_SENSOR_TYPES
+        )
+
+    # Desktops have no mains supply to report, so leave the sensor out there
+    if coordinator.data.battery and coordinator.data.battery.ac_connected is not None:
+        entities.append(
+            SystemBridgeBinarySensor(
+                coordinator, AC_CONNECTED_BINARY_SENSOR_TYPE, entry.data[CONF_PORT]
+            )
         )
 
     async_add_entities(entities)
@@ -108,6 +132,7 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

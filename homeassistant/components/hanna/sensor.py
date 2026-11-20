@@ -5,9 +5,8 @@ including pH, ORP, temperature, and chemical sensors. It uses the Hanna API
 to fetch readings and updates them periodically.
 """
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -55,19 +54,19 @@ SENSOR_DESCRIPTIONS = [
     ),
     SensorEntityDescription(
         key="acidBase",
-        translation_key="ph_acid_base_flow_rate",
+        translation_key="ph_acid_base_injection",
         icon="mdi:chemical-weapon",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="cl",
-        translation_key="chlorine_flow_rate",
+        translation_key="chlorine_injection",
         icon="mdi:chemical-weapon",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]
 
@@ -101,6 +100,7 @@ class HannaSensor(HannaEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.get_parameter_value(self.entity_description.key)

@@ -22,5 +22,5 @@ class ESPHomeServiceInfo(BaseServiceInfo):
         """Return the socket path to connect to the ESPHome device."""
         url = URL.build(scheme="esphome", host=self.ip_address, port=self.port)
         if self.noise_psk:
-            url = url.with_user(self.noise_psk)
+            url = url.with_query({"key": self.noise_psk})
         return str(url)

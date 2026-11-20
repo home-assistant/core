@@ -1,7 +1,8 @@
 """Config flow for SimpleFIN integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from simplefin4py import SimpleFin
 from simplefin4py.exceptions import (
     SimpleFinAuthError,
@@ -10,7 +11,6 @@ from simplefin4py.exceptions import (
     SimpleFinInvalidClaimTokenError,
     SimpleFinPaymentRequiredError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -20,6 +20,7 @@ from .const import CONF_ACCESS_URL, DOMAIN, LOGGER
 class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a SimpleFIN integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,9 +67,9 @@ class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCESS_URL): str,
+                    probatio.Required(CONF_ACCESS_URL): str,
                 }
             ),
             errors=errors,

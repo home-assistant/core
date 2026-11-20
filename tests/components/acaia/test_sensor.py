@@ -1,7 +1,15 @@
 """Test sensors for acaia integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import PERCENTAGE, Platform
@@ -9,12 +17,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
 
 
 async def test_sensors(
@@ -38,7 +40,7 @@ async def test_restore_state(
 ) -> None:
     """Test battery sensor restore state."""
     mock_scale.device_state = None
-    entity_id = "sensor.lunar_ddeeff_battery"
+    entity_id = "sensor.kitchen_lunar_ddeeff_battery"
 
     mock_restore_cache_with_extra_data(
         hass,
@@ -61,3 +63,28 @@ async def test_restore_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "65"
+
+
+async def test_battery_available_within_session_after_disconnect(
+    hass: HomeAssistant,
+    mock_scale: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test battery stays available on disconnect when no restore data exists."""
+    entity_id = "sensor.kitchen_lunar_ddeeff_battery"
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "42"
+
+    mock_scale.connected = False
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "42"

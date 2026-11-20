@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ApplianceType,
     ArrayOfEvents,
     ArrayOfPrograms,
     Event,
@@ -28,26 +29,24 @@ from aiohomeconnect.model.program import (
     ProgramDefinitionOption,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SWITCH]
 
@@ -76,10 +75,12 @@ def platforms() -> list[str]:
     ),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             {
                 OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: "switch.dishwasher_half_load",
-                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: "switch.dishwasher_silence_on_demand",
+                OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: (
+                    "switch.dishwasher_silence_on_demand"
+                ),
                 OptionKey.DISHCARE_DISHWASHER_ECO_DRY: "switch.dishwasher_eco_dry",
             },
             [(STATE_ON, True), (STATE_OFF, False), (None, None)],
@@ -107,7 +108,7 @@ async def test_program_options_retrieval(
     option_without_default: tuple[OptionKey, str],
     option_without_constraints: tuple[OptionKey, str],
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    """Test options are retrieved at start and updated on programs."""
     original_get_all_programs_mock = client.get_all_programs.side_effect
     options_values = [
         Option(
@@ -222,7 +223,8 @@ async def test_program_options_retrieval(
     await hass.async_block_till_done()
 
     # Verify default values
-    # Every time the program is updated, the available options should use the default value if existing
+    # Every time the program is updated, the available options should use the default
+    # value if existing
     for entity_id, available in zip(
         option_entity_id.values(), options_availability_stage_2, strict=True
     ):
@@ -233,7 +235,7 @@ async def test_program_options_retrieval(
         assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize("appliance", [ApplianceType.WASHER], indirect=True)
 @pytest.mark.parametrize(
     ("array_of_programs_program_arg", "event_key"),
     [
@@ -315,7 +317,7 @@ async def test_no_options_retrieval_on_unknown_program(
     ("appliance", "option_key", "option_entity_id"),
     [
         (
-            "Dishwasher",
+            ApplianceType.DISHWASHER,
             OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
             "switch.dishwasher_half_load",
         )
@@ -332,7 +334,7 @@ async def test_program_options_retrieval_after_appliance_connection(
     option_key: OptionKey,
     option_entity_id: str,
 ) -> None:
-    """Test that the options are correctly retrieved at the start and updated on program updates."""
+    """Test options are retrieved at start and updated on programs."""
     appliance.connected = False
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
@@ -468,5 +470,8 @@ async def test_option_entity_functionality_exception(
 
     with pytest.raises(HomeAssistantError, match=r"Error.*setting.*option.*"):
         await hass.services.async_call(
-            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            SWITCH_DOMAIN,
+            SwitchService.TURN_OFF,
+            {TargetKey.ENTITY_ID: entity_id},
+            blocking=True,
         )

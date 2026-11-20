@@ -1,20 +1,26 @@
 """Tests for the Reolink views platform."""
 
+import asyncio
+from collections.abc import AsyncGenerator
+from datetime import datetime
 from http import HTTPStatus
-import logging
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from reolink_aio.enums import VodRequestType
-from reolink_aio.exceptions import ReolinkError
+from reolink_aio.exceptions import ReolinkError, UnexpectedDataError
 
-from homeassistant.components.reolink.views import async_generate_playback_proxy_url
+from homeassistant.components.reolink.util import get_host
+from homeassistant.components.reolink.views import (
+    MAX_PARALLEL_THUMBNAILS,
+    async_generate_playback_proxy_url,
+    async_generate_thumbnail_url,
+)
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 TEST_YEAR = 2023
 TEST_MONTH = 11
@@ -22,13 +28,23 @@ TEST_DAY = 14
 TEST_DAY2 = 15
 TEST_HOUR = 13
 TEST_MINUTE = 12
-TEST_FILE_NAME_MP4 = f"Mp4Record/{TEST_YEAR}-{TEST_MONTH}-{TEST_DAY}/RecS04_{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00_123456_AB123C.mp4"
+TEST_FILE_NAME_MP4 = (
+    f"Mp4Record/{TEST_YEAR}-{TEST_MONTH}-{TEST_DAY}/RecS04_"
+    f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}"
+    f"00_123456_AB123C.mp4"
+)
 TEST_STREAM = "sub"
 TEST_CHANNEL = "0"
 TEST_VOD_TYPE = VodRequestType.PLAYBACK.value
 TEST_MIME_TYPE_MP4 = "video/mp4"
 TEST_URL = "http://test_url&token=test"
 TEST_ERROR = "TestError"
+TEST_NVR_START = "20231114131200"
+TEST_NVR_END = "20231114131700"
+TEST_NVR_FILE_NAME = f"{TEST_NVR_START}_{TEST_NVR_END}"
+TEST_NVR_VOD_TYPE = VodRequestType.NVR_DOWNLOAD.value
+TEST_TIME_ID = "20231114131200"
+TEST_IMAGE = b"jpeg"
 
 
 def get_mock_session(
@@ -81,7 +97,6 @@ async def test_playback_proxy(
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    caplog.set_level(logging.DEBUG)
 
     proxy_url = async_generate_playback_proxy_url(
         config_entry.entry_id,
@@ -125,18 +140,27 @@ async def test_proxy_get_source_error(
     assert response.status == HTTPStatus.BAD_REQUEST
 
 
+@pytest.mark.parametrize(
+    "config_entry_id",
+    [
+        pytest.param("wrong_config_id", id="not_found"),
+        pytest.param("other_entry", id="other_integration"),
+    ],
+)
 async def test_proxy_invalid_config_entry_id(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    config_entry_id: str,
 ) -> None:
     """Test config entry id not found for playback proxy URL."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    MockConfigEntry(domain="other", entry_id="other_entry").add_to_hass(hass)
 
     proxy_url = async_generate_playback_proxy_url(
-        "wrong_config_id",
+        config_entry_id,
         TEST_CHANNEL,
         TEST_FILE_NAME_MP4,
         TEST_STREAM,
@@ -147,7 +171,7 @@ async def test_proxy_invalid_config_entry_id(
     response = await http_client.get(proxy_url)
 
     assert await response.content.read() == bytes(
-        "Reolink playback proxy could not find config entry id: wrong_config_id",
+        f"Reolink playback proxy could not find config entry id: {config_entry_id}",
         "utf-8",
     )
     assert response.status == HTTPStatus.BAD_REQUEST
@@ -251,3 +275,470 @@ async def test_playback_connect_error(
     response = cast(ClientResponse, await http_client.get(proxy_url))
 
     assert response.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.parametrize(
+    "stream_res",
+    [
+        pytest.param("sub", id="sub"),
+        pytest.param("main", id="main"),
+        pytest.param("autotrack_sub", id="autotrack_sub"),
+        pytest.param("telephoto_main", id="telephoto_main"),
+    ],
+)
+async def test_playback_baichuan(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    stream_res: str,
+) -> None:
+    """Test NVR playback proxy URL using the Baichuan mp4 stream."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"test"
+        yield b"test"
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        stream_res,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == b"testtest"
+    assert response.status == 200
+    assert response.content_type == TEST_MIME_TYPE_MP4
+    reolink_host.baichuan.stream_mp4.assert_called_once_with(
+        int(TEST_CHANNEL),
+        datetime(2023, 11, 14, 13, 12, 0),
+        datetime(2023, 11, 14, 13, 17, 0),
+        stream_res,
+        "ffmpeg",
+    )
+    reolink_host.get_vod_source.assert_not_called()
+
+
+async def test_playback_baichuan_start_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test NVR playback proxy URL with an error before the first mp4 data."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        raise UnexpectedDataError(TEST_ERROR)
+        yield b""  # pylint: disable=unreachable
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == bytes(TEST_ERROR, "utf-8")
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_playback_baichuan_stream_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test NVR playback proxy URL with an error while streaming the mp4."""
+
+    async def stream_mp4(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"test"
+        raise UnexpectedDataError(TEST_ERROR)
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(side_effect=stream_mp4)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await response.content.read() == b"test"
+    assert response.status == 200
+    assert "Reolink playback error while streaming mp4" in caplog.text
+
+
+async def test_playback_baichuan_stop_previous(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a new NVR playback stops the previous one, the NVR allows only one download."""
+    first_closed = asyncio.Event()
+
+    async def first_stream(*args: Any) -> AsyncGenerator[bytes]:
+        try:
+            yield b"first"
+            await asyncio.Event().wait()
+        finally:
+            first_closed.set()
+
+    async def second_stream(*args: Any) -> AsyncGenerator[bytes]:
+        yield b"second"
+
+    reolink_host.baichuan.stream_mp4 = MagicMock(
+        side_effect=[first_stream(), second_stream()]
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_NVR_FILE_NAME,
+        TEST_STREAM,
+        TEST_NVR_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    first_response = cast(ClientResponse, await http_client.get(proxy_url))
+    assert first_response.status == 200
+    assert not first_closed.is_set()
+
+    second_response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert await second_response.content.read() == b"second"
+    assert second_response.status == 200
+    assert first_closed.is_set()
+    first_response.close()
+
+
+@pytest.mark.parametrize(
+    "retry_headers",
+    [
+        pytest.param({}, id="no-retry-after"),
+        pytest.param({"Retry-After": "2"}, id="retry-after"),
+    ],
+)
+async def test_playback_service_unavailable(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    retry_headers: dict[str, str],
+) -> None:
+    """Preserve a temporary camera failure and allow a later range request."""
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+    unavailable_session = get_mock_session(content_type="text/html")
+    unavailable_response = unavailable_session.get.return_value
+    unavailable_response.status = HTTPStatus.SERVICE_UNAVAILABLE
+    unavailable_response.headers = {
+        "Content-Type": "text/html",
+        "Content-Length": "1000",
+        **retry_headers,
+    }
+    successful_session = get_mock_session()
+    successful_response = successful_session.get.return_value
+    successful_response.status = HTTPStatus.PARTIAL_CONTENT
+    successful_response.reason = "Partial Content"
+    successful_response.headers = {"Content-Range": "bytes 0-7/8"}
+    unavailable_session.get.side_effect = [unavailable_response, successful_response]
+
+    with patch(
+        "homeassistant.components.reolink.views.async_get_clientsession",
+        return_value=unavailable_session,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_FILE_NAME_MP4,
+        TEST_STREAM,
+        TEST_VOD_TYPE,
+    )
+    http_client = await hass_client()
+    response = await http_client.get(proxy_url, headers={"Range": "bytes=0-"})
+
+    assert response.status == HTTPStatus.SERVICE_UNAVAILABLE
+    assert response.headers.get("Retry-After") == retry_headers.get("Retry-After")
+    assert await response.text() == "Reolink playback service temporarily unavailable"
+    unavailable_response.release.assert_called_once_with()
+    unavailable_response.text.assert_not_awaited()
+    assert unavailable_session.get.await_count == 1
+    reolink_host.expire_session.assert_not_awaited()
+
+    response = await http_client.get(proxy_url, headers={"Range": "bytes=0-"})
+
+    assert response.status == HTTPStatus.PARTIAL_CONTENT
+    assert response.headers["Content-Range"] == "bytes 0-7/8"
+    assert await response.read() == b"testtest"
+    assert unavailable_session.get.call_args.kwargs["headers"]["Range"] == "bytes=0-"
+    successful_response.release.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("stream", "thumbnail_stream"),
+    [
+        ("sub", "sub"),
+        ("main", "sub"),
+        ("autotrack_sub", "telephoto_sub"),
+        ("autotrack_main", "telephoto_sub"),
+        ("telephoto_sub", "telephoto_sub"),
+        ("telephoto_main", "telephoto_sub"),
+    ],
+)
+async def test_thumbnail(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    stream: str,
+    thumbnail_stream: str,
+) -> None:
+    """Test getting the thumbnail of a recording."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    thumbnail_url = async_generate_thumbnail_url(
+        config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_TIME_ID
+    )
+
+    http_client = await hass_client()
+    response = await http_client.get(thumbnail_url)
+
+    assert response.status == 200
+    assert response.content_type == "image/jpeg"
+    assert await response.content.read() == TEST_IMAGE
+    reolink_host.baichuan.snapshot_past.assert_called_once()
+    args = reolink_host.baichuan.snapshot_past.call_args.args
+    assert args[0] == int(TEST_CHANNEL)
+    assert args[1] == datetime(2023, 11, 14, 13, 12, 0)
+    assert args[2] == thumbnail_stream
+
+
+@pytest.mark.parametrize(
+    ("stream", "thumbnail_stream"),
+    [
+        ("main", "main"),
+        ("autotrack_main", "telephoto_main"),
+        ("telephoto_main", "telephoto_main"),
+    ],
+)
+async def test_thumbnail_no_sub_stream(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    stream: str,
+    thumbnail_stream: str,
+) -> None:
+    """Test the thumbnail of a camera without a sub stream uses the main stream."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_host.supported.side_effect = lambda ch, key: key != "sub"
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        async_generate_thumbnail_url(
+            config_entry.entry_id, int(TEST_CHANNEL), stream, TEST_TIME_ID
+        )
+    )
+
+    assert response.status == 200
+    assert await response.content.read() == TEST_IMAGE
+    assert reolink_host.baichuan.snapshot_past.call_args.args[2] == thumbnail_stream
+
+
+@pytest.mark.parametrize(
+    (
+        "config_entry_id",
+        "channel",
+        "stream",
+        "time_id",
+        "side_effect",
+        "body",
+    ),
+    [
+        pytest.param(
+            "wrong_config_id",
+            TEST_CHANNEL,
+            TEST_STREAM,
+            TEST_TIME_ID,
+            None,
+            "Reolink thumbnail could not find config entry id: wrong_config_id",
+            id="unknown_config_entry",
+        ),
+        pytest.param(
+            None,
+            "abc",
+            TEST_STREAM,
+            TEST_TIME_ID,
+            None,
+            f"Reolink thumbnail invalid channel abc or time {TEST_TIME_ID}",
+            id="invalid_channel",
+        ),
+        pytest.param(
+            None,
+            TEST_CHANNEL,
+            TEST_STREAM,
+            "invalid",
+            None,
+            f"Reolink thumbnail invalid channel {TEST_CHANNEL} or time invalid",
+            id="invalid_time",
+        ),
+        pytest.param(
+            None,
+            TEST_CHANNEL,
+            "main",
+            TEST_TIME_ID,
+            None,
+            "Reolink thumbnail invalid stream main",
+            id="invalid_stream",
+        ),
+        pytest.param(
+            None,
+            TEST_CHANNEL,
+            TEST_STREAM,
+            TEST_TIME_ID,
+            ReolinkError(TEST_ERROR),
+            TEST_ERROR,
+            id="camera_error",
+        ),
+    ],
+)
+async def test_thumbnail_errors(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    config_entry_id: str | None,
+    channel: str,
+    stream: str,
+    time_id: str,
+    side_effect: Exception | None,
+    body: str,
+) -> None:
+    """Test errors while getting the thumbnail of a recording."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(
+        return_value=TEST_IMAGE, side_effect=side_effect
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        f"/api/reolink/thumbnail/{config_entry_id or config_entry.entry_id}"
+        f"/{channel}/{stream}/{time_id}"
+    )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    assert await response.content.read() == bytes(body, "utf-8")
+
+
+async def test_thumbnail_unloaded_config_entry(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test getting a thumbnail after the config entry has been unloaded."""
+    reolink_host.baichuan.snapshot_past = AsyncMock(return_value=TEST_IMAGE)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    response = await http_client.get(
+        async_generate_thumbnail_url(
+            config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_TIME_ID
+        )
+    )
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+    reolink_host.baichuan.snapshot_past.assert_not_called()
+
+
+async def test_thumbnail_unloaded_while_queued(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a queued thumbnail request after the config entry has been unloaded."""
+    release = asyncio.Event()
+
+    async def snapshot_past(*args: Any) -> bytes:
+        await release.wait()
+        return TEST_IMAGE
+
+    reolink_host.baichuan.snapshot_past = AsyncMock(side_effect=snapshot_past)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    http_client = await hass_client()
+    thumbnail_url = async_generate_thumbnail_url(
+        config_entry.entry_id, int(TEST_CHANNEL), TEST_STREAM, TEST_TIME_ID
+    )
+    with patch(
+        "homeassistant.components.reolink.views.get_host", wraps=get_host
+    ) as mock_get_host:
+        requests = [
+            asyncio.create_task(http_client.get(thumbnail_url))
+            for _ in range(MAX_PARALLEL_THUMBNAILS)
+        ]
+        while reolink_host.baichuan.snapshot_past.call_count < MAX_PARALLEL_THUMBNAILS:
+            await asyncio.sleep(0)
+        checks = mock_get_host.call_count
+        requests.append(asyncio.create_task(http_client.get(thumbnail_url)))
+        # Past its first config entry check, the request waits for the semaphore.
+        while mock_get_host.call_count == checks:
+            await asyncio.sleep(0)
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        release.set()
+        responses = await asyncio.gather(*requests)
+
+    assert sorted(response.status for response in responses) == [
+        *[HTTPStatus.OK] * MAX_PARALLEL_THUMBNAILS,
+        HTTPStatus.BAD_REQUEST,
+    ]
+    assert reolink_host.baichuan.snapshot_past.call_count == MAX_PARALLEL_THUMBNAILS

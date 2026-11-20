@@ -1,17 +1,14 @@
 """Validate device conditions."""
 
-from __future__ import annotations
+from typing import Any, Protocol, override
 
-from typing import Any, Protocol
-
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DOMAIN, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionChecker,
     ConditionCheckerType,
     ConditionConfig,
 )
@@ -27,7 +24,7 @@ class DeviceAutomationConditionProtocol(Protocol):
     Each module must define either CONDITION_SCHEMA or async_validate_condition_config.
     """
 
-    CONDITION_SCHEMA: vol.Schema
+    CONDITION_SCHEMA: probatio.Schema
 
     async def async_validate_condition_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -41,7 +38,7 @@ class DeviceAutomationConditionProtocol(Protocol):
 
     async def async_get_condition_capabilities(
         self, hass: HomeAssistant, config: ConfigType
-    ) -> dict[str, vol.Schema]:
+    ) -> dict[str, probatio.Schema]:
         """List condition capabilities."""
 
     async def async_get_conditions(
@@ -54,8 +51,10 @@ class DeviceCondition(Condition):
     """Device condition."""
 
     _config: ConfigType
+    _platform_checker: ConditionCheckerType
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -72,6 +71,7 @@ class DeviceCondition(Condition):
         return complete_config
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -87,20 +87,21 @@ class DeviceCondition(Condition):
         assert config.options is not None
         self._config = config.options
 
-    async def async_get_checker(self) -> ConditionChecker:
-        """Test a device condition."""
+    @override
+    async def _async_setup(self) -> None:
+        """Set up a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
-        platform_checker = platform.async_condition_from_config(
+        self._platform_checker = platform.async_condition_from_config(
             self._hass, self._config
         )
 
-        def checker(variables: TemplateVarsType = None, **kwargs: Any) -> bool:
-            result = platform_checker(self._hass, variables)
-            return result is not False
-
-        return checker
+    @override
+    def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
+        """Check the condition."""
+        result = self._platform_checker(self._hass, variables)
+        return result is not False
 
 
 CONDITIONS: dict[str, type[Condition]] = {

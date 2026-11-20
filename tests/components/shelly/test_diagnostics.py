@@ -7,6 +7,8 @@ from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 from aioshelly.const import MODEL_25
 from aioshelly.exceptions import DeviceConnectionError
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.shelly.const import (
@@ -19,9 +21,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration, inject_rpc_device_event
 from .conftest import MOCK_STATUS_COAP
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 RELAY_BLOCK_ID = 0
 
@@ -113,6 +112,10 @@ async def test_rpc_config_entry_diagnostics(
         "entry": entry_dict | {"discovery_keys": {}},
         "bluetooth": {
             "scanner": {
+                "connect_completed_total": 0,
+                "connect_failed_total": 0,
+                "connect_failures": {},
+                "connect_in_progress": {},
                 "connectable": False,
                 "current_mode": {
                     "__type": "<enum 'BluetoothScanningMode'>",
@@ -122,6 +125,7 @@ async def test_rpc_config_entry_diagnostics(
                     "__type": "<enum 'BluetoothScanningMode'>",
                     "repr": "<BluetoothScanningMode.ACTIVE: 'active'>",
                 },
+                "last_connect_completed_time": 0.0,
                 "discovered_device_timestamps": {"AA:BB:CC:DD:EE:FF": ANY},
                 "discovered_devices_and_advertisement_data": [
                     {
@@ -160,7 +164,13 @@ async def test_rpc_config_entry_diagnostics(
                 "raw_advertisement_data": {
                     "AA:BB:CC:DD:EE:FF": {
                         "__type": "<class 'bytes'>",
-                        "repr": "b'\\x02\\x01\\x06\\t\\xffY\\x00\\xd1\\xfb;t\\xc8\\x90\\x11\\x07\\x1b\\xc5\\xd5\\xa5\\x02\\x00\\xb8\\x9f\\xe6\\x11M\"\\x00\\r\\xa2\\xcb\\x06\\x16\\x00\\rH\\x10a'",
+                        "repr": (
+                            "b'\\x02\\x01\\x06\\t\\xffY\\x00\\xd1"
+                            "\\xfb;t\\xc8\\x90\\x11\\x07\\x1b\\xc5"
+                            "\\xd5\\xa5\\x02\\x00\\xb8\\x9f\\xe6"
+                            '\\x11M"\\x00\\r\\xa2\\xcb\\x06\\x16'
+                            "\\x00\\rH\\x10a'"
+                        ),
                     }
                 },
                 "type": "ShellyBLEScanner",
@@ -219,7 +229,7 @@ async def test_rpc_config_entry_diagnostics_no_ws(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test config entry diagnostics for rpc device which doesn't support ws outbound."""
+    """Test diagnostics for rpc device without ws outbound."""
     config = deepcopy(mock_rpc_device.config)
     config.pop("ws")
     monkeypatch.setattr(mock_rpc_device, "config", config)

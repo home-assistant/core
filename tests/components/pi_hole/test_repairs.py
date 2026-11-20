@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from hole.exceptions import HoleConnectionError, HoleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 import homeassistant
 from homeassistant.components import pi_hole
@@ -16,18 +17,17 @@ from homeassistant.util import dt as dt_util
 
 from . import CONFIG_DATA_DEFAULTS, ZERO_DATA, _create_mocked_hole, _patch_init_hole
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 async def test_change_api_5_to_6(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(api_version=5)
 
     # setu up a valid API version 5 config entry
     entry = MockConfigEntry(
         domain=pi_hole.DOMAIN,
+        title="Pi-Hole",
         data={**CONFIG_DATA_DEFAULTS, CONF_API_VERSION: 5},
     )
     entry.add_to_hass(hass)
@@ -70,11 +70,13 @@ async def test_change_api_5_to_6(
 async def test_app_password_changing(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS})
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, title="Pi-Hole", data={**CONFIG_DATA_DEFAULTS}
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -111,11 +113,13 @@ async def test_app_password_changing(
 async def test_app_failed_fetch(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Tests a user with an API version 5 config entry that is updated to API version 6."""
+    """Tests API v5 config entry updated to API v6."""
     mocked_hole = _create_mocked_hole(
         api_version=6, has_data=True, incorrect_app_password=False
     )
-    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data={**CONFIG_DATA_DEFAULTS})
+    entry = MockConfigEntry(
+        domain=pi_hole.DOMAIN, title="Pi-Hole", data={**CONFIG_DATA_DEFAULTS}
+    )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
         assert await hass.config_entries.async_setup(entry.entry_id)

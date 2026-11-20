@@ -1,7 +1,5 @@
 """Helpers to help coordinate updates."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
@@ -10,7 +8,7 @@ from functools import partial
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar, final, override
 import urllib.error
 
 import aiohttp
@@ -19,7 +17,14 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -32,7 +37,7 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .typing import UNDEFINED, UndefinedType
+from .typing import Undefined
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
@@ -52,6 +57,14 @@ class UpdateFailed(HomeAssistantError):
         """Initialize exception."""
         super().__init__(*args, **kwargs)
         self.retry_after = retry_after
+
+
+class UpdateFailedUnreachable(UpdateFailed):
+    """Raised when an update failed because the device or service is unreachable.
+
+    Use for any device or service that cannot be reached, e.g. a device that
+    was turned off. The failure is logged at info level instead of error.
+    """
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -77,7 +90,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | Undefined | None = Undefined,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
@@ -94,7 +107,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
-        if config_entry is UNDEFINED:
+        if config_entry is Undefined:
             # late import to avoid circular imports
             from . import frame  # noqa: PLC0415
 
@@ -103,8 +116,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
+                core_integration_behavior=frame.ReportBehavior.ERROR,
                 custom_integration_behavior=frame.ReportBehavior.IGNORE,
-                breaks_in_ha_version="2026.8",
             )
 
             self.config_entry = config_entries.current_entry.get()
@@ -117,6 +130,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
+        # Use data_or_none where data can be read before the first update.
         self.data: _DataT = None  # type: ignore[assignment]
 
         # Pick a random microsecond in range 0.05..0.50 to stagger the refreshes
@@ -169,6 +183,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -199,7 +214,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def async_update_listeners(self) -> None:
         """Update all registered listeners."""
         for update_callback, _ in list(self._listeners.values()):
-            update_callback()
+            try:
+                update_callback()
+            except Exception:
+                self.logger.exception(
+                    "Unexpected error updating listener %s for %s",
+                    id(update_callback),
+                    self.name,
+                )
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
@@ -231,6 +253,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if self._unsub_shutdown:
             self._unsub_shutdown()
             self._unsub_shutdown = None
+
+    @final
+    @property
+    def data_or_none(self) -> _DataT | None:
+        """Return the data, or None before the first successful update.
+
+        `data` is annotated as `_DataT` rather than `_DataT | None`, so that
+        entities set up after `async_config_entry_first_refresh` need no checks.
+        Use this instead in code that can run before the first successful
+        update, for example `_async_update_data` reusing the previous data, or
+        entities of a coordinator that is refreshed in the background after setup.
+        """
+        return self.data
 
     @property
     def update_interval(self) -> timedelta | None:
@@ -268,12 +303,20 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._retry_after = None
 
         next_refresh = int(loop.time()) + self._microsecond + update_interval
+        # Cancelled when Home Assistant stops so a refresh can't fire during
+        # the close stage, after shared resources like aiohttp sessions are closed
+        refresh_job = HassJob(
+            self.__wrap_handle_refresh_interval,
+            f"{self.name} refresh interval",
+            job_type=HassJobType.Callback,
+            cancel_on_shutdown=True,
+        )
         self._unsub_refresh = loop.call_at(
-            next_refresh, self.__wrap_handle_refresh_interval
+            next_refresh, self.__wrap_handle_refresh_interval, refresh_job
         ).cancel
 
     @callback
-    def __wrap_handle_refresh_interval(self) -> None:
+    def __wrap_handle_refresh_interval(self, _: HassJob) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
             self.config_entry.async_create_background_task(
@@ -335,8 +378,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
             raise ConfigEntryError(
-                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
-                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
+                "`async_config_entry_first_refresh` called when"
+                f" config entry state is"
+                f" {self.config_entry.state},"
+                " but should only be called in state"
+                f" {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
@@ -346,8 +392,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
             if self.last_update_success:
                 return
-        ex = ConfigEntryNotReady()
-        ex.__cause__ = self.last_exception
+        cause = self.last_exception
+        ex = ConfigEntryNotReady(
+            translation_domain=getattr(cause, "translation_domain", None),
+            translation_key=getattr(cause, "translation_key", None),
+            translation_placeholders=getattr(cause, "translation_placeholders", None),
+            retry_after=getattr(cause, "retry_after", None),
+        )
+        ex.__cause__ = cause
         raise ex
 
     async def __wrap_async_setup(self) -> bool:
@@ -369,6 +421,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             requests.exceptions.RequestException,
             urllib.error.URLError,
             UpdateFailed,
+            ConfigEntryNotReady,
         ) as err:
             self.last_exception = err
 
@@ -433,7 +486,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
-        except (OAuth2TokenRequestError,) as err:
+        except OAuth2TokenRequestError as err:
             self.last_exception = err
             if isinstance(err, OAuth2TokenRequestReauthError):
                 # Non-recoverable error
@@ -450,7 +503,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     raise ConfigEntryAuthFailed from err
 
                 if self.config_entry:
-                    self.config_entry.async_start_reauth(self.hass)
+                    self.config_entry.async_start_reauth_if_available(self.hass)
                 return
 
             # Recoverable error
@@ -482,9 +535,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
-            # We can only honor a retry_after, after the config entry has been set up
-            # Basically meaning that the retry after can't be used when coming
-            # from an async_config_entry_first_refresh
+            # During async_config_entry_first_refresh the retry_after is passed on
+            # to ConfigEntryNotReady, so the config entry setup retry honors it
             if err.retry_after is not None and not raise_on_entry_error:
                 self._retry_after = err.retry_after
                 self.logger.debug(
@@ -492,6 +544,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     err.retry_after,
                 )
 
+            if self.last_update_success:
+                if log_failures and isinstance(err, UpdateFailedUnreachable):
+                    self.logger.info("%s is unavailable: %s", self.name, err)
+                elif log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
+                self.last_update_success = False
+
+        except ConfigEntryNotReady as err:
+            self.last_exception = err
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
@@ -528,7 +590,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 raise
 
             if self.config_entry:
-                self.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth_if_available(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             self.last_update_success = False
@@ -617,6 +679,7 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     last_update_success_time: datetime | None = None
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Handle when a refresh has finished."""
         if self.last_update_success:
@@ -636,10 +699,12 @@ class BaseCoordinatorEntity[
         self.coordinator_context = context
 
     @cached_property
+    @override
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -681,10 +746,12 @@ class CoordinatorEntity[
         super().__init__(coordinator, context)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 

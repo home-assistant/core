@@ -1,13 +1,11 @@
 """Update coordinator for Ruuvi Gateway."""
 
-from __future__ import annotations
-
 import logging
+from typing import TYPE_CHECKING, override
 
 from aioruuvigateway.api import get_gateway_history_data
 from aioruuvigateway.models import TagData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -15,16 +13,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import SCAN_INTERVAL
 
+if TYPE_CHECKING:
+    from . import RuuviGatewayConfigEntry
+
 
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
-    """Polls the gateway for data and returns a list of TagData objects that have changed since the last poll."""
+    """Poll the gateway for data and return changed TagData objects."""
 
-    config_entry: ConfigEntry
+    config_entry: RuuviGatewayConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: RuuviGatewayConfigEntry,
         logger: logging.Logger,
     ) -> None:
         """Initialize the coordinator using the given configuration (host, token)."""
@@ -39,6 +40,7 @@ class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
         self.token = config_entry.data[CONF_TOKEN]
         self.last_tag_datas: dict[str, TagData] = {}
 
+    @override
     async def _async_update_data(self) -> list[TagData]:
         changed_tag_datas: list[TagData] = []
         async with get_async_client(self.hass) as client:

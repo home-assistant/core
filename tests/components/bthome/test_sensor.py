@@ -5,6 +5,12 @@ import logging
 import time
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -20,13 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import make_bthome_v1_adv, make_bthome_v2_adv, make_encrypted_bthome_v1_adv
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1090,6 +1089,37 @@ async def test_v1_sensors(
                 },
             ],
         ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x64\x42",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_light_level",
+                    "friendly_name": "Test Device 18B2 Light level",
+                    "state_class": "measurement",
+                    "expected_state": "66",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x40\x65\x07",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_settings_revision",
+                    "friendly_name": "Test Device 18B2 Settings revision",
+                    "expected_state": "7",
+                },
+            ],
+        ),
     ],
 )
 async def test_v2_sensors(
@@ -1241,7 +1271,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
 
 async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
-    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    """Test sleepy device does not go unavailable after 60 min and restores state."""
     start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(

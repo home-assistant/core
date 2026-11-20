@@ -1,8 +1,6 @@
 """Coordinator for Autarco integration."""
 
-from __future__ import annotations
-
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from autarco import (
     AccountSite,
@@ -57,6 +55,7 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
         self.client = client
         self.account_site = account_site
 
+    @override
     async def _async_update_data(self) -> AutarcoData:
         """Fetch data from Autarco API."""
         battery = None

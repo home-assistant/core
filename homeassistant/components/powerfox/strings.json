@@ -1,13 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices were found in this Powerfox account."
     },
     "step": {
       "reauth_confirm": {
@@ -19,18 +18,6 @@
         },
         "description": "The password for {email} is no longer valid.",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "reconfigure": {
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "[%key:component::powerfox::config::step::user::data_description::email%]",
-          "password": "[%key:component::powerfox::config::step::user::data_description::password%]"
-        },
-        "description": "Powerfox is already configured. Would you like to reconfigure it?",
-        "title": "Reconfigure your Powerfox account"
       },
       "user": {
         "data": {
@@ -124,6 +111,9 @@
     },
     "no_data_error": {
       "message": "No data available for device \"{device_name}\". The device may not have reported data yet."
+    },
+    "no_devices": {
+      "message": "No devices were found in the Powerfox account."
     },
     "privacy_error": {
       "message": "Data for device \"{device_name}\" is restricted due to privacy settings in the Powerfox app."

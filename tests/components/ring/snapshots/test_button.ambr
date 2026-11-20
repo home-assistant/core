@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('ring', 'abcdef185036587')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
@@ -39,8 +39,8 @@
 # name: test_states[button.ingress_open_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Ingress Open door',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Open door',
     }),
     'context': <ANY>,
     'entity_id': 'button.ingress_open_door',

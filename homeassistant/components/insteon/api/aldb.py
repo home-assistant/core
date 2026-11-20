@@ -2,9 +2,9 @@
 
 from typing import Any
 
+import probatio
 from pyinsteon import devices
 from pyinsteon.constants import ALDBStatus
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -12,27 +12,28 @@ from homeassistant.helpers import device_registry as dr
 
 from ..const import DEVICE_ADDRESS, ID, INSTEON_DEVICE_NOT_FOUND, TYPE
 from ..utils import async_device_name
+from .config import get_insteon_config_entry
 from .device import notify_device_not_found
 
 ALDB_RECORD = "record"
-ALDB_RECORD_SCHEMA = vol.Schema(
+ALDB_RECORD_SCHEMA = probatio.Schema(
     {
-        vol.Required("mem_addr"): int,
-        vol.Required("in_use"): bool,
-        vol.Required("group"): vol.Range(0, 255),
-        vol.Required("is_controller"): bool,
-        vol.Optional("highwater"): bool,
-        vol.Required("target"): str,
-        vol.Optional("target_name"): str,
-        vol.Required("data1"): vol.Range(0, 255),
-        vol.Required("data2"): vol.Range(0, 255),
-        vol.Required("data3"): vol.Range(0, 255),
-        vol.Optional("dirty"): bool,
+        probatio.Required("mem_addr"): int,
+        probatio.Required("in_use"): bool,
+        probatio.Required("group"): probatio.Range(0, 255),
+        probatio.Required("is_controller"): bool,
+        probatio.Optional("highwater"): bool,
+        probatio.Required("target"): str,
+        probatio.Optional("target_name"): str,
+        probatio.Required("data1"): probatio.Range(0, 255),
+        probatio.Required("data2"): probatio.Range(0, 255),
+        probatio.Required("data3"): probatio.Range(0, 255),
+        probatio.Optional("dirty"): bool,
     }
 )
 
 
-async def async_aldb_record_to_dict(dev_registry, record, dirty=False):
+async def async_aldb_record_to_dict(dev_registry, record, config_entry_id, dirty=False):
     """Convert an ALDB record to a dict."""
     return ALDB_RECORD_SCHEMA(
         {
@@ -42,7 +43,9 @@ async def async_aldb_record_to_dict(dev_registry, record, dirty=False):
             "highwater": record.is_high_water_mark,
             "group": record.group,
             "target": str(record.target),
-            "target_name": await async_device_name(dev_registry, record.target),
+            "target_name": await async_device_name(
+                dev_registry, record.target, config_entry_id
+            ),
             "data1": record.data1,
             "data2": record.data2,
             "data3": record.data3,
@@ -68,7 +71,10 @@ def any_aldb_loading() -> bool:
 
 
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "insteon/aldb/get", vol.Required(DEVICE_ADDRESS): str}
+    {
+        probatio.Required(TYPE): "insteon/aldb/get",
+        probatio.Required(DEVICE_ADDRESS): str,
+    }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -88,10 +94,11 @@ async def websocket_get_aldb(
     changed_records = list(device.aldb.pending_changes.keys())
 
     dev_registry = dr.async_get(hass)
+    config_entry_id = get_insteon_config_entry(hass).entry_id
 
     records = [
         await async_aldb_record_to_dict(
-            dev_registry, aldb[mem_addr], mem_addr in changed_records
+            dev_registry, aldb[mem_addr], config_entry_id, mem_addr in changed_records
         )
         for mem_addr in aldb
     ]
@@ -101,9 +108,9 @@ async def websocket_get_aldb(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/change",
-        vol.Required(DEVICE_ADDRESS): str,
-        vol.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
+        probatio.Required(TYPE): "insteon/aldb/change",
+        probatio.Required(DEVICE_ADDRESS): str,
+        probatio.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
     }
 )
 @websocket_api.require_admin
@@ -134,9 +141,9 @@ async def websocket_change_aldb_record(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/create",
-        vol.Required(DEVICE_ADDRESS): str,
-        vol.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
+        probatio.Required(TYPE): "insteon/aldb/create",
+        probatio.Required(DEVICE_ADDRESS): str,
+        probatio.Required(ALDB_RECORD): ALDB_RECORD_SCHEMA,
     }
 )
 @websocket_api.require_admin
@@ -165,8 +172,8 @@ async def websocket_create_aldb_record(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/write",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/aldb/write",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -188,8 +195,8 @@ async def websocket_write_aldb(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/load",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/aldb/load",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -210,8 +217,8 @@ async def websocket_load_aldb(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/reset",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/aldb/reset",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -232,8 +239,8 @@ async def websocket_reset_aldb(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/add_default_links",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/aldb/add_default_links",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -256,8 +263,8 @@ async def websocket_add_default_links(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/aldb/notify",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/aldb/notify",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -303,7 +310,7 @@ async def websocket_notify_on_aldb_status(
     connection.send_result(msg[ID])
 
 
-@websocket_api.websocket_command({vol.Required(TYPE): "insteon/aldb/notify_all"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "insteon/aldb/notify_all"})
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_notify_on_aldb_status_all(

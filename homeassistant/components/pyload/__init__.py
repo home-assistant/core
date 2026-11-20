@@ -1,7 +1,5 @@
 """The pyLoad integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp import CookieJar
@@ -9,6 +7,7 @@ from pyloadapi import PyLoadAPI
 from yarl import URL
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -28,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> None:
     """Set up pyLoad from a config entry."""
 
     session = async_create_clientsession(
@@ -39,8 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
     pyloadapi = PyLoadAPI(
         session,
         api_url=URL(entry.data[CONF_URL]),
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
+        api_key=entry.data.get(CONF_API_KEY),
     )
 
     coordinator = PyLoadCoordinator(hass, entry, pyloadapi)
@@ -50,15 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> None:
     """Migrate config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -79,4 +77,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> 
         entry.version,
         entry.minor_version,
     )
-    return True

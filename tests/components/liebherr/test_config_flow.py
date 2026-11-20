@@ -8,6 +8,7 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.liebherr.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_API_KEY = "test-api-key"
 MOCK_USER_INPUT = {CONF_API_KEY: MOCK_API_KEY}
@@ -62,9 +61,9 @@ async def test_form(
         (Exception("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors_with_recovery(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     side_effect: Exception,
     expected_error: str,
@@ -132,10 +131,9 @@ async def test_form_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_liebherr_client: MagicMock,
+    hass: HomeAssistant, mock_liebherr_client: MagicMock
 ) -> None:
     """Test zeroconf discovery triggers the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -170,9 +168,9 @@ async def test_zeroconf_already_configured(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -200,9 +198,9 @@ async def test_reauth_flow(
         (Exception("Unexpected"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors_with_recovery(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,

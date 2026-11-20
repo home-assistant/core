@@ -4,6 +4,9 @@ from unittest.mock import patch
 
 from pysenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET, ENTRY_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT_PATH = "/auth/external/callback"
 REDIRECT_URL = "https://example.com" + REDIRECT_PATH
@@ -42,7 +41,7 @@ async def test_full_flow(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "senz", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -74,7 +73,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.senz.async_setup_entry", return_value=True
+        "homeassistant.components.senz.async_setup_entry", return_value=None
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -124,7 +123,7 @@ async def test_duplicate_flow(
         },
     )
 
-    with patch("homeassistant.components.senz.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.senz.async_setup_entry", return_value=None):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result2["type"] is FlowResultType.ABORT

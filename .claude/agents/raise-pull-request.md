@@ -70,7 +70,7 @@ prek run --from-ref "$BASE_SHA" --to-ref HEAD
 **Track results:**
 - `PREK_PASSED`: true if `prek run` exits with code 0
 
-**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://developers.home-assistant.io/docs/development_environment.**
+**If `prek` fails or is not available, STOP and report the failure to the user. Do not proceed with PR creation. If the failure appears to be an environment setup issue (e.g., missing tools, command not found, venv not activated), also point the user to https://contributors.home-assistant.io/core/development/environment/.**
 
 ## Step 3: Stage Any Changes from Checks
 
@@ -118,10 +118,12 @@ Write a release-note-style PR title summarizing the change. The title becomes th
 | | `Improve test coverage of Tesla Fleet` |
 | | `Refactor adguard tests to use proper fixtures for mocking` |
 | | `Simplify entity init in Proxmox` |
+| Developer tooling | `Add pylint checker for flow calls inside a try block` |
+| | `Use all CPUs for full pylint runs in CI` |
 
 ## Step 6: Verify Development Checklist
 
-Check each item from the [development checklist](https://developers.home-assistant.io/docs/development_checklist/):
+Check each item from the [development checklist](https://contributors.home-assistant.io/core/development/checklist/):
 
 | Item | How to verify |
 |------|---------------|
@@ -147,13 +149,14 @@ Select exactly ONE based on the changes. Mark the selected type with `[x]` and a
 | New integration | New folder in components/ |
 | New feature | Adds capability to existing integration |
 | Deprecation | Adds deprecation warnings for future breaking change |
-| Breaking change | Removes or changes existing functionality |
-| Code quality | Only refactoring or test additions, no functional change |
+| Breaking change | Breaks or removes something users rely on, including the removal at the end of an integration deprecation (also a YAML import). Removing a deprecated core API that nothing in core uses anymore is Code quality. See [When it is backward-incompatible](https://contributors.home-assistant.io/releases/guides/backward-incompatible-changes/#when-it-is-backward-incompatible) |
+| Code quality | Only refactoring, typing, performance or similar improvements to existing code, or test additions, no functional change |
+| Developer tooling | Only CI, GitHub workflows, linters and checkers (pylint plugins, hassfest), scripts, AI instructions or code owners |
 
 **Track results:**
 - `CHANGE_TYPE`: the selected type (e.g., "Bugfix", "New feature", "Code quality", etc.)
 
-**Important:** All seven type options must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
+**Important:** All type options from the template must remain in the PR body. Only the selected type gets `[x]`, all others get `[ ]`.
 
 ## Step 8: Determine Checkbox States
 
@@ -186,15 +189,11 @@ If `CHANGE_TYPE` IS "Breaking change" or "Deprecation", keep the `## Breaking ch
 
 ## Step 10: Push Branch and Create PR
 
-```bash
-# Get branch name and GitHub username
-BRANCH=$(git branch --show-current)
-PUSH_REMOTE=$(git config "branch.$BRANCH.remote" 2>/dev/null || git remote | head -1)
-GITHUB_USER=$(gh api user --jq .login 2>/dev/null || git remote get-url "$PUSH_REMOTE" | sed -E 's#.*[:/]([^/]+)/([^/]+)(\.git)?$#\1#')
+Push the branch with upstream tracking, and create a PR against `home-assistant/core` with the generated title and body:
 
+```bash
 # Create PR (gh pr create pushes the branch automatically)
 gh pr create --repo home-assistant/core --base dev \
-  --head "$GITHUB_USER:$BRANCH" \
   --draft \
   --title "TITLE_HERE" \
   --body "$(cat <<'EOF'

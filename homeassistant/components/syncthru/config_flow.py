@@ -1,15 +1,15 @@
 """Config flow for Samsung SyncThru."""
 
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
+import probatio
 from pysyncthru import ConnectionMode, SyncThru, SyncThruAPINotSupported
 from url_normalize import url_normalize
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -27,8 +27,9 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     url: str
-    name: str
+    name: str = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,6 +38,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_show_form(step_id="user")
         return await self._async_check_and_create("user", user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -68,7 +70,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             # Remove trailing " (ip)" if present for consistency with user driven config
             self.name = re.sub(r"\s+\([\d.]+\)\s*$", "", self.name)
 
-        self.context["title_placeholders"] = {CONF_NAME: self.name}
+        self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -80,7 +82,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._async_show_form(
             step_id="confirm",
-            user_input={CONF_URL: self.url, CONF_NAME: self.name},
+            user_input={CONF_URL: self.url},
         )
 
     async def _async_show_form(self, step_id, user_input=None, errors=None):
@@ -89,10 +91,11 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = {}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-                    vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, "")): str,
+                    probatio.Required(
+                        CONF_URL, default=user_input.get(CONF_URL, "")
+                    ): str,
                 }
             ),
             errors=errors or {},
@@ -125,10 +128,6 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         try:
             await printer.update()
-            if not user_input.get(CONF_NAME):
-                user_input[CONF_NAME] = DEFAULT_NAME_TEMPLATE.format(
-                    printer.model() or DEFAULT_MODEL
-                )
         except SyncThruAPINotSupported:
             errors[CONF_URL] = "syncthru_not_supported"
         else:
@@ -141,6 +140,7 @@ class SyncThruConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=user_input.get(CONF_NAME),
+            title=self.name
+            or DEFAULT_NAME_TEMPLATE.format(printer.model() or DEFAULT_MODEL),
             data=user_input,
         )

@@ -1,26 +1,30 @@
 """Support for the Google Cloud TTS service."""
 
-from __future__ import annotations
-
+from collections.abc import AsyncGenerator
 import logging
 from pathlib import Path
-from typing import Any, cast
+import struct
+from typing import Any, cast, override
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
 from google.cloud import texttospeech
-import voluptuous as vol
+import probatio
+from sentence_stream import async_stream_to_sentences
 
 from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -47,6 +51,8 @@ from .helpers import async_tts_voices, tts_options_schema, tts_platform_schema
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(tts_platform_schema().schema)
+
+STREAMING_SAMPLE_RATE = 24000
 
 
 async def async_get_engine(
@@ -128,7 +134,7 @@ class BaseGoogleCloudProvider:
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS base provider."""
         self._client = client
@@ -172,7 +178,7 @@ class BaseGoogleCloudProvider:
         """Load TTS from Google Cloud."""
         try:
             options = self._options_schema(options)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
@@ -195,7 +201,8 @@ class BaseGoogleCloudProvider:
                 ssml_gender=gender,
                 name=voice,
             ),
-            # Avoid: "This voice does not support speaking rate or pitch parameters at this time."
+            # Avoid: "This voice does not support speaking rate
+            # or pitch parameters at this time."
             # by not specifying the fields unless they differ from the defaults
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=encoding,
@@ -241,7 +248,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS entity."""
         super().__init__(client, voices, language, options_schema)
@@ -255,6 +262,7 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         )
         self._entry = entry
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
@@ -267,6 +275,102 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
                 self._entry.async_start_reauth(self.hass)
             return None, None
 
+    @override
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message."""
+        try:
+            options = self._options_schema(request.options)
+        except probatio.Invalid:
+            # The non-streaming path logs the invalid options
+            return await super().async_stream_tts_audio(request)
+
+        # Google only supports streaming for Chirp 3: HD voices and speaking rate
+        if (
+            "Chirp3-HD" not in options[CONF_VOICE]
+            or options[CONF_PITCH] != DEFAULT_PITCH
+            or options[CONF_GAIN] != DEFAULT_GAIN
+            or options[CONF_PROFILES]
+            or options[CONF_TEXT_TYPE] != "text"
+        ):
+            return await super().async_stream_tts_audio(request)
+
+        return TTSAudioResponse(
+            "wav",
+            self._async_stream_audio(request.message_gen, request.language, options),
+        )
+
+    async def _async_stream_audio(
+        self,
+        message_gen: AsyncGenerator[str],
+        language: str,
+        options: dict[str, Any],
+    ) -> AsyncGenerator[bytes]:
+        """Stream TTS from Google Cloud as WAV."""
+        voice = options[CONF_VOICE]
+        if not voice.startswith(language):
+            language = voice[:5]
+
+        config = texttospeech.StreamingSynthesizeConfig(
+            voice=texttospeech.VoiceSelectionParams(
+                language_code=language,
+                name=voice,
+            ),
+            streaming_audio_config=texttospeech.StreamingAudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.PCM,
+                sample_rate_hertz=STREAMING_SAMPLE_RATE,
+                speaking_rate=(
+                    options[CONF_SPEED]
+                    if options[CONF_SPEED] != DEFAULT_SPEED
+                    else None
+                ),
+            ),
+        )
+
+        def text_request(text: str) -> texttospeech.StreamingSynthesizeRequest:
+            # Google concatenates the inputs, so keep the sentences apart
+            return texttospeech.StreamingSynthesizeRequest(
+                input=texttospeech.StreamingSynthesisInput(text=f"{text} ")
+            )
+
+        async def request_gen() -> AsyncGenerator[
+            texttospeech.StreamingSynthesizeRequest
+        ]:
+            yield texttospeech.StreamingSynthesizeRequest(streaming_config=config)
+            # Sending whole sentences avoids long pauses within the speech
+            async for sentence in async_stream_to_sentences(message_gen):
+                yield text_request(sentence)
+
+        # WAV readers take a data size of 0 literally, so mark the sizes unknown
+        yield struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF",
+            0xFFFFFFFF,
+            b"WAVE",
+            b"fmt ",
+            16,
+            1,  # PCM
+            1,
+            STREAMING_SAMPLE_RATE,
+            STREAMING_SAMPLE_RATE * 2,
+            2,
+            16,
+            b"data",
+            0xFFFFFFFF,
+        )
+
+        try:
+            responses = await self._client.streaming_synthesize(request_gen())
+            async for response in responses:
+                yield response.audio_content
+        except GoogleAPIError as err:
+            if isinstance(err, Unauthenticated):
+                self._entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                f"Error occurred during Google Cloud TTS call: {err}"
+            ) from err
+
 
 class GoogleCloudTTSProvider(BaseGoogleCloudProvider, Provider):
     """The Google Cloud TTS API provider."""
@@ -276,12 +380,13 @@ class GoogleCloudTTSProvider(BaseGoogleCloudProvider, Provider):
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
         language: str,
-        options_schema: vol.Schema,
+        options_schema: probatio.Schema,
     ) -> None:
         """Init Google Cloud TTS service."""
         super().__init__(client, voices, language, options_schema)
         self.name = "Google Cloud TTS"
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

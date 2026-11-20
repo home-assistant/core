@@ -3,32 +3,17 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
-
-from homeassistant.components.climate.const import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.components.climate.trigger import CONF_HVAC_MODE
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
-    CONF_OPTIONS,
-    CONF_TARGET,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import async_validate_trigger_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
+    TargetSupport,
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    arm_trigger,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -37,6 +22,25 @@ from tests.components.common import (
     target_entities,
 )
 
+from homeassistant.components.climate.const import (
+    ATTR_HUMIDITY,
+    ATTR_HVAC_ACTION,
+    ClimateEntityCapabilityAttribute,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.components.climate.trigger import CONF_HVAC_MODE, TRIGGERS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    TargetKey,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.trigger import async_validate_trigger_config
+
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
@@ -44,27 +48,80 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
+_CLIMATE_UNIT_ATTRIBUTES = {
+    ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS
+}
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+_TEMPERATURE_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "hvac_mode_changed": TargetSupport.STANDARD,
+    "started_cooling": TargetSupport.STANDARD,
+    "started_drying": TargetSupport.STANDARD,
+    "target_humidity_changed": TargetSupport.STANDARD,
+    "target_humidity_crossed_threshold": TargetSupport.STANDARD,
+    "target_temperature_changed": TargetSupport.STANDARD,
+    "target_temperature_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+    "started_heating": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "climate.hvac_mode_changed",
-        "climate.target_humidity_changed",
-        "climate.target_humidity_crossed_threshold",
-        "climate.target_temperature_changed",
-        "climate.target_temperature_crossed_threshold",
-        "climate.turned_off",
-        "climate.turned_on",
-        "climate.started_heating",
+        ("climate.started_cooling", {}, True, True),
+        ("climate.started_drying", {}, True, True),
+        ("climate.started_heating", {}, True, True),
+        ("climate.turned_off", {}, True, True),
+        ("climate.turned_on", {}, True, True),
+        ("climate.hvac_mode_changed", {"hvac_mode": [HVACMode.HEAT]}, True, True),
+        ("climate.target_humidity_changed", _CHANGED_THRESHOLD, False, False),
+        (
+            "climate.target_humidity_crossed_threshold",
+            _HUMIDITY_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
+        ("climate.target_temperature_changed", _CHANGED_THRESHOLD, False, False),
+        (
+            "climate.target_temperature_crossed_threshold",
+            _TEMPERATURE_CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
     ],
 )
-async def test_climate_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_climate_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the climate triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that climate triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -85,18 +142,18 @@ async def test_climate_triggers_gated_by_labs_flag(
             "climate.hvac_mode_changed",
             # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "climate.hvac_mode_changed",
             {CONF_HVAC_MODE: ["invalid_mode"]},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -113,14 +170,13 @@ async def test_climate_trigger_validation(
             [
                 {
                     "platform": trigger,
-                    CONF_TARGET: {CONF_ENTITY_ID: "climate.test_climate"},
+                    CONF_TARGET: {TargetKey.ENTITY_ID: "climate.test_climate"},
                     CONF_OPTIONS: trigger_options,
                 }
             ],
         )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -155,7 +211,7 @@ async def test_climate_trigger_validation(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_any(
+async def test_climate_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -165,8 +221,8 @@ async def test_climate_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test climate trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -178,7 +234,6 @@ async def test_climate_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -187,22 +242,32 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_changed",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -221,7 +286,7 @@ async def test_climate_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_any(
+async def test_climate_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -231,8 +296,8 @@ async def test_climate_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test climate attribute trigger fires on any change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -244,7 +309,6 @@ async def test_climate_state_attribute_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -289,7 +353,7 @@ async def test_climate_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate changes to a specific state."""
+    """Test climate trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -302,7 +366,6 @@ async def test_climate_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -311,13 +374,18 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -346,7 +414,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate state changes to a specific state."""
+    """Test climate attribute trigger fires on first change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -359,7 +427,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -394,7 +461,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_last(
+async def test_climate_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -404,8 +471,8 @@ async def test_climate_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test climate trigger fires when all climate entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -417,7 +484,6 @@ async def test_climate_state_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -426,13 +492,18 @@ async def test_climate_state_trigger_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
+            "climate.target_humidity_crossed_threshold",
+            HVACMode.AUTO,
+            ATTR_HUMIDITY,
+            attribute_required=True,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            unit_attributes=_CLIMATE_UNIT_ATTRIBUTES,
+            attribute_required=True,
         ),
         *parametrize_trigger_states(
             trigger="climate.started_cooling",
@@ -451,7 +522,7 @@ async def test_climate_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_last(
+async def test_climate_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -461,8 +532,8 @@ async def test_climate_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate state changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test climate attribute trigger fires when all climate entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -472,3 +543,59 @@ async def test_climate_state_attribute_trigger_behavior_last(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+async def test_climate_target_temperature_trigger_temperature_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test the trigger uses the temperature_unit attribute, not the system unit."""
+    calls: list[str] = []
+    entity_id = "climate.test"
+
+    # The system unit is °C, the entity reports in °F
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 70,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass,
+        "climate.target_temperature_crossed_threshold",
+        {
+            "threshold": {
+                "type": "above",
+                "value": {"number": 25, "unit_of_measurement": "°C"},
+            }
+        },
+        {CONF_ENTITY_ID: [entity_id]},
+        calls,
+    )
+
+    # 72°F = 22.2°C, below 25°C - should NOT trigger
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 72,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # 80°F = 26.7°C, above 25°C - should trigger
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {
+            ATTR_TEMPERATURE: 80,
+            ClimateEntityCapabilityAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1

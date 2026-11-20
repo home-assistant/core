@@ -1,13 +1,11 @@
 """Validate integrations which can be setup from YAML have config schemas."""
 
-from __future__ import annotations
-
 import ast
 
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from hassfest import ast_parse_module
+from hassfest.model import Config, Integration
 
-from . import ast_parse_module
-from .model import Config, Integration
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by

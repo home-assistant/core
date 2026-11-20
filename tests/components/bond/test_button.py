@@ -3,8 +3,8 @@
 from bond_async import Action, DeviceType
 
 from homeassistant.components.bond.button import STEP_SIZE
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonService
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -63,6 +63,15 @@ def motorized_shade(name: str):
         "name": name,
         "type": DeviceType.MOTORIZED_SHADES,
         "actions": [Action.OPEN, Action.OPEN_NEXT, Action.CLOSE, Action.CLOSE_NEXT],
+    }
+
+
+def motorized_shade_with_preset(name: str):
+    """Create a motorized shade with preset action."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.CLOSE, Action.HOLD, Action.PRESET, Action.STOP],
     }
 
 
@@ -128,8 +137,8 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_increase_flame"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_increase_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -141,8 +150,8 @@ async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_decrease_flame"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_decrease_flame"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -167,8 +176,8 @@ async def test_press_button(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_start_increasing_brightness"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_start_increasing_brightness"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -180,8 +189,8 @@ async def test_press_button(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_start_decreasing_brightness"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_start_decreasing_brightness"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -206,8 +215,8 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_open_next"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_open_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -217,10 +226,51 @@ async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.name_1_close_next"},
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_close_next"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
     mock_action.assert_called_once_with("test-device-id", Action(Action.CLOSE_NEXT))
+
+
+async def test_preset_button(hass: HomeAssistant) -> None:
+    """Tests preset button is created and can be pressed."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_with_preset("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_preset")
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            ButtonService.PRESS,
+            {TargetKey.ENTITY_ID: "button.name_1_preset"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.PRESET))
+
+
+async def test_preset_does_not_trigger_stop_button(hass: HomeAssistant) -> None:
+    """Tests that Preset alone does not cause a Stop Actions button to appear.
+
+    Preset is added independently of the main button list, so it should
+    not trigger the Stop button logic (which only activates when there
+    are other button entities).
+    """
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade_with_preset("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_preset")
+    assert not hass.states.get("button.name_1_stop_actions")

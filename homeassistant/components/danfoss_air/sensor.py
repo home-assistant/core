@@ -1,7 +1,5 @@
 """Support for the for Danfoss Air HRV sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from pydanfossair.commands import ReadCommand
@@ -73,7 +71,13 @@ def setup_platform(
             SensorDeviceClass.HUMIDITY,
             SensorStateClass.MEASUREMENT,
         ],
-        ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None, None],
+        [
+            "Danfoss Air Fan Step",
+            PERCENTAGE,
+            ReadCommand.fan_speed_percent,
+            None,
+            None,
+        ],
         [
             "Danfoss Air Exhaust Fan Speed",
             REVOLUTIONS_PER_MINUTE,

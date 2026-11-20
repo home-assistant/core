@@ -1,15 +1,14 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
-import datetime
+import datetime as dt
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientSession
 from google.oauth2.credentials import Credentials
 from google_nest_sdm.admin_client import PUBSUB_API_HOST, AdminClient
 from google_nest_sdm.auth import AbstractAuth
+from google_nest_sdm.exceptions import ApiException, ConfigurationException
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.core import HomeAssistant
@@ -20,6 +19,7 @@ from .const import (
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIPTION_NAME,
+    LEGACY_TOPIC_PREFIX,
     OAUTH2_TOKEN,
     SDM_SCOPES,
 )
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Google Nest Device Access authentication tied to an OAuth2 based config entry."""
+    """Provide Google Nest Device Access auth tied to an OAuth2 config entry."""
 
     def __init__(
         self,
@@ -44,11 +44,13 @@ class AsyncConfigEntryAuth(AbstractAuth):
         self._client_id = client_id
         self._client_secret = client_secret
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token for SDM API."""
         await self._oauth_session.async_ensure_token_valid()
         return cast(str, self._oauth_session.token["access_token"])
 
+    @override
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber.
 
@@ -67,7 +69,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
             client_secret=self._client_secret,
             scopes=SDM_SCOPES,
         )
-        creds.expiry = datetime.datetime.fromtimestamp(token["expires_at"])
+        creds.expiry = dt.datetime.fromtimestamp(token["expires_at"])
         return creds
 
 
@@ -89,10 +91,12 @@ class AccessTokenAuthImpl(AbstractAuth):
         super().__init__(websession, host)
         self._access_token = access_token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the access token."""
         return self._access_token
 
+    @override
     async def async_get_creds(self) -> Credentials:
         """Return an OAuth credential for Pub/Sub Subscriber."""
         return Credentials(  # type: ignore[no-untyped-call]
@@ -164,3 +168,34 @@ def new_pubsub_admin_client(
         ),
         cloud_project_id=cloud_project_id,
     )
+
+
+def is_legacy_topic(topic_name: str) -> bool:
+    """Return True if the topic is a Google-hosted Pub/Sub topic."""
+    return topic_name.startswith(LEGACY_TOPIC_PREFIX)
+
+
+def cloud_project_from_subscription(subscription_name: str) -> str | None:
+    """Return the cloud project id from a `projects/X/subscriptions/Y` name."""
+    parts = subscription_name.split("/")
+    if len(parts) != 4 or parts[0] != "projects" or parts[2] != "subscriptions":
+        return None
+    return parts[1]
+
+
+async def async_delete_subscription(
+    admin_client: AdminClient, subscription_name: str
+) -> None:
+    """Delete a Pub/Sub subscription created by Home Assistant, best effort."""
+    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
+    try:
+        await admin_client.delete_subscription(subscription_name)
+    except (ApiException, ConfigurationException) as err:
+        _LOGGER.warning(
+            (
+                "Unable to delete subscription '%s'; Will be automatically cleaned up"
+                " by cloud console: %s"
+            ),
+            subscription_name,
+            err,
+        )

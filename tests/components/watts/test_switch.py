@@ -5,23 +5,27 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_entities(
@@ -46,7 +50,7 @@ async def test_switch_state(
     """Test switch state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("switch.living_room_switch")
+    state = hass.states.get("switch.living_room_living_room_switch")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -71,7 +75,7 @@ async def test_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_switch"},
         blocking=True,
     )
 
@@ -91,8 +95,8 @@ async def test_fast_polling(
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.living_room_switch"},
+        SwitchService.TURN_ON,
+        {TargetKey.ENTITY_ID: "switch.living_room_living_room_switch"},
         blocking=True,
     )
 
@@ -104,7 +108,7 @@ async def test_fast_polling(
     await hass.async_block_till_done()
 
     assert mock_watts_client.get_device.called
-    mock_watts_client.get_device.assert_called_with("switch_789", refresh=True)
+    mock_watts_client.get_device.assert_called_with("switch_789")
 
     # Should still be in fast polling after 55s
     mock_watts_client.get_device.reset_mock()
@@ -149,6 +153,6 @@ async def test_api_error(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "switch.living_room_switch"},
+            {ATTR_ENTITY_ID: "switch.living_room_living_room_switch"},
             blocking=True,
         )

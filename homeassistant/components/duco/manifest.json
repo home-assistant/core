@@ -1,12 +1,25 @@
 {
   "domain": "duco",
   "name": "Duco",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@ronaldvdmeer"],
   "config_flow": true,
+  "connectivity": ["network"],
+  "dhcp": [
+    {
+      "hostname": "duco_[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/duco",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["duco"],
-  "quality_scale": "bronze",
-  "requirements": ["python-duco-client==0.2.0"]
+  "loggers": ["duco_connectivity"],
+  "quality_scale": "platinum",
+  "requirements": ["python-duco-connectivity==0.18.0"],
+  "zeroconf": [
+    {
+      "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+      "type": "_http._tcp.local."
+    }
+  ]
 }

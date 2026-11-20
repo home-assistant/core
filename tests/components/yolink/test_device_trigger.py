@@ -1,5 +1,6 @@
 """The tests for YoLink device triggers."""
 
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 
@@ -11,14 +12,12 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_get_device_automations
-
 
 async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers from a yolink flexfob."""
-    config_entry = MockConfigEntry(domain="yolink", data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -95,7 +94,7 @@ async def test_get_triggers_exception(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test get triggers when device type not flexfob."""
-    config_entry = MockConfigEntry(domain="yolink", data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entity = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -150,7 +149,9 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(connections={connection})
+    device = device_registry.async_get_device_by_connection(
+        connection, config_entry.entry_id
+    )
     assert device is not None
     # Fake remote button long press.
     hass.bus.async_fire(

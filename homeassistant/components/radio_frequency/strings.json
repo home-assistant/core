@@ -1,0 +1,33 @@
+{
+  "entity_component": {
+    "receiver": {
+      "name": "Radio frequency receiver"
+    },
+    "transmitter": {
+      "name": "Radio frequency transmitter"
+    }
+  },
+  "exceptions": {
+    "component_not_loaded": {
+      "message": "Radio Frequency component not loaded"
+    },
+    "entity_not_found": {
+      "message": "Radio Frequency entity `{entity_id}` not found"
+    },
+    "no_receivers": {
+      "message": "No Radio Frequency receivers available"
+    },
+    "no_transmitters": {
+      "message": "No Radio Frequency transmitters available"
+    },
+    "receiver_not_found": {
+      "message": "Radio Frequency receiver entity `{entity_id}` not found"
+    },
+    "unsupported_frequency": {
+      "message": "Radio Frequency entity `{entity_id}` does not support frequency {frequency} Hz"
+    },
+    "unsupported_modulation": {
+      "message": "Radio Frequency entity `{entity_id}` does not support modulation {modulation}"
+    }
+  }
+}

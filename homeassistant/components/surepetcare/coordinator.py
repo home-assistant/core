@@ -1,9 +1,8 @@
 """Coordinator for the surepetcare integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from surepy import Surepy, SurepyEntity
 from surepy.enums import EntityType, Location, LockState
@@ -11,31 +10,26 @@ from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    ATTR_FLAP_ID,
-    ATTR_LOCATION,
-    ATTR_LOCK_STATE,
-    ATTR_PET_NAME,
-    DOMAIN,
-    SURE_API_TIMEOUT,
-)
+from .const import DOMAIN, SURE_API_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
+type SurePetcareConfigEntry = ConfigEntry[SurePetcareDataCoordinator]
+
 
 class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
     """Handle Surepetcare data."""
 
-    config_entry: ConfigEntry
+    config_entry: SurePetcareConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: SurePetcareConfigEntry) -> None:
         """Initialize the data handler."""
         self.surepy = Surepy(
             entry.data[CONF_USERNAME],
@@ -58,6 +52,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, SurepyEntity]:
         """Get the latest data from Sure Petcare."""
         try:
@@ -67,10 +62,8 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
         except SurePetcareError as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
 
-    async def handle_set_lock_state(self, call: ServiceCall) -> None:
+    async def handle_set_lock_state(self, flap_id: int, state: str) -> None:
         """Call when setting the lock state."""
-        flap_id = call.data[ATTR_FLAP_ID]
-        state = call.data[ATTR_LOCK_STATE]
         await self.lock_states_callbacks[state](flap_id)
         await self.async_request_refresh()
 
@@ -82,10 +75,8 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
                 pets[surepy_entity.name] = surepy_entity.id
         return pets
 
-    async def handle_set_pet_location(self, call: ServiceCall) -> None:
+    async def handle_set_pet_location(self, pet_name: str, location: str) -> None:
         """Call when setting the pet location."""
-        pet_name = call.data[ATTR_PET_NAME]
-        location = call.data[ATTR_LOCATION]
         device_id = self.get_pets()[pet_name]
         await self.surepy.sac.set_pet_location(device_id, Location[location.upper()])
         await self.async_request_refresh()

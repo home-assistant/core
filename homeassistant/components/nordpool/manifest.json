@@ -1,13 +1,15 @@
 {
   "domain": "nordpool",
   "name": "Nord Pool",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
+  "connectivity": ["cloud"],
   "documentation": "https://www.home-assistant.io/integrations/nordpool",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pynordpool"],
   "quality_scale": "platinum",
-  "requirements": ["pynordpool==0.3.2"],
+  "requirements": ["pynordpool==0.4.0"],
   "single_config_entry": true
 }

@@ -5,18 +5,17 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
+    NumberService,
+    NumberServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -123,8 +122,11 @@ async def test_set_tool_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 200.4},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 200.4,
+            },
             blocking=True,
         )
         assert len(mock_set_tool_temp.mock_calls) == 1
@@ -159,13 +161,17 @@ async def test_set_bed_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 80.6},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 80.6,
+            },
             blocking=True,
         )
 
         assert len(mock_set_bed_temp.mock_calls) == 1
-        # Verify that we pass integer, expected by the pyoctoprintapi, and that it's rounded down
+        # Verify that we pass integer, expected by pyoctoprintapi,
+        # and that it's rounded down
         mock_set_bed_temp.assert_called_with(80)
 
 
@@ -189,7 +195,7 @@ async def test_set_bed_temp(
 async def test_set_tool_n_temp(
     hass: HomeAssistant,
 ) -> None:
-    """Test setting tool temperature via number entity when multiple tools are present."""
+    """Test setting tool temperature when multiple tools present."""
     with patch(
         "pyoctoprintapi.OctoprintClient.set_tool_temperature"
     ) as mock_set_tool_temp:
@@ -200,8 +206,11 @@ async def test_set_tool_n_temp(
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: entity.entity_id, ATTR_VALUE: 41.0},
+            NumberService.SET_VALUE,
+            {
+                TargetKey.ENTITY_ID: entity.entity_id,
+                NumberServiceArgument.VALUE: 41.0,
+            },
             blocking=True,
         )
         assert len(mock_set_tool_temp.mock_calls) == 1

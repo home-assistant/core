@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from steamloop import HoldType
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -49,7 +48,7 @@ async def test_hold_switch_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.living_room_hold")
+    state = hass.states.get("switch.living_room_living_room_hold")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -72,7 +71,7 @@ async def test_hold_switch_service(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.living_room_hold"},
+        {ATTR_ENTITY_ID: "switch.living_room_living_room_hold"},
         blocking=True,
     )
 

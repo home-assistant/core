@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.airvisual import (
     CONF_CITY,
     CONF_GEOGRAPHIES,
@@ -12,7 +14,7 @@ from homeassistant.components.airvisual import (
     INTEGRATION_TYPE_NODE_PRO,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.airvisual_pro.const import DOMAIN as AIRVISUAL_PRO_DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
@@ -39,8 +41,6 @@ from .conftest import (
     TEST_LONGITUDE2,
     TEST_STATE,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_migration_1_2(hass: HomeAssistant, mock_pyairvisual) -> None:

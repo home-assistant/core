@@ -1,6 +1,6 @@
 """Support for Fast.com internet speed testing sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,7 +33,6 @@ class SpeedtestSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], Sensor
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -49,6 +48,7 @@ class SpeedtestSensor(CoordinatorEntity[FastdotcomDataUpdateCoordinator], Sensor
         )
 
     @property
+    @override
     def native_value(
         self,
     ) -> float | None:

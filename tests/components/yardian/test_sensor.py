@@ -1,12 +1,15 @@
 """Tests for Yardian sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from pyyardian import OperationInfo
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,8 +21,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("sensor_platform_only")
 
@@ -72,7 +73,7 @@ async def test_diagnostic_sensors(
 
     for entity_id in (
         "sensor.yardian_smart_sprinkler_zone_delay",
-        "sensor.yardian_smart_sprinkler_water_hammer_reduction",
+        "sensor.yardian_smart_sprinkler_water_hammer_duration",
     ):
         reg_entry = entity_registry.async_get(entity_id)
         assert reg_entry is not None

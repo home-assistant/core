@@ -1,18 +1,21 @@
 """Provide common test tools for STT."""
 
-from __future__ import annotations
-
-from collections.abc import AsyncIterable, Callable, Coroutine
+from collections.abc import AsyncGenerator, AsyncIterable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
+from pytest_homeassistant.common import MockPlatform, mock_platform
+
 from homeassistant.components.stt import (
+    DEFAULT_AUDIO_PROCESSING,
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    PartialSpeechResult,
     Provider,
+    SpeechAudioProcessing,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
@@ -23,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from tests.common import MockPlatform, mock_platform
-
 TEST_DOMAIN = "test"
 
 
@@ -34,13 +35,18 @@ class BaseProvider:
     fail_process_audio = False
 
     def __init__(
-        self, *, supported_languages: list[str] | None = None, text: str = "test_result"
+        self,
+        *,
+        supported_languages: list[str] | None = None,
+        text: str = "test_result",
+        audio_processing: SpeechAudioProcessing | None = None,
     ) -> None:
         """Init test provider."""
         self._supported_languages = supported_languages or ["de", "de-CH", "en"]
         self.calls: list[tuple[SpeechMetadata, AsyncIterable[bytes]]] = []
         self.received: list[bytes] = []
         self.text = text
+        self._audio_processing = audio_processing or DEFAULT_AUDIO_PROCESSING
 
     @property
     def supported_languages(self) -> list[str]:
@@ -72,6 +78,11 @@ class BaseProvider:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
 
+    @property
+    def audio_processing(self) -> SpeechAudioProcessing:
+        """Return required/preferred input audio processing settings."""
+        return self._audio_processing
+
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
@@ -98,6 +109,54 @@ class MockSTTProviderEntity(BaseProvider, SpeechToTextEntity):
 
     url_path = "stt.test"
     _attr_name = "test"
+
+
+class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
+    """Mock provider entity that only implements the partial results method."""
+
+    url_path = "stt.test_partial"
+    _attr_name = "test partial"
+    closed = False
+
+    async def async_process_audio_stream(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> SpeechResult:
+        """Not implemented, like an integration that only streams partials."""
+        raise NotImplementedError
+
+    async def async_process_audio_stream_with_progress(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream, yielding a partial per word."""
+        try:
+            async for data in stream:
+                self.received.append(data)
+
+            words = self.text.split()
+            for index in range(1, len(words)):
+                yield PartialSpeechResult(" ".join(words[:index]))
+
+            yield SpeechResult(self.text, SpeechResultState.SUCCESS)
+        finally:
+            self.closed = True
+
+
+class MockSTTProviderSpeakersEntity(BaseProvider, SpeechToTextEntity):
+    """Mock provider entity that identifies speakers in partial results."""
+
+    url_path = "stt.test_speakers"
+    _attr_name = "test speakers"
+
+    async def async_process_audio_stream_with_progress(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream, yielding partials for two interleaved speakers."""
+        yield PartialSpeechResult("turn", speaker_id="speaker_0")
+        yield PartialSpeechResult("no", speaker_id="speaker_1")
+        yield PartialSpeechResult("turn on the lights", speaker_id="speaker_0")
+        yield PartialSpeechResult("no wait", speaker_id="speaker_1")
+
+        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
 
 class MockSTTPlatform(MockPlatform):

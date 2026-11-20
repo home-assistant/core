@@ -1,0 +1,10 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:radio-tower"
+    },
+    "receiver": {
+      "default": "mdi:antenna"
+    }
+  }
+}

@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.arve.config_flow import ArveConnectionError
 from homeassistant.components.arve.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -10,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_correct_flow(
@@ -37,9 +38,8 @@ async def test_correct_flow(
     assert result2["result"].unique_id == "12345"
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_arve: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_cannot_connect(hass: HomeAssistant, mock_arve: AsyncMock) -> None:
     """Test we handle cannot connect error."""
     mock_arve.get_customer_id.side_effect = ArveConnectionError
     result = await hass.config_entries.flow.async_init(
@@ -51,6 +51,13 @@ async def test_form_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_arve.get_customer_id.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_abort_already_configured(

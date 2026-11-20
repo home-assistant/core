@@ -1,9 +1,8 @@
 """The brunt component."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 import logging
+from typing import override
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 from brunt import BruntClientAsync, Thing
@@ -13,7 +12,11 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+    UpdateFailedUnreachable,
+)
 
 from .const import REGULAR_INTERVAL
 
@@ -42,6 +45,7 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
             update_interval=REGULAR_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         session = async_get_clientsession(self.hass)
 
@@ -56,21 +60,28 @@ class BruntCoordinator(DataUpdateCoordinator[dict[str | None, Thing]]):
             raise ConfigEntryNotReady("Brunt not ready to connect.") from exc
         except ClientResponseError as exc:
             raise ConfigEntryAuthFailed(
-                f"Brunt could not connect with username: {self.config_entry.data[CONF_USERNAME]}."
+                "Brunt could not connect with username:"
+                f" {self.config_entry.data[CONF_USERNAME]}."
             ) from exc
 
+    @override
     async def _async_update_data(self) -> dict[str | None, Thing]:
         """Fetch data from the Brunt endpoint for all Things.
 
-        Error 403 is the API response for any kind of authentication error (failed password or email)
-        Error 401 is the API response for things that are not part of the account, could happen when a device is deleted from the account.
+        Error 403 is the API response for any kind of
+        authentication error (failed password or email)
+        Error 401 is the API response for things that are not
+        part of the account, could happen when a device is
+        deleted from the account.
         """
         try:
             async with timeout(10):
                 things = await self.bapi.async_get_things(force=True)
                 return {thing.serial: thing for thing in things}
         except ServerDisconnectedError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailedUnreachable(
+                f"Error communicating with API: {err}"
+            ) from err
         except ClientResponseError as err:
             if err.status == 403:
                 raise ConfigEntryAuthFailed from err

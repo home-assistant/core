@@ -1,10 +1,10 @@
 """Config flow for solarman integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from solarman_opendata.solarman import Solarman
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TYPE
@@ -35,6 +35,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
     mac: str | None = None
     client: Solarman | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,14 +80,15 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    probatio.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -136,17 +138,15 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._set_confirm_only()
-
         name = f"{self.model} ({self.device_sn})"
         self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_MODEL: self.model,
-                CONF_SN: self.device_sn,
-                CONF_HOST: self.host,
-                CONF_MAC: self.mac or "",
+                "model": self.model,
+                "sn": self.device_sn,
+                "host": self.host,
+                "mac": self.mac or "",
             },
         )

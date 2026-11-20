@@ -1,8 +1,7 @@
 """Base classes for Renault entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from renault_api.kamereon.models import KamereonVehicleDataAttributes
 
@@ -53,6 +52,7 @@ class RenaultDataEntity[T: KamereonVehicleDataAttributes](
         RenaultEntity.__init__(self, vehicle, description)
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self.coordinator.assumed_state

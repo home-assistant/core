@@ -7,9 +7,12 @@ from urllib.parse import urlparse
 
 import av
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
+    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     HLS_PROVIDER,
@@ -26,10 +29,8 @@ from .common import (
     DefaultSegment as Segment,
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
+    worker_lifetime,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"\x00\x00\x00\x08moov"
@@ -48,7 +49,7 @@ HLS_CONFIG = {
 @pytest.fixture
 async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
-    await async_setup_component(hass, "stream", HLS_CONFIG)
+    await async_setup_component(hass, DOMAIN, HLS_CONFIG)
 
 
 class HlsClient:
@@ -178,9 +179,11 @@ async def test_hls_stream(
     segment_response = await hls_client.get(segment_url)
     assert segment_response.status == HTTPStatus.OK
 
-    stream_worker_sync.resume()
+    # The worker records worker_error when it reaches the end of the clip;
+    # wait for it to exit rather than racing it with stop().
+    async with worker_lifetime(hass, stream):
+        stream_worker_sync.resume()
 
-    # Stop stream, if it hasn't quit already
     await stream.stop()
 
     # Ensure playlist not accessible after stream ends
@@ -334,12 +337,10 @@ async def test_stream_retries(
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
         await stream.start()
-        await open_future1
-        await open_future2
-        await hass.async_add_executor_job(stream._thread.join)
-        stream._thread = None
+        async with worker_lifetime(hass, stream):
+            await open_future1
+            await open_future2
         assert av_open.call_count == 2
-        await hass.async_block_till_done()
 
     # Stop stream, if it hasn't quit already
     await stream.stop()
@@ -399,7 +400,7 @@ async def test_hls_playlist_view(
 async def test_hls_max_segments(
     hass: HomeAssistant, setup_component, hls_stream, stream_worker_sync
 ) -> None:
-    """Test rendering the hls playlist with more segments than the segment deque can hold."""
+    """Test hls playlist with more segments than the deque can hold."""
     stream = create_stream(hass, STREAM_SOURCE, {}, dynamic_stream_settings())
     stream_worker_sync.pause()
     hls = stream.add_provider(HLS_PROVIDER)
@@ -436,7 +437,8 @@ async def test_hls_max_segments(
         segment_response = await hls_client.get("/segment/0.m4s")
     assert segment_response.status == HTTPStatus.NOT_FOUND
 
-    # However all segments in the buffer are accessible, even those that were not in the playlist.
+    # However all segments in the buffer are accessible,
+    # even those that were not in the playlist.
     for sequence in range(1, MAX_SEGMENTS + 1):
         segment_response = await hls_client.get(f"/segment/{sequence}.m4s")
         assert segment_response.status == HTTPStatus.OK
@@ -544,13 +546,10 @@ async def test_remove_incomplete_segment_on_exit(
     segments = hls._segments
     assert len(segments) == 3
     assert not segments[-1].complete
-    stream_worker_sync.resume()
     with patch("homeassistant.components.stream.Stream.remove_provider"):
         # Patch remove_provider so the deque is not cleared
-        stream._thread_quit.set()
-        stream._thread.join()
-        stream._thread = None
-        await hass.async_block_till_done()
+        async with worker_lifetime(hass, stream, request_quit=True):
+            stream_worker_sync.resume()
         assert segments[-1].complete
         assert len(segments) == 2
     await stream.stop()

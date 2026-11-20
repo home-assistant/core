@@ -10,9 +10,10 @@ from goslideapi.goslideapi import (
     DigestAuthCalcError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -20,8 +21,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import get_data, setup_platform
 from .const import HOST
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.2"),
@@ -37,6 +36,33 @@ MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
         "fw_id": "20230502-202745",
     },
     type="mock_type",
+)
+
+MOCK_HOMEKIT_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address("127.0.0.2"),
+    ip_addresses=[ip_address("127.0.0.2")],
+    hostname="Slide-1234567890AB.local.",
+    name="Slide-1234567890AB._hap._tcp.local.",
+    port=9000,
+    properties={
+        "c#": "1",
+        "ff": "0",
+        "id": "72:14:B5:55:8A:33",
+        "md": "Slide",
+        "pv": "1.1",
+        "s#": "1",
+        "sf": "1",
+        "ci": "14",
+    },
+    type="_hap._tcp.local.",
+)
+
+DISCOVERY_PARAMS = pytest.mark.parametrize(
+    ("source", "discovery_info"),
+    [
+        pytest.param(SOURCE_ZEROCONF, MOCK_ZEROCONF_DATA, id="zeroconf"),
+        pytest.param(SOURCE_HOMEKIT, MOCK_HOMEKIT_DATA, id="homekit"),
+    ],
 )
 
 
@@ -321,13 +347,18 @@ async def test_reconfigure(
     assert entry.data[CONF_HOST] == "127.0.0.3"
 
 
+@DISCOVERY_PARAMS
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    source: str,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test starting a flow from discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+        DOMAIN, context={"source": source}, data=discovery_info
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
@@ -343,8 +374,13 @@ async def test_zeroconf(
     assert result["result"].unique_id == "12:34:56:78:90:ab"
 
 
+@DISCOVERY_PARAMS
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_duplicate_entry(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    source: str,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test starting a flow from discovery."""
 
@@ -353,7 +389,7 @@ async def test_zeroconf_duplicate_entry(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+        DOMAIN, context={"source": source}, data=discovery_info
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -362,8 +398,13 @@ async def test_zeroconf_duplicate_entry(
     assert entries[0].data[CONF_HOST] == HOST
 
 
+@DISCOVERY_PARAMS
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_update_duplicate_entry(
-    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    source: str,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test updating an existing entry from discovery."""
 
@@ -372,7 +413,7 @@ async def test_zeroconf_update_duplicate_entry(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+        DOMAIN, context={"source": source}, data=discovery_info
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -391,11 +432,14 @@ async def test_zeroconf_update_duplicate_entry(
         (Exception),
     ],
 )
+@DISCOVERY_PARAMS
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_connection_error(
     hass: HomeAssistant,
     exception: Exception,
     mock_slide_api: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    source: str,
+    discovery_info: ZeroconfServiceInfo,
 ) -> None:
     """Test starting a flow from discovery."""
 
@@ -406,7 +450,7 @@ async def test_zeroconf_connection_error(
     mock_slide_api.slide_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+        DOMAIN, context={"source": source}, data=discovery_info
     )
 
     assert result["type"] is FlowResultType.ABORT

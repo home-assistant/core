@@ -1,6 +1,6 @@
 """Support for Hikvision cameras."""
 
-from __future__ import annotations
+from typing import override
 
 from pyhik.hikvision import VideoChannel
 
@@ -15,6 +15,9 @@ from .entity import HikvisionEntity
 PARALLEL_UPDATES = 0
 RTSP_PORT = 554
 
+STREAM_TYPE_MAIN = 1
+STREAM_TYPE_SUB = 2
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -26,41 +29,55 @@ async def async_setup_entry(
 
     if data.channels:
         # NVR with video channels from get_video_channels()
-        async_add_entities(
-            HikvisionCamera(entry, channel)
-            for channel in data.channels.values()
-            if channel.enabled
-        )
+        channels = [channel for channel in data.channels.values() if channel.enabled]
     else:
         # Single camera - create a default VideoChannel
-        async_add_entities(
-            [
-                HikvisionCamera(
-                    entry,
-                    VideoChannel(id=1, name=data.device_name, enabled=True),
-                )
-            ]
+        channels = [VideoChannel(id=1, name=data.device_name, enabled=True)]
+
+    entities: list[HikvisionCamera] = []
+    for channel in channels:
+        entities.append(HikvisionCamera(hass, entry, channel))
+        # Disabled by default: not every channel has a substream
+        entities.append(
+            HikvisionCamera(hass, entry, channel, stream_type=STREAM_TYPE_SUB)
         )
+    async_add_entities(entities)
 
 
 class HikvisionCamera(HikvisionEntity, Camera):
     """Representation of a Hikvision camera."""
 
-    _attr_name = None
     _attr_supported_features = CameraEntityFeature.STREAM
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         channel: VideoChannel,
+        stream_type: int = STREAM_TYPE_MAIN,
     ) -> None:
         """Initialize the camera."""
-        super().__init__(entry, channel.id)
+        super().__init__(hass, entry, channel.id)
         self._video_channel = channel
+        self._stream_type = stream_type
+        if stream_type == STREAM_TYPE_MAIN:
+            # The main stream is named after its device
+            self._attr_name = None
 
         # Build unique ID (unique per platform per integration)
         self._attr_unique_id = f"{self._data.device_id}_{channel.id}"
 
+        # No pyhik event is routed here; the registration exists so the
+        # camera is told when the event stream connects or drops.
+        self._callback_id = f"{self._data.device_id}.camera.{channel.id}"
+
+        if stream_type == STREAM_TYPE_SUB:
+            self._attr_translation_key = "substream"
+            self._attr_entity_registry_enabled_default = False
+            self._attr_unique_id += "_substream"
+            self._callback_id += ".substream"
+
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -74,6 +91,7 @@ class HikvisionCamera(HikvisionEntity, Camera):
                 f"Error getting image from {self._video_channel.name}: {err}"
             ) from err
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source URL."""
-        return self._camera.get_stream_url(self._channel)
+        return self._camera.get_stream_url(self._channel, stream_type=self._stream_type)

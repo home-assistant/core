@@ -5,7 +5,7 @@ import functools
 import json
 import logging
 from time import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from botocore.exceptions import BotoCoreError
 
@@ -17,13 +17,17 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_iterator import ResourceChunkIterator
 
 from . import R2ConfigEntry
-from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
+# Matches the default chunk size of aiobotocore's StreamingBody.iter_chunks
+DOWNLOAD_CHUNK_SIZE = 1024
 
 # S3 part size requirements: 5 MiB to 5 GiB per part
 # We set the threshold to 20 MiB to avoid too many parts.
@@ -107,6 +111,7 @@ class R2BackupAgent(BackupAgent):
         return f"{self._prefix}/{key}"
 
     @handle_boto_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -123,8 +128,12 @@ class R2BackupAgent(BackupAgent):
         response = await self._client.get_object(
             Bucket=self._bucket, Key=self._with_prefix(tar_filename)
         )
-        return response["Body"].iter_chunks()
+        body = response["Body"]
+        return ResourceChunkIterator(
+            functools.partial(body.read, DOWNLOAD_CHUNK_SIZE), close=body.close
+        )
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -240,8 +249,10 @@ class R2BackupAgent(BackupAgent):
                 finally:
                     view.release()
 
-                # Compact the buffer if the consumed offset has grown large enough. This
-                # avoids unnecessary memory copies when compacting after every part upload.
+                # Compact the buffer if the consumed offset
+                # has grown large enough. This avoids
+                # unnecessary memory copies when compacting
+                # after every part upload.
                 if offset and offset >= MULTIPART_MIN_PART_SIZE_BYTES:
                     buffer = bytearray(buffer[offset:])
                     offset = 0
@@ -286,6 +297,7 @@ class R2BackupAgent(BackupAgent):
             raise
 
     @handle_boto_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -310,12 +322,14 @@ class R2BackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_boto_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups = await self._list_backups()
         return list(backups.values())
 
     @handle_boto_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -340,17 +354,17 @@ class R2BackupAgent(BackupAgent):
         backups = {}
         # Only pass Prefix if a prefix is configured; some S3-compatible APIs
         # (and type checkers) do not like Prefix=None.
-        list_kwargs = {"Bucket": self._bucket}
+        list_kwargs: dict[str, Any] = {"Bucket": self._bucket}
         if self._prefix:
             list_kwargs["Prefix"] = self._prefix + "/"
-        response = await self._client.list_objects_v2(**list_kwargs)
-
-        # Filter for metadata files only
-        metadata_files = [
-            obj
-            for obj in response.get("Contents", [])
-            if obj["Key"].endswith(".metadata.json")
-        ]
+        paginator = self._client.get_paginator("list_objects_v2")
+        metadata_files: list[dict[str, Any]] = []
+        async for page in paginator.paginate(**list_kwargs):
+            metadata_files.extend(
+                obj
+                for obj in page.get("Contents", [])
+                if obj["Key"].endswith(".metadata.json")
+            )
 
         for metadata_file in metadata_files:
             try:

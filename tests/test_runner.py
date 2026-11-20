@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Iterator
+import contextlib
 import fcntl
 import json
 import os
@@ -27,7 +28,7 @@ TIMEOUT_SAFETY_MARGIN = 10
 
 
 async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
-    """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
+    """Verify cumulative shutdown timeout is at least 10s less than supervisor."""
     assert (
         core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
         + core.STOP_STAGE_SHUTDOWN_TIMEOUT
@@ -105,8 +106,11 @@ def test_run_does_not_block_forever_with_shielded_task(
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
     tasks = []
+    shielded_inner_task: asyncio.Task | None = None
 
     async def _async_create_tasks(*_):
+        nonlocal shielded_inner_task
+
         async def async_raise(*_):
             try:
                 await asyncio.sleep(2)
@@ -119,7 +123,8 @@ def test_run_does_not_block_forever_with_shielded_task(
             except asyncio.CancelledError:
                 await asyncio.sleep(2)
 
-        tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
+        shielded_inner_task = asyncio.ensure_future(async_shielded())
+        tasks.append(asyncio.ensure_future(asyncio.shield(shielded_inner_task)))
         tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
         tasks.append(asyncio.ensure_future(async_raise()))
         await asyncio.sleep(0)
@@ -137,6 +142,12 @@ def test_run_does_not_block_forever_with_shielded_task(
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )
+
+    # runner.run() deliberately abandons the shielded inner task after timeout.
+    # Suppress the asyncio GC warning so it doesn't fire nondeterministically
+    # during a later test's log-capture window.
+    assert shielded_inner_task is not None
+    shielded_inner_task._log_destroy_pending = False
 
 
 async def test_unhandled_exception_traceback(
@@ -434,3 +445,50 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
 
     # Lock file should still exist after second run (not unlinked)
     assert lock_file_path.exists()
+
+
+def _assert_hass_event_loop(loop: asyncio.AbstractEventLoop) -> None:
+    """Assert the loop carries the Home Assistant customizations."""
+    assert loop.time is runner.monotonic
+    assert isinstance(loop._default_executor, executor.InterruptibleThreadPoolExecutor)
+
+
+def test_sync_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test a synchronous test builds the async hass fixture on our loop."""
+    _assert_hass_event_loop(hass.loop)
+
+
+async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test an async test runs on our loop."""
+    _assert_hass_event_loop(asyncio.get_running_loop())
+    _assert_hass_event_loop(hass.loop)
+
+
+def test_create_event_loop() -> None:
+    """Test created loops are configured and leave the current loop alone."""
+    created: list[asyncio.AbstractEventLoop] = []
+    current: list[asyncio.AbstractEventLoop] = []
+
+    # A thread of its own starts out without a current event loop
+    def _create() -> None:
+        created.append(runner.create_event_loop())
+        created.append(runner.create_event_loop(debug=True))
+        with contextlib.suppress(RuntimeError):
+            current.append(asyncio.get_event_loop())
+
+    create_thread = threading.Thread(target=_create)
+    create_thread.start()
+    create_thread.join()
+
+    try:
+        for loop in created:
+            _assert_hass_event_loop(loop)
+        # The other loop is only debug free when the interpreter is, so is not
+        # asserted on: CI runs with -X dev and PYTHONASYNCIODEBUG set.
+        assert created[1].get_debug()
+        # asyncio.Runner only unsets the current loop when it set it itself, so
+        # a factory that sets it leaves a closed loop behind after asyncio.run()
+        assert current == []
+    finally:
+        for loop in created:
+            loop.close()

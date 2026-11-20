@@ -1,8 +1,7 @@
 """Platform to control a Renson ventilation unit."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from renson_endura_delta.field_enum import FILTER_PRESET_FIELD, DataType
 from renson_endura_delta.renson import RensonVentilation
@@ -63,6 +62,7 @@ class RensonNumber(RensonEntity, NumberEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.api.parse_value(
@@ -72,6 +72,7 @@ class RensonNumber(RensonEntity, NumberEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 

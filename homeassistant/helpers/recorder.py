@@ -1,7 +1,5 @@
 """Helpers to check recorder."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
@@ -19,6 +17,9 @@ if TYPE_CHECKING:
     from homeassistant.components.recorder import Recorder
 
 _LOGGER = logging.getLogger(__name__)
+
+# Session.info key set while a session is used in a read-only session scope
+SESSION_INFO_READ_ONLY = "recorder_read_only"
 
 DATA_RECORDER: HassKey[RecorderData] = HassKey("recorder")
 DATA_INSTANCE: HassKey[Recorder] = HassKey("recorder_instance")
@@ -56,9 +57,7 @@ def async_initialize_recorder(hass: HomeAssistant) -> None:
     registers the basic recorder websocket API which is used by frontend to determine
     if the recorder is migrating the database.
     """
-    from homeassistant.components.recorder.basic_websocket_api import (  # noqa: PLC0415
-        async_setup,
-    )
+    from homeassistant.components.recorder.basic_websocket_api import async_setup  # noqa: PLC0415
 
     hass.data[DATA_RECORDER] = RecorderData()
     async_setup(hass)
@@ -90,6 +89,10 @@ def session_scope(
     if session is None:
         raise RuntimeError("Session required")
 
+    if read_only:
+        # Sessions are reused per thread, so the marker is removed again when the
+        # scope ends
+        session.info[SESSION_INFO_READ_ONLY] = True
     need_rollback = False
     try:
         yield session
@@ -103,4 +106,6 @@ def session_scope(
         if not exception_filter or not exception_filter(err):
             raise
     finally:
+        if read_only:
+            session.info.pop(SESSION_INFO_READ_ONLY, None)
         session.close()

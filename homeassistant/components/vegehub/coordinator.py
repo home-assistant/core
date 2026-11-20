@@ -1,7 +1,5 @@
 """Coordinator for the Vegetronix VegeHub."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -13,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-type VegeHubConfigEntry = ConfigEntry[VegeHub]
+type VegeHubConfigEntry = ConfigEntry[VegeHubCoordinator]
 
 
 class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -43,8 +41,7 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.vegehub.num_actuators or 0,
             self.vegehub.is_ac or False,
         )
-        if self.data:
-            existing_data: dict = self.data
+        if (existing_data := self.data_or_none) is not None:
             existing_data.update(sensor_data)
             if sensor_data:
                 self.async_set_updated_data(existing_data)

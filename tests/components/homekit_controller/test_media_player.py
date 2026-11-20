@@ -12,8 +12,7 @@ import pytest
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
+    MediaPlayerService,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -24,7 +23,8 @@ from .common import setup_test_component
 def create_tv_service(accessory: Accessory) -> Service:
     """Define tv characteristics.
 
-    The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
+    The TV is not currently documented publicly - this is based on observing really TV's
+    that have HomeKit support.
     """
     tv_service = accessory.add_service(ServicesTypes.TELEVISION)
 
@@ -430,7 +430,7 @@ async def test_turn_on(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> 
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
+        MediaPlayerService.TURN_ON,
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )
@@ -457,7 +457,7 @@ async def test_turn_off(hass: HomeAssistant, get_next_aid: Callable[[], int]) ->
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
+        MediaPlayerService.TURN_OFF,
         {"entity_id": "media_player.testdevice"},
         blocking=True,
     )

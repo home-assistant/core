@@ -1,6 +1,6 @@
 """Support for INSTEON locks."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -42,14 +42,17 @@ class InsteonLockEntity(InsteonEntity, LockEntity):
     """A Class for an Insteon lock entity."""
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self._insteon_device.async_lock()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self._insteon_device.async_unlock()

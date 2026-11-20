@@ -1,7 +1,5 @@
 """Diagnostics support for IPMA."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE

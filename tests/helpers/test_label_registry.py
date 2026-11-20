@@ -7,6 +7,11 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    flush_store,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -15,8 +20,6 @@ from homeassistant.helpers import (
     label_registry as lr,
 )
 from homeassistant.util.dt import utcnow
-
-from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
 async def test_list_labels(label_registry: lr.LabelRegistry) -> None:
@@ -217,7 +220,7 @@ async def test_update_label_with_same_data(
 async def test_update_label_with_same_name_change_case(
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Make sure that we can reapply the same name with a different case to the label."""
+    """Make sure we can reapply the same name with a different case."""
     label = label_registry.async_create("mock")
 
     updated_label = label_registry.async_update(label.label_id, name="Mock")
@@ -558,3 +561,14 @@ async def test_migration_from_1_1(
             ]
         },
     }
+
+
+async def test_async_get_missing_label_ids(
+    hass: HomeAssistant, label_registry: lr.LabelRegistry
+) -> None:
+    """Test getting label ids missing from the registry."""
+    label_registry.async_create("mock")
+
+    assert lr.async_get_missing_label_ids(hass, set()) == set()
+    assert lr.async_get_missing_label_ids(hass, {"mock"}) == set()
+    assert lr.async_get_missing_label_ids(hass, {"mock", "missing"}) == {"missing"}

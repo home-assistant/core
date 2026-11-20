@@ -3,7 +3,8 @@
 from unittest.mock import Mock
 
 import pytest
-from waterfurnace.waterfurnace import WFCredentialError
+from pytest_homeassistant.common import MockConfigEntry
+from waterfurnace.waterfurnace import WFCredentialError, WFException
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.waterfurnace.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_auth_failure(
@@ -76,13 +75,29 @@ async def test_migrate_unique_id(
     assert old_entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(
+            WFCredentialError("Invalid credentials"),
+            "Authentication failed for test_user, update your credentials",
+            id="credential_error",
+        ),
+        pytest.param(
+            WFException("Error"),
+            "Failed to log in to WaterFurnace as test_user",
+            id="wf_exception",
+        ),
+    ],
+)
 async def test_migrate_unique_id_auth_failure(
-    hass: HomeAssistant, mock_waterfurnace_client: Mock
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    side_effect: Exception,
+    reason: str,
 ) -> None:
     """Test migration fails when login fails."""
-    mock_waterfurnace_client.login.side_effect = WFCredentialError(
-        "Invalid credentials"
-    )
+    mock_waterfurnace_client.login.side_effect = side_effect
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         title="WaterFurnace test_user",
@@ -100,10 +115,37 @@ async def test_migrate_unique_id_auth_failure(
     await hass.async_block_till_done()
 
     assert old_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_entry.reason == reason
     assert old_entry.unique_id == "TEST_GWID_12345"
 
 
-@pytest.mark.usefixtures("init_integration")
+async def test_migrate_unique_id_invalid_account_id(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test migration fails when the account ID is invalid."""
+    mock_waterfurnace_client.account_id = None
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="WaterFurnace test_user",
+        data={
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+        },
+        unique_id="TEST_GWID_12345",
+        version=1,
+        minor_version=1,
+    )
+    old_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(old_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert old_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_entry.reason == "WaterFurnace returned an invalid account ID"
+    assert old_entry.unique_id == "TEST_GWID_12345"
+
+
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -117,7 +159,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("seed_statistics", "init_integration")
 async def test_reload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -125,15 +167,16 @@ async def test_reload_entry(
 ) -> None:
     """Test reloading a config entry."""
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 3
+    assert mock_waterfurnace_client.login.call_count == 2
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 6
+    assert mock_waterfurnace_client.login.call_count == 4
 
 
+@pytest.mark.usefixtures("seed_statistics")
 async def test_setup_creates_energy_coordinator(
     recorder_mock: Recorder,
     hass: HomeAssistant,
@@ -146,8 +189,8 @@ async def test_setup_creates_energy_coordinator(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_waterfurnace_client.login.call_count == 3
-    assert mock_waterfurnace_client.read_with_retry.call_count == 1
+    assert mock_waterfurnace_client.login.call_count == 2
+    assert mock_waterfurnace_client.read.call_count == 1
     assert mock_waterfurnace_client.get_energy_data.call_count == 1
 
 

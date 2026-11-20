@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -68,6 +68,14 @@ SWITCH_DESCRIPTION = [
         on_fn=lambda client: client.async_change_price_cap(True),
         off_fn=lambda client: client.async_change_price_cap(False),
     ),
+    OhmeSwitchDescription(
+        key="solar_boost",
+        translation_key="solar_boost",
+        is_supported_fn=lambda client: client.is_capable("solar"),
+        is_on_fn=lambda client: client.solar_enabled,
+        on_fn=lambda client: client.async_set_solar_mode(True),
+        off_fn=lambda client: client.async_set_solar_mode(False),
+    ),
 ]
 
 
@@ -79,17 +87,19 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator = config_entry.runtime_data.device_info_coordinator
 
-    async_add_entities(
+    entities: list[OhmeConfigSwitch | OhmeSwitch] = [
         OhmeConfigSwitch(coordinator, description)
         for description in SWITCH_CONFIG
         if description.is_supported_fn(coordinator.client)
-    )
+    ]
 
-    async_add_entities(
+    entities.extend(
         OhmeSwitch(coordinator, description)
         for description in SWITCH_DESCRIPTION
         if description.is_supported_fn(coordinator.client)
     )
+
+    async_add_entities(entities)
 
 
 class OhmeSwitch(OhmeEntity, SwitchEntity):
@@ -98,15 +108,18 @@ class OhmeSwitch(OhmeEntity, SwitchEntity):
     entity_description: OhmeSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.entity_description.is_on_fn(self.coordinator.client)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.off_fn(self.coordinator.client)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.on_fn(self.coordinator.client)
@@ -119,16 +132,19 @@ class OhmeConfigSwitch(OhmeEntity, SwitchEntity):
     entity_description: OhmeConfigSwitchDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the entity value to represent the entity state."""
         return self.coordinator.client.configuration_value(
             self.entity_description.configuration_key
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._toggle(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._toggle(False)

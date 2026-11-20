@@ -4,30 +4,23 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
-    ATTR_FAN_MODE,
-    ATTR_HVAC_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.test_controller_residential_thermostat_v2"
 
@@ -249,11 +242,11 @@ async def test_set_hvac_mode(
     """Test setting HVAC mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
+        ClimateService.SET_HVAC_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.HVAC_MODE: hvac_mode},
         blocking=True,
     )
-    mock_c4_climate.setHvacMode.assert_called_once_with(expected_c4_mode)
+    mock_c4_climate.set_hvac_mode.assert_called_once_with(expected_c4_mode)
 
 
 @pytest.mark.parametrize(
@@ -265,7 +258,7 @@ async def test_set_hvac_mode(
                 temperature=72.5,
                 humidity=45,
             ),
-            "setHeatSetpointF",
+            "set_heat_setpoint_f",
             id="heat",
         ),
         pytest.param(
@@ -275,7 +268,7 @@ async def test_set_hvac_mode(
                 temperature=74.0,
                 cool_setpoint=72.0,
             ),
-            "setCoolSetpointF",
+            "set_cool_setpoint_f",
             id="cool",
         ),
     ],
@@ -295,8 +288,8 @@ async def test_set_temperature(
     """Test setting temperature in different modes."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 70.0},
         blocking=True,
     )
     getattr(mock_c4_climate, method_name).assert_called_once_with(70.0)
@@ -322,16 +315,16 @@ async def test_set_temperature_range_auto_mode(
     """Test setting temperature range in auto mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
+        ClimateService.SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TARGET_TEMP_LOW: 65.0,
-            ATTR_TARGET_TEMP_HIGH: 78.0,
+            TargetKey.ENTITY_ID: ENTITY_ID,
+            ClimateServiceArgument.TARGET_TEMP_LOW: 65.0,
+            ClimateServiceArgument.TARGET_TEMP_HIGH: 78.0,
         },
         blocking=True,
     )
-    mock_c4_climate.setHeatSetpointF.assert_called_once_with(65.0)
-    mock_c4_climate.setCoolSetpointF.assert_called_once_with(78.0)
+    mock_c4_climate.set_heat_setpoint_f.assert_called_once_with(65.0)
+    mock_c4_climate.set_cool_setpoint_f.assert_called_once_with(78.0)
 
 
 @pytest.mark.parametrize("mock_climate_variables", [{}])
@@ -383,6 +376,40 @@ async def test_climate_missing_variables(
     assert state.attributes.get("current_temperature") is None
     assert state.attributes.get("current_humidity") is None
     assert state.attributes["temperature"] == 68.0
+
+
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "Off",
+                "HVAC_MODE": "Heat",
+                "TEMPERATURE_F": 72.0,
+                "HUMIDITY": "Undefined",
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+                "SCALE": "FAHRENHEIT",
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_climate_undefined_humidity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test climate entity handles 'Undefined' humidity string gracefully."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes.get("current_temperature") == 72.0
+    assert state.attributes.get("current_humidity") is None
 
 
 @pytest.mark.parametrize(
@@ -443,12 +470,12 @@ async def test_set_fan_mode(
     """Test setting fan mode."""
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "on"},
+        ClimateService.SET_FAN_MODE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.FAN_MODE: "on"},
         blocking=True,
     )
     # Verify the Control4 API is called with the C4 format ("On" not "on")
-    mock_c4_climate.setFanMode.assert_called_once_with("On")
+    mock_c4_climate.set_fan_mode.assert_called_once_with("On")
 
 
 @pytest.mark.parametrize(
@@ -496,14 +523,14 @@ async def test_fan_mode_not_supported(
     [
         pytest.param(
             _make_climate_data(hvac_state="Off", hvac_mode="Heat"),
-            "setHeatSetpointF",
-            "setHeatSetpointC",
+            "set_heat_setpoint_f",
+            "set_heat_setpoint_c",
             id="fahrenheit_heat_calls_F_not_C",
         ),
         pytest.param(
             _make_climate_data(hvac_state="Cool", hvac_mode="Cool"),
-            "setCoolSetpointF",
-            "setCoolSetpointC",
+            "set_cool_setpoint_f",
+            "set_cool_setpoint_c",
             id="fahrenheit_cool_calls_F_not_C",
         ),
     ],
@@ -532,8 +559,8 @@ async def test_set_temperature_calls_correct_api(
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 70.0},
+        ClimateService.SET_TEMPERATURE,
+        {TargetKey.ENTITY_ID: ENTITY_ID, ClimateServiceArgument.TEMPERATURE: 70.0},
         blocking=True,
     )
     getattr(mock_c4_climate, expected_method).assert_called_once_with(70.0)

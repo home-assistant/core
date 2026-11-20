@@ -1,11 +1,11 @@
 """The tests for number recorder."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant.components import number
 from homeassistant.components.number import ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_STEP
@@ -15,9 +15,6 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)

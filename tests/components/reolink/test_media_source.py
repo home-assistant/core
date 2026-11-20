@@ -1,10 +1,10 @@
 """Tests for the Reolink media_source platform."""
 
 from datetime import datetime, timedelta
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from reolink_aio.exceptions import ReolinkError
 from reolink_aio.typings import VOD_trigger
 
@@ -45,8 +45,6 @@ from .conftest import (
     TEST_USERNAME2,
 )
 
-from tests.common import MockConfigEntry
-
 TEST_YEAR = 2023
 TEST_MONTH = 11
 TEST_DAY = 14
@@ -58,6 +56,8 @@ TEST_END = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE + 5}"
 TEST_START_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 0, 0)
 TEST_END_TIME = datetime(TEST_YEAR, TEST_MONTH, TEST_DAY, 23, 59, 59)
 TEST_FILE_NAME = f"{TEST_START}00"
+TEST_THUMBNAIL_TIME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000005"
+TEST_THUMBNAIL_TIME_BATTERY = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000000"
 TEST_FILE_NAME_MP4 = f"{TEST_START}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
@@ -95,9 +95,11 @@ async def test_resolve(
     """Test resolving Reolink media items."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    caplog.set_level(logging.DEBUG)
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
     play_media = await async_resolve_media(
@@ -105,7 +107,10 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
 
     play_media = await async_resolve_media(
@@ -120,7 +125,10 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    file_id = (
+        f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     play_media = await async_resolve_media(
@@ -140,6 +148,7 @@ async def test_browsing(
     entry_id = config_entry.entry_id
     reolink_host.supported.return_value = 1
     reolink_host.model = "Reolink TrackMix PoE"
+    reolink_host.is_dual_lens = True
     reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
@@ -149,8 +158,6 @@ async def test_browsing(
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
     device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
-
-    caplog.set_level(logging.DEBUG)
 
     # browse root
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
@@ -206,8 +213,14 @@ async def test_browsing(
     )
 
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
-    browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    browse_day_0_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    )
+    browse_day_1_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
+    )
     assert browse.domain == DOMAIN
     assert browse.title == f"{TEST_CAM_NAME} lens 0 High res."
     assert browse.identifier == browse_days_id
@@ -227,7 +240,10 @@ async def test_browsing(
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
     browse_files_id = f"FILES|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
-    browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    browse_file_id = (
+        f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
+    )
     assert browse.domain == DOMAIN
     assert (
         browse.title
@@ -235,6 +251,9 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
+    assert browse.children[0].thumbnail == (
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}/sub/{TEST_THUMBNAIL_TIME_BATTERY}"
+    )
     reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
         TEST_START_TIME,
@@ -245,10 +264,15 @@ async def test_browsing(
     )
 
     reolink_host.model = TEST_HOST_MODEL
+    reolink_host.is_dual_lens = False
 
     # browse event trigger person on a NVR
     reolink_host.is_nvr = True
-    browse_event_person_id = f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}|{VOD_trigger.PERSON.name}"
+    browse_event_person_id = (
+        f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}"
+        f"|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+        f"|{VOD_trigger.PERSON.name}"
+    )
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
     assert browse.children[0].identifier == browse_event_person_id
@@ -274,6 +298,60 @@ async def test_browsing(
     )
 
 
+@pytest.mark.parametrize(
+    ("stream", "duration", "battery", "thumbnail_time"),
+    [
+        ("autotrack_sub", timedelta(minutes=5), False, TEST_THUMBNAIL_TIME),
+        ("autotrack_main", timedelta(minutes=5), False, TEST_THUMBNAIL_TIME),
+        # a short recording uses the middle of the recording
+        (
+            "autotrack_sub",
+            timedelta(seconds=6),
+            False,
+            f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}000003",
+        ),
+        # a battery camera uses the start of the recording
+        ("autotrack_sub", timedelta(minutes=5), True, TEST_THUMBNAIL_TIME_BATTERY),
+    ],
+)
+async def test_browsing_autotrack_thumbnail(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+    stream: str,
+    duration: timedelta,
+    battery: bool,
+    thumbnail_time: str,
+) -> None:
+    """Test recordings of an autotrack stream have a telephoto thumbnail."""
+    entry_id = config_entry.entry_id
+    reolink_host.is_nvr = False
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(entry_id) is True
+    await hass.async_block_till_done()
+
+    mock_vod_file = MagicMock()
+    mock_vod_file.start_time = TEST_START_TIME
+    mock_vod_file.start_time_id = TEST_START
+    mock_vod_file.end_time_id = TEST_END
+    mock_vod_file.duration = duration
+    mock_vod_file.file_name = TEST_FILE_NAME
+    mock_vod_file.triggers = VOD_trigger.PERSON
+    reolink_host.request_vod_files.return_value = ([], [mock_vod_file])
+    reolink_host.supported.side_effect = lambda ch, key: battery or key != "battery"
+
+    browse_day_id = (
+        f"DAY|{entry_id}|{TEST_CHANNEL}|{stream}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
+    )
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_id}")
+
+    assert browse.children[0].thumbnail == (
+        f"/api/reolink/thumbnail/{entry_id}/{TEST_CHANNEL}"
+        f"/telephoto_sub/{thumbnail_time}"
+    )
+
+
 async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_host: MagicMock,
@@ -296,7 +374,7 @@ async def test_browsing_h265_encoding(
     reolink_host.request_vod_files.return_value = ([mock_status], [])
     reolink_host.time.return_value = None
     reolink_host.get_encoding.return_value = "h265"
-    reolink_host.supported.return_value = False
+    reolink_host.supported.side_effect = lambda ch, key: key == "sub"
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
@@ -409,3 +487,46 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+
+async def test_browsing_main_only(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test browsing a Reolink camera without a sub stream."""
+    entry_id = config_entry.entry_id
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(entry_id) is True
+    await hass.async_block_till_done()
+
+    reolink_host.supported.side_effect = lambda ch, key: key != "sub"
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/CAM|{entry_id}|{TEST_CHANNEL}"
+    )
+
+    assert [child.identifier for child in browse.children] == [
+        f"RES|{entry_id}|{TEST_CHANNEL}|main",
+        f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_main",
+    ]
+
+    # only the main stream: resolution select is skipped
+    mock_status = MagicMock()
+    mock_status.year = TEST_YEAR
+    mock_status.month = TEST_MONTH
+    mock_status.days = (TEST_DAY, TEST_DAY2)
+    reolink_host.request_vod_files.return_value = ([mock_status], [])
+    reolink_host.supported.side_effect = None
+    reolink_host.supported.return_value = False
+
+    browse = await async_browse_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/CAM|{entry_id}|{TEST_CHANNEL}"
+    )
+
+    assert browse.identifier == f"DAYS|{entry_id}|{TEST_CHANNEL}|main"
+    assert [child.identifier for child in browse.children] == [
+        f"DAY|{entry_id}|{TEST_CHANNEL}|main|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}",
+        f"DAY|{entry_id}|{TEST_CHANNEL}|main|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}",
+    ]

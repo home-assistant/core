@@ -1,13 +1,11 @@
 """Tests for vacuum platform."""
 
-from __future__ import annotations
-
 from kasa import Device, Module
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_LOCATE,
@@ -26,8 +24,6 @@ from homeassistant.helpers import (
 )
 
 from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.my_vacuum"
 
@@ -64,7 +60,6 @@ async def test_vacuum(
     assert state.state == VacuumActivity.DOCKED
 
     assert state.attributes[ATTR_FAN_SPEED] == "max"
-    assert state.attributes[ATTR_BATTERY_LEVEL] == 100
     result = translation.async_translate_state(
         hass, "max", "vacuum", "tplink", "vacuum.state_attributes.fan_speed", None
     )

@@ -1,9 +1,8 @@
 """Tests of the switches of the balboa integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -12,7 +11,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
-from tests.common import snapshot_platform
 from tests.components.switch import common
 
 ENTITY_SWITCH = "switch.fakespa_filter_cycle_2_enabled"
@@ -43,7 +41,7 @@ async def test_switch(hass: HomeAssistant, client: MagicMock) -> None:
     await common.async_turn_off(hass, ENTITY_SWITCH)
     client.configure_filter_cycle.assert_called_with(2, enabled=False)
 
-    setattr(client, "filter_cycle_2_enabled", False)
+    client.filter_cycle_2_enabled = False
     client.emit("")
     await hass.async_block_till_done()
 

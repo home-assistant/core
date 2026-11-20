@@ -4,6 +4,7 @@ from collections.abc import Callable
 from copy import copy
 import dataclasses
 import logging
+from typing import override
 
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.const.msg import CODE
@@ -22,14 +23,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ScreenlogicDataUpdateCoordinator
+from .coordinator import ScreenLogicConfigEntry, ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
-from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -356,6 +356,7 @@ class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """State of the sensor."""
         val = self.entity_data[ATTR.VALUE]

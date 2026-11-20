@@ -6,26 +6,29 @@ from ayla_iot_unofficial import AylaAuthError
 from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.fujitsu_fglair.const import (
     API_REFRESH,
     API_TIMEOUT,
     CONF_EUROPE,
-    CONF_REGION,
     DOMAIN,
     REGION_DEFAULT,
     REGION_EU,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from . import entity_id, setup_integration
 from .conftest import TEST_PASSWORD, TEST_USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_auth_failure(
@@ -177,7 +180,7 @@ async def test_startup_exception(
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Make sure that no devices are added if there was an exception while logging in."""
+    """Make sure no devices are added if login raises an exception."""
     mock_ayla_api.async_sign_in.side_effect = exception
     await setup_integration(hass, mock_config_entry)
 

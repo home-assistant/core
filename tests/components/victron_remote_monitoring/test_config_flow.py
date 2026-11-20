@@ -3,19 +3,18 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 
 from homeassistant.components.victron_remote_monitoring.config_flow import SiteNotFound
 from homeassistant.components.victron_remote_monitoring.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _make_site(site_id: int, name: str = "ESS System") -> Mock:
@@ -63,6 +62,7 @@ async def test_full_flow_success(
         CONF_API_TOKEN: "test_token",
         CONF_SITE_ID: site1.id,
     }
+    assert result["result"].unique_id == str(site1.id)
     assert mock_setup_entry.call_count == 1
 
 
@@ -118,7 +118,8 @@ async def test_user_step_errors_then_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     flow_id = result["flow_id"]
-    # First call raises/returns error via side_effect, we then clear and set return value
+    # First call raises/returns error via side_effect,
+    # we then clear and set return value
     mock_vrm_client.users.list_sites.side_effect = side_effect
     result_err = await hass.config_entries.flow.async_configure(
         flow_id, {CONF_API_TOKEN: "token"}
@@ -204,7 +205,7 @@ async def test_select_site_errors(
 async def test_select_site_duplicate_aborts(
     hass: HomeAssistant, mock_vrm_client: AsyncMock
 ) -> None:
-    """Selecting an already configured site aborts during the select step (multi-site)."""
+    """Selecting already configured site aborts during select step."""
     site_id = 555
     # Existing entry with same site id
 
@@ -252,6 +253,7 @@ async def test_select_site_duplicate_aborts(
         CONF_API_TOKEN: "token3",
         CONF_SITE_ID: other_site.id,
     }
+    assert result_new2["result"].unique_id == str(other_site.id)
 
 
 async def test_reauth_flow_success(

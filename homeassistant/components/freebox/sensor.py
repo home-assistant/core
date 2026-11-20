@@ -1,9 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,53 +9,125 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, LAN_PORT_STATS_FAILED
 from .entity import FreeboxHomeEntity
-from .router import FreeboxConfigEntry, FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter, lan_port_translation
 
 _LOGGER = logging.getLogger(__name__)
 
 CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rate_down",
-        name="Freebox download speed",
+        translation_key="rate_down",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        icon="mdi:download-network",
     ),
     SensorEntityDescription(
         key="rate_up",
-        name="Freebox upload speed",
+        translation_key="rate_up",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
-        icon="mdi:upload-network",
+    ),
+    SensorEntityDescription(
+        key="state",
+        translation_key="connection_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["going_up", "up", "going_down", "down"],
+    ),
+    SensorEntityDescription(
+        key="ipv4",
+        translation_key="ipv4",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="ipv6",
+        translation_key="ipv6",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_down",
+        translation_key="bandwidth_down",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="bandwidth_up",
+        translation_key="bandwidth_up",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BITS_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
 CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="missed",
-        name="Freebox missed calls",
-        icon="mdi:phone-missed",
+        translation_key="missed",
+        native_unit_of_measurement="calls",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
 DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="partition_free_space",
-        name="free space",
+        translation_key="partition_free_space",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:harddisk",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
+)
+
+LAN_PORT_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="rx_bytes_rate",
+        translation_key="port_rx_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="tx_bytes_rate",
+        translation_key="port_tx_rate",
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+LAN_PORT_SPEED_SENSOR = SensorEntityDescription(
+    key="speed",
+    translation_key="port_link_speed",
+    device_class=SensorDeviceClass.DATA_RATE,
+    native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 
@@ -79,15 +149,37 @@ async def async_setup_entry(
         FreeboxSensor(
             router,
             SensorEntityDescription(
-                key=sensor_name,
-                name=f"Freebox {sensor_name}",
+                key=sensor_id,
+                name=sensor_name,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
         )
-        for sensor_name in router.sensors_temperature
+        for sensor_id, sensor_name in router.sensors_temperature_names.items()
     ]
+
+    _LOGGER.debug(
+        "%s - %s - %s fan sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_fan_names),
+    )
+    entities.extend(
+        FreeboxSensor(
+            router,
+            SensorEntityDescription(
+                key=fan_id,
+                name=fan_name,
+                native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                icon="mdi:fan",
+            ),
+        )
+        for fan_id, fan_name in router.sensors_fan_names.items()
+    )
 
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
@@ -102,6 +194,16 @@ async def async_setup_entry(
         for disk in router.disks.values()
         for partition in disk["partitions"].values()
         for description in DISK_PARTITION_SENSORS
+    )
+
+    entities.extend(
+        FreeboxLanPortRateSensor(router, port_id, description)
+        for port_id in router.lan_ports
+        for description in LAN_PORT_SENSORS
+    )
+    entities.extend(
+        FreeboxLanPortSpeedSensor(router, port_id, LAN_PORT_SPEED_SENSOR)
+        for port_id in router.lan_ports
     )
 
     entities.extend(
@@ -123,6 +225,7 @@ class FreeboxSensor(SensorEntity):
     """Representation of a Freebox sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, router: FreeboxRouter, description: SensorEntityDescription
@@ -130,7 +233,7 @@ class FreeboxSensor(SensorEntity):
         """Initialize a Freebox sensor."""
         self.entity_description = description
         self._router = router
-        self._attr_unique_id = f"{router.mac} {description.name}"
+        self._attr_unique_id = f"{router.mac} {description.key}"
         self._attr_device_info = router.device_info
 
     @callback
@@ -148,6 +251,7 @@ class FreeboxSensor(SensorEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
@@ -171,6 +275,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._call_list_for_type: list[dict[str, Any]] = []
 
     @callback
+    @override
     def async_update_state(self) -> None:
         """Update the Freebox call sensor."""
         self._call_list_for_type = []
@@ -184,6 +289,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._attr_native_value = len(self._call_list_for_type)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
@@ -206,7 +312,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         super().__init__(router, description)
         self._disk_id = disk["id"]
         self._partition_id = partition["id"]
-        self._attr_name = f"{partition['label']} {description.name}"
+        self._attr_translation_placeholders = {"partition": partition["label"]}
         self._attr_unique_id = (
             f"{router.mac} {description.key} {disk['id']} {partition['id']}"
         )
@@ -216,13 +322,15 @@ class FreeboxDiskSensor(FreeboxSensor):
             model=disk["model"],
             name=f"Disk {disk['id']}",
             sw_version=disk["firmware"],
-            via_device=(
-                DOMAIN,
-                router.mac,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                router.hass,
+                (DOMAIN, router.mac),
+                config_entry_id=router.config_entry.entry_id,
             ),
         )
 
     @callback
+    @override
     def async_update_state(self) -> None:
         """Update the Freebox disk sensor."""
         value = None
@@ -233,6 +341,64 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._attr_native_value = value
 
 
+class FreeboxLanPortSensor(FreeboxSensor):
+    """Representation of a Freebox LAN port sensor."""
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        port_id: int,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize a Freebox LAN port sensor."""
+        super().__init__(router, description)
+        self._port_id = port_id
+        if TYPE_CHECKING:
+            assert description.translation_key
+        self._attr_translation_key, self._attr_translation_placeholders = (
+            lan_port_translation(router.lan_ports[port_id], description.translation_key)
+        )
+        self._attr_unique_id = f"{router.mac} lan_port {port_id} {description.key}"
+
+
+class FreeboxLanPortRateSensor(FreeboxLanPortSensor):
+    """Representation of a Freebox LAN port traffic sensor."""
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Ask the router to fetch the stats of this port."""
+        self._router.lan_ports_stats_listeners[self._port_id] += 1
+        self.async_on_remove(self._release_stats)
+        await super().async_added_to_hass()
+
+    @callback
+    def _release_stats(self) -> None:
+        """Stop fetching the stats of this port."""
+        self._router.lan_ports_stats_listeners[self._port_id] -= 1
+
+    @callback
+    @override
+    def async_update_state(self) -> None:
+        """Update the Freebox LAN port traffic sensor."""
+        stats = self._router.lan_ports[self._port_id]["stats"]
+        self._attr_available = stats != LAN_PORT_STATS_FAILED
+        self._attr_native_value = (
+            stats.get(self.entity_description.key) if isinstance(stats, dict) else None
+        )
+
+
+class FreeboxLanPortSpeedSensor(FreeboxLanPortSensor):
+    """Representation of a Freebox LAN port negotiated speed."""
+
+    @callback
+    @override
+    def async_update_state(self) -> None:
+        """Update the Freebox LAN port speed sensor."""
+        port = self._router.lan_ports[self._port_id]
+        # A port that is down still reports a speed
+        self._attr_native_value = int(port["speed"]) if port["link"] == "up" else None
+
+
 class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     """Representation of a Freebox battery sensor."""
 
@@ -240,6 +406,7 @@ class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the current state of the device."""
         return self.get_value("signal", "battery")

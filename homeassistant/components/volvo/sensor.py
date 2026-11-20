@@ -1,11 +1,9 @@
 """Volvo sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import cast, override
 
 from volvocarsapi.models import (
     VolvoCarsApiBaseModel,
@@ -101,6 +99,7 @@ def _direction_value(field: VolvoCarsApiBaseModel) -> str | None:
 
 _CHARGING_POWER_STATUS_OPTIONS = [
     "fault",
+    "initialization",
     "power_available_but_not_activated",
     "providing_power",
     "no_power_available",
@@ -414,6 +413,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
 
     entity_description: VolvoSensorDescription
 
+    @override
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
         if api_field is None:

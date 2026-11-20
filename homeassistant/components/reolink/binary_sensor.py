@@ -1,12 +1,10 @@
 """Component providing support for Reolink binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from reolink_aio.api import (
-    DUAL_LENS_DUAL_MOTION_MODELS,
     FACE_DETECTION_TYPE,
     PACKAGE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
@@ -73,6 +71,7 @@ BINARY_PUSH_SENSORS = (
         key="motion",
         cmd_id=33,
         device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.motion_detected(ch),
         supported=lambda api, ch: api.supported(ch, "motion_detection"),
     ),
@@ -80,6 +79,8 @@ BINARY_PUSH_SENSORS = (
         key=FACE_DETECTION_TYPE,
         cmd_id=33,
         translation_key="face",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, FACE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, FACE_DETECTION_TYPE),
     ),
@@ -87,6 +88,8 @@ BINARY_PUSH_SENSORS = (
         key=PERSON_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="person",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
@@ -94,6 +97,8 @@ BINARY_PUSH_SENSORS = (
         key=VEHICLE_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="vehicle",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
@@ -101,6 +106,8 @@ BINARY_PUSH_SENSORS = (
         key="non-motor_vehicle",
         cmd_id=[600, 696],
         translation_key="non-motor_vehicle",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, "non-motor vehicle"),
         supported=lambda api, ch: api.supported(ch, "ai_non-motor vehicle"),
     ),
@@ -108,6 +115,8 @@ BINARY_PUSH_SENSORS = (
         key=PET_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="pet",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
             api.ai_supported(ch, PET_DETECTION_TYPE)
@@ -118,6 +127,8 @@ BINARY_PUSH_SENSORS = (
         key=PET_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="animal",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
@@ -125,6 +136,8 @@ BINARY_PUSH_SENSORS = (
         key=PACKAGE_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="package",
+        device_class=BinarySensorDeviceClass.MOTION,
+        lens_entity=True,
         value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
     ),
@@ -142,6 +155,14 @@ BINARY_PUSH_SENSORS = (
         translation_key="cry",
         value=lambda api, ch: api.ai_detected(ch, "cry"),
         supported=lambda api, ch: api.ai_supported(ch, "cry"),
+    ),
+    ReolinkBinarySensorEntityDescription(
+        key="tamper",
+        translation_key="tamper",
+        cmd_id=[33],
+        device_class=BinarySensorDeviceClass.TAMPER,
+        value=lambda api, ch: api.baichuan.tamper_state(ch),
+        supported=lambda api, ch: api.supported(ch, "tamper"),
     ),
 )
 
@@ -311,7 +332,7 @@ async def async_setup_entry(
     api = reolink_data.host.api
 
     entities: list[BinarySensorEntity] = []
-    for channel in api.channels:
+    for channel in api.stream_channels:
         entities.extend(
             ReolinkPushBinarySensorEntity(reolink_data, channel, entity_description)
             for entity_description in BINARY_PUSH_SENSORS
@@ -357,14 +378,8 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
 
-        if self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
-            if entity_description.translation_key is not None:
-                key = entity_description.translation_key
-            else:
-                key = entity_description.key
-            self._attr_translation_key = f"{key}_lens_{self._channel}"
-
     @property
+    @override
     def is_on(self) -> bool:
         """State of the sensor."""
         return self.entity_description.value(self._host.api, self._channel)
@@ -373,6 +388,7 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
 class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
     """Binary-sensor class for Reolink IP camera motion sensors."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -426,6 +442,7 @@ class ReolinkSmartAIBinarySensorEntity(
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """State of the sensor."""
         return self.entity_description.value(
@@ -456,6 +473,7 @@ class ReolinkIndexBinarySensorEntity(
         self._attr_translation_placeholders = {"index": str(index)}
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """State of the sensor."""
         return self.entity_description.value(self._host.api, self._channel, self._index)

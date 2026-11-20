@@ -1,13 +1,12 @@
 """Backup platform for the SFTP Storage integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
-from typing import Any
+from typing import Any, override
 
 from asyncssh.sftp import SFTPError
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
@@ -62,6 +61,7 @@ class SFTPBackupAgent(BackupAgent):
         self.name: str = entry.title
         self.unique_id: str = entry.entry_id
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -69,7 +69,8 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug(
-            "Establishing SFTP connection to remote host in order to download backup id: %s",
+            "Establishing SFTP connection to remote host"
+            " in order to download backup id: %s",
             backup_id,
         )
         try:
@@ -78,9 +79,12 @@ class SFTPBackupAgent(BackupAgent):
                 return await client.iter_file(backup_id)
         except FileNotFoundError as e:
             raise BackupNotFound(
-                f"Unable to initiate download of backup id: {backup_id}. {e}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="backup_not_found",
+                translation_placeholders={"backup_id": backup_id},
             ) from e
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -100,9 +104,10 @@ class SFTPBackupAgent(BackupAgent):
         # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
         async with BackupAgentClient(self._entry, self._hass) as client:
             LOGGER.debug("Uploading backup: %s", backup.backup_id)
-            await client.async_upload_backup(iterator, backup)
+            await client.async_upload_backup(iterator, backup, on_progress)
         LOGGER.debug("Successfully uploaded backup id: %s", backup.backup_id)
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -119,14 +124,21 @@ class SFTPBackupAgent(BackupAgent):
             async with BackupAgentClient(self._entry, self._hass) as client:
                 await client.async_delete_backup(backup_id)
         except FileNotFoundError as err:
-            raise BackupNotFound(str(err)) from err
+            raise BackupNotFound(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="backup_not_found",
+                translation_placeholders={"backup_id": backup_id},
+            ) from err
         except SFTPError as err:
             raise BackupAgentError(
-                f"Failed to delete backup id: {backup_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="delete_failed",
+                translation_placeholders={"backup_id": backup_id},
             ) from err
 
         LOGGER.debug("Successfully removed backup id: %s", backup_id)
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups stored on SFTP Storage."""
 
@@ -136,9 +148,11 @@ class SFTPBackupAgent(BackupAgent):
                 return await client.async_list_backups()
             except SFTPError as err:
                 raise BackupAgentError(
-                    f"Remote server error while attempting to list backups: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="list_failed",
                 ) from err
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -152,4 +166,8 @@ class SFTPBackupAgent(BackupAgent):
                 LOGGER.debug("Returning backup id: %s. %s", backup_id, backup)
                 return backup
 
-        raise BackupNotFound(f"Backup id: {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )

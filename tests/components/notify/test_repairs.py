@@ -3,19 +3,17 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.notify import DOMAIN, migrate_notify_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator
 
 THERMOSTAT_ID = 0
 
@@ -35,7 +33,6 @@ async def test_notify_migration_repair_flow(
     """Test the notify service repair flow is triggered."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    await async_process_repairs_platforms(hass)
 
     http_client = await hass_client()
     await hass.async_block_till_done()
@@ -45,7 +42,7 @@ async def test_notify_migration_repair_flow(
         hass,
         MockModule(
             "test",
-            async_setup_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
         ),
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)

@@ -3,20 +3,18 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
-    EVENT_END_DATETIME,
-    EVENT_START_DATETIME,
-    SERVICE_GET_EVENTS,
+    CalendarService,
+    CalendarServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup_component(hass: HomeAssistant, service_multiple: Mock) -> None:
@@ -56,7 +54,14 @@ async def test_discount_games(
         "start_time": "2022-10-18 08:00:00",
         "end_time": "2022-11-01 08:00:00",
         "location": "",
-        "description": "In Shadow of the Tomb Raider Definitive Edition experience the final chapter of Lara\u2019s origin as she is forged into the Tomb Raider she is destined to be.\n\nhttps://store.epicgames.com/fr/p/shadow-of-the-tomb-raider",
+        "description": (
+            "In Shadow of the Tomb Raider Definitive Edition"
+            " experience the final chapter of Lara\u2019s origin"
+            " as she is forged into the Tomb Raider she is"
+            " destined to be.\n\n"
+            "https://store.epicgames.com/fr/p/"
+            "shadow-of-the-tomb-raider"
+        ),
     }
 
 
@@ -81,7 +86,16 @@ async def test_free_games(
         "start_time": "2022-10-27 08:00:00",
         "end_time": "2022-11-03 08:00:00",
         "location": "",
-        "description": "Take control of the most technologically advanced army in the Imperium - The Adeptus Mechanicus. Your every decision will weigh heavily on the outcome of the mission, in this turn-based tactical game. Will you be blessed by the Omnissiah?\n\nhttps://store.epicgames.com/fr/p/warhammer-mechanicus-0e4b71",
+        "description": (
+            "Take control of the most technologically"
+            " advanced army in the Imperium - The Adeptus"
+            " Mechanicus. Your every decision will weigh"
+            " heavily on the outcome of the mission, in"
+            " this turn-based tactical game. Will you be"
+            " blessed by the Omnissiah?\n\n"
+            "https://store.epicgames.com/fr/p/"
+            "warhammer-mechanicus-0e4b71"
+        ),
     }
 
 
@@ -134,11 +148,15 @@ async def test_get_events(
     # 1 week in range of data
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("2022-10-20T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("2022-10-27T00:00:00.000Z"),
+            TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-20T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "2022-10-27T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,
@@ -149,11 +167,15 @@ async def test_get_events(
     # 1 week out of range of data
     result = await hass.services.async_call(
         CALENDAR_DOMAIN,
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         {
-            ATTR_ENTITY_ID: ["calendar.epic_games_store_discount_games"],
-            EVENT_START_DATETIME: dt_util.parse_datetime("1970-01-01T00:00:00.000Z"),
-            EVENT_END_DATETIME: dt_util.parse_datetime("1970-01-08T00:00:00.000Z"),
+            TargetKey.ENTITY_ID: ["calendar.epic_games_store_discount_games"],
+            CalendarServiceArgument.START_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-01T00:00:00.000Z"
+            ),
+            CalendarServiceArgument.END_DATE_TIME: dt_util.parse_datetime(
+                "1970-01-08T00:00:00.000Z"
+            ),
         },
         blocking=True,
         return_response=True,

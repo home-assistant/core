@@ -3,22 +3,13 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER,
-    SERVICE_SET_COVER_POSITION,
-    STATE_CLOSED,
-    STATE_OPEN,
-    Platform,
-)
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverService
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -61,13 +52,13 @@ async def test_cover_services(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
 
     # Open cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert cover.level == 100
@@ -75,8 +66,8 @@ async def test_cover_services(
     # Close cover
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: entity_id},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert cover.level == 0
@@ -84,8 +75,8 @@ async def test_cover_services(
     # Set cover position
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: entity_id, "position": 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: entity_id, "position": 50},
         blocking=True,
     )
     assert cover.level == 50
@@ -104,7 +95,7 @@ async def test_cover_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "cover.test_cover"
+    entity_id = "cover.test_area_test_cover"
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # Simulate update

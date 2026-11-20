@@ -6,28 +6,26 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_GROUP_MEMBERS,
-    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
-    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
-    SERVICE_CLEAR_PLAYLIST,
-    SERVICE_JOIN,
-    SERVICE_PLAY_MEDIA,
-    SERVICE_UNJOIN,
     MediaPlayerEnqueue,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaPlayerState,
     MediaType,
     RepeatMode,
@@ -41,31 +39,17 @@ from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
 )
 from homeassistant.components.squeezebox.services import (
-    ATTR_PARAMETERS,
-    SERVICE_CALL_METHOD,
-    SERVICE_CALL_QUERY,
+    SqueezeboxService,
+    SqueezeboxServiceArgument,
 )
 from homeassistant.const import (
-    ATTR_COMMAND,
     ATTR_ENTITY_ID,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_REPEAT_SET,
-    SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -73,8 +57,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
 from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, VOLUME_STEP
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -213,8 +195,8 @@ async def test_squeezebox_volume_up(
     configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.VOLUME_UP,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
@@ -229,8 +211,8 @@ async def test_squeezebox_volume_down(
     configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.VOLUME_DOWN,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
@@ -244,8 +226,11 @@ async def test_squeezebox_volume_set(
     """Test volume set service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        MediaPlayerService.VOLUME_SET,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.VOLUME_LEVEL: 0.5,
+        },
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with("50")
@@ -281,8 +266,11 @@ async def test_squeezebox_mute(
     """Test mute service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: True,
+        },
         blocking=True,
     )
     configured_player.async_set_muting.assert_called_once_with(True)
@@ -294,8 +282,11 @@ async def test_squeezebox_unmute(
     """Test unmute service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_MUTE,
-        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: False},
+        MediaPlayerService.VOLUME_MUTE,
+        {
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.IS_VOLUME_MUTED: False,
+        },
         blocking=True,
     )
     configured_player.async_set_muting.assert_called_once_with(False)
@@ -331,10 +322,10 @@ async def test_squeezebox_repeat_mode(
     """Test set repeat mode service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ALL,
         },
         blocking=True,
     )
@@ -342,10 +333,10 @@ async def test_squeezebox_repeat_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_REPEAT: RepeatMode.ONE,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.ONE,
         },
         blocking=True,
     )
@@ -353,10 +344,10 @@ async def test_squeezebox_repeat_mode(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
+        MediaPlayerService.REPEAT_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_REPEAT: RepeatMode.OFF,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -401,10 +392,10 @@ async def test_squeezebox_shuffle(
     """Test set shuffle service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_SHUFFLE: True,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SHUFFLE: True,
         },
         blocking=True,
     )
@@ -412,10 +403,10 @@ async def test_squeezebox_shuffle(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
+        MediaPlayerService.SHUFFLE_SET,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_SHUFFLE: False,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SHUFFLE: False,
         },
         blocking=True,
     )
@@ -456,8 +447,8 @@ async def test_squeezebox_play(
     """Test play service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PLAY,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_play.assert_called_once()
@@ -469,12 +460,12 @@ async def test_squeezebox_play_media_with_announce(
     """Test play service call with announce."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_ANNOUNCE: True,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
         },
         blocking=True,
     )
@@ -493,13 +484,13 @@ async def test_squeezebox_play_media_with_announce_volume(
     """Test play service call with announce."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
         },
         blocking=True,
     )
@@ -516,17 +507,22 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     """Test play service call with announce and volume zero."""
     with pytest.raises(
         ServiceValidationError,
-        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+        match=(
+            "announce_volume must be a number greater than 0"
+            " and less than or equal to 1"
+        ),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-                ATTR_MEDIA_ANNOUNCE: True,
-                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
+                MediaPlayerServiceArgument.EXTRA: {
+                    ATTR_ANNOUNCE_VOLUME: announce_volume
+                },
             },
             blocking=True,
         )
@@ -540,13 +536,15 @@ async def test_squeezebox_play_media_with_announce_timeout_invalid(
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_PLAY_MEDIA,
+            MediaPlayerService.PLAY_MEDIA,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-                ATTR_MEDIA_ANNOUNCE: True,
-                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                MediaPlayerServiceArgument.ANNOUNCE: True,
+                MediaPlayerServiceArgument.EXTRA: {
+                    ATTR_ANNOUNCE_TIMEOUT: announce_timeout
+                },
             },
             blocking=True,
         )
@@ -559,13 +557,13 @@ async def test_squeezebox_play_media_with_announce_timeout(
     """Test play service call with announce."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.ANNOUNCE: True,
+            MediaPlayerServiceArgument.EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
         },
         blocking=True,
     )
@@ -581,8 +579,8 @@ async def test_squeezebox_play_pause(
     """Test play/pause service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PLAY_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_toggle_pause.assert_called_once()
@@ -594,8 +592,8 @@ async def test_squeezebox_pause(
     """Test pause service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PAUSE,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_pause.assert_called_once()
@@ -607,20 +605,20 @@ async def test_squeezebox_seek(
     """Test seek service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
         },
         blocking=True,
     )
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_SEEK,
+        MediaPlayerService.MEDIA_SEEK,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_SEEK_POSITION: 100,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.SEEK_POSITION: 100,
         },
         blocking=True,
     )
@@ -633,8 +631,8 @@ async def test_squeezebox_stop(
     """Test stop service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_STOP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_STOP,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_stop.assert_called_once()
@@ -647,11 +645,11 @@ async def test_squeezebox_load_playlist(
     # load a playlist by number
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
         },
         blocking=True,
     )
@@ -660,7 +658,7 @@ async def test_squeezebox_load_playlist(
     # load a list of urls
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
             ATTR_MEDIA_CONTENT_ID: json.dumps(
@@ -681,8 +679,8 @@ async def test_squeezebox_load_playlist(
     # clear the playlist
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_CLEAR_PLAYLIST,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.CLEAR_PLAYLIST,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_clear_playlist.assert_called_once()
@@ -695,12 +693,12 @@ async def test_squeezebox_enqueue(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
     )
@@ -708,12 +706,12 @@ async def test_squeezebox_enqueue(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
     )
@@ -721,12 +719,12 @@ async def test_squeezebox_enqueue(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            MediaPlayerServiceArgument.ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
     )
@@ -739,26 +737,26 @@ async def test_squeezebox_skip_tracks(
     """Test track skipping service calls."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_PLAY_MEDIA,
+        MediaPlayerService.PLAY_MEDIA,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
         },
         blocking=True,
     )
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_NEXT_TRACK,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_NEXT_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_index.assert_called_once_with("+1")
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PREVIOUS_TRACK,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.MEDIA_PREVIOUS_TRACK,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_index.assert_called_with("-1")
@@ -770,11 +768,11 @@ async def test_squeezebox_call_query(
     """Test query service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_QUERY,
+        SqueezeboxService.CALL_QUERY,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )
@@ -787,11 +785,11 @@ async def test_squeezebox_call_method(
     """Test method call service call."""
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_CALL_METHOD,
+        SqueezeboxService.CALL_METHOD,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_COMMAND: "test_command",
-            ATTR_PARAMETERS: ["param1", "param2"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            SqueezeboxServiceArgument.COMMAND: "test_command",
+            SqueezeboxServiceArgument.PARAMETERS: ["param1", "param2"],
         },
         blocking=True,
     )
@@ -844,10 +842,10 @@ async def test_squeezebox_join(hass: HomeAssistant, configured_players: list) ->
     # join a valid player
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
+        MediaPlayerService.JOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            TargetKey.ENTITY_ID: "media_player.test_player",
+            MediaPlayerServiceArgument.GROUP_MEMBERS: ["media_player.test_player_2"],
         },
         blocking=True,
     )
@@ -859,10 +857,10 @@ async def test_squeezebox_join(hass: HomeAssistant, configured_players: list) ->
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
-            SERVICE_JOIN,
+            MediaPlayerService.JOIN,
             {
-                ATTR_ENTITY_ID: "media_player.test_player",
-                ATTR_GROUP_MEMBERS: ["media_player.invalid"],
+                TargetKey.ENTITY_ID: "media_player.test_player",
+                MediaPlayerServiceArgument.GROUP_MEMBERS: ["media_player.invalid"],
             },
             blocking=True,
         )
@@ -874,8 +872,8 @@ async def test_squeezebox_unjoin(
     """Test unjoining a squeezebox player."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
+        MediaPlayerService.UNJOIN,
+        {TargetKey.ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
     configured_player.async_unsync.assert_called_once()

@@ -6,15 +6,10 @@ import json
 import ssl
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 import pytest
-import respx
-
-from homeassistant.components import image, mqtt
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -41,23 +36,25 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import (
+from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
 )
+import respx
 
-DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}
-}
+from homeassistant.components import image
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+
+DEFAULT_CONFIG = {DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}}
 
 
 @pytest.mark.freeze_time("2023-04-01 00:00:00+00:00")
 @pytest.mark.parametrize(
     "hass_config",
-    [{mqtt.DOMAIN: {image.DOMAIN: {"image_topic": "test/image", "name": "Test"}}}],
+    [{DOMAIN: {image.DOMAIN: {"image_topic": "test/image", "name": "Test"}}}],
 )
 async def test_run_image_setup(
     hass: HomeAssistant,
@@ -93,7 +90,7 @@ async def test_run_image_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 image.DOMAIN: {
                     "image_topic": "test/image",
                     "name": "Test",
@@ -147,7 +144,7 @@ async def test_run_image_b64_encoded(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "image": {
                     "image_topic": "test/image",
                     "name": "Test",
@@ -200,7 +197,7 @@ async def test_image_b64_encoded_with_availability(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "image": {
                     "url_topic": "test/image",
                     "name": "Test",
@@ -281,7 +278,7 @@ async def test_image_from_url(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "image": {
                     "url_topic": "test/image",
                     "name": "Test",
@@ -334,7 +331,7 @@ async def test_image_from_url_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "image": {
                     "url_topic": "test/image",
                     "name": "Test",
@@ -402,7 +399,7 @@ async def test_image_from_url_content_type(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "image": {
                     "url_topic": "test/image",
                     "name": "Test",
@@ -415,8 +412,8 @@ async def test_image_from_url_content_type(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )
@@ -462,7 +459,7 @@ async def test_image_from_url_fails(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     "image": {
                         "url_topic": "test/image",
                         "content_type": "image/jpg",
@@ -475,7 +472,7 @@ async def test_image_from_url_fails(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     "image": {
                         "url_topic": "test/image",
                         "image_topic": "test/image-data-topic",
@@ -488,7 +485,7 @@ async def test_image_from_url_fails(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     "image": {
                         "name": "Test",
                         "encoding": "utf-8",
@@ -601,7 +598,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 image.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -629,7 +626,7 @@ async def test_discovery_removal_image(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered image."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][image.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][image.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, image.DOMAIN, data)
 
 
@@ -710,7 +707,11 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass,
+        mqtt_mock_entry,
+        image.DOMAIN,
+        DEFAULT_CONFIG,
+        ["test_topic", "avty-topic"],
     )
 
 
@@ -806,7 +807,7 @@ async def test_skipped_async_ha_write_state(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 image.DOMAIN: {
                     "name": "test",
                     "url_topic": "test-topic",
@@ -825,6 +826,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

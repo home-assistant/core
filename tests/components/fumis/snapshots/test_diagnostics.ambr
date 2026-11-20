@@ -1,0 +1,1213 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'apiVersion': '1.3',
+    'controller': dict({
+      'alert': 0,
+      'antifreeze': dict({
+        'enable': True,
+        'temperature': 5,
+      }),
+      'command': 2,
+      'currentTime': 1776413805,
+      'delayedStartAt': -1,
+      'delayedStopAt': -1,
+      'diagnostic': dict({
+        'parameters': list([
+          dict({
+            'id': 0,
+            'value': 25,
+          }),
+          dict({
+            'id': 1,
+            'value': 5,
+          }),
+          dict({
+            'id': 2,
+            'value': 0,
+          }),
+          dict({
+            'id': 3,
+            'value': 1,
+          }),
+          dict({
+            'id': 4,
+            'value': 100,
+          }),
+          dict({
+            'id': 5,
+            'value': 85,
+          }),
+          dict({
+            'id': 6,
+            'value': 20,
+          }),
+          dict({
+            'id': 7,
+            'value': 85,
+          }),
+          dict({
+            'id': 8,
+            'value': 25,
+          }),
+          dict({
+            'id': 9,
+            'value': 70,
+          }),
+          dict({
+            'id': 10,
+            'value': 25,
+          }),
+          dict({
+            'id': 11,
+            'value': 90,
+          }),
+          dict({
+            'id': 12,
+            'value': 22,
+          }),
+          dict({
+            'id': 13,
+            'value': 115,
+          }),
+          dict({
+            'id': 14,
+            'value': 31,
+          }),
+          dict({
+            'id': 15,
+            'value': 130,
+          }),
+          dict({
+            'id': 16,
+            'value': 39,
+          }),
+          dict({
+            'id': 17,
+            'value': 145,
+          }),
+          dict({
+            'id': 18,
+            'value': 50,
+          }),
+          dict({
+            'id': 19,
+            'value': 140,
+          }),
+          dict({
+            'id': 20,
+            'value': 200,
+          }),
+          dict({
+            'id': 21,
+            'value': 190,
+          }),
+          dict({
+            'id': 22,
+            'value': 215,
+          }),
+          dict({
+            'id': 23,
+            'value': 200,
+          }),
+          dict({
+            'id': 24,
+            'value': 125,
+          }),
+          dict({
+            'id': 25,
+            'value': 85,
+          }),
+          dict({
+            'id': 26,
+            'value': 108,
+          }),
+          dict({
+            'id': 27,
+            'value': 129,
+          }),
+          dict({
+            'id': 28,
+            'value': 150,
+          }),
+          dict({
+            'id': 29,
+            'value': 85,
+          }),
+          dict({
+            'id': 30,
+            'value': 85,
+          }),
+          dict({
+            'id': 31,
+            'value': 85,
+          }),
+          dict({
+            'id': 32,
+            'value': 85,
+          }),
+          dict({
+            'id': 33,
+            'value': 85,
+          }),
+          dict({
+            'id': 34,
+            'value': 85,
+          }),
+          dict({
+            'id': 35,
+            'value': 105,
+          }),
+          dict({
+            'id': 36,
+            'value': 125,
+          }),
+          dict({
+            'id': 37,
+            'value': 145,
+          }),
+          dict({
+            'id': 38,
+            'value': 165,
+          }),
+          dict({
+            'id': 39,
+            'value': 135,
+          }),
+          dict({
+            'id': 40,
+            'value': 120,
+          }),
+          dict({
+            'id': 41,
+            'value': 0,
+          }),
+          dict({
+            'id': 42,
+            'value': 0,
+          }),
+          dict({
+            'id': 43,
+            'value': 0,
+          }),
+          dict({
+            'id': 44,
+            'value': 0,
+          }),
+          dict({
+            'id': 45,
+            'value': 90,
+          }),
+          dict({
+            'id': 46,
+            'value': 105,
+          }),
+          dict({
+            'id': 47,
+            'value': 120,
+          }),
+          dict({
+            'id': 48,
+            'value': 135,
+          }),
+          dict({
+            'id': 49,
+            'value': 150,
+          }),
+          dict({
+            'id': 50,
+            'value': 5,
+          }),
+          dict({
+            'id': 51,
+            'value': 125,
+          }),
+          dict({
+            'id': 52,
+            'value': 6,
+          }),
+          dict({
+            'id': 53,
+            'value': 0,
+          }),
+          dict({
+            'id': 54,
+            'value': 40,
+          }),
+          dict({
+            'id': 55,
+            'value': 155,
+          }),
+          dict({
+            'id': 56,
+            'value': 35,
+          }),
+          dict({
+            'id': 57,
+            'value': 200,
+          }),
+          dict({
+            'id': 58,
+            'value': 50,
+          }),
+          dict({
+            'id': 59,
+            'value': 37,
+          }),
+          dict({
+            'id': 60,
+            'value': 45,
+          }),
+          dict({
+            'id': 61,
+            'value': 120,
+          }),
+          dict({
+            'id': 62,
+            'value': 230,
+          }),
+          dict({
+            'id': 63,
+            'value': 0,
+          }),
+          dict({
+            'id': 64,
+            'value': 0,
+          }),
+          dict({
+            'id': 65,
+            'value': 0,
+          }),
+          dict({
+            'id': 66,
+            'value': 0,
+          }),
+          dict({
+            'id': 67,
+            'value': 5,
+          }),
+          dict({
+            'id': 68,
+            'value': 40,
+          }),
+          dict({
+            'id': 69,
+            'value': 60,
+          }),
+          dict({
+            'id': 70,
+            'value': 125,
+          }),
+          dict({
+            'id': 71,
+            'value': 2,
+          }),
+          dict({
+            'id': 72,
+            'value': 4,
+          }),
+          dict({
+            'id': 73,
+            'value': 100,
+          }),
+          dict({
+            'id': 74,
+            'value': 100,
+          }),
+          dict({
+            'id': 75,
+            'value': 100,
+          }),
+          dict({
+            'id': 76,
+            'value': 1,
+          }),
+          dict({
+            'id': 77,
+            'value': 0,
+          }),
+          dict({
+            'id': 78,
+            'value': 0,
+          }),
+          dict({
+            'id': 79,
+            'value': 0,
+          }),
+          dict({
+            'id': 80,
+            'value': 0,
+          }),
+          dict({
+            'id': 81,
+            'value': 0,
+          }),
+          dict({
+            'id': 82,
+            'value': 200,
+          }),
+          dict({
+            'id': 83,
+            'value': 90,
+          }),
+          dict({
+            'id': 84,
+            'value': 70,
+          }),
+          dict({
+            'id': 85,
+            'value': 80,
+          }),
+          dict({
+            'id': 86,
+            'value': 90,
+          }),
+          dict({
+            'id': 87,
+            'value': 50,
+          }),
+          dict({
+            'id': 88,
+            'value': 100,
+          }),
+          dict({
+            'id': 89,
+            'value': 1,
+          }),
+          dict({
+            'id': 90,
+            'value': 0,
+          }),
+          dict({
+            'id': 91,
+            'value': 0,
+          }),
+          dict({
+            'id': 92,
+            'value': 2,
+          }),
+          dict({
+            'id': 93,
+            'value': 1,
+          }),
+          dict({
+            'id': 94,
+            'value': 90,
+          }),
+          dict({
+            'id': 95,
+            'value': 0,
+          }),
+          dict({
+            'id': 96,
+            'value': 4,
+          }),
+          dict({
+            'id': 97,
+            'value': 27,
+          }),
+          dict({
+            'id': 98,
+            'value': 0,
+          }),
+          dict({
+            'id': 99,
+            'value': 0,
+          }),
+          dict({
+            'id': 100,
+            'value': 0,
+          }),
+          dict({
+            'id': 101,
+            'value': 60,
+          }),
+          dict({
+            'id': 102,
+            'value': 50,
+          }),
+          dict({
+            'id': 103,
+            'value': 10,
+          }),
+          dict({
+            'id': 104,
+            'value': 5,
+          }),
+          dict({
+            'id': 105,
+            'value': 60,
+          }),
+        ]),
+        'timers': list([
+          dict({
+            'id': 0,
+            'value': 5,
+          }),
+          dict({
+            'id': 1,
+            'value': 45,
+          }),
+          dict({
+            'id': 2,
+            'value': 7,
+          }),
+          dict({
+            'id': 3,
+            'value': 30,
+          }),
+          dict({
+            'id': 4,
+            'value': 6,
+          }),
+          dict({
+            'id': 5,
+            'value': 15,
+          }),
+          dict({
+            'id': 6,
+            'value': 8,
+          }),
+          dict({
+            'id': 7,
+            'value': 15,
+          }),
+          dict({
+            'id': 8,
+            'value': 11,
+          }),
+          dict({
+            'id': 9,
+            'value': 30,
+          }),
+          dict({
+            'id': 10,
+            'value': 14,
+          }),
+          dict({
+            'id': 11,
+            'value': 0,
+          }),
+          dict({
+            'id': 12,
+            'value': 12,
+          }),
+          dict({
+            'id': 13,
+            'value': 0,
+          }),
+          dict({
+            'id': 14,
+            'value': 14,
+          }),
+          dict({
+            'id': 15,
+            'value': 30,
+          }),
+          dict({
+            'id': 16,
+            'value': 0,
+          }),
+          dict({
+            'id': 17,
+            'value': 0,
+          }),
+          dict({
+            'id': 18,
+            'value': 0,
+          }),
+          dict({
+            'id': 19,
+            'value': 0,
+          }),
+          dict({
+            'id': 20,
+            'value': 0,
+          }),
+          dict({
+            'id': 21,
+            'value': 0,
+          }),
+          dict({
+            'id': 22,
+            'value': 0,
+          }),
+          dict({
+            'id': 23,
+            'value': 0,
+          }),
+          dict({
+            'id': 24,
+            'value': 0,
+          }),
+          dict({
+            'id': 25,
+            'value': 0,
+          }),
+          dict({
+            'id': 26,
+            'value': 0,
+          }),
+          dict({
+            'id': 27,
+            'value': 0,
+          }),
+          dict({
+            'id': 28,
+            'value': 0,
+          }),
+          dict({
+            'id': 29,
+            'value': 0,
+          }),
+          dict({
+            'id': 30,
+            'value': 16,
+          }),
+          dict({
+            'id': 31,
+            'value': 0,
+          }),
+          dict({
+            'id': 32,
+            'value': 21,
+          }),
+          dict({
+            'id': 33,
+            'value': 0,
+          }),
+          dict({
+            'id': 34,
+            'value': 17,
+          }),
+          dict({
+            'id': 35,
+            'value': 30,
+          }),
+          dict({
+            'id': 36,
+            'value': 22,
+          }),
+          dict({
+            'id': 37,
+            'value': 30,
+          }),
+          dict({
+            'id': 38,
+            'value': 0,
+          }),
+          dict({
+            'id': 39,
+            'value': 0,
+          }),
+          dict({
+            'id': 40,
+            'value': 0,
+          }),
+          dict({
+            'id': 41,
+            'value': 0,
+          }),
+          dict({
+            'id': 42,
+            'value': 0,
+          }),
+          dict({
+            'id': 43,
+            'value': 0,
+          }),
+          dict({
+            'id': 44,
+            'value': 0,
+          }),
+          dict({
+            'id': 45,
+            'value': 160,
+          }),
+          dict({
+            'id': 46,
+            'value': 160,
+          }),
+          dict({
+            'id': 47,
+            'value': 160,
+          }),
+          dict({
+            'id': 48,
+            'value': 160,
+          }),
+          dict({
+            'id': 49,
+            'value': 160,
+          }),
+          dict({
+            'id': 50,
+            'value': 160,
+          }),
+        ]),
+        'variables': list([
+          dict({
+            'id': 0,
+            'value': 2,
+          }),
+          dict({
+            'id': 1,
+            'value': 17410,
+          }),
+          dict({
+            'id': 2,
+            'value': 68,
+          }),
+          dict({
+            'id': 3,
+            'value': 0,
+          }),
+          dict({
+            'id': 4,
+            'value': 108,
+          }),
+          dict({
+            'id': 5,
+            'value': 5,
+          }),
+          dict({
+            'id': 6,
+            'value': 0,
+          }),
+          dict({
+            'id': 7,
+            'value': 0,
+          }),
+          dict({
+            'id': 8,
+            'value': 0,
+          }),
+          dict({
+            'id': 9,
+            'value': 6,
+          }),
+          dict({
+            'id': 10,
+            'value': 0,
+          }),
+          dict({
+            'id': 11,
+            'value': 0,
+          }),
+          dict({
+            'id': 12,
+            'value': 0,
+          }),
+          dict({
+            'id': 13,
+            'value': 2,
+          }),
+          dict({
+            'id': 14,
+            'value': 6,
+          }),
+          dict({
+            'id': 15,
+            'value': 24,
+          }),
+          dict({
+            'id': 16,
+            'value': 8,
+          }),
+          dict({
+            'id': 17,
+            'value': 1,
+          }),
+          dict({
+            'id': 18,
+            'value': 8,
+          }),
+          dict({
+            'id': 19,
+            'value': 1,
+          }),
+          dict({
+            'id': 20,
+            'value': 0,
+          }),
+          dict({
+            'id': 21,
+            'value': 0,
+          }),
+          dict({
+            'id': 22,
+            'value': 207,
+          }),
+          dict({
+            'id': 23,
+            'value': 22,
+          }),
+          dict({
+            'id': 24,
+            'value': 8,
+          }),
+          dict({
+            'id': 25,
+            'value': 0,
+          }),
+          dict({
+            'id': 26,
+            'value': 2,
+          }),
+          dict({
+            'id': 27,
+            'value': 2,
+          }),
+          dict({
+            'id': 28,
+            'value': 1,
+          }),
+          dict({
+            'id': 29,
+            'value': 0,
+          }),
+          dict({
+            'id': 30,
+            'value': 1,
+          }),
+          dict({
+            'id': 31,
+            'value': 1,
+          }),
+          dict({
+            'id': 32,
+            'value': 0,
+          }),
+          dict({
+            'id': 33,
+            'value': 1,
+          }),
+          dict({
+            'id': 34,
+            'value': 1127,
+          }),
+          dict({
+            'id': 35,
+            'value': 675,
+          }),
+          dict({
+            'id': 36,
+            'value': 0,
+          }),
+          dict({
+            'id': 37,
+            'value': 241,
+          }),
+          dict({
+            'id': 38,
+            'value': 20000101,
+          }),
+          dict({
+            'id': 39,
+            'value': 8,
+          }),
+          dict({
+            'id': 40,
+            'value': 1,
+          }),
+          dict({
+            'id': 41,
+            'value': 241,
+          }),
+          dict({
+            'id': 42,
+            'value': 20000101,
+          }),
+          dict({
+            'id': 43,
+            'value': 10,
+          }),
+          dict({
+            'id': 44,
+            'value': 2,
+          }),
+          dict({
+            'id': 45,
+            'value': 241,
+          }),
+          dict({
+            'id': 46,
+            'value': 20000101,
+          }),
+          dict({
+            'id': 47,
+            'value': 2347,
+          }),
+          dict({
+            'id': 48,
+            'value': 3,
+          }),
+          dict({
+            'id': 49,
+            'value': 0,
+          }),
+          dict({
+            'id': 50,
+            'value': 0,
+          }),
+          dict({
+            'id': 51,
+            'value': 0,
+          }),
+          dict({
+            'id': 52,
+            'value': 4,
+          }),
+          dict({
+            'id': 53,
+            'value': 0,
+          }),
+          dict({
+            'id': 54,
+            'value': 0,
+          }),
+          dict({
+            'id': 55,
+            'value': 0,
+          }),
+          dict({
+            'id': 56,
+            'value': 5,
+          }),
+          dict({
+            'id': 57,
+            'value': 0,
+          }),
+          dict({
+            'id': 58,
+            'value': 0,
+          }),
+          dict({
+            'id': 59,
+            'value': 0,
+          }),
+          dict({
+            'id': 60,
+            'value': 6,
+          }),
+          dict({
+            'id': 61,
+            'value': 0,
+          }),
+          dict({
+            'id': 62,
+            'value': 0,
+          }),
+          dict({
+            'id': 63,
+            'value': 0,
+          }),
+          dict({
+            'id': 64,
+            'value': 7,
+          }),
+          dict({
+            'id': 65,
+            'value': 0,
+          }),
+          dict({
+            'id': 66,
+            'value': 0,
+          }),
+          dict({
+            'id': 67,
+            'value': 0,
+          }),
+          dict({
+            'id': 68,
+            'value': 8,
+          }),
+          dict({
+            'id': 69,
+            'value': 0,
+          }),
+          dict({
+            'id': 70,
+            'value': 0,
+          }),
+          dict({
+            'id': 71,
+            'value': 0,
+          }),
+          dict({
+            'id': 72,
+            'value': 9,
+          }),
+          dict({
+            'id': 73,
+            'value': 0,
+          }),
+          dict({
+            'id': 74,
+            'value': 0,
+          }),
+          dict({
+            'id': 75,
+            'value': 0,
+          }),
+          dict({
+            'id': 76,
+            'value': 10,
+          }),
+          dict({
+            'id': 77,
+            'value': 0,
+          }),
+          dict({
+            'id': 78,
+            'value': 0,
+          }),
+          dict({
+            'id': 79,
+            'value': 0,
+          }),
+          dict({
+            'id': 80,
+            'value': 11,
+          }),
+          dict({
+            'id': 81,
+            'value': 0,
+          }),
+          dict({
+            'id': 82,
+            'value': 0,
+          }),
+          dict({
+            'id': 83,
+            'value': 0,
+          }),
+          dict({
+            'id': 84,
+            'value': 12,
+          }),
+          dict({
+            'id': 85,
+            'value': 0,
+          }),
+          dict({
+            'id': 86,
+            'value': 0,
+          }),
+          dict({
+            'id': 87,
+            'value': 0,
+          }),
+          dict({
+            'id': 88,
+            'value': 13,
+          }),
+          dict({
+            'id': 89,
+            'value': 0,
+          }),
+          dict({
+            'id': 90,
+            'value': 0,
+          }),
+          dict({
+            'id': 91,
+            'value': 0,
+          }),
+          dict({
+            'id': 92,
+            'value': 14,
+          }),
+          dict({
+            'id': 93,
+            'value': 0,
+          }),
+          dict({
+            'id': 94,
+            'value': 0,
+          }),
+          dict({
+            'id': 95,
+            'value': 0,
+          }),
+          dict({
+            'id': 96,
+            'value': 211,
+          }),
+          dict({
+            'id': 97,
+            'value': 15,
+          }),
+          dict({
+            'id': 98,
+            'value': 0,
+          }),
+          dict({
+            'id': 99,
+            'value': 0,
+          }),
+        ]),
+      }),
+      'ecoMode': dict({
+        'ecoModeEnable': 0,
+        'ecoModeSetType': 1,
+      }),
+      'error': 0,
+      'fans': list([
+        dict({
+          'id': 1,
+          'speed': 0,
+          'speedType': 0,
+          'weight': 0,
+        }),
+      ]),
+      'fuelType': 1,
+      'fuels': list([
+        dict({
+          'id': 1,
+          'name': None,
+          'quality': 2,
+          'qualityActual': None,
+          'qualityType': 0,
+          'quantity': 0.95,
+          'quantityActualType': 2,
+          'quantityDisplay': 1,
+          'quantitySetType': 2,
+        }),
+      ]),
+      'heatingSlope': -0.1,
+      'hybrid': dict({
+        'actualType': 1,
+        'operation': 0,
+        'state': 0,
+      }),
+      'mobileLastAvailability': 1776412827,
+      'power': dict({
+        'actualPower': 0,
+        'actualType': 2,
+        'kw': 4.6,
+        'setPower': 5,
+        'setType': 1,
+      }),
+      'statistic': dict({
+        'fuelQuantityUsed': 0,
+        'heatingTime': 4080,
+        'igniterStarts': 2,
+        'misfires': 0,
+        'overheatings': 0,
+        'serviceTime': 4080,
+        'uptime': 86760,
+      }),
+      'status': 30,
+      'stoveLastAvailability': 1776413799,
+      'temperatures': list([
+        dict({
+          'actual': 20.7,
+          'actualType': 1,
+          'id': 1,
+          'name': None,
+          'onMainScreen': True,
+          'set': 25,
+          'setType': 2,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 0,
+          'id': 2,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 0,
+          'id': 3,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 0,
+          'id': 4,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 0,
+          'id': 5,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 0,
+          'id': 6,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 206,
+          'actualType': 10,
+          'id': 7,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 0,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 1,
+          'id': 8,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0.5,
+          'setType': 1,
+          'weight': 0,
+        }),
+        dict({
+          'actual': 0,
+          'actualType': 1,
+          'id': 9,
+          'name': None,
+          'onMainScreen': False,
+          'set': 0,
+          'setType': 1,
+          'weight': 0,
+        }),
+      ]),
+      'timeToService': 2159,
+      'timerEnable': False,
+      'timers': list([
+      ]),
+      'type': 2,
+      'version': '2.6.0',
+    }),
+    'unit': dict({
+      'command': None,
+      'id': '**REDACTED**',
+      'ip': '**REDACTED**',
+      'rssi': '-60',
+      'temperature': 27,
+      'timezone': None,
+      'type': 3,
+      'version': '2.5.0',
+    }),
+  })
+# ---

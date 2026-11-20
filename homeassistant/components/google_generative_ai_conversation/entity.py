@@ -1,15 +1,14 @@
 """Conversation support for the Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from dataclasses import dataclass, replace
-import datetime
+import datetime as dt
 import mimetypes
 from pathlib import Path
+import re
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import Client
@@ -30,11 +29,11 @@ from google.genai.types import (
     SafetySetting,
     Schema,
     ThinkingConfig,
+    ThinkingLevel,
     Tool,
     ToolListUnion,
 )
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -51,6 +50,8 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -61,6 +62,8 @@ from .const import (
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
@@ -91,6 +94,163 @@ SUPPORTED_SCHEMA_KEYS = {
     "required",
     "items",
 }
+
+
+_GEMINI_VERSION = re.compile(r"^gemini-(\d+)(?:\.(\d+))?(?=-|$)")
+_GEMINI_TEXT_ALIASES = {
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-flash-lite-latest",
+}
+
+
+def _gemini_version(name: str) -> tuple[int, int] | None:
+    """Parse the numeric Gemini version without confusing 3.10 with 3.1."""
+    if match := _GEMINI_VERSION.match(name):
+        return int(match[1]), int(match[2] or 0)
+    return None
+
+
+def supports_speech_metadata(model: str) -> bool:
+    """Return whether a TTS model accepts per-turn speech metadata like style."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
+
+
+def supports_custom_sampling(model: str) -> bool:
+    """Keep sampling for older models and omit it for newer Gemini models."""
+    name = model.removeprefix("models/")
+    if not name.startswith("gemini-"):
+        return True
+    # These newer families are exceptions to numeric version ordering.
+    for stem in ("gemini-3.5-flash-lite", "gemini-3.5-transcribe"):
+        if name == stem or name.startswith(f"{stem}-"):
+            return False
+    if version := _gemini_version(name):
+        return version < (3, 6)
+    # Preserve sampling behavior for the established older Robotics family.
+    stem = "gemini-robotics-er-1.6"
+    return name == stem or name.startswith(f"{stem}-")
+
+
+def supports_voice_library(model: str) -> bool:
+    """Return whether a TTS model can use the voices from the voices API."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
+
+
+def _is_thinking_model(model: str) -> bool:
+    """Check if the model uses the integration's thinking configuration."""
+    name = model.removeprefix("models/")
+    # Preserve existing Gemini 2.5/3 handling of non-text models.
+    if name.endswith(("tts", "image", "image-preview")):
+        return False
+    if name in _GEMINI_TEXT_ALIASES:
+        return True
+    if (version := _gemini_version(name)) is None:
+        return False
+    if version == (2, 5) or version[0] == 3:
+        return True
+    # Only extend thinking to ordinary text families, not new specialized APIs.
+    tokens = name.split("-")[2:]
+    return (
+        version[0] > 3
+        and bool(tokens)
+        and tokens[0] in {"flash", "pro"}
+        and not {"tts", "image", "live", "transcribe", "embedding"}.intersection(tokens)
+    )
+
+
+def _is_gemini_3_model(model: str) -> bool:
+    """Check if the model uses thinking levels rather than numeric budgets."""
+    name = model.removeprefix("models/")
+    return name in _GEMINI_TEXT_ALIASES or (
+        (version := _gemini_version(name)) is not None and version[0] >= 3
+    )
+
+
+def _is_gemma_4_model(model: str) -> bool:
+    """Check if the model is a Gemma 4 series model."""
+    name = model.removeprefix("models/")
+    return name.startswith("gemma-4")
+
+
+def _create_thinking_config(
+    model: str,
+    thinking_budget: int,
+    thinking_level: str | None = None,
+) -> ThinkingConfig | None:
+    """Create a ThinkingConfig based on the model and user configuration.
+
+    Args:
+        model: The model name (e.g., "models/gemini-2.5-flash").
+        thinking_budget: The user-configured thinking budget:
+            -1 = automatic (default behavior),
+            0 = disable thinking,
+            >0 = custom token budget (Gemini 2.5 only).
+        thinking_level: The user-configured thinking level for Gemini 3 and
+            Gemma 4 models: "auto" = automatic (default), "minimal", "low",
+            "medium", "high".
+
+    """
+    if _is_gemma_4_model(model):
+        # Gemma 4 only supports the minimal and high thinking levels
+        gemma_level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
+            "high": ThinkingLevel.HIGH,
+        }
+        if thinking_level and thinking_level in gemma_level_map:
+            return ThinkingConfig(thinking_level=gemma_level_map[thinking_level])
+        return None
+
+    if not _is_thinking_model(model):
+        return None
+
+    if _is_gemini_3_model(model):
+        name = model.removeprefix("models/")
+        level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
+            "low": ThinkingLevel.LOW,
+            "medium": ThinkingLevel.MEDIUM,
+            "high": ThinkingLevel.HIGH,
+        }
+        version = _gemini_version(name)
+        if (
+            "pro" in name
+            or name in _GEMINI_TEXT_ALIASES
+            or (
+                version is not None
+                and version >= (3, 6)
+                and not (
+                    version == (3, 6)
+                    and name.startswith("gemini-3.6-flash")
+                    and "lite" not in name.split("-")
+                )
+            )
+        ):
+            level_map.pop("minimal")
+        if thinking_level and thinking_level in level_map:
+            return ThinkingConfig(
+                include_thoughts=True,
+                thinking_level=level_map[thinking_level],
+            )
+        return ThinkingConfig(include_thoughts=True)
+
+    # Gemini 2.5 models use integer thinking_budget
+    if thinking_budget == -1:
+        return ThinkingConfig(include_thoughts=True)
+
+    name = model.removeprefix("models/")
+    if name.startswith("gemini-2.5-pro"):
+        # gemini-2.5-pro minimum thinking budget is 128
+        if thinking_budget < 128:
+            return ThinkingConfig(include_thoughts=True, thinking_budget=128)
+        return ThinkingConfig(include_thoughts=True, thinking_budget=thinking_budget)
+
+    if thinking_budget == 0:
+        return ThinkingConfig(include_thoughts=False, thinking_budget=0)
+
+    return ThinkingConfig(include_thoughts=True, thinking_budget=thinking_budget)
 
 
 def _camel_to_snake(name: str) -> str:
@@ -134,8 +294,8 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
 
     if result.get("enum") and result.get("type") != "STRING":
         # enum is only allowed for STRING type. This is safe as long as the schema
-        # contains vol.Coerce for the respective type, for example:
-        # vol.All(vol.Coerce(int), vol.In([1, 2, 3]))
+        # contains probatio.Coerce for the respective type, for example:
+        # probatio.All(probatio.Coerce(int), probatio.In([1, 2, 3]))
         result["type"] = "STRING"
         result["enum"] = [str(item) for item in result["enum"]]
 
@@ -155,7 +315,7 @@ def _format_tool(
 
     if tool.parameters.schema:
         parameters = _format_schema(
-            convert(tool.parameters, custom_serializer=custom_serializer)
+            probatio.to_openapi(tool.parameters, custom_serializer=custom_serializer)
         )
     else:
         parameters = None
@@ -174,7 +334,7 @@ def _format_tool(
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
-        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")
     if isinstance(value, list):
         return [_escape_decode(item) for item in value]
     if isinstance(value, dict):
@@ -184,7 +344,7 @@ def _escape_decode(value: Any) -> Any:
 
 def _validate_tool_results(value: Any) -> Any:
     """Recursively convert non-json-serializable types."""
-    if isinstance(value, (datetime.time, datetime.date)):
+    if isinstance(value, (dt.time, dt.date)):
         return value.isoformat()
     if isinstance(value, list):
         return [_validate_tool_results(item) for item in value]
@@ -200,7 +360,12 @@ def _create_google_tool_response_parts(
     return [
         Part.from_function_response(
             name=tool_result.tool_name,
-            response=_validate_tool_results(tool_result.tool_result),
+            response=_validate_tool_results(
+                {
+                    "data": tool_result.result.data,
+                    "error": tool_result.result.error,
+                }
+            ),
         )
         for tool_result in parts
     ]
@@ -338,6 +503,7 @@ def _convert_content(
 
 
 async def _transform_stream(
+    chat_log: conversation.ChatLog,
     result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
@@ -345,6 +511,19 @@ async def _transform_stream(
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
+
+            if (usage := response.usage_metadata) is not None:
+                chat_log.async_trace(
+                    {
+                        "stats": {
+                            "input_tokens": usage.prompt_token_count,
+                            "cached_input_tokens": (
+                                usage.cached_content_token_count or 0
+                            ),
+                            "output_tokens": usage.candidates_token_count,
+                        }
+                    }
+                )
 
             if new_message:
                 if part_details:
@@ -356,7 +535,9 @@ async def _transform_stream(
                 thinking_content_index = 0
                 tool_call_index = 0
 
-            # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
+            # According to the API docs, this would mean no
+            # candidate is returned, so we can safely throw
+            # an error here.
             if response.prompt_feedback or not response.candidates:
                 reason = (
                     response.prompt_feedback.block_reason_message
@@ -364,7 +545,8 @@ async def _transform_stream(
                     else "unknown"
                 )
                 raise HomeAssistantError(
-                    f"The message got blocked due to content violations, reason: {reason}"
+                    "The message got blocked due to content"
+                    f" violations, reason: {reason}"
                 )
 
             candidate = response.candidates[0]
@@ -374,6 +556,7 @@ async def _transform_stream(
                 and candidate.finish_reason != "STOP"
             ):
                 # The message ended due to a content error as explained in: https://ai.google.dev/api/generate-content#FinishReason
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error(
                     "Error in Google Generative AI response: %s, see: https://ai.google.dev/api/generate-content#FinishReason",
                     candidate.finish_reason,
@@ -448,6 +631,7 @@ async def _transform_stream(
         APIError,
         ValueError,
     ) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Error sending message: %s %s", type(err), err)
         if isinstance(err, APIError):
             message = err.message
@@ -484,7 +668,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         default_max_tokens: int | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
@@ -498,9 +682,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 for tool in chat_log.llm_api.tools
             ]
 
-        # Using search grounding allows the model to retrieve information from the web,
-        # however, it may interfere with how the model decides to use some tools, or entities
-        # for example weather entity may be disregarded if the model chooses to Google it.
+        # Using search grounding allows the model to retrieve
+        # information from the web, however, it may interfere
+        # with how the model decides to use some tools, or
+        # entities for example weather entity may be
+        # disregarded if the model chooses to Google it.
         if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
@@ -532,12 +718,12 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 tool_results.append(chat_content)
                 continue
 
-            if (
-                not isinstance(chat_content, conversation.ToolResultContent)
-                and chat_content.content == ""
-            ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+            if chat_content.content == "":
+                # Skipping is not possible since the number of
+                # function calls need to match the number of
+                # function responses and skipping one would
+                # mean removing the other and hence this would
+                # prevent a proper chat log
                 chat_content = replace(chat_content, content=" ")
 
             if tool_results:
@@ -560,18 +746,18 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-        generateContentConfig = self.create_generate_content_config()
-        generateContentConfig.tools = tools or None
-        generateContentConfig.system_instruction = (
+        generate_content_config = self.create_generate_content_config()
+        generate_content_config.tools = tools or None
+        generate_content_config.system_instruction = (
             prompt if supports_system_instruction else None
         )
-        generateContentConfig.automatic_function_calling = (
+        generate_content_config.automatic_function_calling = (
             AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
         )
         if structure:
-            generateContentConfig.response_mime_type = "application/json"
-            generateContentConfig.response_schema = _format_schema(
-                convert(
+            generate_content_config.response_mime_type = "application/json"
+            generate_content_config.response_schema = _format_schema(
+                probatio.to_openapi(
                     structure,
                     custom_serializer=(
                         chat_log.llm_api.custom_serializer
@@ -588,7 +774,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 *messages,
             ]
         chat = self._genai_client.aio.chats.create(
-            model=model_name, history=messages, config=generateContentConfig
+            model=model_name, history=messages, config=generate_content_config
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
@@ -613,6 +799,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ClientError,
                 ValueError,
             ) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error sending message: %s %s", type(err), err)
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err
@@ -623,7 +810,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                         content
                         async for content in chat_log.async_add_delta_content_stream(
                             self.entity_id,
-                            _transform_stream(chat_response_generator),
+                            _transform_stream(chat_log, chat_response_generator),
                         )
                         if isinstance(content, conversation.ToolResultContent)
                     ]
@@ -639,16 +826,13 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
         model = options.get(CONF_CHAT_MODEL, self.default_model)
-        thinking_config: ThinkingConfig | None = None
-        if model.startswith("models/gemini-2.5") and not model.endswith(
-            ("tts", "image", "image-preview")
-        ):
-            thinking_config = ThinkingConfig(include_thoughts=True)
+        thinking_config = _create_thinking_config(
+            model,
+            int(options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)),
+            options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL),
+        )
 
-        return GenerateContentConfig(
-            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-            top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+        config = GenerateContentConfig(
             max_output_tokens=options.get(
                 CONF_MAX_TOKENS,
                 default_max_tokens
@@ -684,6 +868,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             ],
             thinking_config=thinking_config,
         )
+        if supports_custom_sampling(model):
+            config.temperature = options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE)
+            config.top_k = options.get(CONF_TOP_K, RECOMMENDED_TOP_K)
+            config.top_p = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+        return config
 
 
 async def async_prepare_files_for_prompt(
@@ -736,7 +925,9 @@ async def async_prepare_files_for_prompt(
 
         if uploaded_file.state == FileState.FAILED:
             raise HomeAssistantError(
-                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
+                f"File `{uploaded_file.name}` processing"
+                " failed, reason:"
+                f" {uploaded_file.error.message if uploaded_file.error else 'unknown'}"
             )
 
     prompt_parts = await hass.async_add_executor_job(upload_files)

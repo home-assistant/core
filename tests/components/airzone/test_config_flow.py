@@ -6,14 +6,16 @@ from aioairzone.const import API_MAC, API_SYSTEMS
 from aioairzone.exceptions import (
     AirzoneError,
     HotWaterNotAvailable,
+    IaqSensorNotAvailable,
     InvalidMethod,
     InvalidSystem,
     SystemOutOfRange,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.airzone.config_flow import short_mac
-from homeassistant.components.airzone.const import DOMAIN
+from homeassistant.components.airzone.const import CONF_MQTT_TOPIC, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -30,8 +32,6 @@ from .util import (
     HVAC_WEBSERVER_MOCK,
     USER_INPUT,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="airzone",
@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -63,6 +63,10 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -106,7 +110,7 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -121,6 +125,10 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
             side_effect=SystemOutOfRange,
         ),
         patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
             return_value=HVAC_VERSION_MOCK,
         ),
@@ -130,7 +138,15 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -154,8 +170,9 @@ async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert (
-            result["title"]
-            == f"Airzone {CONFIG_ID1[CONF_HOST]}:{CONFIG_ID1[CONF_PORT]} #{CONFIG_ID1[CONF_ID]}"
+            result["title"] == f"Airzone {CONFIG_ID1[CONF_HOST]}"
+            f":{CONFIG_ID1[CONF_PORT]}"
+            f" #{CONFIG_ID1[CONF_ID]}"
         )
         assert result["data"][CONF_HOST] == CONFIG_ID1[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG_ID1[CONF_PORT]
@@ -176,7 +193,15 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -191,10 +216,36 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         side_effect=AirzoneError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
         )
 
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.validate",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
@@ -216,7 +267,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -229,6 +280,10 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -304,7 +359,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -317,6 +372,10 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -367,7 +426,7 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.airzone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
@@ -380,6 +439,10 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
             side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
         ),
         patch(
             "homeassistant.components.airzone.AirzoneLocalApi.get_version",
@@ -425,3 +488,83 @@ async def test_dhcp_invalid_system_id(hass: HomeAssistant) -> None:
         assert result["data"][CONF_ID] == TEST_ID
 
         mock_setup_entry.assert_called_once()
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test updating the MQTT topic through options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.airzone.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            return_value=HVAC_DHW_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            side_effect=SystemOutOfRange,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_iaq",
+            side_effect=IaqSensorNotAvailable,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WEBSERVER_MOCK,
+        ),
+    ):
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_MQTT_TOPIC: "airzone"},
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert entry.options[CONF_MQTT_TOPIC] == "airzone"
+
+
+async def test_options_flow_invalid_mqtt_topic(hass: HomeAssistant) -> None:
+    """Test options flow rejects an invalid MQTT topic prefix."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_MQTT_TOPIC: "airzone/#"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_mqtt_topic"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_MQTT_TOPIC: "airzone"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_MQTT_TOPIC: "airzone"}

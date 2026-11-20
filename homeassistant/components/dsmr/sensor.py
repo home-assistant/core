@@ -1,23 +1,23 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import CancelledError
 from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
+from typing import override
+from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
-from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
-import serial
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -26,7 +26,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -50,6 +49,7 @@ from homeassistant.util import Throttle
 from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_ENCRYPTION_KEY,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -63,6 +63,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -87,6 +88,7 @@ class MbusDeviceType(IntEnum):
     GAS = 3
     HEAT = 4
     WATER = 7
+    HEAT_COOL = 12
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
@@ -115,7 +117,16 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_active_tariff",
         translation_key="electricity_active_tariff",
         obis_reference="ELECTRICITY_ACTIVE_TARIFF",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        dsmr_versions={
+            "2.2",
+            "4",
+            "5",
+            "5B",
+            "5L",
+            "5EONHU",
+            "MSn",
+            "SAGEMCOM_T210_D_R",
+        },
         device_class=SensorDeviceClass.ENUM,
         options=["low", "normal"],
     ),
@@ -123,7 +134,16 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_used_tariff_1",
         translation_key="electricity_used_tariff_1",
         obis_reference="ELECTRICITY_USED_TARIFF_1",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        dsmr_versions={
+            "2.2",
+            "4",
+            "5",
+            "5B",
+            "5L",
+            "5EONHU",
+            "MSn",
+            "SAGEMCOM_T210_D_R",
+        },
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -131,7 +151,16 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_used_tariff_2",
         translation_key="electricity_used_tariff_2",
         obis_reference="ELECTRICITY_USED_TARIFF_2",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        dsmr_versions={
+            "2.2",
+            "4",
+            "5",
+            "5B",
+            "5L",
+            "5EONHU",
+            "MSn",
+            "SAGEMCOM_T210_D_R",
+        },
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -157,7 +186,16 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_delivered_tariff_1",
         translation_key="electricity_delivered_tariff_1",
         obis_reference="ELECTRICITY_DELIVERED_TARIFF_1",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        dsmr_versions={
+            "2.2",
+            "4",
+            "5",
+            "5B",
+            "5L",
+            "5EONHU",
+            "MSn",
+            "SAGEMCOM_T210_D_R",
+        },
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -165,7 +203,16 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_delivered_tariff_2",
         translation_key="electricity_delivered_tariff_2",
         obis_reference="ELECTRICITY_DELIVERED_TARIFF_2",
-        dsmr_versions={"2.2", "4", "5", "5B", "5L", "5EONHU"},
+        dsmr_versions={
+            "2.2",
+            "4",
+            "5",
+            "5B",
+            "5L",
+            "5EONHU",
+            "MSn",
+            "SAGEMCOM_T210_D_R",
+        },
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -239,7 +286,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="short_power_failure_count",
         translation_key="short_power_failure_count",
         obis_reference="SHORT_POWER_FAILURE_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -248,7 +295,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="long_power_failure_count",
         translation_key="long_power_failure_count",
         obis_reference="LONG_POWER_FAILURE_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -257,7 +304,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_sag_l1_count",
         translation_key="voltage_sag_l1_count",
         obis_reference="VOLTAGE_SAG_L1_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -266,7 +313,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_sag_l2_count",
         translation_key="voltage_sag_l2_count",
         obis_reference="VOLTAGE_SAG_L2_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -275,7 +322,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_sag_l3_count",
         translation_key="voltage_sag_l3_count",
         obis_reference="VOLTAGE_SAG_L3_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -284,7 +331,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_swell_l1_count",
         translation_key="voltage_swell_l1_count",
         obis_reference="VOLTAGE_SWELL_L1_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -293,7 +340,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_swell_l2_count",
         translation_key="voltage_swell_l2_count",
         obis_reference="VOLTAGE_SWELL_L2_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -302,7 +349,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="voltage_swell_l3_count",
         translation_key="voltage_swell_l3_count",
         obis_reference="VOLTAGE_SWELL_L3_COUNT",
-        dsmr_versions={"2.2", "4", "5", "5L"},
+        dsmr_versions={"2.2", "4", "5", "5L", "MSn"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -385,7 +432,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_imported_total",
         translation_key="electricity_imported_total",
         obis_reference="ELECTRICITY_IMPORTED_TOTAL",
-        dsmr_versions={"5L", "5S", "Q3D", "5EONHU"},
+        dsmr_versions={"5L", "5S", "Q3D", "5EONHU", "MSn", "SAGEMCOM_T210_D_R"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -393,9 +440,49 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="electricity_exported_total",
         translation_key="electricity_exported_total",
         obis_reference="ELECTRICITY_EXPORTED_TOTAL",
-        dsmr_versions={"5L", "5S", "Q3D", "5EONHU"},
+        dsmr_versions={"5L", "5S", "Q3D", "5EONHU", "MSn", "SAGEMCOM_T210_D_R"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_version_information",
+        translation_key="belgium_version_information",
+        obis_reference="BELGIUM_VERSION_INFORMATION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_equipment_identifier",
+        translation_key="belgium_equipment_identifier",
+        obis_reference="BELGIUM_EQUIPMENT_IDENTIFIER",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_switch_position",
+        translation_key="belgium_switch_position",
+        obis_reference="ACTUAL_SWITCH_POSITION",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_text_message",
+        translation_key="belgium_text_message",
+        obis_reference="TEXT_MESSAGE",
+        dsmr_versions={"5B"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
+        key="belgium_maximum_demand_history",
+        translation_key="belgium_maximum_demand_history",
+        obis_reference="BELGIUM_MAXIMUM_DEMAND_13_MONTHS",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key="belgium_current_average_demand",
@@ -417,7 +504,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         key="hourly_gas_meter_reading",
         translation_key="gas_meter_reading",
         obis_reference="HOURLY_GAS_METER_READING",
-        dsmr_versions={"4", "5", "5L"},
+        dsmr_versions={"4", "5", "5L", "MSn"},
         is_gas=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -491,7 +578,6 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_frequency",
-        translation_key="frequency",
         obis_reference="EON_HU_FREQUENCY",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
@@ -543,6 +629,33 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
     MbusDeviceType.GAS: (
         DSMRSensorEntityDescription(
+            key="belgium_gas_device_type",
+            translation_key="belgium_gas_device_type",
+            obis_reference="MBUS_DEVICE_TYPE",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_equipment_identifier",
+            translation_key="belgium_gas_equipment_identifier",
+            obis_reference="MBUS_EQUIPMENT_IDENTIFIER",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
+            key="belgium_gas_valve_position",
+            translation_key="belgium_gas_valve_position",
+            obis_reference="MBUS_VALVE_POSITION",
+            dsmr_versions={"5B"},
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            is_gas=True,
+        ),
+        DSMRSensorEntityDescription(
             key="gas_reading",
             translation_key="gas_meter_reading",
             obis_reference="MBUS_METER_READING",
@@ -571,6 +684,16 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
+    MbusDeviceType.HEAT_COOL: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
 }
 
 
@@ -592,12 +715,14 @@ def device_class_and_uom(
 
 
 def rename_old_gas_to_mbus(
-    hass: HomeAssistant, entry: ConfigEntry, mbus_device_id: str
+    hass: HomeAssistant, entry: DsmrConfigEntry, mbus_device_id: str
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
     for dev_id in (mbus_device_id, entry.entry_id):
-        device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+        device_entry_v1 = dev_reg.async_get_device_by_identifier(
+            (DOMAIN, dev_id), entry.entry_id
+        )
         if device_entry_v1 is not None:
             device_id = device_entry_v1.id
 
@@ -651,7 +776,7 @@ def is_supported_description(
 
 
 def create_mbus_entities(
-    hass: HomeAssistant, telegram: Telegram, entry: ConfigEntry, dsmr_version: str
+    hass: HomeAssistant, telegram: Telegram, entry: DsmrConfigEntry, dsmr_version: str
 ) -> Generator[DSMREntity]:
     """Create MBUS Entities."""
     mbus_devices: list[MbusDevice] = getattr(telegram, "MBUS_DEVICES", [])
@@ -685,7 +810,7 @@ def create_mbus_entities(
 
 def get_dsmr_object(
     telegram: Telegram | None, mbus_id: int, obis_reference: str
-) -> DSMRObject | None:
+) -> DSMRObject | list | None:
     """Extract DSMR object from telegram."""
     if not telegram:
         return None
@@ -722,11 +847,15 @@ async def async_setup_entry(
 
         entities.extend(
             [
-                DSMREntity(
-                    description,
-                    entry,
-                    telegram,
-                    *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                (
+                    DSMRBelgiumDemandHistory(description, entry, telegram)
+                    if description.key == "belgium_maximum_demand_history"
+                    else DSMREntity(
+                        description,
+                        entry,
+                        telegram,
+                        *device_class_and_uom(telegram, description),  # type: ignore[arg-type]
+                    )
                 )
                 for description in SENSORS
                 if is_supported_description(telegram, description, dsmr_version)
@@ -761,34 +890,59 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls update_entities_telegram to update entities on arrival
-    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    # Legacy network entries stored host and port separately; combine them into
+    # the single socket://host:port form newer entries already use, in memory
+    # only, so the stored entry stays untouched and rolling back to an older
+    # Home Assistant version keeps working.
+    port = entry.data[CONF_PORT]
     if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
+        port = f"socket://{entry.data[CONF_HOST]}:{port}"
+
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams and calls
+    # update_entities_telegram to update entities on arrival. A port starting
+    # with "/" is a local serial device, which doesn't need a liveness check;
+    # anything else is a network connection that can drop silently, so it gets a
+    # keep-alive watchdog that closes the connection (triggering a reconnect)
+    # when no telegram arrives in time.
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if protocol == RFXTRX_DSMR_PROTOCOL:
+        if port.startswith("/"):
+            reader_factory = partial(
+                create_rfxtrx_dsmr_reader,
+                port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+            )
         else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
-        )
+            # The RFXtrx serial reader has no keep-alive support, so the network
+            # host and port are fed to the dedicated TCP reader instead.
+            address = urlparse(port)
+            reader_factory = partial(
+                create_rfxtrx_tcp_dsmr_reader,
+                address.hostname,
+                address.port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+                keep_alive_interval=60,
+            )
     else:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_dsmr_reader
+        # create_dsmr_reader opens both local devices and any URL (socket://,
+        # esphome://, ...); the only difference is the keep-alive watchdog.
+        keep_alive = {} if port.startswith("/") else {"keep_alive_interval": 60}
+        # authentication_key=None decrypts without verifying the GCM
+        # authentication tag; an empty encryption key leaves plain telegrams
+        # untouched.
         reader_factory = partial(
-            create_reader,
-            entry.data[CONF_PORT],
+            create_dsmr_reader,
+            port,
             dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
+            encryption_key=entry.data.get(CONF_ENCRYPTION_KEY, ""),
+            authentication_key=None,
+            **keep_alive,
         )
 
     async def connect_and_reconnect() -> None:
@@ -805,7 +959,7 @@ async def async_setup_entry(
             update_entities_telegram({})
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol = await reader_factory()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -837,7 +991,7 @@ async def async_setup_entry(
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except serial.SerialException, OSError:
+            except OSError:
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -896,7 +1050,7 @@ class DSMREntity(SensorEntity):
     def __init__(
         self,
         entity_description: DSMRSensorEntityDescription,
-        entry: ConfigEntry,
+        entry: DsmrConfigEntry,
         telegram: Telegram,
         device_class: SensorDeviceClass,
         native_unit_of_measurement: str | None,
@@ -939,6 +1093,8 @@ class DSMREntity(SensorEntity):
                 self._attr_unique_id = f"{device_serial}"
             else:
                 self._attr_unique_id = f"{device_serial}_{mbus_id}"
+            if entity_description.key.startswith("belgium_gas_"):
+                self._attr_unique_id += f"_{entity_description.key}"
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
@@ -951,6 +1107,7 @@ class DSMREntity(SensorEntity):
             or get_dsmr_object(
                 telegram, self._mbus_id, self.entity_description.obis_reference
             )
+            is not None
         ):
             self.async_write_ha_state()
 
@@ -968,11 +1125,13 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """Entity is only available if there is a telegram."""
         return self.telegram is not None
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value: StateType
@@ -982,7 +1141,17 @@ class DSMREntity(SensorEntity):
         if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
-        with suppress(TypeError):
+        if self.entity_description.key in {
+            "belgium_version_information",
+            "belgium_equipment_identifier",
+            "belgium_gas_equipment_identifier",
+        }:
+            return str(value)
+
+        if self.entity_description.key == "belgium_text_message":
+            return str(value)[:255]
+
+        with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
@@ -990,6 +1159,19 @@ class DSMREntity(SensorEntity):
             return None
 
         return value
+
+    @property
+    @override
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
+        """Keep long Belgian utility messages without oversized states."""
+        if self.entity_description.key != "belgium_text_message":
+            return None
+        message = self.get_dsmr_object_attr("value")
+        if message is not None and len(str(message)) > 255:
+            return {"full_message": str(message)}
+        return None
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
@@ -1010,3 +1192,73 @@ class DSMREntity(SensorEntity):
             return "low"
 
         return None
+
+
+class DSMRBelgiumDemandHistory(DSMREntity):
+    """Expose the latest completed Belgian monthly demand and its peak history."""
+
+    def __init__(
+        self,
+        entity_description: DSMRSensorEntityDescription,
+        entry: DsmrConfigEntry,
+        telegram: Telegram,
+    ) -> None:
+        """Initialize historical maximum demand sensor."""
+        super().__init__(
+            entity_description, entry, telegram, SensorDeviceClass.POWER, "kW"
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the last valid monthly peak."""
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
+        if not isinstance(peaks, list):
+            return None
+        valid = [peak for peak in peaks if self._valid_peak(peak)]
+        return (
+            float(max(valid, key=lambda peak: peak.datetime).value) if valid else None
+        )
+
+    @staticmethod
+    def _valid_peak(peak: object) -> bool:
+        """Ignore placeholder records with invalid month timestamps."""
+        month = getattr(peak, "datetime", None)
+        return (
+            isinstance(month, datetime)
+            and 2000 <= month.year <= 2100
+            and isinstance(getattr(peak, "occurred", None), datetime)
+            and getattr(peak, "value", None) is not None
+        )
+
+    @property
+    @override
+    def extra_state_attributes(
+        self,
+    ) -> dict[str, str | list[dict[str, str | float | None]]] | None:
+        """Expose all valid demand peaks and their occurrence times."""
+        peaks = get_dsmr_object(
+            self.telegram, 0, self.entity_description.obis_reference
+        )
+        if not isinstance(peaks, list):
+            return {"monthly_peaks": []}
+        return {
+            "monthly_peaks": [
+                {
+                    "month": (
+                        peak.datetime.astimezone(ZoneInfo("Europe/Brussels")).date()
+                        - timedelta(days=1)
+                    ).strftime("%Y-%m"),
+                    "peak": float(peak.value),
+                    "occurred": (
+                        peak.occurred.isoformat()
+                        if isinstance(peak.occurred, datetime)
+                        else None
+                    ),
+                }
+                for peak in peaks
+                if self._valid_peak(peak)
+            ]
+        }

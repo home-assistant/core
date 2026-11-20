@@ -1,13 +1,14 @@
 """Tests for the UniFi Access image platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
+from unifi_access_api import ApiNotFoundError
 from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateV2,
@@ -20,9 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 FRONT_DOOR_IMAGE = "image.front_door_thumbnail"
 BACK_DOOR_IMAGE = "image.back_door_thumbnail"
@@ -39,7 +37,7 @@ def _get_ws_handlers(
 def mock_getrandbits() -> Generator[None]:
     """Mock image access token which normally is randomized."""
     with patch(
-        "homeassistant.components.image.SystemRandom.getrandbits",
+        "homeassistant.components.image.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield
@@ -76,17 +74,13 @@ async def test_async_image_with_thumbnail(
     mock_client.get_thumbnail.assert_awaited_once_with("/preview/front_door.png")
 
 
-async def test_async_image_without_thumbnail(
+async def test_no_image_entity_for_door_without_thumbnail(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
-    hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test async_image returns empty response when no thumbnail exists."""
-    client = await hass_client()
-    resp = await client.get(f"/api/image_proxy/{BACK_DOOR_IMAGE}")
-
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    """Test that no image entity is created for a door with no thumbnail data."""
+    assert hass.states.get(BACK_DOOR_IMAGE) is None
 
 
 async def test_initial_thumbnail_sets_image_last_updated(
@@ -99,10 +93,8 @@ async def test_initial_thumbnail_sets_image_last_updated(
     assert state is not None
     assert state.state != "unknown"
 
-    # Back door has no thumbnail, so it should be unknown
-    state_back = hass.states.get(BACK_DOOR_IMAGE)
-    assert state_back is not None
-    assert state_back.state == "unknown"
+    # Back door has no thumbnail, so no entity is created
+    assert hass.states.get(BACK_DOOR_IMAGE) is None
 
 
 async def test_handle_coordinator_update_sets_image_last_updated(
@@ -110,11 +102,9 @@ async def test_handle_coordinator_update_sets_image_last_updated(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test WS thumbnail update sets image_last_updated from thumbnail."""
-    # Back door starts without thumbnail
-    state_before = hass.states.get(BACK_DOOR_IMAGE)
-    assert state_before is not None
-    assert state_before.state == "unknown"
+    """Test WS thumbnail update creates entity and sets image_last_updated."""
+    # Back door starts without thumbnail — no entity exists yet
+    assert hass.states.get(BACK_DOOR_IMAGE) is None
 
     handlers = _get_ws_handlers(mock_client)
     await handlers["access.data.device.location_update_v2"](
@@ -157,3 +147,21 @@ async def test_handle_coordinator_update_sets_image_last_updated(
     state_updated = hass.states.get(BACK_DOOR_IMAGE)
     assert state_updated is not None
     assert state_updated.state != state_after.state
+
+
+async def test_async_image_get_thumbnail_api_error_returns_none(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test async_image returns 500 when get_thumbnail raises an API error."""
+    mock_client.get_thumbnail.side_effect = ApiNotFoundError(
+        "Thumbnail fetch failed (404)"
+    )
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{FRONT_DOOR_IMAGE}")
+
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    mock_client.get_thumbnail.assert_awaited_once_with("/preview/front_door.png")

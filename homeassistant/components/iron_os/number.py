@@ -1,10 +1,9 @@
 """Number platform for IronOS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from pynecil import CharSetting, LiveDataResponse, SettingsDataResponse, TempUnit
 
@@ -25,7 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import IronOSConfigEntry
 from .const import (
     MAX_TEMP,
     MAX_TEMP_F,
@@ -34,7 +32,7 @@ from .const import (
     MIN_TEMP,
     MIN_TEMP_F,
 )
-from .coordinator import IronOSCoordinators
+from .coordinator import IronOSConfigEntry, IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -286,11 +284,16 @@ PINECIL_NUMBER_DESCRIPTIONS_V223: tuple[IronOSNumberEntityDescription, ...] = (
 )
 
 """
-The `device_class` attribute was removed from the `setpoint_temperature`, `sleep_temperature`, and `boost_temp` entities.
-These entities represent user-defined input values, not measured temperatures, and their
-interpretation depends on the device's current unit configuration. Applying a device_class
-results in automatic unit conversions, which introduce rounding errors due to the use of integers.
-This can prevent the correct value from being set, as the input is modified during synchronization with the device.
+The `device_class` attribute was removed from the
+`setpoint_temperature`, `sleep_temperature`, and
+`boost_temp` entities. These entities represent user-defined
+input values, not measured temperatures, and their
+interpretation depends on the device's current unit
+configuration. Applying a device_class results in automatic
+unit conversions, which introduce rounding errors due to the
+use of integers. This can prevent the correct value from
+being set, as the input is modified during synchronization
+with the device.
 """
 PINECIL_TEMP_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
     IronOSNumberEntityDescription(
@@ -403,6 +406,7 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
 
         self.settings = coordinators.settings
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         if raw_value_fn := self.entity_description.raw_value_fn:
@@ -411,12 +415,14 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
         await self.settings.write(self.entity_description.characteristic, value)
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return sensor state."""
         return self.entity_description.value_fn(
             self.coordinator.data, self.settings.data
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -433,6 +439,7 @@ class IronOSTemperatureNumberEntity(IronOSNumberEntity):
     """Implementation of a IronOS temperature number entity."""
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
 
@@ -443,6 +450,7 @@ class IronOSTemperatureNumberEntity(IronOSNumberEntity):
         )
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
 
@@ -454,6 +462,7 @@ class IronOSTemperatureNumberEntity(IronOSNumberEntity):
         )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
 
@@ -465,6 +474,7 @@ class IronOSTemperatureNumberEntity(IronOSNumberEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (
@@ -479,6 +489,7 @@ class IronOSSetpointNumberEntity(IronOSTemperatureNumberEntity):
     """IronOS setpoint temperature entity."""
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
 

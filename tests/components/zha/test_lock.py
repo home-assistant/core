@@ -4,13 +4,14 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
-from zigpy.device import Device
+from zigpy.device import ZigbeeDevice
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import closures, general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -41,7 +42,7 @@ def lock_platform_only():
 async def test_lock(
     hass: HomeAssistant,
     setup_zha: Callable[..., Coroutine[None]],
-    zigpy_device_mock: Callable[..., Device],
+    zigpy_device_mock: Callable[..., ZigbeeDevice],
 ) -> None:
     """Test ZHA lock platform."""
 
@@ -143,7 +144,7 @@ async def async_set_user_code(hass: HomeAssistant, cluster: Cluster, entity_id: 
     with patch("zigpy.zcl.Cluster.request", return_value=[zcl_f.Status.SUCCESS]):
         # set lock code via service call
         await hass.services.async_call(
-            "zha",
+            DOMAIN,
             "set_lock_user_code",
             {"entity_id": entity_id, "code_slot": 3, "user_code": "13246579"},
             blocking=True,
@@ -167,7 +168,7 @@ async def async_clear_user_code(hass: HomeAssistant, cluster: Cluster, entity_id
     with patch("zigpy.zcl.Cluster.request", return_value=[zcl_f.Status.SUCCESS]):
         # set lock code via service call
         await hass.services.async_call(
-            "zha",
+            DOMAIN,
             "clear_lock_user_code",
             {
                 "entity_id": entity_id,
@@ -189,7 +190,7 @@ async def async_enable_user_code(hass: HomeAssistant, cluster: Cluster, entity_i
     with patch("zigpy.zcl.Cluster.request", return_value=[zcl_f.Status.SUCCESS]):
         # set lock code via service call
         await hass.services.async_call(
-            "zha",
+            DOMAIN,
             "enable_lock_user_code",
             {
                 "entity_id": entity_id,
@@ -214,7 +215,7 @@ async def async_disable_user_code(
     with patch("zigpy.zcl.Cluster.request", return_value=[zcl_f.Status.SUCCESS]):
         # set lock code via service call
         await hass.services.async_call(
-            "zha",
+            DOMAIN,
             "disable_lock_user_code",
             {
                 "entity_id": entity_id,

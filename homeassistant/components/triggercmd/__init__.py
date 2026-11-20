@@ -1,16 +1,12 @@
 """The TRIGGERcmd component."""
 
-from __future__ import annotations
-
 from triggercmd import client, ha
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import httpx_client
-
-from .const import CONF_TOKEN
 
 PLATFORMS = [
     Platform.SWITCH,
@@ -19,7 +15,7 @@ PLATFORMS = [
 type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> None:
     """Set up TRIGGERcmd from a config entry."""
     hass_client = httpx_client.get_async_client(hass)
     hub = ha.Hub(entry.data[CONF_TOKEN])
@@ -32,9 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -
 
     entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

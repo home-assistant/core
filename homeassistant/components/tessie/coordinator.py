@@ -1,11 +1,9 @@
 """Tessie Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import TeslaEnergyPeriod
@@ -18,10 +16,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS
+
 if TYPE_CHECKING:
     from . import TessieConfigEntry
-
-from .const import DOMAIN, ENERGY_HISTORY_FIELDS
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -72,12 +70,16 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.session = async_get_clientsession(hass)
         self.data = flatten(data)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
             vehicle = await self.api.state(use_cache=True)
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -85,7 +87,10 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from e
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
-                raise ConfigEntryAuthFailed from e
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from e
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -126,13 +131,17 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
         self.data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
         try:
             data = (await self.api.live_status())["response"]
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -165,13 +174,17 @@ class TessieEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""
 
         try:
             data = (await self.api.site_info())["response"]
         except (InvalidToken, MissingToken) as e:
-            raise ConfigEntryAuthFailed from e
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -203,6 +216,7 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy history data using Tessie API."""
 
@@ -224,10 +238,13 @@ class TessieEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or not isinstance(data.get("time_series"), list)
             or not data["time_series"]
         ):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_energy_history_data",
+            _LOGGER.warning(
+                "Tessie returned no energy history"
+                " time_series for coordinator %s;"
+                " skipping update",
+                self.config_entry.entry_id,
             )
+            return self.data
 
         time_series = data["time_series"]
         output: dict[str, Any] = {}

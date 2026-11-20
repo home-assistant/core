@@ -107,7 +107,7 @@ async def test_async_create_flow_checks_existing_flows_after_startup(
 async def test_async_create_flow_checks_existing_flows_before_startup(
     hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
-    """Test existing flows prevent an identical ones from being created before startup."""
+    """Test existing flows prevent identical ones from being created."""
     hass.set_state(CoreState.stopped)
     for _ in range(2):
         discovery_flow.async_create_flow(

@@ -5,8 +5,9 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Literal
+from typing import Literal, override
 
+import httpx2
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +21,7 @@ from .const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
+    CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
@@ -30,12 +32,15 @@ from .const import (
     CONF_VEHICLE_TYPE,
     DOMAIN,
     IMPERIAL_UNITS,
-    SEMAPHORE,
+    SEMAPHORE_KEY,
 )
+from .helpers import base_coordinates_to_tuple
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+type WazeTravelTimeConfigEntry = ConfigEntry[WazeTravelTimeCoordinator]
 
 SECONDS_BETWEEN_API_CALLS = 0.5
 
@@ -53,6 +58,7 @@ async def async_get_travel_times(
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
     time_delta: int = 0,
+    base_coordinates: tuple[float, float] | None = None,
 ) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
@@ -77,6 +83,7 @@ async def async_get_travel_times(
             real_time=realtime,
             alternatives=3,
             time_delta=time_delta,
+            base_coords=base_coordinates,
         )
 
         if len(routes) < 1:
@@ -96,7 +103,8 @@ async def async_get_travel_times(
             )
             if not should_include:
                 _LOGGER.debug(
-                    "Excluding route [%s], because no inclusive filter matched any streetname",
+                    "Excluding route [%s], because no"
+                    " inclusive filter matched any streetname",
                     route.name,
                 )
                 return False
@@ -111,7 +119,9 @@ async def async_get_travel_times(
                 for excl_filter in excl_filters:
                     if excl_filter == street_name:
                         _LOGGER.debug(
-                            "Excluding route, because exclusive filter [%s] matched streetname: %s",
+                            "Excluding route, because"
+                            " exclusive filter [%s]"
+                            " matched streetname: %s",
                             excl_filter,
                             route.name,
                         )
@@ -141,7 +151,15 @@ async def async_get_travel_times(
             ]
 
     except WRCError as exp:
-        raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_error",
+        ) from exp
+    except httpx2.RequestError as exp:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from exp
 
     else:
         return filtered_routes
@@ -161,12 +179,12 @@ class WazeTravelTimeData:
 class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
     """Waze Travel Time DataUpdateCoordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: WazeTravelTimeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WazeTravelTimeConfigEntry,
         client: WazeRouteCalculator,
     ) -> None:
         """Initialize."""
@@ -181,6 +199,7 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
         self._origin = config_entry.data[CONF_ORIGIN]
         self._destination = config_entry.data[CONF_DESTINATION]
 
+    @override
     async def _async_update_data(self) -> WazeTravelTimeData:
         """Get the latest data from Waze."""
         origin_coordinates = find_coordinates(self.hass, self._origin)
@@ -192,10 +211,13 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             self._origin,
             self._destination,
         )
-        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        await self.hass.data[SEMAPHORE_KEY].acquire()
         try:
             if origin_coordinates is None or destination_coordinates is None:
-                raise UpdateFailed("Unable to determine origin or destination")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_origin_or_destination",
+                )
 
             # Grab options on every update
             incl_filter = self.config_entry.options[CONF_INCL_FILTER]
@@ -211,6 +233,9 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 timedelta(**self.config_entry.options[CONF_TIME_DELTA]).total_seconds()
                 / 60
             )
+            base_coordinates = base_coordinates_to_tuple(
+                self.config_entry.options.get(CONF_BASE_COORDINATES)
+            )
 
             routes = await async_get_travel_times(
                 self.client,
@@ -225,6 +250,7 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 incl_filter,
                 excl_filter,
                 time_delta,
+                base_coordinates,
             )
             if len(routes) < 1:
                 travel_data = WazeTravelTimeData(
@@ -249,6 +275,6 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
 
         finally:
-            self.hass.data[DOMAIN][SEMAPHORE].release()
+            self.hass.data[SEMAPHORE_KEY].release()
 
         return travel_data

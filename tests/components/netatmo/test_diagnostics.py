@@ -3,17 +3,17 @@
 from functools import partial
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
+from homeassistant.components.netatmo import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import fake_post_request
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
@@ -31,7 +31,7 @@ async def test_entry_diagnostics(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = partial(
@@ -39,7 +39,7 @@ async def test_entry_diagnostics(
         )
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        assert await async_setup_component(hass, "netatmo", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 

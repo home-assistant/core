@@ -6,27 +6,27 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    CoverService,
     CoverState,
 )
 from homeassistant.components.nice_go.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 async def test_covers(
@@ -52,8 +52,8 @@ async def test_open_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_garage_2"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test_garage_2"},
         blocking=True,
     )
 
@@ -61,8 +61,8 @@ async def test_open_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test_garage_1"},
         blocking=True,
     )
 
@@ -78,8 +78,8 @@ async def test_close_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.test_garage_1"},
         blocking=True,
     )
 
@@ -87,8 +87,8 @@ async def test_close_cover(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_garage_2"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.test_garage_2"},
         blocking=True,
     )
 
@@ -169,7 +169,7 @@ async def test_auth_failed_error(
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that if an auth failed error occurs, the integration attempts a token refresh and a retry before throwing an error."""
+    """Test auth failure triggers token refresh and retry."""
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
@@ -193,8 +193,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error opening the barrier"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test_garage_1"},
             blocking=True,
         )
 
@@ -204,8 +204,8 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error closing the barrier"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test_garage_2"},
             blocking=True,
         )
 
@@ -216,8 +216,8 @@ async def test_auth_failed_error(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_garage_1"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test_garage_1"},
         blocking=True,
     )
 
@@ -229,16 +229,16 @@ async def test_auth_failed_error(
     with pytest.raises(HomeAssistantError, match="Error opening the barrier"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_1"},
+            CoverService.OPEN,
+            {TargetKey.ENTITY_ID: "cover.test_garage_1"},
             blocking=True,
         )
 
     with pytest.raises(HomeAssistantError, match="Error closing the barrier"):
         await hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.test_garage_2"},
+            CoverService.CLOSE,
+            {TargetKey.ENTITY_ID: "cover.test_garage_2"},
             blocking=True,
         )
 

@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 import requests.exceptions
 import requests_mock
 
@@ -17,8 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from .helpers import trigger_plex_update, wait_for_debouncer
-
-from tests.common import async_fire_time_changed
 
 LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complete"}]}
 
@@ -124,17 +123,16 @@ async def test_library_sensor_values(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-
     media = [MockPlexTVEpisode()]
     with patch(
         "plexapi.library.LibrarySection.recentlyAdded",
         return_value=media,
         __qualname__="recentlyAdded",
     ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
         await hass.async_block_till_done()
 
     library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
@@ -203,17 +201,16 @@ async def test_library_sensor_values(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-
     media = [MockPlexMovie()]
     with patch(
         "plexapi.library.LibrarySection.recentlyAdded",
         return_value=media,
         __qualname__="recentlyAdded",
     ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
         await hass.async_block_till_done()
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
@@ -247,17 +244,16 @@ async def test_library_sensor_values(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-
     media = [MockPlexMusic()]
     with patch(
         "plexapi.library.LibrarySection.recentlyAdded",
         return_value=media,
         __qualname__="recentlyAdded",
     ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
         await hass.async_block_till_done()
 
     library_music_sensor = hass.states.get("sensor.plex_server_1_library_music")

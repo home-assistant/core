@@ -2,14 +2,17 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from aioacaia.acaiascale import AcaiaScale
+from aioacaia import AcaiaScale
+from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
 
@@ -58,6 +61,13 @@ class AcaiaButton(AcaiaEntity, ButtonEntity):
 
     entity_description: AcaiaButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_fn(self._scale)
+        try:
+            await self.entity_description.press_fn(self._scale)
+        except (AcaiaDeviceNotFound, AcaiaError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err

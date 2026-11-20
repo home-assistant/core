@@ -3,6 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    get_sensor_display_state,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -10,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry, get_sensor_display_state, snapshot_platform
 
 
 async def test_setup(
@@ -53,28 +56,28 @@ async def test_setup(
             "reeflex_mock",
             [
                 (
-                    "binary_sensor.mock_reeflex_light",
+                    "binary_sensor.mock_aquarium_mock_reeflex_light",
                     "reeflex_data",
                     "isLighting",
                     True,
                     "on",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_light",
+                    "binary_sensor.mock_aquarium_mock_reeflex_light",
                     "reeflex_data",
                     "isLighting",
                     False,
                     "off",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_uvc_lamp_connected",
+                    "binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected",
                     "reeflex_data",
                     "isUVCConnected",
                     True,
                     "on",
                 ),
                 (
-                    "binary_sensor.mock_reeflex_uvc_lamp_connected",
+                    "binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected",
                     "reeflex_data",
                     "isUVCConnected",
                     False,

@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('trmnl', '42793')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -39,7 +39,7 @@
 # name: test_all_entities[time.test_trmnl_sleep_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test TRMNL Sleep end time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test TRMNL Sleep end time',
     }),
     'context': <ANY>,
     'entity_id': 'time.test_trmnl_sleep_end_time',
@@ -57,9 +57,9 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
+    'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ANY>,
+    'device_id': <DeviceEntry identifiers=[('trmnl', '42793')]>,
     'disabled_by': None,
     'domain': 'time',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
@@ -89,7 +89,7 @@
 # name: test_all_entities[time.test_trmnl_sleep_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test TRMNL Sleep start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test TRMNL Sleep start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.test_trmnl_sleep_start_time',

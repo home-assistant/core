@@ -1,9 +1,8 @@
 """Calendar platform for Withings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
+from typing import override
 
 from aiowithings import WithingsClient, WorkoutCategory
 
@@ -13,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, WithingsConfigEntry
+from . import WithingsConfigEntry
+from .const import DOMAIN
 from .coordinator import WithingsWorkoutDataUpdateCoordinator
 from .entity import WithingsEntity
 
@@ -80,10 +80,12 @@ class WithingsWorkoutCalendarEntity(
         self.client = client
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

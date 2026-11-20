@@ -1,18 +1,18 @@
 """The syncthru component."""
 
-from __future__ import annotations
-
 from pysyncthru import SyncThruAPINotSupported
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
+from .const import DOMAIN
 from .coordinator import SyncThruConfigEntry, SyncthruCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> None:
     """Set up config entry."""
 
     coordinator = SyncthruCoordinator(hass, entry)
@@ -21,12 +21,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> 
     if isinstance(coordinator.last_exception, SyncThruAPINotSupported):
         # this means that the printer does not support the syncthru JSON API
         # and the config should simply be discarded
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="api_not_supported",
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SyncThruConfigEntry) -> None:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,7 +1,5 @@
 """Diagnostics support for Actron Air."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -21,6 +19,7 @@ async def async_get_config_entry_diagnostics(
     coordinators: dict[int, Any] = {}
     for idx, coordinator in enumerate(entry.runtime_data.system_coordinators.values()):
         coordinators[idx] = {
+            "push_enabled": coordinator.push_enabled,
             "system": async_redact_data(
                 coordinator.system.model_dump(mode="json"), TO_REDACT
             ),

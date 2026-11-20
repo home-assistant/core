@@ -1,7 +1,5 @@
 """Test the sonos config flow."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.sonos.helpers import hostname_to_uid

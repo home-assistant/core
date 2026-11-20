@@ -1,7 +1,5 @@
 """Constants for google integration."""
 
-from __future__ import annotations
-
 from enum import Enum, StrEnum
 
 DOMAIN = "google"
@@ -38,14 +36,6 @@ class CredentialType(StrEnum):
     WEB_AUTH = "web_auth"
 
 
-EVENT_DESCRIPTION = "description"
-EVENT_END_DATE = "end_date"
-EVENT_END_DATETIME = "end_date_time"
-EVENT_IN = "in"
 EVENT_IN_DAYS = "days"
 EVENT_IN_WEEKS = "weeks"
-EVENT_LOCATION = "location"
-EVENT_START_DATE = "start_date"
-EVENT_START_DATETIME = "start_date_time"
-EVENT_SUMMARY = "summary"
 EVENT_TYPES_CONF = "event_types"

@@ -3,13 +3,14 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
-from homeassistant.components.wiz.config_flow import CONF_DEVICE
+from homeassistant.components import wiz
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -30,8 +31,6 @@ from . import (
     async_setup_integration,
 )
 
-from tests.common import MockConfigEntry
-
 DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="wiz_abcabc",
     ip=FAKE_IP,
@@ -47,6 +46,8 @@ INTEGRATION_DISCOVERY = {
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -54,10 +55,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     # Patch functions
     with (
-        _patch_wizlight(),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
@@ -74,8 +75,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    bulb.async_close.assert_awaited_once()
 
 
 async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
@@ -99,7 +102,7 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
         _patch_wizlight(),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
@@ -130,17 +133,17 @@ async def test_user_flow_enters_dns_name(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_form_exceptions(
-    hass: HomeAssistant, side_effect, error_base
+    hass: HomeAssistant, side_effect: type[Exception], error_base: str
 ) -> None:
     """Test all user exceptions in the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.wiz.wizlight.getBulbConfig",
-        side_effect=side_effect,
-    ):
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+    bulb.get_bulbtype = AsyncMock(side_effect=side_effect)
+
+    with _patch_wizlight(device=bulb):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_CONNECTION,
@@ -148,6 +151,20 @@ async def test_user_form_exceptions(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
+    bulb.async_close.assert_awaited_once()
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONNECTION,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_updates_unique_id(hass: HomeAssistant) -> None:
@@ -185,10 +202,10 @@ async def test_discovered_by_dhcp_connection_fails(
     hass: HomeAssistant, source, data
 ) -> None:
     """Test we abort on connection failure."""
-    with patch(
-        "homeassistant.components.wiz.wizlight.getBulbConfig",
-        side_effect=WizLightTimeOutError,
-    ):
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+    bulb.get_bulbtype = AsyncMock(side_effect=WizLightTimeOutError)
+
+    with _patch_wizlight(device=bulb):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -196,6 +213,7 @@ async def test_discovered_by_dhcp_connection_fails(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+    bulb.async_close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -263,9 +281,9 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     hass: HomeAssistant, source, data, bulb_type, extended_white_range, name
 ) -> None:
     """Test we can configure when discovered from dhcp or discovery."""
-    with _patch_wizlight(
-        device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
-    ):
+    bulb = _mocked_wizlight(None, extended_white_range, bulb_type)
+
+    with _patch_wizlight(device=bulb):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -273,14 +291,15 @@ async def test_discovered_by_dhcp_or_integration_discovery(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    bulb.async_close.assert_awaited_once()
+
+    bulb.async_close.reset_mock()
 
     with (
-        _patch_wizlight(
-            device=None, extended_white_range=extended_white_range, bulb_type=bulb_type
-        ),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
@@ -297,8 +316,10 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    bulb.async_close.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -393,13 +414,15 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+
     with (
-        _patch_wizlight(),
+        _patch_wizlight(device=bulb),
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
         ) as mock_setup,
         patch(
-            "homeassistant.components.wiz.async_setup_entry", return_value=True
+            "homeassistant.components.wiz.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -413,8 +436,10 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result3["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    bulb.async_close.assert_awaited_once()
 
     # ignore configured devices
     result = await hass.config_entries.flow.async_init(
@@ -489,7 +514,7 @@ async def test_setup_via_discovery_exception_finds_nothing(hass: HomeAssistant) 
 
 
 async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
-    """Test we check the device again between first discovery and config entry creation."""
+    """Test we recheck the device between discovery and entry creation."""
     with _patch_wizlight(
         device=None,
         extended_white_range=FAKE_EXTENDED_WHITE_RANGE,
@@ -512,7 +537,7 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
@@ -534,6 +559,7 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -551,7 +577,7 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
         _patch_wizlight(),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup", return_value=True
@@ -570,6 +596,7 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -597,7 +624,7 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
         _patch_wizlight(),
         patch(
             "homeassistant.components.wiz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.wiz.async_setup",
@@ -613,5 +640,130 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfiguring the bulb IP address."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONNECTION, unique_id=FAKE_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.1.1.2"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "1.1.1.2"}
+
+
+async def test_reconfigure_flow_loaded_entry(hass: HomeAssistant) -> None:
+    """Test reconfiguring a loaded entry reloads it once."""
+    bulb, entry = await async_setup_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    # The startup discovery would otherwise revert the reconfigured host
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        _patch_discovery(),
+        _patch_wizlight(device=bulb),
+        patch(
+            "homeassistant.components.wiz.async_setup_entry",
+            wraps=wiz.async_setup_entry,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.1.1.2"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "1.1.1.2"}
+    assert entry.state is ConfigEntryState.LOADED
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("host", "side_effect", "error_base"),
+    [
+        pytest.param("ip.only", None, "no_ip", id="no_ip"),
+        pytest.param("1.1.1.2", WizLightTimeOutError, "bulb_time_out", id="timeout"),
+        pytest.param(
+            "1.1.1.2", WizLightConnectionError, "no_wiz_light", id="no_wiz_light"
+        ),
+        pytest.param("1.1.1.2", Exception, "unknown", id="unknown"),
+        pytest.param(
+            "1.1.1.2", ConnectionRefusedError, "cannot_connect", id="cannot_connect"
+        ),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    host: str,
+    side_effect: type[Exception] | None,
+    error_base: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONNECTION, unique_id=FAKE_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+    bulb.get_bulbtype = AsyncMock(side_effect=side_effect)
+    with _patch_wizlight(device=bulb):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: host}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error_base}
+
+    with (
+        _patch_wizlight(),
+        patch("homeassistant.components.wiz.async_setup_entry", return_value=None),
+        patch("homeassistant.components.wiz.async_setup", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.1.1.2"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_HOST: "1.1.1.2"}
+
+
+async def test_reconfigure_flow_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure flow aborts when pointed at a different bulb."""
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONNECTION, unique_id=FAKE_MAC)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    bulb = _mocked_wizlight(None, None, FAKE_DIMMABLE_BULB)
+    bulb.getMac = AsyncMock(return_value="defdefdefdef")
+    with _patch_wizlight(device=bulb):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "1.1.1.2"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data == TEST_CONNECTION

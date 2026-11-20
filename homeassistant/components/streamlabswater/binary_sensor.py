@@ -1,24 +1,22 @@
 """Support for Streamlabs Water Monitor Away Mode."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import StreamlabsCoordinator
-from .const import DOMAIN
+from .coordinator import StreamlabsConfigEntry, StreamlabsCoordinator
 from .entity import StreamlabsWaterEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: StreamlabsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Streamlabs water binary sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         StreamlabsAwayMode(coordinator, location_id) for location_id in coordinator.data
@@ -35,6 +33,7 @@ class StreamlabsAwayMode(StreamlabsWaterEntity, BinarySensorEntity):
         super().__init__(coordinator, location_id, "away_mode")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if away mode is on."""
         return self.location_data.is_away

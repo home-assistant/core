@@ -1,26 +1,33 @@
 """Component providing Switches for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, Literal, cast, override
 
 from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
+    PublicDeviceModel,
+    PublicRelayOutput,
     RecordingMode,
+    Relay,
+    RelayOutputState,
+    SmartDetectObjectType,
     VideoMode,
 )
+from uiprotect.data.public_devices import PublicCamera, SensorFeatureCapability
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -29,10 +36,13 @@ from .entity import (
     ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectPublicChannelEntity,
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_private_only_entity
 from .utils import async_ufp_instance_command
 
 ATTR_PREV_MIC = "prev_mic_level"
@@ -47,7 +57,7 @@ class ProtectSwitchEntityDescription(
     """Describes UniFi Protect Switch entity."""
 
 
-async def _set_highfps(obj: Camera, value: bool) -> None:
+async def _set_highfps(obj: PublicCamera, value: bool) -> None:
     await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
@@ -66,28 +76,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         translation_key="status_light",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_led_status",
-        ufp_value="led_settings.is_enabled",
+        ufp_public_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription(
-        key="hdr_mode",
-        translation_key="hdr_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        ufp_required_field="feature_flags.has_hdr",
-        ufp_value="hdr_mode",
-        ufp_set_method="set_hdr",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription[Camera](
         key="high_fps",
         translation_key="high_fps",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value="is_high_fps_enabled",
+        ufp_public_value="is_high_fps_enabled",
         ufp_set_method_fn=_set_highfps,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="system_sounds",
@@ -103,33 +101,29 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="osd_name",
         translation_key="overlay_show_name",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="osd_settings.is_name_enabled",
+        ufp_public_value="osd_settings.is_name_enabled",
         ufp_set_method="set_osd_name",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_date",
         translation_key="overlay_show_date",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="osd_settings.is_date_enabled",
+        ufp_public_value="osd_settings.is_date_enabled",
         ufp_set_method="set_osd_date",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_logo",
         translation_key="overlay_show_logo",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="osd_settings.is_logo_enabled",
+        ufp_public_value="osd_settings.is_logo_enabled",
         ufp_set_method="set_osd_logo",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_bitrate",
         translation_key="overlay_show_nerd_mode",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="osd_settings.is_debug_enabled",
-        ufp_set_method="set_osd_bitrate",
-        ufp_perm=PermRequired.WRITE,
+        ufp_public_value="osd_settings.is_debug_enabled",
+        ufp_set_method="set_osd_nerd_mode",
     ),
     ProtectSwitchEntityDescription(
         key="color_night_vision",
@@ -153,141 +147,114 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="smart_person",
         translation_key="detections_person",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_person",
-        ufp_value="is_person_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.PERSON,
+        ufp_public_value="is_person_detection_on",
         ufp_set_method="set_person_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_vehicle",
         translation_key="detections_vehicle",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_vehicle",
-        ufp_value="is_vehicle_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.VEHICLE,
+        ufp_public_value="is_vehicle_detection_on",
         ufp_set_method="set_vehicle_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_animal",
         translation_key="detections_animal",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_animal",
-        ufp_value="is_animal_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.ANIMAL,
+        ufp_public_value="is_animal_detection_on",
         ufp_set_method="set_animal_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_package",
         translation_key="detections_package",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_package",
-        ufp_value="is_package_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.PACKAGE,
+        ufp_public_value="is_package_detection_on",
         ufp_set_method="set_package_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_licenseplate",
         translation_key="detections_license_plate",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_license_plate",
-        ufp_value="is_license_plate_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.LICENSE_PLATE,
+        ufp_public_value="is_license_plate_detection_on",
         ufp_set_method="set_license_plate_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_smoke",
         translation_key="detections_smoke",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_smoke",
-        ufp_value="is_smoke_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.SMOKE,
+        ufp_public_value="is_smoke_detection_on",
         ufp_set_method="set_smoke_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_cmonx",
         translation_key="detections_co_alarm",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_co",
-        ufp_value="is_co_detection_on",
-        ufp_enabled="is_recording_enabled",
-        ufp_set_method="set_cmonx_detection",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SmartDetectObjectType.CMONX,
+        ufp_public_value="is_co_detection_on",
+        ufp_set_method="set_co_detection",
     ),
     ProtectSwitchEntityDescription(
         key="smart_siren",
         translation_key="detections_siren",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_siren",
-        ufp_value="is_siren_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.SIREN,
+        ufp_public_value="is_siren_detection_on",
         ufp_set_method="set_siren_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_baby_cry",
         translation_key="detections_baby_cry",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_baby_cry",
-        ufp_value="is_baby_cry_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.BABY_CRY,
+        ufp_public_value="is_baby_cry_detection_on",
         ufp_set_method="set_baby_cry_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_speak",
         translation_key="detections_speak",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_speaking",
-        ufp_value="is_speaking_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.SPEAK,
+        ufp_public_value="is_speaking_detection_on",
         ufp_set_method="set_speaking_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_bark",
         translation_key="detections_bark",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_bark",
-        ufp_value="is_bark_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.BARK,
+        ufp_public_value="is_bark_detection_on",
         ufp_set_method="set_bark_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_car_alarm",
         translation_key="detections_car_alarm",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_car_alarm",
-        ufp_value="is_car_alarm_detection_on",
-        ufp_enabled="is_recording_enabled",
-        ufp_set_method="set_car_alarm_detection",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SmartDetectObjectType.BURGLAR,
+        # Public API renamed "car alarm" to "burglar"; internal model keeps the legacy name.
+        ufp_public_value="is_car_alarm_detection_on",
+        ufp_set_method="set_burglar_detection",
     ),
     ProtectSwitchEntityDescription(
         key="smart_car_horn",
         translation_key="detections_car_horn",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_car_horn",
-        ufp_value="is_car_horn_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.CAR_HORN,
+        ufp_public_value="is_car_horn_detection_on",
         ufp_set_method="set_car_horn_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_glass_break",
         translation_key="detections_glass_break",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="can_detect_glass_break",
-        ufp_value="is_glass_break_detection_on",
-        ufp_enabled="is_recording_enabled",
+        ufp_capability=SmartDetectObjectType.GLASS_BREAK,
+        ufp_public_value="is_glass_break_detection_on",
         ufp_set_method="set_glass_break_detection",
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="track_person",
@@ -310,6 +277,8 @@ PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
 )
 
 SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    # The public sensor object carries no led_settings, so the status light is
+    # the one setting that has to stay on the private API.
     ProtectSwitchEntityDescription(
         key="status_light",
         translation_key="status_light",
@@ -322,41 +291,41 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="motion",
         translation_key="detections_motion",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="motion_settings.is_enabled",
+        ufp_public_value="motion_settings.is_enabled",
         ufp_set_method="set_motion_status",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectSwitchEntityDescription(
         key="temperature",
         translation_key="temperature_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="temperature_settings.is_enabled",
+        ufp_public_value="temperature_settings.is_enabled",
         ufp_set_method="set_temperature_status",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SensorFeatureCapability.TEMPERATURE,
     ),
     ProtectSwitchEntityDescription(
         key="humidity",
         translation_key="humidity_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="humidity_settings.is_enabled",
+        ufp_public_value="humidity_settings.is_enabled",
         ufp_set_method="set_humidity_status",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SensorFeatureCapability.HUMIDITY,
     ),
     ProtectSwitchEntityDescription(
         key="light",
         translation_key="light_sensor",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="light_settings.is_enabled",
+        ufp_public_value="light_settings.is_enabled",
         ufp_set_method="set_light_status",
-        ufp_perm=PermRequired.WRITE,
+        ufp_capability=SensorFeatureCapability.LIGHT,
     ),
     ProtectSwitchEntityDescription(
         key="alarm",
         translation_key="alarm_sound_detection",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="alarm_settings.is_enabled",
-        ufp_set_method="set_alarm_status",
-        ufp_perm=PermRequired.WRITE,
+        ufp_public_value="alarm_settings.is_enabled",
+        ufp_set_method="set_alarm",
+        ufp_capability=SensorFeatureCapability.SMOKE,
     ),
 )
 
@@ -375,20 +344,8 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         key="status_light",
         translation_key="status_light",
         entity_category=EntityCategory.CONFIG,
-        ufp_value="light_device_settings.is_indicator_enabled",
+        ufp_public_value="light_device_settings.is_indicator_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
-DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
-    ProtectSwitchEntityDescription(
-        key="status_light",
-        translation_key="status_light",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="led_settings.is_enabled",
-        ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -421,11 +378,16 @@ NVR_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
+_RELAY_STATE_MAP: dict[RelayOutputState, bool] = {
+    RelayOutputState.ON: True,
+    RelayOutputState.OFF: False,
+    RelayOutputState.OFF_OTP: False,
+}
+
 _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SWITCHES,
     ModelType.LIGHT: LIGHT_SWITCHES,
     ModelType.SENSOR: SENSE_SWITCHES,
-    ModelType.DOORLOCK: DOORLOCK_SWITCHES,
     ModelType.VIEWPORT: VIEWER_SWITCHES,
 }
 
@@ -442,12 +404,12 @@ class ProtectBaseSwitch(ProtectIsOnEntity):
     @async_ufp_instance_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.entity_description.ufp_set(self.device, True)
+        await self.entity_description.ufp_set(self._ufp_set_target(), True)
 
     @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.entity_description.ufp_set(self.device, False)
+        await self.entity_description.ufp_set(self._ufp_set_target(), False)
 
 
 class ProtectSwitch(ProtectDeviceEntity, ProtectBaseSwitch, SwitchEntity):
@@ -497,6 +459,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._attr_extra_state_attributes = {}
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # do not add extra state attribute on initialize
@@ -504,6 +467,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._update_previous_attr()
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._previous_mic_level = self.device.mic_volume
@@ -511,6 +475,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         await self.device.set_privacy(True, 0, RecordingMode.NEVER)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         extra_state = self.extra_state_attributes or {}
@@ -518,6 +483,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         prev_record = extra_state.get(ATTR_PREV_RECORD, self._previous_record_mode)
         await self.device.set_privacy(False, prev_mic, prev_record)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore extra state attributes on startup."""
         await super().async_added_to_hass()
@@ -540,6 +506,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.SWITCH, data, SENSE_SWITCHES)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -549,16 +516,127 @@ async def async_setup_entry(
         entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
         async_add_entities(entities)
 
+    relay_output_unique_ids: set[str] = set()
+
+    @callback
+    def _add_relay_outputs(relay: Relay) -> None:
+        entities: list[ProtectRelayOutputSwitch] = []
+        for output in relay.outputs:
+            unique_id = f"{relay.mac}_relay_output_{output.id}"
+            if unique_id in relay_output_unique_ids:
+                continue
+            relay_output_unique_ids.add(unique_id)
+            entities.append(ProtectRelayOutputSwitch(data, relay, output))
+        if entities:
+            async_add_entities(entities)
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Relay):
+            _add_relay_outputs(device)
+            return
+        async_add_entities(
+            async_all_device_entities(
+                data, ProtectSwitch, _MODEL_DESCRIPTIONS, public_device=device
+            )
+        )
+
     _make_entities = partial(async_all_device_entities, data)
     data.async_subscribe_adopt(_add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_outputs)
+    )
     entities: list[BaseProtectEntity] = []
     entities += _make_entities(ProtectSwitch, _MODEL_DESCRIPTIONS)
     entities += _make_entities(ProtectPrivacyModeSwitch, _PRIVACY_DESCRIPTIONS)
-    bootstrap = data.api.bootstrap
-    nvr = bootstrap.nvr
-    if nvr.can_write(bootstrap.auth_user) and nvr.is_insights_enabled is not None:
-        entities.extend(
-            ProtectNVRSwitch(data, device=nvr, description=switch)
-            for switch in NVR_SWITCHES
-        )
+    api = data.api
+    if not api.is_public_only:
+        # The NVR switches are private-only settings.
+        bootstrap = api.bootstrap
+        nvr = bootstrap.nvr
+        if nvr.can_write(bootstrap.auth_user) and nvr.is_insights_enabled is not None:
+            entities.extend(
+                ProtectNVRSwitch(data, device=nvr, description=switch)
+                for switch in NVR_SWITCHES
+                if not async_is_new_private_only_entity(
+                    hass, ModelType.NVR, nvr.mac, switch.key
+                )
+            )
     async_add_entities(entities)
+
+    if api.has_public_bootstrap:
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_outputs(relay)
+
+
+class ProtectRelayOutputSwitch(
+    ProtectPublicChannelEntity[PublicRelayOutput], SwitchEntity
+):
+    """Switch entity for a single relay output channel (Public API).
+
+    Each output channel is its own switch; turning it on/off goes through
+    :meth:`Relay.activate_output`.
+    """
+
+    _state_attrs = ("_attr_available", "_attr_is_on")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        relay: Relay,
+        output: PublicRelayOutput,
+    ) -> None:
+        """Initialize the relay output switch."""
+        # The description key keeps the legacy ``{mac}_relay_output_{id}`` unique ID.
+        description = SwitchEntityDescription(
+            key=f"relay_output_{output.id}", translation_key="relay_output"
+        )
+        super().__init__(data, relay, description, output.id)
+        self._attr_translation_placeholders = {
+            "output_name": output.name or str(output.id),
+        }
+
+    @property
+    def _relay(self) -> Relay | None:
+        return cast(Relay | None, self.data.async_get_public_device(self.device))
+
+    @callback
+    @override
+    def _async_get_channel(self, device: PublicDeviceModel) -> PublicRelayOutput | None:
+        return cast(Relay, device).get_output(self._channel_id)
+
+    @callback
+    @override
+    def _async_update_from_channel(self, channel: PublicRelayOutput) -> None:
+        self._attr_is_on = (
+            _RELAY_STATE_MAP.get(channel.state) if channel.state is not None else None
+        )
+
+    async def _activate_output(self, state: Literal["on", "off"]) -> None:
+        """Send activate_output to the relay, raising if unavailable."""
+        if (relay := self._relay) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="relay_not_available",
+            )
+        if relay.get_output(self._channel_id) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="relay_not_available",
+            )
+        await relay.activate_output(self._channel_id, state=state)
+
+    @async_ufp_instance_command
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the relay output on."""
+        await self._activate_output("on")
+
+    @async_ufp_instance_command
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the relay output off."""
+        await self._activate_output("off")

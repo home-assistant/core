@@ -1,11 +1,9 @@
 """Queries for the recorder."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from datetime import datetime
 
-from sqlalchemy import and_, delete, distinct, func, lambda_stmt, select, update
+from sqlalchemy import and_, bindparam, delete, func, lambda_stmt, select, update
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -35,22 +33,23 @@ def select_event_type_ids(event_types: tuple[str, ...]) -> Select:
     )
 
 
-def get_shared_attributes(hashes: list[int]) -> StatementLambdaElement:
-    """Load shared attributes from the database."""
-    return lambda_stmt(
-        lambda: select(
-            StateAttributes.attributes_id, StateAttributes.shared_attrs
-        ).where(StateAttributes.hash.in_(hashes))
-    )
+# Plain statements: these run for every cache miss on the write path, where
+# lambda_stmt's per-call analysis costs far more than the query itself.
+SELECT_SHARED_ATTRIBUTES_BY_HASH = select(
+    StateAttributes.attributes_id, StateAttributes.shared_attrs
+).where(StateAttributes.hash == bindparam("hash"))
 
+SELECT_SHARED_ATTRIBUTES = select(
+    StateAttributes.attributes_id, StateAttributes.shared_attrs
+).where(StateAttributes.hash.in_(bindparam("hashes", expanding=True)))
 
-def get_shared_event_datas(hashes: list[int]) -> StatementLambdaElement:
-    """Load shared event data from the database."""
-    return lambda_stmt(
-        lambda: select(EventData.data_id, EventData.shared_data).where(
-            EventData.hash.in_(hashes)
-        )
-    )
+SELECT_SHARED_EVENT_DATAS_BY_HASH = select(
+    EventData.data_id, EventData.shared_data
+).where(EventData.hash == bindparam("hash"))
+
+SELECT_SHARED_EVENT_DATAS = select(EventData.data_id, EventData.shared_data).where(
+    EventData.hash.in_(bindparam("hashes", expanding=True))
+)
 
 
 def find_event_type_ids(event_types: Iterable[str]) -> StatementLambdaElement:
@@ -81,8 +80,10 @@ def attributes_ids_exist_in_states_with_fast_in_distinct(
 ) -> StatementLambdaElement:
     """Find attributes ids that exist in the states table."""
     return lambda_stmt(
-        lambda: select(distinct(States.attributes_id)).filter(
-            States.attributes_id.in_(attributes_ids)
+        lambda: (
+            select(States.attributes_id)
+            .distinct()
+            .filter(States.attributes_id.in_(attributes_ids))
         )
     )
 
@@ -127,7 +128,7 @@ def data_ids_exist_in_events_with_fast_in_distinct(
 ) -> StatementLambdaElement:
     """Find data ids that exist in the events table."""
     return lambda_stmt(
-        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
+        lambda: select(Events.data_id).distinct().filter(Events.data_id.in_(data_ids))
     )
 
 
@@ -423,7 +424,8 @@ def find_entity_ids_to_migrate(max_bind_vars: int) -> StatementLambdaElement:
 
 def batch_cleanup_entity_ids() -> StatementLambdaElement:
     """Find entity_id to cleanup."""
-    # Self join because This version of MariaDB doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'
+    # Self join because this version of MariaDB doesn't yet
+    # support 'LIMIT & IN/ALL/ANY/SOME subquery'
     return lambda_stmt(
         lambda: (
             update(States)

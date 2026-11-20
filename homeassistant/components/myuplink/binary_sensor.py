@@ -1,5 +1,7 @@
 """Binary sensors for myUplink."""
 
+from typing import override
+
 from myuplink import DeviceConnectionState, DevicePoint
 
 from homeassistant.components.binary_sensor import (
@@ -14,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity, MyUplinkSystemEntity
-from .helpers import find_matching_platform, transform_model_series
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, BinarySensorEntityDescription]] = {
     F_SERIES: {
@@ -67,6 +69,8 @@ async def async_setup_entry(
     # Setup device point bound sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
+            if skip_entity(device_point.category, device_point):
+                continue
             if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
                 description = get_description(device_point)
 
@@ -134,17 +138,19 @@ class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
             self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Binary sensor state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return int(device_point.value) != 0
 
     @property
+    @override
     def available(self) -> bool:
         """Return device data availability."""
         return super().available and (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 
@@ -168,11 +174,12 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Binary sensor state value."""
         return (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 
@@ -198,6 +205,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Binary sensor state value."""
         retval = None

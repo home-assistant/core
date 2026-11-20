@@ -1,17 +1,61 @@
 """Tuya Home Assistant Base Device Model."""
 
-from __future__ import annotations
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, override
 
-from typing import Any
-
+import requests
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
+from tuya_sharing.exceptions import ApiRequestException, TuyaSDKException
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY
+
+TUYA_ERROR_CODE_GENERIC = "-9999999"
+TUYA_ERROR_RATE_LIMITED = "API_QPS_LIMIT_OR_DEGRADE"
+TUYA_ERROR_SIGN_INVALID = "sign invalid"
+
+# Matched on (code, message) first, then on code alone (message None)
+_API_ERROR_TRANSLATION_KEYS: dict[tuple[str, str | None], str] = {
+    ("2008", None): "command_not_accepted",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_SIGN_INVALID): "command_sign_invalid",
+    (TUYA_ERROR_CODE_GENERIC, TUYA_ERROR_RATE_LIMITED): "command_rate_limited",
+}
+
+
+@dataclass(frozen=True)
+class TuyaEntityDescription(EntityDescription):
+    """Describes a Tuya entity."""
+
+    channel_index: int | None = None
+    channel_condition: Callable[[CustomerDevice], bool] | None = None
+
+
+def get_child_device_info(
+    device: CustomerDevice,
+    parent_device_id: str,
+    description: TuyaEntityDescription,
+) -> ChildDeviceInfo | None:
+    """Get the device info for a single channel of a Tuya device.
+
+    Returns None for entities belonging to the device itself, and for devices
+    that do not expose more than one channel.
+    """
+    if (channel_index := description.channel_index) is None:
+        return None
+    if description.channel_condition and not description.channel_condition(device):
+        return None
+    return ChildDeviceInfo(
+        identifiers={(DOMAIN, f"{device.id}_channel_{channel_index}")},
+        parent_device_id=parent_device_id,
+        translation_key="channel",
+        translation_placeholders={"index": str(channel_index)},
+    )
 
 
 class TuyaEntity(Entity):
@@ -24,10 +68,16 @@ class TuyaEntity(Entity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: EntityDescription,
+        description: TuyaEntityDescription,
+        *,
+        device_info: ChildDeviceInfo | None = None,
     ) -> None:
-        """Init TuyaHaEntity."""
-        self._attr_unique_id = f"tuya.{device.id}{description.key}"
+        """Init TuyaEntity."""
+        self._attr_device_info = device_info or DeviceInfo(
+            identifiers={(DOMAIN, device.id)}
+        )
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
         device.set_up = True
@@ -35,21 +85,12 @@ class TuyaEntity(Entity):
         self.device_manager = device_manager
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.id)},
-            manufacturer="Tuya",
-            name=self.device.name,
-            model=self.device.product_name,
-            model_id=self.device.product_id,
-        )
-
-    @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(
@@ -98,9 +139,31 @@ class TuyaEntity(Entity):
         LOGGER.debug("Sending commands for device %s: %s", self.device.id, commands)
         if not commands:
             return
-        await self.hass.async_add_executor_job(
-            self.device_manager.send_commands, self.device.id, commands
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.device_manager.send_commands, self.device.id, commands
+            )
+        except ApiRequestException as err:
+            # error_code is typed as str, but is passed through from the JSON response
+            code = str(err.error_code)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=_API_ERROR_TRANSLATION_KEYS.get(
+                    (code, err.error_message)
+                )
+                or _API_ERROR_TRANSLATION_KEYS.get(
+                    (code, None), "command_rejected_with_reason"
+                ),
+                translation_placeholders={"code": code},
+            ) from err
+        except TuyaSDKException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_rejected"
+            ) from err
+        except requests.RequestException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="send_command_failed"
+            ) from err
 
     def _read_wrapper[T](self, wrapper: DeviceWrapper[T] | None) -> T | None:
         """Read the wrapper device status."""
