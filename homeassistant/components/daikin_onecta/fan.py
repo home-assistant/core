@@ -364,9 +364,6 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        purification = self._air_purification()
-        if purification is None or purification.mode is None:
-            self._raise_service_validation_error("air_purifier_speed_unavailable")
         if not self.is_on:
             await self.async_turn_on()
         purification = self._air_purification()

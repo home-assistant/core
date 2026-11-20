@@ -208,7 +208,7 @@ class DaikinOnectaAccountEntity(_DaikinOnectaCoordinatorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"account_{self._account_id}")},
             manufacturer="Daikin",
-            name="Daikin Onecta account",
+            translation_key="account",
         )
 
 

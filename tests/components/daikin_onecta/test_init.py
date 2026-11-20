@@ -68,8 +68,7 @@ def _get_domestic_hot_water_tank_child(
         _ALTHERMA_DOMESTIC_HOT_WATER_CHILD_IDENTIFIER,
         config_entry.entry_id,
     )
-    if child is None:
-        raise AssertionError("Domestic hot water child device was not registered")
+    assert child is not None
     return child
 
 

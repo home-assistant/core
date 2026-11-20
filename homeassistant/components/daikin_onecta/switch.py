@@ -103,15 +103,10 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        self._switch_state = self.sensor_value()
-
-    @property
-    @override
-    def is_on(self) -> bool | None:
-        """Return whether the switch is on."""
-        if self._switch_state is None:
-            return None
-        return self._switch_state == "on"
+        if (value := self.sensor_value()) is not None:
+            self._attr_is_on = value == "on"
+        else:
+            self._attr_is_on = None
 
     def sensor_value(self) -> str | None:
         """Return the state of the switch."""

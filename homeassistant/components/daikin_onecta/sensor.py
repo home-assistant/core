@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import cast, override
 
-from daikin_onecta.models import Characteristic, EnergyData, ManagementPoint
+from daikin_onecta.models import Characteristic, ManagementPoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,11 +19,7 @@ from homeassistant.util import dt as dt_util
 from .const import ENERGY_AGGREGATE_PERIODS
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .discovery import (
-    energy_description_key,
-    scalar_characteristics_for_platform,
-    scalar_platform_for_point,
-)
+from .discovery import energy_description_key, scalar_characteristics_for_platform
 from .entity import (
     DaikinManagementPointEntity,
     DaikinOnectaAccountEntity,
@@ -293,7 +289,6 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._datatype = details.datatype
         self.entity_description = description
         self._sensor_type = details.sensor_type
-        self._energy_data: EnergyData | None = None
         self._has_energy_series = False
         self._attr_unique_id = _energy_sensor_unique_id(self._device_id, details)
         self.update_state()
@@ -309,7 +304,6 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
             if point is not None
             else None
         )
-        self._energy_data = energy_data
         values_period = "month" if self._period == "year" else self._period
         self._has_energy_series = (
             energy_data is not None
@@ -357,7 +351,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         self._sub_type = details.sub_type
         self._value = details.value
         self._current_characteristic: Characteristic | None = None
-        self._management_point_type: str | None = None
         self._unknown_enum_values: set[str] = set()
         self.entity_description = description
         self._attr_unique_id = _value_sensor_unique_id(
@@ -378,11 +371,8 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     @override
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
-        point, characteristic = self._get_current_characteristic()
+        _, characteristic = self._get_current_characteristic()
         self._current_characteristic = characteristic
-        self._management_point_type = (
-            point.management_point_type if point is not None else None
-        )
         self._attr_native_value = self._sensor_value(characteristic)
         self._attr_native_unit_of_measurement = _native_unit(
             characteristic.unit if characteristic is not None else None,
@@ -435,16 +425,10 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         """Return whether the source characteristic is still available."""
         if not super().available:
             return False
-        point = self._management_point
         characteristic = self._current_characteristic
-        return (
-            point is not None
-            and characteristic is not None
-            and (
-                self._sub_type is not None
-                or scalar_platform_for_point(point, self._value, characteristic)
-                is Platform.SENSOR
-            )
+        return characteristic is not None and (
+            self._sub_type is not None
+            or self._characteristic_exposed_on(self._value, Platform.SENSOR)
         )
 
 

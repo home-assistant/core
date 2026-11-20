@@ -42,6 +42,9 @@
     }
   },
   "device": {
+    "account": {
+      "name": "Daikin Onecta account"
+    },
     "climate_zone": {
       "name": "Climate zone"
     },
