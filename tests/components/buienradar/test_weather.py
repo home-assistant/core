@@ -10,9 +10,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECASTS,
+    WeatherService,
+    WeatherServiceArgument,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from . import TEST_CFG_DATA, setup_integration
@@ -38,7 +39,7 @@ async def test_smoke_test_setup_component(
     assert state.state == "unknown"
 
 
-@pytest.mark.usefixtures("mock_buienradar_data")
+@pytest.mark.usefixtures("mock_buienradar_feeds")
 async def test_weather(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test the weather entity state."""
     await setup_integration(hass)
@@ -46,15 +47,15 @@ async def test_weather(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
     assert hass.states.get(WEATHER_ENTITY) == snapshot
 
 
-@pytest.mark.usefixtures("mock_buienradar_data")
+@pytest.mark.usefixtures("mock_buienradar_feeds")
 async def test_forecast(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test the daily forecast."""
     await setup_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECASTS,
-        {ATTR_ENTITY_ID: WEATHER_ENTITY, "type": "daily"},
+        WeatherService.GET_FORECASTS,
+        {TargetKey.ENTITY_ID: WEATHER_ENTITY, WeatherServiceArgument.TYPE: "daily"},
         blocking=True,
         return_response=True,
     )
