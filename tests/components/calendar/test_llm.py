@@ -7,7 +7,7 @@ import pytest
 from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import calendar, llm as llm_component
-from homeassistant.components.calendar import llm as calendar_llm
+from homeassistant.components.calendar import CalendarService, llm as calendar_llm
 from homeassistant.components.calendar.services import SERVICE_GET_EVENTS_SCHEMA
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.core import Context, HomeAssistant, SupportsResponse
@@ -71,7 +71,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     calls = async_mock_service(
         hass,
         domain=calendar.DOMAIN,
-        service=calendar.CalendarService.GET_EVENTS,
+        service=CalendarService.GET_EVENTS,
         schema=SERVICE_GET_EVENTS_SCHEMA,
         response={
             ENTITY_ID: {
@@ -105,7 +105,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == calendar.DOMAIN
-    assert call.service == calendar.CalendarService.GET_EVENTS
+    assert call.service == CalendarService.GET_EVENTS
     assert call.data == {
         "entity_id": [ENTITY_ID],
         "start_date_time": now,
