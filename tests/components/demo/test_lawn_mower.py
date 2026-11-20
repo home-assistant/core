@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CommonServiceArgument,
     Platform,
+    TargetKey,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -56,7 +57,7 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         LawnMowerService.START_MOWING,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
+        {TargetKey.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -66,7 +67,7 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         LawnMowerService.STOP,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
+        {TargetKey.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -76,7 +77,7 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         LawnMowerService.PAUSE,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
+        {TargetKey.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -86,7 +87,7 @@ async def test_methods(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> N
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         LawnMowerService.DOCK,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
+        {TargetKey.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     state = hass.states.get(ENTITY_LAWN_MOWER)
@@ -119,7 +120,7 @@ async def test_command_cancels_pending_dock(
     await hass.services.async_call(
         LAWN_MOWER_DOMAIN,
         LawnMowerService.DOCK,
-        {CommonServiceArgument.ENTITY_ID: ENTITY_LAWN_MOWER},
+        {TargetKey.ENTITY_ID: ENTITY_LAWN_MOWER},
         blocking=True,
     )
     assert hass.states.get(ENTITY_LAWN_MOWER).state == LawnMowerActivity.RETURNING

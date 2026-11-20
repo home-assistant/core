@@ -320,6 +320,8 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
+        if xmod_name := (info.get("jwt") or {}).get("n"):
+            return cast(str, xmod_name)
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -487,9 +489,6 @@ def get_rpc_key_instances(
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
-
-    if key == "switch" and "cover:0" in keys_dict:
-        key = "cover"
 
     if key in All_LIGHT_TYPES and all_lights:
         return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]

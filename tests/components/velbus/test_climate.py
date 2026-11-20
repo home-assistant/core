@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     ClimateService,
     ClimateServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -48,7 +48,7 @@ async def test_set_target_temperature(
         CLIMATE_DOMAIN,
         ClimateService.SET_TEMPERATURE,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: "climate.living_room_temperature",
             ClimateServiceArgument.TEMPERATURE: 29,
         },
         blocking=True,
@@ -78,7 +78,7 @@ async def test_set_preset_mode(
         CLIMATE_DOMAIN,
         ClimateService.SET_PRESET_MODE,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: "climate.living_room_temperature",
             ClimateServiceArgument.PRESET_MODE: set_mode,
         },
         blocking=True,
@@ -105,7 +105,7 @@ async def test_set_hvac_mode(
         CLIMATE_DOMAIN,
         ClimateService.SET_HVAC_MODE,
         {
-            CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+            TargetKey.ENTITY_ID: "climate.living_room_temperature",
             ClimateServiceArgument.HVAC_MODE: set_mode,
         },
         blocking=True,
@@ -125,7 +125,7 @@ async def test_set_hvac_mode_invalid(
             CLIMATE_DOMAIN,
             ClimateService.SET_HVAC_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: "climate.living_room_temperature",
+                TargetKey.ENTITY_ID: "climate.living_room_temperature",
                 ClimateServiceArgument.HVAC_MODE: "auto",
             },
             blocking=True,
