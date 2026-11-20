@@ -60,14 +60,13 @@ MAX_SANDBOXES = 10
 
 
 class Sandboxes:
-    """The pool of sandbox processes and the users that keep it running."""
+    """The pool of sandbox processes and the chat sessions that keep it running."""
 
     def __init__(self) -> None:
         """Init the class."""
         self.lock = asyncio.Lock()
         self.pool: AsyncMonty | None = None
-        # IDs of chat sessions, and an object for each run outside a chat session.
-        self.users: set[object] = set()
+        self.conversation_ids: set[str] = set()
         self.async_stop: CALLBACK_TYPE | None = None
 
 
@@ -269,11 +268,11 @@ async def _async_get_pool(hass: HomeAssistant) -> AsyncMonty:
 
 
 @callback
-def _async_release_pool(hass: HomeAssistant, user: object) -> None:
-    """Remove a user of the sandbox pool, and stop the pool after the last user."""
+def _async_release_pool(hass: HomeAssistant, conversation_id: str) -> None:
+    """Remove a chat session, and stop the sandbox pool after the last one."""
     sandboxes = hass.data[DATA_SANDBOXES]
-    sandboxes.users.discard(user)
-    if not sandboxes.users and sandboxes.async_stop is not None:
+    sandboxes.conversation_ids.discard(conversation_id)
+    if not sandboxes.conversation_ids and sandboxes.async_stop is not None:
         sandboxes.async_stop()
         sandboxes.pool = sandboxes.async_stop = None
 
@@ -367,27 +366,28 @@ class ExecuteTool(Tool):
         """Run the code in a sandbox.
 
         The sandbox processes run until the chat sessions that used them are
-        cleaned up. Outside a chat session, they can stop after this call.
+        cleaned up.
         """
         code = self.parameters(tool_input.tool_args)["code"]
         # The chat log keeps this tool between turns, so the tools must get
         # the context of the current turn.
         self._api_instance.llm_context = llm_context
-        session = chat_session.current_session.get()
-        user: object = session.conversation_id if session else object()
+        # The chat log creates this tool and calls it in its chat session.
+        if (session := chat_session.current_session.get()) is None:
+            raise HomeAssistantError("Code can only run in a chat session")
+        conversation_id = session.conversation_id
         sandboxes = hass.data.setdefault(DATA_SANDBOXES, Sandboxes())
-        if (is_new_user := user not in sandboxes.users) and session:
-            session.async_on_cleanup(partial(_async_release_pool, hass, user))
-        sandboxes.users.add(user)
+        if conversation_id not in sandboxes.conversation_ids:
+            sandboxes.conversation_ids.add(conversation_id)
+            session.async_on_cleanup(
+                partial(_async_release_pool, hass, conversation_id)
+            )
         try:
             return await self._async_run(await _async_get_pool(hass), code)
         except (MontyError, OSError) as err:
             return ToolResult(
                 data={"error": str(err)[:MAX_ERROR_SIZE], "output": ""}, error=True
             )
-        finally:
-            if is_new_user and not session:
-                _async_release_pool(hass, user)
 
     async def _async_run(self, pool: AsyncMonty, code: str) -> ToolResult:
         """Run the code in a sandbox of the pool."""

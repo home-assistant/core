@@ -126,8 +126,12 @@ async def api_instance(
 
 
 async def _execute(api_instance: llm.APIInstance, code: str) -> llm.ToolResult:
-    """Run code with the execute tool."""
-    return await api_instance.async_call_tool(llm.ToolInput("execute", {"code": code}))
+    """Run code with the execute tool, in a new chat session if none is active."""
+    tool_input = llm.ToolInput("execute", {"code": code})
+    if chat_session.current_session.get() is not None:
+        return await api_instance.async_call_tool(tool_input)
+    with chat_session.async_get_chat_session(api_instance.api.hass, context=None):
+        return await api_instance.async_call_tool(tool_input)
 
 
 async def _search(api_instance: llm.APIInstance, query: str) -> list[str]:
@@ -442,18 +446,13 @@ async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -
     await hass.async_block_till_done()
 
     assert _sandbox_count() == 0
-    assert hass.data[code_mode_api.DATA_SANDBOXES].users == set()
+    assert hass.data[code_mode_api.DATA_SANDBOXES].conversation_ids == set()
 
 
-async def test_sandbox_stops_without_chat_session(
-    api_instance: llm.APIInstance, hass: HomeAssistant
-) -> None:
-    """Test the sandbox stops after a run outside a chat session."""
-    result = await _execute(api_instance, "1")
-    await hass.async_block_till_done()
-
-    assert result.data["result"] == 1
-    assert _sandbox_count() == 0
+async def test_execute_needs_chat_session(api_instance: llm.APIInstance) -> None:
+    """Test code does not run outside a chat session."""
+    with pytest.raises(HomeAssistantError, match="chat session"):
+        await api_instance.async_call_tool(llm.ToolInput("execute", {"code": "1"}))
 
 
 async def test_sandbox_stops_with_home_assistant(
