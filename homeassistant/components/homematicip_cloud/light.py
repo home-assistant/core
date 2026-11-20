@@ -19,9 +19,12 @@ from packaging.version import Version
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -175,10 +178,21 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
         channel = self.get_channel_or_raise()
         return channel.hue is not None and channel.saturationLevel is not None
 
+    def _supports_color_temp(self) -> bool:
+        """Return true if device supports color temperature control."""
+        # the library does not parse the optional features of the channel
+        channel = self.get_channel_or_raise()
+        features = getattr(channel, "_rawJSONData", {}).get(
+            "supportedOptionalFeatures", {}
+        )
+        return bool(features.get("IOptionalFeatureColorTemperature"))
+
     @property
     @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
+        if self._supports_color_temp() and self.get_channel_or_raise().hue is None:
+            return ColorMode.COLOR_TEMP
         if self._supports_color():
             return ColorMode.HS
         return ColorMode.BRIGHTNESS
@@ -187,9 +201,30 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
     @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
+        modes = set()
         if self._supports_color():
-            return {ColorMode.HS}
-        return {ColorMode.BRIGHTNESS}
+            modes.add(ColorMode.HS)
+        if self._supports_color_temp():
+            modes.add(ColorMode.COLOR_TEMP)
+        return modes or {ColorMode.BRIGHTNESS}
+
+    @property
+    @override
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color temperature the light supports."""
+        return self.get_channel_or_raise().minimalColorTemperature or DEFAULT_MIN_KELVIN
+
+    @property
+    @override
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color temperature the light supports."""
+        return self.get_channel_or_raise().maximumColorTemperature or DEFAULT_MAX_KELVIN
+
+    @property
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature in Kelvin."""
+        return self.get_channel_or_raise().colorTemperature
 
     @property
     @override
@@ -226,6 +261,12 @@ class HomematicipColorLight(HomematicipGenericEntity, LightEntity):
         if ATTR_BRIGHTNESS not in kwargs:
             # If no brightness is set, use the current brightness
             dim_level = channel.dimLevel or 1.0
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            await channel.set_color_temperature_dim_level_async(
+                color_temperature=kwargs[ATTR_COLOR_TEMP_KELVIN], dim_level=dim_level
+            )
+            return
 
         # Use dim-only method for monochrome mode (hue/saturation not supported)
         if not self._supports_color():

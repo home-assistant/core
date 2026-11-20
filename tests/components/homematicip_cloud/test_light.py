@@ -12,8 +12,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
     LightEntityFeature,
@@ -765,6 +768,59 @@ async def test_hmip_light_hs_monochrome(
     }
 
 
+async def test_hmip_light_color_temp(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipColorLight with color temperature mode."""
+    entity_id = "light.led_strip_channel1"
+    entity_name = "LED Strip Channel1"
+    device_model = "HmIP-LSC"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["LED Strip"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert ha_state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4250
+    assert ha_state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2000
+    assert ha_state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+
+    service_call_counter = len(hmip_device.functionalChannels[1].mock_calls)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_COLOR_TEMP_KELVIN: 3000, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
+    assert (
+        hmip_device.functionalChannels[1].mock_calls[-1][0]
+        == "set_color_temperature_dim_level_async"
+    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {
+        "color_temperature": 3000,
+        "dim_level": 0.5,
+    }
+
+    # a color set in the app switches the light to HS, color temperature stays
+    await async_manipulate_test_data(hass, hmip_device, "hue", 120, channel=1)
+    await async_manipulate_test_data(
+        hass, hmip_device, "saturationLevel", 0.8, channel=1
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+
+
 async def test_hmip_wired_push_button_led(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
@@ -985,6 +1041,7 @@ async def test_hmip_light_unique_ids(
         "light.bsl2_led_unten": "3014F711000000000000BSL2_2_notification_light",
         "light.flur_oben": "3014F7110000000000000108_1_light",
         "light.kombisignalmelder": "3014F7110000000000000MP3_1_combination_signalling_light",
+        "light.led_strip_channel1": "3014F7110000000000000LSC_1_color_light",
         "light.rgbw_controller_channel1": "3014F71100000000000RGBW2_1_color_light",
         "light.rgbw_controller_channel2": "3014F71100000000000RGBW2_2_color_light",
         "light.rgbw_controller_channel3": "3014F71100000000000RGBW2_3_color_light",
