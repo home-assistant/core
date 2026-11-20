@@ -260,7 +260,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     default_entity_id: str | None = None
 
     for entity in hass.data[DATA_COMPONENT].entities:
-        if entity.platform and entity.platform.platform_name == "cloud":
+        if entity.platform.platform_name == "cloud":
             return entity.entity_id
 
         if default_entity_id is None:
@@ -1923,8 +1923,7 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
-        if entity.platform:
-            entity_domains.add(entity.platform.platform_name)
+        entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in hass.data[DATA_TTS_MANAGER].providers.items():
         if provider.has_entity:
             continue
