@@ -141,8 +141,11 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Return the stream URI."""
         if self._stream_uri:
             return self._stream_uri
-        if self._stream_uri_future:
-            return await self._stream_uri_future
+        if future := self._stream_uri_future:
+            # Not awaited directly: a cancelled waiting call must not cancel
+            # the request that the other calls are waiting for.
+            await asyncio.wait((future,))
+            return future.result()
         loop = asyncio.get_running_loop()
         self._stream_uri_future = future = loop.create_future()
         try:
