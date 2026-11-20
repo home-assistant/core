@@ -1,14 +1,19 @@
 """The tests for the Buienradar sensor platform."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
-from pytest_homeassistant.common import MockConfigEntry
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
 
 TEST_LONGITUDE = 51.5288504
 TEST_LATITUDE = 5.4002156
@@ -46,3 +51,16 @@ async def test_smoke_test_setup_component(
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.buienradar_5_40021651_528850{cond}")
         assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_feeds")
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test all sensors."""
+    with patch("homeassistant.components.buienradar.PLATFORMS", [Platform.SENSOR]):
+        entry = await setup_integration(hass)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
