@@ -275,11 +275,19 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
         """Fetch all nodes with their VMs, containers, storages, etc."""
         nodes = self.proxmox.nodes.get() or []
-        return [(node, self._get_node_data(node)) for node in nodes]
+        # The node VM list reports host memory; cluster resources carry the
+        # guest memory that pvestatd reads from the balloon driver.
+        guest_memory = {
+            int(resource["vmid"]): resource["mem"]
+            for resource in self.proxmox.cluster.resources.get(type="vm") or []
+            if resource.get("type") == "qemu" and "mem" in resource
+        }
+        return [(node, self._get_node_data(node, guest_memory)) for node in nodes]
 
     def _get_node_data(
         self,
         node: dict[str, Any],
+        guest_memory: dict[int, int],
     ) -> NodeResources:
         """Get vms, containers, storages, etc. for a node."""
         if node.get("status") != NODE_ONLINE:
@@ -296,7 +304,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 update=False,
             )
 
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        vms = [
+            {**vm, "mem": guest_memory.get(int(vm["vmid"]), vm.get("mem"))}
+            for vm in self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        ]
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         storages = self.proxmox.nodes(node[CONF_NODE]).storage.get() or []
         backups = (

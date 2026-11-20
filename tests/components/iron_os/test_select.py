@@ -33,7 +33,7 @@ from homeassistant.components.select import (
     SelectServiceArgument,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -143,7 +143,7 @@ async def test_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         service_data={SelectServiceArgument.OPTION: option},
-        target={ATTR_ENTITY_ID: entity_id},
+        target={TargetKey.ENTITY_ID: entity_id},
         blocking=True,
     )
     assert len(mock_pynecil.write.mock_calls) == 1
@@ -174,6 +174,6 @@ async def test_select_option_exception(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             service_data={SelectServiceArgument.OPTION: "battery_3s"},
-            target={ATTR_ENTITY_ID: "select.pinecil_power_source"},
+            target={TargetKey.ENTITY_ID: "select.pinecil_power_source"},
             blocking=True,
         )

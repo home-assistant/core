@@ -19,7 +19,7 @@ from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -58,7 +58,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        {TargetKey.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -81,7 +81,7 @@ async def test_switch_turn_on_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        {TargetKey.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -112,7 +112,7 @@ async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) ->
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        {TargetKey.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 
@@ -127,7 +127,7 @@ async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) ->
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        {TargetKey.ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
         blocking=True,
     )
 

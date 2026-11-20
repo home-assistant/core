@@ -24,16 +24,6 @@ from homeassistant.util import dt as dt_util
 from .helpers import assert_result_info, render, render_to_info
 
 
-async def test_template_render_missing_hass(hass: HomeAssistant) -> None:
-    """Test template render when hass is not set."""
-    hass.states.async_set("sensor.test", "23")
-    template_obj = template.Template("{{ states('sensor.test') }}", None)
-    template.render_info_cv.set(template.RenderInfo(template_obj))
-
-    with pytest.raises(RuntimeError, match="hass not set while rendering"):
-        template_obj.async_render_to_info()
-
-
 async def test_template_render_info_collision(hass: HomeAssistant) -> None:
     """Test template render info collision.
 

@@ -23,12 +23,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
     SwitchService,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    CommonServiceArgument,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -253,6 +248,6 @@ async def test_standby_exceptions(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SwitchService.TURN_ON,
-            {CommonServiceArgument.ENTITY_ID: entity_id},
+            {TargetKey.ENTITY_ID: entity_id},
             blocking=True,
         )

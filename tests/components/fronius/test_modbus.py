@@ -32,7 +32,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchService
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CommonServiceArgument, Platform
+from homeassistant.const import CONF_HOST, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -598,13 +598,13 @@ async def _turn_on_limit(
     await hass.services.async_call(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
-        {CommonServiceArgument.ENTITY_ID: number, NumberServiceArgument.VALUE: limit},
+        {TargetKey.ENTITY_ID: number, NumberServiceArgument.VALUE: limit},
         blocking=True,
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_ON,
-        {CommonServiceArgument.ENTITY_ID: switch},
+        {TargetKey.ENTITY_ID: switch},
         blocking=True,
     )
 
@@ -795,7 +795,7 @@ async def test_heartbeat_stops_with_the_limit(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SwitchService.TURN_OFF,
-        {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
+        {TargetKey.ENTITY_ID: POWER_LIMITING},
         blocking=True,
     )
 
@@ -1064,7 +1064,7 @@ async def test_heartbeat_does_not_undo_a_write_it_overlaps(
             hass.services.async_call(
                 SWITCH_DOMAIN,
                 SwitchService.TURN_OFF,
-                {CommonServiceArgument.ENTITY_ID: POWER_LIMITING},
+                {TargetKey.ENTITY_ID: POWER_LIMITING},
                 blocking=True,
             )
         )
@@ -1211,7 +1211,7 @@ async def test_battery_settings_leave_a_foreign_period_alone(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: MINIMUM_RESERVE,
+            TargetKey.ENTITY_ID: MINIMUM_RESERVE,
             NumberServiceArgument.VALUE: 30,
         },
         blocking=True,
@@ -1254,7 +1254,7 @@ async def test_battery_writes_do_not_hold_back_the_power_limit_beat(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: MINIMUM_RESERVE,
+                TargetKey.ENTITY_ID: MINIMUM_RESERVE,
                 NumberServiceArgument.VALUE: reserve,
             },
             blocking=True,
