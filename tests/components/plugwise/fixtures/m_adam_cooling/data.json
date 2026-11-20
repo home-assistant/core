@@ -15,7 +15,10 @@
       "upper_bound": 95.0
     },
     "dev_class": "heater_central",
-    "dhw_modes": ["comfort", "eco"],
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "model": "Generic heater",
     "name": "OpenTherm",
@@ -26,8 +29,8 @@
       "dhw_burner_operation_time": 913,
       "failed_burner_flame_ignitions": 34,
       "failed_burner_starts": 6,
-      "intended_boiler_temperature": 17.5,
       "fault_flags": 0,
+      "intended_boiler_temperature": 17.5,
       "oem_fault_code": 255,
       "water_temperature": 19.0
     },
@@ -124,7 +127,11 @@
     },
     "dev_class": "gateway",
     "firmware": "3.9.0",
-    "gateway_modes": ["away", "full", "vacation"],
+    "gateway_modes": [
+      "away",
+      "full",
+      "vacation"
+    ],
     "hardware": "AME Smile 2.0 board",
     "location": "bc93488efab249e5bc54fd7e175a6f91",
     "mac_address": "D40FB201CBA0",
@@ -254,15 +261,21 @@
       "setpoint_low": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": ["vacation", "no_frost", "asleep", "home", "away"],
+    "preset_modes": [
+      "vacation",
+      "no_frost",
+      "asleep",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "active",
     "sensors": {
       "electricity_consumed": 60.8,
-      "electricity_produced": 0.0,
-      "temperature": 24.2
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 24.2,
       "lower_bound": 1.0,
       "resolution": 0.01,
       "setpoint": 23.5,
@@ -284,7 +297,11 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   },
   "f871b8c4d63549319221e294e4f88074": {
     "active_preset": "vacation",
@@ -328,23 +345,33 @@
       "setpoint_low": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
+    "preset_modes": [
+      "no_frost",
+      "asleep",
+      "vacation",
+      "home",
+      "away"
+    ],
     "select_schedule": "off",
     "select_zone_profile": "passive",
     "sensors": {
       "electricity_consumed": 0.0,
-      "electricity_produced": 0.0,
-      "temperature": 25.8
+      "electricity_produced": 0.0
     },
     "thermostat": {
+      "current": 25.8,
       "lower_bound": 0.0,
       "resolution": 0.01,
       "setpoint": 25.0,
       "upper_bound": 99.9
     },
     "thermostats": {
-      "primary": ["e2f4322d57924fa090fbbc48b3a140dc"],
-      "secondary": ["1772a4ea304041adb83f357b751341ff"]
+      "primary": [
+        "e2f4322d57924fa090fbbc48b3a140dc"
+      ],
+      "secondary": [
+        "1772a4ea304041adb83f357b751341ff"
+      ]
     },
     "vacation_preset_temperature": {
       "lower_bound": 4.0,
@@ -354,6 +381,10 @@
       "upper_bound": 30.0
     },
     "vendor": "Plugwise",
-    "zone_profiles": ["active", "off", "passive"]
+    "zone_profiles": [
+      "active",
+      "off",
+      "passive"
+    ]
   }
 }

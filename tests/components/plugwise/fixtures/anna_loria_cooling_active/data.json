@@ -8,7 +8,11 @@
       "setpoint_low": 19.5,
       "upper_bound": 30.0
     },
-    "available_schedules": ["off", "Winter", "Test "],
+    "available_schedules": [
+      "off",
+      "Winter",
+      "Test "
+    ],
     "away_preset_temperature": {
       "lower_bound": 4.0,
       "resolution": 0.5,
@@ -38,7 +42,13 @@
       "setpoint_low": 10.0,
       "upper_bound": 30.0
     },
-    "preset_modes": ["away", "vacation", "no_frost", "home", "asleep"],
+    "preset_modes": [
+      "away",
+      "vacation",
+      "no_frost",
+      "home",
+      "asleep"
+    ],
     "select_schedule": "Winter",
     "sensors": {
       "illuminance": 45.0,
@@ -54,6 +64,7 @@
       "upper_bound": 2.0
     },
     "thermostat": {
+      "current": 24.1,
       "lower_bound": 4.0,
       "resolution": 0.1,
       "setpoint_high": 23.5,
@@ -105,7 +116,13 @@
     },
     "dev_class": "heater_central",
     "dhw_mode": "auto",
-    "dhw_modes": ["off", "auto", "boost", "eco", "comfort"],
+    "dhw_modes": [
+      "off",
+      "auto",
+      "boost",
+      "eco",
+      "comfort"
+    ],
     "dhw_temperature": {
       "current": 52.9,
       "lower_bound": 35.0,
@@ -119,9 +136,9 @@
     "name": "OpenTherm",
     "sensors": {
       "dhw_temperature": 52.9,
+      "fault_flags": 0,
       "intended_boiler_temperature": 0.0,
       "modulation_level": 100,
-      "fault_flags": 0,
       "oem_fault_code": 0,
       "outdoor_air_temperature": 17.2,
       "return_temperature": 26.3,
