@@ -1075,3 +1075,53 @@ async def test_pending_retry_cancelled_when_refresh_succeeds(
         # Only the other demo camera still had a retry pending
         assert mock_stream_source.call_count == calls + 1
         assert camera.webrtc_provider is provider
+
+
+async def test_retry_lookup_cancelled_before_integration_cleanup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test removal stops a retried lookup before the integration's own cleanup."""
+    order: list[str] = []
+    lookup_waiting = asyncio.Event()
+    attempts = 0
+
+    async def stream_source() -> str:
+        nonlocal attempts
+        attempts += 1
+        if attempts <= 2:  # First lookup of each demo camera
+            raise TimeoutError("camera not ready")
+        lookup_waiting.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            order.append("lookup cancelled")
+            raise
+        return STREAM_SOURCE
+
+    async def will_remove(self: Camera) -> None:
+        order.append("integration cleanup")
+
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            side_effect=stream_source,
+        ),
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.async_will_remove_from_hass",
+            will_remove,
+        ),
+    ):
+        assert await async_setup_component(hass, "demo", {})
+        await hass.async_block_till_done()
+        camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+        await get_camera_from_entity_id(hass, "camera.demo_camera_png").async_remove()
+        order.clear()
+
+        freezer.tick(30)
+        async_fire_time_changed(hass)
+        await lookup_waiting.wait()
+        await camera.async_remove()
+
+    assert order == ["lookup cancelled", "integration cleanup"]

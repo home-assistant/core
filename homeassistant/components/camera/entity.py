@@ -3,6 +3,7 @@
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
+import contextlib
 from dataclasses import dataclass
 from functools import partial
 import logging
@@ -179,6 +180,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._provider_lookup_stopped = False
         self._provider_lookup_generation = 0
         self._provider_lock = asyncio.Lock()
+        self._provider_retry_task: asyncio.Task[None] | None = None
         self._supports_native_async_webrtc = (
             type(self).async_handle_async_webrtc_offer
             != Camera.async_handle_async_webrtc_offer
@@ -437,6 +439,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # schedule another lookup
         self._provider_lookup_stopped = True
         self._async_cancel_provider_refresh_retry()
+        # A retry still waiting for the stream source is stopped before the
+        # integration cleans up, as asking for it can have side effects
+        if task := self._provider_retry_task:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
         # Wait for a refresh that is registering or unregistering right now
         async with self._provider_lock:
             if self._webrtc_provider:
@@ -526,11 +534,22 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._provider_refresh_attempt += 1
         self._async_cancel_provider_refresh_retry()
 
-        async def _async_retry(_now: Any) -> None:
+        @callback
+        def _async_retry(_now: Any) -> None:
             self._provider_refresh_retry = None
-            await self.async_refresh_providers()
+            self._provider_retry_task = task = self.hass.async_create_background_task(
+                self.async_refresh_providers(),
+                f"{self.entity_id} WebRTC provider lookup",
+            )
+            task.add_done_callback(self._async_provider_retry_done)
 
         self._provider_refresh_retry = async_call_later(self.hass, delay, _async_retry)
+
+    @callback
+    def _async_provider_retry_done(self, task: asyncio.Task[None]) -> None:
+        """Forget a finished retry of the provider lookup."""
+        if self._provider_retry_task is task:
+            self._provider_retry_task = None
 
     @callback
     def _async_cancel_provider_refresh_retry(self) -> None:
