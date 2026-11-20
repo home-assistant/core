@@ -121,11 +121,26 @@
     "region": {
       "options": {
         "krups_de": "Krups (Germany)",
+        "krups_mx": "Krups (Mexico)",
+        "moulinex_ae": "Moulinex (United Arab Emirates)",
         "moulinex_be": "Moulinex (Belgium)",
+        "moulinex_ch": "Moulinex (Switzerland)",
+        "moulinex_dz": "Moulinex (Algeria)",
         "moulinex_es": "Moulinex (Spain)",
         "moulinex_fr": "Moulinex (France)",
         "moulinex_it": "Moulinex (Italy)",
-        "tefal_gb": "Tefal (United Kingdom)"
+        "moulinex_pt": "Moulinex (Portugal)",
+        "tefal_au": "Tefal (Australia)",
+        "tefal_bg": "Tefal (Bulgaria)",
+        "tefal_cz": "Tefal (Czechia)",
+        "tefal_gb": "Tefal (United Kingdom)",
+        "tefal_hu": "Tefal (Hungary)",
+        "tefal_pl": "Tefal (Poland)",
+        "tefal_ro": "Tefal (Romania)",
+        "tefal_ru": "Tefal (Russia)",
+        "tefal_sk": "Tefal (Slovakia)",
+        "tefal_ua": "Tefal (Ukraine)",
+        "tfal_jp": "T-fal (Japan)"
       }
     }
   }

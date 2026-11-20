@@ -40,7 +40,7 @@ class MoulinexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ApplianceSta
         """Initialize the coordinator."""
         super().__init__(hass, LOGGER, config_entry=entry, name=DOMAIN)
         region = Region(entry.data[CONF_REGION])
-        self.manufacturer = region.brand.capitalize()
+        self.manufacturer = region.brand_name
         self.client = MoulinexClient(
             async_get_clientsession(hass),
             Tokens.from_dict(entry.data[CONF_TOKENS]),

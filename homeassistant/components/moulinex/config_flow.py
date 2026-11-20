@@ -34,6 +34,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 options=[region.value for region in Region],
                 mode=SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_REGION,
+                sort=True,
             )
         ),
         probatio.Required(CONF_EMAIL): TextSelector(

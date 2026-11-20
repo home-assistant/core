@@ -11,5 +11,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aiomoulinex"],
   "quality_scale": "bronze",
-  "requirements": ["aiomoulinex==0.1.0"]
+  "requirements": ["aiomoulinex==0.1.1"]
 }

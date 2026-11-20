@@ -20,6 +20,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.translation import async_get_translations
 
 from .conftest import EMAIL, USER_ID, build_tokens
 
@@ -60,6 +61,15 @@ ERRORS = [
         id="profile_cannot_connect",
     ),
 ]
+
+
+async def test_regions_are_translated(hass: HomeAssistant) -> None:
+    """Every region of the library has a label in the region selector."""
+    translations = await async_get_translations(hass, "en", "selector", {DOMAIN})
+
+    assert {
+        f"component.{DOMAIN}.selector.region.options.{region}" for region in Region
+    } <= translations.keys()
 
 
 @pytest.mark.usefixtures("mock_fetch_profile")
