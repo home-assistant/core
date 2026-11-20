@@ -54,6 +54,12 @@
     }
   },
   "exceptions": {
+    "address_in_use": {
+      "message": "The listening port {port} is already in use on this system"
+    },
+    "modbus_url_invalid": {
+      "message": "The Modbus URL {url} is not well formed or not supported"
+    },
     "write_failed": {
       "message": "Writing of coil {address} with value `{value}` failed with error `{error}`"
     },
