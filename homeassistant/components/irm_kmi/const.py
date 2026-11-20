@@ -30,6 +30,9 @@ LANGS: Final = ["en", "fr", "nl", "de"]
 CONF_LANGUAGE_OVERRIDE: Final = "language_override"
 CONF_LANGUAGE_OVERRIDE_OPTIONS: Final = ["none", "fr", "nl", "de", "en"]
 
+SERVICE_GET_FORECASTS_RADAR: Final = "get_forecasts_radar"
+ATTR_INCLUDE_PAST_FORECASTS: Final = "include_past_forecasts"
+
 # Dict to map ('ww', 'dayNight') tuple from IRM KMI to HA conditions.
 IRM_KMI_TO_HA_CONDITION_MAP: Final = {
     (0, "d"): ATTR_CONDITION_SUNNY,
