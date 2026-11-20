@@ -1501,23 +1501,24 @@ async def test_unmapped_config_value_logs_warning(
     assert not _unmapped_issue_ids(issue_registry)
 
 
-async def test_unmapped_enum_value_cleared_after_mapped_update(
+async def test_unmapped_enum_value_kept_after_mapped_update(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     unmapped_motion_sensor: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that the repair is cleared when the value resolves to a mapped state."""
+    """Test that the repair stays when the value goes back to a mapped state."""
     node = unmapped_motion_sensor
-    assert _unmapped_issue_ids(issue_registry)
+    [issue_id] = _unmapped_issue_ids(issue_registry)
 
+    # Motion events drop back to idle; the unmapped event still needs fixing.
     node.receive_event(_motion_status_value_event(node, 0, 8))
     await hass.async_block_till_done()
 
     state = hass.states.get(MOTION_STATUS_ENTITY)
     assert state
     assert state.state == "idle"
-    assert not _unmapped_issue_ids(issue_registry)
+    assert _unmapped_issue_ids(issue_registry) == [issue_id]
 
 
 @pytest.mark.parametrize(

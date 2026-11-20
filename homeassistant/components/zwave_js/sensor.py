@@ -1000,7 +1000,7 @@ class ZWaveListSensor(ZwaveSensor):
     @callback
     @override
     def on_value_update(self) -> None:
-        """Raise or clear the unmapped value repair."""
+        """Raise the unmapped value repair."""
         self._async_update_unmapped_issue()
 
     @property
@@ -1026,10 +1026,12 @@ class ZWaveListSensor(ZwaveSensor):
 
     @callback
     def _async_update_unmapped_issue(self) -> None:
-        """Raise the repair for an unmapped value, or clear it once mapped.
+        """Raise the repair for an unmapped value.
 
-        A None value is no reading at all, so it leaves the repair as it is.
-        Rediscovery may drop the states, which also clears the repair.
+        A mapped reading leaves the repair in place: notification values often
+        drop back to idle right after an event, which would clear the repair
+        before anyone sees it. The states only change through rediscovery, and
+        removing the entity clears the repair.
         """
         if (value := self.info.primary_value.value) is None:
             return
@@ -1037,8 +1039,6 @@ class ZWaveListSensor(ZwaveSensor):
             self.info.primary_value.metadata.states
         ):
             self._async_report_unmapped_value(str(value))
-        else:
-            self._async_clear_unmapped_value()
 
     @callback
     def _async_report_unmapped_value(self, raw_value: str) -> None:
@@ -1085,10 +1085,7 @@ class ZWaveListSensor(ZwaveSensor):
     def _async_clear_unmapped_value(self) -> None:
         """Clear the repair, keeping it if the user ignored it.
 
-        Looks the issue up rather than tracking it on the entity, so a
-        freshly rediscovered entity instance clears a stale issue left by
-        the prior one. An ignored issue is kept so the next unmapped
-        reading stays hidden.
+        An ignored issue is kept so the next unmapped reading stays hidden.
         """
         if (issue_id := self._unmapped_issue_id) is None:
             return
