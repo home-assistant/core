@@ -28,7 +28,6 @@ EntityIdChecker = Callable[[Platform, str], bool]
 
 MANAGEMENT_POINT_DEVICE_TRANSLATION_KEYS = {
     "climateControl": "climate_zone",
-    "climateControlMainZone": "climate_zone",
     "domesticHotWaterFlowThrough": "domestic_hot_water_flow_through",
     "domesticHotWaterTank": "domestic_hot_water_tank",
     "indoorUnit": "indoor_unit",

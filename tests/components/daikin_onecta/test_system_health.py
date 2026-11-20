@@ -103,6 +103,7 @@ async def test_system_health_reports_every_loaded_account(
     hass: HomeAssistant,
 ) -> None:
     """Include cached health data for every configured Daikin account."""
+    entry_ids: list[str] = []
     for title, unique_id, remaining in (
         ("Account one", "account-1", 199),
         ("Account two", "account-2", 399),
@@ -125,6 +126,7 @@ async def test_system_health_reports_every_loaded_account(
             session=MagicMock(valid_token=True),
         )
         config_entry.add_to_hass(hass)
+        entry_ids.append(config_entry.entry_id)
 
     with patch(
         "homeassistant.components.daikin_onecta.system_health."
@@ -133,9 +135,11 @@ async def test_system_health_reports_every_loaded_account(
     ):
         info = await system_health_info(hass)
 
-    assert "Account one" in info["remaining_day"]
+    assert entry_ids[0] in info["remaining_day"]
     assert "199" in info["remaining_day"]
-    assert "Account two" in info["remaining_day"]
+    assert entry_ids[1] in info["remaining_day"]
     assert "399" in info["remaining_day"]
+    assert "Account one" not in info["remaining_day"]
+    assert "Account two" not in info["remaining_day"]
     assert await info["api_status"] == "ok"
     assert await info["oauth2_status"] == "ok"

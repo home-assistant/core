@@ -67,18 +67,18 @@ async def test_gateway_device_registry_uses_cloud_metadata(
     assert outdoor_unit.name == "Outdoor unit"
 
 
-async def test_main_zone_child_uses_climate_zone_translation(
+async def test_main_zone_embedded_id_remains_a_climate_control(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Use the climate-zone device name for Altherma's main zone point."""
-    await _async_setup_fixture(hass, config_entry, "altherma_boost")
+    """Do not treat the main-zone embedded ID as a management-point type."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
     device = next(iter(config_entry.runtime_data.data.values()))
     point = device.device.management_points_by_type("climateControl")[0]
-    point.management_point_type = "climateControlMainZone"
+    assert point.embedded_id == "climateControlMainZone"
 
     device_info = management_point_device_info(device, point.embedded_id)
 
-    assert device_info.translation_key == "climate_zone"
+    assert device_info == _gateway_device_info(device)
 
 
 def test_gateway_device_info_only_returns_its_identifier() -> None:

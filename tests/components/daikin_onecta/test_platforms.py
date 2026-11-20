@@ -38,6 +38,8 @@ from homeassistant.helpers import entity_registry as er
 from .platform_helpers import _execute_typed_command
 from .test_climate_snapshots import _async_setup_fixture
 
+AIR_PURIFIER_ENTITY_ID = "fan.air_purifier"
+
 
 async def test_platform_entities_become_unavailable_after_failed_update(
     hass: HomeAssistant,
@@ -104,7 +106,7 @@ def test_entity_descriptions_have_translation_keys(descriptions: dict) -> None:
 @pytest.mark.parametrize(
     ("fixture", "domain", "service", "entity_id", "data", "attribute", "expected"),
     [
-        (
+        pytest.param(
             "altherma_boost",
             WATER_HEATER_DOMAIN,
             WATER_HEATER_SERVICE_SET_TEMPERATURE,
@@ -112,24 +114,27 @@ def test_entity_descriptions_have_translation_keys(descriptions: dict) -> None:
             {WaterHeaterServiceArgument.TEMPERATURE: 50},
             WaterHeaterStateAttribute.TARGET_TEMPERATURE,
             50,
+            id="water-heater-temperature",
         ),
-        (
+        pytest.param(
             "mc80z",
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            "fan.air_purifier",
+            AIR_PURIFIER_ENTITY_ID,
             {FanServiceArgument.PRESET_MODE: "auto_fan"},
             FanEntityStateAttribute.PRESET_MODE,
             "auto_fan",
+            id="air-purifier-preset",
         ),
-        (
+        pytest.param(
             "mc80z",
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
-            "fan.air_purifier",
+            AIR_PURIFIER_ENTITY_ID,
             {FanServiceArgument.PERCENTAGE: 100},
             FanEntityStateAttribute.PERCENTAGE,
             100,
+            id="air-purifier-percentage",
         ),
     ],
 )

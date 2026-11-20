@@ -15,8 +15,8 @@ DAIKIN_API_URL = ONECTA_API_URL
 
 
 def _entry_label(config_entry: DaikinOnectaConfigEntry) -> str:
-    """Return an unambiguous label for an account entry."""
-    return f"{config_entry.title or config_entry.entry_id} ({config_entry.entry_id})"
+    """Return a non-sensitive label for an account entry."""
+    return config_entry.entry_id
 
 
 def _entry_info(config_entry: DaikinOnectaConfigEntry) -> dict[str, Any]:

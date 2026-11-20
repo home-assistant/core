@@ -10,25 +10,32 @@ from .const import ENERGY_AGGREGATE_PERIODS
 from .entity_metadata import BINARY_SENSOR_KEYS, SENSOR_KEYS, SWITCH_KEYS
 from .utils import is_read_only_on_off_value
 
-CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
+CLIMATE_SETPOINT_TYPES = frozenset(
     {
-        "climateControl",
-        "climateControlMainZone",
-        "domesticHotWaterFlowThrough",
-        "domesticHotWaterTank",
+        "calculatedLeavingWaterTemperature",
+        "leavingWaterOffset",
+        "leavingWaterTemperature",
+        "roomTemperature",
     }
 )
-CLIMATE_CONTROL_MANAGEMENT_POINT_TYPES = frozenset(
-    {"climateControl", "climateControlMainZone"}
-)
 
 
-def has_air_purifier_power_control(point: ManagementPoint) -> bool:
-    """Return whether the point supports the Home Assistant air-purifier fan."""
-    if point.management_point_type != "climateControl":
+def has_air_purifier_power(
+    point: ManagementPoint | None,
+) -> bool:
+    """Return whether an air-purifier power characteristic is present."""
+    if point is None or point.management_point_type != "climateControl":
         return False
     air_purification = point.air_purification
-    return (
+    return air_purification is not None and air_purification.power is not None
+
+
+def has_air_purifier_power_control(point: ManagementPoint | None) -> bool:
+    """Return whether the air-purifier power characteristic is writable."""
+    if point is None or point.management_point_type != "climateControl":
+        return False
+    air_purification = point.air_purification
+    return bool(
         air_purification is not None
         and air_purification.power is not None
         and air_purification.power.settable
@@ -40,7 +47,7 @@ def scalar_platform(
     characteristic: Characteristic,
     management_point_type: str,
     *,
-    air_purifier_power_settable: bool = False,
+    air_purifier_power_present: bool = False,
 ) -> Platform | None:
     """Return the platform that exposes a scalar characteristic, if any."""
     values = characteristic.values or []
@@ -53,8 +60,8 @@ def scalar_platform(
         return Platform.BINARY_SENSOR
     if name in SENSOR_KEYS and not (
         name == "airPurificationMode"
-        and management_point_type in CONTROL_MANAGEMENT_POINT_TYPES
-        and air_purifier_power_settable
+        and management_point_type == "climateControl"
+        and air_purifier_power_present
     ):
         return Platform.SENSOR
     return None
@@ -74,7 +81,10 @@ def scalar_platform_for_point(
     # also produce a climate entity; otherwise retain the scalar switch.
     if name == "econoMode" and point.management_point_type == "climateControl":
         climate_control = point.climate_control
-        if climate_control is not None and climate_control.setpoint_types:
+        if climate_control is not None and any(
+            setpoint_type in CLIMATE_SETPOINT_TYPES
+            for setpoint_type in climate_control.setpoint_types
+        ):
             return None
     # These controls belong to their typed entity even when Daikin reports them
     # as read-only while the gateway is offline.
@@ -94,7 +104,7 @@ def scalar_platform_for_point(
         name,
         characteristic,
         point.management_point_type,
-        air_purifier_power_settable=has_air_purifier_power_control(point),
+        air_purifier_power_present=has_air_purifier_power(point),
     )
 
 

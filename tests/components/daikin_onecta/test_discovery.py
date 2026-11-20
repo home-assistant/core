@@ -19,6 +19,7 @@ from homeassistant.components.daikin_onecta import OnectaDataUpdateCoordinator
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.components.daikin_onecta.discovery import (
     energy_description_key,
+    has_air_purifier_power,
     has_air_purifier_power_control,
     scalar_characteristics_for_platform,
     scalar_platform,
@@ -50,7 +51,7 @@ def test_sensor_keys_exclude_other_platform_keys() -> None:
         "name",
         "characteristic",
         "management_point_type",
-        "air_purifier_power_settable",
+        "air_purifier_power_present",
         "expected",
     ),
     [
@@ -156,7 +157,7 @@ def test_scalar_platform(
     name: str,
     characteristic: Characteristic,
     management_point_type: str,
-    air_purifier_power_settable: bool,
+    air_purifier_power_present: bool,
     expected: Platform | None,
 ) -> None:
     """Classify supported scalar characteristics consistently."""
@@ -165,7 +166,7 @@ def test_scalar_platform(
             name,
             characteristic,
             management_point_type,
-            air_purifier_power_settable=air_purifier_power_settable,
+            air_purifier_power_present=air_purifier_power_present,
         )
         is expected
     )
@@ -250,18 +251,75 @@ def test_energy_description_key() -> None:
     assert energy_description_key(replace(aggregate, source="future-source")) is None
 
 
-def test_read_only_air_purifier_mode_is_exposed_as_sensor() -> None:
-    """Expose purifier mode as a sensor when no controllable fan can exist."""
+def test_air_purifier_mode_is_sensor_when_power_control_is_absent() -> None:
+    """Expose purifier mode when the device has no power characteristic."""
     device = _load_gateway_devices("mc80z")[0]
     point = device.management_points_by_type("climateControl")[0]
     assert point.air_purification is not None
     assert point.air_purification.power is not None
-    point.air_purification.power.settable = False
+    point.on_off_mode = None
 
+    assert not has_air_purifier_power(point)
     assert not has_air_purifier_power_control(point)
     assert "airPurificationMode" in dict(
         scalar_characteristics_for_platform(point, Platform.SENSOR)
     )
+
+
+async def test_air_purifier_offline_does_not_create_mode_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_onecta_client: MockOnectaClient,
+) -> None:
+    """Do not register a duplicate mode sensor while purifier power is read-only."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    device = next(iter(coordinator.data.values()))
+    point = device.device.management_points_by_type("climateControl")[0]
+    fan_unique_id = f"{device.id}_{point.embedded_id}_air_purifier"
+    mode_sensor_unique_id = f"{device.id}_{point.embedded_id}_airPurificationMode"
+    fan_entity_id = entity_registry.async_get_entity_id(
+        Platform.FAN.value, DOMAIN, fan_unique_id
+    )
+    assert fan_entity_id is not None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+        )
+        is None
+    )
+
+    offline_devices = deepcopy(_load_gateway_devices("mc80z"))
+    offline_devices[0].cloud_connection.value = False
+    offline_point = offline_devices[0].management_points_by_type("climateControl")[0]
+    assert offline_point.air_purification is not None
+    assert offline_point.air_purification.power is not None
+    offline_point.air_purification.power.settable = False
+    mock_onecta_client.get_gateway_devices.return_value = offline_devices
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+        )
+        is None
+    )
+    fan_state = hass.states.get(fan_entity_id)
+    assert fan_state is not None and fan_state.state == STATE_UNAVAILABLE
+
+    mock_onecta_client.get_gateway_devices.return_value = _load_gateway_devices("mc80z")
+    await _async_fire_coordinator_update(hass, coordinator, freezer)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR.value, DOMAIN, mode_sensor_unique_id
+        )
+        is None
+    )
+    fan_state = hass.states.get(fan_entity_id)
+    assert fan_state is not None and fan_state.state != STATE_UNAVAILABLE
 
 
 async def _async_fire_coordinator_update(

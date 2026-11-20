@@ -451,9 +451,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from err
-            except OAuth2TokenRequestError:
-                # Preserve transient token errors so the coordinator retries.
-                raise
             except OnectaRateLimitError as err:
                 if self.last_update_success and previous_devices is not None:
                     # Preserve known-good entities while every refresh waits

@@ -55,26 +55,15 @@ def _create_water_tanks(
     """Create water heaters for management points with typed tank data."""
     entities: list[DaikinWaterTank] = []
     for device in present_devices(coordinator):
-        supported_management_point_types = (
-            "domesticHotWaterTank",
-            "domesticHotWaterFlowThrough",
-        )
-        for management_point_type in supported_management_point_types:
-            entities.extend(
-                DaikinWaterTank(
-                    device,
-                    coordinator,
-                    management_point.embedded_id,
-                )
-                for management_point in device.device.management_points_by_type(
-                    management_point_type
-                )
-                if management_point.domestic_hot_water is not None
-                and not is_known(
-                    Platform.WATER_HEATER,
-                    management_point_unique_id(device.id, management_point.embedded_id),
-                )
+        entities.extend(
+            DaikinWaterTank(device, coordinator, management_point.embedded_id)
+            for management_point in device.device.management_points
+            if management_point.domestic_hot_water is not None
+            and not is_known(
+                Platform.WATER_HEATER,
+                management_point_unique_id(device.id, management_point.embedded_id),
             )
+        )
     return entities
 
 

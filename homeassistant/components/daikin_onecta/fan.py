@@ -157,12 +157,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
 
     def _power_control_is_available(self) -> bool:
         """Return whether the air purifier power control is writable."""
-        purification = self._air_purification()
-        return bool(
-            purification is not None
-            and purification.power is not None
-            and purification.power.settable
-        )
+        return has_air_purifier_power_control(self._management_point)
 
     @property
     @override
