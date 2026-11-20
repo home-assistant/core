@@ -187,9 +187,22 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         if subentry_id is None:
             return
 
+        device_registry = dr.async_get(self.hass)
+        # A subentry describes one lamp. If it already owns another lamp's
+        # registry entry, its address was reconfigured to this device's IP:
+        # adopting would put two lamps under one subentry and make either
+        # deletion cascade to both.
+        for entry in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if (
+                entry.config_subentry_id == subentry_id
+                and (DOMAIN, device.fingerprint) not in entry.identifiers
+            ):
+                return
+
         device.is_manual = True
 
-        device_registry = dr.async_get(self.hass)
         if (
             device_entry := device_registry.async_get_device_by_identifier(
                 (DOMAIN, device.fingerprint), self.config_entry.entry_id

@@ -406,6 +406,73 @@ async def test_reconfigured_device_answers_at_new_ip(
     assert coordinator.discovery_queue == set()
 
 
+async def test_reconfigure_to_discovered_lamp_ip_does_not_adopt(
+    hass: HomeAssistant,
+    mock_govee_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfiguring to a discovered lamp's IP leaves that lamp alone.
+
+    The controller's IP map may be stale after a DHCP reshuffle, so the new
+    address cannot be rejected up front. Adopting the other lamp instead would
+    put two lamps under one subentry, making either deletion cascade to both.
+    """
+
+    manual_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.100",
+        fingerprint="manual_device-fingerprint",
+        sku="H615A",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    manual_device.is_manual = True
+    other_device = GoveeDevice(
+        controller=mock_govee_api,
+        ip="192.168.1.50",
+        fingerprint="other-fingerprint",
+        sku="H615B",
+        capabilities=DEFAULT_CAPABILITIES,
+    )
+    set_mocked_devices(mock_govee_api, [manual_device, other_device])
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=_device_subentries(manual_device.ip),
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry_id = next(iter(config_entry.subentries))
+
+    result = await _async_reconfigure_subentry(hass, config_entry, other_device.ip)
+    assert result["reason"] == "reconfigure_successful"
+
+    # The discovered lamp stays on the main entry, unclaimed.
+    other_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, other_device.fingerprint), config_entry.entry_id
+    )
+    assert other_entry is not None
+    assert other_entry.config_subentry_id is None
+    assert other_device.is_manual is False
+    # The subentry stays bound to its original lamp.
+    manual_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, manual_device.fingerprint), config_entry.entry_id
+    )
+    assert manual_entry is not None
+    assert manual_entry.config_subentry_id == subentry_id
+
+    # Deleting the subentry only cascades to its own lamp.
+    hass.config_entries.async_remove_subentry(config_entry, subentry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("light.h615a") is None
+    assert entity_registry.async_get("light.h615b") is not None
+    mock_govee_api.remove_device.assert_called_once_with(manual_device)
+
+
 async def test_reconfigure_queued_device(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
