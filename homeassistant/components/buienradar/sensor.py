@@ -30,7 +30,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     DEGREE,
     PERCENTAGE,
     UnitOfIrradiance,
@@ -43,17 +42,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_TIMEFRAME,
-    DEFAULT_TIMEFRAME,
-    STATE_CONDITION_CODES,
-    STATE_CONDITIONS,
-    STATE_DETAILED_CONDITIONS,
-)
-from .coordinator import BuienRadarConfigEntry
-from .util import BrData
+from .const import STATE_CONDITION_CODES, STATE_CONDITIONS, STATE_DETAILED_CONDITIONS
+from .coordinator import BuienRadarConfigEntry, BuienradarCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -697,62 +690,27 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the buienradar sensor."""
-    config = entry.data
-    options = entry.options
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    timeframe = options.get(
-        CONF_TIMEFRAME, config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    coordinator = entry.runtime_data
+    async_add_entities(
+        BrSensor(coordinator, description) for description in SENSOR_TYPES
     )
 
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
 
-    coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
-
-    _LOGGER.debug(
-        "Initializing buienradar sensor coordinate %s, timeframe %s",
-        coordinates,
-        timeframe,
-    )
-
-    # create weather entities:
-    entities = [
-        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
-        for description in SENSOR_TYPES
-    ]
-
-    # create weather data:
-    data = BrData(hass, coordinates, timeframe, entities)
-
-    @callback
-    def _async_cancel_update() -> None:
-        if data.unsub_schedule_update:
-            data.unsub_schedule_update()
-
-    entry.async_on_unload(_async_cancel_update)
-    await data.async_update()
-
-    async_add_entities(entities)
-
-
-class BrSensor(SensorEntity):
+class BrSensor(CoordinatorEntity[BuienradarCoordinator], SensorEntity):
     """Representation of a Buienradar sensor."""
 
     _attr_entity_registry_enabled_default = False
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
-        self, client_name, coordinates, description: SensorEntityDescription
+        self, coordinator: BuienradarCoordinator, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+        coordinates = coordinator.coordinates
         self.entity_description = description
-        self._data: BrData | None = None
         self._measured = None
+        self._written_available = True
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
             f"{description.key}"
@@ -768,23 +726,18 @@ class BrSensor(SensorEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Handle entity being added to hass."""
-        if self._data is None:
-            return
-        self._update()
+        """Load the current data when added."""
+        await super().async_added_to_hass()
+        self._load_data(self.coordinator.data.data)
 
     @callback
-    def data_updated(self, data: BrData):
-        """Handle data update."""
-        self._data = data
-        if not self.hass:
-            return
-        self._update()
-
-    def _update(self):
-        """Update sensor data."""
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Write the state for a new measurement or a change in availability."""
         _LOGGER.debug("Updating sensor %s", self.entity_id)
-        if self._load_data(self._data.data):
+        loaded = self._load_data(self.coordinator.data.data)
+        if loaded or self.available != self._written_available:
+            self._written_available = self.available
             self.async_write_ha_state()
 
     @callback

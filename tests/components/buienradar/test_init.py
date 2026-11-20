@@ -1,7 +1,9 @@
 """Tests for the buienradar component."""
 
 from http import HTTPStatus
+from typing import Any
 
+from aiohttp import ClientError
 from buienradar.urls import JSON_FEED_URL
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -24,11 +26,21 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"status": HTTPStatus.NOT_FOUND}, id="not_found"),
+        pytest.param({"exc": ClientError}, id="client_error"),
+        pytest.param({"exc": TimeoutError}, id="timeout"),
+    ],
+)
 async def test_setup_retry_when_fetch_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
 ) -> None:
     """Test setup is retried when the first update fails."""
-    aioclient_mock.get(JSON_FEED_URL, status=HTTPStatus.NOT_FOUND)
+    aioclient_mock.get(JSON_FEED_URL, **response)
 
     entry = await setup_integration(hass)
 

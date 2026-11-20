@@ -1,13 +1,20 @@
 """The tests for the Buienradar sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from buienradar.constants import MESSAGE, SUCCESS
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.buienradar.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -53,3 +60,34 @@ async def test_sensors(
         entry = await setup_integration(hass)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_buienradar_feeds")
+async def test_sensor_unavailable_and_recovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensors are unavailable after a failed update and recover."""
+    with patch("homeassistant.components.buienradar.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{TEST_LATITUDE:2.6f}{TEST_LONGITUDE:2.6f}temperature"
+    )
+    assert entity_id
+    assert hass.states.get(entity_id).state == "8.2"
+
+    with patch(
+        "homeassistant.components.buienradar.util.parse_data",
+        return_value={SUCCESS: False, MESSAGE: "no data"},
+    ):
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # A failed update is retried two minutes later, with the same measurement.
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(entity_id).state == "8.2"
