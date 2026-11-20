@@ -165,9 +165,25 @@ async def update_listener(
         elif not device.is_manual:
             coordinator.async_adopt_device(device)
 
+    device_registry = dr.async_get(hass)
     # The difference is a new set, so removing entries below cannot mutate what
     # we are iterating over.
     for ip in coordinator.manual_device_ips - config.manual_devices:
+        if (
+            (device := coordinator.get_device_by_ip(ip)) is not None
+            and (
+                device_entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, device.fingerprint), config_entry.entry_id
+                )
+            )
+            is not None
+            and device_entry.config_subentry_id in config_entry.subentries
+        ):
+            # The lamp's subentry survived, so its address was reconfigured and
+            # the lamp was not deleted. Keep it, with its registry entries and
+            # entity: the library updates its IP in place when it answers the
+            # probe queued above for the new address.
+            continue
         coordinator.async_remove_manual_device(ip)
 
 

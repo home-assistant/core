@@ -290,4 +290,10 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
                 translation_domain=DOMAIN, translation_key="no_live_endpoints"
             )
         self._controller.send_update_message()
+        # The library drains the discovery queue only when an unknown
+        # fingerprint answers, so a known lamp probed at its reconfigured
+        # address strands its queue entry. Drop entries a tracked device
+        # already covers.
+        for ip in self.discovery_queue & {device.ip for device in self.devices}:
+            self.remove_device_from_discovery_queue(ip)
         return self.devices
