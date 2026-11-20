@@ -29,6 +29,25 @@ def is_unit_setting(device_point: DevicePoint) -> bool:
     return device_point.category.lower() == "software debug"
 
 
+def was_sensor_before_zero_limits(
+    device_point: DevicePoint,
+    description: NumberEntityDescription | None = None,
+) -> bool:
+    """Return True for a setting that used to be a sensor.
+
+    A minimum or maximum of 0 used to be read as no limit, so writable settings
+    like these were created as read-only sensors. Installs that already have
+    such a sensor keep it until the deprecation ends, see sensor.py.
+    """
+    return (
+        find_matching_platform(device_point, description)
+        in (Platform.NUMBER, Platform.SWITCH)
+        and not device_point.enum_values
+        and not (description and description.native_unit_of_measurement == "DM")
+        and not (device_point.raw["maxValue"] and device_point.raw["minValue"])
+    )
+
+
 def find_matching_platform(
     device_point: DevicePoint,
     description: SensorEntityDescription | NumberEntityDescription | None = None,

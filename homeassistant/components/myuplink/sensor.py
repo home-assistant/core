@@ -23,13 +23,20 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import F_SERIES
+from .const import DOMAIN, F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity, transform_model_series
+from .helpers import (
+    find_matching_platform,
+    skip_entity,
+    transform_model_series,
+    was_sensor_before_zero_limits,
+)
+from .number import get_description as get_number_description
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -222,6 +229,7 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     coordinator = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
@@ -257,6 +265,21 @@ async def async_setup_entry(
                         device_id=device_id,
                         device_point=device_point,
                         entity_description=description,
+                        unique_id_suffix=point_id,
+                    )
+                )
+            elif was_sensor_before_zero_limits(
+                device_point, get_number_description(device_point)
+            ) and entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{device_id}-{point_id}"
+            ):
+                # Keep the old sensor for installs that have it, see the repair issue
+                entities.append(
+                    MyUplinkDevicePointSensor(
+                        coordinator=coordinator,
+                        device_id=device_id,
+                        device_point=device_point,
+                        entity_description=None,
                         unique_id_suffix=point_id,
                     )
                 )

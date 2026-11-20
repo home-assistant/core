@@ -68,6 +68,12 @@
       "message": "Failed to set state for {entity}."
     }
   },
+  "issues": {
+    "deprecated_setting_sensor": {
+      "description": "The sensor `{entity_id}` is deprecated because this setting can now be changed with `{replacement_entity_id}`, and the sensor will be removed.\n\nThe sensor is used in the following automations or scripts:\n{items}\n\nUpdate them to use `{replacement_entity_id}`, then disable `{entity_id}` to fix this issue.",
+      "title": "The {entity_name} sensor is being replaced"
+    }
+  },
   "selector": {
     "datapoint": {
       "fields": {

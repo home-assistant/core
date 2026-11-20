@@ -28,7 +28,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
@@ -426,3 +430,92 @@ async def test_settings_with_zero_limit(
         assert entry
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         assert entry.entity_category is EntityCategory.CONFIG
+
+
+SG_READY_POINTS = orjson.dumps(
+    [_s320_point("10613", "Activate SG Ready via API", minValue=0.0, maxValue=1.0)]
+).decode()
+SG_READY_UNIQUE_ID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-10613"
+
+
+@pytest.mark.parametrize("load_device_points_jv_file", [SG_READY_POINTS])
+async def test_deprecated_setting_sensor_kept(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an install that had the setting as a sensor keeps the sensor."""
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        SG_READY_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="sg_ready",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(sensor.entity_id).state == "0.0"
+    assert entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, SG_READY_UNIQUE_ID
+    )
+    # Not used anywhere, so there is nothing to repair
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize("load_device_points_jv_file", [SG_READY_POINTS])
+async def test_deprecated_setting_sensor_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a repair issue is raised when the old sensor is still used."""
+    sensor = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        SG_READY_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="sg_ready",
+    )
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "id": "sg_ready_watch",
+                    "alias": "SG Ready watch",
+                    "triggers": {"trigger": "state", "entity_id": sensor.entity_id},
+                    "actions": [],
+                },
+                {
+                    "alias": "SG Ready without an id",
+                    "triggers": {"trigger": "state", "entity_id": sensor.entity_id},
+                    "actions": [],
+                },
+            ]
+        },
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    switch_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, SG_READY_UNIQUE_ID
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_setting_sensor_{sensor.entity_id}"
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.7.0"
+    assert issue.translation_key == "deprecated_setting_sensor"
+    assert issue.translation_placeholders["replacement_entity_id"] == switch_id
+    assert "SG Ready watch" in issue.translation_placeholders["items"]
+    assert (
+        "automation.sg_ready_without_an_id" in issue.translation_placeholders["items"]
+    )
