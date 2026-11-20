@@ -1,0 +1,12 @@
+send_image:
+  target:
+    entity:
+      domain: notify
+      integration: playstation_network
+  fields:
+    image:
+      required: true
+      selector:
+        media:
+          accept:
+            - "*"

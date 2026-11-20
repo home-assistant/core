@@ -1,7 +1,7 @@
 """Notify platform for PlayStation Network."""
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
@@ -28,6 +28,7 @@ from .coordinator import (
     PlaystationNetworkGroupsUpdateCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
+from .helpers import resolve_media
 
 PARALLEL_UPDATES = 20
 
@@ -116,6 +117,12 @@ class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, Notify
             assert self.psn_group
         self.psn_group.send_message(message)
 
+    def _send_image(self, image: bytes) -> None:
+        """Send image."""
+        if TYPE_CHECKING:
+            assert self.psn_group
+        self.psn_group.send_image(image)
+
     @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
@@ -140,6 +147,33 @@ class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, Notify
                 translation_key="send_message_failed",
                 translation_placeholders=dict(self.translation_placeholders),
             ) from e
+
+    async def send_image(self, image: dict[str, Any]) -> None:
+        """Send an image."""
+
+        img_data = await resolve_media(self.hass, image)
+
+        try:
+            await self.hass.async_add_executor_job(self._send_image, img_data)
+        except PSNAWPNotFoundError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="group_invalid",
+                translation_placeholders=dict(self.translation_placeholders),
+            ) from e
+        except PSNAWPForbiddenError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_forbidden",
+                translation_placeholders=dict(self.translation_placeholders),
+            ) from e
+        except (PSNAWPServerError, PSNAWPClientError) as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+                translation_placeholders=dict(self.translation_placeholders),
+            ) from e
+        self._async_record_notification()
 
 
 class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
@@ -194,10 +228,19 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
 
         super().__init__(coordinator, self.entity_description)
 
-    @override
-    def _send_message(self, message: str) -> None:
+    def _get_group(self) -> None:
+        """Initialize group."""
         if not self.psn_group:
             self.psn_group = self.coordinator.psn.psn.group(
                 users_list=[self.coordinator.psn.friends_list[self.account_id]]
             )
+
+    @override
+    def _send_message(self, message: str) -> None:
+        self._get_group()
         super()._send_message(message)
+
+    @override
+    def _send_image(self, image: bytes) -> None:
+        self._get_group()
+        super()._send_image(image)

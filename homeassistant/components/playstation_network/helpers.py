@@ -6,15 +6,24 @@ from typing import Any
 
 from psnawp_api import PSNAWP
 from psnawp_api.models.client import Client
+from psnawp_api.models.group import Group
 from psnawp_api.models.trophies import PlatformType, TrophySummary, TrophyTitle
 from psnawp_api.models.user import User
 from pyrate_limiter import Duration, Rate
 
+from homeassistant.components.media_source import (
+    async_get_media_image,
+    async_resolve_media,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.os_error import os_read_error
 
-from .const import SUPPORTED_PLATFORMS
+from .const import DOMAIN, SUPPORTED_PLATFORMS
 
 LEGACY_PLATFORMS = {PlatformType.PS3, PlatformType.PS4, PlatformType.PS_VITA}
+
+MAX_IMAGE_SIZE = 1024 * 1024
 
 
 @dataclass
@@ -208,3 +217,35 @@ def get_game_title_info(presence: dict[str, Any]) -> dict[str, Any]:
         )
         else {}
     )
+
+
+async def resolve_media(hass: HomeAssistant, media_source: dict[str, str]) -> bytes:
+    """Resolve media from a media source."""
+    media_content_id: str = media_source["media_content_id"]
+
+    if (media_image := await async_get_media_image(hass, media_content_id)) is not None:
+        image = media_image.content
+    else:
+        media = await async_resolve_media(hass, media_source["media_content_id"], None)
+
+        if media.path is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_source_not_supported",
+            )
+        try:
+            image = await hass.async_add_executor_job(media.path.read_bytes)
+        except OSError as err:
+            raise os_read_error(err, str(media.path)) from err
+
+    if Group.get_content_type_from_magic_number(image) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_media_type",
+        )
+    if len(image) > (MAX_IMAGE_SIZE):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="max_file_size_exceeded",
+        )
+    return image

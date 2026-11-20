@@ -23,13 +23,13 @@ from pytest_homeassistant.common import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.notify import (
-    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
-    SERVICE_SEND_MESSAGE,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from homeassistant.components.playstation_network.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -92,10 +92,10 @@ async def test_send_message(
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        SERVICE_SEND_MESSAGE,
+        NotifyService.SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MESSAGE: "henlo fren",
+            CommonServiceArgument.ENTITY_ID: entity_id,
+            NotifyServiceArgument.MESSAGE: "henlo fren",
         },
         blocking=True,
     )
@@ -138,10 +138,10 @@ async def test_send_message_exceptions(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            SERVICE_SEND_MESSAGE,
+            NotifyService.SEND_MESSAGE,
             {
-                ATTR_ENTITY_ID: "notify.testuser_group_publicuniversalfriend",
-                ATTR_MESSAGE: "henlo fren",
+                CommonServiceArgument.ENTITY_ID: "notify.testuser_group_publicuniversalfriend",
+                NotifyServiceArgument.MESSAGE: "henlo fren",
             },
             blocking=True,
         )

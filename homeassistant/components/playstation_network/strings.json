@@ -148,6 +148,12 @@
     "group_invalid": {
       "message": "Failed to send message to group {name}. The group is invalid or does not exist."
     },
+    "max_file_size_exceeded": {
+      "message": "The file size exceeds the maximum allowed size of 1 MiB."
+    },
+    "media_source_not_supported": {
+      "message": "Media source is not supported."
+    },
     "not_ready": {
       "message": "Authentication to the PlayStation Network failed."
     },
@@ -156,6 +162,9 @@
     },
     "send_message_forbidden": {
       "message": "Failed to send message to {name}. You are not allowed to send messages to this group or friend."
+    },
+    "unsupported_media_type": {
+      "message": "The media type is not supported. Supported formats are PNG and JPEG."
     },
     "update_failed": {
       "message": "Data retrieval failed when trying to access the PlayStation Network."
@@ -171,6 +180,18 @@
     "group_chat_forbidden": {
       "description": "The PlayStation Network integration was unable to retrieve group chats for **{name}**.\n\nThis is likely due to insufficient permissions (Error: `{error_message}`).\n\nTo resolve this issue, please ensure the account's chat and messaging feature is not restricted by parental controls or other privacy settings.\n\nIf the restriction is intentional, you can safely ignore this message.",
       "title": "Failed to retrieve group chats for {name}"
+    }
+  },
+  "services": {
+    "send_image": {
+      "description": "Send an image to a friend or group chat on PlayStation Network.",
+      "fields": {
+        "image": {
+          "description": "The image to send. Maximum size is 1 MiB. Supported formats: PNG and JPEG.",
+          "name": "Image"
+        }
+      },
+      "name": "Send image"
     }
   }
 }
