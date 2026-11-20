@@ -3,6 +3,7 @@
 from typing import override
 
 from aiomoulinex import (
+    Appliance,
     ApplianceState,
     ApplianceUpdated,
     ConnectionLost,
@@ -19,7 +20,8 @@ from aiomoulinex import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.ssl import get_default_context
@@ -55,7 +57,7 @@ class MoulinexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ApplianceSta
         try:
             await self.client.connect()
         except MoulinexAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
@@ -87,5 +89,20 @@ class MoulinexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ApplianceSta
                 )
             case ConnectionLost() | ConnectionRestored():
                 self.async_update_listeners()
-            case ApplianceUpdated():
+            case ApplianceUpdated(appliance, state):
+                self._async_update_firmware(appliance, state)
                 self.async_set_updated_data(self.client.states)
+
+    @callback
+    def _async_update_firmware(
+        self, appliance: Appliance, state: ApplianceState
+    ) -> None:
+        """Show a new firmware version on the device page."""
+        if (version := state.shadow.firmware.ui_version) is None:
+            return
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance.thing_uuid), self.config_entry.entry_id
+        )
+        if device and device.sw_version != version:
+            device_registry.async_update_device(device.id, sw_version=version)

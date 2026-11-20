@@ -4,6 +4,8 @@ from dataclasses import replace
 from unittest.mock import MagicMock
 
 from aiomoulinex import (
+    ApplianceState,
+    Firmware,
     MoulinexAuthenticationError,
     MoulinexConnectionError,
     MoulinexError,
@@ -13,7 +15,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.moulinex.const import CONF_TOKENS
+from homeassistant.components.moulinex.const import CONF_TOKENS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -114,13 +116,15 @@ async def test_setup_fails_when_tokens_refused(
     hass: HomeAssistant,
     mock_moulinex_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """The setup fails for good when the cloud refuses the stored tokens."""
+    """The setup fails as an authentication error when the tokens are refused."""
     mock_moulinex_client.connect.side_effect = MoulinexAuthenticationError("refused")
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert "could not authenticate" in caplog.text
 
 
 async def test_renewed_tokens_are_stored(
@@ -135,3 +139,37 @@ async def test_renewed_tokens_are_stored(
     push_event(mock_moulinex_client, TokensUpdated(tokens))
 
     assert mock_config_entry.data[CONF_TOKENS] == tokens.to_dict()
+
+
+async def test_firmware_update(
+    hass: HomeAssistant,
+    mock_moulinex_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A new firmware version is shown on the device, an unknown one is ignored."""
+    await setup_integration(hass, mock_config_entry)
+    state = mock_moulinex_client.states[COOKEO_ID]
+
+    push_state(mock_moulinex_client, COOKEO_ID, ApplianceState(status=state.status))
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, COOKEO_ID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "5.0.54"
+
+    push_state(
+        mock_moulinex_client,
+        COOKEO_ID,
+        replace(
+            state,
+            shadow=replace(state.shadow, firmware=Firmware(ui_version="5.1.0")),
+        ),
+    )
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, COOKEO_ID), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "5.1.0"
