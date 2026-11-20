@@ -32,7 +32,7 @@ from homeassistant.components.vesync.select import (
 )
 from homeassistant.components.vesync.services import VeSyncService
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN, CommonServiceArgument, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -130,7 +130,7 @@ async def test_humidifier_set_nightlight_level(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+            TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
             SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
         },
         blocking=True,
@@ -231,7 +231,7 @@ async def test_nightlight_select_option(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: option,
         },
         blocking=True,
@@ -322,7 +322,7 @@ async def test_nightlight_select_option_unsupported(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 SelectServiceArgument.OPTION: option,
             },
             blocking=True,
@@ -365,7 +365,7 @@ async def test_select_option_device_failure(
             SELECT_DOMAIN,
             SelectService.SELECT_OPTION,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT,
                 SelectServiceArgument.OPTION: HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
             },
             blocking=True,
@@ -430,7 +430,7 @@ async def test_purifier_auto_preference(
         SELECT_DOMAIN,
         SelectService.SELECT_OPTION,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             SelectServiceArgument.OPTION: "quiet",
         },
         blocking=True,

@@ -23,7 +23,7 @@ from homeassistant.components.vesync.const import (
     VS_HUMIDIFIER_MODE_SLEEP,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, CommonServiceArgument
+from homeassistant.const import STATE_UNAVAILABLE, TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -118,7 +118,7 @@ async def test_set_target_humidity_invalid(
             HUMIDIFIER_DOMAIN,
             HumidifierService.SET_HUMIDITY,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
                 HumidifierServiceArgument.HUMIDITY: 20,
             },
             blocking=True,
@@ -152,7 +152,7 @@ async def test_set_target_humidity(
             HUMIDIFIER_DOMAIN,
             HumidifierService.SET_HUMIDITY,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
                 HumidifierServiceArgument.HUMIDITY: 54,
             },
             blocking=True,
@@ -188,7 +188,7 @@ async def test_turn_on(
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 HumidifierService.TURN_ON,
-                {CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER},
+                {TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER},
                 blocking=True,
             )
 
@@ -224,7 +224,7 @@ async def test_turn_off(
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 HumidifierService.TURN_OFF,
-                {CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER},
+                {TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER},
                 blocking=True,
             )
 
@@ -247,7 +247,7 @@ async def test_set_mode_invalid(
                 HUMIDIFIER_DOMAIN,
                 HumidifierService.SET_MODE,
                 {
-                    CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER,
+                    TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
                     HumidifierServiceArgument.MODE: "something_invalid",
                 },
                 blocking=True,
@@ -281,7 +281,7 @@ async def test_set_mode(
             HUMIDIFIER_DOMAIN,
             HumidifierService.SET_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
                 HumidifierServiceArgument.MODE: MODE_AUTO,
             },
             blocking=True,
@@ -369,7 +369,7 @@ async def test_set_mode_sleep_turns_display_off(
             HUMIDIFIER_DOMAIN,
             HumidifierService.SET_MODE,
             {
-                CommonServiceArgument.ENTITY_ID: ENTITY_HUMIDIFIER,
+                TargetKey.ENTITY_ID: ENTITY_HUMIDIFIER,
                 HumidifierServiceArgument.MODE: MODE_SLEEP,
             },
             blocking=True,

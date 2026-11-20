@@ -20,7 +20,7 @@ from homeassistant.components.number import (
     NumberService,
     NumberServiceArgument,
 )
-from homeassistant.const import CommonServiceArgument
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -76,7 +76,7 @@ async def test_coffee_temperature_supported_values(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: (
+            TargetKey.ENTITY_ID: (
                 f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
             ),
             NumberServiceArgument.VALUE: temperature,
@@ -109,7 +109,7 @@ async def test_coffee_temperature_unsupported_values(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: (
+                TargetKey.ENTITY_ID: (
                     f"number.{mock_lamarzocco.serial_number}_coffee_target_temperature"
                 ),
                 NumberServiceArgument.VALUE: temperature,
@@ -171,7 +171,7 @@ async def test_general_numbers(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: f"number.{serial_number}_{entity_name}",
+            TargetKey.ENTITY_ID: f"number.{serial_number}_{entity_name}",
             NumberServiceArgument.VALUE: value,
         },
         blocking=True,
@@ -210,7 +210,7 @@ async def test_preinfusion(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 5.3,
         },
         blocking=True,
@@ -255,7 +255,7 @@ async def test_prebrew_on(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 5.3,
         },
         blocking=True,
@@ -301,7 +301,7 @@ async def test_prebrew_off(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 7,
         },
         blocking=True,
@@ -343,7 +343,7 @@ async def test_number_error(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
+                TargetKey.ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
                 NumberServiceArgument.VALUE: 94,
             },
             blocking=True,
@@ -380,7 +380,7 @@ async def test_steam_temperature(
         NUMBER_DOMAIN,
         NumberService.SET_VALUE,
         {
-            CommonServiceArgument.ENTITY_ID: entity_id,
+            TargetKey.ENTITY_ID: entity_id,
             NumberServiceArgument.VALUE: 128.3,
         },
         blocking=True,
@@ -421,7 +421,7 @@ async def test_brew_by_weight_dose(
             NUMBER_DOMAIN,
             NumberService.SET_VALUE,
             {
-                CommonServiceArgument.ENTITY_ID: entity_id,
+                TargetKey.ENTITY_ID: entity_id,
                 NumberServiceArgument.VALUE: 42,
             },
             blocking=True,

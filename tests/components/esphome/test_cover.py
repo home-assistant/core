@@ -12,19 +12,12 @@ from aioesphomeapi import (
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import TargetKey
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDeviceType
@@ -69,8 +62,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        CoverService.CLOSE,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.0, device_id=0)])
@@ -78,8 +71,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        CoverService.OPEN,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=1.0, device_id=0)])
@@ -87,8 +80,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_POSITION: 50},
+        CoverService.SET_POSITION,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover", CoverServiceArgument.POSITION: 50},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=0.5, device_id=0)])
@@ -96,8 +89,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        CoverService.STOP,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, stop=True, device_id=0)])
@@ -105,8 +98,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_OPEN_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        CoverService.OPEN_TILT,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=1.0, device_id=0)])
@@ -114,8 +107,8 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_CLOSE_COVER_TILT,
-        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        CoverService.CLOSE_TILT,
+        {TargetKey.ENTITY_ID: "cover.test_my_cover"},
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.0, device_id=0)])
@@ -123,8 +116,11 @@ async def test_cover_entity(
 
     await hass.services.async_call(
         COVER_DOMAIN,
-        SERVICE_SET_COVER_TILT_POSITION,
-        {ATTR_ENTITY_ID: "cover.test_my_cover", ATTR_TILT_POSITION: 50},
+        CoverService.SET_TILT_POSITION,
+        {
+            TargetKey.ENTITY_ID: "cover.test_my_cover",
+            CoverServiceArgument.TILT_POSITION: 50,
+        },
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5, device_id=0)])
