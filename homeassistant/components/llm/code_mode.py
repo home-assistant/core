@@ -102,8 +102,21 @@ _JSON_TYPES = {
 
 
 @callback
-def async_create_api_instance(api_instance: APIInstance) -> APIInstance:
-    """Return an API instance with a search tool and an execute tool."""
+def async_create_api_instance(
+    api_instance: APIInstance, conversation_id: str
+) -> APIInstance:
+    """Return an API instance with a search tool and an execute tool.
+
+    The sandboxes that run the code stop when the chat session of the
+    conversation is cleaned up.
+    """
+    hass = api_instance.api.hass
+    sandboxes = hass.data.setdefault(DATA_SANDBOXES, Sandboxes())
+    if conversation_id not in sandboxes.conversation_ids:
+        sandboxes.conversation_ids.add(conversation_id)
+        session = hass.data[chat_session.DATA_CHAT_SESSION][conversation_id]
+        session.async_on_cleanup(partial(_async_release_pool, hass, conversation_id))
+
     functions: list[ToolFunction] = []
     names: set[str] = set()
     for tool in api_instance.tools:
@@ -363,25 +376,11 @@ class ExecuteTool(Tool):
         tool_input: ToolInput,
         llm_context: LLMContext,
     ) -> ToolResult:
-        """Run the code in a sandbox.
-
-        The sandbox processes run until the chat sessions that used them are
-        cleaned up.
-        """
+        """Run the code in a sandbox."""
         code = self.parameters(tool_input.tool_args)["code"]
         # The chat log keeps this tool between turns, so the tools must get
         # the context of the current turn.
         self._api_instance.llm_context = llm_context
-        # The chat log creates this tool and calls it in its chat session.
-        if (session := chat_session.current_session.get()) is None:
-            raise HomeAssistantError("Code can only run in a chat session")
-        conversation_id = session.conversation_id
-        sandboxes = hass.data.setdefault(DATA_SANDBOXES, Sandboxes())
-        if conversation_id not in sandboxes.conversation_ids:
-            sandboxes.conversation_ids.add(conversation_id)
-            session.async_on_cleanup(
-                partial(_async_release_pool, hass, conversation_id)
-            )
         try:
             return await self._async_run(await _async_get_pool(hass), code)
         except (MontyError, OSError) as err:

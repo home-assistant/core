@@ -108,30 +108,27 @@ async def setup_integration(hass: HomeAssistant, state_tool: GetStateTool) -> No
     llm.async_register_api(hass, TestAPI(hass, state_tool))
 
 
-async def _api_instance(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> llm.APIInstance:
-    """Return the Assist API and the test API with their tools as code."""
-    return code_mode_api.async_create_api_instance(
-        await llm.async_get_api(hass, [llm.LLM_API_ASSIST, "test"], llm_context)
-    )
+@pytest.fixture
+def conversation_id(hass: HomeAssistant) -> str:
+    """Return the conversation ID of a chat session."""
+    with chat_session.async_get_chat_session(hass, context=None) as session:
+        return session.conversation_id
 
 
 @pytest.fixture
 async def api_instance(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> llm.APIInstance:
     """Return the Assist API and the test API with their tools as code."""
-    return await _api_instance(hass, llm_context)
+    return code_mode_api.async_create_api_instance(
+        await llm.async_get_api(hass, [llm.LLM_API_ASSIST, "test"], llm_context),
+        conversation_id,
+    )
 
 
 async def _execute(api_instance: llm.APIInstance, code: str) -> llm.ToolResult:
-    """Run code with the execute tool, in a new chat session if none is active."""
-    tool_input = llm.ToolInput("execute", {"code": code})
-    if chat_session.current_session.get() is not None:
-        return await api_instance.async_call_tool(tool_input)
-    with chat_session.async_get_chat_session(api_instance.api.hass, context=None):
-        return await api_instance.async_call_tool(tool_input)
+    """Run code with the execute tool."""
+    return await api_instance.async_call_tool(llm.ToolInput("execute", {"code": code}))
 
 
 async def _search(api_instance: llm.APIInstance, query: str) -> list[str]:
@@ -171,7 +168,7 @@ async def test_search(api_instance: llm.APIInstance) -> None:
 
 
 async def test_nested_parameters(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> None:
     """Test the declaration shows the keys of dict parameters."""
 
@@ -215,7 +212,8 @@ async def test_nested_parameters(
             api_prompt="",
             llm_context=llm_context,
             tools=[MemoryTool()],
-        )
+        ),
+        conversation_id,
     )
 
     assert (await _search(api_instance, "memory"))[0].startswith(
@@ -396,14 +394,11 @@ async def test_sandbox_lives_with_chat_session(
     """Test the sandbox stays between runs and stops with the chat session."""
     assert _sandbox_count() == 0
 
-    with chat_session.async_get_chat_session(hass, context=None):
-        for value in (1, 2):
-            result = await _execute(api_instance, str(value))
-            assert result.data["result"] == value
-            assert _sandbox_count() == 1
-
-    # A later turn of the conversation uses the same sandbox.
-    assert _sandbox_count() == 1
+    for value in (1, 2):
+        result = await _execute(api_instance, str(value))
+        assert result.data["result"] == value
+        # The sandbox stays for the next run of the conversation.
+        assert _sandbox_count() == 1
 
     async_fire_time_changed(
         hass,
@@ -414,17 +409,17 @@ async def test_sandbox_lives_with_chat_session(
     assert _sandbox_count() == 0
 
 
-async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+async def test_sandbox_limit(
+    hass: HomeAssistant, api_instance: llm.APIInstance
+) -> None:
     """Test runs wait for a sandbox when the maximum number is in use."""
-    api_instance = await _api_instance(hass, llm_context)
     sandbox_counts: list[int] = []
 
     async def run(value: int) -> int:
-        with chat_session.async_get_chat_session(hass, context=None):
-            result = await _execute(
-                api_instance,
-                f'await test__get_state(entity_id="light.room_{value}")\n{value}',
-            )
+        result = await _execute(
+            api_instance,
+            f'await test__get_state(entity_id="light.room_{value}")\n{value}',
+        )
         sandbox_counts.append(_sandbox_count())
         return result.data["result"]
 
@@ -449,18 +444,11 @@ async def test_sandbox_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -
     assert hass.data[code_mode_api.DATA_SANDBOXES].conversation_ids == set()
 
 
-async def test_execute_needs_chat_session(api_instance: llm.APIInstance) -> None:
-    """Test code does not run outside a chat session."""
-    with pytest.raises(HomeAssistantError, match="chat session"):
-        await api_instance.async_call_tool(llm.ToolInput("execute", {"code": "1"}))
-
-
 async def test_sandbox_stops_with_home_assistant(
     hass: HomeAssistant, api_instance: llm.APIInstance
 ) -> None:
     """Test the sandbox stops when Home Assistant stops."""
-    with chat_session.async_get_chat_session(hass, context=None):
-        await _execute(api_instance, "1")
+    await _execute(api_instance, "1")
     assert _sandbox_count() == 1
 
     await hass.async_stop()
@@ -514,7 +502,7 @@ async def test_result_too_large(api_instance: llm.APIInstance, code: str) -> Non
 
 
 async def test_python_names_are_unique(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> None:
     """Test tools whose names give the same Python name stay separate."""
 
@@ -551,7 +539,8 @@ async def test_python_names_are_unique(
                 NameTool("len"),
                 NameTool("asyncio"),
             ],
-        )
+        ),
+        conversation_id,
     )
 
     names = (
@@ -592,13 +581,13 @@ async def test_invalid_arguments(
 
 
 async def test_custom_serializer_is_kept(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_context: llm.LLMContext, conversation_id: str
 ) -> None:
     """Test the API instance keeps the serializer for schemas of the provider."""
     assist = await llm.async_get_api(hass, llm.LLM_API_ASSIST, llm_context)
     assert assist.custom_serializer is not None
 
-    api_instance = code_mode_api.async_create_api_instance(assist)
+    api_instance = code_mode_api.async_create_api_instance(assist, conversation_id)
 
     assert api_instance.custom_serializer is assist.custom_serializer
 

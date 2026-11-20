@@ -861,7 +861,9 @@ class ChatLog:
         # Assist alone has few tools, so the model calls them directly. With
         # other APIs, the model writes code that calls the tools.
         if code_mode and llm_api is not None and api_ids != (llm.LLM_API_ASSIST,):
-            llm_api = llm_code_mode.async_create_api_instance(llm_api)
+            llm_api = llm_code_mode.async_create_api_instance(
+                llm_api, self.conversation_id
+            )
 
         user_name: str | None = None
 
