@@ -1,4 +1,57 @@
 # serializer version: 1
+# name: test_entities[sensor.input_bus_error_transmit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('velbus', '2')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.input_bus_error_transmit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bus error transmit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bus error transmit',
+    'platform': 'velbus',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a1b2c3d4e5f6-BusErrorTx',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[sensor.input_bus_error_transmit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Input Bus error transmit',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.input_bus_error_transmit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.0',
+  })
+# ---
 # name: test_entities[sensor.input_buttoncounter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -260,7 +313,7 @@
     'object_id_base': 'LightSensor',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
     'original_name': 'LightSensor',
     'platform': 'velbus',
@@ -269,15 +322,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'a1b2c3d4e5f6-LightValue',
-    'unit_of_measurement': 'illuminance',
+    'unit_of_measurement': 'lx',
   })
 # ---
 # name: test_entities[sensor.input_lightsensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Input LightSensor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'illuminance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.input_lightsensor',

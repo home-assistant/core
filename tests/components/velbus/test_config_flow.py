@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from velbusaio.exceptions import VelbusConnectionFailed
+from velbusaio.exceptions import VelbusAuthenticationFailed, VelbusConnectionFailed
 
 from homeassistant.components.velbus.config_flow import format_manager_dsn
 from homeassistant.components.velbus.const import CONF_TLS, CONF_VLP_FILE, DOMAIN
@@ -91,6 +91,8 @@ def mock_controller_connection_failed():
         ("127.0.0.1", 4201, "manager://127.0.0.1:4201"),
         ("2001:db8::1", 4201, "manager://[2001:db8::1]:4201"),
         ("[2001:db8::1]", 4201, "manager://[2001:db8::1]:4201"),
+        ("manager", 4201, "manager://manager:4201"),
+        ("velbus.local", 4201, "manager://velbus.local:4201"),
     ],
 )
 def test_format_manager_dsn(host: str, port: int, expected_dsn: str) -> None:
@@ -126,6 +128,42 @@ async def test_user_manager_success(hass: HomeAssistant) -> None:
     assert data[CONF_PORT] == "manager://127.0.0.1:4201"
     assert data[CONF_ACCESS_TOKEN] == "token"
     assert data[CONF_VLP_FILE] is None
+
+
+@pytest.mark.usefixtures("controller")
+async def test_user_manager_invalid_access_token(hass: HomeAssistant) -> None:
+    """Test invalid access token during Manager setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "manager"},
+    )
+    with patch(
+        "velbusaio.controller.Velbus",
+        side_effect=VelbusAuthenticationFailed(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result.get("flow_id"),
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: 4201,
+                CONF_ACCESS_TOKEN: "bad-token",
+            },
+        )
+    assert result.get("errors") == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 4201,
+            CONF_ACCESS_TOKEN: "good-token",
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("controller_connection_failed")
@@ -224,6 +262,91 @@ async def test_reauth_manager(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+async def test_reauth_manager_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth reports connection errors on the base field."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "new-token"},
+    )
+    assert result.get("errors") == {"base": "cannot_connect"}
+
+    with patch("velbusaio.controller.Velbus", return_value=AsyncMock()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "new-token"},
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "new-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_reauth_manager_invalid_token_then_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test reauth handles invalid tokens before accepting a valid one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={
+            CONF_PORT: "manager://127.0.0.1:4201",
+            CONF_ACCESS_TOKEN: "old-token",
+        },
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "velbusaio.controller.Velbus",
+        side_effect=VelbusAuthenticationFailed(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ACCESS_TOKEN: "bad-token"},
+        )
+    assert result.get("errors") == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_TOKEN: "good-token"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "good-token"
+
+
+@pytest.mark.usefixtures("controller")
+async def test_manager_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfigure routes manager entries to the manager step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Velbus Manager",
+        data={CONF_PORT: "manager://127.0.0.1:4201"},
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("step_id") == "manager"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "127.0.0.1", CONF_PORT: 4201},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.usefixtures("controller")

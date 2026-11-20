@@ -1,7 +1,7 @@
 """Config flow for the Velbus platform."""
 
 from collections.abc import Mapping
-from ipaddress import AddressValueError, ip_address
+from ipaddress import ip_address
 from pathlib import Path
 import shutil
 from typing import Any, Final, override
@@ -53,7 +53,7 @@ def _host_requires_brackets(host: str) -> bool:
     """Return whether *host* is an IPv6 literal that must be bracketed in the DSN."""
     try:
         return ip_address(host).version == 6
-    except AddressValueError:
+    except ValueError:
         return False
 
 
@@ -363,7 +363,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             token = user_input.get(CONF_ACCESS_TOKEN)
             self._access_token = token or None
-            if connect_error := await self._test_connection():
+            if connect_error := await self._test_connection(error_field="base"):
                 errors[connect_error] = (
                     "invalid_access_token"
                     if connect_error == CONF_ACCESS_TOKEN

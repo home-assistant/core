@@ -1,7 +1,9 @@
 """Velbus sensor platform tests."""
 
-from unittest.mock import AsyncMock, PropertyMock, patch
+import logging
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     STATE_UNKNOWN,
+    EntityCategory,
     EntityStateAttribute,
     Platform,
     UnitOfVolume,
@@ -144,3 +147,68 @@ async def test_vmb7in_water_counter_unavailable_when_no_total(
     state = hass.states.get("sensor.input_watercounter_counter")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_illuminance_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test illuminance sensor device class and unit handling."""
+    await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_lightsensor")
+    assert state is not None
+    assert state.state == "250.0"
+    assert (
+        state.attributes[EntityStateAttribute.DEVICE_CLASS]
+        == SensorDeviceClass.ILLUMINANCE
+    )
+    assert (
+        state.attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
+    assert state.attributes[EntityStateAttribute.UNIT_OF_MEASUREMENT] == "lx"
+
+
+async def test_bus_error_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test bus error diagnostic sensor attributes."""
+    await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_bus_error_transmit")
+    assert state is not None
+    assert state.state == "12.0"
+    assert (
+        state.attributes[SensorEntityCapabilityAttribute.STATE_CLASS]
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
+    entry = entity_registry.async_get("sensor.input_bus_error_transmit")
+    assert entry is not None
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+async def test_unknown_sensor_type_skipped(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    mock_sensornumber: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unknown sensor types are skipped without breaking setup."""
+    unknown = MagicMock()
+    unknown.get_sensor_types.return_value = ["not_supported"]
+    unknown.get_full_name.return_value = "Experimental channel"
+    controller.return_value.get_all_sensor.return_value = [unknown, mock_sensornumber]
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch("homeassistant.components.velbus.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await init_integration(hass, config_entry)
+
+    assert hass.states.get("sensor.input_sensornumber") is not None
+    assert "Skipping unknown Velbus sensor type 'not_supported'" in caplog.text
