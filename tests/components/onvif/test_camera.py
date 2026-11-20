@@ -1,11 +1,14 @@
 """Test the ONVIF camera platform."""
 
+import asyncio
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 
 from homeassistant.components.camera import async_get_stream_source
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import PASSWORD, USERNAME, setup_onvif_integration
 
@@ -30,3 +33,42 @@ async def test_stream_uri_retried_after_failure(hass: HomeAssistant) -> None:
         == f"rtsp://{USERNAME}:{PASSWORD}@1.2.3.4/stream"
     )
     assert device.async_get_stream_uri.await_count == 2
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_stream_uri_request_cancelled(hass: HomeAssistant) -> None:
+    """Test a cancelled request neither blocks waiting calls nor later ones."""
+    _, _, device = await setup_onvif_integration(hass)
+    device.username = USERNAME
+    device.password = PASSWORD
+    request_started = asyncio.Event()
+    calls = 0
+
+    async def get_stream_uri(profile: Any) -> str:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            request_started.set()
+            await asyncio.Event().wait()
+        return "rtsp://1.2.3.4/stream"
+
+    device.async_get_stream_uri = get_stream_uri
+
+    first = hass.async_create_task(async_get_stream_source(hass, ENTITY_ID))
+    await request_started.wait()
+    waiting = hass.async_create_task(async_get_stream_source(hass, ENTITY_ID))
+    await asyncio.sleep(0)
+
+    first.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await first
+    # Before, the waiting call waited for the cancelled request forever
+    async with asyncio.timeout(5):
+        with pytest.raises(HomeAssistantError, match="cancelled"):
+            await waiting
+
+    assert (
+        await async_get_stream_source(hass, ENTITY_ID)
+        == f"rtsp://{USERNAME}:{PASSWORD}@1.2.3.4/stream"
+    )
+    assert calls == 2
