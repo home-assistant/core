@@ -36,7 +36,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
 
 
 async def _llm_data(
-    hass: HomeAssistant, api_ids: str | list[str], *, code_mode: bool = True
+    hass: HomeAssistant, api_ids: str | list[str], *, code_mode: bool | None = None
 ) -> tuple[list[str], str]:
     """Return the tool names and the system prompt that an agent gets."""
     user_input = ConversationInput(
@@ -86,6 +86,13 @@ async def test_code_mode_disabled(hass: HomeAssistant) -> None:
 
     assert "llm__GetDateTime" in tool_names
     assert "execute" not in tool_names
+
+
+async def test_code_mode_enabled(hass: HomeAssistant) -> None:
+    """Test an agent can use code mode with the Assist API alone."""
+    tool_names, _ = await _llm_data(hass, llm.LLM_API_ASSIST, code_mode=True)
+
+    assert tool_names == ["search", "execute"]
 
 
 async def test_date_time_prompt(hass: HomeAssistant) -> None:
